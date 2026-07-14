@@ -10,6 +10,7 @@ import {
 } from '@dvt/contracts';
 
 import type { ICanvasAuthoringAuthorityStore } from '../ports/canvasAuthoringAuthority.js';
+import type { IDbtProjectImportReceiptStore } from '../ports/dbtProjectImport.js';
 import {
   DbtProjectImportAuthorityConflictError,
   DbtProjectImportCanvasOccupiedError,
@@ -30,6 +31,7 @@ export class ImportDbtProjectUseCase {
       readonly validator: Pick<ValidateDbtProjectImportUseCase, 'execute'>;
       readonly authorityStore: ICanvasAuthoringAuthorityStore;
       readonly graphDraftStore: IWorkspaceGraphDraftStore;
+      readonly receiptStore: IDbtProjectImportReceiptStore;
       readonly projectGraph: Pick<ProjectDbtGraphFromFilesUseCase, 'execute'>;
       readonly now: () => Date;
     }
@@ -40,6 +42,19 @@ export class ImportDbtProjectUseCase {
     rawCommand: DbtProjectImportCommand
   ): Promise<DbtProjectImportResult> {
     const command = DbtProjectImportCommandSchema.parse(rawCommand);
+    const key = { ...scope, canvasId: command.canvasId };
+    const requestHash = sha256(command);
+    const replay = await this.deps.receiptStore.read({
+      key,
+      idempotencyKey: command.idempotencyKey,
+    });
+    if (replay) {
+      if (replay.requestHash !== requestHash) {
+        throw new DbtProjectImportIdempotencyMismatchError();
+      }
+      return DbtProjectImportResultSchema.parse(replay.result);
+    }
+
     const freshReport = await this.deps.validator.execute(scope, {
       schemaVersion: 'validate-dbt-project-import-request.v1',
       projectRoot: command.validationReceipt.projectRoot,
@@ -50,7 +65,6 @@ export class ImportDbtProjectUseCase {
     }
     await this.assertCanvasUnoccupied(scope, command.canvasId);
 
-    const key = { ...scope, canvasId: command.canvasId };
     const binding = {
       schemaVersion: 'canvas-authoring-authority-binding.v1' as const,
       canvasId: command.canvasId,
@@ -59,7 +73,6 @@ export class ImportDbtProjectUseCase {
         projectRoot: command.validationReceipt.projectRoot,
       },
     };
-    const requestHash = sha256(command);
     const revision = `authority-${command.validationReceipt.validationSha256}`;
     const bindResult = await this.deps.authorityStore.bind({
       key,
@@ -93,7 +106,7 @@ export class ImportDbtProjectUseCase {
       ) {
         throw new DbtProjectImportProjectionError();
       }
-      return DbtProjectImportResultSchema.parse({
+      const result = DbtProjectImportResultSchema.parse({
         schemaVersion: 'dbt-project-import-result.v1',
         success: true,
         idempotencyKey: command.idempotencyKey,
@@ -103,6 +116,16 @@ export class ImportDbtProjectUseCase {
         projectedResourceCount: projection.nodes.length,
         importedAt: bindResult.record.updatedAt,
       });
+      const recorded = await this.deps.receiptStore.record({
+        key,
+        idempotencyKey: command.idempotencyKey,
+        requestHash,
+        result,
+      });
+      if (recorded.kind === 'idempotency_mismatch') {
+        throw new DbtProjectImportIdempotencyMismatchError();
+      }
+      return DbtProjectImportResultSchema.parse(recorded.receipt.result);
     } catch (error) {
       if (!bindResult.deduplicated) {
         const released = await this.deps.authorityStore.release({

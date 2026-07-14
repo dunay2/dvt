@@ -58,6 +58,7 @@ describe('buildDbtProjectImportRuntime', () => {
       authorityStore: authorityStore as never,
       authorityPolicy: new CanvasAuthoringAuthorityPolicy(authorityStore as never),
       graphDraftStore: {} as never,
+      receiptStore: {} as never,
       now: () => new Date('2026-07-14T10:00:00.000Z'),
     });
 

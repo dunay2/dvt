@@ -10,6 +10,7 @@ import type { Logger } from 'pino';
 import { getPgPool } from '../db/pool.js';
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
+import { PostgresDbtProjectImportReceiptStore } from '../infrastructure/dbt/PostgresDbtProjectImportReceiptStore.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
@@ -103,11 +104,17 @@ export async function buildProtectedRuntimeModule(
     timeoutMs: env.DVT_DBT_ANALYZER_TIMEOUT_MS,
     maxOutputBytes: env.DVT_DBT_ANALYZER_MAX_OUTPUT_BYTES,
   });
+  const dbtProjectImportReceiptStore = new PostgresDbtProjectImportReceiptStore({
+    pool,
+    schema: env.DVT_PG_SCHEMA,
+    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+  });
   const dbtProjectImport = buildDbtProjectImportRuntime({
     analyzer: dbtProjectAnalyzer,
     inspector: new LocalDbtProjectImportInspector({
       workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
     }),
+    receiptStore: dbtProjectImportReceiptStore,
     authorityStore: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore,
     authorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
     graphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
@@ -170,6 +177,7 @@ export async function buildProtectedRuntimeModule(
       await storageRuntime.planStore.migrate();
       await workspaceGraphDraftRuntime.workspaceGraphDraftStore.migrate();
       await canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore.migrate();
+      await dbtProjectImportReceiptStore.migrate();
     },
     close: async () => {
       await closeAllClosers([
@@ -177,6 +185,7 @@ export async function buildProtectedRuntimeModule(
         () => storageRuntime.planStore.close(),
         () => workspaceGraphDraftRuntime.workspaceGraphDraftStore.close(),
         () => canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore.close(),
+        () => dbtProjectImportReceiptStore.close(),
         () => storageRuntime.stateStore.close(),
         () => storageRuntime.intentStore.close(),
         () => pool.end(),

@@ -15,6 +15,7 @@ code_refs:
   - apps/api/src/application/services/importWarehouseSourcesUseCase.ts
   - apps/api/src/application/services/saveWorkspaceGraphDraftUseCase.ts
   - apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts
+  - apps/api/src/infrastructure/dbt/PostgresDbtProjectImportReceiptStore.ts
   - apps/api/src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.ts
   - apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts
   - apps/api/src/entrypoints/http/dbtProjectImportRoutes.ts
@@ -29,7 +30,9 @@ evidence:
     - pnpm --filter dvt-api lint
     - pnpm --filter dvt-api exec vitest run test/app/protectedRuntimeComposition.test.ts
     - pnpm --filter dvt-api exec vitest run test/entrypoints/http/workspaceGraphDraftRoutes.test.ts
+    - pnpm --filter dvt-api exec vitest run test/application/dbtProjectImportReplay.test.ts
     - DVT_PG_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-api exec vitest run test/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.test.ts
+    - DVT_PG_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-api exec vitest run test/infrastructure/dbt/PostgresDbtProjectImportReceiptStore.test.ts
     - node --test scripts/planning-db-migrate.test.cjs
     - pnpm verify:prepush
 ---
@@ -57,6 +60,9 @@ authority without dual writes.
 - HTTP routes enforce workspace scope, stable validation errors, idempotency,
   conflict rejection, and the protected runtime rate limit before repeated
   authorization.
+- A completed import persists its exact accepted result. Equivalent retries
+  replay that result before inspecting later project-file changes, while a
+  reused key with another request hash fails closed.
 
 # Authority
 

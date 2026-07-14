@@ -55,16 +55,17 @@ then compensated by application code.
 
 ## Target Components
 
-| Component                            | Owned concern                                                                      | Reason to change                                            |
-| ------------------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| `DbtProjectImportContract`           | Version validation reports, accepted receipts, import commands, and receipts.      | The cross-process import vocabulary changes.                |
-| `DbtProjectImportApplicationService` | Orchestrate validation and explicit authority binding.                             | Import policy or command/query orchestration changes.       |
-| `DbtProjectImportInspector`          | Inspect one existing workspace project under security and compatibility limits.    | Filesystem compatibility or import security policy changes. |
-| `CanvasAuthoringAuthorityPolicy`     | Resolve the stored authority or the canonical graph-draft default.                 | Authority transition or default-resolution policy changes.  |
-| `CanvasAuthoringAuthorityStore`      | Persist and compare one Canvas authority binding.                                  | PostgreSQL persistence or conflict mechanics change.        |
-| `CanvasAuthoringAuthorityRuntime`    | Compose the policy port with its production store adapter.                         | Protected runtime dependency wiring changes.                |
-| `WorkspaceFileBatchMutation`         | Apply one scoped multi-file mutation with CAS, idempotency, staging, and rollback. | Local batch publication mechanics change.                   |
-| `DbtProjectImportDialog`             | Present validation, diagnostics, and explicit import confirmation.                 | The import interaction or presentation model changes.       |
+| Component                            | Owned concern                                                                      | Reason to change                                             |
+| ------------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `DbtProjectImportContract`           | Version validation reports, accepted receipts, import commands, and receipts.      | The cross-process import vocabulary changes.                 |
+| `DbtProjectImportApplicationService` | Orchestrate validation and explicit authority binding.                             | Import policy or command/query orchestration changes.        |
+| `DbtProjectImportInspector`          | Inspect one existing workspace project under security and compatibility limits.    | Filesystem compatibility or import security policy changes.  |
+| `CanvasAuthoringAuthorityPolicy`     | Resolve the stored authority or the canonical graph-draft default.                 | Authority transition or default-resolution policy changes.   |
+| `CanvasAuthoringAuthorityStore`      | Persist and compare one Canvas authority binding.                                  | PostgreSQL persistence or conflict mechanics change.         |
+| `CanvasAuthoringAuthorityRuntime`    | Compose the policy port with its production store adapter.                         | Protected runtime dependency wiring changes.                 |
+| `DbtProjectImportReceiptStore`       | Persist and replay the completed result of one accepted import command.            | Import command replay or PostgreSQL receipt storage changes. |
+| `WorkspaceFileBatchMutation`         | Apply one scoped multi-file mutation with CAS, idempotency, staging, and rollback. | Local batch publication mechanics change.                    |
+| `DbtProjectImportDialog`             | Present validation, diagnostics, and explicit import confirmation.                 | The import interaction or presentation model changes.        |
 
 `ImportWarehouseSources` remains the existing command rail. Its application
 service resolves the active authority and delegates only the mode-specific
@@ -81,6 +82,7 @@ flowchart LR
   Analyzer[IDbtProjectAnalyzerPort]
   AuthorityPolicy[CanvasAuthoringAuthorityPolicy]
   AuthorityStore[ICanvasAuthoringAuthorityStore]
+  ReceiptStore[IDbtProjectImportReceiptStore]
   Graph[ProjectDbtGraphFromFiles query]
   Source[ImportWarehouseSources command]
   Batch[IWorkspaceFileBatchMutationPort]
@@ -90,6 +92,7 @@ flowchart LR
   Validate --> Inspector
   Validate --> Analyzer
   Dialog --> Import
+  Import --> ReceiptStore
   Import --> Inspector
   Import --> Analyzer
   Import --> AuthorityPolicy
@@ -104,12 +107,12 @@ flowchart LR
 
 ## Command And Query Rails
 
-| Rail                       | Type            | DDD owner                          | Application port                          | Authorization                                              | Required negative evidence                                                                                                                     |
-| -------------------------- | --------------- | ---------------------------------- | ----------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ValidateDbtProjectImport` | query           | `DbtProjectImportValidationReport` | `ValidateDbtProjectImportUseCase.execute` | `workspace:files:view` in tenant/project/environment scope | unauthenticated, forbidden, traversal, symlink, unsupported/binary file, profiles/secrets, limits, invalid dbt                                 |
-| `ImportDbtProject`         | command         | `CanvasAuthoringAuthorityBinding`  | `ImportDbtProjectUseCase.execute`         | `workspace:files:save` in tenant/project/environment scope | rejected/tampered/stale receipt, occupied Canvas, concurrent graph-draft claim, authority conflict, reused idempotency key, projection failure |
-| `ImportWarehouseSources`   | command, reused | authority-aware source import      | `ImportWarehouseSourcesUseCase.execute`   | `workspace:source-import:import`                           | file mode never writes draft; graph mode rejects file authority; equivalent post-publication retry deduplicates; batch conflict and rollback   |
-| `SaveWorkspaceGraphDraft`  | command, reused | `WorkspaceGraphAuthoringDraft`     | `SaveWorkspaceGraphDraftUseCase.execute`  | `workspace:graph-draft:save`                               | stale revision, idempotency mismatch, file-authority conflict, concurrent file-authority claim                                                 |
+| Rail                       | Type            | DDD owner                          | Application port                          | Authorization                                              | Required negative evidence                                                                                                                                                                             |
+| -------------------------- | --------------- | ---------------------------------- | ----------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ValidateDbtProjectImport` | query           | `DbtProjectImportValidationReport` | `ValidateDbtProjectImportUseCase.execute` | `workspace:files:view` in tenant/project/environment scope | unauthenticated, forbidden, traversal, symlink, unsupported/binary file, profiles/secrets, limits, invalid dbt                                                                                         |
+| `ImportDbtProject`         | command         | `CanvasAuthoringAuthorityBinding`  | `ImportDbtProjectUseCase.execute`         | `workspace:files:save` in tenant/project/environment scope | rejected/tampered/stale receipt, occupied Canvas, concurrent graph-draft claim, authority conflict, reused idempotency key, replay after later file changes, projection or receipt-persistence failure |
+| `ImportWarehouseSources`   | command, reused | authority-aware source import      | `ImportWarehouseSourcesUseCase.execute`   | `workspace:source-import:import`                           | file mode never writes draft; graph mode rejects file authority; equivalent post-publication retry deduplicates; batch conflict and rollback                                                           |
+| `SaveWorkspaceGraphDraft`  | command, reused | `WorkspaceGraphAuthoringDraft`     | `SaveWorkspaceGraphDraftUseCase.execute`  | `workspace:graph-draft:save`                               | stale revision, idempotency mismatch, file-authority conflict, concurrent file-authority claim                                                                                                         |
 
 `IWorkspaceFileBatchMutationPort` is an outbound Gateway. It is not a product
 command or query rail.
@@ -124,6 +127,7 @@ sequenceDiagram
   participant Inspect as Import inspector
   participant Analyze as dbt analyzer
   participant Import as ImportDbtProject
+  participant Receipt as Import receipt store
   participant Authority as Authority store
   participant Graph as ProjectDbtGraphFromFiles
 
@@ -134,11 +138,17 @@ sequenceDiagram
   Validate-->>UI: report plus accepted receipt
   User->>UI: confirm import
   UI->>Import: receipt, canvas id, conflict policy, idempotency key
-  Import->>Inspect: revalidate current content
-  Import->>Analyze: verify revision and analysis
-  Import->>Authority: transactionally bind dbt-project-files if the Canvas has no graph-draft owner
-  Import->>Graph: first persisted-authority projection
-  Graph-->>Import: fresh projection
+  Import->>Receipt: find completed command by scope, canvas and idempotency key
+  alt completed equivalent command
+    Receipt-->>Import: original accepted result
+  else first execution
+    Import->>Inspect: revalidate current content
+    Import->>Analyze: verify revision and analysis
+    Import->>Authority: transactionally bind dbt-project-files if the Canvas has no graph-draft owner
+    Import->>Graph: first persisted-authority projection
+    Graph-->>Import: fresh projection
+    Import->>Receipt: persist request hash and accepted result
+  end
   Import-->>UI: command receipt
 ```
 
@@ -184,6 +194,9 @@ sequenceDiagram
   hash still match a fresh inspection.
 - A successful import persists authority before reporting success and proves
   the first projection through that persisted authority.
+- A completed import persists its exact command result before responding. An
+  equivalent retry replays that result before inspecting mutable project files;
+  reuse of the same idempotency key for another command fails closed.
 - File-backed Source Import writes only beneath the bound `projectRoot`.
 - File-backed Source Import never calls the graph-draft save port.
 - Graph-draft Source Import retains its current semantic behavior.
@@ -222,8 +235,9 @@ rather than represented by duplicate adapter-level logs.
 5. The authority and graph-draft stores prove scope isolation,
    compare-and-swap, idempotency-key mismatch behavior, and one-winner
    ownership under concurrent claims.
-6. API tests prove validation is read-only, import is explicit, and the first
-   graph projection resolves persisted authority.
+6. API tests prove validation is read-only, import is explicit, the first
+   graph projection resolves persisted authority, and a completed command
+   replays its original result after later project-file changes.
 7. Source Import tests prove both modes and prove zero graph-draft writes in
    file-backed mode.
 8. Presentation tests prove validate-before-import, actionable diagnostics,

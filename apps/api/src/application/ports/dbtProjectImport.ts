@@ -1,4 +1,8 @@
-import type { DbtProjectImportDiagnostic, DbtProjectImportInventory } from '@dvt/contracts';
+import type {
+  DbtProjectImportDiagnostic,
+  DbtProjectImportInventory,
+  DbtProjectImportResult,
+} from '@dvt/contracts';
 
 import type { WorkspaceStorageScope } from './workspaceFiles.js';
 
@@ -17,6 +21,36 @@ export type DbtProjectImportInspection = Readonly<{
 
 export interface IDbtProjectImportInspectorPort {
   inspect(input: InspectDbtProjectImportInput): Promise<DbtProjectImportInspection>;
+}
+
+export type DbtProjectImportReceiptKey = WorkspaceStorageScope & Readonly<{ canvasId: string }>;
+
+export type DbtProjectImportStoredReceipt = Readonly<{
+  requestHash: string;
+  result: DbtProjectImportResult;
+}>;
+
+export type DbtProjectImportReceiptRecordResult =
+  | Readonly<{
+      kind: 'recorded';
+      receipt: DbtProjectImportStoredReceipt;
+      deduplicated: boolean;
+    }>
+  | Readonly<{ kind: 'idempotency_mismatch' }>;
+
+export interface IDbtProjectImportReceiptStore {
+  migrate(): Promise<void>;
+  close(): Promise<void>;
+  read(input: {
+    key: DbtProjectImportReceiptKey;
+    idempotencyKey: string;
+  }): Promise<DbtProjectImportStoredReceipt | null>;
+  record(input: {
+    key: DbtProjectImportReceiptKey;
+    idempotencyKey: string;
+    requestHash: string;
+    result: DbtProjectImportResult;
+  }): Promise<DbtProjectImportReceiptRecordResult>;
 }
 
 export class DbtProjectImportRejectedError extends Error {

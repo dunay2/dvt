@@ -1,9 +1,16 @@
-import type { DbtProjectImportValidationReport, DbtProjectGraphProjection } from '@dvt/contracts';
+import type {
+  DbtProjectGraphProjection,
+  DbtProjectImportResult,
+  DbtProjectImportValidationReport,
+} from '@dvt/contracts';
 import { DbtProjectGraphProjectionSchema } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IDbtProjectAnalyzerPort } from '../../src/application/ports/dbtProjectAnalysis.js';
-import type { IDbtProjectImportInspectorPort } from '../../src/application/ports/dbtProjectImport.js';
+import type {
+  IDbtProjectImportInspectorPort,
+  IDbtProjectImportReceiptStore,
+} from '../../src/application/ports/dbtProjectImport.js';
 import { ImportDbtProjectUseCase } from '../../src/application/services/importDbtProjectUseCase.js';
 import { ValidateDbtProjectImportUseCase } from '../../src/application/services/validateDbtProjectImportUseCase.js';
 
@@ -192,6 +199,7 @@ describe('ImportDbtProjectUseCase', () => {
       validator: { execute: vi.fn().mockResolvedValue(report) },
       authorityStore: authorityStore as never,
       graphDraftStore: { read: vi.fn().mockResolvedValue(null) } as never,
+      receiptStore: emptyReceiptStore(),
       projectGraph: { execute: vi.fn().mockResolvedValue(projection) },
       now: () => NOW,
     });
@@ -225,6 +233,7 @@ describe('ImportDbtProjectUseCase', () => {
       },
       authorityStore: authorityStore as never,
       graphDraftStore: { read: vi.fn() } as never,
+      receiptStore: emptyReceiptStore(),
       projectGraph: { execute: vi.fn() },
       now: () => NOW,
     });
@@ -260,6 +269,7 @@ describe('ImportDbtProjectUseCase', () => {
         release,
       } as never,
       graphDraftStore: { read: vi.fn().mockResolvedValue(null) } as never,
+      receiptStore: emptyReceiptStore(),
       projectGraph: { execute: vi.fn().mockRejectedValue(new Error('projection failed')) },
       now: () => NOW,
     });
@@ -293,6 +303,7 @@ describe('ImportDbtProjectUseCase', () => {
           },
         }),
       } as never,
+      receiptStore: emptyReceiptStore(),
       projectGraph: { execute: vi.fn() },
       now: () => NOW,
     });
@@ -336,6 +347,7 @@ describe('ImportDbtProjectUseCase', () => {
         release,
       } as never,
       graphDraftStore: { read: vi.fn().mockResolvedValue(null) } as never,
+      receiptStore: emptyReceiptStore(),
       projectGraph: { execute: vi.fn().mockResolvedValue(changedProjection) },
       now: () => NOW,
     });
@@ -377,6 +389,7 @@ describe('ImportDbtProjectUseCase', () => {
         ),
       } as never,
       graphDraftStore: { read: vi.fn().mockResolvedValue(null) } as never,
+      receiptStore: emptyReceiptStore(),
       projectGraph,
       now: () => NOW,
     });
@@ -393,6 +406,19 @@ describe('ImportDbtProjectUseCase', () => {
     expect(projectGraph.execute).not.toHaveBeenCalled();
   });
 });
+
+function emptyReceiptStore(): IDbtProjectImportReceiptStore {
+  return {
+    migrate: vi.fn(),
+    close: vi.fn(),
+    read: vi.fn().mockResolvedValue(null),
+    record: vi.fn(async (input: { requestHash: string; result: DbtProjectImportResult }) => ({
+      kind: 'recorded' as const,
+      receipt: { requestHash: input.requestHash, result: input.result },
+      deduplicated: false,
+    })),
+  };
+}
 
 function freshProjection(): DbtProjectGraphProjection {
   return DbtProjectGraphProjectionSchema.parse({

@@ -29,6 +29,8 @@ mitigations:
     projection refresh failures.'
   - 'Apply the protected runtime rate limit to graph-draft read and save routes before repeated
     authorization attempts reach application services.'
+  - 'Persist the completed ImportDbtProject result and replay it before validating mutable project
+    files; reject a reused idempotency key whose request hash differs.'
   - 'Keep authority and import payloads versioned in @dvt/contracts and reject unsupported shapes.'
 review_after: 2026-08-14
 ---
