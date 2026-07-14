@@ -61,6 +61,63 @@ describe('LocalDbtProjectImportInspector', () => {
     ]);
   });
 
+  it('uses configured runtime paths without hiding same-named nested source directories', async () => {
+    await writeFile(
+      path.join(projectRoot, 'dbt_project.yml'),
+      [
+        'name: analytics',
+        'model-paths: [models]',
+        'target-path: generated/target',
+        'log-path: generated/logs',
+        'packages-install-path: vendor/dbt',
+        '',
+      ].join('\n')
+    );
+    await mkdir(path.join(projectRoot, 'models', 'target'), { recursive: true });
+    await mkdir(path.join(projectRoot, 'generated', 'target'), { recursive: true });
+    await mkdir(path.join(projectRoot, 'generated', 'logs'), { recursive: true });
+    await mkdir(path.join(projectRoot, 'vendor', 'dbt'), { recursive: true });
+    await writeFile(path.join(projectRoot, 'models', 'target', 'daily.sql'), 'select 2\n');
+    await writeFile(
+      path.join(projectRoot, 'generated', 'target', 'manifest.json'),
+      'x'.repeat(4_096)
+    );
+    await writeFile(path.join(projectRoot, 'generated', 'logs', 'dbt.log'), 'runtime log');
+    await writeFile(path.join(projectRoot, 'vendor', 'dbt', 'package.json'), '{}');
+    const inspector = new LocalDbtProjectImportInspector({
+      workspaceFilesRoot: workspaceRoot,
+      maxProjectBytes: 512,
+    });
+
+    const result = await inspector.inspect({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.inventory.files).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: 'analytics/models/target/daily.sql',
+          classification: 'resource-sql',
+          decision: 'included',
+        }),
+        expect.objectContaining({
+          path: 'analytics/generated/target/manifest.json',
+          classification: 'runtime-artifact',
+          decision: 'excluded-runtime-artifact',
+        }),
+        expect.objectContaining({
+          path: 'analytics/generated/logs/dbt.log',
+          classification: 'runtime-artifact',
+          decision: 'excluded-runtime-artifact',
+        }),
+        expect.objectContaining({
+          path: 'analytics/vendor/dbt/package.json',
+          classification: 'runtime-artifact',
+          decision: 'excluded-runtime-artifact',
+        }),
+      ])
+    );
+  });
+
   it('rejects secret material and binary project files with path-specific diagnostics', async () => {
     await writeFile(path.join(projectRoot, 'profiles.yml'), 'analytics: {target: dev}\n');
     await writeFile(path.join(projectRoot, 'models', 'payload.bin'), Buffer.from([0, 1, 2]));

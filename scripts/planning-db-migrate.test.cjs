@@ -14553,3 +14553,39 @@ test('tracked migrations seed the graph-draft command before governance import',
   assert.doesNotMatch(authorityMigration.sql, /truncate\s+/i);
   assert.doesNotMatch(rateLimitMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations govern one shared dbt runtime-artifact source policy', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '682_dbt_project_runtime_artifact_source_policy.sql'
+  );
+  const maturityMigration = migrations.find(
+    (candidate) => candidate.fileName === '683_dbt_project_source_path_policy_maturity.sql'
+  );
+  const mechanizationMigration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '684_dbt_project_source_path_policy_feature_mechanization.sql'
+  );
+
+  assert.ok(migration);
+  assert.ok(maturityMigration);
+  assert.ok(mechanizationMigration);
+  assert.match(migration.sql, /SYS-API-INFRA-DBT-PROJECT-SOURCE-PATH-POLICY/);
+  assert.match(migration.sql, /RESP-DBT-PROJECT-SOURCE-PATH-POLICY/);
+  assert.match(migration.sql, /REL-DBT-ANALYZER-DEPENDS-ON-SOURCE-PATH-POLICY/);
+  assert.match(migration.sql, /REL-DBT-IMPORT-INSPECTOR-DEPENDS-ON-SOURCE-PATH-POLICY/);
+  assert.match(migration.sql, /runtimeArtifactSourcePolicy/);
+  assert.match(migration.sql, /ProjectDbtGraphFromFiles/);
+  assert.match(migration.sql, /ValidateDbtProjectImport/);
+  assert.match(maturityMigration.sql, /architecture\.component_observability/);
+  assert.match(maturityMigration.sql, /architecture\.evidence/);
+  assert.match(mechanizationMigration.sql, /E-DBT-PROJECT-FILE-PROJECTION-PHASE2-20260713/);
+  assert.match(mechanizationMigration.sql, /evaluateDbtProjectPathPolicy/);
+  assert.match(mechanizationMigration.sql, /normalizeContainedRelativePath/);
+  assert.match(mechanizationMigration.sql, /parseDbtProjectDocument/);
+  assert.match(mechanizationMigration.sql, /ValidateDbtProjectImport/);
+  assert.match(mechanizationMigration.sql, /ProjectDbtGraphFromFiles/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+  assert.doesNotMatch(maturityMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(mechanizationMigration.sql, /truncate\s+/i);
+});

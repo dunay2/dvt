@@ -14,13 +14,15 @@ import type {
   InspectDbtProjectImportInput,
 } from '../../application/ports/dbtProjectImport.js';
 
-import { evaluateDbtProjectPathPolicy } from './dbtProjectPathPolicy.js';
+import {
+  evaluateDbtProjectPathPolicy,
+  resolveDbtRuntimeArtifactDirectoryPaths,
+} from './dbtProjectPathPolicy.js';
 import {
   DbtProjectBoundaryError,
   resolveDbtProjectDirectory,
 } from './dbtProjectWorkspaceBoundary.js';
 
-const RUNTIME_DIRECTORIES = new Set(['target', 'logs', 'dbt_packages']);
 const SECRET_FILE_NAMES = new Set(['profiles.yml', 'profiles.yaml', '.env']);
 const DEPENDENCY_FILE_NAMES = new Set([
   'packages.yml',
@@ -78,9 +80,21 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
       };
     }
 
+    const configContent = await readFile(path.join(projectDirectory, 'dbt_project.yml'), 'utf8');
+    const runtimeArtifactDirectories = new Set(
+      resolveDbtRuntimeArtifactDirectoryPaths(configContent)
+    );
     const state: ScanState = { files: [], diagnostics: [], bytes: 0, directories: 1 };
     try {
-      await this.scanDirectory(input.projectRoot, projectDirectory, '', false, 0, state);
+      await this.scanDirectory(
+        input.projectRoot,
+        projectDirectory,
+        '',
+        false,
+        runtimeArtifactDirectories,
+        0,
+        state
+      );
     } catch (error) {
       if (!(error instanceof ProjectLimitError)) throw error;
       state.diagnostics.push({
@@ -94,7 +108,6 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
     const configEntry = state.files.find((file) => file.path === configPath);
     let projectName: string | undefined;
     if (configEntry?.decision === 'included') {
-      const configContent = await readFile(path.join(projectDirectory, 'dbt_project.yml'), 'utf8');
       const pathPolicy = evaluateDbtProjectPathPolicy(configContent);
       if (!pathPolicy.ok) {
         state.diagnostics.push({
@@ -132,6 +145,7 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
     absoluteDirectory: string,
     relativeDirectory: string,
     runtimeArtifact: boolean,
+    runtimeArtifactDirectories: ReadonlySet<string>,
     depth: number,
     state: ScanState
   ): Promise<void> {
@@ -142,7 +156,8 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
       const entryState = await lstat(absolutePath);
 
       if (entryState.isSymbolicLink()) {
-        this.consumeFileBudget(entryState.size, state);
+        this.consumeFileCountBudget(state);
+        this.consumeByteBudget(entryState.size, state);
         this.addRejected(
           projectRoot,
           relativePath,
@@ -164,14 +179,16 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
           projectRoot,
           absolutePath,
           relativePath,
-          runtimeArtifact || RUNTIME_DIRECTORIES.has(entry.name),
+          runtimeArtifact || runtimeArtifactDirectories.has(relativePath),
+          runtimeArtifactDirectories,
           nextDepth,
           state
         );
         continue;
       }
       if (!entry.isFile()) {
-        this.consumeFileBudget(entryState.size, state);
+        this.consumeFileCountBudget(state);
+        this.consumeByteBudget(entryState.size, state);
         this.addRejected(
           projectRoot,
           relativePath,
@@ -184,7 +201,7 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
         continue;
       }
 
-      this.consumeFileBudget(entryState.size, state);
+      this.consumeFileCountBudget(state);
 
       const objectPath = workspacePath(projectRoot, relativePath);
       if (runtimeArtifact) {
@@ -197,6 +214,8 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
         });
         continue;
       }
+
+      this.consumeByteBudget(entryState.size, state);
 
       const content = await readFile(absolutePath);
       const fileName = entry.name.toLowerCase();
@@ -267,8 +286,11 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
     state.diagnostics.push({ code, severity: 'error', message, path: objectPath });
   }
 
-  private consumeFileBudget(byteSize: number, state: ScanState): void {
+  private consumeFileCountBudget(state: ScanState): void {
     if (state.files.length + 1 > this.maxProjectFiles) throw new ProjectLimitError();
+  }
+
+  private consumeByteBudget(byteSize: number, state: ScanState): void {
     state.bytes += byteSize;
     if (state.bytes > this.maxProjectBytes) throw new ProjectLimitError();
   }

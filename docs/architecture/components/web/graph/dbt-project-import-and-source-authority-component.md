@@ -60,6 +60,7 @@ then compensated by application code.
 | `DbtProjectImportContract`           | Version validation reports, accepted receipts, import commands, and receipts.      | The cross-process import vocabulary changes.                 |
 | `DbtProjectImportApplicationService` | Orchestrate validation and explicit authority binding.                             | Import policy or command/query orchestration changes.        |
 | `DbtProjectImportInspector`          | Inspect one existing workspace project under security and compatibility limits.    | Filesystem compatibility or import security policy changes.  |
+| `DbtProjectSourcePathPolicy`         | Partition project source from configured dbt runtime-artifact directories.         | dbt path configuration or source-selection policy changes.   |
 | `CanvasAuthoringAuthorityPolicy`     | Resolve the stored authority or the canonical graph-draft default.                 | Authority transition or default-resolution policy changes.   |
 | `CanvasAuthoringAuthorityStore`      | Persist and compare one Canvas authority binding.                                  | PostgreSQL persistence or conflict mechanics change.         |
 | `CanvasAuthoringAuthorityRuntime`    | Compose the policy port with its production store adapter.                         | Protected runtime dependency wiring changes.                 |
@@ -80,6 +81,7 @@ flowchart LR
   Import[ImportDbtProject command]
   Inspector[IDbtProjectImportInspectorPort]
   Analyzer[IDbtProjectAnalyzerPort]
+  SourcePathPolicy[DbtProjectSourcePathPolicy]
   AuthorityPolicy[CanvasAuthoringAuthorityPolicy]
   AuthorityStore[ICanvasAuthoringAuthorityStore]
   ReceiptStore[IDbtProjectImportReceiptStore]
@@ -91,6 +93,8 @@ flowchart LR
   Dialog --> Validate
   Validate --> Inspector
   Validate --> Analyzer
+  Inspector --> SourcePathPolicy
+  Analyzer --> SourcePathPolicy
   Dialog --> Import
   Import --> ReceiptStore
   Import --> Inspector
@@ -109,7 +113,7 @@ flowchart LR
 
 | Rail                       | Type            | DDD owner                          | Application port                          | Authorization                                              | Required negative evidence                                                                                                                                                                             |
 | -------------------------- | --------------- | ---------------------------------- | ----------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `ValidateDbtProjectImport` | query           | `DbtProjectImportValidationReport` | `ValidateDbtProjectImportUseCase.execute` | `workspace:files:view` in tenant/project/environment scope | unauthenticated, forbidden, traversal, symlink, unsupported/binary file, profiles/secrets, limits, invalid dbt                                                                                         |
+| `ValidateDbtProjectImport` | query           | `DbtProjectImportValidationReport` | `ValidateDbtProjectImportUseCase.execute` | `workspace:files:view` in tenant/project/environment scope | unauthenticated, forbidden, traversal, symlink, unsupported/binary file, profiles/secrets, source limits, invalid dbt, runtime-artifact mutation, unsafe or source-shadowing runtime paths             |
 | `ImportDbtProject`         | command         | `CanvasAuthoringAuthorityBinding`  | `ImportDbtProjectUseCase.execute`         | `workspace:files:save` in tenant/project/environment scope | rejected/tampered/stale receipt, occupied Canvas, concurrent graph-draft claim, authority conflict, reused idempotency key, replay after later file changes, projection or receipt-persistence failure |
 | `ImportWarehouseSources`   | command, reused | authority-aware source import      | `ImportWarehouseSourcesUseCase.execute`   | `workspace:source-import:import`                           | file mode never writes draft; graph mode rejects file authority; equivalent post-publication retry deduplicates; batch conflict and rollback                                                           |
 | `SaveWorkspaceGraphDraft`  | command, reused | `WorkspaceGraphAuthoringDraft`     | `SaveWorkspaceGraphDraftUseCase.execute`  | `workspace:graph-draft:save`                               | stale revision, idempotency mismatch, file-authority conflict, concurrent file-authority claim                                                                                                         |
@@ -208,8 +212,20 @@ sequenceDiagram
   instead of conflicting with its own post-write revisions.
 - `profiles.yml`, credentials, binary files, traversal, absolute paths,
   symbolic links, excessive files, and excessive bytes fail closed.
-- Runtime artifacts are diagnosed explicitly; no project files are silently
-  omitted from compatibility reporting.
+- One `DbtProjectSourcePathPolicy` resolves the runtime-artifact directory set
+  for both inspection and analysis. It includes dbt defaults and safe
+  `target-path`, `log-path`, and `packages-install-path` configuration.
+- Runtime-artifact paths cannot resolve to the project root or shadow a
+  configured source/resource path. Such projects fail validation rather than
+  silently omitting source.
+- Runtime artifacts are diagnosed explicitly in the compatibility inventory,
+  but they are excluded from the analyzer snapshot, content revision, and
+  source-byte budget. File, directory, and depth limits still bound inventory
+  traversal.
+- The analyzer hashes and parses exactly the same source snapshot. Changes
+  below an excluded runtime-artifact directory cannot change an accepted
+  project revision or make analysis unavailable through the source-byte
+  budget.
 - Browser components consume typed ports and presentation models; they do not
   parse dbt, mutate files directly, or synthesize success.
 
@@ -238,14 +254,17 @@ rather than represented by duplicate adapter-level logs.
 6. API tests prove validation is read-only, import is explicit, the first
    graph projection resolves persisted authority, and a completed command
    replays its original result after later project-file changes.
-7. Source Import tests prove both modes and prove zero graph-draft writes in
+7. Analyzer and inspector tests prove the shared source/runtime partition,
+   custom runtime paths, source-shadowing rejection, invariant hashes under
+   runtime mutation, and explicit runtime inventory without source-byte charge.
+8. Source Import tests prove both modes and prove zero graph-draft writes in
    file-backed mode.
-8. Presentation tests prove validate-before-import, actionable diagnostics,
+9. Presentation tests prove validate-before-import, actionable diagnostics,
    disabled confirmation on rejection, and navigation from the real receipt.
-9. A strict Cypress flow uses the protected API and real workspace files to
-   import a dbt project, add a source, refresh the projection, and verify the
-   graph draft did not gain that source.
-10. Contracts, API, web, architecture, lint, typecheck, governance,
+10. A strict Cypress flow uses the protected API and real workspace files to
+    import a dbt project, add a source, refresh the projection, and verify the
+    graph draft did not gain that source.
+11. Contracts, API, web, architecture, lint, typecheck, governance,
     feature-mechanization, and `pnpm verify:prepush` pass with no disabled rule,
     stub, fake adapter, placeholder, or hidden skipped check.
 

@@ -145,6 +145,7 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(path.relative(projectDirectory, isolatedTargetPath)).toMatch(/^\.\./);
     expect(path.relative(projectDirectory, isolatedLogPath)).toMatch(/^\.\./);
     expect(path.relative(projectDirectory, isolatedProjectDirectory)).toMatch(/^\.\./);
+    await expect(stat(path.join(isolatedProjectDirectory, 'target'))).rejects.toThrow();
     await expect(stat(isolatedTargetPath)).rejects.toThrow();
     await expect(stat(isolatedProjectDirectory)).rejects.toThrow();
   });
@@ -168,6 +169,64 @@ describe('DbtCliProjectAnalyzer', () => {
     const first = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
     const second = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
 
+    expect(second.projectRevision.contentSetSha256).toBe(first.projectRevision.contentSetSha256);
+    expect(second.analysisSha256).toBe(first.analysisSha256);
+  });
+
+  it('keeps source hashes stable when excluded runtime artifacts change', async () => {
+    await writeFile(
+      path.join(projectDirectory, 'dbt_project.yml'),
+      [
+        'name: analytics',
+        'version: 1.0.0',
+        'profile: analytics',
+        'model-paths: [models]',
+        'target-path: generated/target',
+        'log-path: generated/logs',
+        'packages-install-path: vendor/dbt',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    await rm(path.join(projectDirectory, 'target'), { recursive: true, force: true });
+    const processRunner = {
+      run: vi.fn().mockImplementation(async (input: { args: readonly string[] }) => {
+        const projectPath = readFlag(input.args, '--project-dir');
+        await expect(stat(path.join(projectPath, 'generated', 'target'))).rejects.toThrow();
+        await expect(stat(path.join(projectPath, 'generated', 'logs'))).rejects.toThrow();
+        await expect(stat(path.join(projectPath, 'vendor', 'dbt'))).rejects.toThrow();
+        const targetPath = readFlag(input.args, '--target-path');
+        await mkdir(targetPath, { recursive: true });
+        await writeFile(path.join(targetPath, 'manifest.json'), JSON.stringify(manifest()), 'utf8');
+        return { kind: 'completed' as const, exitCode: 0, stdout: '', stderr: '' };
+      }),
+    };
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner,
+      maxProjectBytes: 512,
+      now: () => new Date('2026-07-13T10:00:00.000Z'),
+    });
+    await mkdir(path.join(projectDirectory, 'generated', 'target'), { recursive: true });
+    await mkdir(path.join(projectDirectory, 'generated', 'logs'), { recursive: true });
+    await mkdir(path.join(projectDirectory, 'vendor', 'dbt', 'package'), { recursive: true });
+    await writeFile(path.join(projectDirectory, 'generated', 'target', 'manifest.json'), '{}');
+
+    const first = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+    await writeFile(
+      path.join(projectDirectory, 'generated', 'target', 'manifest.json'),
+      'x'.repeat(4_096)
+    );
+    await writeFile(
+      path.join(projectDirectory, 'generated', 'logs', 'dbt.log'),
+      'changed runtime log'
+    );
+    await writeFile(path.join(projectDirectory, 'vendor', 'dbt', 'package', 'state.json'), '{}');
+    const second = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(first.status).toBe('valid');
+    expect(second.status).toBe('valid');
     expect(second.projectRevision.contentSetSha256).toBe(first.projectRevision.contentSetSha256);
     expect(second.analysisSha256).toBe(first.analysisSha256);
   });
@@ -197,12 +256,18 @@ describe('DbtCliProjectAnalyzer', () => {
       processRunner: { run },
       now: () => new Date('2026-07-13T10:00:00.000Z'),
     });
-    const expectedRevision = await hashProjectContent(projectDirectory, {
-      maxFiles: 10_000,
-      maxBytes: 50_000_000,
-      maxDirectories: 5_000,
-      maxDepth: 64,
-    });
+    const expectedRevision = await hashProjectContent(
+      projectDirectory,
+      {
+        maxFiles: 10_000,
+        maxBytes: 50_000_000,
+        maxDirectories: 5_000,
+        maxDepth: 64,
+      },
+      {
+        excludedDirectoryPaths: ['target', 'logs', 'dbt_packages'],
+      }
+    );
 
     const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
 
