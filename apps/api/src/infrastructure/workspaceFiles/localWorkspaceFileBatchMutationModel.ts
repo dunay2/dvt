@@ -148,10 +148,7 @@ export function hashLocalWorkspaceFileBatchRequest(
 ): string {
   return workspaceFileBatchSha256(
     JSON.stringify({
-      expectedFiles: mutation.expectedFiles.map((file) => ({
-        path: file.workspacePath,
-        expectedContentSha256: file.expectedContentSha256,
-      })),
+      expectedFiles: mutation.expectedFiles.map((file) => file.workspacePath),
       writes: mutation.writes.map((file) => ({
         path: file.workspacePath,
         contentSha256: file.contentSha256,

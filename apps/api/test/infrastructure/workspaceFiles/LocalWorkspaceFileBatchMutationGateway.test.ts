@@ -193,6 +193,30 @@ describe('LocalWorkspaceFileBatchMutationGateway', () => {
     ).rejects.toBeInstanceOf(WorkspaceFileBatchIdempotencyConflictError);
   });
 
+  it('deduplicates an equivalent retry rebuilt from the post-publication revisions', async () => {
+    const gateway = new LocalWorkspaceFileBatchMutationGateway({ root: namespaceRoot });
+    const workspacePath = 'analytics/models/sources/new.yml';
+    const content = 'version: 2\n';
+
+    await expect(
+      gateway.apply(SCOPE, {
+        idempotencyKey: 'source-import-post-publication-retry',
+        expectedFiles: [{ path: workspacePath }],
+        writes: [{ path: workspacePath, content }],
+        deletes: [],
+      })
+    ).resolves.toMatchObject({ kind: 'applied', deduplicated: false });
+
+    await expect(
+      gateway.apply(SCOPE, {
+        idempotencyKey: 'source-import-post-publication-retry',
+        expectedFiles: [{ path: workspacePath, expectedContentSha256: sha256(content) }],
+        writes: [{ path: workspacePath, content }],
+        deletes: [],
+      })
+    ).resolves.toMatchObject({ kind: 'applied', deduplicated: true });
+  });
+
   it('reapplies the same request after a compensating batch restores its preconditions', async () => {
     const gateway = new LocalWorkspaceFileBatchMutationGateway({ root: namespaceRoot });
     const path = 'analytics/models/sources/new.yml';
