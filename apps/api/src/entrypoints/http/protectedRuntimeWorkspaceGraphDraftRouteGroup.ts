@@ -10,16 +10,14 @@ import type { Env } from '../../plugins/env.js';
 import type { ProtectedRuntimeRouteDependencies } from './protectedRuntimeRouteDependencies.js';
 import { registerWorkspaceGraphDraftRoutes } from './workspaceGraphDraftRoutes.js';
 
-export type ProtectedWorkspaceGraphDraftRouteGroupOptions = {
-  readonly dependencies: ProtectedRuntimeRouteDependencies;
-  readonly env: Env;
-  readonly observability: IObservability;
-  readonly protectedModule: ProtectedRuntimeModule;
-};
-
 export function registerProtectedWorkspaceGraphDraftRouteGroup(
   app: FastifyInstance,
-  options: ProtectedWorkspaceGraphDraftRouteGroupOptions
+  options: {
+    readonly dependencies: ProtectedRuntimeRouteDependencies;
+    readonly env: Env;
+    readonly observability: IObservability;
+    readonly protectedModule: ProtectedRuntimeModule;
+  }
 ): void {
   registerWorkspaceGraphDraftRoutes(app, {
     capabilityService: options.protectedModule.workspaceGraphDraftCapabilityService,
