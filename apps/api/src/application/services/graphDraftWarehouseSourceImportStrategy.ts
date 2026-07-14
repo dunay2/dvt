@@ -107,16 +107,21 @@ export class GraphDraftWarehouseSourceImportStrategy {
       }
       if (saveResult.kind !== 'saved') throw new WarehouseSourceImportDraftConflictError();
 
+      const importedNodeIds = saveResult.deduplicated
+        ? await readPersistedImportedNodeIds(this.deps.draftStore, context)
+        : mutation.selectedNodeIds;
+
       return {
         sourcesCreated: filePlan.updates.length,
         yamlFiles: filePlan.updates.map((update) => update.path),
         outcome: {
           kind: 'graph-draft',
           draftRevision: saveResult.revision,
-          importedNodeIds: [...mutation.selectedNodeIds],
+          importedNodeIds: [...importedNodeIds],
         },
       };
     } catch (error) {
+      if (appliedReceipt.deduplicated) throw error;
       try {
         await rollbackWarehouseSourceImportFilePlan({
           context,
@@ -134,6 +139,35 @@ export class GraphDraftWarehouseSourceImportStrategy {
       throw error;
     }
   }
+}
+
+async function readPersistedImportedNodeIds(
+  draftStore: IWorkspaceGraphDraftStore,
+  context: WarehouseSourceImportCommandContext
+): Promise<readonly string[]> {
+  const stored = await draftStore.read(context.scope);
+  const parsed = stored ? WorkspaceGraphAuthoringDraftSchema.safeParse(stored.draftPayload) : null;
+  if (!parsed?.success || !hasTargetCanvas(parsed.data, context.canvasId)) {
+    throw new WarehouseSourceImportDraftConflictError();
+  }
+
+  const nodeIdsBySourceObjectId = new Map<string, string[]>();
+  for (const node of readTargetCanvas(parsed.data, context.canvasId).nodes) {
+    const sourceObjectId = readSourceObjectId(node);
+    if (!sourceObjectId) continue;
+    const nodeIds = nodeIdsBySourceObjectId.get(sourceObjectId) ?? [];
+    nodeIds.push(node.id);
+    nodeIdsBySourceObjectId.set(sourceObjectId, nodeIds);
+  }
+
+  return context.sourceObjects.map((sourceObject) => {
+    const nodeIds = nodeIdsBySourceObjectId.get(sourceObject.objectId);
+    const nodeId = nodeIds?.[0];
+    if (nodeIds?.length !== 1 || !nodeId) {
+      throw new WarehouseSourceImportDraftConflictError();
+    }
+    return nodeId;
+  });
 }
 
 function appendImportedSourceNodes(

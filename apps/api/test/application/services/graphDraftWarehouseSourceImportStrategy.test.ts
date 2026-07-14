@@ -3,7 +3,10 @@ import { createHash } from 'node:crypto';
 import type { SourceObject, WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import { WarehouseSourceImportIdempotencyMismatchError } from '../../../src/application/ports/warehouseSourceImport.js';
+import {
+  WarehouseSourceImportDraftConflictError,
+  WarehouseSourceImportIdempotencyMismatchError,
+} from '../../../src/application/ports/warehouseSourceImport.js';
 import type {
   IWorkspaceFileBatchMutationPort,
   IWorkspaceFileRepository,
@@ -166,6 +169,63 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     ).rejects.toBeInstanceOf(WarehouseSourceImportIdempotencyMismatchError);
     expect(batchMutation.apply).toHaveBeenCalledTimes(2);
   });
+
+  it('fails closed when a deduplicated save no longer has the imported nodes', async () => {
+    const draftStore = createDraftStore(createDraft('orders-canvas'), {
+      kind: 'saved',
+      schemaVersion: 'workspace-graph-draft.v1',
+      revision: 'source-import-original-revision',
+      updatedAt: '2026-07-14T00:00:00.000Z',
+      deduplicated: true,
+    });
+    const batchMutation = createBatchMutation(true);
+    const strategy = createStrategy(draftStore, batchMutation);
+
+    await expect(
+      strategy.execute(CONTEXT, {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'orders-canvas',
+        authority: { kind: 'graph-draft' },
+      })
+    ).rejects.toBeInstanceOf(WarehouseSourceImportDraftConflictError);
+
+    expect(draftStore.read).toHaveBeenCalledTimes(2);
+    expect(batchMutation.apply).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports persisted node identities for a deduplicated save', async () => {
+    const persistedNodeId = 'src_existing_collision_3a7f63de';
+    const draftStore = createDraftStore(
+      createDraft('orders-canvas'),
+      {
+        kind: 'saved',
+        schemaVersion: 'workspace-graph-draft.v1',
+        revision: 'source-import-original-revision',
+        updatedAt: '2026-07-14T00:00:00.000Z',
+        deduplicated: true,
+      },
+      createDraftWithSourceNode('orders-canvas', persistedNodeId)
+    );
+    const batchMutation = createBatchMutation(true);
+    const strategy = createStrategy(draftStore, batchMutation);
+
+    await expect(
+      strategy.execute(CONTEXT, {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'orders-canvas',
+        authority: { kind: 'graph-draft' },
+      })
+    ).resolves.toMatchObject({
+      outcome: {
+        kind: 'graph-draft',
+        draftRevision: 'source-import-original-revision',
+        importedNodeIds: [persistedNodeId],
+      },
+    });
+
+    expect(draftStore.read).toHaveBeenCalledTimes(2);
+    expect(batchMutation.apply).toHaveBeenCalledTimes(1);
+  });
 });
 
 const CONTEXT: WarehouseSourceImportCommandContext = {
@@ -214,13 +274,13 @@ function createWorkspaceFiles(): IWorkspaceFileRepository {
   };
 }
 
-function createBatchMutation(): IWorkspaceFileBatchMutationPort {
+function createBatchMutation(deduplicated = false): IWorkspaceFileBatchMutationPort {
   return {
     apply: vi.fn(async (_scope: WorkspaceStorageScope, mutation: WorkspaceFileBatchMutation) => ({
       kind: 'applied' as const,
       idempotencyKey: mutation.idempotencyKey,
       requestHash: 'a'.repeat(64),
-      deduplicated: false,
+      deduplicated,
       writes: mutation.writes.map((write) => ({
         path: write.path,
         contentSha256: sha256(write.content),
@@ -238,22 +298,25 @@ function createDraftStore(
     revision: 'draft-revision-2',
     updatedAt: '2026-07-14T00:00:00.000Z',
     deduplicated: false,
-  }
+  },
+  replayDraft: WorkspaceGraphAuthoringDraft | null = draft
 ): IWorkspaceGraphDraftStore {
+  let readCount = 0;
   return {
     migrate: vi.fn(async () => undefined),
     close: vi.fn(async () => undefined),
-    read: vi.fn(async () =>
-      draft === null
+    read: vi.fn(async () => {
+      const currentDraft = readCount++ === 0 ? draft : replayDraft;
+      return currentDraft === null
         ? null
         : {
             scope: SCOPE,
             schemaVersion: 'workspace-graph-draft.v1',
             revision: 'draft-revision-1',
-            draftPayload: draft,
+            draftPayload: currentDraft,
             updatedAt: '2026-07-14T00:00:00.000Z',
-          }
-    ),
+          };
+    }),
     save: vi.fn(async () => saveResult),
   };
 }
@@ -280,6 +343,32 @@ function createDraft(canvasId: string): WorkspaceGraphAuthoringDraft {
         edges: [],
       },
     ],
+  };
+}
+
+function createDraftWithSourceNode(canvasId: string, nodeId: string): WorkspaceGraphAuthoringDraft {
+  const draft = createDraft(canvasId);
+  const node = {
+    id: nodeId,
+    name: SOURCE_OBJECT.displayName,
+    pluginId: 'dvt.warehouse-source',
+    kind: 'dvt:source',
+    role: 'input' as const,
+    status: 'idle' as const,
+    tags: ['source', 'erp'],
+    metadata: { sourceObjectId: SOURCE_OBJECT.objectId },
+  };
+  return {
+    ...draft,
+    nodeIds: [nodeId],
+    nodePositions: { [nodeId]: { x: 120, y: 120 } },
+    nodes: [node],
+    canvases: draft.canvases?.map((canvas) => ({
+      ...canvas,
+      nodeIds: [nodeId],
+      nodePositions: { [nodeId]: { x: 120, y: 120 } },
+      nodes: [node],
+    })),
   };
 }
 

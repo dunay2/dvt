@@ -14589,3 +14589,28 @@ test('tracked migrations govern one shared dbt runtime-artifact source policy', 
   assert.doesNotMatch(maturityMigration.sql, /truncate\s+/i);
   assert.doesNotMatch(mechanizationMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations require persisted postconditions for source-import replays', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '685_graph_draft_source_import_replay_postcondition.sql'
+  );
+  const symbolMigration = migrations.find(
+    (candidate) => candidate.fileName === '686_graph_draft_source_import_replay_feature_symbol.sql'
+  );
+
+  assert.ok(migration);
+  assert.ok(symbolMigration);
+  assert.match(migration.sql, /SYS-API-APPLICATION-WAREHOUSE-SOURCE-IMPORT-GRAPH-DRAFT/);
+  assert.match(migration.sql, /deduplicated draft save/);
+  assert.match(migration.sql, /persisted authoritative draft/);
+  assert.match(migration.sql, /fails closed without compensating/);
+  assert.match(migration.sql, /RESP-GRAPH-DRAFT-WAREHOUSE-SOURCE-IMPORT/);
+  assert.match(migration.sql, /OBS-GRAPH-DRAFT-SOURCE-IMPORT/);
+  assert.match(symbolMigration.sql, /readPersistedImportedNodeIds/);
+  assert.match(symbolMigration.sql, /ImportWarehouseSources/);
+  assert.match(symbolMigration.sql, /Postcondition Verification/);
+  assert.match(symbolMigration.sql, /reconciled_rail_count <> 2/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+  assert.doesNotMatch(symbolMigration.sql, /truncate\s+/i);
+});
