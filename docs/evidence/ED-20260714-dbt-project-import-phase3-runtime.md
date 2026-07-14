@@ -18,6 +18,7 @@ code_refs:
   - apps/api/src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.ts
   - apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts
   - apps/api/src/entrypoints/http/dbtProjectImportRoutes.ts
+  - apps/api/src/entrypoints/http/workspaceGraphDraftRoutes.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test
@@ -27,6 +28,7 @@ evidence:
     - pnpm --filter dvt-api typecheck
     - pnpm --filter dvt-api lint
     - pnpm --filter dvt-api exec vitest run test/app/protectedRuntimeComposition.test.ts
+    - pnpm --filter dvt-api exec vitest run test/entrypoints/http/workspaceGraphDraftRoutes.test.ts
     - DVT_PG_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-api exec vitest run test/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.test.ts
     - node --test scripts/planning-db-migrate.test.cjs
     - pnpm verify:prepush
@@ -52,8 +54,9 @@ authority without dual writes.
 - Source Import V2 delegates to exactly one authority strategy. Graph authority
   mutates the draft; file authority writes governed dbt source files and refreshes
   the projection without mutating the draft.
-- HTTP routes enforce workspace scope, stable validation errors, idempotency, and
-  conflict rejection.
+- HTTP routes enforce workspace scope, stable validation errors, idempotency,
+  conflict rejection, and the protected runtime rate limit before repeated
+  authorization.
 
 # Authority
 

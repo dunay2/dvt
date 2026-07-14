@@ -34,6 +34,7 @@ export function registerWorkspaceGraphDraftRoutes(
     readonly saveUseCase: SaveWorkspaceGraphDraftUseCase;
     readonly telemetry: IWorkspaceGraphDraftTelemetry;
     readonly observability: IObservability;
+    readonly rateLimit: { readonly max: number; readonly timeWindow: number };
   }
 ): void {
   app.get<{
@@ -42,167 +43,175 @@ export function registerWorkspaceGraphDraftRoutes(
       projectId?: string;
       environmentId?: string;
     };
-  }>('/workspace/graph/draft', async (request, reply) => {
-    const startedAt = Date.now();
-    const parsed = parseRequestedScope(request.query);
-    if (!parsed.ok) {
-      httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
-      return;
-    }
-
-    const span = deps.observability.traces.startSpan('api.workspace_graph_draft.read', {
-      attributes: {
-        route: '/workspace/graph/draft',
-        action: 'draft_read',
-      },
-    });
-
-    try {
-      const decision = await deps.capabilityService.authorize({
-        token: extractBearerToken(request.headers.authorization),
-        requestId: request.id,
-        requestedScope: parsed.value,
-      });
-      attachDecisionAttributes(
-        span,
-        decision.capability.mode,
-        decision.capability.reason,
-        decision
-      );
-
-      const result = await deps.getUseCase.execute(decision);
-      if (result.kind === 'not_found') {
-        deps.telemetry.recordRead('not_found', decision.capability.mode, Date.now() - startedAt);
-        span.setAttributes({ outcome: 'not_found' });
-        httpErrorTranslation.respond(
-          reply,
-          httpErrorTranslation.workspaceGraphDraft.read.notFound({
-            correlationId: decision.correlationId,
-            decisionId: decision.decisionId,
-          })
-        );
+  }>(
+    '/workspace/graph/draft',
+    { config: { rateLimit: deps.rateLimit } },
+    async (request, reply) => {
+      const startedAt = Date.now();
+      const parsed = parseRequestedScope(request.query);
+      if (!parsed.ok) {
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
         return;
       }
 
-      deps.telemetry.recordRead(
-        result.response.kind,
-        decision.capability.mode,
-        Date.now() - startedAt
-      );
-      span.setAttributes({
-        outcome: result.response.kind,
-        httpStatus: result.httpStatus,
-      });
-      reply.code(result.httpStatus).send(result.response);
-    } catch (error) {
-      span.recordException(error);
-      span.setStatus(
-        'error',
-        error instanceof Error ? error.message : 'workspace_graph_draft_read_failed'
-      );
-      throw error;
-    } finally {
-      span.end();
-    }
-  });
-
-  app.put<{ Body: unknown }>('/workspace/graph/draft', async (request, reply) => {
-    const startedAt = Date.now();
-    const parsed = parseSaveRequest(request.body);
-    if (!parsed.ok) {
-      httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
-      return;
-    }
-
-    const span = deps.observability.traces.startSpan('api.workspace_graph_draft.write', {
-      attributes: {
-        route: '/workspace/graph/draft',
-        action: 'draft_write',
-      },
-    });
-
-    try {
-      const decision = await deps.capabilityService.authorize({
-        token: extractBearerToken(request.headers.authorization),
-        requestId: request.id,
-        requestedScope: parsed.value.requestedScope,
-      });
-      attachDecisionAttributes(
-        span,
-        decision.capability.mode,
-        decision.capability.reason,
-        decision
-      );
-
-      const result = await deps.saveUseCase.execute({
-        request: parsed.value.request,
-        decision,
+      const span = deps.observability.traces.startSpan('api.workspace_graph_draft.read', {
+        attributes: {
+          route: '/workspace/graph/draft',
+          action: 'draft_read',
+        },
       });
 
-      if (result.kind === 'authoring_authority_conflict') {
-        deps.telemetry.recordWrite('conflict', decision.capability.mode, Date.now() - startedAt);
-        span.setAttributes({ outcome: result.kind, httpStatus: 409 });
-        httpErrorTranslation.respond(
-          reply,
-          httpErrorTranslation.workspaceGraphDraft.write.authoringAuthorityConflict(
-            {
+      try {
+        const decision = await deps.capabilityService.authorize({
+          token: extractBearerToken(request.headers.authorization),
+          requestId: request.id,
+          requestedScope: parsed.value,
+        });
+        attachDecisionAttributes(
+          span,
+          decision.capability.mode,
+          decision.capability.reason,
+          decision
+        );
+
+        const result = await deps.getUseCase.execute(decision);
+        if (result.kind === 'not_found') {
+          deps.telemetry.recordRead('not_found', decision.capability.mode, Date.now() - startedAt);
+          span.setAttributes({ outcome: 'not_found' });
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.workspaceGraphDraft.read.notFound({
               correlationId: decision.correlationId,
               decisionId: decision.decisionId,
-            },
-            result.canvasIds
-          )
-        );
-        return;
-      }
+            })
+          );
+          return;
+        }
 
-      if (result.kind === 'unsupported_schema_version') {
-        deps.telemetry.recordWrite('denied', decision.capability.mode, Date.now() - startedAt);
-        span.setAttributes({ outcome: 'unsupported_schema_version', httpStatus: 422 });
-        httpErrorTranslation.respond(
-          reply,
-          httpErrorTranslation.workspaceGraphDraft.write.unsupportedSchemaVersion()
-        );
-        return;
-      }
-
-      if (result.kind === 'idempotency_mismatch') {
-        deps.telemetry.recordWrite(
-          'idempotency_mismatch',
+        deps.telemetry.recordRead(
+          result.response.kind,
           decision.capability.mode,
           Date.now() - startedAt
         );
-        span.setAttributes({ outcome: 'idempotency_mismatch', httpStatus: 409 });
-        httpErrorTranslation.respond(
-          reply,
-          httpErrorTranslation.workspaceGraphDraft.write.idempotencyMismatch({
-            correlationId: decision.correlationId,
-            decisionId: decision.decisionId,
-          })
+        span.setAttributes({
+          outcome: result.response.kind,
+          httpStatus: result.httpStatus,
+        });
+        reply.code(result.httpStatus).send(result.response);
+      } catch (error) {
+        span.recordException(error);
+        span.setStatus(
+          'error',
+          error instanceof Error ? error.message : 'workspace_graph_draft_read_failed'
         );
+        throw error;
+      } finally {
+        span.end();
+      }
+    }
+  );
+
+  app.put<{ Body: unknown }>(
+    '/workspace/graph/draft',
+    { config: { rateLimit: deps.rateLimit } },
+    async (request, reply) => {
+      const startedAt = Date.now();
+      const parsed = parseSaveRequest(request.body);
+      if (!parsed.ok) {
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsed.issue));
         return;
       }
 
-      deps.telemetry.recordWrite(
-        writeTelemetryOutcome(result.response.kind),
-        decision.capability.mode,
-        Date.now() - startedAt
-      );
-      span.setAttributes({
-        outcome: result.response.kind,
-        httpStatus: result.httpStatus,
+      const span = deps.observability.traces.startSpan('api.workspace_graph_draft.write', {
+        attributes: {
+          route: '/workspace/graph/draft',
+          action: 'draft_write',
+        },
       });
-      reply.code(result.httpStatus).send(result.response);
-    } catch (error) {
-      span.recordException(error);
-      span.setStatus(
-        'error',
-        error instanceof Error ? error.message : 'workspace_graph_draft_write_failed'
-      );
-      throw error;
-    } finally {
-      span.end();
+
+      try {
+        const decision = await deps.capabilityService.authorize({
+          token: extractBearerToken(request.headers.authorization),
+          requestId: request.id,
+          requestedScope: parsed.value.requestedScope,
+        });
+        attachDecisionAttributes(
+          span,
+          decision.capability.mode,
+          decision.capability.reason,
+          decision
+        );
+
+        const result = await deps.saveUseCase.execute({
+          request: parsed.value.request,
+          decision,
+        });
+
+        if (result.kind === 'authoring_authority_conflict') {
+          deps.telemetry.recordWrite('conflict', decision.capability.mode, Date.now() - startedAt);
+          span.setAttributes({ outcome: result.kind, httpStatus: 409 });
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.workspaceGraphDraft.write.authoringAuthorityConflict(
+              {
+                correlationId: decision.correlationId,
+                decisionId: decision.decisionId,
+              },
+              result.canvasIds
+            )
+          );
+          return;
+        }
+
+        if (result.kind === 'unsupported_schema_version') {
+          deps.telemetry.recordWrite('denied', decision.capability.mode, Date.now() - startedAt);
+          span.setAttributes({ outcome: 'unsupported_schema_version', httpStatus: 422 });
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.workspaceGraphDraft.write.unsupportedSchemaVersion()
+          );
+          return;
+        }
+
+        if (result.kind === 'idempotency_mismatch') {
+          deps.telemetry.recordWrite(
+            'idempotency_mismatch',
+            decision.capability.mode,
+            Date.now() - startedAt
+          );
+          span.setAttributes({ outcome: 'idempotency_mismatch', httpStatus: 409 });
+          httpErrorTranslation.respond(
+            reply,
+            httpErrorTranslation.workspaceGraphDraft.write.idempotencyMismatch({
+              correlationId: decision.correlationId,
+              decisionId: decision.decisionId,
+            })
+          );
+          return;
+        }
+
+        deps.telemetry.recordWrite(
+          writeTelemetryOutcome(result.response.kind),
+          decision.capability.mode,
+          Date.now() - startedAt
+        );
+        span.setAttributes({
+          outcome: result.response.kind,
+          httpStatus: result.httpStatus,
+        });
+        reply.code(result.httpStatus).send(result.response);
+      } catch (error) {
+        span.recordException(error);
+        span.setStatus(
+          'error',
+          error instanceof Error ? error.message : 'workspace_graph_draft_write_failed'
+        );
+        throw error;
+      } finally {
+        span.end();
+      }
     }
-  });
+  );
 }
 
 function parseRequestedScope(input: {

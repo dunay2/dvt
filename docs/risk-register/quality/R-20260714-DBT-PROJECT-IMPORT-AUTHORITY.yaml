@@ -27,6 +27,8 @@ mitigations:
     receipt postconditions before replaying a completed retry.'
   - 'Use idempotency keys at protected command routes and test retries, conflicts, rollback, and
     projection refresh failures.'
+  - 'Apply the protected runtime rate limit to graph-draft read and save routes before repeated
+    authorization attempts reach application services.'
   - 'Keep authority and import payloads versioned in @dvt/contracts and reject unsupported shapes.'
 review_after: 2026-08-14
 ---

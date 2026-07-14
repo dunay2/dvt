@@ -42,7 +42,12 @@ export async function registerProtectedRuntimeRoutes(
   registerProjectOnboardingRouteGroup(app, env, protectedModule);
   registerProtectedWorkspaceContextRouteGroup(app, env, protectedModule);
   registerProtectedWorkspacePluginCatalogRouteGroup(app, env, protectedModule);
-  registerProtectedWorkspaceGraphDraftRouteGroup(app, observability, protectedModule, dependencies);
+  registerProtectedWorkspaceGraphDraftRouteGroup(app, {
+    dependencies,
+    env,
+    observability,
+    protectedModule,
+  });
   registerProtectedDbtProjectGraphRouteGroup(app, {
     env,
     runtimeAuth: dependencies.runtimeAuth,
