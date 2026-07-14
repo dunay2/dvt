@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Node } from '@xyflow/react';
 import { Box } from 'lucide-react';
 import type { ImportSourcesResult } from '../../ports/workspace';
+import { buildGraphDraftSourceImportResult } from '../../../testing/sourceImportTestFixtures';
 import { buildProtectedDraftRecord } from '../../services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode } from '../../types/canonical';
@@ -88,20 +89,19 @@ describe('useCanvasController source import contract', () => {
     const saveGraphDraft = harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft;
 
     await act(async () => {
-      harness.getLatestResult()?.handleSourceImportComplete({
-        success: true,
-        draftRevision: 'draft-revision-2',
-        sourcesCreated: 2,
-        objectsImported: 2,
-        yamlFiles: ['models/sources/src_erp.yml'],
-        importedNodeIds: ['src_erp_orders', 'src_erp_customers'],
-        grouping: 'schema',
-        options: {
-          includeColumns: true,
-          addTests: false,
-          addFreshness: false,
-        },
-      });
+      harness.getLatestResult()?.handleSourceImportComplete(
+        buildGraphDraftSourceImportResult({
+          sourcesCreated: 2,
+          objectsImported: 2,
+          yamlFiles: ['models/sources/src_erp.yml'],
+          importedNodeIds: ['src_erp_orders', 'src_erp_customers'],
+          options: {
+            includeColumns: true,
+            addTests: false,
+            addFreshness: false,
+          },
+        })
+      );
     });
 
     expect(harness.state.store.setCurrentPlan).toHaveBeenCalledWith(null);
@@ -145,20 +145,17 @@ describe('useCanvasController source import contract', () => {
         | undefined;
 
       complete?.(
-        {
-          success: true,
-          draftRevision: 'draft-revision-2',
+        buildGraphDraftSourceImportResult({
           sourcesCreated: 2,
           objectsImported: 2,
           yamlFiles: ['models/sources/src_erp.yml'],
           importedNodeIds: ['src_erp_orders', 'src_erp_customers'],
-          grouping: 'schema',
           options: {
             includeColumns: true,
             addTests: false,
             addFreshness: false,
           },
-        },
+        }),
         { canvasPosition: { x: 420, y: 260 } }
       );
     });
@@ -215,20 +212,11 @@ describe('useCanvasController source import contract', () => {
     harness.state.queryClient.invalidateQueries.mockClear();
 
     await act(async () => {
-      harness.getLatestResult()?.handleSourceImportComplete({
-        success: true,
-        draftRevision: 'draft-revision-2',
-        sourcesCreated: 1,
-        objectsImported: 1,
-        yamlFiles: ['models/sources/src_erp.yml'],
-        importedNodeIds: ['node_3'],
-        grouping: 'schema',
-        options: {
-          includeColumns: true,
-          addTests: false,
-          addFreshness: false,
-        },
-      });
+      harness.getLatestResult()?.handleSourceImportComplete(
+        buildGraphDraftSourceImportResult({
+          importedNodeIds: ['node_3'],
+        })
+      );
     });
 
     expect(harness.getLatestResult()?.hasMissingRemoteDraft).toBe(true);
@@ -317,20 +305,13 @@ describe('useCanvasController source import contract', () => {
     await harness.renderProbe();
 
     await act(async () => {
-      harness.getLatestResult()?.handleSourceImportComplete({
-        success: true,
-        sourcesCreated: 1,
-        objectsImported: 1,
-        yamlFiles: ['models/sources/src_public.yml'],
-        importedNodeIds: [importedWarehouseSourceNode.id],
-        grouping: 'schema',
-        draftRevision: 'rev-imported',
-        options: {
-          includeColumns: true,
-          addTests: false,
-          addFreshness: false,
-        },
-      });
+      harness.getLatestResult()?.handleSourceImportComplete(
+        buildGraphDraftSourceImportResult({
+          yamlFiles: ['models/sources/src_public.yml'],
+          importedNodeIds: [importedWarehouseSourceNode.id],
+          draftRevision: 'rev-imported',
+        })
+      );
     });
 
     await act(async () => {

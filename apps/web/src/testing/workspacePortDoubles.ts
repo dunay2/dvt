@@ -355,25 +355,36 @@ function createImportedSourceNode(
 function buildImportResult(
   input: ImportSourcesInput,
   selectedSourceObjects: readonly RelationalSourceObject[],
-  importedNodes: DbtNode[]
+  _importedNodes: DbtNode[]
 ): ImportSourcesResult {
   const yamlFiles = new Set<string>();
   for (const sourceObject of selectedSourceObjects) {
     yamlFiles.add(buildYamlFileName(sourceObject, input.groupingStrategy));
   }
+  const importedNodeIds = selectedSourceObjects.map(toSourceNodeId);
 
   return {
+    schemaVersion: 'source-import-result.v2',
     success: true,
-    draftRevision: 'mock-source-import-revision',
-    sourcesCreated: importedNodes.length,
+    idempotencyKey: input.idempotencyKey,
+    authorityBinding: {
+      schemaVersion: 'canvas-authoring-authority-binding.v1',
+      canvasId: input.canvasId,
+      authority: { kind: 'graph-draft' },
+    },
+    sourcesCreated: yamlFiles.size,
     objectsImported: input.objects.length,
     yamlFiles: Array.from(yamlFiles),
-    importedNodeIds: importedNodes.map((node) => node.id),
     grouping: input.groupingStrategy,
     options: {
       includeColumns: input.includeColumns,
       addTests: input.addTests,
       addFreshness: input.addFreshness,
+    },
+    outcome: {
+      kind: 'graph-draft',
+      draftRevision: 'mock-source-import-revision',
+      importedNodeIds,
     },
   };
 }

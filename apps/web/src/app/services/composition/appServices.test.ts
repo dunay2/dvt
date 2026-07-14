@@ -2,6 +2,10 @@ import { createAppServicesTestOverrides } from '../../../testing/appServicesTest
 import { describe, expect, it, vi } from 'vitest';
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
+import {
+  buildGraphDraftSourceImportResult,
+  buildSourceImportCommandInput,
+} from '../../../testing/sourceImportTestFixtures';
 import type { IPlansPort } from '../../ports/plans';
 import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { IRunsPort } from '../../ports/runs';
@@ -140,16 +144,12 @@ function buildWorkspacePortStubs(): {
         checkedAt: '2026-06-08T00:00:00.000Z',
         objectCount: 0,
       })),
-      importSources: vi.fn(async () => ({
-        success: true as const,
-        draftRevision: 'draft-revision-1',
-        sourcesCreated: 0,
-        objectsImported: 0,
-        yamlFiles: [],
-        importedNodeIds: [],
-        grouping: 'schema' as const,
-        options: { includeColumns: false, addTests: false, addFreshness: false },
-      })),
+      importSources: vi.fn(async (input) =>
+        buildGraphDraftSourceImportResult({
+          canvasId: input.canvasId,
+          idempotencyKey: input.idempotencyKey,
+        })
+      ),
     },
     workspaceFileContentCommand: {
       saveFileContent: vi.fn(async (input) => ({
@@ -222,14 +222,14 @@ describe('buildAppServices', () => {
     );
     expect(orders).toBeDefined();
 
-    await firstServices.warehouseSourceImport.importSources({
-      connectionId: 'conn-1',
-      objects: [{ objectId: orders!.objectId }],
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-    });
+    await firstServices.warehouseSourceImport.importSources(
+      buildSourceImportCommandInput({
+        canvasId: 'canvas-orders',
+        idempotencyKey: 'source-import:orders-1',
+        connectionId: 'conn-1',
+        objects: [{ objectId: orders!.objectId }],
+      })
+    );
 
     const secondAfter = await secondServices.workspaceGraphSnapshotQuery.getGraphSnapshot();
 

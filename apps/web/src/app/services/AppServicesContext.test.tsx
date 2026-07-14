@@ -5,6 +5,7 @@ import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTestFixtures';
 import type { IRunsPort } from '../ports/runs';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import type { IPlansPort } from '../ports/plans';
@@ -202,20 +203,11 @@ describe('AppServicesProvider', () => {
         checkedAt: '2026-06-08T00:00:00.000Z',
         objectCount: 0,
       }),
-      importSources: async () => ({
-        success: true as const,
-        draftRevision: 'draft-revision-1',
-        sourcesCreated: 0,
-        objectsImported: 0,
-        yamlFiles: [],
-        importedNodeIds: [],
-        grouping: 'schema' as const,
-        options: {
-          includeColumns: false,
-          addTests: false,
-          addFreshness: false,
-        },
-      }),
+      importSources: async (input) =>
+        buildGraphDraftSourceImportResult({
+          canvasId: input.canvasId,
+          idempotencyKey: input.idempotencyKey,
+        }),
     };
     const workspaceFilesQuery: IWorkspaceFilesQueryPort = {
       listFiles: async () => [],

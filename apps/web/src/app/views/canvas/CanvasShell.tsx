@@ -131,14 +131,17 @@ export default function CanvasShell({
       />
       <CanvasContextMenuLayer presenter={contextMenuPresenter} />
 
-      <CanvasSourceImportDialogHost
-        open={sourceImportDialog.open}
-        onClose={sourceImportDialog.close}
-        onComplete={graphCommands.onSourceImportComplete}
-        sourceImportOptions={sourceImportOptions}
-        initialSelection={sourceImportDialog.initialSelection}
-        placement={sourceImportDialog.placement}
-      />
+      {panels.activeCanvasId != null ? (
+        <CanvasSourceImportDialogHost
+          open={sourceImportDialog.open}
+          canvasId={panels.activeCanvasId}
+          onClose={sourceImportDialog.close}
+          onComplete={graphCommands.onSourceImportComplete}
+          sourceImportOptions={sourceImportOptions}
+          initialSelection={sourceImportDialog.initialSelection}
+          placement={sourceImportDialog.placement}
+        />
+      ) : null}
       <CanvasProjectExplorerDialog
         open={projectExplorerOpen}
         activeCanvasId={panels.activeCanvasId}

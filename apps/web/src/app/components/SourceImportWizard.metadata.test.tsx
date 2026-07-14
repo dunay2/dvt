@@ -337,6 +337,9 @@ describe('SourceImportWizard metadata exploration', () => {
     await harness.clickButtonContaining('Attach sources to canvas');
 
     expect(importSources).toHaveBeenCalledWith({
+      schemaVersion: 'source-import-request.v2',
+      idempotencyKey: expect.stringMatching(/^source-import:/),
+      canvasId: 'canvas-orders',
       connectionId: 'conn-1',
       objects: [{ objectId: 'relation/RAW/ERP/ORDERS' }],
       groupingStrategy: 'schema',

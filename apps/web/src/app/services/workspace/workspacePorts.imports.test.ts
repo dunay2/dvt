@@ -4,6 +4,10 @@ import {
   createMockWorkspacePorts,
   createMockWorkspaceState,
 } from '../../../testing/workspacePortDoubles';
+import {
+  buildGraphDraftSourceImportResult,
+  buildSourceImportCommandInput,
+} from '../../../testing/sourceImportTestFixtures';
 import { createApiClientHarness } from './workspaceApiClient.test.harness';
 import {
   buildWorkspaceScope,
@@ -34,14 +38,14 @@ describe('workspace ports source import', () => {
     );
     expect(events).toBeDefined();
 
-    const result = await ports.warehouseSourceImport.importSources({
-      connectionId: 'conn-1',
-      objects: [{ objectId: events!.objectId }],
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-    });
+    const result = await ports.warehouseSourceImport.importSources(
+      buildSourceImportCommandInput({
+        canvasId: 'canvas-marketing',
+        idempotencyKey: 'source-import:marketing-events',
+        connectionId: 'conn-1',
+        objects: [{ objectId: events!.objectId }],
+      })
+    );
 
     const after = await ports.workspaceGraphSnapshotQuery.getGraphSnapshot();
     const importedNode = after.nodes.find((node) => node.id === 'src_marketing_events');
@@ -50,7 +54,10 @@ describe('workspace ports source import', () => {
     expect(result.sourcesCreated).toBe(1);
     expect(result.objectsImported).toBe(1);
     expect(result.yamlFiles).toEqual(['models/sources/src_marketing.yml']);
-    expect(result.importedNodeIds).toEqual(['src_marketing_events']);
+    expect(result.outcome).toMatchObject({
+      kind: 'graph-draft',
+      importedNodeIds: ['src_marketing_events'],
+    });
     expect(after.nodes).toHaveLength(before.nodes.length + 1);
     expect(importedNode).toMatchObject({
       id: 'src_marketing_events',
@@ -82,14 +89,14 @@ describe('workspace ports source import', () => {
     );
     expect(campaigns).toBeDefined();
 
-    await firstPorts.warehouseSourceImport.importSources({
-      connectionId: 'conn-1',
-      objects: [{ objectId: campaigns!.objectId }],
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-    });
+    await firstPorts.warehouseSourceImport.importSources(
+      buildSourceImportCommandInput({
+        canvasId: 'canvas-marketing',
+        idempotencyKey: 'source-import:marketing-campaigns',
+        connectionId: 'conn-1',
+        objects: [{ objectId: campaigns!.objectId }],
+      })
+    );
 
     const firstAfter = await firstPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
     const secondAfter = await secondPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
@@ -111,14 +118,14 @@ describe('workspace ports source import', () => {
     );
     expect(contacts).toBeDefined();
 
-    await firstPorts.warehouseSourceImport.importSources({
-      connectionId: 'conn-1',
-      objects: [{ objectId: contacts!.objectId }],
-      groupingStrategy: 'schema',
-      includeColumns: true,
-      addTests: false,
-      addFreshness: false,
-    });
+    await firstPorts.warehouseSourceImport.importSources(
+      buildSourceImportCommandInput({
+        canvasId: 'canvas-crm',
+        idempotencyKey: 'source-import:crm-contacts',
+        connectionId: 'conn-1',
+        objects: [{ objectId: contacts!.objectId }],
+      })
+    );
 
     const secondAfter = await secondPorts.workspaceGraphSnapshotQuery.getGraphSnapshot();
 
@@ -138,30 +145,17 @@ describe('workspace ports source import', () => {
             database: 'analytics',
           },
         ] as TResponse,
-      postJson: async <_TRequest, TResponse>() =>
-        ({
-          success: true,
-          draftRevision: 'draft-revision-2',
-          sourcesCreated: 0,
-          objectsImported: 0,
-          yamlFiles: [],
-          importedNodeIds: [],
-          grouping: 'schema',
-          options: { includeColumns: false, addTests: false, addFreshness: false },
-        }) as TResponse,
+      postJson: async <_TRequest, TResponse>() => buildGraphDraftSourceImportResult() as TResponse,
     });
     const ports = createWorkspacePorts(apiClient);
 
     await expect(ports.warehouseSourceImport.listWarehouseConnections()).resolves.toHaveLength(1);
     await expect(
-      ports.warehouseSourceImport.importSources({
-        connectionId: 'conn-1',
-        objects: [],
-        groupingStrategy: 'schema',
-        includeColumns: false,
-        addTests: false,
-        addFreshness: false,
-      })
+      ports.warehouseSourceImport.importSources(
+        buildSourceImportCommandInput({
+          connectionId: 'conn-1',
+        })
+      )
     ).resolves.toMatchObject({ success: true });
     expect(getJson).toHaveBeenCalledWith(
       `/workspace/warehouse/connections?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`
@@ -180,14 +174,11 @@ describe('workspace ports source import', () => {
     const ports = createWorkspacePorts(apiClient);
 
     await expect(
-      ports.warehouseSourceImport.importSources({
-        connectionId: 'conn-1',
-        objects: [],
-        groupingStrategy: 'schema',
-        includeColumns: false,
-        addTests: false,
-        addFreshness: false,
-      })
+      ports.warehouseSourceImport.importSources(
+        buildSourceImportCommandInput({
+          connectionId: 'conn-1',
+        })
+      )
     ).rejects.toThrow('workspace_scope_unresolved');
     expect(postJson).not.toHaveBeenCalled();
   });

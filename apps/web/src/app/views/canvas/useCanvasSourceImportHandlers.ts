@@ -85,11 +85,12 @@ export function useCanvasSourceImportHandlers({
 
   const handleSourceImportComplete = useCallback(
     (result: ImportSourcesResult, context?: CanvasSourceImportCompletionContext) => {
-      if (!canMutateGraph) {
+      const outcome = result.outcome;
+      if (!canMutateGraph || outcome.kind !== 'graph-draft') {
         return;
       }
 
-      const nextImportedNodeIds = result.importedNodeIds ?? [];
+      const nextImportedNodeIds = outcome.importedNodeIds;
       setCurrentPlan(null);
       invalidateInFlightSaveAttempt();
 
@@ -99,7 +100,7 @@ export function useCanvasSourceImportHandlers({
             ? canvasGraphLifecycle.node.queueImported(currentSession, nextImportedNodeIds)
             : currentSession;
 
-        return canvasDraftSession.machine.adoptExternalRevision(nextSession, result.draftRevision);
+        return canvasDraftSession.machine.adoptExternalRevision(nextSession, outcome.draftRevision);
       });
 
       if (nextImportedNodeIds.length > 0) {

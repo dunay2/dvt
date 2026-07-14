@@ -12,6 +12,7 @@ import type {
 } from '../ports/workspace';
 import type { SourceImportOptionContribution } from '../plugins/registry';
 import { AppServicesProvider } from '../services/AppServicesContext';
+import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTestFixtures';
 import SourceImportWizard from './SourceImportWizard';
 import type { SourceImportInitialSelection } from './sourceImportWizard/types';
 import {
@@ -73,20 +74,17 @@ export function buildWarehouseSourceImportPort(
       checkedAt: '2026-06-08T00:00:00.000Z',
       objectCount: 1,
     }),
-    importSources: async (input) => ({
-      success: true,
-      draftRevision: 'draft-revision-2',
-      sourcesCreated: 1,
-      objectsImported: 1,
-      yamlFiles: ['models/sources/erp.yml'],
-      importedNodeIds: ['src_erp_orders'],
-      grouping: 'schema',
-      options: {
-        includeColumns: input.includeColumns,
-        addTests: input.addTests,
-        addFreshness: input.addFreshness,
-      },
-    }),
+    importSources: async (input) =>
+      buildGraphDraftSourceImportResult({
+        canvasId: input.canvasId,
+        idempotencyKey: input.idempotencyKey,
+        yamlFiles: ['models/sources/erp.yml'],
+        options: {
+          includeColumns: input.includeColumns,
+          addTests: input.addTests,
+          addFreshness: input.addFreshness,
+        },
+      }),
     ...overrides,
   };
 }
@@ -121,6 +119,7 @@ export function createSourceImportWizardHarness() {
 
   async function renderWizard(args?: {
     open?: boolean;
+    canvasId?: string;
     warehouseSourceImport?: IWarehouseSourceImportPort;
     onClose?: () => void;
     onComplete?: (result: ImportSourcesResult) => void;
@@ -137,6 +136,7 @@ export function createSourceImportWizardHarness() {
         >
           <SourceImportWizard
             open={args?.open ?? true}
+            canvasId={args?.canvasId ?? 'canvas-orders'}
             onClose={args?.onClose ?? vi.fn()}
             onComplete={args?.onComplete}
             sourceImportOptions={args?.sourceImportOptions}

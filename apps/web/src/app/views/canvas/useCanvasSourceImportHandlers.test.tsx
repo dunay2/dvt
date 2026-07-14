@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { buildGraphDraftSourceImportResult } from '../../../testing/sourceImportTestFixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
 import { useCanvasSourceImportHandlers } from './useCanvasSourceImportHandlers';
 
@@ -110,20 +111,11 @@ describe('useCanvasSourceImportHandlers', () => {
     await harness.render();
 
     await act(async () => {
-      harness.latest()?.handleSourceImportComplete({
-        success: true,
-        sourcesCreated: 1,
-        objectsImported: 1,
-        yamlFiles: ['models/sources/src_erp.yml'],
-        importedNodeIds: ['src_erp_orders'],
-        grouping: 'schema',
-        draftRevision: 'rev-imported',
-        options: {
-          includeColumns: true,
-          addTests: false,
-          addFreshness: false,
-        },
-      });
+      harness.latest()?.handleSourceImportComplete(
+        buildGraphDraftSourceImportResult({
+          draftRevision: 'rev-imported',
+        })
+      );
     });
 
     expect(harness.spies.invalidateInFlightSaveAttempt).toHaveBeenCalledTimes(1);
@@ -131,8 +123,7 @@ describe('useCanvasSourceImportHandlers', () => {
       harness.spies.setDraftSession.mock.invocationCallOrder[0] ?? Number.POSITIVE_INFINITY
     );
     const sessionUpdater = harness.spies.setDraftSession.mock.calls[0]?.[0] as
-      | ((currentSession: CanvasDraftSession) => CanvasDraftSession)
-      | undefined;
+      ((currentSession: CanvasDraftSession) => CanvasDraftSession) | undefined;
     const session = sessionUpdater?.({
       syncState: 'saving',
       baseline: { record: null },
