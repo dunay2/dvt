@@ -110,7 +110,7 @@ base del grafo.
 canvas`.
 
 Resultado esperado: el flujo registra fuentes gobernadas desde los rails
-`ListWarehouseConnections`, `ListWarehouseConnectionTables` e
+`ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects` e
 `ImportWarehouseSources`, y las proyecta como nodos de fuente en el canvas cerca
 del punto donde se abrio el menu contextual.
 
@@ -232,7 +232,7 @@ contextual independiente.
 La UI abre `Add source` desde el canvas, pero la verdad de conexiones no debe
 salir de fixtures locales ni de formularios ad hoc. Las conexiones deben venir
 de rails protegidos como `ListWarehouseConnections`,
-`ListWarehouseConnectionTables` e `ImportWarehouseSources`.
+`ListWarehouseConnectionSourceObjects` e `ImportWarehouseSources`.
 
 ## Lista de comprobacion QA
 

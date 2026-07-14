@@ -95,6 +95,7 @@ docs/planning/status/system-governance-remediation-queue.queue.yaml
 /eslint-issues.txt
 /audit.md
 /arc.json
+/.playwright-mcp/
 /.dvt/
 /x[1])
 

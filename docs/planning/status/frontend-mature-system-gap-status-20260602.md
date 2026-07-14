@@ -133,7 +133,7 @@ flows are either partial, implicit, or not demonstrably connected end to end:
 - Mature signal: source connections are authenticated server-side, testable,
   auditable, and cannot be faked in the browser.
 - Current DVT evidence: `ListWarehouseConnections`,
-  `ListWarehouseConnectionTables`, and `ImportWarehouseSources` exist for
+  `ListWarehouseConnectionSourceObjects`, and `ImportWarehouseSources` exist for
   server-known connections.
 - Remaining gap: end-to-end maturity evidence for credential audit, secret
   redaction, duplicate connection name, unsupported adapter, unauthorized tenant,
