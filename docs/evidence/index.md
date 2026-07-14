@@ -136,6 +136,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ED-20260612-contracts-compat-schema-parity.md)
 - [Summary](ED-20260711-source-object-catalog-contract.md)
 - [Summary](ED-20260713-dbt-project-file-projection-phase2.md)
+- [Summary](ED-20260714-dbt-project-import-phase3-runtime.md)
 - [Summary](ed-20260423-access-decision-vocabulary-hardening.md)
 - [Summary](ed-20260423-rc-c2-turbo-ci-governance.md)
 - [Summary](ed-20260423-runtime-boundary-hardening.md)

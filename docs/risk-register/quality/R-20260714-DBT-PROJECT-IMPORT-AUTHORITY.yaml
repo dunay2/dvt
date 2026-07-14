@@ -1,0 +1,28 @@
+---
+id: R-20260714-DBT-PROJECT-IMPORT-AUTHORITY
+title: dbt import authority or atomic file mutation can diverge under runtime failure
+status: Open
+date: 2026-07-14
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: High
+probability: Low
+context: >
+  Phase three introduces persisted Canvas authoring authority, validation-bound dbt project imports,
+  atomic workspace file batches, and authority-specific warehouse source import.
+risk: >
+  A future adapter, retry path, or transaction-boundary change could bind a Canvas to stale project
+  evidence, partially mutate project files, or write both project files and graph draft state for
+  one product command.
+mitigations:
+  - 'Bind imports to a validation receipt and reject changed project inventory or an already-bound
+    Canvas before mutation.'
+  - 'Execute workspace file writes through one atomic batch gateway with deterministic rollback and
+    restored preconditions.'
+  - 'Resolve one persisted authority before Source Import and delegate to exactly one strategy.'
+  - 'Use idempotency keys at protected command routes and test retries, conflicts, rollback, and
+    projection refresh failures.'
+  - 'Keep authority and import payloads versioned in @dvt/contracts and reject unsupported shapes.'
+review_after: 2026-08-14
+---
