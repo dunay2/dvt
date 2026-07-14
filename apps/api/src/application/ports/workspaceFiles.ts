@@ -25,8 +25,7 @@ export type WorkspaceFileContent = {
 };
 
 export type ExpectedWorkspaceFileRevision =
-  | { readonly kind: 'absent' }
-  | { readonly kind: 'content_sha256'; readonly value: string };
+  { readonly kind: 'absent' } | { readonly kind: 'content_sha256'; readonly value: string };
 
 export type SaveWorkspaceFileContentInput = {
   readonly path: string;
@@ -73,6 +72,45 @@ export type WorkspaceFileDeleteResult =
       readonly currentContentSha256: string;
     };
 
+export type WorkspaceFileBatchExpectedFile = Readonly<{
+  path: string;
+  expectedContentSha256?: string;
+}>;
+
+export type WorkspaceFileBatchWrite = Readonly<{
+  path: string;
+  content: string;
+}>;
+
+export type WorkspaceFileBatchMutation = Readonly<{
+  expectedFiles: readonly WorkspaceFileBatchExpectedFile[];
+  writes: readonly WorkspaceFileBatchWrite[];
+  deletes: readonly string[];
+  idempotencyKey: string;
+}>;
+
+export type WorkspaceFileBatchReceipt = Readonly<{
+  kind: 'applied';
+  idempotencyKey: string;
+  requestHash: string;
+  deduplicated: boolean;
+  writes: readonly Readonly<{
+    path: string;
+    contentSha256: string;
+  }>[];
+  deletes: readonly string[];
+}>;
+
+export type WorkspaceFileBatchMutationResult =
+  | WorkspaceFileBatchReceipt
+  | Readonly<{
+      kind: 'conflict';
+      conflicts: readonly Readonly<{
+        path: string;
+        currentContentSha256: string | null;
+      }>[];
+    }>;
+
 export type WorkspaceStorageScope = Readonly<{
   tenantId: string;
   projectId: string;
@@ -103,6 +141,29 @@ export class WorkspaceFileRevisionConflictError extends Error {
   }
 }
 
+export class InvalidWorkspaceFileBatchMutationError extends Error {
+  public constructor(message: string) {
+    super(message);
+    this.name = 'InvalidWorkspaceFileBatchMutationError';
+  }
+}
+
+export class WorkspaceFileBatchIdempotencyConflictError extends Error {
+  public constructor(readonly idempotencyKey: string) {
+    super(
+      `Workspace file batch idempotency key was reused with a different request: ${idempotencyKey}`
+    );
+    this.name = 'WorkspaceFileBatchIdempotencyConflictError';
+  }
+}
+
+export class InvalidWorkspaceFileBatchReceiptError extends Error {
+  public constructor(readonly idempotencyKey: string) {
+    super(`Workspace file batch receipt is invalid: ${idempotencyKey}`);
+    this.name = 'InvalidWorkspaceFileBatchReceiptError';
+  }
+}
+
 export interface IWorkspaceFileRepository {
   listFiles(scope: WorkspaceStorageScope): Promise<readonly WorkspaceFileEntry[]>;
   getFileContent(scope: WorkspaceStorageScope, path: string): Promise<WorkspaceFileContent>;
@@ -114,4 +175,11 @@ export interface IWorkspaceFileRepository {
     scope: WorkspaceStorageScope,
     input: DeleteWorkspaceFileContentInput
   ): Promise<WorkspaceFileDeleteResult>;
+}
+
+export interface IWorkspaceFileBatchMutationPort {
+  apply(
+    scope: WorkspaceStorageScope,
+    mutation: WorkspaceFileBatchMutation
+  ): Promise<WorkspaceFileBatchMutationResult>;
 }
