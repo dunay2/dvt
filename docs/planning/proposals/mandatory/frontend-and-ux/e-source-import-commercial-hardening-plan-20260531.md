@@ -307,6 +307,14 @@ redGreenCycles:
       - apps/web/src/app/plugins/graph/graphVisualTokens.ts
       - apps/web/src/app/components/DbtExplorer.tsx
     greenTest: pnpm --filter @dvt/web test -- src/app/plugins/graph/graphVisualTokenConvergence.architecture.test.ts
+xContractSymbol: &contract_symbol
+  dddOwner: Source import published language
+  cqRails: [ListWarehouseConnectionSourceObjects, ImportWarehouseSources]
+  fowlerSignals: [Provider-neutral source objects replace adapter-shaped table DTOs]
+  architectureGuard: pnpm --filter @dvt/contracts test -- test/source-import/SourceObjectCatalog.v1.test.ts
+  cypressCoverage: N/A - published language contract only
+  unitTests:
+    - packages/@dvt/contracts/test/source-import/SourceObjectCatalog.v1.test.ts
 xApiSymbol: &api_symbol
   dddOwner: Warehouse source import
   cqRails: [ListWarehouseConnections, ListWarehouseConnectionSourceObjects, ImportWarehouseSources]
@@ -369,9 +377,9 @@ symbols:
   - <<: *api_symbol
     name: WarehouseColumnCatalogSchema
     path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.ts
-  - <<: *api_symbol
+  - <<: *contract_symbol
     name: SourceObjectCatalogResponseSchema
-    path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.ts
+    path: packages/@dvt/contracts/src/contracts/source-import/SourceObjectCatalog.v1.ts
   - <<: *api_symbol
     name: WarehouseConnectionCatalogSchema
     path: apps/api/src/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.ts

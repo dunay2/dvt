@@ -195,7 +195,7 @@ symbols:
     path: apps/api/src/application/services/importWarehouseSourcesUseCase.ts
   - <<: *api_symbol
     name: ListWarehouseConnectionSourceObjectsUseCase
-    path: apps/api/src/application/services/listWarehouseConnectionTablesUseCase.ts
+    path: apps/api/src/application/services/listWarehouseConnectionSourceObjectsUseCase.ts
   - <<: *api_symbol
     name: ListWarehouseConnectionsUseCase
     path: apps/api/src/application/services/listWarehouseConnectionsUseCase.ts
