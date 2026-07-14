@@ -137,7 +137,7 @@ const DbtDiagnosticSchema = z
   })
   .strict();
 
-const DbtProjectRevisionSchema = z
+export const DbtProjectRevisionSchema = z
   .object({
     projectRoot: NonBlankStringSchema,
     contentSetSha256: Sha256HexStringSchema,
@@ -237,3 +237,4 @@ export const DbtProjectGraphProjectionSchema = z
   });
 
 export type DbtProjectGraphProjection = z.infer<typeof DbtProjectGraphProjectionSchema>;
+export type DbtProjectRevision = z.infer<typeof DbtProjectRevisionSchema>;

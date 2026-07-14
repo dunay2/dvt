@@ -2,6 +2,7 @@ export * from './types/contracts.js';
 export * from './types/artifacts.js';
 export * from './workflows.js';
 export * from './contracts/source-import/index.js';
+export * from './contracts/dbt-project/index.js';
 export * from './contracts/engine/IOutboxStorage.v1.js';
 export * from './contracts/engine/RunExecutionPolicy.v1.js';
 export * from './contracts/engine/RunExecutionContext.v1.js';
@@ -141,11 +142,14 @@ export type {
 } from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
 export {
   CanvasAuthoringAuthorityBindingSchema,
+  WorkspaceRelativeProjectRootSchema,
   type CanvasAuthoringAuthorityBinding,
 } from './contracts/planner/CanvasAuthoringAuthorityBinding.v1.js';
 export {
   DbtProjectGraphProjectionSchema,
+  DbtProjectRevisionSchema,
   type DbtProjectGraphProjection,
+  type DbtProjectRevision,
 } from './contracts/planner/DbtProjectGraphProjection.v1.js';
 export {
   EXECUTABLE_SUBGRAPH_DIAGNOSTIC_CODE,
