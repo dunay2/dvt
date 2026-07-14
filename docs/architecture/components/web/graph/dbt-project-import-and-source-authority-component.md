@@ -200,6 +200,15 @@ sequenceDiagram
 - Browser components consume typed ports and presentation models; they do not
   parse dbt, mutate files directly, or synthesize success.
 
+## Observability Ownership
+
+The authority policy, PostgreSQL store, and runtime builder do not create an
+independent telemetry vocabulary. They return typed command outcomes or fail
+the protected-runtime startup. The owning import and graph-draft command
+boundaries record those outcomes, while protected-runtime readiness owns
+composition and migration failures. This delegation is explicit in Planning DB
+rather than represented by duplicate adapter-level logs.
+
 ## Definition Of Done
 
 1. Planning DB lists every component, owned file, relation, rail, test, and

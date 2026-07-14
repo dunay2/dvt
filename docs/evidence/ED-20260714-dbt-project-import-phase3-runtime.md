@@ -26,6 +26,7 @@ evidence:
     - pnpm --filter dvt-api test:arch
     - pnpm --filter dvt-api typecheck
     - pnpm --filter dvt-api lint
+    - pnpm --filter dvt-api exec vitest run test/app/protectedRuntimeComposition.test.ts
     - DVT_PG_URL=postgresql://dvt:dvt@localhost:5432/dvt pnpm --filter dvt-api exec vitest run test/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.test.ts
     - node --test scripts/planning-db-migrate.test.cjs
     - pnpm verify:prepush

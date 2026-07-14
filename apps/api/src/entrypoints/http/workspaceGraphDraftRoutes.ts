@@ -85,7 +85,7 @@ export function registerWorkspaceGraphDraftRoutes(
       }
 
       deps.telemetry.recordRead(
-        readTelemetryOutcome(result.response.kind),
+        result.response.kind,
         decision.capability.mode,
         Date.now() - startedAt
       );
@@ -348,12 +348,6 @@ function attachDecisionAttributes(
     correlationId: decision.correlationId,
     decisionId: decision.decisionId,
   });
-}
-
-function readTelemetryOutcome(
-  kind: 'ok' | 'format_error' | 'denied'
-): 'ok' | 'format_error' | 'denied' {
-  return kind;
 }
 
 function writeTelemetryOutcome(
