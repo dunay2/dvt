@@ -51,10 +51,6 @@ interface RelationRow extends QueryResultRow {
   readonly relation_name: string | null;
 }
 
-interface ExistingRow extends QueryResultRow {
-  readonly present: number;
-}
-
 type BeginInput = Parameters<IDbtProjectImportProcessStore['begin']>[0];
 type CompleteInput = Parameters<IDbtProjectImportProcessStore['complete']>[0];
 type FailInput = Parameters<IDbtProjectImportProcessStore['fail']>[0];
@@ -518,7 +514,7 @@ export class PostgresDbtProjectImportProcessStore implements IDbtProjectImportPr
     key: DbtProjectImportProcessKey,
     operation: OperationRow
   ): Promise<boolean> {
-    const result = await client.query<ExistingRow>(
+    const result = await client.query(
       withTimeout(this.config.queryTimeoutMs, {
         text: `
           SELECT 1 AS present
