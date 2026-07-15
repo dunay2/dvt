@@ -212,20 +212,22 @@ sequenceDiagram
   instead of conflicting with its own post-write revisions.
 - `profiles.yml`, credentials, binary files, traversal, absolute paths,
   symbolic links, excessive files, and excessive bytes fail closed.
-- One `DbtProjectSourcePathPolicy` resolves the runtime-artifact directory set
-  for both inspection and analysis. It includes dbt defaults and safe
-  `target-path`, `log-path`, and `packages-install-path` configuration.
-- Runtime-artifact paths cannot resolve to the project root or shadow a
+- One `DbtProjectSourcePathPolicy` resolves a typed directory partition for
+  both inspection and analysis. Generated artifacts (`target-path` and
+  `log-path`) are distinct from installed dependencies
+  (`packages-install-path`).
+- Non-source paths cannot resolve to the project root or shadow a
   configured source/resource path. Such projects fail validation rather than
-  silently omitting source.
-- Runtime artifacts are diagnosed explicitly in the compatibility inventory,
-  but they are excluded from the analyzer snapshot, content revision, and
-  source-byte budget. File, directory, and depth limits still bound inventory
-  traversal.
-- The analyzer hashes and parses exactly the same source snapshot. Changes
-  below an excluded runtime-artifact directory cannot change an accepted
-  project revision or make analysis unavailable through the source-byte
-  budget.
+  silently omitting source. Generated-artifact and installed-dependency paths
+  also cannot overlap because one directory cannot have both lifecycle roles.
+- Generated artifacts and installed dependencies are diagnosed explicitly in
+  the compatibility inventory and excluded from imported project source and
+  its source file/byte budgets. A separate inspected-file budget plus directory
+  and depth limits still bound inventory traversal.
+- The analyzer excludes generated artifacts but preserves materialized
+  dependencies because `dbt parse` consumes package macros, tests, and models.
+  It hashes and parses exactly that same isolated snapshot, so dependency
+  changes affect project revision while generated output changes do not.
 - Browser components consume typed ports and presentation models; they do not
   parse dbt, mutate files directly, or synthesize success.
 

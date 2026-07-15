@@ -61,7 +61,7 @@ describe('LocalDbtProjectImportInspector', () => {
     ]);
   });
 
-  it('uses configured runtime paths without hiding same-named nested source directories', async () => {
+  it('partitions configured non-source paths without hiding nested source directories', async () => {
     await writeFile(
       path.join(projectRoot, 'dbt_project.yml'),
       [
@@ -83,7 +83,7 @@ describe('LocalDbtProjectImportInspector', () => {
       'x'.repeat(4_096)
     );
     await writeFile(path.join(projectRoot, 'generated', 'logs', 'dbt.log'), 'runtime log');
-    await writeFile(path.join(projectRoot, 'vendor', 'dbt', 'package.json'), '{}');
+    await writeFile(path.join(projectRoot, 'vendor', 'dbt', 'package.json'), 'x'.repeat(4_096));
     const inspector = new LocalDbtProjectImportInspector({
       workspaceFilesRoot: workspaceRoot,
       maxProjectBytes: 512,
@@ -113,6 +113,7 @@ describe('LocalDbtProjectImportInspector', () => {
           path: 'analytics/vendor/dbt/package.json',
           classification: 'runtime-artifact',
           decision: 'excluded-runtime-artifact',
+          reason: expect.stringContaining('Installed dbt dependencies'),
         }),
       ])
     );
@@ -161,6 +162,42 @@ describe('LocalDbtProjectImportInspector', () => {
     const inspector = new LocalDbtProjectImportInspector({
       workspaceFilesRoot: workspaceRoot,
       maxProjectFiles: 1,
+    });
+
+    const result = await inspector.inspect({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.diagnostics).toContainEqual(
+      expect.objectContaining({ code: 'dbt_project_limits_exceeded' })
+    );
+  });
+
+  it('does not charge excluded artifacts or installed dependencies to the source-file limit', async () => {
+    await mkdir(path.join(projectRoot, 'target'), { recursive: true });
+    await mkdir(path.join(projectRoot, 'dbt_packages', 'package'), { recursive: true });
+    await writeFile(path.join(projectRoot, 'target', 'manifest.json'), '{}');
+    await writeFile(path.join(projectRoot, 'dbt_packages', 'package', 'package.json'), '{}');
+    await writeFile(path.join(projectRoot, 'dbt_packages', 'package', 'state.json'), '{}');
+    const inspector = new LocalDbtProjectImportInspector({
+      workspaceFilesRoot: workspaceRoot,
+      maxProjectFiles: 2,
+    });
+
+    const result = await inspector.inspect({ scope: SCOPE, projectRoot: 'analytics' });
+
+    expect(result.diagnostics).toEqual([]);
+    expect(result.inventory).toMatchObject({
+      includedFileCount: 2,
+      excludedFileCount: 3,
+    });
+  });
+
+  it('limits total file-system inspection independently from imported source files', async () => {
+    await mkdir(path.join(projectRoot, 'target'), { recursive: true });
+    await writeFile(path.join(projectRoot, 'target', 'manifest.json'), '{}');
+    const inspector = new LocalDbtProjectImportInspector({
+      workspaceFilesRoot: workspaceRoot,
+      maxProjectFiles: 100,
+      maxInspectedFiles: 2,
     });
 
     const result = await inspector.inspect({ scope: SCOPE, projectRoot: 'analytics' });

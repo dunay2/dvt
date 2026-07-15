@@ -18,7 +18,7 @@ import { projectDbtManifest } from './dbtManifestProjection.js';
 import { snapshotProjectContent } from './dbtProjectContentRevision.js';
 import {
   evaluateDbtProjectSnapshotPathPolicy,
-  resolveDbtRuntimeArtifactDirectoryPaths,
+  resolveDbtProjectDirectoryPartition,
 } from './dbtProjectPathPolicy.js';
 import { resolveDbtProjectDirectory } from './dbtProjectWorkspaceBoundary.js';
 
@@ -112,6 +112,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
           path.join(projectDirectory, 'dbt_project.yml'),
           'utf8'
         );
+        const directoryPartition = resolveDbtProjectDirectoryPartition(projectConfigContent);
         contentSetSha256 = (
           await snapshotProjectContent(
             projectDirectory,
@@ -123,7 +124,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
               maxDepth: this.maxProjectDepth,
             },
             {
-              excludedDirectoryPaths: resolveDbtRuntimeArtifactDirectoryPaths(projectConfigContent),
+              excludedDirectoryPaths: directoryPartition.generatedArtifactDirectories,
             }
           )
         ).sha256;

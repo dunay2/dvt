@@ -14614,3 +14614,51 @@ test('tracked migrations require persisted postconditions for source-import repl
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
   assert.doesNotMatch(symbolMigration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations separate generated dbt artifacts from installed dependencies', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '687_dbt_project_dependency_path_partition.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /generated_artifact_installed_dependency_partition/);
+  assert.match(migration.sql, /resolveDbtProjectDirectoryPartition/);
+  assert.match(migration.sql, /installed parse dependencies/);
+  assert.match(migration.sql, /separate inspected-file budget/);
+  assert.match(migration.sql, /ProjectDbtGraphFromFiles/);
+  assert.match(migration.sql, /ValidateDbtProjectImport/);
+  assert.match(migration.sql, /resolveDbtRuntimeArtifactDirectoryPaths/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration rejects overlapping dbt generated and dependency paths', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '688_dbt_project_non_source_path_overlap_guard.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /mutually non-overlapping/);
+  assert.match(migration.sql, /nonSourcePathsOverlap/);
+  assert.match(migration.sql, /projectdbtgraphfromfiles/i);
+  assert.match(migration.sql, /validatedbtprojectimport/i);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration reconciles dbt path partition source symbols and surfaces', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '689_dbt_project_path_partition_manifest_reconciliation.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /DirectoryRole/);
+  assert.match(migration.sql, /excludedDirectoryReason/);
+  assert.match(migration.sql, /resolveDirectoryRole/);
+  assert.match(migration.sql, /RUNTIME_DIRECTORIES/);
+  assert.match(migration.sql, /688_dbt_project_non_source_path_overlap_guard/);
+  assert.match(migration.sql, /689_dbt_project_path_partition_manifest_reconciliation/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});

@@ -16,7 +16,7 @@ import type {
 
 import {
   evaluateDbtProjectPathPolicy,
-  resolveDbtRuntimeArtifactDirectoryPaths,
+  resolveDbtProjectDirectoryPartition,
 } from './dbtProjectPathPolicy.js';
 import {
   DbtProjectBoundaryError,
@@ -35,6 +35,7 @@ const DEPENDENCY_FILE_NAMES = new Set([
 type Options = Readonly<{
   workspaceFilesRoot: string;
   maxProjectFiles?: number;
+  maxInspectedFiles?: number;
   maxProjectBytes?: number;
   maxProjectDirectories?: number;
   maxProjectDepth?: number;
@@ -43,15 +44,20 @@ type Options = Readonly<{
 type ScanState = {
   readonly files: DbtProjectImportFile[];
   readonly diagnostics: DbtProjectImportDiagnostic[];
+  sourceFiles: number;
+  inspectedFiles: number;
   bytes: number;
   directories: number;
 };
+
+type DirectoryRole = 'project-source' | 'generated-artifact' | 'installed-dependency';
 
 class ProjectLimitError extends Error {}
 
 export class LocalDbtProjectImportInspector implements IDbtProjectImportInspectorPort {
   private readonly workspaceFilesRoot: string;
   private readonly maxProjectFiles: number;
+  private readonly maxInspectedFiles: number;
   private readonly maxProjectBytes: number;
   private readonly maxProjectDirectories: number;
   private readonly maxProjectDepth: number;
@@ -59,6 +65,7 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
   public constructor(options: Options) {
     this.workspaceFilesRoot = path.resolve(options.workspaceFilesRoot);
     this.maxProjectFiles = options.maxProjectFiles ?? 10_000;
+    this.maxInspectedFiles = options.maxInspectedFiles ?? 100_000;
     this.maxProjectBytes = options.maxProjectBytes ?? 50_000_000;
     this.maxProjectDirectories = options.maxProjectDirectories ?? 5_000;
     this.maxProjectDepth = options.maxProjectDepth ?? 64;
@@ -81,17 +88,27 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
     }
 
     const configContent = await readFile(path.join(projectDirectory, 'dbt_project.yml'), 'utf8');
-    const runtimeArtifactDirectories = new Set(
-      resolveDbtRuntimeArtifactDirectoryPaths(configContent)
+    const directoryPartition = resolveDbtProjectDirectoryPartition(configContent);
+    const generatedArtifactDirectories = new Set(directoryPartition.generatedArtifactDirectories);
+    const installedDependencyDirectories = new Set(
+      directoryPartition.installedDependencyDirectories
     );
-    const state: ScanState = { files: [], diagnostics: [], bytes: 0, directories: 1 };
+    const state: ScanState = {
+      files: [],
+      diagnostics: [],
+      sourceFiles: 0,
+      inspectedFiles: 0,
+      bytes: 0,
+      directories: 1,
+    };
     try {
       await this.scanDirectory(
         input.projectRoot,
         projectDirectory,
         '',
-        false,
-        runtimeArtifactDirectories,
+        'project-source',
+        generatedArtifactDirectories,
+        installedDependencyDirectories,
         0,
         state
       );
@@ -144,8 +161,9 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
     projectRoot: string,
     absoluteDirectory: string,
     relativeDirectory: string,
-    runtimeArtifact: boolean,
-    runtimeArtifactDirectories: ReadonlySet<string>,
+    directoryRole: DirectoryRole,
+    generatedArtifactDirectories: ReadonlySet<string>,
+    installedDependencyDirectories: ReadonlySet<string>,
     depth: number,
     state: ScanState
   ): Promise<void> {
@@ -156,8 +174,11 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
       const entryState = await lstat(absolutePath);
 
       if (entryState.isSymbolicLink()) {
-        this.consumeFileCountBudget(state);
-        this.consumeByteBudget(entryState.size, state);
+        this.consumeInspectedFileBudget(state);
+        if (directoryRole === 'project-source') {
+          this.consumeSourceFileBudget(state);
+          this.consumeByteBudget(entryState.size, state);
+        }
         this.addRejected(
           projectRoot,
           relativePath,
@@ -175,20 +196,30 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
         if (state.directories > this.maxProjectDirectories || nextDepth > this.maxProjectDepth) {
           throw new ProjectLimitError();
         }
+        const nextDirectoryRole = resolveDirectoryRole(
+          directoryRole,
+          relativePath,
+          generatedArtifactDirectories,
+          installedDependencyDirectories
+        );
         await this.scanDirectory(
           projectRoot,
           absolutePath,
           relativePath,
-          runtimeArtifact || runtimeArtifactDirectories.has(relativePath),
-          runtimeArtifactDirectories,
+          nextDirectoryRole,
+          generatedArtifactDirectories,
+          installedDependencyDirectories,
           nextDepth,
           state
         );
         continue;
       }
       if (!entry.isFile()) {
-        this.consumeFileCountBudget(state);
-        this.consumeByteBudget(entryState.size, state);
+        this.consumeInspectedFileBudget(state);
+        if (directoryRole === 'project-source') {
+          this.consumeSourceFileBudget(state);
+          this.consumeByteBudget(entryState.size, state);
+        }
         this.addRejected(
           projectRoot,
           relativePath,
@@ -201,20 +232,21 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
         continue;
       }
 
-      this.consumeFileCountBudget(state);
+      this.consumeInspectedFileBudget(state);
 
       const objectPath = workspacePath(projectRoot, relativePath);
-      if (runtimeArtifact) {
+      if (directoryRole !== 'project-source') {
         state.files.push({
           path: objectPath,
           classification: 'runtime-artifact',
           byteSize: entryState.size,
           decision: 'excluded-runtime-artifact',
-          reason: 'Runtime artifacts are regenerated and are not imported as project source.',
+          reason: excludedDirectoryReason(directoryRole),
         });
         continue;
       }
 
+      this.consumeSourceFileBudget(state);
       this.consumeByteBudget(entryState.size, state);
 
       const content = await readFile(absolutePath);
@@ -286,14 +318,38 @@ export class LocalDbtProjectImportInspector implements IDbtProjectImportInspecto
     state.diagnostics.push({ code, severity: 'error', message, path: objectPath });
   }
 
-  private consumeFileCountBudget(state: ScanState): void {
-    if (state.files.length + 1 > this.maxProjectFiles) throw new ProjectLimitError();
+  private consumeSourceFileBudget(state: ScanState): void {
+    state.sourceFiles += 1;
+    if (state.sourceFiles > this.maxProjectFiles) throw new ProjectLimitError();
+  }
+
+  private consumeInspectedFileBudget(state: ScanState): void {
+    state.inspectedFiles += 1;
+    if (state.inspectedFiles > this.maxInspectedFiles) throw new ProjectLimitError();
   }
 
   private consumeByteBudget(byteSize: number, state: ScanState): void {
     state.bytes += byteSize;
     if (state.bytes > this.maxProjectBytes) throw new ProjectLimitError();
   }
+}
+
+function resolveDirectoryRole(
+  parentRole: DirectoryRole,
+  relativePath: string,
+  generatedArtifactDirectories: ReadonlySet<string>,
+  installedDependencyDirectories: ReadonlySet<string>
+): DirectoryRole {
+  if (parentRole !== 'project-source') return parentRole;
+  if (generatedArtifactDirectories.has(relativePath)) return 'generated-artifact';
+  if (installedDependencyDirectories.has(relativePath)) return 'installed-dependency';
+  return 'project-source';
+}
+
+function excludedDirectoryReason(directoryRole: Exclude<DirectoryRole, 'project-source'>): string {
+  return directoryRole === 'generated-artifact'
+    ? 'Generated dbt artifacts are regenerated and are not imported as project source.'
+    : 'Installed dbt dependencies are retained for analysis and are not imported as project source.';
 }
 
 function boundaryDiagnostic(projectRoot: string, error: unknown): DbtProjectImportDiagnostic {

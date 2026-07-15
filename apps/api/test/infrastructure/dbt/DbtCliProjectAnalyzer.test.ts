@@ -173,7 +173,7 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(second.analysisSha256).toBe(first.analysisSha256);
   });
 
-  it('keeps source hashes stable when excluded runtime artifacts change', async () => {
+  it('excludes generated artifacts while preserving installed dependencies for parsing', async () => {
     await writeFile(
       path.join(projectDirectory, 'dbt_project.yml'),
       [
@@ -194,7 +194,9 @@ describe('DbtCliProjectAnalyzer', () => {
         const projectPath = readFlag(input.args, '--project-dir');
         await expect(stat(path.join(projectPath, 'generated', 'target'))).rejects.toThrow();
         await expect(stat(path.join(projectPath, 'generated', 'logs'))).rejects.toThrow();
-        await expect(stat(path.join(projectPath, 'vendor', 'dbt'))).rejects.toThrow();
+        await expect(
+          readFile(path.join(projectPath, 'vendor', 'dbt', 'macros', 'package_macro.sql'), 'utf8')
+        ).resolves.toContain('macro package_macro');
         const targetPath = readFlag(input.args, '--target-path');
         await mkdir(targetPath, { recursive: true });
         await writeFile(path.join(targetPath, 'manifest.json'), JSON.stringify(manifest()), 'utf8');
@@ -210,8 +212,12 @@ describe('DbtCliProjectAnalyzer', () => {
     });
     await mkdir(path.join(projectDirectory, 'generated', 'target'), { recursive: true });
     await mkdir(path.join(projectDirectory, 'generated', 'logs'), { recursive: true });
-    await mkdir(path.join(projectDirectory, 'vendor', 'dbt', 'package'), { recursive: true });
+    await mkdir(path.join(projectDirectory, 'vendor', 'dbt', 'macros'), { recursive: true });
     await writeFile(path.join(projectDirectory, 'generated', 'target', 'manifest.json'), '{}');
+    await writeFile(
+      path.join(projectDirectory, 'vendor', 'dbt', 'macros', 'package_macro.sql'),
+      '{% macro package_macro() %}1{% endmacro %}\n'
+    );
 
     const first = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
     await writeFile(
@@ -222,13 +228,29 @@ describe('DbtCliProjectAnalyzer', () => {
       path.join(projectDirectory, 'generated', 'logs', 'dbt.log'),
       'changed runtime log'
     );
-    await writeFile(path.join(projectDirectory, 'vendor', 'dbt', 'package', 'state.json'), '{}');
-    const second = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+    const afterGeneratedArtifactChange = await analyzer.analyze({
+      scope: SCOPE,
+      projectRoot: 'analytics',
+    });
+    await writeFile(
+      path.join(projectDirectory, 'vendor', 'dbt', 'macros', 'package_macro.sql'),
+      '{% macro package_macro() %}2{% endmacro %}\n'
+    );
+    const afterDependencyChange = await analyzer.analyze({
+      scope: SCOPE,
+      projectRoot: 'analytics',
+    });
 
     expect(first.status).toBe('valid');
-    expect(second.status).toBe('valid');
-    expect(second.projectRevision.contentSetSha256).toBe(first.projectRevision.contentSetSha256);
-    expect(second.analysisSha256).toBe(first.analysisSha256);
+    expect(afterGeneratedArtifactChange.status).toBe('valid');
+    expect(afterDependencyChange.status).toBe('valid');
+    expect(afterGeneratedArtifactChange.projectRevision.contentSetSha256).toBe(
+      first.projectRevision.contentSetSha256
+    );
+    expect(afterGeneratedArtifactChange.analysisSha256).toBe(first.analysisSha256);
+    expect(afterDependencyChange.projectRevision.contentSetSha256).not.toBe(
+      afterGeneratedArtifactChange.projectRevision.contentSetSha256
+    );
   });
 
   it('hashes and parses the same isolated project snapshot', async () => {
@@ -265,7 +287,7 @@ describe('DbtCliProjectAnalyzer', () => {
         maxDepth: 64,
       },
       {
-        excludedDirectoryPaths: ['target', 'logs', 'dbt_packages'],
+        excludedDirectoryPaths: ['target', 'logs'],
       }
     );
 

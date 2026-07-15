@@ -5,10 +5,11 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
-  DBT_RUNTIME_ARTIFACT_DIRECTORY_DEFAULTS,
+  DBT_GENERATED_ARTIFACT_DIRECTORY_DEFAULTS,
+  DBT_INSTALLED_DEPENDENCY_DIRECTORY_DEFAULTS,
   evaluateDbtProjectPathPolicy,
   evaluateDbtProjectSnapshotPathPolicy,
-  resolveDbtRuntimeArtifactDirectoryPaths,
+  resolveDbtProjectDirectoryPartition,
 } from '../../../src/infrastructure/dbt/dbtProjectPathPolicy.js';
 
 describe('dbtProjectPathPolicy', () => {
@@ -41,41 +42,59 @@ vars:
     ).toEqual({ ok: true });
   });
 
-  it('resolves one normalized runtime-artifact directory set from defaults and dbt config', () => {
+  it('partitions generated artifacts from installed parse dependencies', () => {
     expect(
-      resolveDbtRuntimeArtifactDirectoryPaths(`
+      resolveDbtProjectDirectoryPartition(`
 name: analytics
 target-path: build/../generated/target
 log-path: generated/logs
 packages-install-path: vendor/dbt
 `)
-    ).toEqual(['generated/logs', 'generated/target', 'vendor/dbt']);
+    ).toEqual({
+      generatedArtifactDirectories: ['generated/logs', 'generated/target'],
+      installedDependencyDirectories: ['vendor/dbt'],
+    });
   });
 
-  it('uses canonical dbt runtime defaults when no override is configured', () => {
-    expect(resolveDbtRuntimeArtifactDirectoryPaths('name: analytics\n')).toEqual(
-      [...DBT_RUNTIME_ARTIFACT_DIRECTORY_DEFAULTS].sort((left, right) => left.localeCompare(right))
-    );
+  it('uses canonical directory defaults when no override is configured', () => {
+    expect(resolveDbtProjectDirectoryPartition('name: analytics\n')).toEqual({
+      generatedArtifactDirectories: [...DBT_GENERATED_ARTIFACT_DIRECTORY_DEFAULTS].sort(
+        (left, right) => left.localeCompare(right)
+      ),
+      installedDependencyDirectories: [...DBT_INSTALLED_DEPENDENCY_DIRECTORY_DEFAULTS].sort(
+        (left, right) => left.localeCompare(right)
+      ),
+    });
   });
 
-  it('rejects a runtime-artifact path that would hide configured project source', () => {
+  it('rejects a non-source path that would hide configured project source', () => {
     expect(
       evaluateDbtProjectPathPolicy(`
 name: analytics
 model-paths: [models]
 target-path: models
 `)
-    ).toEqual({ ok: false, reason: 'runtime_path_shadows_source' });
+    ).toEqual({ ok: false, reason: 'non_source_path_shadows_source' });
   });
 
   it.each([
     ['the project root', 'target-path: .\n'],
     ['a default source path', 'target-path: models\n'],
-  ])('rejects a runtime-artifact path that shadows %s', (_label, setting) => {
+  ])('rejects a non-source path that shadows %s', (_label, setting) => {
     expect(evaluateDbtProjectPathPolicy(`name: analytics\n${setting}`)).toEqual({
       ok: false,
-      reason: 'runtime_path_shadows_source',
+      reason: 'non_source_path_shadows_source',
     });
+  });
+
+  it('rejects overlapping generated-artifact and installed-dependency directories', () => {
+    expect(
+      evaluateDbtProjectPathPolicy(`
+name: analytics
+target-path: vendor
+packages-install-path: vendor/dbt
+`)
+    ).toEqual({ ok: false, reason: 'non_source_path_overlap' });
   });
 
   it('rejects an escaping path declared by a vendored dbt package', async () => {

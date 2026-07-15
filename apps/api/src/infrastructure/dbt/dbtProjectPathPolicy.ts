@@ -1,4 +1,4 @@
-/** Owned concern: keep dbt source and runtime paths safe, contained, and disjoint. */
+/** Owned concern: keep dbt source, generated, and dependency paths contained and disjoint. */
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
@@ -11,16 +11,19 @@ export type DbtProjectPathPolicyResult =
       readonly reason:
         | 'escaping_path'
         | 'malformed_config'
-        | 'runtime_path_shadows_source'
+        | 'non_source_path_overlap'
+        | 'non_source_path_shadows_source'
         | 'unsupported_path_value'
         | 'unverifiable_path';
     };
 
 const TEMPLATE_MARKER = /{{|}}|{%|%}|{#|#}/;
 const PATH_SETTING = /(?:^|-)paths?$/;
-const RUNTIME_PATH_SETTING_DEFAULTS = {
+const GENERATED_ARTIFACT_PATH_SETTING_DEFAULTS = {
   'target-path': 'target',
   'log-path': 'logs',
+} as const;
+const INSTALLED_DEPENDENCY_PATH_SETTING_DEFAULTS = {
   'packages-install-path': 'dbt_packages',
 } as const;
 const SOURCE_PATH_SETTING_DEFAULTS = {
@@ -33,9 +36,17 @@ const SOURCE_PATH_SETTING_DEFAULTS = {
   'test-paths': 'tests',
 } as const;
 
-export const DBT_RUNTIME_ARTIFACT_DIRECTORY_DEFAULTS = Object.freeze(
-  Object.values(RUNTIME_PATH_SETTING_DEFAULTS)
+export const DBT_GENERATED_ARTIFACT_DIRECTORY_DEFAULTS = Object.freeze(
+  Object.values(GENERATED_ARTIFACT_PATH_SETTING_DEFAULTS)
 );
+export const DBT_INSTALLED_DEPENDENCY_DIRECTORY_DEFAULTS = Object.freeze(
+  Object.values(INSTALLED_DEPENDENCY_PATH_SETTING_DEFAULTS)
+);
+
+export type DbtProjectDirectoryPartition = Readonly<{
+  generatedArtifactDirectories: readonly string[];
+  installedDependencyDirectories: readonly string[];
+}>;
 
 export function evaluateDbtProjectPathPolicy(dbtProjectYaml: string): DbtProjectPathPolicyResult {
   const document = parseDbtProjectDocument(dbtProjectYaml);
@@ -60,19 +71,37 @@ export function evaluateDbtProjectPathPolicy(dbtProjectYaml: string): DbtProject
     }
   }
 
-  if (runtimePathShadowsConfiguredSource(document)) {
-    return { ok: false, reason: 'runtime_path_shadows_source' };
+  if (nonSourcePathsOverlap(document)) {
+    return { ok: false, reason: 'non_source_path_overlap' };
+  }
+
+  if (nonSourcePathShadowsConfiguredSource(document)) {
+    return { ok: false, reason: 'non_source_path_shadows_source' };
   }
 
   return { ok: true };
 }
 
-export function resolveDbtRuntimeArtifactDirectoryPaths(dbtProjectYaml: string): readonly string[] {
+export function resolveDbtProjectDirectoryPartition(
+  dbtProjectYaml: string
+): DbtProjectDirectoryPartition {
   const document = parseDbtProjectDocument(dbtProjectYaml);
-  if (document === null) return DBT_RUNTIME_ARTIFACT_DIRECTORY_DEFAULTS;
-  return resolveEffectivePathSettings(document, RUNTIME_PATH_SETTING_DEFAULTS).filter(
-    (configuredPath) => configuredPath !== '.'
-  );
+  if (document === null) {
+    return {
+      generatedArtifactDirectories: DBT_GENERATED_ARTIFACT_DIRECTORY_DEFAULTS,
+      installedDependencyDirectories: DBT_INSTALLED_DEPENDENCY_DIRECTORY_DEFAULTS,
+    };
+  }
+  return {
+    generatedArtifactDirectories: resolveEffectivePathSettings(
+      document,
+      GENERATED_ARTIFACT_PATH_SETTING_DEFAULTS
+    ).filter((configuredPath) => configuredPath !== '.'),
+    installedDependencyDirectories: resolveEffectivePathSettings(
+      document,
+      INSTALLED_DEPENDENCY_PATH_SETTING_DEFAULTS
+    ).filter((configuredPath) => configuredPath !== '.'),
+  };
 }
 
 export async function evaluateDbtProjectSnapshotPathPolicy(
@@ -112,19 +141,42 @@ function normalizeContainedRelativePath(configuredPath: string): string | null {
   return normalized !== '..' && !normalized.startsWith('../') ? normalized : null;
 }
 
-function runtimePathShadowsConfiguredSource(document: Record<string, unknown>): boolean {
-  const runtimePaths = resolveEffectivePathSettings(document, RUNTIME_PATH_SETTING_DEFAULTS);
+function nonSourcePathShadowsConfiguredSource(document: Record<string, unknown>): boolean {
+  const nonSourcePaths = [
+    ...resolveEffectivePathSettings(document, GENERATED_ARTIFACT_PATH_SETTING_DEFAULTS),
+    ...resolveEffectivePathSettings(document, INSTALLED_DEPENDENCY_PATH_SETTING_DEFAULTS),
+  ];
   const configuredSourcePaths = resolveEffectivePathSettings(
     document,
     SOURCE_PATH_SETTING_DEFAULTS
   );
 
-  return runtimePaths.some(
-    (runtimePath) =>
-      runtimePath === '.' ||
+  return nonSourcePaths.some(
+    (nonSourcePath) =>
+      nonSourcePath === '.' ||
       configuredSourcePaths.some(
-        (sourcePath) => sourcePath === runtimePath || sourcePath.startsWith(`${runtimePath}/`)
+        (sourcePath) => sourcePath === nonSourcePath || sourcePath.startsWith(`${nonSourcePath}/`)
       )
+  );
+}
+
+function nonSourcePathsOverlap(document: Record<string, unknown>): boolean {
+  const generatedArtifactPaths = resolveEffectivePathSettings(
+    document,
+    GENERATED_ARTIFACT_PATH_SETTING_DEFAULTS
+  );
+  const installedDependencyPaths = resolveEffectivePathSettings(
+    document,
+    INSTALLED_DEPENDENCY_PATH_SETTING_DEFAULTS
+  );
+
+  return generatedArtifactPaths.some((generatedPath) =>
+    installedDependencyPaths.some(
+      (dependencyPath) =>
+        generatedPath === dependencyPath ||
+        generatedPath.startsWith(`${dependencyPath}/`) ||
+        dependencyPath.startsWith(`${generatedPath}/`)
+    )
   );
 }
 
