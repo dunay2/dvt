@@ -43,6 +43,19 @@ describe('useCanvasInteractionStore', () => {
     expect(localStorage.getItem(CANVAS_INTERACTION_STORAGE_KEY)).toBe(firstPersistedValue);
   });
 
+  it('does not publish a new execution selection snapshot when node identities are unchanged', () => {
+    useCanvasInteractionStore.getState().setSelectedNodes(['source.orders', 'model.orders']);
+    const selection = useCanvasInteractionStore.getState().selectedNodes;
+    const subscriber = vi.fn();
+    const unsubscribe = useCanvasInteractionStore.subscribe(subscriber);
+
+    useCanvasInteractionStore.getState().setSelectedNodes(['source.orders', 'model.orders']);
+
+    expect(useCanvasInteractionStore.getState().selectedNodes).toBe(selection);
+    expect(subscriber).not.toHaveBeenCalled();
+    unsubscribe();
+  });
+
   it('marks the store hydrated through the persist lifecycle', async () => {
     expect(useCanvasInteractionStore.getState()._hasHydrated).toBe(false);
 

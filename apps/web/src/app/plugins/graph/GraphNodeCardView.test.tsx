@@ -77,7 +77,7 @@ describe('GraphNodeCardView', () => {
     expect(onPlay).toHaveBeenCalledOnce();
   });
 
-  it('keeps the card play action green but visually secondary until hover or focus', () => {
+  it('keeps the card play action green and immediately discoverable', () => {
     act(() => {
       root.render(
         <GraphNodeCardView
@@ -92,9 +92,8 @@ describe('GraphNodeCardView', () => {
 
     expect(card?.className).toContain('group');
     expect(button?.className).toContain('text-green');
-    expect(button?.className).toContain('opacity-0');
-    expect(button?.className).toContain('group-hover:opacity-100');
-    expect(button?.className).toContain('focus-visible:opacity-100');
+    expect(button?.className).toContain('cursor-pointer');
+    expect(button?.className).not.toContain('opacity-0');
   });
 
   it('opens governed node actions from the card action button without selecting the card', () => {

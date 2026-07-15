@@ -258,14 +258,7 @@ export function useDbtProjectFileCanvasController(
 
   const handleSelectionChange = useCallback<
     NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>
-  >(
-    ({ nodes }) => {
-      if (execution.canSelectExecution) {
-        store.setSelectedNodes(nodes.map((node) => node.id));
-      }
-    },
-    [execution.canSelectExecution, store.setSelectedNodes]
-  );
+  >(() => undefined, []);
   const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
     () => undefined,
     []
