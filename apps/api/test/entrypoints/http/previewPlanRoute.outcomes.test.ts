@@ -72,7 +72,7 @@ function expectTransformationPreviewPlannerObservability(
             previewProfile: PREVIEW_PROFILE_TRANSFORMATION,
             executor: 'postgres',
           },
-          transformationFlowProvenance: VALID_PREVIEW_PROVENANCE,
+          planPreviewProvenance: VALID_PREVIEW_PROVENANCE,
         }),
       }),
     })

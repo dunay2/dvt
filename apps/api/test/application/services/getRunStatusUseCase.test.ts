@@ -950,7 +950,7 @@ describe('GetRunStatusUseCase', () => {
                     previewProfile: 'transformation-sql-first-v1',
                     executor: 'postgres',
                   },
-                  transformationFlowProvenance: {
+                  planPreviewProvenance: {
                     graphArtifact: {
                       repo: 'acme/warehouse',
                       path: 'graphs/orders.flow.yaml',

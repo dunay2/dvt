@@ -61,6 +61,7 @@ export const VALID_DBT_GRAPH_SOURCE = {
 } as const;
 
 export const VALID_PREVIEW_PROVENANCE = {
+  kind: 'transformation-git-artifacts',
   graphArtifact: {
     repo: 'org/repo',
     ref: 'refs/heads/main',
@@ -206,10 +207,12 @@ export function buildTransformationStoredPlan(): ExecutionPlan {
   } as const;
 }
 
-export function buildImportedPlan(input: {
-  ownership?: PlanOwnershipOverride;
-  scopeTags?: Record<string, string>;
-} = {}): ExecutionPlan {
+export function buildImportedPlan(
+  input: {
+    ownership?: PlanOwnershipOverride;
+    scopeTags?: Record<string, string>;
+  } = {}
+): ExecutionPlan {
   const scopeTags = input.scopeTags ?? {};
   return {
     metadata: {
