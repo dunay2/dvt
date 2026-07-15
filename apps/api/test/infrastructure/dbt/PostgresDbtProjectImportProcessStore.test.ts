@@ -83,6 +83,25 @@ describeWithPostgres('PostgresDbtProjectImportProcessStore', () => {
     await expect(authorityStore!.read(KEY)).resolves.toMatchObject({ binding: BINDING });
   });
 
+  it('admits only one active import across different idempotency keys', async () => {
+    await expect(
+      processStore!.begin(
+        beginInput('lease-a', '2026-07-15T10:00:00.000Z', '2026-07-15T10:03:00.000Z')
+      )
+    ).resolves.toMatchObject({ kind: 'acquired', leaseToken: 'lease-a' });
+
+    await expect(
+      processStore!.begin({
+        ...beginInput('lease-b', '2026-07-15T10:01:00.000Z', '2026-07-15T10:04:00.000Z'),
+        idempotencyKey: 'import-orders-second-client',
+        requestHash: 'request-b',
+      })
+    ).resolves.toEqual({
+      kind: 'in_progress',
+      leaseExpiresAt: '2026-07-15T10:03:00.000Z',
+    });
+  });
+
   it('recovers an expired lease and rejects completion or compensation by the old owner', async () => {
     await begin('lease-a', '2026-07-15T10:00:00.000Z', '2026-07-15T10:01:00.000Z');
 
@@ -124,6 +143,37 @@ describeWithPostgres('PostgresDbtProjectImportProcessStore', () => {
       result: RESULT,
     });
     await expect(authorityStore!.read(KEY)).resolves.toMatchObject({ binding: BINDING });
+  });
+
+  it('preserves a completed authority when a later import with another key fails', async () => {
+    await begin('lease-a', '2026-07-15T10:00:00.000Z', '2026-07-15T10:03:00.000Z');
+    await expect(complete('lease-a')).resolves.toMatchObject({ kind: 'completed' });
+
+    const secondOperation = {
+      key: KEY,
+      idempotencyKey: 'import-orders-second-client',
+    } as const;
+    await expect(
+      processStore!.begin({
+        ...beginInput('lease-b', '2026-07-15T10:03:00.000Z', '2026-07-15T10:06:00.000Z'),
+        ...secondOperation,
+        requestHash: 'request-b',
+      })
+    ).resolves.toMatchObject({ kind: 'acquired', leaseToken: 'lease-b' });
+    await expect(
+      processStore!.fail({
+        ...secondOperation,
+        requestHash: 'request-b',
+        leaseToken: 'lease-b',
+        expectedRevision: 'authority-1',
+        nowIso: '2026-07-15T10:04:00.000Z',
+      })
+    ).resolves.toEqual({ kind: 'failed' });
+
+    await expect(authorityStore!.read(KEY)).resolves.toMatchObject({ binding: BINDING });
+    await expect(processStore!.readCompleted(operationKey())).resolves.toMatchObject({
+      requestHash: 'request-a',
+    });
   });
 
   it('fails closed when an idempotency key is reused for another request', async () => {

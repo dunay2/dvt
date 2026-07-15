@@ -51,6 +51,10 @@ interface RelationRow extends QueryResultRow {
   readonly relation_name: string | null;
 }
 
+interface ExistingRow extends QueryResultRow {
+  readonly present: number;
+}
+
 type BeginInput = Parameters<IDbtProjectImportProcessStore['begin']>[0];
 type CompleteInput = Parameters<IDbtProjectImportProcessStore['complete']>[0];
 type FailInput = Parameters<IDbtProjectImportProcessStore['fail']>[0];
@@ -128,6 +132,14 @@ export class PostgresDbtProjectImportProcessStore implements IDbtProjectImportPr
           await client.query('COMMIT');
           return existing;
         }
+      }
+      const activeSibling = await this.readActiveSiblingOperationForUpdate(client, input);
+      if (activeSibling) {
+        await client.query('COMMIT');
+        return {
+          kind: 'in_progress',
+          leaseExpiresAt: asIsoString(activeSibling.lease_expires_at!),
+        };
       }
 
       const authority = await this.ensureAuthority(client, input, binding);
@@ -304,7 +316,12 @@ export class PostgresDbtProjectImportProcessStore implements IDbtProjectImportPr
         await client.query('ROLLBACK');
         return { kind: 'authority_conflict' };
       }
-      if (authority) {
+      const completedSiblingProtectsAuthority = await this.hasCompletedOperationForAuthority(
+        client,
+        input.key,
+        operation
+      );
+      if (authority && !completedSiblingProtectsAuthority) {
         await client.query(
           withTimeout(this.config.queryTimeoutMs, {
             text: `
@@ -471,6 +488,54 @@ export class PostgresDbtProjectImportProcessStore implements IDbtProjectImportPr
       })
     );
     return result.rows[0] ?? null;
+  }
+
+  private async readActiveSiblingOperationForUpdate(
+    client: PoolClient,
+    input: BeginInput
+  ): Promise<OperationRow | null> {
+    const result = await client.query<OperationRow>(
+      withTimeout(this.config.queryTimeoutMs, {
+        text: `
+          SELECT request_hash, status, binding_json, authority_revision,
+                 lease_token, lease_expires_at, result_json, updated_at
+          FROM ${quoteIdentifier(this.config.schema)}.dbt_project_import_operations
+          WHERE tenant_id = $1 AND project_id = $2 AND environment_id = $3
+            AND canvas_id = $4 AND idempotency_key <> $5
+            AND status = 'in_progress' AND lease_expires_at > $6::timestamptz
+          ORDER BY lease_expires_at ASC
+          LIMIT 1
+          FOR UPDATE
+        `,
+        values: [...operationKeyValues(input), input.nowIso],
+      })
+    );
+    return result.rows[0] ?? null;
+  }
+
+  private async hasCompletedOperationForAuthority(
+    client: PoolClient,
+    key: DbtProjectImportProcessKey,
+    operation: OperationRow
+  ): Promise<boolean> {
+    const result = await client.query<ExistingRow>(
+      withTimeout(this.config.queryTimeoutMs, {
+        text: `
+          SELECT 1 AS present
+          FROM ${quoteIdentifier(this.config.schema)}.dbt_project_import_operations
+          WHERE tenant_id = $1 AND project_id = $2 AND environment_id = $3
+            AND canvas_id = $4 AND status = 'completed'
+            AND authority_revision = $5 AND binding_json = $6::jsonb
+          LIMIT 1
+        `,
+        values: [
+          ...keyValues(key),
+          operation.authority_revision,
+          JSON.stringify(operation.binding_json),
+        ],
+      })
+    );
+    return result.rows.length > 0;
   }
 
   private async readAuthorityForUpdate(
