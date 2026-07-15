@@ -31,6 +31,9 @@ mitigations:
     authorization attempts reach application services.'
   - 'Persist the completed ImportDbtProject result and replay it before validating mutable project
     files; reject a reused idempotency key whose request hash differs.'
+  - 'Own authority binding, active-operation leasing, completed replay, and compensation through one
+    durable import process store. Recover an incomplete operation only after lease expiry and reject
+    completion or compensation from a stale owner token.'
   - 'Keep authority and import payloads versioned in @dvt/contracts and reject unsupported shapes.'
 review_after: 2026-08-14
 ---
