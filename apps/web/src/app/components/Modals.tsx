@@ -81,6 +81,7 @@ function PlanPreviewField({
     <div className="min-w-0 rounded-md border border-slate-800 bg-slate-950/45 px-3 py-2">
       <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{label}</div>
       <div
+        aria-label={`${label} value`}
         data-testid={long ? 'plan-preview-long-value' : undefined}
         className={`mt-1 ${valueClassName}`}
       >
@@ -246,6 +247,9 @@ export function PlanPreviewModal({
                 <div className="grid min-w-0 gap-3 md:grid-cols-2">
                   {provenance.kind === 'dbt-project-files' ? (
                     <>
+                      <PlanPreviewField label="Canvas" long>
+                        {provenance.canvasId}
+                      </PlanPreviewField>
                       <PlanPreviewField label="Project root" long>
                         {provenance.projectRoot}
                       </PlanPreviewField>

@@ -19,6 +19,13 @@ function buildProjection(): DbtProjectGraphProjection {
       analyzerVersion: 'dbt-cli-v1',
       dbtVersion: '1.10.0',
     },
+    adapterType: 'postgres',
+    executionTarget: {
+      provider: 'temporal',
+      adapter: 'postgres',
+      targetName: 'analysis',
+      credentialRef: 'env:DBT_PROFILES_DIR',
+    },
     analysisSha256: '2'.repeat(64),
     nodes: [
       {

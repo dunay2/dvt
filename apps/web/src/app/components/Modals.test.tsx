@@ -136,6 +136,7 @@ describe('PlanPreviewModal', () => {
         ...mockExecutionPlan.preview!,
         provenance: {
           kind: 'dbt-project-files' as const,
+          canvasId: 'analytics-canvas',
           projectRoot: 'analytics',
           contentSetSha256: '1'.repeat(64),
           analysisSha256: '2'.repeat(64),
@@ -159,9 +160,15 @@ describe('PlanPreviewModal', () => {
 
     const bodyText = document.body.textContent ?? '';
     expect(bodyText).toContain('Authoritative dbt project revision');
+    expect(document.querySelector('[aria-label="Canvas value"]')?.textContent).toBe(
+      'analytics-canvas'
+    );
     expect(bodyText).toContain('analytics');
     expect(bodyText).toContain('model.analytics.orders');
     expect(bodyText).toContain('server-config / postgres / development');
+    expect(document.querySelector('[aria-label="Execution target value"]')?.textContent).toBe(
+      'server-config / postgres / development'
+    );
     expect(bodyText).not.toContain('vault:dbt/development');
   });
 });
