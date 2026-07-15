@@ -193,7 +193,7 @@ describe('CanvasWorkspaceMenuControls', () => {
     const onExportProjectSnapshot = vi.fn();
     const onImportProjectSnapshotFile = vi.fn();
 
-    const renderRegistrar = (onImportDbtProject: () => void) => (
+    const renderRegistrar = (onImportDbtProject: () => void): React.ReactElement => (
       <CanvasWorkspaceMenuContributionRegistrar
         canExportProjectSnapshot={false}
         canImportProjectSnapshot={false}

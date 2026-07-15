@@ -29,7 +29,7 @@ describe('CanvasViewMenuContributionRegistrar', () => {
   });
 
   it('keeps one registered snapshot while parent callback identities change', async () => {
-    const renderRegistrar = (onAutoLayout: () => void) => (
+    const renderRegistrar = (onAutoLayout: () => void): React.ReactElement => (
       <CanvasViewMenuContributionRegistrar
         canEditEdges
         canUseCostOverlay={false}

@@ -1,4 +1,7 @@
-import { ImportSourceObjectsResultV2Schema } from '@dvt/contracts';
+import {
+  ImportSourceObjectsResultV2Schema,
+  type ImportSourceObjectsResultV2,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { resolveDbtProjectFileSourceImportFocus } from './useDbtProjectFileCanvasController';
@@ -12,7 +15,7 @@ const AUTHORITY_BINDING = {
   },
 };
 
-function buildFileImportResult(canvasId = AUTHORITY_BINDING.canvasId) {
+function buildFileImportResult(canvasId = AUTHORITY_BINDING.canvasId): ImportSourceObjectsResultV2 {
   return ImportSourceObjectsResultV2Schema.parse({
     schemaVersion: 'source-import-result.v2',
     success: true,
