@@ -9,6 +9,7 @@ import type { IObservability } from '@dvt/observability';
 import { PlannerFacade, type IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
+import type { IDbtExecutionTargetResolver } from '../../application/ports/dbtExecutionTarget.js';
 import type { DuplicateRunProbe } from '../../application/ports/DuplicateRunProbe.js';
 import type { IAdmissionGuard } from '../../application/ports/IAdmissionGuard.js';
 import type { AdmissionMode } from '../../application/ports/IAdmissionMode.js';
@@ -24,8 +25,10 @@ import { ResolveAuthorizedExecutableSubgraphService } from '../../application/se
 import { StartRunAuthorizedFacade } from '../../application/services/startRunAuthorizedFacade.js';
 import { StoredPlanExecutabilityValidator } from '../../application/services/StoredPlanExecutabilityValidator.js';
 import { ObservabilityAdmissionTelemetry } from '../../infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.js';
+import { DbtProjectBundleBuilder } from '../../infrastructure/dbt/DbtProjectBundleBuilder.js';
+import { DEFAULT_DBT_PROJECT_SOURCE_LIMITS } from '../../infrastructure/dbt/dbtProjectSourceSnapshot.js';
+import { FileDbtRunExecutionContextWriter } from '../../infrastructure/dbt/FileDbtRunExecutionContextWriter.js';
 import { ObservabilityStartRunSlaTelemetry } from '../../infrastructure/telemetry/ObservabilityStartRunSlaTelemetry.js';
-import { resolveWorkspaceScopeStorageRoot } from '../../infrastructure/workspaceFiles/workspaceScopeStoragePath.js';
 import { buildPlanCompilePlanner } from '../planCompileBoundary.js';
 
 export type BuildProtectedStartRunRuntimeDeps = {
@@ -44,6 +47,7 @@ export type BuildProtectedStartRunRuntimeDeps = {
   readonly workspaceGraphDraftStore: IWorkspaceGraphDraftStore;
   readonly workspaceRoot: string;
   readonly dbtBundleStore: DbtProjectBundleArtifactStore | undefined;
+  readonly dbtExecutionTargetResolver: IDbtExecutionTargetResolver;
 };
 
 export type ProtectedStartRunRuntime = {
@@ -75,8 +79,13 @@ export function buildProtectedStartRunRuntime(
   const dbtRunExecutionContextBindingUseCase = new DbtRunExecutionContextBindingUseCase({
     delegate: engineStartRunUseCase,
     planStore: deps.planStore,
-    resolveWorkspaceRoot: (scope) => resolveWorkspaceScopeStorageRoot(deps.workspaceRoot, scope),
-    dbtBundleStore: deps.dbtBundleStore,
+    bundleBuilder: new DbtProjectBundleBuilder({
+      workspaceFilesRoot: deps.workspaceRoot,
+      bundleStore: deps.dbtBundleStore,
+      limits: DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
+    }),
+    contextWriter: new FileDbtRunExecutionContextWriter(deps.dbtBundleStore),
+    executionTargetResolver: deps.dbtExecutionTargetResolver,
   });
   const plannerBackedUseCase = new PlannerBackedStartRunUseCase({
     planner,

@@ -17,6 +17,7 @@ import {
 import { projectDbtManifest } from './dbtManifestProjection.js';
 import { evaluateDbtProjectSnapshotPathPolicy } from './dbtProjectPathPolicy.js';
 import {
+  DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
   DbtProjectSourcePolicyError,
   snapshotDbtProjectSource,
 } from './dbtProjectSourceSnapshot.js';
@@ -25,8 +26,6 @@ import { resolveDbtProjectDirectory } from './dbtProjectWorkspaceBoundary.js';
 const ANALYZER_VERSION = 'dvt-dbt-analyzer.v1';
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 1_000_000;
-const DEFAULT_MAX_PROJECT_FILES = 10_000;
-const DEFAULT_MAX_PROJECT_BYTES = 50_000_000;
 const INVALID_PROJECT_DIAGNOSTIC_MESSAGE =
   'dbt parse rejected the project. Review it in a trusted dbt environment.';
 
@@ -66,10 +65,11 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     this.dbtExecutable = options.dbtExecutable ?? 'dbt';
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.maxOutputBytes = options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
-    this.maxProjectFiles = options.maxProjectFiles ?? DEFAULT_MAX_PROJECT_FILES;
-    this.maxProjectBytes = options.maxProjectBytes ?? DEFAULT_MAX_PROJECT_BYTES;
-    this.maxProjectDirectories = options.maxProjectDirectories ?? 5_000;
-    this.maxProjectDepth = options.maxProjectDepth ?? 64;
+    this.maxProjectFiles = options.maxProjectFiles ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxFiles;
+    this.maxProjectBytes = options.maxProjectBytes ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxBytes;
+    this.maxProjectDirectories =
+      options.maxProjectDirectories ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDirectories;
+    this.maxProjectDepth = options.maxProjectDepth ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDepth;
     this.processRunner = options.processRunner ?? NODE_DBT_PROCESS_RUNNER;
     this.processEnvironment = options.processEnvironment ?? process.env;
     this.now = options.now ?? (() => new Date());

@@ -159,6 +159,7 @@ export async function buildProtectedRuntimeModule(
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
     workspaceRoot: storageRuntime.workspaceFilesRoot,
     dbtBundleStore: storageRuntime.dbtBundleStore,
+    dbtExecutionTargetResolver,
   });
 
   return {

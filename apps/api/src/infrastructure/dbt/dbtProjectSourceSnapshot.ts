@@ -37,6 +37,13 @@ const SENSITIVE_FILE_NAME =
   /^(?:\.env(?:\..+)?|credentials?(?:\..+)?|profiles?\.(?:yml|yaml)|secrets?(?:\..+)?|service[-_]?account(?:\..+)?)$/iu;
 const SENSITIVE_FILE_EXTENSION = /\.(?:key|p12|pem|pfx)$/iu;
 
+export const DEFAULT_DBT_PROJECT_SOURCE_LIMITS: ProjectContentLimits = Object.freeze({
+  maxFiles: 10_000,
+  maxBytes: 50_000_000,
+  maxDirectories: 5_000,
+  maxDepth: 64,
+});
+
 export class DbtProjectSourcePolicyError extends Error {
   public readonly contentSetSha256: string;
 

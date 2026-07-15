@@ -1,286 +1,211 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { URL } from 'node:url';
-import { promisify } from 'node:util';
-import { gunzip } from 'node:zlib';
-
-import { parseExecutionSelection, parsePlanRef, type StartRunCommand } from '@dvt/contracts';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  parseExecutionSelection,
+  parsePlanRef,
+  parseRunExecutionContextRef,
+  type StartRunCommand,
+} from '@dvt/contracts';
+import { describe, expect, it, vi } from 'vitest';
 
 import { DbtRunExecutionContextBindingUseCase } from '../../../src/application/services/DbtRunExecutionContextBindingUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
 
-const gunzipAsync = promisify(gunzip);
-const tempRoots: string[] = [];
+const PLAN_ID = 'd'.repeat(64);
+const PROJECT_REVISION = '1'.repeat(64);
+const BUNDLE_SHA = '2'.repeat(64);
+const TARGET = {
+  provider: 'temporal',
+  adapter: 'postgres',
+  targetName: 'production',
+  credentialRef: 'vault:dbt/production',
+} as const;
+const PLAN_REF = parsePlanRef({
+  uri: 'dvt-plan://postgres/dbt-plan-1',
+  sha256: 'a'.repeat(64),
+  schemaVersion: '1.0',
+  planId: PLAN_ID,
+  planVersion: '1.0',
+});
+const RUN_CONTEXT_REF = parseRunExecutionContextRef({
+  uri: 'file:///run-contexts/context.json',
+  sha256: '3'.repeat(64),
+  schemaVersion: 'v1.0',
+  planId: PLAN_ID,
+  planVersion: '1.0',
+});
 
 describe('DbtRunExecutionContextBindingUseCase', () => {
-  afterEach(async () => {
-    await Promise.all(
-      tempRoots.splice(0).map((path) => rm(path, { recursive: true, force: true }))
-    );
-  });
-
-  it('binds DBT persisted plans to a generated runExecutionContextRef before engine dispatch', async () => {
-    const workspaceRoot = await makeTempRoot('dvt-api-dbt-workspace-');
-    const bundleRoot = await makeTempRoot('dvt-api-dbt-bundles-');
-    await writeWorkspaceFiles(workspaceRoot);
-    const delegate = {
-      execute: vi.fn(
-        async (_command: StartRunCommand, _context: ReturnType<typeof buildContext>) => ({
-          ok: true as const,
-          value: { kind: 'accepted' as const, runId: 'run-test-1', accepted: true as const },
-        })
-      ),
+  it('orchestrates a revision-bound bundle and server-owned run context before dispatch', async () => {
+    const delegate = makeDelegate();
+    const bundleBuilder = {
+      build: vi.fn(async () => ({
+        ok: true as const,
+        contentSetSha256: PROJECT_REVISION,
+        projectBundleRef: {
+          uri: `file:///bundles/tenants/tenant-1/${BUNDLE_SHA}`,
+          kind: 'dbt-project-bundle' as const,
+          sha256: BUNDLE_SHA,
+          tenantId: 'tenant-1',
+        },
+      })),
     };
-    const planId = 'd'.repeat(64);
-    const planRef = parsePlanRef({
-      uri: 'dvt-plan://postgres/dbt-plan-1',
-      sha256: 'a'.repeat(64),
-      schemaVersion: '1.0',
-      planId,
-      planVersion: '1.0',
-    });
-    const resolveWorkspaceRoot = vi.fn(() => workspaceRoot);
+    const contextWriter = {
+      write: vi.fn(async () => ({ ok: true as const, ref: RUN_CONTEXT_REF })),
+    };
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planStore: makePlanStore('DBT_MODEL', planId),
-      resolveWorkspaceRoot,
-      dbtBundleStore: {
-        kind: 'file' as const,
-        rootPath: bundleRoot,
-      },
+      planStore: makePlanStore('DBT_MODEL', DBT_PROVENANCE),
+      bundleBuilder,
+      contextWriter,
+      executionTargetResolver: { resolve: () => TARGET },
     });
 
-    const result = await useCase.execute(
-      {
-        ...buildCommand(),
-        planRef,
-      },
-      buildContext()
-    );
+    const result = await useCase.execute({ ...buildCommand(), planRef: PLAN_REF }, buildContext());
 
-    expect(result).toEqual({
-      ok: true,
-      value: { kind: 'accepted', runId: 'run-test-1', accepted: true },
+    expect(result).toMatchObject({ ok: true, value: { kind: 'accepted' } });
+    expect(bundleBuilder.build).toHaveBeenCalledWith({
+      scope: { tenantId: 'tenant-1', projectId: 'proj-1', environmentId: 'env-1' },
+      projectRoot: 'analytics',
+      expectedContentSetSha256: PROJECT_REVISION,
     });
-    expect(delegate.execute).toHaveBeenCalledTimes(1);
-    expect(resolveWorkspaceRoot).toHaveBeenCalledWith({
-      tenantId: 'tenant-1',
-      projectId: 'proj-1',
-      environmentId: 'env-1',
-    });
-    const enrichedCommand = delegate.execute.mock.calls[0]?.[0] as StartRunCommand;
-    expect(enrichedCommand.runExecutionContextRef).toMatchObject({
-      schemaVersion: 'v1.0',
-      planId,
-      planVersion: '1.0',
-    });
-
-    const contextRef = enrichedCommand.runExecutionContextRef;
-    expect(contextRef).toBeDefined();
-    const contextBytes = await readFile(new URL(contextRef!.uri));
-    const contextPayload = JSON.parse(contextBytes.toString('utf8')) as {
-      planSha256: string;
-      tenantId: string;
-      projectId: string;
-      environmentId: string;
-      pluginContexts: {
-        dbt?: {
-          projectBundleRef?: {
-            uri: string;
-            sha256: string;
-            tenantId: string;
-          };
-        };
-      };
-    };
-    expect(contextPayload).toMatchObject({
-      planSha256: planRef.sha256,
-      tenantId: 'tenant-1',
-      projectId: 'proj-1',
-      environmentId: 'env-1',
-    });
-    const bundleRef = contextPayload.pluginContexts.dbt?.projectBundleRef;
-    expect(bundleRef).toMatchObject({
-      tenantId: 'tenant-1',
-    });
-    expect(bundleRef?.uri).toContain('/tenants/tenant-1/');
-    const bundleBytes = await readFile(new URL(bundleRef!.uri));
-    const tarBytes = await gunzipAsync(bundleBytes);
-    expect(tarBytes.toString('utf8')).toContain('bundle/dbt_project.yml');
-    expect(tarBytes.toString('utf8')).toContain('bundle/models/model_1.sql');
-    expect(tarBytes.toString('utf8')).toContain(
-      "select * from {{ source('source_1', 'source_1') }}"
-    );
-  });
-
-  it('delegates non-DBT plans without generating run execution context artifacts', async () => {
-    const workspaceRoot = await makeTempRoot('dvt-api-non-dbt-workspace-');
-    const bundleRoot = await makeTempRoot('dvt-api-non-dbt-bundles-');
-    const delegate = {
-      execute: vi.fn(
-        async (_command: StartRunCommand, _context: ReturnType<typeof buildContext>) => ({
-          ok: true as const,
-          value: { kind: 'accepted' as const, runId: 'run-test-1', accepted: true as const },
-        })
-      ),
-    };
-    const planId = 'e'.repeat(64);
-    const command = {
-      ...buildCommand(),
-      planRef: parsePlanRef({
-        uri: 'dvt-plan://postgres/sql-plan-1',
-        sha256: 'b'.repeat(64),
-        schemaVersion: '1.0',
-        planId,
-        planVersion: '1.0',
+    expect(contextWriter.write).toHaveBeenCalledWith({
+      runId: 'run-test-1',
+      context: expect.objectContaining({
+        planSha256: PLAN_REF.sha256,
+        pluginContexts: {
+          dbt: expect.objectContaining({ targetProfile: 'production' }),
+        },
       }),
-    };
+    });
+    expect(delegate.execute).toHaveBeenCalledWith(
+      expect.objectContaining({ runExecutionContextRef: RUN_CONTEXT_REF }),
+      expect.any(Object)
+    );
+  });
+
+  it('rejects a changed project before writing context or dispatching', async () => {
+    const delegate = makeDelegate();
+    const contextWriter = { write: vi.fn() };
     const useCase = new DbtRunExecutionContextBindingUseCase({
       delegate,
-      planStore: makePlanStore(undefined, planId),
-      resolveWorkspaceRoot: () => workspaceRoot,
-      dbtBundleStore: {
-        kind: 'file' as const,
-        rootPath: bundleRoot,
+      planStore: makePlanStore('DBT_MODEL', DBT_PROVENANCE),
+      bundleBuilder: {
+        build: vi.fn(async () => ({
+          ok: false as const,
+          reason: 'revision_mismatch' as const,
+          expectedContentSetSha256: PROJECT_REVISION,
+          actualContentSetSha256: '9'.repeat(64),
+        })),
       },
+      contextWriter,
+      executionTargetResolver: { resolve: () => TARGET },
     });
 
+    const result = await useCase.execute({ ...buildCommand(), planRef: PLAN_REF }, buildContext());
+
+    expect(result).toMatchObject({
+      ok: true,
+      value: {
+        kind: 'plan_rejected',
+        accepted: false,
+        reason: 'The DBT project changed after Preview. Run Preview again before Run.',
+      },
+    });
+    expect(contextWriter.write).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
+  });
+
+  it('delegates non-DBT plans without creating DBT artifacts', async () => {
+    const delegate = makeDelegate();
+    const bundleBuilder = { build: vi.fn() };
+    const command = { ...buildCommand(), planRef: PLAN_REF };
     const context = buildContext();
+    const useCase = new DbtRunExecutionContextBindingUseCase({
+      delegate,
+      planStore: makePlanStore(undefined, undefined),
+      bundleBuilder,
+      contextWriter: { write: vi.fn() },
+      executionTargetResolver: { resolve: () => TARGET },
+    });
 
     await useCase.execute(command, context);
 
     expect(delegate.execute).toHaveBeenCalledWith(command, context);
+    expect(bundleBuilder.build).not.toHaveBeenCalled();
   });
 
-  it('rejects DBT plans explicitly when the DBT bundle store is not configured', async () => {
-    const workspaceRoot = await makeTempRoot('dvt-api-dbt-missing-store-');
+  it('reports an unavailable bundle store without dispatching', async () => {
+    const delegate = makeDelegate();
     const useCase = new DbtRunExecutionContextBindingUseCase({
-      delegate: {
-        execute: vi.fn(async () => ({
-          ok: true as const,
-          value: { kind: 'accepted' as const, runId: 'run-test-1', accepted: true as const },
+      delegate,
+      planStore: makePlanStore('DBT_MODEL', DBT_PROVENANCE),
+      bundleBuilder: {
+        build: vi.fn(async () => ({
+          ok: false as const,
+          reason: 'artifact_store_unavailable' as const,
         })),
       },
-      planStore: makePlanStore('DBT_MODEL', 'f'.repeat(64)),
-      resolveWorkspaceRoot: () => workspaceRoot,
-      dbtBundleStore: undefined,
+      contextWriter: { write: vi.fn() },
+      executionTargetResolver: { resolve: () => TARGET },
     });
 
-    const planId = 'f'.repeat(64);
-    const result = await useCase.execute(
-      {
-        ...buildCommand(),
-        planRef: parsePlanRef({
-          uri: 'dvt-plan://postgres/dbt-plan-2',
-          sha256: 'c'.repeat(64),
-          schemaVersion: '1.0',
-          planId,
-          planVersion: '1.0',
-        }),
-      },
-      buildContext()
-    );
+    const result = await useCase.execute({ ...buildCommand(), planRef: PLAN_REF }, buildContext());
 
-    expect(result).toEqual({
-      ok: true,
-      value: {
-        kind: 'plan_rejected',
-        accepted: false,
-        code: 'REJECTED',
-        reason: 'dbt project bundle artifact store is not configured',
-        cause: 'run_execution_context',
-      },
+    expect(result).toMatchObject({
+      value: { reason: 'The DBT project bundle artifact store is not configured.' },
     });
-  });
-
-  it('rejects DBT auto-binding when the configured bundle store is not file-backed', async () => {
-    const workspaceRoot = await makeTempRoot('dvt-api-dbt-s3-store-');
-    await writeWorkspaceFiles(workspaceRoot);
-    const planId = 'b'.repeat(64);
-    const useCase = new DbtRunExecutionContextBindingUseCase({
-      delegate: {
-        execute: vi.fn(async () => ({
-          ok: true as const,
-          value: { kind: 'accepted' as const, runId: 'run-test-1', accepted: true as const },
-        })),
-      },
-      planStore: makePlanStore('DBT_MODEL', planId),
-      resolveWorkspaceRoot: () => workspaceRoot,
-      dbtBundleStore: {
-        kind: 's3' as const,
-        bucket: 'dbt-bundles',
-      },
-    });
-
-    const result = await useCase.execute(
-      {
-        ...buildCommand(),
-        planRef: parsePlanRef({
-          uri: 'dvt-plan://postgres/dbt-plan-3',
-          sha256: 'd'.repeat(64),
-          schemaVersion: '1.0',
-          planId,
-          planVersion: '1.0',
-        }),
-      },
-      buildContext()
-    );
-
-    expect(result).toEqual({
-      ok: true,
-      value: {
-        kind: 'plan_rejected',
-        accepted: false,
-        code: 'REJECTED',
-        reason: 'dbt project bundle artifact auto-binding requires a file artifact store',
-        cause: 'run_execution_context',
-      },
-    });
+    expect(delegate.execute).not.toHaveBeenCalled();
   });
 });
 
-async function makeTempRoot(prefix: string): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), prefix));
-  tempRoots.push(root);
-  return root;
+const DBT_PROVENANCE = {
+  kind: 'dbt-project-files',
+  projectRoot: 'analytics',
+  contentSetSha256: PROJECT_REVISION,
+  analysisSha256: '4'.repeat(64),
+  dbtVersion: '1.10.0',
+  selectedUniqueIds: ['model.analytics.orders'],
+  executionTarget: TARGET,
+} as const;
+
+function makeDelegate() {
+  return {
+    execute: vi.fn(async () => ({
+      ok: true as const,
+      value: { kind: 'accepted' as const, runId: 'run-test-1', accepted: true as const },
+    })),
+  };
 }
 
-async function writeWorkspaceFiles(workspaceRoot: string): Promise<void> {
-  await writeFile(join(workspaceRoot, 'dbt_project.yml'), 'name: canvas_dbt\nversion: "1.0"\n');
-  await mkdir(join(workspaceRoot, 'models'), { recursive: true });
-  await writeFile(
-    join(workspaceRoot, 'models', 'model_1.sql'),
-    "{{ config(materialized='view') }}\n\nselect * from {{ source('source_1', 'source_1') }}\n"
-  );
-}
-
-function makePlanStore(
-  stepKind: string | undefined,
-  planId: string
-): {
-  fetchStoredPlanArtifactForValidation: ReturnType<typeof vi.fn>;
-} {
+function makePlanStore(stepKind: string | undefined, provenance: unknown) {
   return {
     fetchStoredPlanArtifactForValidation: vi.fn(async () => ({
       executionPolicy: {},
       bytes: Buffer.from(
         JSON.stringify({
           metadata: {
-            planId,
+            planId: PLAN_ID,
             planVersion: '1.0',
             schemaVersion: '1.0',
             contractVersion: '1.0.0',
-            inputHashSha256: '1'.repeat(64),
-            createdAtIso: '2026-05-26T00:00:00.000Z',
+            inputHashSha256: '5'.repeat(64),
+            createdAtIso: '2026-07-15T00:00:00.000Z',
           },
           steps:
             stepKind === undefined
               ? []
-              : [{ stepId: 'model_1', kind: stepKind, dependsOn: [], stepTypeConfig: {} }],
+              : [
+                  {
+                    stepId: 'model.analytics.orders',
+                    kind: stepKind,
+                    dependsOn: [],
+                    stepTypeConfig: {},
+                  },
+                ],
+          ...(provenance === undefined
+            ? {}
+            : { observability: { extra: { planPreviewProvenance: provenance } } }),
         }),
         'utf8'
       ),
@@ -292,7 +217,10 @@ function buildCommand(): StartRunCommand {
   return {
     runId: 'run-test-1',
     targetAdapter: 'temporal',
-    selection: parseExecutionSelection({ mode: 'explicit', nodeIds: ['model_1'] }),
+    selection: parseExecutionSelection({
+      mode: 'explicit',
+      nodeIds: ['model.analytics.orders'],
+    }),
   };
 }
 
@@ -300,11 +228,11 @@ function buildContext(): ReturnType<typeof buildAuthorizedContext> {
   return {
     ...buildAuthorizedContext('tenant-1'),
     scope: {
-      resource: 'environment' as const,
+      resource: 'environment',
       tenantId: TenantId.unsafe('tenant-1'),
       projectId: ProjectId.unsafe('proj-1'),
       environmentId: EnvironmentId.unsafe('env-1'),
     },
-    authorizedAt: new Date('2026-05-26T00:00:00.000Z'),
+    authorizedAt: new Date('2026-07-15T00:00:00.000Z'),
   };
 }
