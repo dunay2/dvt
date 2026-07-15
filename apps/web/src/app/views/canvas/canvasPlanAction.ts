@@ -19,6 +19,7 @@ import {
 } from './canvasDbtPlannerGraphSource';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import {
+  buildDbtProjectFilePlannerProjection,
   buildDbtProjectFileExecutionDraftSignature,
   buildDbtProjectFilePreviewProvenance,
 } from './dbtProjectFileExecutionStrategy';
@@ -107,17 +108,23 @@ export async function executeCanvasPlanAction({
   ) {
     try {
       const scopeSelection = collectPreviewSelection(selectedNodeIds, workspaceNodeIds);
-      const scopedNodeIds = resolveDbtExecutionScopeNodeIds({
-        nodes: canonicalNodes,
-        edges: canonicalEdges,
-        selectedNodeIds: scopeSelection.nodeIds,
-        workspaceNodeIds,
-      });
-      const plannerProjection = buildDbtPlannerGraphSource({
-        nodes: canonicalNodes,
-        edges: canonicalEdges,
-        scopedNodeIds,
-      });
+      const scopedNodeIds =
+        executionStrategy.kind === 'dbt_project_file_preview'
+          ? []
+          : resolveDbtExecutionScopeNodeIds({
+              nodes: canonicalNodes,
+              edges: canonicalEdges,
+              selectedNodeIds: scopeSelection.nodeIds,
+              workspaceNodeIds,
+            });
+      const plannerProjection =
+        executionStrategy.kind === 'dbt_project_file_preview'
+          ? buildDbtProjectFilePlannerProjection(executionStrategy, scopeSelection.nodeIds)
+          : buildDbtPlannerGraphSource({
+              nodes: canonicalNodes,
+              edges: canonicalEdges,
+              scopedNodeIds,
+            });
       if (!plannerProjection.ok) {
         return { ok: false, message: plannerProjection.message };
       }

@@ -69,6 +69,26 @@ describe('dbt project file execution strategy', () => {
         targetName: 'development',
         credentialRef: 'vault:dbt/development',
       },
+      plannerGraphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: '1.0',
+        nodes: [
+          {
+            nodeId: 'model.analytics.orders',
+            stepKind: 'DBT_MODEL',
+            dependsOn: [],
+            metadata: {
+              displayName: 'orders',
+              tags: {
+                kind: 'dbt:model',
+                pluginId: 'dbt',
+                role: 'transform',
+              },
+            },
+          },
+        ],
+      },
     });
   });
 

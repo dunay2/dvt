@@ -46,6 +46,31 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       contentSetSha256: '1'.repeat(64),
       analysisSha256: '2'.repeat(64),
       dbtVersion: '1.10.0',
+      plannerGraphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: '1.0',
+        nodes: [
+          {
+            nodeId: 'model.analytics.orders',
+            stepKind: 'DBT_MODEL',
+            dependsOn: [],
+            metadata: {
+              displayName: 'orders',
+              tags: { kind: 'dbt:model', pluginId: 'dbt', role: 'transform' },
+            },
+          },
+          {
+            nodeId: 'test.analytics.orders_not_null',
+            stepKind: 'DBT_TEST',
+            dependsOn: ['model.analytics.orders'],
+            metadata: {
+              displayName: 'orders_not_null',
+              tags: { kind: 'dbt:test', pluginId: 'dbt', role: 'check' },
+            },
+          },
+        ],
+      },
       executionTarget: {
         provider: 'server-config',
         adapter: 'postgres',
@@ -78,15 +103,15 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       executionStrategy: strategy,
       plansService: { previewPlan, importPlan: vi.fn() },
       previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
-      selectedNodeIds: ['model.analytics.orders'],
+      selectedNodeIds: ['test.analytics.orders_not_null'],
       sessionContext,
       transformationValidation: validateTransformationGraph({
         nodes: [modelNode],
         edges: [],
-        selectedNodeIds: ['model.analytics.orders'],
-        workspaceNodeIds: ['model.analytics.orders'],
+        selectedNodeIds: ['test.analytics.orders_not_null'],
+        workspaceNodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
       }),
-      workspaceNodeIds: ['model.analytics.orders'],
+      workspaceNodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
       workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
       workspaceFileContentCommand: {
         saveFileContent,
@@ -102,7 +127,10 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
     expect(previewPlan).toHaveBeenCalledWith({
       previewProfile: 'planner-generic-v1',
       graphSource: expect.objectContaining({ kind: 'generic-graph-v1', sourceFamily: 'dbt' }),
-      selection: { mode: 'explicit', nodeIds: ['model.analytics.orders'] },
+      selection: {
+        mode: 'explicit',
+        nodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
+      },
       context: expect.objectContaining({ runId: 'preview_context' }),
       provenance: {
         kind: 'dbt-project-files',
@@ -111,7 +139,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
         contentSetSha256: '1'.repeat(64),
         analysisSha256: '2'.repeat(64),
         dbtVersion: '1.10.0',
-        selectedUniqueIds: ['model.analytics.orders'],
+        selectedUniqueIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
         executionTarget: strategy.executionTarget,
       },
       persist: true,

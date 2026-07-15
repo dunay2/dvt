@@ -1,4 +1,6 @@
 /** Owned concern: declare execution posture for registered Canvas runtimes. */
+import type { GenericGraphSourceV1 } from '@dvt/contracts';
+
 export type CanvasExecutionStrategy =
   | {
       kind: 'transformation_preview';
@@ -18,6 +20,7 @@ export type CanvasExecutionStrategy =
       contentSetSha256: string;
       analysisSha256: string;
       dbtVersion: string;
+      plannerGraphSource: GenericGraphSourceV1;
       executionTarget: {
         provider: string;
         adapter: string;

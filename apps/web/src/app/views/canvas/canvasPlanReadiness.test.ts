@@ -230,6 +230,12 @@ describe('canvasPlanReadiness', () => {
         contentSetSha256: '1'.repeat(64),
         analysisSha256: '3'.repeat(64),
         dbtVersion: '1.10.0',
+        plannerGraphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: '1.0',
+          nodes: [],
+        },
         executionTarget: {
           provider: 'server-config',
           adapter: 'postgres',
