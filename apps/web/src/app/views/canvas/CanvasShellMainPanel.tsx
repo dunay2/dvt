@@ -35,6 +35,7 @@ type CanvasShellMainPanelProps = Readonly<{
   onOpenSourceImport?: CanvasShellOpenDataRegistryCommand;
   onOpenProjectExplorer?: () => void;
   onOpenProjectCode?: () => void;
+  onImportDbtProject?: () => void;
   onOpenCanvasSettings?: () => void;
   contextMenuPresenter: CanvasContextMenuPresenter;
 }>;
@@ -46,6 +47,7 @@ function CanvasShellMenuContributionRegistrars({
   chromeCommands,
   onOpenProjectExplorer,
   onOpenProjectCode,
+  onImportDbtProject,
 }: Pick<
   CanvasShellMainPanelProps,
   | 'panels'
@@ -54,6 +56,7 @@ function CanvasShellMenuContributionRegistrars({
   | 'chromeCommands'
   | 'onOpenProjectExplorer'
   | 'onOpenProjectCode'
+  | 'onImportDbtProject'
 >): JSX.Element {
   return (
     <>
@@ -82,10 +85,12 @@ function CanvasShellMenuContributionRegistrars({
         canImportProjectSnapshot={chromeState.canImportProjectSnapshot}
         canOpenProjectExplorer={typeof onOpenProjectExplorer === 'function'}
         canOpenProjectCode={typeof onOpenProjectCode === 'function'}
+        canImportDbtProject={typeof onImportDbtProject === 'function'}
         onExportProjectSnapshot={chromeCommands.onExportProjectSnapshot}
         onImportProjectSnapshotFile={chromeCommands.onImportProjectSnapshotFile}
         onOpenProjectExplorer={onOpenProjectExplorer}
         onOpenProjectCode={onOpenProjectCode}
+        onImportDbtProject={onImportDbtProject}
       />
     </>
   );
@@ -243,6 +248,7 @@ export function CanvasShellMainPanel({
   onOpenSourceImport,
   onOpenProjectExplorer,
   onOpenProjectCode,
+  onImportDbtProject,
   onOpenCanvasSettings,
   contextMenuPresenter,
 }: CanvasShellMainPanelProps): JSX.Element {
@@ -258,6 +264,7 @@ export function CanvasShellMainPanel({
         chromeCommands={chromeCommands}
         onOpenProjectExplorer={onOpenProjectExplorer}
         onOpenProjectCode={onOpenProjectCode}
+        onImportDbtProject={onImportDbtProject}
       />
       {layout.readOnlyBanner ? (
         <CanvasShellReadOnlyBannerSlot>{layout.readOnlyBanner}</CanvasShellReadOnlyBannerSlot>

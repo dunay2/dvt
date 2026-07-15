@@ -10,6 +10,7 @@ const CYPRESS_SPEC_PATH = 'apps/web/cypress/e2e/canvas/canvas-source-import-live
 const RETIRED_STUBBED_CYPRESS_SPEC_PATH =
   'apps/web/cypress/e2e/canvas/canvas-source-import-contextual.cy.ts';
 const LIVE_RUNNER_PATH = 'scripts/run-canvas-source-import-live-proof.cjs';
+const LIVE_SOURCE_IMPORT_SUPPORT_PATH = 'apps/web/cypress/support/liveWarehouseSourceImport.ts';
 const LIVE_PROOF_DB_OWNERSHIP_MIGRATION_PATH =
   'tools/planning-db/migrations/559_source_import_live_proof_db_first_ownership.sql';
 
@@ -24,6 +25,8 @@ describe('Canvas source import live proof architecture', () => {
     expect(repoFileExists(LIVE_RUNNER_PATH)).toBe(true);
 
     const cypressSpecSource = readRepoFile(CYPRESS_SPEC_PATH);
+    const sourceImportSupport = readRepoFile(LIVE_SOURCE_IMPORT_SUPPORT_PATH);
+    const liveInteractionSource = `${cypressSpecSource}\n${sourceImportSupport}`;
     const liveRunnerSource = readRepoFile(LIVE_RUNNER_PATH);
     const liveProofDbOwnershipMigration = readRepoFile(LIVE_PROOF_DB_OWNERSHIP_MIGRATION_PATH);
     const rootScripts = readPackageScripts('package.json');
@@ -58,22 +61,22 @@ describe('Canvas source import live proof architecture', () => {
     expect(cypressSpecSource).toContain(
       "clickCanvasAddCatalogAction('open-source-import', 'dbt:source')"
     );
-    expect(cypressSpecSource).toContain('source-import-connection-option');
-    expect(cypressSpecSource).toContain('data-source-import-object');
-    expect(cypressSpecSource).toContain('data-source-import-review-object');
-    expect(cypressSpecSource).not.toContain('data-source-import-table');
+    expect(liveInteractionSource).toContain('source-import-connection-option');
+    expect(liveInteractionSource).toContain('data-source-import-object');
+    expect(liveInteractionSource).toContain('data-source-import-review-object');
+    expect(liveInteractionSource).not.toContain('data-source-import-table');
     expect(cypressSpecSource).toContain("readLiveWorkspaceFile('models/sources/src_public.yml'");
     expect(cypressSpecSource).toContain("cy.contains('Stale version').should('not.exist')");
-    expect(cypressSpecSource).toContain("cy.contains('[role=\"dialog\"]', 'Add source'");
-    expect(cypressSpecSource).toContain('Attach sources to canvas');
+    expect(liveInteractionSource).toContain("cy.contains('[role=\"dialog\"]', 'Add source'");
+    expect(liveInteractionSource).toContain('Attach sources to canvas');
     expect(cypressSpecSource).toContain('.react-flow__node');
 
-    expect(cypressSpecSource).not.toContain('cy.intercept(');
-    expect(cypressSpecSource).not.toContain('stubE2eApi');
-    expect(cypressSpecSource).not.toContain('stubE2eJsonApi');
-    expect(cypressSpecSource).not.toContain('stubCanvasDraft');
-    expect(cypressSpecSource).not.toContain('seedLiveSelectedClosureDraft');
-    expect(cypressSpecSource).not.toContain("method: 'PUT'");
-    expect(cypressSpecSource).not.toContain('method: "PUT"');
+    expect(liveInteractionSource).not.toContain('cy.intercept(');
+    expect(liveInteractionSource).not.toContain('stubE2eApi');
+    expect(liveInteractionSource).not.toContain('stubE2eJsonApi');
+    expect(liveInteractionSource).not.toContain('stubCanvasDraft');
+    expect(liveInteractionSource).not.toContain('seedLiveSelectedClosureDraft');
+    expect(liveInteractionSource).not.toContain("method: 'PUT'");
+    expect(liveInteractionSource).not.toContain('method: "PUT"');
   });
 });

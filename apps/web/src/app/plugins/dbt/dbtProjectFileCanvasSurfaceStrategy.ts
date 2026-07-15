@@ -8,7 +8,7 @@ export const dbtProjectFileCanvasSurfaceStrategy: CanvasSurfaceStrategy = {
   id: 'dbt-project-files-read-only-canvas',
   sourceImport: {
     placement: 'contextual-modal',
-    openedFrom: [],
+    openedFrom: ['canvas-context-menu'],
   },
   nodeWorkbench: {
     placement: 'contextual-overlay',

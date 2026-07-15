@@ -6,6 +6,7 @@ const path = require('node:path');
 const yaml = require('js-yaml');
 
 const {
+  buildLiveProofCypressDockerInvocation,
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
   prepareLiveProofDbtAnalyzerProfile,
@@ -21,13 +22,62 @@ test('resolveLiveProofSpecPath keeps the selected-closure proof as the default',
   );
 });
 
-test('resolveLiveProofSpecPath maps a governed repository Cypress spec into the container', () => {
+test('resolveLiveProofSpecPath maps a governed repository Cypress spec into the proof container', () => {
   assert.equal(
     resolveLiveProofSpecPath([
       '--spec',
       'apps\\web\\cypress\\e2e\\canvas\\canvas-dbt-author-code-run-live.cy.ts',
     ]),
     '/repo/apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts'
+  );
+});
+
+test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cypress 15', () => {
+  assert.deepEqual(
+    buildLiveProofCypressDockerInvocation(
+      {
+        apiPort: 3300,
+        webPort: 4174,
+        apiBearerToken: 'proof-token',
+        specPath: '/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
+        workspaceScope: {
+          tenantId: 'tenant',
+          projectId: 'project',
+          environmentId: 'dev',
+        },
+      },
+      'C:/repo'
+    ),
+    [
+      'run',
+      '--rm',
+      '-t',
+      '-v',
+      'C:/repo:/repo',
+      '-w',
+      '/repo/apps/web',
+      '-e',
+      'CYPRESS_baseUrl=http://host.docker.internal:4174',
+      '-e',
+      'CYPRESS_apiBaseUrl=http://host.docker.internal:3300',
+      '-e',
+      'CYPRESS_apiBearerToken=proof-token',
+      '-e',
+      'CYPRESS_workspaceTenantId=tenant',
+      '-e',
+      'CYPRESS_workspaceProjectId=project',
+      '-e',
+      'CYPRESS_workspaceEnvironmentId=dev',
+      'cypress/included:15.18.1',
+      '--project',
+      '/repo/apps/web',
+      '--config-file',
+      '/repo/apps/web/cypress.config.ts',
+      '--browser',
+      'chrome',
+      '--spec',
+      '/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
+    ]
   );
 });
 

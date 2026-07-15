@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove CanvasShell contextual dialogs without source-import contract noise. */
+import { DbtProjectImportResultSchema } from '@dvt/contracts';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -118,6 +119,47 @@ describe('CanvasShell contextual dialogs', () => {
 
     expect(onToggleGridVisible).toHaveBeenCalledTimes(1);
     expect(onToggleSnapToGrid).toHaveBeenCalledTimes(1);
+  });
+
+  it('imports a dbt project from Workspace and delegates navigation from the server receipt', async () => {
+    const onDbtProjectImported = vi.fn();
+    const result = DbtProjectImportResultSchema.parse({
+      schemaVersion: 'dbt-project-import-result.v1',
+      success: true,
+      idempotencyKey: 'dbt-project-import:warehouse-analytics:1',
+      authorityBinding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'warehouse-analytics',
+        authority: { kind: 'dbt-project-files', projectRoot: 'analytics' },
+      },
+      projectRevision: {
+        projectRoot: 'analytics',
+        contentSetSha256: '1'.repeat(64),
+        analyzedAt: '2026-07-15T10:00:01.000Z',
+        analyzerVersion: 'dbt-cli-v1',
+      },
+      analysisSha256: '2'.repeat(64),
+      projectedResourceCount: 8,
+      importedAt: '2026-07-15T10:00:02.000Z',
+    });
+
+    await renderShell({ onDbtProjectImported });
+
+    await act(async () => {
+      useCanvasWorkspaceMenuContributionStore.getState().contribution?.onImportDbtProject?.();
+    });
+
+    expect(shellState.dbtProjectImportDialogProps).toMatchObject({ open: true });
+    expect(container.querySelector('[data-testid="dbt-project-import-dialog"]')).not.toBeNull();
+
+    await act(async () => {
+      const onImported = shellState.dbtProjectImportDialogProps?.onImported as
+        ((receipt: typeof result) => void) | undefined;
+      onImported?.(result);
+    });
+
+    expect(onDbtProjectImported).toHaveBeenCalledWith(result);
+    expect(shellState.dbtProjectImportDialogProps).toMatchObject({ open: false });
   });
 });
 

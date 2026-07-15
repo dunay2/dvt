@@ -58,6 +58,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   dbtProjectImportCanvasOccupied: 'dbt_project_import_canvas_occupied',
   dbtProjectImportAuthorityConflict: 'dbt_project_import_authority_conflict',
   dbtProjectImportIdempotencyMismatch: 'dbt_project_import_idempotency_mismatch',
+  dbtProjectImportInProgress: 'dbt_project_import_in_progress',
   dbtProjectImportProjectionFailed: 'dbt_project_import_projection_failed',
   dbtProjectFileAuthorityRequired: 'dbt_project_file_authority_required',
 } as const);

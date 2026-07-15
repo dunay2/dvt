@@ -14,7 +14,9 @@ task_id: E-DBT-PROJECT-ROUNDTRIP-1
 This component closes phase 3 of file-backed dbt authoring. A demanding user
 can validate an existing dbt project inside the authorized workspace, bind a
 new Canvas to that project, and add warehouse sources without creating a
-second semantic authority.
+second semantic authority. The import command is a durable process: a crash
+between authority binding, first projection, and result persistence can be
+recovered without stranding the Canvas or inventing another product rail.
 
 The implementation keeps exactly two mutually exclusive modes:
 
@@ -31,42 +33,46 @@ The implementation keeps exactly two mutually exclusive modes:
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md`
 
-## Current-State Drift
+## Recovery Drift Being Removed
 
 ```mermaid
 flowchart LR
-  Route[Canvas route query parameters]
-  Projection[ProjectDbtGraphFromFiles]
-  Analyzer[dbt analyzer]
-  SourceImport[ImportWarehouseSources]
-  Yaml[dbt source YAML]
-  Draft[WorkspaceGraphAuthoringDraft]
+  Import[ImportDbtProject]
+  Authority[Authority store transaction]
+  Projection[First file-backed projection]
+  Receipt[Completed receipt transaction]
+  Crash[Process crash or transient failure]
 
-  Route -->|unpersisted authority| Projection
-  Projection --> Analyzer
-  SourceImport --> Yaml
-  SourceImport --> Draft
+  Import --> Authority
+  Authority --> Projection
+  Projection --> Receipt
+  Authority -. committed before .-> Crash
+  Crash -. no completed receipt .-> Receipt
 ```
 
-The route currently trusts a client-supplied project root. Source Import
-always writes YAML and draft semantics, even when project files should be the
-only authority. Multi-file YAML writes are coordinated one file at a time and
-then compensated by application code.
+Authority binding and completed-result persistence were previously separate
+repository transactions with no durable owner for the work between them. A
+retry could observe a deduplicated authority binding and no completed receipt;
+if projection then failed, application compensation skipped the binding and
+left an unrecoverable file-authoritative Canvas. A boolean deduplication check
+cannot resolve that race. The command therefore requires one explicit process
+store with durable state, an expiring ownership lease, exact replay, and
+lease-guarded completion or compensation.
 
 ## Target Components
 
-| Component                            | Owned concern                                                                      | Reason to change                                             |
-| ------------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `DbtProjectImportContract`           | Version validation reports, accepted receipts, import commands, and receipts.      | The cross-process import vocabulary changes.                 |
-| `DbtProjectImportApplicationService` | Orchestrate validation and explicit authority binding.                             | Import policy or command/query orchestration changes.        |
-| `DbtProjectImportInspector`          | Inspect one existing workspace project under security and compatibility limits.    | Filesystem compatibility or import security policy changes.  |
-| `DbtProjectSourcePathPolicy`         | Partition project source from configured dbt runtime-artifact directories.         | dbt path configuration or source-selection policy changes.   |
-| `CanvasAuthoringAuthorityPolicy`     | Resolve the stored authority or the canonical graph-draft default.                 | Authority transition or default-resolution policy changes.   |
-| `CanvasAuthoringAuthorityStore`      | Persist and compare one Canvas authority binding.                                  | PostgreSQL persistence or conflict mechanics change.         |
-| `CanvasAuthoringAuthorityRuntime`    | Compose the policy port with its production store adapter.                         | Protected runtime dependency wiring changes.                 |
-| `DbtProjectImportReceiptStore`       | Persist and replay the completed result of one accepted import command.            | Import command replay or PostgreSQL receipt storage changes. |
-| `WorkspaceFileBatchMutation`         | Apply one scoped multi-file mutation with CAS, idempotency, staging, and rollback. | Local batch publication mechanics change.                    |
-| `DbtProjectImportDialog`             | Present validation, diagnostics, and explicit import confirmation.                 | The import interaction or presentation model changes.        |
+| Component                            | Owned concern                                                                                            | Reason to change                                                                |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `DbtProjectImportContract`           | Version validation reports, accepted receipts, import commands, and receipts.                            | The cross-process import vocabulary changes.                                    |
+| `DbtProjectImportApplicationService` | Orchestrate validation and explicit authority binding.                                                   | Import policy or command/query orchestration changes.                           |
+| `DbtProjectImportInspector`          | Inspect one existing workspace project under security and compatibility limits.                          | Filesystem compatibility or import security policy changes.                     |
+| `DbtProjectSourcePathPolicy`         | Partition project source from configured dbt runtime-artifact directories.                               | dbt path configuration or source-selection policy changes.                      |
+| `CanvasAuthoringAuthorityPolicy`     | Resolve the stored authority or the canonical graph-draft default.                                       | Authority transition or default-resolution policy changes.                      |
+| `CanvasAuthoringAuthorityStore`      | Persist and compare one Canvas authority binding.                                                        | PostgreSQL persistence or conflict mechanics change.                            |
+| `CanvasAuthoringAuthorityRuntime`    | Compose the policy port with its production store adapter.                                               | Protected runtime dependency wiring changes.                                    |
+| `DbtProjectImportProcessStore`       | Own the durable import operation, lease, authority transition, compensation, and exact completed replay. | Import recovery, process ownership, or PostgreSQL transaction semantics change. |
+| `WorkspaceFileBatchMutation`         | Apply one scoped multi-file mutation with CAS, idempotency, staging, and rollback.                       | Local batch publication mechanics change.                                       |
+| `DbtProjectImportDialog`             | Present validation, diagnostics, and explicit import confirmation.                                       | The import interaction or presentation model changes.                           |
 
 `ImportWarehouseSources` remains the existing command rail. Its application
 service resolves the active authority and delegates only the mode-specific
@@ -84,7 +90,7 @@ flowchart LR
   SourcePathPolicy[DbtProjectSourcePathPolicy]
   AuthorityPolicy[CanvasAuthoringAuthorityPolicy]
   AuthorityStore[ICanvasAuthoringAuthorityStore]
-  ReceiptStore[IDbtProjectImportReceiptStore]
+  ProcessStore[IDbtProjectImportProcessStore]
   Graph[ProjectDbtGraphFromFiles query]
   Source[ImportWarehouseSources command]
   Batch[IWorkspaceFileBatchMutationPort]
@@ -96,11 +102,12 @@ flowchart LR
   Inspector --> SourcePathPolicy
   Analyzer --> SourcePathPolicy
   Dialog --> Import
-  Import --> ReceiptStore
+  Import --> ProcessStore
   Import --> Inspector
   Import --> Analyzer
   Import --> AuthorityPolicy
   AuthorityPolicy --> AuthorityStore
+  ProcessStore --> AuthorityStore
   Import --> Graph
   Graph --> AuthorityPolicy
   Source --> AuthorityPolicy
@@ -131,8 +138,7 @@ sequenceDiagram
   participant Inspect as Import inspector
   participant Analyze as dbt analyzer
   participant Import as ImportDbtProject
-  participant Receipt as Import receipt store
-  participant Authority as Authority store
+  participant Process as Import process store
   participant Graph as ProjectDbtGraphFromFiles
 
   User->>UI: enter workspace-relative project root
@@ -142,16 +148,24 @@ sequenceDiagram
   Validate-->>UI: report plus accepted receipt
   User->>UI: confirm import
   UI->>Import: receipt, canvas id, conflict policy, idempotency key
-  Import->>Receipt: find completed command by scope, canvas and idempotency key
+  Import->>Process: find completed command by scope, canvas and idempotency key
   alt completed equivalent command
-    Receipt-->>Import: original accepted result
+    Process-->>Import: original accepted result
   else first execution
     Import->>Inspect: revalidate current content
     Import->>Analyze: verify revision and analysis
-    Import->>Authority: transactionally bind dbt-project-files if the Canvas has no graph-draft owner
+    Import->>Process: acquire lease and atomically bind authority
+    alt another live owner
+      Process-->>Import: operation in progress
+    else new or expired operation acquired
+      Process-->>Import: lease token and persisted authority
+    end
     Import->>Graph: first persisted-authority projection
     Graph-->>Import: fresh projection
-    Import->>Receipt: persist request hash and accepted result
+    Import->>Process: complete exact result under lease
+    opt projection or completion failure
+      Import->>Process: fail and compensate under the same lease
+    end
   end
   Import-->>UI: command receipt
 ```
@@ -201,6 +215,15 @@ sequenceDiagram
 - A completed import persists its exact command result before responding. An
   equivalent retry replays that result before inspecting mutable project files;
   reuse of the same idempotency key for another command fails closed.
+- One durable import operation owns the interval between authority binding and
+  completed-result persistence. Starting the operation and binding authority
+  happen in one PostgreSQL transaction.
+- An active lease admits at most one projection/completion owner for an import
+  operation. A retry may recover only after lease expiry; the previous owner
+  can no longer complete or compensate after recovery changes the lease token.
+- Completion wins over compensation. Compensation removes only the authority
+  revision owned by the same operation and leaves a recoverable failed process
+  record; a new attempt can bind the Canvas again without manual database work.
 - File-backed Source Import writes only beneath the bound `projectRoot`.
 - File-backed Source Import never calls the graph-draft save port.
 - Graph-draft Source Import retains its current semantic behavior.
@@ -256,17 +279,21 @@ rather than represented by duplicate adapter-level logs.
 6. API tests prove validation is read-only, import is explicit, the first
    graph projection resolves persisted authority, and a completed command
    replays its original result after later project-file changes.
-7. Analyzer and inspector tests prove the shared source/runtime partition,
+7. PostgreSQL process-store tests prove one active lease owner, expired-lease
+   recovery, stale-owner rejection, completed-result precedence, mismatch
+   rejection, and safe authority compensation after injected projection or
+   result-persistence failure.
+8. Analyzer and inspector tests prove the shared source/runtime partition,
    custom runtime paths, source-shadowing rejection, invariant hashes under
    runtime mutation, and explicit runtime inventory without source-byte charge.
-8. Source Import tests prove both modes and prove zero graph-draft writes in
+9. Source Import tests prove both modes and prove zero graph-draft writes in
    file-backed mode.
-9. Presentation tests prove validate-before-import, actionable diagnostics,
-   disabled confirmation on rejection, and navigation from the real receipt.
-10. A strict Cypress flow uses the protected API and real workspace files to
+10. Presentation tests prove validate-before-import, actionable diagnostics,
+    disabled confirmation on rejection, and navigation from the real receipt.
+11. A strict Cypress flow uses the protected API and real workspace files to
     import a dbt project, add a source, refresh the projection, and verify the
     graph draft did not gain that source.
-11. Contracts, API, web, architecture, lint, typecheck, governance,
+12. Contracts, API, web, architecture, lint, typecheck, governance,
     feature-mechanization, and `pnpm verify:prepush` pass with no disabled rule,
     stub, fake adapter, placeholder, or hidden skipped check.
 

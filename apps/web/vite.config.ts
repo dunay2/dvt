@@ -43,6 +43,9 @@ export default defineConfig(({ mode }) => {
     },
     server: {
       allowedHosts,
+      watch: {
+        ignored: ['**/cypress/downloads/**', '**/cypress/screenshots/**', '**/cypress/videos/**'],
+      },
       proxy: {
         '/api': {
           target: proxyTarget,

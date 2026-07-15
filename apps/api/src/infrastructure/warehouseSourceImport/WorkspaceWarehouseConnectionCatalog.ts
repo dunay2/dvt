@@ -18,7 +18,7 @@ import {
   WarehouseConnectionNotFoundError,
 } from '../../application/ports/warehouseSourceImport.js';
 import type {
-  IWorkspaceFileRepository,
+  IWorkspaceMetadataFileRepository,
   WorkspaceFileContent,
 } from '../../application/ports/workspaceFiles.js';
 import {
@@ -42,7 +42,9 @@ export const WorkspaceWarehouseConnectionCatalogSchema = z.object({
 });
 
 export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnectionCatalog {
-  public constructor(private readonly options: { readonly repository: IWorkspaceFileRepository }) {}
+  public constructor(
+    private readonly options: { readonly repository: IWorkspaceMetadataFileRepository }
+  ) {}
 
   public async listConnections(
     scope: WorkspaceGraphDraftScope
@@ -124,7 +126,7 @@ export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnection
 }
 
 export async function resolveWorkspaceWarehouseCatalog(
-  repository: IWorkspaceFileRepository,
+  repository: IWorkspaceMetadataFileRepository,
   scope: WorkspaceGraphDraftScope
 ): Promise<readonly WarehouseConnectionCatalogEntry[]> {
   const file = await readWorkspaceWarehouseCatalogFile(repository, scope);
@@ -132,7 +134,7 @@ export async function resolveWorkspaceWarehouseCatalog(
 }
 
 async function readWorkspaceWarehouseCatalogFile(
-  repository: IWorkspaceFileRepository,
+  repository: IWorkspaceMetadataFileRepository,
   scope: WorkspaceGraphDraftScope
 ): Promise<WorkspaceFileContent | null> {
   try {

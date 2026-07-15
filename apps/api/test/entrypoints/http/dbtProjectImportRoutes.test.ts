@@ -10,6 +10,7 @@ import {
   DbtProjectImportAuthorityConflictError,
   DbtProjectImportCanvasOccupiedError,
   DbtProjectImportIdempotencyMismatchError,
+  DbtProjectImportInProgressError,
   DbtProjectImportProjectionError,
   DbtProjectImportRejectedError,
   DbtProjectImportStaleReceiptError,
@@ -115,6 +116,11 @@ describe('dbtProjectImportRoutes', () => {
       'dbt_project_import_idempotency_mismatch',
     ],
     [new DbtProjectImportProjectionError(), 422, 'dbt_project_import_projection_failed'],
+    [
+      new DbtProjectImportInProgressError('2026-07-14T00:01:00.000Z'),
+      409,
+      'dbt_project_import_in_progress',
+    ],
   ])('maps %s to a stable HTTP conflict', async (error, status, reason) => {
     const { app } = buildApp({ executeImport: vi.fn().mockRejectedValue(error) });
 

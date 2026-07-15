@@ -8,6 +8,7 @@ import type { ExecutionPlan } from '@dvt/engine';
 import { StoredExecutablePlanResolver } from '../../application/services/StoredExecutablePlanResolver.js';
 import { ArtifactBackedRunExecutionContextResolver } from '../../infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.js';
 import { ArtifactStoreDbtProjectBundleBindingPolicy } from '../../infrastructure/startRun/ArtifactStoreDbtProjectBundleBindingPolicy.js';
+import { resolveWorkspaceFilesRoot } from '../../infrastructure/workspaceFiles/resolveWorkspaceFilesRoot.js';
 import type { Env } from '../../plugins/env.js';
 import { bindStateStoreRoles } from '../stateStoreRoles.js';
 
@@ -99,8 +100,4 @@ function resolveDbtBundleArtifactStore(env: Env) {
   }
 
   return undefined;
-}
-
-function resolveWorkspaceFilesRoot(env: Env): string {
-  return env.DVT_WORKSPACE_FILES_ROOT ?? env.DVT_DBT_BUNDLE_FILE_ROOT ?? process.cwd();
 }

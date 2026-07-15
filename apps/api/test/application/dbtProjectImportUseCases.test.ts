@@ -9,7 +9,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { IDbtProjectAnalyzerPort } from '../../src/application/ports/dbtProjectAnalysis.js';
 import type {
   IDbtProjectImportInspectorPort,
-  IDbtProjectImportReceiptStore,
+  IDbtProjectImportProcessStore,
 } from '../../src/application/ports/dbtProjectImport.js';
 import { ImportDbtProjectUseCase } from '../../src/application/services/importDbtProjectUseCase.js';
 import { ValidateDbtProjectImportUseCase } from '../../src/application/services/validateDbtProjectImportUseCase.js';
@@ -59,6 +59,7 @@ function validAnalyzer(): IDbtProjectAnalyzerPort {
         dbtVersion: '1.10.0',
       },
       analysisSha256: 'b'.repeat(64),
+      adapterType: 'postgres',
       resources: [],
       dependencies: [],
       diagnostics: [],
@@ -89,6 +90,7 @@ describe('ValidateDbtProjectImportUseCase', () => {
     expect(report).toMatchObject({
       status: 'accepted',
       projectName: 'analytics',
+      adapterType: 'postgres',
       receipt: {
         projectRoot: 'analytics',
         contentSetSha256: 'a'.repeat(64),
@@ -174,34 +176,17 @@ describe('ValidateDbtProjectImportUseCase', () => {
 });
 
 describe('ImportDbtProjectUseCase', () => {
-  it('binds an unoccupied Canvas and returns the first persisted-authority projection', async () => {
+  it('acquires an unoccupied Canvas process and returns its completed projection', async () => {
     const report = await acceptedReport();
-    const authorityStore = {
-      read: vi.fn(),
-      bind: vi.fn().mockResolvedValue({
-        kind: 'bound',
-        deduplicated: false,
-        record: {
-          key: { ...SCOPE, canvasId: 'orders-canvas' },
-          binding: {
-            schemaVersion: 'canvas-authoring-authority-binding.v1',
-            canvasId: 'orders-canvas',
-            authority: { kind: 'dbt-project-files', projectRoot: 'analytics' },
-          },
-          revision: 'authority-1',
-          updatedAt: NOW.toISOString(),
-        },
-      }),
-      release: vi.fn(),
-    };
+    const processStore = emptyProcessStore();
     const projection = freshProjection();
     const useCase = new ImportDbtProjectUseCase({
       validator: { execute: vi.fn().mockResolvedValue(report) },
-      authorityStore: authorityStore as never,
-      graphDraftStore: { read: vi.fn().mockResolvedValue(null) } as never,
-      receiptStore: emptyReceiptStore(),
+      processStore,
       projectGraph: { execute: vi.fn().mockResolvedValue(projection) },
       now: () => NOW,
+      createLeaseToken: () => 'lease-a',
+      operationLeaseMs: 60_000,
     });
 
     const result = await useCase.execute(SCOPE, {
@@ -212,7 +197,8 @@ describe('ImportDbtProjectUseCase', () => {
       validationReceipt: report.receipt,
     });
 
-    expect(authorityStore.bind).toHaveBeenCalledOnce();
+    expect(processStore.begin).toHaveBeenCalledOnce();
+    expect(processStore.complete).toHaveBeenCalledOnce();
     expect(result).toMatchObject({
       success: true,
       idempotencyKey: 'import-orders',
@@ -223,7 +209,7 @@ describe('ImportDbtProjectUseCase', () => {
 
   it('rejects a stale validation receipt before binding authority', async () => {
     const report = await acceptedReport();
-    const authorityStore = { bind: vi.fn() };
+    const processStore = emptyProcessStore();
     const useCase = new ImportDbtProjectUseCase({
       validator: {
         execute: vi.fn().mockResolvedValue({
@@ -231,11 +217,11 @@ describe('ImportDbtProjectUseCase', () => {
           receipt: { ...report.receipt, contentSetSha256: 'c'.repeat(64) },
         }),
       },
-      authorityStore: authorityStore as never,
-      graphDraftStore: { read: vi.fn() } as never,
-      receiptStore: emptyReceiptStore(),
+      processStore,
       projectGraph: { execute: vi.fn() },
       now: () => NOW,
+      createLeaseToken: () => 'lease-a',
+      operationLeaseMs: 60_000,
     });
 
     await expect(
@@ -247,82 +233,12 @@ describe('ImportDbtProjectUseCase', () => {
         validationReceipt: report.receipt,
       })
     ).rejects.toThrow('validation receipt is stale');
-    expect(authorityStore.bind).not.toHaveBeenCalled();
+    expect(processStore.begin).not.toHaveBeenCalled();
   });
 
-  it('releases a newly bound authority when the first projection fails', async () => {
+  it('compensates when files change between validation and first projection', async () => {
     const report = await acceptedReport();
-    const release = vi.fn().mockResolvedValue({ kind: 'released' });
-    const useCase = new ImportDbtProjectUseCase({
-      validator: { execute: vi.fn().mockResolvedValue(report) },
-      authorityStore: {
-        bind: vi.fn().mockResolvedValue({
-          kind: 'bound',
-          deduplicated: false,
-          record: {
-            key: { ...SCOPE, canvasId: 'orders-canvas' },
-            binding: freshProjection().authorityBinding,
-            revision: 'authority-1',
-            updatedAt: NOW.toISOString(),
-          },
-        }),
-        release,
-      } as never,
-      graphDraftStore: { read: vi.fn().mockResolvedValue(null) } as never,
-      receiptStore: emptyReceiptStore(),
-      projectGraph: { execute: vi.fn().mockRejectedValue(new Error('projection failed')) },
-      now: () => NOW,
-    });
-
-    await expect(
-      useCase.execute(SCOPE, {
-        schemaVersion: 'import-dbt-project-command.v1',
-        canvasId: 'orders-canvas',
-        conflictPolicy: 'require-unbound-canvas',
-        idempotencyKey: 'import-orders',
-        validationReceipt: report.receipt,
-      })
-    ).rejects.toThrow('projection failed');
-    expect(release).toHaveBeenCalledOnce();
-  });
-
-  it('rejects an occupied graph-draft Canvas before binding file authority', async () => {
-    const report = await acceptedReport();
-    const bind = vi.fn();
-    const useCase = new ImportDbtProjectUseCase({
-      validator: { execute: vi.fn().mockResolvedValue(report) },
-      authorityStore: { bind } as never,
-      graphDraftStore: {
-        read: vi.fn().mockResolvedValue({
-          draftPayload: {
-            canvas: { id: 'orders-canvas', kind: 'transformation', title: 'Orders' },
-            nodeIds: [],
-            nodePositions: {},
-            nodes: [],
-            edges: [],
-          },
-        }),
-      } as never,
-      receiptStore: emptyReceiptStore(),
-      projectGraph: { execute: vi.fn() },
-      now: () => NOW,
-    });
-
-    await expect(
-      useCase.execute(SCOPE, {
-        schemaVersion: 'import-dbt-project-command.v1',
-        canvasId: 'orders-canvas',
-        conflictPolicy: 'require-unbound-canvas',
-        idempotencyKey: 'import-orders',
-        validationReceipt: report.receipt,
-      })
-    ).rejects.toThrow('already has graph-draft authority');
-    expect(bind).not.toHaveBeenCalled();
-  });
-
-  it('rolls back when files change between validation and first projection', async () => {
-    const report = await acceptedReport();
-    const release = vi.fn().mockResolvedValue({ kind: 'released' });
+    const processStore = emptyProcessStore();
     const baselineProjection = freshProjection();
     const changedProjection = DbtProjectGraphProjectionSchema.parse({
       ...baselineProjection,
@@ -333,23 +249,11 @@ describe('ImportDbtProjectUseCase', () => {
     });
     const useCase = new ImportDbtProjectUseCase({
       validator: { execute: vi.fn().mockResolvedValue(report) },
-      authorityStore: {
-        bind: vi.fn().mockResolvedValue({
-          kind: 'bound',
-          deduplicated: false,
-          record: {
-            key: { ...SCOPE, canvasId: 'orders-canvas' },
-            binding: changedProjection.authorityBinding,
-            revision: 'authority-1',
-            updatedAt: NOW.toISOString(),
-          },
-        }),
-        release,
-      } as never,
-      graphDraftStore: { read: vi.fn().mockResolvedValue(null) } as never,
-      receiptStore: emptyReceiptStore(),
+      processStore,
       projectGraph: { execute: vi.fn().mockResolvedValue(changedProjection) },
       now: () => NOW,
+      createLeaseToken: () => 'lease-a',
+      operationLeaseMs: 60_000,
     });
 
     await expect(
@@ -361,7 +265,7 @@ describe('ImportDbtProjectUseCase', () => {
         validationReceipt: report.receipt,
       })
     ).rejects.toThrow('fresh projection');
-    expect(release).toHaveBeenCalledOnce();
+    expect(processStore.fail).toHaveBeenCalledOnce();
   });
 
   it.each([
@@ -371,27 +275,27 @@ describe('ImportDbtProjectUseCase', () => {
   ] as const)('fails closed on authority %s before projecting', async (kind, message) => {
     const report = await acceptedReport();
     const projectGraph = { execute: vi.fn() };
+    const processStore = emptyProcessStore();
+    processStore.begin.mockResolvedValue(
+      kind === 'conflict'
+        ? {
+            kind,
+            current: {
+              key: { ...SCOPE, canvasId: 'orders-canvas' },
+              binding: freshProjection().authorityBinding,
+              revision: 'authority-existing',
+              updatedAt: NOW.toISOString(),
+            },
+          }
+        : { kind }
+    );
     const useCase = new ImportDbtProjectUseCase({
       validator: { execute: vi.fn().mockResolvedValue(report) },
-      authorityStore: {
-        bind: vi.fn().mockResolvedValue(
-          kind === 'conflict'
-            ? {
-                kind,
-                current: {
-                  key: { ...SCOPE, canvasId: 'orders-canvas' },
-                  binding: freshProjection().authorityBinding,
-                  revision: 'authority-existing',
-                  updatedAt: NOW.toISOString(),
-                },
-              }
-            : { kind }
-        ),
-      } as never,
-      graphDraftStore: { read: vi.fn().mockResolvedValue(null) } as never,
-      receiptStore: emptyReceiptStore(),
+      processStore,
       projectGraph,
       now: () => NOW,
+      createLeaseToken: () => 'lease-a',
+      operationLeaseMs: 60_000,
     });
 
     await expect(
@@ -407,16 +311,32 @@ describe('ImportDbtProjectUseCase', () => {
   });
 });
 
-function emptyReceiptStore(): IDbtProjectImportReceiptStore {
+function emptyProcessStore(): IDbtProjectImportProcessStore & {
+  begin: ReturnType<typeof vi.fn>;
+  complete: ReturnType<typeof vi.fn>;
+  fail: ReturnType<typeof vi.fn>;
+} {
   return {
     migrate: vi.fn(),
     close: vi.fn(),
-    read: vi.fn().mockResolvedValue(null),
-    record: vi.fn(async (input: { requestHash: string; result: DbtProjectImportResult }) => ({
-      kind: 'recorded' as const,
+    readCompleted: vi.fn().mockResolvedValue(null),
+    begin: vi.fn(async (input: Parameters<IDbtProjectImportProcessStore['begin']>[0]) => ({
+      kind: 'acquired' as const,
+      leaseToken: input.leaseToken,
+      recovered: false,
+      record: {
+        key: input.key,
+        binding: input.binding,
+        revision: input.revision,
+        updatedAt: input.nowIso,
+      },
+    })),
+    complete: vi.fn(async (input: { requestHash: string; result: DbtProjectImportResult }) => ({
+      kind: 'completed' as const,
       receipt: { requestHash: input.requestHash, result: input.result },
       deduplicated: false,
     })),
+    fail: vi.fn().mockResolvedValue({ kind: 'failed' as const }),
   };
 }
 

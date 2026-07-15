@@ -55,11 +55,11 @@ describe('buildDbtProjectImportRuntime', () => {
           diagnostics: [],
         }),
       },
-      authorityStore: authorityStore as never,
       authorityPolicy: new CanvasAuthoringAuthorityPolicy(authorityStore as never),
-      graphDraftStore: {} as never,
-      receiptStore: {} as never,
+      processStore: {} as never,
       now: () => new Date('2026-07-14T10:00:00.000Z'),
+      createLeaseToken: () => 'lease-a',
+      operationLeaseMs: 60_000,
     });
 
     const validation = await runtime.validateUseCase.execute(SCOPE, {

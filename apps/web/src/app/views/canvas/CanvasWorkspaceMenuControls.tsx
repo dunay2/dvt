@@ -1,6 +1,6 @@
 /** Owned concern: render Canvas project commands inside the shell Workspace menu. */
-import { Code2, Download, FolderOpen, Upload } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { Code2, Download, FolderInput, FolderOpen, Upload } from 'lucide-react';
+import { useEffect, useMemo, useRef } from 'react';
 
 import {
   DropdownMenuItem,
@@ -18,13 +18,65 @@ function resolveCanvasKindLabel(kind: string): string {
 }
 
 export function CanvasWorkspaceMenuContributionRegistrar(
-  contribution: CanvasWorkspaceMenuContributionRegistrarProps
+  props: CanvasWorkspaceMenuContributionRegistrarProps
 ): null {
   const registerCanvasWorkspaceMenuContribution = useCanvasWorkspaceMenuContributionStore(
     (state) => state.registerCanvasWorkspaceMenuContribution
   );
   const clearCanvasWorkspaceMenuContribution = useCanvasWorkspaceMenuContributionStore(
     (state) => state.clearCanvasWorkspaceMenuContribution
+  );
+  const latestPropsRef = useRef(props);
+  latestPropsRef.current = props;
+  const activeCanvas = props.activeCanvas;
+  const hasImportDbtProjectCommand = props.onImportDbtProject != null;
+  const hasOpenProjectCodeCommand = props.onOpenProjectCode != null;
+  const hasOpenProjectExplorerCommand = props.onOpenProjectExplorer != null;
+  const contribution = useMemo<CanvasWorkspaceMenuContribution>(
+    () => ({
+      activeCanvas:
+        activeCanvas == null
+          ? null
+          : {
+              id: activeCanvas.id,
+              kind: activeCanvas.kind,
+              title: activeCanvas.title,
+              environmentId: activeCanvas.environmentId,
+              defaultPermission: activeCanvas.defaultPermission,
+            },
+      canExportProjectSnapshot: props.canExportProjectSnapshot,
+      canImportProjectSnapshot: props.canImportProjectSnapshot,
+      canImportDbtProject: props.canImportDbtProject,
+      canOpenProjectCode: props.canOpenProjectCode,
+      canOpenProjectExplorer: props.canOpenProjectExplorer,
+      onExportProjectSnapshot: () => latestPropsRef.current.onExportProjectSnapshot(),
+      onImportProjectSnapshotFile: (file) =>
+        latestPropsRef.current.onImportProjectSnapshotFile(file),
+      onImportDbtProject: hasImportDbtProjectCommand
+        ? () => latestPropsRef.current.onImportDbtProject?.()
+        : undefined,
+      onOpenProjectCode: hasOpenProjectCodeCommand
+        ? () => latestPropsRef.current.onOpenProjectCode?.()
+        : undefined,
+      onOpenProjectExplorer: hasOpenProjectExplorerCommand
+        ? () => latestPropsRef.current.onOpenProjectExplorer?.()
+        : undefined,
+    }),
+    [
+      activeCanvas?.defaultPermission,
+      activeCanvas?.environmentId,
+      activeCanvas?.id,
+      activeCanvas?.kind,
+      activeCanvas?.title,
+      props.canExportProjectSnapshot,
+      props.canImportDbtProject,
+      props.canImportProjectSnapshot,
+      props.canOpenProjectCode,
+      props.canOpenProjectExplorer,
+      hasImportDbtProjectCommand,
+      hasOpenProjectCodeCommand,
+      hasOpenProjectExplorerCommand,
+    ]
   );
 
   useEffect(() => {
@@ -49,6 +101,14 @@ export function CanvasWorkspaceMenuControls(): JSX.Element | null {
     <>
       <DropdownMenuSeparator />
       <DropdownMenuLabel>Project</DropdownMenuLabel>
+      <DropdownMenuItem
+        data-slot="canvas-workspace-import-dbt-project-command"
+        disabled={!contribution.canImportDbtProject || contribution.onImportDbtProject == null}
+        onClick={contribution.onImportDbtProject}
+      >
+        <FolderInput className="mr-2 size-4" />
+        Import dbt project
+      </DropdownMenuItem>
       <DropdownMenuItem
         data-slot="canvas-workspace-explore-project-command"
         disabled={

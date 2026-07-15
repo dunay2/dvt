@@ -57,6 +57,7 @@ export interface ProtectedRuntimeModule {
   canvasAuthoringAuthorityStore: ICanvasAuthoringAuthorityStore;
   canvasAuthoringAuthorityPolicy: CanvasAuthoringAuthorityPolicy;
   dbtProjectImport: DbtProjectImportRuntime;
+  workspaceFilesRoot: string;
   workspaceGraphDraftCapabilityService: AuthorizeWorkspaceGraphDraftCapabilityService;
   getWorkspaceGraphDraftUseCase: GetWorkspaceGraphDraftUseCase;
   saveWorkspaceGraphDraftUseCase: SaveWorkspaceGraphDraftUseCase;

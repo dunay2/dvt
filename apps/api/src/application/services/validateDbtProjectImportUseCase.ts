@@ -65,10 +65,12 @@ export class ValidateDbtProjectImportUseCase {
     }
 
     const validatedAt = this.deps.now().toISOString();
+    const adapterType = analysis.adapterType ?? inspection.adapterType;
     const validationSha256 = sha256({
       policyVersion: 'dbt-project-import-policy.v1',
       projectRoot: request.projectRoot,
       projectName: inspection.projectName,
+      adapterType,
       inventory: inspection.inventory,
       contentSetSha256: analysis.projectRevision.contentSetSha256,
       analysisSha256: analysis.analysisSha256,
@@ -78,7 +80,7 @@ export class ValidateDbtProjectImportUseCase {
       status: 'accepted',
       projectRoot: request.projectRoot,
       projectName: inspection.projectName,
-      ...(inspection.adapterType === undefined ? {} : { adapterType: inspection.adapterType }),
+      ...(adapterType === undefined ? {} : { adapterType }),
       inventory: inspection.inventory,
       diagnostics: inspection.diagnostics,
       receipt: {

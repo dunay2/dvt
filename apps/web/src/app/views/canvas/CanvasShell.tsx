@@ -1,7 +1,7 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasContextMenuLayer } from './CanvasContextMenuLayer';
@@ -10,6 +10,7 @@ import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationa
 import { CanvasProjectExplorerDialog } from './CanvasProjectExplorerDialog';
 import { CanvasSettingsDialog } from './CanvasSettingsDialog';
 import { CanvasSourceImportDialogHost } from './CanvasSourceImportDialogHost';
+import { DbtProjectImportDialog } from '../../components/dbtProjectImport/DbtProjectImportDialog';
 import { useCanvasSourceImportDialogState } from './useCanvasSourceImportDialogState';
 import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type { CanvasShellContextualWorkbench, CanvasShellProps } from './canvasShell.types';
@@ -26,10 +27,16 @@ export default function CanvasShell({
   canvasCommands,
   workspaceCommands,
   canvasContextScreenToFlowPosition,
+  onDbtProjectImported,
 }: CanvasShellProps): JSX.Element {
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
+  const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
   const [contextualWorkbenchId, setContextualWorkbenchId] = useState<'project-code' | null>(null);
+  const openProjectCodeWorkbench = useCallback(() => setContextualWorkbenchId('project-code'), []);
+  const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
+  const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
+  const openCanvasSettings = useCallback(() => setCanvasSettingsOpen(true), []);
   const canEditGraph = panels.userPermissions.canEditEdges;
   const sourceImportContributions = useMemo(
     () => getSourceImportContributions(panels.runtimeCapabilities),
@@ -40,7 +47,7 @@ export default function CanvasShell({
     [panels.runtimeCapabilities]
   );
   const canBrowseDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
-  const canOpenDataRegistry = canEditGraph && canBrowseDataRegistry;
+  const canOpenDataRegistry = canBrowseDataRegistry;
   const sourceImportDialog = useCanvasSourceImportDialogState(canOpenDataRegistry);
   const internalContextualWorkbench = useMemo<CanvasShellContextualWorkbench | undefined>(() => {
     if (contextualWorkbenchId !== 'project-code') {
@@ -75,12 +82,9 @@ export default function CanvasShell({
           },
     [internalContextualWorkbench, layout]
   );
-  const onOpenProjectCode =
-    workspaceCommands?.onOpenProjectCode ?? (() => setContextualWorkbenchId('project-code'));
+  const onOpenProjectCode = workspaceCommands?.onOpenProjectCode ?? openProjectCodeWorkbench;
   const onOpenProjectExplorer =
-    workspaceCommands?.canOpenProjectExplorer === false
-      ? undefined
-      : () => setProjectExplorerOpen(true);
+    workspaceCommands?.canOpenProjectExplorer === false ? undefined : openProjectExplorer;
   const contextMenuPresenter = useCanvasContextMenuPresenter({
     canEditEdges: canEditGraph,
     canOpenSourceImport: canOpenDataRegistry,
@@ -97,7 +101,7 @@ export default function CanvasShell({
               undefined,
               flowPosition == null ? undefined : { canvasPosition: flowPosition }
             ),
-    onOpenCanvasSettings: () => setCanvasSettingsOpen(true),
+    onOpenCanvasSettings: openCanvasSettings,
   });
 
   return (
@@ -126,7 +130,8 @@ export default function CanvasShell({
         onOpenSourceImport={sourceImportDialog.openCommand}
         onOpenProjectExplorer={onOpenProjectExplorer}
         onOpenProjectCode={onOpenProjectCode}
-        onOpenCanvasSettings={() => setCanvasSettingsOpen(true)}
+        onImportDbtProject={onDbtProjectImported == null ? undefined : openDbtProjectImport}
+        onOpenCanvasSettings={openCanvasSettings}
         contextMenuPresenter={contextMenuPresenter}
       />
       <CanvasContextMenuLayer presenter={contextMenuPresenter} />
@@ -167,6 +172,14 @@ export default function CanvasShell({
         onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
         onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
         onClose={() => setCanvasSettingsOpen(false)}
+      />
+      <DbtProjectImportDialog
+        open={dbtProjectImportOpen}
+        onClose={() => setDbtProjectImportOpen(false)}
+        onImported={(result) => {
+          setDbtProjectImportOpen(false);
+          onDbtProjectImported?.(result);
+        }}
       />
     </ResizablePanelGroup>
   );

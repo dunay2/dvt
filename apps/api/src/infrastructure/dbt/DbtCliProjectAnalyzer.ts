@@ -201,6 +201,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       const projection = projectDbtManifest(manifest);
       return {
         status: 'valid',
+        ...(projection.adapterType === undefined ? {} : { adapterType: projection.adapterType }),
         projectRevision: {
           ...projectRevision,
           ...(projection.dbtVersion === undefined ? {} : { dbtVersion: projection.dbtVersion }),

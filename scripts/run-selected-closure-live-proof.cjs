@@ -3,7 +3,6 @@
  * Owned concern: boot a live protected-runtime browser proof lane for selected closure.
  */
 const { spawn, spawnSync } = require('node:child_process');
-const { once } = require('node:events');
 const { mkdir, rm, writeFile } = require('node:fs/promises');
 const http = require('node:http');
 const https = require('node:https');
@@ -36,7 +35,7 @@ const DEFAULT_POLL_INTERVAL_MS = 500;
 const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-temporal-postgres-proof.cjs');
 const TEMPORAL_PACKAGE_ROOT = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
 const DEFAULT_SPEC_RELATIVE_PATH = 'apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts';
-const CYPRESS_IMAGE = 'cypress/included:13.17.0';
+const CYPRESS_IMAGE = 'cypress/included:15.18.1';
 const LOCAL_AUTH_HOST = '127.0.0.1';
 const API_BIND_HOST = '0.0.0.0';
 const WEB_BIND_HOST = '0.0.0.0';
@@ -224,6 +223,41 @@ function resolveLiveProofSpecPath(argv = process.argv.slice(2)) {
   return `/repo/${relativeSpecPath}`;
 }
 
+function buildLiveProofCypressDockerInvocation(args, repoRoot = path.resolve(__dirname, '..')) {
+  const normalizedRepoRoot = repoRoot.replaceAll('\\', '/');
+
+  return [
+    'run',
+    '--rm',
+    '-t',
+    '-v',
+    `${normalizedRepoRoot}:/repo`,
+    '-w',
+    '/repo/apps/web',
+    '-e',
+    `CYPRESS_baseUrl=http://host.docker.internal:${args.webPort}`,
+    '-e',
+    `CYPRESS_apiBaseUrl=http://host.docker.internal:${args.apiPort}`,
+    '-e',
+    `CYPRESS_apiBearerToken=${args.apiBearerToken}`,
+    '-e',
+    `CYPRESS_workspaceTenantId=${args.workspaceScope.tenantId}`,
+    '-e',
+    `CYPRESS_workspaceProjectId=${args.workspaceScope.projectId}`,
+    '-e',
+    `CYPRESS_workspaceEnvironmentId=${args.workspaceScope.environmentId}`,
+    CYPRESS_IMAGE,
+    '--project',
+    '/repo/apps/web',
+    '--config-file',
+    '/repo/apps/web/cypress.config.ts',
+    '--browser',
+    'chrome',
+    '--spec',
+    args.specPath,
+  ];
+}
+
 function resolveLiveProofWorkspaceFilesRoot(liveProofSchema, sourceEnv = process.env) {
   return (
     readNonEmptyEnv(sourceEnv.DVT_WORKSPACE_FILES_ROOT) ??
@@ -378,42 +412,21 @@ async function seedSelectedClosureLocalWarehouseProof(
 }
 
 async function runCypress(args) {
-  const repoRoot = path.resolve(__dirname, '..').replaceAll('\\', '/');
-  const dockerArgs = [
-    'run',
-    '--rm',
-    '-t',
-    '-v',
-    `${repoRoot}:/repo`,
-    '-w',
-    '/repo/apps/web',
-    '-e',
-    `CYPRESS_baseUrl=http://host.docker.internal:${args.webPort}`,
-    '-e',
-    `CYPRESS_apiBaseUrl=http://host.docker.internal:${args.apiPort}`,
-    '-e',
-    `CYPRESS_apiBearerToken=${args.apiBearerToken}`,
-    '-e',
-    `CYPRESS_workspaceTenantId=${args.workspaceScope.tenantId}`,
-    '-e',
-    `CYPRESS_workspaceProjectId=${args.workspaceScope.projectId}`,
-    '-e',
-    `CYPRESS_workspaceEnvironmentId=${args.workspaceScope.environmentId}`,
-    CYPRESS_IMAGE,
-    '--project',
-    '/repo/apps/web',
-    '--config-file',
-    '/repo/apps/web/cypress.config.ts',
-    '--spec',
-    args.specPath,
-  ];
-
-  const child = spawn('docker', dockerArgs, {
+  const child = spawn('docker', buildLiveProofCypressDockerInvocation(args), {
     stdio: 'inherit',
     windowsHide: true,
   });
 
-  const [exitCode] = await once(child, 'exit');
+  const exitCode = await new Promise((resolve, reject) => {
+    child.once('error', reject);
+    child.once('exit', (code, signal) => {
+      if (signal != null) {
+        reject(new Error(`Cypress live selected-closure proof exited from signal ${signal}`));
+        return;
+      }
+      resolve(code);
+    });
+  });
 
   if (typeof exitCode !== 'number' || exitCode !== 0) {
     throw new Error(`Cypress live selected-closure proof failed with exit code ${exitCode}`);
@@ -569,6 +582,7 @@ async function main() {
 }
 
 module.exports = {
+  buildLiveProofCypressDockerInvocation,
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
   prepareLiveProofDbtAnalyzerProfile,

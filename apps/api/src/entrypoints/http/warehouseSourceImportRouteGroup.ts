@@ -16,7 +16,7 @@ import {
 } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
 import { LocalWorkspaceFileBatchMutationGateway } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.js';
 import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
-import { resolveWorkspaceFilesRoot } from '../../infrastructure/workspaceFiles/resolveWorkspaceFilesRoot.js';
+import { LocalWorkspaceMetadataFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
@@ -33,12 +33,15 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
   app: FastifyInstance,
   options: ProtectedWarehouseSourceImportRouteGroupOptions
 ): void {
-  const workspaceFilesRoot = resolveWorkspaceFilesRoot(options.env);
+  const workspaceFilesRoot = options.protectedModule.workspaceFilesRoot;
   const workspaceFiles = new LocalWorkspaceFileRepository({
     root: workspaceFilesRoot,
   });
+  const workspaceMetadataFiles = new LocalWorkspaceMetadataFileRepository({
+    root: workspaceFilesRoot,
+  });
   const batchMutation = new LocalWorkspaceFileBatchMutationGateway({ root: workspaceFilesRoot });
-  const catalog = new WorkspaceWarehouseConnectionCatalog({ repository: workspaceFiles });
+  const catalog = new WorkspaceWarehouseConnectionCatalog({ repository: workspaceMetadataFiles });
   const probe = new WorkspaceWarehouseConnectionProbe({
     credentialResolver: new EnvironmentWarehouseCredentialResolver(),
     now: () => new Date(),

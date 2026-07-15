@@ -102,7 +102,7 @@ describe('CanvasShell source import lifecycle', () => {
     );
   });
 
-  it('closes the import wizard if edit permissions are revoked while it is open', async () => {
+  it('closes the import wizard if source import eligibility is revoked while it is open', async () => {
     await renderShell();
 
     await act(async () => {
@@ -117,12 +117,8 @@ describe('CanvasShell source import lifecycle', () => {
 
     await renderShellProps(
       buildCanvasShellProps({
-        panels: {
-          userPermissions: {
-            canPlan: false,
-            canRun: false,
-            canEditEdges: false,
-          },
+        layout: {
+          canOpenSourceImport: false,
         },
       })
     );

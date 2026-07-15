@@ -25,12 +25,20 @@ import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStra
 const shellState = vi.hoisted(() => ({
   canvasViewportProps: null as null | Record<string, unknown>,
   sourceImportWizardProps: null as null | Record<string, unknown>,
+  dbtProjectImportDialogProps: null as null | Record<string, unknown>,
 }));
 
 vi.mock('../../components/SourceImportWizard', () => ({
   default: (props: Record<string, unknown>) => {
     shellState.sourceImportWizardProps = props;
     return <div data-testid="source-import-wizard" />;
+  },
+}));
+
+vi.mock('../../components/dbtProjectImport/DbtProjectImportDialog', () => ({
+  DbtProjectImportDialog: (props: Record<string, unknown>) => {
+    shellState.dbtProjectImportDialogProps = props;
+    return props.open ? <div data-testid="dbt-project-import-dialog" /> : null;
   },
 }));
 
@@ -50,6 +58,7 @@ export type CanvasShellPropsOverrides = {
   chromeCommands?: Partial<CanvasShellChromeCommands>;
   canvasCommands?: Partial<CanvasShellCanvasCommands>;
   warehouseSourceImport?: IWarehouseSourceImportPort;
+  onDbtProjectImported?: CanvasShellProps['onDbtProjectImported'];
 };
 
 export function getCanvasShellState(): typeof shellState {
@@ -206,6 +215,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       ...overrides?.canvasCommands,
     },
     warehouseSourceImport: overrides?.warehouseSourceImport,
+    onDbtProjectImported: overrides?.onDbtProjectImported,
   };
 }
 
@@ -223,6 +233,7 @@ export function createCanvasShellHarness(): {
   ).IS_REACT_ACT_ENVIRONMENT = true;
   shellState.canvasViewportProps = null;
   shellState.sourceImportWizardProps = null;
+  shellState.dbtProjectImportDialogProps = null;
 
   return {
     container,

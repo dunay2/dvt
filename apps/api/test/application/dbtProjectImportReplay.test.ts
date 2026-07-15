@@ -65,10 +65,9 @@ describe('ImportDbtProjectUseCase completed-command replay', () => {
     const useCase = new ImportDbtProjectUseCase(deps as never);
 
     await expect(useCase.execute(SCOPE, COMMAND)).resolves.toEqual(RESULT);
-    expect(deps.receiptStore.read).toHaveBeenCalledOnce();
+    expect(deps.processStore.readCompleted).toHaveBeenCalledOnce();
     expect(deps.validator.execute).not.toHaveBeenCalled();
-    expect(deps.graphDraftStore.read).not.toHaveBeenCalled();
-    expect(deps.authorityStore.bind).not.toHaveBeenCalled();
+    expect(deps.processStore.begin).not.toHaveBeenCalled();
     expect(deps.projectGraph.execute).not.toHaveBeenCalled();
   });
 
@@ -82,16 +81,18 @@ describe('ImportDbtProjectUseCase completed-command replay', () => {
     expect(deps.validator.execute).not.toHaveBeenCalled();
   });
 
-  it('releases newly bound authority when the accepted result cannot be persisted', async () => {
-    const release = vi.fn().mockResolvedValue({ kind: 'released' });
+  it('compensates its acquired process when completion persistence fails', async () => {
+    const fail = vi.fn().mockResolvedValue({ kind: 'failed' });
     const useCase = new ImportDbtProjectUseCase({
       validator: {
         execute: vi.fn().mockResolvedValue({ status: 'accepted', receipt: RECEIPT }),
       },
-      authorityStore: {
-        bind: vi.fn().mockResolvedValue({
-          kind: 'bound',
-          deduplicated: false,
+      processStore: {
+        readCompleted: vi.fn().mockResolvedValue(null),
+        begin: vi.fn().mockResolvedValue({
+          kind: 'acquired',
+          leaseToken: 'lease-a',
+          recovered: false,
           record: {
             key: { ...SCOPE, canvasId: COMMAND.canvasId },
             binding: PROJECTION.authorityBinding,
@@ -99,39 +100,40 @@ describe('ImportDbtProjectUseCase completed-command replay', () => {
             updatedAt: NOW.toISOString(),
           },
         }),
-        release,
-      },
-      graphDraftStore: { read: vi.fn().mockResolvedValue(null) },
-      receiptStore: {
-        read: vi.fn().mockResolvedValue(null),
-        record: vi.fn().mockRejectedValue(new Error('receipt write failed')),
+        complete: vi.fn().mockRejectedValue(new Error('process completion failed')),
+        fail,
       },
       projectGraph: { execute: vi.fn().mockResolvedValue(PROJECTION) },
       now: () => NOW,
+      createLeaseToken: () => 'lease-a',
+      operationLeaseMs: 60_000,
     } as never);
 
-    await expect(useCase.execute(SCOPE, COMMAND)).rejects.toThrow('receipt write failed');
-    expect(release).toHaveBeenCalledOnce();
+    await expect(useCase.execute(SCOPE, COMMAND)).rejects.toThrow('process completion failed');
+    expect(fail).toHaveBeenCalledOnce();
   });
 });
 
 type ReplayDeps = Readonly<{
   validator: Readonly<{ execute: Mock }>;
-  authorityStore: Readonly<{ bind: Mock }>;
-  graphDraftStore: Readonly<{ read: Mock }>;
-  receiptStore: Readonly<{ read: Mock; record: Mock }>;
+  processStore: Readonly<{ readCompleted: Mock; begin: Mock }>;
   projectGraph: Readonly<{ execute: Mock }>;
   now: () => Date;
+  createLeaseToken: () => string;
+  operationLeaseMs: number;
 }>;
 
 function replayDeps(storedReceipt: { requestHash: string; result: typeof RESULT }): ReplayDeps {
   return {
     validator: { execute: vi.fn() },
-    authorityStore: { bind: vi.fn() },
-    graphDraftStore: { read: vi.fn() },
-    receiptStore: { read: vi.fn().mockResolvedValue(storedReceipt), record: vi.fn() },
+    processStore: {
+      readCompleted: vi.fn().mockResolvedValue(storedReceipt),
+      begin: vi.fn(),
+    },
     projectGraph: { execute: vi.fn() },
     now: () => NOW,
+    createLeaseToken: () => 'lease-a',
+    operationLeaseMs: 60_000,
   };
 }
 

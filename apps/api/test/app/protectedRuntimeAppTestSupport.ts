@@ -4,7 +4,7 @@ import * as pgPool from '../../src/db/pool.js';
 import { EmbeddedAccessDecisionService } from '../../src/infrastructure/auth/embeddedAccessDecisionService.js';
 import { EmbeddedProjectOnboardingRepository } from '../../src/infrastructure/auth/embeddedProjectOnboardingRepository.js';
 import { PostgresCanvasAuthoringAuthorityStore } from '../../src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.js';
-import { PostgresDbtProjectImportReceiptStore } from '../../src/infrastructure/dbt/PostgresDbtProjectImportReceiptStore.js';
+import { PostgresDbtProjectImportProcessStore } from '../../src/infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
 import { PostgresWorkspaceGraphDraftStore } from '../../src/infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
 import { EmbeddedWorkspacePluginCatalogRepository } from '../../src/infrastructure/workspacePlugins/EmbeddedWorkspacePluginCatalogRepository.js';
 
@@ -36,7 +36,7 @@ export type ProtectedRuntimeMigrationCalls = {
   readonly intentStore: number;
   readonly workspaceGraphDraftStore: number;
   readonly canvasAuthoringAuthorityStore: number;
-  readonly dbtProjectImportReceiptStore: number;
+  readonly dbtProjectImportProcessStore: number;
 };
 
 function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
@@ -51,8 +51,8 @@ function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
     PostgresWorkspaceGraphDraftStore.prototype.migrate;
   const originalCanvasAuthoringAuthorityStoreMigrate =
     PostgresCanvasAuthoringAuthorityStore.prototype.migrate;
-  const originalDbtProjectImportReceiptStoreMigrate =
-    PostgresDbtProjectImportReceiptStore.prototype.migrate;
+  const originalDbtProjectImportProcessStoreMigrate =
+    PostgresDbtProjectImportProcessStore.prototype.migrate;
 
   EmbeddedAccessDecisionService.prototype.migrate = async function migrate() {};
   EmbeddedProjectOnboardingRepository.prototype.migrate = async function migrate() {};
@@ -62,7 +62,7 @@ function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
   PostgresStartRunIntentStore.prototype.migrate = async function migrate() {};
   PostgresWorkspaceGraphDraftStore.prototype.migrate = async function migrate() {};
   PostgresCanvasAuthoringAuthorityStore.prototype.migrate = async function migrate() {};
-  PostgresDbtProjectImportReceiptStore.prototype.migrate = async function migrate() {};
+  PostgresDbtProjectImportProcessStore.prototype.migrate = async function migrate() {};
 
   return {
     restore() {
@@ -76,8 +76,8 @@ function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
       PostgresWorkspaceGraphDraftStore.prototype.migrate = originalWorkspaceGraphDraftStoreMigrate;
       PostgresCanvasAuthoringAuthorityStore.prototype.migrate =
         originalCanvasAuthoringAuthorityStoreMigrate;
-      PostgresDbtProjectImportReceiptStore.prototype.migrate =
-        originalDbtProjectImportReceiptStoreMigrate;
+      PostgresDbtProjectImportProcessStore.prototype.migrate =
+        originalDbtProjectImportProcessStoreMigrate;
     },
   };
 }
@@ -141,8 +141,8 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
     PostgresWorkspaceGraphDraftStore.prototype.migrate;
   const originalCanvasAuthoringAuthorityStoreMigrate =
     PostgresCanvasAuthoringAuthorityStore.prototype.migrate;
-  const originalDbtProjectImportReceiptStoreMigrate =
-    PostgresDbtProjectImportReceiptStore.prototype.migrate;
+  const originalDbtProjectImportProcessStoreMigrate =
+    PostgresDbtProjectImportProcessStore.prototype.migrate;
   const calls = {
     accessDecision: 0,
     projectOnboarding: 0,
@@ -152,7 +152,7 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
     intentStore: 0,
     workspaceGraphDraftStore: 0,
     canvasAuthoringAuthorityStore: 0,
-    dbtProjectImportReceiptStore: 0,
+    dbtProjectImportProcessStore: 0,
   };
 
   EmbeddedAccessDecisionService.prototype.migrate = async function migrate() {
@@ -179,8 +179,8 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
   PostgresCanvasAuthoringAuthorityStore.prototype.migrate = async function migrate() {
     calls.canvasAuthoringAuthorityStore += 1;
   };
-  PostgresDbtProjectImportReceiptStore.prototype.migrate = async function migrate() {
-    calls.dbtProjectImportReceiptStore += 1;
+  PostgresDbtProjectImportProcessStore.prototype.migrate = async function migrate() {
+    calls.dbtProjectImportProcessStore += 1;
   };
 
   try {
@@ -196,7 +196,7 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
     PostgresWorkspaceGraphDraftStore.prototype.migrate = originalWorkspaceGraphDraftStoreMigrate;
     PostgresCanvasAuthoringAuthorityStore.prototype.migrate =
       originalCanvasAuthoringAuthorityStoreMigrate;
-    PostgresDbtProjectImportReceiptStore.prototype.migrate =
-      originalDbtProjectImportReceiptStoreMigrate;
+    PostgresDbtProjectImportProcessStore.prototype.migrate =
+      originalDbtProjectImportProcessStoreMigrate;
   }
 }

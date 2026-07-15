@@ -3,24 +3,25 @@ import { createHash } from 'node:crypto';
 import {
   DbtProjectImportCommandSchema,
   DbtProjectImportResultSchema,
-  WorkspaceGraphAuthoringDraftSchema,
   type DbtProjectImportCommand,
   type DbtProjectImportResult,
   type DbtProjectImportValidationReceipt,
 } from '@dvt/contracts';
 
-import type { ICanvasAuthoringAuthorityStore } from '../ports/canvasAuthoringAuthority.js';
-import type { IDbtProjectImportReceiptStore } from '../ports/dbtProjectImport.js';
+import type {
+  DbtProjectImportProcessFailResult,
+  IDbtProjectImportProcessStore,
+} from '../ports/dbtProjectImport.js';
 import {
   DbtProjectImportAuthorityConflictError,
   DbtProjectImportCanvasOccupiedError,
   DbtProjectImportIdempotencyMismatchError,
+  DbtProjectImportInProgressError,
   DbtProjectImportProjectionError,
   DbtProjectImportRejectedError,
   DbtProjectImportStaleReceiptError,
 } from '../ports/dbtProjectImport.js';
 import type { WorkspaceStorageScope } from '../ports/workspaceFiles.js';
-import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
 
 import type { ProjectDbtGraphFromFilesUseCase } from './projectDbtGraphFromFilesUseCase.js';
 import type { ValidateDbtProjectImportUseCase } from './validateDbtProjectImportUseCase.js';
@@ -29,11 +30,11 @@ export class ImportDbtProjectUseCase {
   public constructor(
     private readonly deps: {
       readonly validator: Pick<ValidateDbtProjectImportUseCase, 'execute'>;
-      readonly authorityStore: ICanvasAuthoringAuthorityStore;
-      readonly graphDraftStore: IWorkspaceGraphDraftStore;
-      readonly receiptStore: IDbtProjectImportReceiptStore;
+      readonly processStore: IDbtProjectImportProcessStore;
       readonly projectGraph: Pick<ProjectDbtGraphFromFilesUseCase, 'execute'>;
       readonly now: () => Date;
+      readonly createLeaseToken: () => string;
+      readonly operationLeaseMs: number;
     }
   ) {}
 
@@ -44,7 +45,7 @@ export class ImportDbtProjectUseCase {
     const command = DbtProjectImportCommandSchema.parse(rawCommand);
     const key = { ...scope, canvasId: command.canvasId };
     const requestHash = sha256(command);
-    const replay = await this.deps.receiptStore.read({
+    const replay = await this.deps.processStore.readCompleted({
       key,
       idempotencyKey: command.idempotencyKey,
     });
@@ -63,8 +64,6 @@ export class ImportDbtProjectUseCase {
     if (!sameReceipt(command.validationReceipt, freshReport.receipt)) {
       throw new DbtProjectImportStaleReceiptError();
     }
-    await this.assertCanvasUnoccupied(scope, command.canvasId);
-
     const binding = {
       schemaVersion: 'canvas-authoring-authority-binding.v1' as const,
       canvasId: command.canvasId,
@@ -74,19 +73,29 @@ export class ImportDbtProjectUseCase {
       },
     };
     const revision = `authority-${command.validationReceipt.validationSha256}`;
-    const bindResult = await this.deps.authorityStore.bind({
+    const now = this.deps.now();
+    const leaseToken = this.deps.createLeaseToken();
+    const beginResult = await this.deps.processStore.begin({
       key,
       binding,
       idempotencyKey: command.idempotencyKey,
       requestHash,
       revision,
-      nowIso: this.deps.now().toISOString(),
+      leaseToken,
+      leaseExpiresAt: new Date(now.getTime() + this.deps.operationLeaseMs).toISOString(),
+      nowIso: now.toISOString(),
     });
-    if (bindResult.kind === 'canvas_occupied') {
+    if (beginResult.kind === 'completed') {
+      return DbtProjectImportResultSchema.parse(beginResult.receipt.result);
+    }
+    if (beginResult.kind === 'in_progress') {
+      throw new DbtProjectImportInProgressError(beginResult.leaseExpiresAt);
+    }
+    if (beginResult.kind === 'canvas_occupied') {
       throw new DbtProjectImportCanvasOccupiedError();
     }
-    if (bindResult.kind === 'conflict') throw new DbtProjectImportAuthorityConflictError();
-    if (bindResult.kind === 'idempotency_mismatch') {
+    if (beginResult.kind === 'conflict') throw new DbtProjectImportAuthorityConflictError();
+    if (beginResult.kind === 'idempotency_mismatch') {
       throw new DbtProjectImportIdempotencyMismatchError();
     }
 
@@ -114,51 +123,58 @@ export class ImportDbtProjectUseCase {
         projectRevision: projection.projectRevision,
         analysisSha256: projection.analysisSha256,
         projectedResourceCount: projection.nodes.length,
-        importedAt: bindResult.record.updatedAt,
+        importedAt: beginResult.record.updatedAt,
       });
-      const recorded = await this.deps.receiptStore.record({
+      const completed = await this.deps.processStore.complete({
         key,
         idempotencyKey: command.idempotencyKey,
         requestHash,
+        leaseToken: beginResult.leaseToken,
         result,
+        nowIso: this.deps.now().toISOString(),
       });
-      if (recorded.kind === 'idempotency_mismatch') {
+      if (completed.kind === 'idempotency_mismatch') {
         throw new DbtProjectImportIdempotencyMismatchError();
       }
-      return DbtProjectImportResultSchema.parse(recorded.receipt.result);
+      if (completed.kind === 'lease_lost') {
+        throw new Error('The dbt project import lease ownership was lost before completion.');
+      }
+      if (completed.kind === 'authority_conflict') {
+        throw new DbtProjectImportAuthorityConflictError();
+      }
+      return DbtProjectImportResultSchema.parse(completed.receipt.result);
     } catch (error) {
-      if (!bindResult.deduplicated) {
-        const released = await this.deps.authorityStore.release({
+      let failed: DbtProjectImportProcessFailResult;
+      try {
+        failed = await this.deps.processStore.fail({
           key,
-          expectedRevision: bindResult.record.revision,
+          expectedRevision: beginResult.record.revision,
           idempotencyKey: command.idempotencyKey,
           requestHash,
+          leaseToken: beginResult.leaseToken,
+          nowIso: this.deps.now().toISOString(),
         });
-        if (released.kind !== 'released') {
-          throw new AggregateError(
-            [error, new Error(`Authority rollback failed: ${released.kind}`)],
-            'dbt project import failed and authority rollback was not completed.',
-            { cause: error }
-          );
-        }
+      } catch (compensationError) {
+        throw new AggregateError(
+          [error, compensationError],
+          'dbt project import failed and process compensation could not be persisted.',
+          { cause: compensationError }
+        );
+      }
+      if (failed.kind === 'completed') {
+        return DbtProjectImportResultSchema.parse(failed.receipt.result);
+      }
+      if (failed.kind !== 'failed') {
+        throw new AggregateError(
+          [error, new Error(`Process compensation failed: ${failed.kind}`)],
+          failed.kind === 'lease_lost'
+            ? 'dbt project import failed after lease ownership was lost.'
+            : 'dbt project import failed and process compensation was not completed.',
+          { cause: error }
+        );
       }
       throw error;
     }
-  }
-
-  private async assertCanvasUnoccupied(
-    scope: WorkspaceStorageScope,
-    canvasId: string
-  ): Promise<void> {
-    const stored = await this.deps.graphDraftStore.read(scope);
-    if (!stored) return;
-    const parsed = WorkspaceGraphAuthoringDraftSchema.safeParse(stored.draftPayload);
-    if (!parsed.success) throw new DbtProjectImportCanvasOccupiedError();
-    const draft = parsed.data;
-    const occupied =
-      draft.canvas.id === canvasId ||
-      draft.canvases?.some((workspace) => workspace.canvas.id === canvasId) === true;
-    if (occupied) throw new DbtProjectImportCanvasOccupiedError();
   }
 }
 
