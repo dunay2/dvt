@@ -177,6 +177,14 @@ export interface IWorkspaceFileRepository {
   ): Promise<WorkspaceFileDeleteResult>;
 }
 
+export interface IWorkspaceMetadataFileRepository {
+  getFileContent(scope: WorkspaceStorageScope, path: string): Promise<WorkspaceFileContent>;
+  saveFileContent(
+    scope: WorkspaceStorageScope,
+    input: SaveWorkspaceFileContentInput
+  ): Promise<WorkspaceFileSaveResult>;
+}
+
 export interface IWorkspaceFileBatchMutationPort {
   apply(
     scope: WorkspaceStorageScope,

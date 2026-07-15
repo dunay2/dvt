@@ -7,7 +7,6 @@ import { GetWorkspaceFileContentUseCase } from '../../application/services/getWo
 import { ListWorkspaceFilesUseCase } from '../../application/services/listWorkspaceFilesUseCase.js';
 import { SaveWorkspaceFileContentUseCase } from '../../application/services/saveWorkspaceFileContentUseCase.js';
 import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
-import { resolveWorkspaceFilesRoot } from '../../infrastructure/workspaceFiles/resolveWorkspaceFilesRoot.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
@@ -21,6 +20,7 @@ type RuntimeAuth = {
 export type ProtectedWorkspaceFilesRouteGroupOptions = {
   readonly env: Env;
   readonly runtimeAuth: RuntimeAuth;
+  readonly workspaceFilesRoot: string;
 };
 
 export function registerProtectedWorkspaceFilesRouteGroup(
@@ -28,7 +28,7 @@ export function registerProtectedWorkspaceFilesRouteGroup(
   options: ProtectedWorkspaceFilesRouteGroupOptions
 ): void {
   const repository = new LocalWorkspaceFileRepository({
-    root: resolveWorkspaceFilesRoot(options.env),
+    root: options.workspaceFilesRoot,
   });
 
   registerWorkspaceFilesRoutes(app, {

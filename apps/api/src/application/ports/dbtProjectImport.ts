@@ -1,9 +1,11 @@
 import type {
+  CanvasAuthoringAuthorityBinding,
   DbtProjectImportDiagnostic,
   DbtProjectImportInventory,
   DbtProjectImportResult,
 } from '@dvt/contracts';
 
+import type { CanvasAuthoringAuthorityStoredRecord } from './canvasAuthoringAuthority.js';
 import type { WorkspaceStorageScope } from './workspaceFiles.js';
 
 export type InspectDbtProjectImportInput = Readonly<{
@@ -23,34 +25,76 @@ export interface IDbtProjectImportInspectorPort {
   inspect(input: InspectDbtProjectImportInput): Promise<DbtProjectImportInspection>;
 }
 
-export type DbtProjectImportReceiptKey = WorkspaceStorageScope & Readonly<{ canvasId: string }>;
+export type DbtProjectImportProcessKey = WorkspaceStorageScope & Readonly<{ canvasId: string }>;
 
-export type DbtProjectImportStoredReceipt = Readonly<{
+export type DbtProjectImportStoredCompletion = Readonly<{
   requestHash: string;
   result: DbtProjectImportResult;
 }>;
 
-export type DbtProjectImportReceiptRecordResult =
+export type DbtProjectImportProcessBeginResult =
   | Readonly<{
-      kind: 'recorded';
-      receipt: DbtProjectImportStoredReceipt;
-      deduplicated: boolean;
+      kind: 'acquired';
+      record: CanvasAuthoringAuthorityStoredRecord;
+      leaseToken: string;
+      recovered: boolean;
     }>
+  | Readonly<{ kind: 'completed'; receipt: DbtProjectImportStoredCompletion }>
+  | Readonly<{ kind: 'in_progress'; leaseExpiresAt: string }>
+  | Readonly<{ kind: 'canvas_occupied' }>
+  | Readonly<{ kind: 'conflict'; current: CanvasAuthoringAuthorityStoredRecord }>
   | Readonly<{ kind: 'idempotency_mismatch' }>;
 
-export interface IDbtProjectImportReceiptStore {
+export type DbtProjectImportProcessCompleteResult =
+  | Readonly<{
+      kind: 'completed';
+      receipt: DbtProjectImportStoredCompletion;
+      deduplicated: boolean;
+    }>
+  | Readonly<{ kind: 'lease_lost' }>
+  | Readonly<{ kind: 'authority_conflict' }>
+  | Readonly<{ kind: 'idempotency_mismatch' }>;
+
+export type DbtProjectImportProcessFailResult =
+  | Readonly<{ kind: 'failed' }>
+  | Readonly<{ kind: 'completed'; receipt: DbtProjectImportStoredCompletion }>
+  | Readonly<{ kind: 'lease_lost' }>
+  | Readonly<{ kind: 'authority_conflict' }>
+  | Readonly<{ kind: 'idempotency_mismatch' }>;
+
+export interface IDbtProjectImportProcessStore {
   migrate(): Promise<void>;
   close(): Promise<void>;
-  read(input: {
-    key: DbtProjectImportReceiptKey;
-    idempotencyKey: string;
-  }): Promise<DbtProjectImportStoredReceipt | null>;
-  record(input: {
-    key: DbtProjectImportReceiptKey;
-    idempotencyKey: string;
-    requestHash: string;
-    result: DbtProjectImportResult;
-  }): Promise<DbtProjectImportReceiptRecordResult>;
+  readCompleted(input: {
+    readonly key: DbtProjectImportProcessKey;
+    readonly idempotencyKey: string;
+  }): Promise<DbtProjectImportStoredCompletion | null>;
+  begin(input: {
+    readonly key: DbtProjectImportProcessKey;
+    readonly idempotencyKey: string;
+    readonly requestHash: string;
+    readonly binding: CanvasAuthoringAuthorityBinding;
+    readonly revision: string;
+    readonly leaseToken: string;
+    readonly leaseExpiresAt: string;
+    readonly nowIso: string;
+  }): Promise<DbtProjectImportProcessBeginResult>;
+  complete(input: {
+    readonly key: DbtProjectImportProcessKey;
+    readonly idempotencyKey: string;
+    readonly requestHash: string;
+    readonly leaseToken: string;
+    readonly result: DbtProjectImportResult;
+    readonly nowIso: string;
+  }): Promise<DbtProjectImportProcessCompleteResult>;
+  fail(input: {
+    readonly key: DbtProjectImportProcessKey;
+    readonly idempotencyKey: string;
+    readonly requestHash: string;
+    readonly leaseToken: string;
+    readonly expectedRevision: string;
+    readonly nowIso: string;
+  }): Promise<DbtProjectImportProcessFailResult>;
 }
 
 export class DbtProjectImportRejectedError extends Error {
@@ -85,6 +129,13 @@ export class DbtProjectImportIdempotencyMismatchError extends Error {
   public constructor() {
     super('The dbt project import idempotency key was reused for another command.');
     this.name = 'DbtProjectImportIdempotencyMismatchError';
+  }
+}
+
+export class DbtProjectImportInProgressError extends Error {
+  public constructor(public readonly leaseExpiresAt: string) {
+    super(`The dbt project import is already in progress until ${leaseExpiresAt}.`);
+    this.name = 'DbtProjectImportInProgressError';
   }
 }
 

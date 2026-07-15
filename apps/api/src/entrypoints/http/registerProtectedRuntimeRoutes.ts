@@ -71,7 +71,7 @@ export async function registerProtectedRuntimeRoutes(
     ...dependencies.runtimeAuth,
     listUseCase: new ListWorkspaceFileHistoryUseCase(
       new LocalWorkspaceFileHistoryRepository({
-        root: env.DVT_WORKSPACE_FILES_ROOT ?? env.DVT_DBT_BUNDLE_FILE_ROOT ?? process.cwd(),
+        root: protectedModule.workspaceFilesRoot,
       })
     ),
     rateLimit: {
@@ -79,7 +79,11 @@ export async function registerProtectedRuntimeRoutes(
       timeWindow: env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,
     },
   });
-  registerProtectedWorkspaceFilesRouteGroup(app, { env, runtimeAuth: dependencies.runtimeAuth });
+  registerProtectedWorkspaceFilesRouteGroup(app, {
+    env,
+    runtimeAuth: dependencies.runtimeAuth,
+    workspaceFilesRoot: protectedModule.workspaceFilesRoot,
+  });
   registerProtectedRunRoutes(app, env, protectedModule, dependencies);
   registerProtectedAdminRouteGroup(app, env, protectedModule, dependencies.runtimeAuth);
 

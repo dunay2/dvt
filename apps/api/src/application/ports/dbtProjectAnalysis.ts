@@ -19,6 +19,7 @@ export type DbtProjectAnalysisDependency = Omit<ProjectedEdge, 'id'>;
 
 export type DbtProjectAnalysis = Readonly<{
   status: 'valid' | 'invalid' | 'unavailable';
+  adapterType?: string;
   projectRevision: Readonly<{
     projectRoot: string;
     contentSetSha256: string;

@@ -30,7 +30,7 @@ describe('buildApp protected runtime composition', () => {
             intentStore: 1,
             workspaceGraphDraftStore: 1,
             canvasAuthoringAuthorityStore: 1,
-            dbtProjectImportReceiptStore: 1,
+            dbtProjectImportProcessStore: 1,
           });
         }
       );

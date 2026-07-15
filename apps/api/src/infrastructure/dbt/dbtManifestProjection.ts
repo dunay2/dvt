@@ -16,6 +16,7 @@ const SUPPORTED_RESOURCE_TYPES = new Set([
 
 export type ManifestProjection = Readonly<{
   dbtVersion?: string;
+  adapterType?: string;
   resources: readonly DbtProjectAnalysisResource[];
   dependencies: readonly DbtProjectAnalysisDependency[];
   diagnostics: DbtProjectAnalysis['diagnostics'];
@@ -89,8 +90,10 @@ export function projectDbtManifest(value: unknown): ManifestProjection {
   }
 
   const dbtVersion = stringValue(record(manifest.metadata).dbt_version);
+  const adapterType = stringValue(record(manifest.metadata).adapter_type);
   return {
     ...(dbtVersion === undefined ? {} : { dbtVersion }),
+    ...(adapterType === undefined ? {} : { adapterType }),
     resources,
     dependencies: deduplicateDependencies(dependencies),
     diagnostics: diagnostics.sort((left, right) => left.message.localeCompare(right.message)),
@@ -114,6 +117,7 @@ function projectResource(value: unknown): DbtProjectAnalysisResource | null {
   }
 
   const projectedType = resourceType as DbtProjectAnalysisResource['resourceType'];
+  const originalFilePath = stringValue(resource.original_file_path);
   const columns = collectionValues(resource.columns)
     .map((columnValue) => {
       const column = record(columnValue);
@@ -138,9 +142,9 @@ function projectResource(value: unknown): DbtProjectAnalysisResource | null {
     resourceType: projectedType,
     name,
     packageName,
-    ...(stringValue(resource.original_file_path) === undefined
+    ...(originalFilePath === undefined
       ? {}
-      : { originalFilePath: stringValue(resource.original_file_path) }),
+      : { originalFilePath: normalizeManifestPath(originalFilePath) }),
     ...(stringValue(resource.source_name) === undefined
       ? {}
       : { sourceName: stringValue(resource.source_name) }),
@@ -220,4 +224,8 @@ function stringArray(value: unknown): readonly string[] {
   return Array.isArray(value)
     ? value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
     : [];
+}
+
+function normalizeManifestPath(value: string): string {
+  return value.replaceAll('\\', '/');
 }

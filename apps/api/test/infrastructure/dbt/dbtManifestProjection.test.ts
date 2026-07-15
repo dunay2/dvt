@@ -5,13 +5,14 @@ import { projectDbtManifest } from '../../../src/infrastructure/dbt/dbtManifestP
 describe('projectDbtManifest', () => {
   it('projects supported resources and reports unsupported graph resources', () => {
     const projection = projectDbtManifest({
-      metadata: { dbt_version: '1.10.0' },
+      metadata: { dbt_version: '1.10.0', adapter_type: 'postgres' },
       nodes: {
         'model.analytics.orders': {
           unique_id: 'model.analytics.orders',
           resource_type: 'model',
           name: 'orders',
           package_name: 'analytics',
+          original_file_path: 'models\\orders.sql',
           depends_on: { nodes: ['source.analytics.raw.orders'] },
           columns: {},
           tags: [],
@@ -31,6 +32,7 @@ describe('projectDbtManifest', () => {
           name: 'orders',
           source_name: 'raw',
           package_name: 'analytics',
+          original_file_path: 'models\\sources\\src_raw.yml',
           depends_on: { nodes: [] },
           columns: {},
           tags: [],
@@ -44,6 +46,19 @@ describe('projectDbtManifest', () => {
       'model.analytics.orders',
       'source.analytics.raw.orders',
     ]);
+    expect(projection.adapterType).toBe('postgres');
+    expect(projection.resources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          uniqueId: 'model.analytics.orders',
+          originalFilePath: 'models/orders.sql',
+        }),
+        expect.objectContaining({
+          uniqueId: 'source.analytics.raw.orders',
+          originalFilePath: 'models/sources/src_raw.yml',
+        }),
+      ])
+    );
     expect(projection.dependencies).toEqual([
       {
         sourceUniqueId: 'source.analytics.raw.orders',

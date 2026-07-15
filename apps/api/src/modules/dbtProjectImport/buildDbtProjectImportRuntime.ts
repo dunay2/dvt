@@ -1,11 +1,9 @@
 /** Owned concern: compose phase-three dbt project import application services once. */
-import type { ICanvasAuthoringAuthorityStore } from '../../application/ports/canvasAuthoringAuthority.js';
 import type { IDbtProjectAnalyzerPort } from '../../application/ports/dbtProjectAnalysis.js';
 import type {
   IDbtProjectImportInspectorPort,
-  IDbtProjectImportReceiptStore,
+  IDbtProjectImportProcessStore,
 } from '../../application/ports/dbtProjectImport.js';
-import type { IWorkspaceGraphDraftStore } from '../../application/ports/workspaceGraphDraft.js';
 import type { CanvasAuthoringAuthorityPolicy } from '../../application/services/canvasAuthoringAuthorityPolicy.js';
 import { ImportDbtProjectUseCase } from '../../application/services/importDbtProjectUseCase.js';
 import { ProjectDbtGraphFromFilesUseCase } from '../../application/services/projectDbtGraphFromFilesUseCase.js';
@@ -14,11 +12,11 @@ import { ValidateDbtProjectImportUseCase } from '../../application/services/vali
 export type BuildDbtProjectImportRuntimeDeps = {
   readonly analyzer: IDbtProjectAnalyzerPort;
   readonly inspector: IDbtProjectImportInspectorPort;
-  readonly receiptStore: IDbtProjectImportReceiptStore;
-  readonly authorityStore: ICanvasAuthoringAuthorityStore;
+  readonly processStore: IDbtProjectImportProcessStore;
   readonly authorityPolicy: CanvasAuthoringAuthorityPolicy;
-  readonly graphDraftStore: IWorkspaceGraphDraftStore;
   readonly now: () => Date;
+  readonly createLeaseToken: () => string;
+  readonly operationLeaseMs: number;
 };
 
 export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeDeps) {
@@ -33,11 +31,11 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
   });
   const importUseCase = new ImportDbtProjectUseCase({
     validator: validateUseCase,
-    authorityStore: deps.authorityStore,
-    graphDraftStore: deps.graphDraftStore,
-    receiptStore: deps.receiptStore,
+    processStore: deps.processStore,
     projectGraph: projectGraphUseCase,
     now: deps.now,
+    createLeaseToken: deps.createLeaseToken,
+    operationLeaseMs: deps.operationLeaseMs,
   });
 
   return { projectGraphUseCase, validateUseCase, importUseCase };

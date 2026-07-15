@@ -33,11 +33,16 @@ describe('workspace files command/query rail architecture', () => {
     expect(routeRegistration).not.toContain('LocalWorkspaceFileRepository');
     expect(routeRegistration).not.toContain('new ListWorkspaceFilesUseCase');
     expect(routeRegistration).not.toContain('new GetWorkspaceFileContentUseCase');
+    expect(routeRegistration).toContain('workspaceFilesRoot: protectedModule.workspaceFilesRoot');
+    expect(routeRegistration).toContain('root: protectedModule.workspaceFilesRoot');
+    expect(routeRegistration).not.toContain('env.DVT_WORKSPACE_FILES_ROOT');
     expect(routeGroup).toContain('registerWorkspaceFilesRoutes');
     expect(routeGroup).toContain('LocalWorkspaceFileRepository');
     expect(routeGroup).toContain('ListWorkspaceFilesUseCase');
     expect(routeGroup).toContain('GetWorkspaceFileContentUseCase');
     expect(routeGroup).toContain('SaveWorkspaceFileContentUseCase');
+    expect(routeGroup).toContain('root: options.workspaceFilesRoot');
+    expect(routeGroup).not.toContain('resolveWorkspaceFilesRoot');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.workspaceFiles');
     expect(routeModule).toContain('RUNTIME_ROUTE_PATH.workspaceFileContent');
     expect(routeModule).toContain('config: { rateLimit: deps.rateLimit }');

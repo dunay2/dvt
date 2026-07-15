@@ -3,6 +3,8 @@
  * This module is the only composition root that binds planner, validator,
  * adapters, stores, auth, and runtime services into one `ProtectedRuntimeModule`.
  */
+import { randomUUID } from 'node:crypto';
+
 import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
@@ -10,7 +12,7 @@ import type { Logger } from 'pino';
 import { getPgPool } from '../db/pool.js';
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
-import { PostgresDbtProjectImportReceiptStore } from '../infrastructure/dbt/PostgresDbtProjectImportReceiptStore.js';
+import { PostgresDbtProjectImportProcessStore } from '../infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
@@ -23,6 +25,8 @@ import { buildProtectedSecurityRuntime } from './protectedRuntime/buildProtected
 import { buildProtectedStartRunRuntime } from './startRun/buildProtectedStartRunRuntime.js';
 import type { ProtectedRuntimeModule } from './types.js';
 import { buildWorkspaceGraphDraftRuntime } from './workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.js';
+
+const MINIMUM_DBT_PROJECT_IMPORT_OPERATION_LEASE_MS = 300_000;
 
 async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
   const results = await Promise.allSettled(closers.map((closer) => closer()));
@@ -104,7 +108,7 @@ export async function buildProtectedRuntimeModule(
     timeoutMs: env.DVT_DBT_ANALYZER_TIMEOUT_MS,
     maxOutputBytes: env.DVT_DBT_ANALYZER_MAX_OUTPUT_BYTES,
   });
-  const dbtProjectImportReceiptStore = new PostgresDbtProjectImportReceiptStore({
+  const dbtProjectImportProcessStore = new PostgresDbtProjectImportProcessStore({
     pool,
     schema: env.DVT_PG_SCHEMA,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
@@ -114,11 +118,14 @@ export async function buildProtectedRuntimeModule(
     inspector: new LocalDbtProjectImportInspector({
       workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
     }),
-    receiptStore: dbtProjectImportReceiptStore,
-    authorityStore: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore,
+    processStore: dbtProjectImportProcessStore,
     authorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
-    graphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
     now: () => new Date(),
+    createLeaseToken: randomUUID,
+    operationLeaseMs: Math.max(
+      MINIMUM_DBT_PROJECT_IMPORT_OPERATION_LEASE_MS,
+      env.DVT_DBT_ANALYZER_TIMEOUT_MS + 60_000
+    ),
   });
   const executionCapacity = buildProtectedExecutionCapacityPort(env);
   const startRunRuntime = buildProtectedStartRunRuntime({
@@ -162,6 +169,7 @@ export async function buildProtectedRuntimeModule(
     canvasAuthoringAuthorityStore: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore,
     canvasAuthoringAuthorityPolicy: canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy,
     dbtProjectImport,
+    workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
     workspaceGraphDraftCapabilityService:
       workspaceGraphDraftRuntime.workspaceGraphDraftCapabilityService,
     getWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.getWorkspaceGraphDraftUseCase,
@@ -177,7 +185,7 @@ export async function buildProtectedRuntimeModule(
       await storageRuntime.planStore.migrate();
       await workspaceGraphDraftRuntime.workspaceGraphDraftStore.migrate();
       await canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore.migrate();
-      await dbtProjectImportReceiptStore.migrate();
+      await dbtProjectImportProcessStore.migrate();
     },
     close: async () => {
       await closeAllClosers([
@@ -185,7 +193,7 @@ export async function buildProtectedRuntimeModule(
         () => storageRuntime.planStore.close(),
         () => workspaceGraphDraftRuntime.workspaceGraphDraftStore.close(),
         () => canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityStore.close(),
-        () => dbtProjectImportReceiptStore.close(),
+        () => dbtProjectImportProcessStore.close(),
         () => storageRuntime.stateStore.close(),
         () => storageRuntime.intentStore.close(),
         () => pool.end(),

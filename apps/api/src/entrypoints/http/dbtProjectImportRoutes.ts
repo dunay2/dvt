@@ -17,6 +17,7 @@ import {
   DbtProjectImportAuthorityConflictError,
   DbtProjectImportCanvasOccupiedError,
   DbtProjectImportIdempotencyMismatchError,
+  DbtProjectImportInProgressError,
   DbtProjectImportProjectionError,
   DbtProjectImportRejectedError,
   DbtProjectImportStaleReceiptError,
@@ -194,6 +195,9 @@ function mapImportError(
   }
   if (error instanceof DbtProjectImportIdempotencyMismatchError) {
     return { status: 409, reason: HTTP_ERROR_REASON.dbtProjectImportIdempotencyMismatch };
+  }
+  if (error instanceof DbtProjectImportInProgressError) {
+    return { status: 409, reason: HTTP_ERROR_REASON.dbtProjectImportInProgress };
   }
   if (error instanceof DbtProjectImportRejectedError) {
     return { status: 422, reason: HTTP_ERROR_REASON.dbtProjectImportRejected };
