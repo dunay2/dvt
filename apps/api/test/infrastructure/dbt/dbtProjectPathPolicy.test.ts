@@ -53,6 +53,15 @@ packages-install-path: vendor/dbt
     ).toEqual({
       generatedArtifactDirectories: ['generated/logs', 'generated/target'],
       installedDependencyDirectories: ['vendor/dbt'],
+      sourceDirectories: [
+        'analyses',
+        'macros',
+        'models',
+        'seeds',
+        'semantic_models',
+        'snapshots',
+        'tests',
+      ],
     });
   });
 
@@ -67,6 +76,15 @@ packages-install-path: dbt_packages/
     ).toEqual({
       generatedArtifactDirectories: ['logs', 'target'],
       installedDependencyDirectories: ['dbt_packages'],
+      sourceDirectories: [
+        'analyses',
+        'macros',
+        'models',
+        'seeds',
+        'semantic_models',
+        'snapshots',
+        'tests',
+      ],
     });
   });
 
@@ -78,6 +96,36 @@ packages-install-path: dbt_packages/
       installedDependencyDirectories: [...DBT_INSTALLED_DEPENDENCY_DIRECTORY_DEFAULTS].sort(
         (left, right) => left.localeCompare(right)
       ),
+      sourceDirectories: [
+        'analyses',
+        'macros',
+        'models',
+        'seeds',
+        'semantic_models',
+        'snapshots',
+        'tests',
+      ],
+    });
+  });
+
+  it('exposes normalized configured source directories for canonical snapshots', () => {
+    expect(
+      resolveDbtProjectDirectoryPartition(`
+name: analytics
+model-paths: [warehouse/models, shared/../shared_models]
+seed-paths: [warehouse/seeds]
+`)
+    ).toMatchObject({
+      sourceDirectories: [
+        'analyses',
+        'macros',
+        'semantic_models',
+        'shared_models',
+        'snapshots',
+        'tests',
+        'warehouse/models',
+        'warehouse/seeds',
+      ],
     });
   });
 

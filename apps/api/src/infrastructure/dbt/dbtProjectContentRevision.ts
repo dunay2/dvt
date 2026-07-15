@@ -9,7 +9,7 @@ export type ProjectContentRevision = Readonly<{
   bytes: number;
 }>;
 
-type ProjectContentLimits = Readonly<{
+export type ProjectContentLimits = Readonly<{
   maxFiles: number;
   maxBytes: number;
   maxDirectories: number;
@@ -18,6 +18,8 @@ type ProjectContentLimits = Readonly<{
 
 export type ProjectContentSelection = Readonly<{
   excludedDirectoryPaths?: readonly string[];
+  excludedDirectoryNames?: readonly string[];
+  shouldIncludeFile?: (portableRelativePath: string) => boolean;
 }>;
 
 export async function hashProjectContent(
@@ -49,6 +51,9 @@ async function collectProjectContent(
   const excludedDirectoryPaths = normalizeExcludedDirectoryPaths(
     selection.excludedDirectoryPaths ?? []
   );
+  const excludedDirectoryNames = normalizeExcludedDirectoryNames(
+    selection.excludedDirectoryNames ?? []
+  );
   if (state.directories > limits.maxDirectories || limits.maxDepth < 0) {
     throw new Error('The dbt project exceeds configured analysis limits.');
   }
@@ -60,6 +65,8 @@ async function collectProjectContent(
     limits,
     state,
     excludedDirectoryPaths,
+    excludedDirectoryNames,
+    selection.shouldIncludeFile ?? (() => true),
     0
   );
   entries.sort((left, right) => left.path.localeCompare(right.path));
@@ -78,6 +85,8 @@ async function visitProjectDirectory(
   limits: ProjectContentLimits,
   state: { bytes: number; directories: number },
   excludedDirectoryPaths: ReadonlySet<string>,
+  excludedDirectoryNames: ReadonlySet<string>,
+  shouldIncludeFile: (portableRelativePath: string) => boolean,
   depth: number
 ): Promise<void> {
   const directoryEntries = await readdir(currentDirectory, { withFileTypes: true });
@@ -90,7 +99,9 @@ async function visitProjectDirectory(
       const relativeDirectory = path
         .relative(projectDirectory, absoluteDirectory)
         .replaceAll('\\', '/');
-      if (excludedDirectoryPaths.has(relativeDirectory)) continue;
+      if (excludedDirectoryPaths.has(relativeDirectory) || excludedDirectoryNames.has(entry.name)) {
+        continue;
+      }
 
       const nextDepth = depth + 1;
       state.directories += 1;
@@ -110,6 +121,8 @@ async function visitProjectDirectory(
         limits,
         state,
         excludedDirectoryPaths,
+        excludedDirectoryNames,
+        shouldIncludeFile,
         nextDepth
       );
       continue;
@@ -119,6 +132,10 @@ async function visitProjectDirectory(
     }
 
     const absolutePath = path.join(currentDirectory, entry.name);
+    const portableRelativePath = path
+      .relative(projectDirectory, absolutePath)
+      .replaceAll('\\', '/');
+    if (!shouldIncludeFile(portableRelativePath)) continue;
     if (entries.length + 1 > limits.maxFiles) {
       throw new Error('The dbt project exceeds configured analysis limits.');
     }
@@ -152,12 +169,21 @@ async function visitProjectDirectory(
     }
 
     entries.push({
-      path: path.relative(projectDirectory, absolutePath).replaceAll('\\', '/'),
+      path: portableRelativePath,
       sha256: contentHash.digest('hex'),
       bytes: contentBytes,
     });
     state.bytes += contentBytes;
   }
+}
+
+function normalizeExcludedDirectoryNames(names: readonly string[]): ReadonlySet<string> {
+  for (const name of names) {
+    if (name.length === 0 || name.includes('/') || name.includes('\\')) {
+      throw new Error('Excluded project directory names must be single path segments.');
+    }
+  }
+  return new Set(names);
 }
 
 function normalizeExcludedDirectoryPaths(paths: readonly string[]): ReadonlySet<string> {

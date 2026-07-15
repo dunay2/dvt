@@ -15,11 +15,11 @@ import {
   type DbtProcessRunner,
 } from './dbtAnalyzerProcess.js';
 import { projectDbtManifest } from './dbtManifestProjection.js';
-import { snapshotProjectContent } from './dbtProjectContentRevision.js';
+import { evaluateDbtProjectSnapshotPathPolicy } from './dbtProjectPathPolicy.js';
 import {
-  evaluateDbtProjectSnapshotPathPolicy,
-  resolveDbtProjectDirectoryPartition,
-} from './dbtProjectPathPolicy.js';
+  DbtProjectSourcePolicyError,
+  snapshotDbtProjectSource,
+} from './dbtProjectSourceSnapshot.js';
 import { resolveDbtProjectDirectory } from './dbtProjectWorkspaceBoundary.js';
 
 const ANALYZER_VERSION = 'dvt-dbt-analyzer.v1';
@@ -106,36 +106,28 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     try {
       const snapshotDirectory = path.join(analysisRoot, 'project');
       let contentSetSha256: string;
-      let projectConfigContent: string;
       try {
-        projectConfigContent = await readFile(
-          path.join(projectDirectory, 'dbt_project.yml'),
-          'utf8'
-        );
-        const directoryPartition = resolveDbtProjectDirectoryPartition(projectConfigContent);
         contentSetSha256 = (
-          await snapshotProjectContent(
+          await snapshotDbtProjectSource({
             projectDirectory,
             snapshotDirectory,
-            {
+            limits: {
               maxFiles: this.maxProjectFiles,
               maxBytes: this.maxProjectBytes,
               maxDirectories: this.maxProjectDirectories,
               maxDepth: this.maxProjectDepth,
             },
-            {
-              excludedDirectoryPaths: directoryPartition.generatedArtifactDirectories,
-            }
-          )
+          })
         ).sha256;
-        const snapshotConfigContent = await readFile(
-          path.join(snapshotDirectory, 'dbt_project.yml'),
-          'utf8'
-        );
-        if (snapshotConfigContent !== projectConfigContent) {
-          throw new Error('The dbt project changed while its source snapshot was created.');
+      } catch (error) {
+        if (error instanceof DbtProjectSourcePolicyError) {
+          const invalidRevision = this.buildRevision(
+            input.projectRoot,
+            error.contentSetSha256,
+            analyzedAt
+          );
+          return this.invalid(invalidRevision, error.contentSetSha256);
         }
-      } catch {
         return this.unavailable(
           unavailableRevision(`unreadable:${input.projectRoot}`),
           'dbt_project_unreadable',
