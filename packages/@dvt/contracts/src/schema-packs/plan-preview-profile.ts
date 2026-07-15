@@ -1,16 +1,12 @@
 import { z } from 'zod';
 
 import { ExecutionSelectionSchema } from '../contracts/planner/ExecutionSelection.v1.js';
-import {
-  type DesignGraphDraft,
-  type PlanPreviewProvenance,
-} from '../contracts/planner/TransformationFlowDesignGraph.v1.js';
+import type { PlanPreviewProvenance } from '../contracts/planner/PlanPreviewProvenance.v1.js';
+import type { DesignGraphDraft } from '../contracts/planner/TransformationFlowDesignGraph.v1.js';
 import { PREVIEW_PROFILE } from '../contracts/planner/TransformationFlowPreview.v1.js';
 
-export {
-  DesignGraphDraftSchema,
-  PlanPreviewProvenanceSchema,
-} from '../contracts/planner/TransformationFlowDesignGraph.v1.js';
+export { DesignGraphDraftSchema } from '../contracts/planner/TransformationFlowDesignGraph.v1.js';
+export { PlanPreviewProvenanceSchema } from '../contracts/planner/PlanPreviewProvenance.v1.js';
 export const PlanPreviewSelectionSchema = ExecutionSelectionSchema;
 
 export const PreviewProfileSchema = z.enum([

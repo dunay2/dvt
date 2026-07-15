@@ -8,14 +8,10 @@
  */
 import { z } from 'zod';
 
-import {
-  isNonBlankString,
-  isSha256HexString,
-  NON_BLANK_STRING_MESSAGE,
-  SHA256_HEX_STRING_MESSAGE,
-} from '../../utils/contractPrimitives.js';
+import { isNonBlankString, NON_BLANK_STRING_MESSAGE } from '../../utils/contractPrimitives.js';
 
 import type { GenericGraphSourceV1 } from './ExecutionPlan.v1.js';
+import { GitArtifactRefSchema, type GitArtifactRef } from './PlanPreviewProvenance.v1.js';
 
 const NonBlankStringSchema = z
   .string()
@@ -24,29 +20,12 @@ const NonBlankStringSchema = z
     message: NON_BLANK_STRING_MESSAGE,
   })
   .brand<'NonBlankString'>();
-const Sha256HexStringSchema = NonBlankStringSchema.refine((value) => isSha256HexString(value), {
-  message: SHA256_HEX_STRING_MESSAGE,
-}).brand<'Sha256HexString'>();
-
 export const TRANSFORMATION_EXECUTION_TARGET = 'postgres' as const;
 export const TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY = 'transformation-design-graph' as const;
 export const TRANSFORMATION_SQL_FIRST_SOURCE_VERSION = 'transformation-sql-first-v1' as const;
 
 export type TransformationExecutionTarget = typeof TRANSFORMATION_EXECUTION_TARGET;
 export type DesignNodeType = 'source' | 'sql_transform' | 'sink';
-
-export interface GitArtifactRef {
-  repo: string;
-  path: string;
-  ref: string;
-  commitSha: string;
-  contentSha256: string;
-}
-
-export interface PlanPreviewProvenance {
-  graphArtifact: GitArtifactRef;
-  sqlArtifact: GitArtifactRef;
-}
 
 export interface DesignGraphContext {
   tenantId: string;
@@ -90,9 +69,7 @@ export interface DesignGraphSinkNode {
 }
 
 export type DesignGraphNode =
-  | DesignGraphSourceNode
-  | DesignGraphSqlTransformNode
-  | DesignGraphSinkNode;
+  DesignGraphSourceNode | DesignGraphSqlTransformNode | DesignGraphSinkNode;
 
 export interface DesignGraphEdge {
   fromNodeId: string;
@@ -109,23 +86,6 @@ export interface TransformationSqlFirstGraphSourceV1 extends GenericGraphSourceV
   sourceFamily: typeof TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY;
   sourceVersion: typeof TRANSFORMATION_SQL_FIRST_SOURCE_VERSION;
 }
-
-export const GitArtifactRefSchema = z
-  .object({
-    repo: NonBlankStringSchema,
-    path: NonBlankStringSchema,
-    ref: NonBlankStringSchema,
-    commitSha: NonBlankStringSchema,
-    contentSha256: Sha256HexStringSchema,
-  })
-  .strict() satisfies z.ZodType<GitArtifactRef>;
-
-export const PlanPreviewProvenanceSchema = z
-  .object({
-    graphArtifact: GitArtifactRefSchema,
-    sqlArtifact: GitArtifactRefSchema,
-  })
-  .strict() satisfies z.ZodType<PlanPreviewProvenance>;
 
 const DesignGraphContextSchema = z
   .object({

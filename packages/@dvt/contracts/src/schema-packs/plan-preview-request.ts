@@ -1,9 +1,12 @@
 import { z } from 'zod';
 
 import { ExecutionSelectionSchema } from '../contracts/planner/ExecutionSelection.v1.js';
+import {
+  PLAN_PREVIEW_PROVENANCE_KIND,
+  PlanPreviewProvenanceSchema,
+} from '../contracts/planner/PlanPreviewProvenance.v1.js';
 import { TransformationSqlFirstCompilerGraphSourceSchema } from '../contracts/planner/TransformationFlowCompiler.v1.js';
 import {
-  PlanPreviewProvenanceSchema,
   TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY,
   TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
 } from '../contracts/planner/TransformationFlowDesignGraph.v1.js';
@@ -50,6 +53,14 @@ export const PlanPreviewRequestSchema = z
         ctx,
         ['provenance'],
         'transformation-sql-first-v1 requires graphArtifact and sqlArtifact provenance.'
+      );
+    } else if (
+      request.provenance.kind !== PLAN_PREVIEW_PROVENANCE_KIND.transformationGitArtifacts
+    ) {
+      addPlanPreviewRequestIssue(
+        ctx,
+        ['provenance', 'kind'],
+        'transformation-sql-first-v1 requires transformation Git artifact provenance.'
       );
     }
 

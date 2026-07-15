@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { isNonBlankString, NON_BLANK_STRING_MESSAGE } from '../../utils/contractPrimitives.js';
 
-import { GitArtifactRefSchema, type GitArtifactRef } from './TransformationFlowDesignGraph.v1.js';
+import { GitArtifactRefSchema, type GitArtifactRef } from './PlanPreviewProvenance.v1.js';
 
 const NonBlankStringSchema = z
   .string()

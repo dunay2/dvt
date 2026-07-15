@@ -76,6 +76,7 @@ describe('DbtProjectGraphProjection.v1', () => {
       freshness: 'fresh',
       projectRevision: PROJECT_REVISION,
       analysisSha256: 'b'.repeat(64),
+      adapterType: 'postgres',
       nodes: [
         {
           uniqueId: 'source.analytics.raw.orders',
@@ -115,6 +116,12 @@ describe('DbtProjectGraphProjection.v1', () => {
         },
       ],
       diagnostics: [],
+      executionTarget: {
+        provider: 'temporal',
+        adapter: 'postgres',
+        targetName: 'production',
+        credentialRef: 'env:DBT_PROFILES_DIR',
+      },
       capabilities: {
         canPreview: true,
         canRun: true,

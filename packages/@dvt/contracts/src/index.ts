@@ -92,8 +92,6 @@ export {
   TRANSFORMATION_EXECUTION_TARGET,
   TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
   DesignGraphDraftSchema,
-  GitArtifactRefSchema,
-  PlanPreviewProvenanceSchema,
 } from './contracts/planner/TransformationFlowDesignGraph.v1.js';
 export type {
   DesignGraphContext,
@@ -104,11 +102,22 @@ export type {
   DesignGraphSourceNode,
   DesignGraphSqlTransformNode,
   DesignNodeType,
-  GitArtifactRef,
-  PlanPreviewProvenance,
   TransformationExecutionTarget,
   TransformationSqlFirstGraphSourceV1,
 } from './contracts/planner/TransformationFlowDesignGraph.v1.js';
+export {
+  DbtExecutionTargetIdentitySchema,
+  GitArtifactRefSchema,
+  PLAN_PREVIEW_PROVENANCE_KIND,
+  PlanPreviewProvenanceSchema,
+} from './contracts/planner/PlanPreviewProvenance.v1.js';
+export type {
+  DbtExecutionTargetIdentity,
+  DbtProjectFilesProvenance,
+  GitArtifactRef,
+  PlanPreviewProvenance,
+  TransformationGitArtifactsProvenance,
+} from './contracts/planner/PlanPreviewProvenance.v1.js';
 export {
   WORKSPACE_GRAPH_AUTHORING_EDGE_RELATION,
   WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
