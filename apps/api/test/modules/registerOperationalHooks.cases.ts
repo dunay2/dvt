@@ -127,6 +127,7 @@ function createProtectedRuntimeModuleHarness(): {
         },
       } as never,
       workspaceGraphDraftStore: createWorkspaceGraphDraftStore(),
+      workspaceFilesRoot: 'test-workspace-files',
       canvasAuthoringAuthorityStore: {} as never,
       canvasAuthoringAuthorityPolicy: {} as never,
       dbtProjectImport: {} as never,
