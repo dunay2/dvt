@@ -467,7 +467,6 @@ async function main() {
     if (!hasExternallyManagedAnalyzerProfile) {
       await prepareLiveProofDbtAnalyzerProfile(apiEnv);
     }
-    console.log(`[selected-closure-live] Workspace files root: ${apiEnv.DVT_WORKSPACE_FILES_ROOT}`);
     await seedSelectedClosureLocalWarehouseProof(apiEnv);
 
     const apiHandle = spawnProcess('api-live-proof', ['--filter', 'dvt-api', 'dev'], apiEnv);
