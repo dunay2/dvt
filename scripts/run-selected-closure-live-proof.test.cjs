@@ -146,6 +146,10 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
     apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR,
     /[\\/]\.dvt[\\/]live-proofs[\\/]selected-closure[\\/]dvt_live_selected_closure_test[\\/]server-dbt-profiles$/
   );
+  assert.equal(apiEnv.DBT_PROFILES_DIR, apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR);
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_ADAPTER, 'postgres');
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_TARGET_NAME, 'analysis');
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_CREDENTIAL_REF, 'env:DBT_PROFILES_DIR');
   assert.equal(apiEnv.OIDC_ISSUER, 'https://issuer.local.dvt/');
 });
 
@@ -210,6 +214,7 @@ test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live 
   assert.equal(workerEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(workerEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
   assert.equal(workerEnv.DVT_DBT_BUNDLE_FILE_ROOT, apiEnv.DVT_DBT_BUNDLE_FILE_ROOT);
+  assert.equal(workerEnv.DBT_PROFILES_DIR, apiEnv.DBT_PROFILES_DIR);
 });
 
 test('seedSelectedClosureLocalWarehouseProof seeds source data before the API command creates the catalog', async () => {

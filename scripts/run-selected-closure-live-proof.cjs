@@ -342,9 +342,19 @@ function buildLiveProofApiEnv({
   oidcEnv = {},
   sourceEnv = process.env,
 }) {
+  const profilesDirectory = resolveLiveProofDbtAnalyzerProfilesDirectory(
+    liveProofSchema,
+    sourceEnv
+  );
   const temporalSourceEnv = {
     ...buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort),
     DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DBT_ENABLED) ?? 'true',
+    DVT_DBT_EXECUTION_ADAPTER: readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_ADAPTER) ?? 'postgres',
+    DVT_DBT_EXECUTION_TARGET_NAME:
+      readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_TARGET_NAME) ?? 'analysis',
+    DVT_DBT_EXECUTION_CREDENTIAL_REF:
+      readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_CREDENTIAL_REF) ?? 'env:DBT_PROFILES_DIR',
+    DBT_PROFILES_DIR: readNonEmptyEnv(sourceEnv.DBT_PROFILES_DIR) ?? profilesDirectory,
   };
   const artifactEnv = buildLocalDbtArtifactEnv({
     ...temporalSourceEnv,
@@ -367,10 +377,7 @@ function buildLiveProofApiEnv({
     DATABASE_URL: databaseUrl,
     DVT_LOCAL_POSTGRES_WAREHOUSE_URL: databaseUrl,
     DVT_PG_SCHEMA: liveProofSchema,
-    DVT_DBT_ANALYZER_PROFILES_DIR: resolveLiveProofDbtAnalyzerProfilesDirectory(
-      liveProofSchema,
-      temporalSourceEnv
-    ),
+    DVT_DBT_ANALYZER_PROFILES_DIR: profilesDirectory,
     DVT_READYZ_ENABLED: 'true',
     DVT_VERSION_ENABLED: 'true',
     DVT_DB_READY_ENABLED: 'true',
@@ -387,10 +394,12 @@ function buildLiveProofTemporalWorkerEnv(apiEnv, sourceEnv = process.env) {
     sourceEnv
   );
   const workspaceFilesRoot = readNonEmptyEnv(apiEnv.DVT_WORKSPACE_FILES_ROOT);
+  const dbtProfilesDirectory = readNonEmptyEnv(apiEnv.DBT_PROFILES_DIR);
 
   return {
     ...workerEnv,
     ...(workspaceFilesRoot === undefined ? {} : { DVT_WORKSPACE_FILES_ROOT: workspaceFilesRoot }),
+    ...(dbtProfilesDirectory === undefined ? {} : { DBT_PROFILES_DIR: dbtProfilesDirectory }),
   };
 }
 
