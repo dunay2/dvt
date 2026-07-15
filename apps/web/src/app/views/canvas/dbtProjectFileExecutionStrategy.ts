@@ -27,6 +27,7 @@ export function buildDbtProjectFileExecutionStrategy(
     kind: 'dbt_project_file_preview',
     previewProfile: 'planner-generic-v1',
     sourceFamily: 'dbt',
+    canvasId: projection.authorityBinding.canvasId,
     projectRoot: projection.projectRevision.projectRoot,
     contentSetSha256: projection.projectRevision.contentSetSha256,
     analysisSha256: projection.analysisSha256,
@@ -41,6 +42,7 @@ export function buildDbtProjectFilePreviewProvenance(
 ): DbtProjectFilesProvenance {
   const provenance = PlanPreviewProvenanceSchema.parse({
     kind: 'dbt-project-files',
+    canvasId: strategy.canvasId,
     projectRoot: strategy.projectRoot,
     contentSetSha256: strategy.contentSetSha256,
     analysisSha256: strategy.analysisSha256,
@@ -62,6 +64,7 @@ export function buildDbtProjectFileExecutionDraftSignature(
 ): string {
   return JSON.stringify({
     plannerDraftSignature,
+    canvasId: strategy.canvasId,
     projectRoot: strategy.projectRoot,
     contentSetSha256: strategy.contentSetSha256,
     analysisSha256: strategy.analysisSha256,

@@ -161,6 +161,7 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
 
 const DBT_PROVENANCE = {
   kind: 'dbt-project-files',
+  canvasId: 'analytics-canvas',
   projectRoot: 'analytics',
   contentSetSha256: PROJECT_REVISION,
   analysisSha256: '4'.repeat(64),

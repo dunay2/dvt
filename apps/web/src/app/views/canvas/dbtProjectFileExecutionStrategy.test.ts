@@ -58,6 +58,7 @@ describe('dbt project file execution strategy', () => {
       kind: 'dbt_project_file_preview',
       previewProfile: 'planner-generic-v1',
       sourceFamily: 'dbt',
+      canvasId: 'analytics-canvas',
       projectRoot: 'analytics',
       contentSetSha256: '1'.repeat(64),
       analysisSha256: '2'.repeat(64),
@@ -97,6 +98,7 @@ describe('dbt project file execution strategy', () => {
       ])
     ).toEqual({
       kind: 'dbt-project-files',
+      canvasId: 'analytics-canvas',
       projectRoot: 'analytics',
       contentSetSha256: '1'.repeat(64),
       analysisSha256: '2'.repeat(64),

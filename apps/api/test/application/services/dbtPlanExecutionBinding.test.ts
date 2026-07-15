@@ -73,6 +73,7 @@ describe('resolveDbtPlanExecutionBinding', () => {
 
 const DBT_PROVENANCE = {
   kind: 'dbt-project-files',
+  canvasId: 'analytics-canvas',
   projectRoot: 'analytics',
   contentSetSha256: '1'.repeat(64),
   analysisSha256: '2'.repeat(64),

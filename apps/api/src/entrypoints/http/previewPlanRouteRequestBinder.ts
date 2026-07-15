@@ -30,9 +30,7 @@ export function createParsedPreviewPlanRequest(
     {
       graphSource: commandInput.graphSource,
       ...(commandInput.policies === undefined ? {} : { policies: commandInput.policies }),
-      ...(commandInput.environment === undefined
-        ? {}
-        : { environment: commandInput.environment }),
+      ...(commandInput.environment === undefined ? {} : { environment: commandInput.environment }),
       ...(commandInput.observability === undefined
         ? {}
         : { observability: commandInput.observability }),
@@ -55,6 +53,7 @@ export function createParsedPreviewPlanRequest(
       targetAdapter: routePolicy.routeContext.targetAdapter,
       graphSource: commandInput.graphSource,
       selection: commandInput.selection,
+      ...(commandInput.provenance === undefined ? {} : { provenance: commandInput.provenance }),
       ...(plannerEnvelope.policies === undefined ? {} : { policies: plannerEnvelope.policies }),
       ...(plannerEnvelope.environment === undefined
         ? {}

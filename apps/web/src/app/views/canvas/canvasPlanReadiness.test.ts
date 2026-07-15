@@ -203,6 +203,7 @@ describe('canvasPlanReadiness', () => {
         },
         provenance: {
           kind: 'dbt-project-files' as const,
+          canvasId: 'analytics-canvas',
           projectRoot: 'analytics',
           contentSetSha256: '1'.repeat(64),
           analysisSha256: '2'.repeat(64),
@@ -224,6 +225,7 @@ describe('canvasPlanReadiness', () => {
         kind: 'dbt_project_file_preview',
         previewProfile: 'planner-generic-v1',
         sourceFamily: 'dbt',
+        canvasId: 'analytics-canvas',
         projectRoot: 'analytics',
         contentSetSha256: '1'.repeat(64),
         analysisSha256: '3'.repeat(64),

@@ -13,6 +13,7 @@ export type CanvasExecutionStrategy =
       kind: 'dbt_project_file_preview';
       previewProfile: 'planner-generic-v1';
       sourceFamily: 'dbt';
+      canvasId: string;
       projectRoot: string;
       contentSetSha256: string;
       analysisSha256: string;

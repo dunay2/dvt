@@ -21,6 +21,7 @@ const EXECUTION_TARGET = {
 
 const DBT_PROVENANCE = {
   kind: PLAN_PREVIEW_PROVENANCE_KIND.dbtProjectFiles,
+  canvasId: 'canvas-orders',
   projectRoot: 'analytics/orders',
   contentSetSha256: 'a'.repeat(64),
   analysisSha256: 'b'.repeat(64),
@@ -57,6 +58,7 @@ describe('PlanPreviewProvenance.v1', () => {
   });
 
   it.each([
+    (({ canvasId: _canvasId, ...provenance }) => provenance)(DBT_PROVENANCE),
     { ...DBT_PROVENANCE, projectRoot: '../analytics' },
     { ...DBT_PROVENANCE, selectedUniqueIds: [] },
     { ...DBT_PROVENANCE, selectedUniqueIds: ['model.analytics.orders', 'model.analytics.orders'] },

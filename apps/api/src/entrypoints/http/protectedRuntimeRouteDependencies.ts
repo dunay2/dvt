@@ -15,6 +15,7 @@ import { ListRunsUseCase } from '../../application/services/listRunsUseCase.js';
 import { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCase.js';
 import { RecoverRunUseCase } from '../../application/services/recoverRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
+import { ResolveAuthorizedPreviewSelectionService } from '../../application/services/resolveAuthorizedPreviewSelection.js';
 import { SignalRunUseCase } from '../../application/services/signalRunUseCase.js';
 import { ObservabilityRunStatusStalenessTelemetry } from '../../infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
 import { ObservabilityWorkspaceGraphDraftTelemetry } from '../../infrastructure/telemetry/ObservabilityWorkspaceGraphDraftTelemetry.js';
@@ -62,9 +63,12 @@ export function buildProtectedRuntimeRouteDependencies(
     },
     planStore: protectedModule.planStore,
     planValidator: protectedModule.planValidator,
-    executableSubgraphResolver: new ResolveAuthorizedExecutableSubgraphService({
-      planner: protectedModule.planner,
-      workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore,
+    previewSelectionResolver: new ResolveAuthorizedPreviewSelectionService({
+      graphDraftResolver: new ResolveAuthorizedExecutableSubgraphService({
+        planner: protectedModule.planner,
+        workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore,
+      }),
+      projectGraph: protectedModule.dbtProjectImport.projectGraphUseCase,
     }),
   });
 

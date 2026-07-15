@@ -58,6 +58,7 @@ const TransformationGitArtifactsProvenanceSchema = z
 const DbtProjectFilesProvenanceSchema = z
   .object({
     kind: z.literal(PLAN_PREVIEW_PROVENANCE_KIND.dbtProjectFiles),
+    canvasId: NonBlankStringSchema,
     projectRoot: WorkspaceRelativeProjectRootSchema,
     contentSetSha256: Sha256HexStringSchema,
     analysisSha256: Sha256HexStringSchema,

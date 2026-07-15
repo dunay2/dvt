@@ -41,6 +41,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       kind: 'dbt_project_file_preview',
       previewProfile: 'planner-generic-v1',
       sourceFamily: 'dbt',
+      canvasId: 'analytics-canvas',
       projectRoot: 'analytics',
       contentSetSha256: '1'.repeat(64),
       analysisSha256: '2'.repeat(64),
@@ -105,6 +106,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       context: expect.objectContaining({ runId: 'preview_context' }),
       provenance: {
         kind: 'dbt-project-files',
+        canvasId: 'analytics-canvas',
         projectRoot: 'analytics',
         contentSetSha256: '1'.repeat(64),
         analysisSha256: '2'.repeat(64),

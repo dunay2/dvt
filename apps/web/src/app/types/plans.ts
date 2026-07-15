@@ -50,6 +50,7 @@ export type PlanPreviewProvenanceViewModel =
     }
   | {
       kind: 'dbt-project-files';
+      canvasId: string;
       projectRoot: string;
       contentSetSha256: string;
       analysisSha256: string;

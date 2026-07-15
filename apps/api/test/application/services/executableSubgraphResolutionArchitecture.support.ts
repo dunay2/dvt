@@ -19,6 +19,10 @@ export const EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT = {
       'services/PlannerBackedStartRunUseCase.ts'
     ),
     previewUseCase: defineArtifact(APPLICATION_ROOT, 'services/PreviewPlanUseCase.ts'),
+    previewSelectionAuthority: defineArtifact(
+      APPLICATION_ROOT,
+      'services/resolveAuthorizedPreviewSelection.ts'
+    ),
     resolverService: defineArtifact(
       APPLICATION_ROOT,
       'services/resolveAuthorizedExecutableSubgraph.ts'

@@ -13,6 +13,7 @@ import type {
   PlannerBuildResultV1,
   PlannerPolicyClassSet,
   PlannerSelection,
+  PlanPreviewProvenance,
   ScopedPlanRef,
   StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
@@ -21,8 +22,8 @@ import type { IPlanExecutabilityValidator } from '@dvt/planner';
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
 import { PLAN_ROUTE_POLICY_CATALOG } from './planRoutePolicyCatalog.js';
-import { ResolveAuthorizedExecutableSubgraphService } from './resolveAuthorizedExecutableSubgraph.js';
 import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlannerInputEnvelope.js';
+import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
 
 type PreviewPlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
 type PreviewPlanSemanticRejection = {
@@ -39,6 +40,7 @@ export interface PreviewPlanCommand {
   readonly targetAdapter: string;
   readonly graphSource: GenericGraphSourceV1;
   readonly selection: ExecutionSelection;
+  readonly provenance?: PlanPreviewProvenance;
   readonly policies?: PlannerPolicyClassSet;
   readonly environment?: StartRunPlannerEnvironmentInput;
   readonly observability?: ExecutionPlan['observability'];
@@ -70,7 +72,7 @@ export class PreviewPlanUseCase {
       readonly planStore: IStoredPlanArtifactWriter &
         Pick<IStoredPlanArtifactReader, 'getStoredPlanValidationRecord'>;
       readonly planValidator: IPlanExecutabilityValidator;
-      readonly executableSubgraphResolver: ResolveAuthorizedExecutableSubgraphService;
+      readonly previewSelectionResolver: ResolveAuthorizedPreviewSelectionService;
     }
   ) {}
 
@@ -78,14 +80,15 @@ export class PreviewPlanUseCase {
     command: PreviewPlanCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<PreviewPlanUseCaseResult> {
-    const executableSubgraph = await this.deps.executableSubgraphResolver.execute(
+    const previewSelection = await this.deps.previewSelectionResolver.execute(
       {
         selection: command.selection,
         graphSource: command.graphSource,
+        ...(command.provenance === undefined ? {} : { provenance: command.provenance }),
       },
       context
     );
-    if (!executableSubgraph.ok) {
+    if (!previewSelection.ok) {
       return {
         kind: PREVIEW_PLAN_RESULT_KIND.rejected,
         validation: {
@@ -93,15 +96,15 @@ export class PreviewPlanUseCase {
           planId: 'selection',
           adapterId: command.targetAdapter,
           degradable: false,
-          ...executableSubgraph.rejection,
+          ...previewSelection.rejection,
         },
       };
     }
 
     const plannerInputSeed = {
-      graphSource: command.graphSource,
+      graphSource: previewSelection.value.graphSource,
       selection: {
-        selectedNodeIds: executableSubgraph.value.nodeIds,
+        selectedNodeIds: previewSelection.value.nodeIds,
       } satisfies PlannerSelection,
       ...(command.policies === undefined ? {} : { policies: command.policies }),
       ...(command.environment === undefined ? {} : { environment: command.environment }),
