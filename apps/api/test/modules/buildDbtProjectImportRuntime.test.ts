@@ -10,6 +10,7 @@ describe('buildDbtProjectImportRuntime', () => {
     const analyzer = {
       analyze: vi.fn().mockResolvedValue({
         status: 'valid',
+        adapterType: 'postgres',
         projectRevision: {
           projectRoot: 'analytics',
           contentSetSha256: 'a'.repeat(64),
@@ -34,6 +35,14 @@ describe('buildDbtProjectImportRuntime', () => {
     };
     const runtime = buildDbtProjectImportRuntime({
       analyzer,
+      executionTargetResolver: {
+        resolve: () => ({
+          provider: 'temporal',
+          adapter: 'postgres',
+          targetName: 'production',
+          credentialRef: 'env:DBT_PROFILES_DIR',
+        }),
+      },
       inspector: {
         inspect: vi.fn().mockResolvedValue({
           projectRoot: 'analytics',

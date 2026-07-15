@@ -8,19 +8,11 @@
  */
 import { z } from 'zod';
 
-import {
-  isNonBlankString,
-  isSha256HexString,
-  NON_BLANK_STRING_MESSAGE,
-  SHA256_HEX_STRING_MESSAGE,
-} from '../../utils/contractPrimitives.js';
+import { isSha256HexString, SHA256_HEX_STRING_MESSAGE } from '../../utils/contractPrimitives.js';
 
 import { WorkspaceRelativeProjectRootSchema } from './CanvasAuthoringAuthorityBinding.v1.js';
 
-const NonBlankStringSchema = z
-  .string()
-  .min(1)
-  .refine((value) => isNonBlankString(value), { message: NON_BLANK_STRING_MESSAGE });
+const NonBlankStringSchema = z.string().trim().min(1);
 const Sha256HexStringSchema = NonBlankStringSchema.refine(isSha256HexString, {
   message: SHA256_HEX_STRING_MESSAGE,
 });

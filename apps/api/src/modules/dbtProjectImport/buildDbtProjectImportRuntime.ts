@@ -1,4 +1,5 @@
 /** Owned concern: compose phase-three dbt project import application services once. */
+import type { IDbtExecutionTargetResolver } from '../../application/ports/dbtExecutionTarget.js';
 import type { IDbtProjectAnalyzerPort } from '../../application/ports/dbtProjectAnalysis.js';
 import type {
   IDbtProjectImportInspectorPort,
@@ -11,6 +12,7 @@ import { ValidateDbtProjectImportUseCase } from '../../application/services/vali
 
 export type BuildDbtProjectImportRuntimeDeps = {
   readonly analyzer: IDbtProjectAnalyzerPort;
+  readonly executionTargetResolver: IDbtExecutionTargetResolver;
   readonly inspector: IDbtProjectImportInspectorPort;
   readonly processStore: IDbtProjectImportProcessStore;
   readonly authorityPolicy: CanvasAuthoringAuthorityPolicy;
@@ -23,6 +25,7 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
   const projectGraphUseCase = new ProjectDbtGraphFromFilesUseCase({
     analyzer: deps.analyzer,
     authorityPolicy: deps.authorityPolicy,
+    executionTargetResolver: deps.executionTargetResolver,
   });
   const validateUseCase = new ValidateDbtProjectImportUseCase({
     inspector: deps.inspector,
