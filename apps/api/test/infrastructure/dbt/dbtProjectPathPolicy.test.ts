@@ -56,6 +56,20 @@ packages-install-path: vendor/dbt
     });
   });
 
+  it('canonicalizes trailing separators in configured non-source directories', () => {
+    expect(
+      resolveDbtProjectDirectoryPartition(`
+name: analytics
+target-path: target/
+log-path: logs/
+packages-install-path: dbt_packages/
+`)
+    ).toEqual({
+      generatedArtifactDirectories: ['logs', 'target'],
+      installedDependencyDirectories: ['dbt_packages'],
+    });
+  });
+
   it('uses canonical directory defaults when no override is configured', () => {
     expect(resolveDbtProjectDirectoryPartition('name: analytics\n')).toEqual({
       generatedArtifactDirectories: [...DBT_GENERATED_ARTIFACT_DIRECTORY_DEFAULTS].sort(

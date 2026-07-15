@@ -89,6 +89,20 @@ describe('DbtProjectFilesWarehouseSourceImportStrategy', () => {
       })
     );
   });
+
+  it('does not roll back YAML owned by an earlier deduplicated import', async () => {
+    const batchMutation = createBatchMutation({ deduplicated: true });
+    const projectGraph = {
+      execute: vi.fn(async () => ({ ...createProjection(), freshness: 'invalid' as const })),
+    };
+    const strategy = createStrategy(batchMutation, projectGraph);
+
+    await expect(strategy.execute(CONTEXT, AUTHORITY)).rejects.toBeInstanceOf(
+      WarehouseSourceImportProjectionError
+    );
+
+    expect(batchMutation.apply).toHaveBeenCalledTimes(1);
+  });
 });
 
 const SOURCE_OBJECT: SourceObject = {
@@ -160,13 +174,15 @@ function createWorkspaceFiles(): IWorkspaceFileRepository {
   };
 }
 
-function createBatchMutation(): IWorkspaceFileBatchMutationPort {
+function createBatchMutation(
+  options: Readonly<{ deduplicated?: boolean }> = {}
+): IWorkspaceFileBatchMutationPort {
   return {
     apply: vi.fn(async (_scope: WorkspaceStorageScope, mutation: WorkspaceFileBatchMutation) => ({
       kind: 'applied' as const,
       idempotencyKey: mutation.idempotencyKey,
       requestHash: 'a'.repeat(64),
-      deduplicated: false,
+      deduplicated: options.deduplicated ?? false,
       writes: mutation.writes.map((write) => ({
         path: write.path,
         contentSha256: sha256(write.content),

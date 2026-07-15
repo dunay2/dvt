@@ -193,28 +193,31 @@ describe('LocalWorkspaceFileBatchMutationGateway', () => {
     ).rejects.toBeInstanceOf(WorkspaceFileBatchIdempotencyConflictError);
   });
 
-  it('deduplicates an equivalent retry rebuilt from the post-publication revisions', async () => {
+  it('rejects idempotency-key reuse when the expected revision changes', async () => {
     const gateway = new LocalWorkspaceFileBatchMutationGateway({ root: namespaceRoot });
     const workspacePath = 'analytics/models/sources/new.yml';
-    const content = 'version: 2\n';
+    const originalContent = 'version: 2\n';
+    const concurrentContent = 'version: 3\n';
 
     await expect(
       gateway.apply(SCOPE, {
         idempotencyKey: 'source-import-post-publication-retry',
         expectedFiles: [{ path: workspacePath }],
-        writes: [{ path: workspacePath, content }],
+        writes: [{ path: workspacePath, content: originalContent }],
         deletes: [],
       })
     ).resolves.toMatchObject({ kind: 'applied', deduplicated: false });
+    await seed(workspacePath, concurrentContent);
 
     await expect(
       gateway.apply(SCOPE, {
         idempotencyKey: 'source-import-post-publication-retry',
-        expectedFiles: [{ path: workspacePath, expectedContentSha256: sha256(content) }],
-        writes: [{ path: workspacePath, content }],
+        expectedFiles: [{ path: workspacePath, expectedContentSha256: sha256(concurrentContent) }],
+        writes: [{ path: workspacePath, content: originalContent }],
         deletes: [],
       })
-    ).resolves.toMatchObject({ kind: 'applied', deduplicated: true });
+    ).rejects.toBeInstanceOf(WorkspaceFileBatchIdempotencyConflictError);
+    await expect(read(workspacePath)).resolves.toBe(concurrentContent);
   });
 
   it('reapplies the same request after a compensating batch restores its preconditions', async () => {

@@ -138,7 +138,8 @@ function normalizeContainedRelativePath(configuredPath: string): string | null {
   }
 
   const normalized = path.posix.normalize(portablePath);
-  return normalized !== '..' && !normalized.startsWith('../') ? normalized : null;
+  if (normalized === '..' || normalized.startsWith('../')) return null;
+  return normalized === '.' ? normalized : normalized.replace(/\/+$/u, '');
 }
 
 function nonSourcePathShadowsConfiguredSource(document: Record<string, unknown>): boolean {

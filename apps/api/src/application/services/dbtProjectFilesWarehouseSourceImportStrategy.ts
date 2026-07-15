@@ -75,6 +75,7 @@ export class DbtProjectFilesWarehouseSourceImportStrategy {
         },
       };
     } catch (error) {
+      if (appliedReceipt.deduplicated) throw error;
       try {
         await rollbackWarehouseSourceImportFilePlan({
           context,
