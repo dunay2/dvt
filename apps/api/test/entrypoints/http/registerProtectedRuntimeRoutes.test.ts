@@ -43,6 +43,7 @@ function protectedRuntimeModule(): ProtectedRuntimeModule {
       snapshotStaleness: {},
     },
     workspaceContextQuery: { getEffectiveWorkspaceContext: async () => null },
+    workspaceFilesRoot: process.cwd(),
     workspaceGraphDraftCapabilityService: {},
     workspaceGraphDraftStore: {},
   } as unknown as ProtectedRuntimeModule;
