@@ -2,21 +2,29 @@
  * Owned concern: route composition for the governed Canvas shell.
  */
 import { ReactFlowProvider, useReactFlow, type Edge, type Node } from '@xyflow/react';
-import { useMemo } from 'react';
-import { Navigate, useParams, useSearchParams } from 'react-router';
+import { useCallback, useMemo } from 'react';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
+import type { DbtProjectImportResult } from '@dvt/contracts';
 
 import CanvasModalHost from './canvas/CanvasModalHost';
 import CanvasShell from './canvas/CanvasShell';
 import { buildCanvasModalHostProps } from './canvas/canvasModalHostPropsBuilder';
 import { deriveCanvasRouteViewState } from './canvas/canvasRouteViewState';
 import { buildCanvasShellProps } from './canvas/canvasShellPropsBuilder';
-import { resolveCanvasRouteAuthority } from './canvas/canvasRouteAuthority';
+import {
+  buildDbtProjectFileCanvasPath,
+  resolveCanvasRouteAuthority,
+} from './canvas/canvasRouteAuthority';
 import { DbtProjectFileCanvas, InvalidCanvasAuthority } from './canvas/DbtProjectFileCanvas';
 import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentationSync';
 import { useCanvasController } from './canvas/useCanvasController';
 import { useWarehouseSourceImportPort } from '../services/AppServicesContext';
 
-function GraphDraftCanvasContent(): JSX.Element {
+function GraphDraftCanvasContent({
+  onDbtProjectImported,
+}: Readonly<{
+  onDbtProjectImported: (result: DbtProjectImportResult) => void;
+}>): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const warehouseSourceImport = useWarehouseSourceImportPort();
   const controller = useCanvasController();
@@ -39,6 +47,7 @@ function GraphDraftCanvasContent(): JSX.Element {
         canvasContextScreenToFlowPosition={(screenPosition) =>
           reactFlow.screenToFlowPosition(screenPosition)
         }
+        onDbtProjectImported={onDbtProjectImported}
       />
       <CanvasModalHost {...modalHostProps} />
     </>
@@ -47,10 +56,17 @@ function GraphDraftCanvasContent(): JSX.Element {
 
 function CanvasContent(): JSX.Element {
   const params = useParams();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const authorityResolution = useMemo(
     () => resolveCanvasRouteAuthority(searchParams),
     [searchParams]
+  );
+  const onDbtProjectImported = useCallback(
+    (result: DbtProjectImportResult) => {
+      void navigate(buildDbtProjectFileCanvasPath(result.authorityBinding));
+    },
+    [navigate]
   );
 
   if (params.workbenchTab != null && params.workbenchTab.trim() !== '') {
@@ -59,9 +75,14 @@ function CanvasContent(): JSX.Element {
 
   switch (authorityResolution.kind) {
     case 'graph-draft':
-      return <GraphDraftCanvasContent />;
+      return <GraphDraftCanvasContent onDbtProjectImported={onDbtProjectImported} />;
     case 'dbt-project-files':
-      return <DbtProjectFileCanvas authorityBinding={authorityResolution.binding} />;
+      return (
+        <DbtProjectFileCanvas
+          authorityBinding={authorityResolution.binding}
+          onDbtProjectImported={onDbtProjectImported}
+        />
+      );
     case 'invalid':
       return <InvalidCanvasAuthority message={authorityResolution.message} />;
   }

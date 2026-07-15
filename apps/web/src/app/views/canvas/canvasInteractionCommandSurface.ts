@@ -34,8 +34,7 @@ export type CanvasContextMenuSourceImportCatalogAction = Readonly<{
 }>;
 
 export type CanvasContextMenuCatalogAction =
-  | CanvasContextMenuCreateNodeAction
-  | CanvasContextMenuSourceImportCatalogAction;
+  CanvasContextMenuCreateNodeAction | CanvasContextMenuSourceImportCatalogAction;
 
 export type CanvasContextMenuCanvasAction = Readonly<{
   action: 'open-add-node-catalog' | 'open-source-import' | 'open-canvas-settings';
@@ -62,6 +61,7 @@ export type CanvasContextMenuModel = Readonly<{
 type BuildCanvasContextMenuModelArgs = Readonly<{
   target: CanvasContextMenuTarget;
   canMutateGraph: boolean;
+  canOpenSourceImport?: boolean;
   canOpenCanvasSettings?: boolean;
   authoringNodeKinds: readonly NodeKindRegistration[];
   copy?: CanvasViewCopy;
@@ -110,13 +110,18 @@ function formatCreateNodeActionLabel(
 export function buildCanvasContextMenuModel({
   target,
   canMutateGraph,
+  canOpenSourceImport = false,
   canOpenCanvasSettings = false,
   authoringNodeKinds,
   copy = canvasViewCopy,
 }: BuildCanvasContextMenuModelArgs): CanvasContextMenuModel {
   const canvasActions: CanvasContextMenuCanvasAction[] = [];
   if (target.kind === 'pane') {
-    if (canMutateGraph && authoringNodeKinds.length > 0) {
+    const hasSourceImportKind = authoringNodeKinds.some(isSourceNodeKind);
+    if (
+      (canMutateGraph && authoringNodeKinds.length > 0) ||
+      (canOpenSourceImport && hasSourceImportKind)
+    ) {
       canvasActions.push({
         action: 'open-add-node-catalog',
         label: copy.canvasContextMenuAddLabel,
@@ -140,15 +145,15 @@ export function buildCanvasContextMenuModel({
     edgeActions: [],
   } satisfies CanvasContextMenuModel;
 
-  if (!canMutateGraph) {
-    return baseModel;
-  }
-
   if (target.kind === 'pane') {
     return {
       ...baseModel,
       flowPosition: target.flowPosition,
     };
+  }
+
+  if (!canMutateGraph) {
+    return baseModel;
   }
 
   return {
@@ -162,11 +167,13 @@ export function buildCanvasAddNodeCatalogMenuModel({
   sourceModel,
   authoringNodeKinds,
   canOpenSourceImport = false,
+  canCreateAuthoringNodes = true,
   copy = canvasViewCopy,
 }: Readonly<{
   sourceModel: CanvasContextMenuModel | null;
   authoringNodeKinds: readonly NodeKindRegistration[];
   canOpenSourceImport?: boolean;
+  canCreateAuthoringNodes?: boolean;
   copy?: CanvasViewCopy;
 }>): CanvasContextMenuModel | null {
   if (sourceModel == null || sourceModel.kind !== 'pane' || sourceModel.flowPosition == null) {
@@ -186,13 +193,15 @@ export function buildCanvasAddNodeCatalogMenuModel({
             registration: sourceImportRegistration,
           },
         ];
-  const createNodeActions: CanvasContextMenuCreateNodeAction[] = authoringNodeKinds
-    .filter((registration) => registration !== sourceImportRegistration)
-    .map((registration) => ({
-      action: 'create-node',
-      label: formatCreateNodeActionLabel(registration, copy),
-      registration,
-    }));
+  const createNodeActions: CanvasContextMenuCreateNodeAction[] = canCreateAuthoringNodes
+    ? authoringNodeKinds
+        .filter((registration) => registration !== sourceImportRegistration)
+        .map((registration) => ({
+          action: 'create-node',
+          label: formatCreateNodeActionLabel(registration, copy),
+          registration,
+        }))
+    : [];
 
   return {
     ...sourceModel,

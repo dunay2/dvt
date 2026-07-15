@@ -1,0 +1,175 @@
+// @vitest-environment jsdom
+
+import { fireEvent, waitFor } from '@testing-library/dom';
+import React, { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { DbtProjectImportDialogView } from './DbtProjectImportDialogView';
+import type { DbtProjectImportPresentationModel } from './dbtProjectImportPresentationModel';
+
+function buildModel(
+  overrides: Partial<DbtProjectImportPresentationModel> = {}
+): DbtProjectImportPresentationModel {
+  return {
+    phase: 'accepted',
+    projectRoot: 'analytics',
+    canvasId: 'warehouse-analytics',
+    status: { label: 'Ready to import', tone: 'success', busy: false },
+    canValidate: true,
+    canImport: true,
+    project: { name: 'warehouse_analytics', adapter: 'postgres' },
+    inventory: {
+      fileCount: 2,
+      includedFileCount: 1,
+      excludedFileCount: 1,
+      totalBytesLabel: '2.25 KiB',
+      files: [
+        {
+          path: 'analytics/dbt_project.yml',
+          classification: 'project-config',
+          byteSizeLabel: '256 B',
+          decisionLabel: 'Included',
+          reason: null,
+        },
+        {
+          path: 'analytics/target/manifest.json',
+          classification: 'runtime-artifact',
+          byteSizeLabel: '2 KiB',
+          decisionLabel: 'Excluded',
+          reason: 'Generated runtime artifact.',
+        },
+      ],
+    },
+    diagnostics: [
+      {
+        code: 'dbt_adapter_unavailable',
+        severity: 'warning',
+        message: 'Adapter unavailable for execution.',
+        location: null,
+      },
+    ],
+    failureMessage: null,
+    receipt: null,
+    ...overrides,
+  };
+}
+
+describe('DbtProjectImportDialogView', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    vi.clearAllMocks();
+  });
+
+  it('renders the complete accepted report and delegates explicit commands', async () => {
+    const onValidate = vi.fn();
+    const onImport = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <DbtProjectImportDialogView
+          open
+          model={buildModel()}
+          onOpenChange={vi.fn()}
+          onProjectRootChange={vi.fn()}
+          onCanvasIdChange={vi.fn()}
+          onValidate={onValidate}
+          onImport={onImport}
+        />
+      );
+    });
+
+    const dialog = document.body.querySelector('[data-slot="dbt-project-import-dialog"]');
+    expect(dialog?.textContent).toContain('warehouse_analytics');
+    expect(dialog?.textContent).toContain('postgres');
+    expect(dialog?.textContent).toContain('2 files');
+    expect(dialog?.textContent).toContain('2.25 KiB');
+    expect(dialog?.textContent).toContain('analytics/target/manifest.json');
+    expect(dialog?.textContent).toContain('Generated runtime artifact.');
+    expect(dialog?.textContent).toContain('Adapter unavailable for execution.');
+
+    fireEvent.click(document.body.querySelector('[data-slot="dbt-project-validate-command"]')!);
+    fireEvent.click(document.body.querySelector('[data-slot="dbt-project-import-command"]')!);
+
+    expect(onValidate).toHaveBeenCalledTimes(1);
+    expect(onImport).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps import disabled for rejected validation while preserving diagnostics', async () => {
+    await act(async () => {
+      root.render(
+        <DbtProjectImportDialogView
+          open
+          model={buildModel({
+            phase: 'rejected',
+            status: { label: 'Validation rejected', tone: 'danger', busy: false },
+            canImport: false,
+            diagnostics: [
+              {
+                code: 'dbt_project_invalid',
+                severity: 'error',
+                message: 'dbt_project.yml is invalid.',
+                location: 'analytics/dbt_project.yml, line 4',
+              },
+            ],
+          })}
+          onOpenChange={vi.fn()}
+          onProjectRootChange={vi.fn()}
+          onCanvasIdChange={vi.fn()}
+          onValidate={vi.fn()}
+          onImport={vi.fn()}
+        />
+      );
+    });
+
+    const importButton = document.body.querySelector<HTMLButtonElement>(
+      '[data-slot="dbt-project-import-command"]'
+    );
+    expect(importButton?.disabled).toBe(true);
+    expect(document.body.textContent).toContain('analytics/dbt_project.yml, line 4');
+  });
+
+  it('shows only the server-backed receipt as completed evidence', async () => {
+    await act(async () => {
+      root.render(
+        <DbtProjectImportDialogView
+          open
+          model={buildModel({
+            phase: 'imported',
+            status: { label: 'Imported', tone: 'success', busy: false },
+            canImport: false,
+            receipt: {
+              canvasId: 'warehouse-analytics',
+              projectRoot: 'analytics',
+              projectedResourceCount: 12,
+              revision: '111111111111',
+            },
+          })}
+          onOpenChange={vi.fn()}
+          onProjectRootChange={vi.fn()}
+          onCanvasIdChange={vi.fn()}
+          onValidate={vi.fn()}
+          onImport={vi.fn()}
+        />
+      );
+    });
+
+    await waitFor(() => {
+      expect(document.body.textContent).toContain('12 projected resources');
+      expect(document.body.textContent).toContain('111111111111');
+    });
+  });
+});

@@ -30,7 +30,7 @@ class CanvasFirstAuthoringLiveProofRunner {
     this.postgresBootstrapScript = path.resolve(__dirname, 'run-temporal-postgres-proof.cjs');
     this.temporalPackageRoot = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
     this.specPath = '/repo/apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts';
-    this.cypressImage = 'cypress/included:13.17.0';
+    this.cypressImage = 'cypress/included:15.18.1';
     this.localAuthHost = '127.0.0.1';
     this.apiBindHost = '0.0.0.0';
     this.webBindHost = '0.0.0.0';

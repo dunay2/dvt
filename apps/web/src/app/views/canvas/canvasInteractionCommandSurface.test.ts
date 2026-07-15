@@ -144,6 +144,33 @@ describe('canvasInteractionCommandSurface', () => {
     expect(model.edgeActions).toEqual([]);
   });
 
+  it('offers only source import when file authority permits import but forbids graph mutation', () => {
+    const sourceKind = buildTestNodeKind('dbt:source', 'Source');
+    const modelKind = buildTestNodeKind('dbt:model', 'Model');
+    const rootModel = buildCanvasContextMenuModel({
+      target: {
+        kind: 'pane',
+        screenPosition: { x: 480, y: 320 },
+        flowPosition: { x: 720, y: 180 },
+      },
+      canMutateGraph: false,
+      canOpenSourceImport: true,
+      authoringNodeKinds: [sourceKind, modelKind],
+    });
+    const catalogModel = buildCanvasAddNodeCatalogMenuModel({
+      sourceModel: rootModel,
+      authoringNodeKinds: [sourceKind, modelKind],
+      canOpenSourceImport: true,
+      canCreateAuthoringNodes: false,
+    });
+
+    expect(rootModel.canvasActions).toEqual([{ action: 'open-add-node-catalog', label: 'Add...' }]);
+    expect(catalogModel?.catalogActions).toEqual([
+      { action: 'open-source-import', label: 'Add source', registration: sourceKind },
+    ]);
+    expect(catalogModel?.createNodeActions).toEqual([]);
+  });
+
   it('keeps project navigation out of the canvas menu while preserving canvas-local commands', () => {
     const model = buildCanvasContextMenuModel({
       target: {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveCanvasRouteAuthority } from './canvasRouteAuthority';
+import { buildDbtProjectFileCanvasPath, resolveCanvasRouteAuthority } from './canvasRouteAuthority';
 
 describe('resolveCanvasRouteAuthority', () => {
   it('keeps the existing Canvas route on graph-draft authority when no authority is requested', () => {
@@ -43,5 +43,20 @@ describe('resolveCanvasRouteAuthority', () => {
     if (result.kind === 'invalid') {
       expect(result.message).toMatch(/authority/i);
     }
+  });
+
+  it('builds the file-backed Canvas route from a validated server authority receipt', () => {
+    expect(
+      buildDbtProjectFileCanvasPath({
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'warehouse analytics',
+        authority: {
+          kind: 'dbt-project-files',
+          projectRoot: 'analytics/dbt project',
+        },
+      })
+    ).toBe(
+      '/canvas?authority=dbt-project-files&canvasId=warehouse+analytics&projectRoot=analytics%2Fdbt+project'
+    );
   });
 });

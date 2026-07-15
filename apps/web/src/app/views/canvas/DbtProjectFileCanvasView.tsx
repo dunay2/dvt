@@ -1,8 +1,10 @@
 /** Owned concern: present the read-only file-authoritative dbt Canvas surface. */
 import { lazy, Suspense, type ReactNode } from 'react';
+import type { DbtProjectImportResult } from '@dvt/contracts';
 
 import { cn } from '../../components/ui/utils';
 import { dbtProjectFileCanvasSurfaceStrategy } from '../../plugins/dbt/dbtProjectFileCanvasSurfaceStrategy';
+import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type { CanvasShellProps } from './canvasShell.types';
 import CanvasShell from './CanvasShell';
 import { CanvasErrorStateView, CanvasLoadingStateView } from './CanvasStateViews';
@@ -11,6 +13,9 @@ import type { useDbtProjectFileCanvasController } from './useDbtProjectFileCanva
 const CodeView = lazy(() => import('../CodeView'));
 
 type DbtProjectFileCanvasController = ReturnType<typeof useDbtProjectFileCanvasController>;
+const FILE_AUTHORITY_SOURCE_IMPORT_KINDS = DBT_NODE_KINDS.filter(
+  (registration) => registration.kind === 'dbt:source'
+);
 
 function unsupportedFileProjectionCommand(commandName: string): never {
   throw new Error(`${commandName} is unavailable in the read-only dbt project file projection.`);
@@ -108,9 +113,11 @@ function resolveCenterSurface(controller: DbtProjectFileCanvasController): React
 export function DbtProjectFileCanvasView({
   controller,
   screenToFlowPosition,
+  onDbtProjectImported,
 }: Readonly<{
   controller: DbtProjectFileCanvasController;
   screenToFlowPosition: NonNullable<CanvasShellProps['canvasContextScreenToFlowPosition']>;
+  onDbtProjectImported: (result: DbtProjectImportResult) => void;
 }>): JSX.Element {
   const projectRoot = controller.authorityBinding.authority.projectRoot;
   const projectTitle = resolveProjectTitle(projectRoot);
@@ -154,7 +161,7 @@ export function DbtProjectFileCanvasView({
     layout: {
       focusMode: controller.presentation.focusMode,
       inspectorPanelVisible: controller.presentation.inspectorPanelVisible,
-      canOpenSourceImport: false,
+      canOpenSourceImport: true,
       canMoveNodes: true,
       canSelectNodes: true,
       surfaceStrategy: dbtProjectFileCanvasSurfaceStrategy,
@@ -164,7 +171,7 @@ export function DbtProjectFileCanvasView({
       readOnlyBanner: <DbtProjectProjectionNotice controller={controller} />,
     },
     panels: {
-      authoringNodeKinds: [],
+      authoringNodeKinds: FILE_AUTHORITY_SOURCE_IMPORT_KINDS,
       activeCanvasId: activeCanvas.id,
       activeCanvas,
       canvasDocuments: [activeCanvas],
@@ -187,7 +194,7 @@ export function DbtProjectFileCanvasView({
         canRun: false,
         canEditEdges: false,
       },
-      importedNodeFocusIds: [],
+      importedNodeFocusIds: controller.importedNodeFocusIds,
     },
     graph: {
       nodesWithImpact: controller.nodesWithCommands,
@@ -236,6 +243,7 @@ export function DbtProjectFileCanvasView({
       onOpenProjectCode: controller.openProjectCode,
     },
     canvasContextScreenToFlowPosition: screenToFlowPosition,
+    onDbtProjectImported,
   };
 
   return <CanvasShell {...shellProps} />;

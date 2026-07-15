@@ -3,6 +3,7 @@
  */
 import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
 import type React from 'react';
+import type { DbtProjectImportResult } from '@dvt/contracts';
 
 import type { ImportSourcesResult, IWarehouseSourceImportPort } from '../../ports/workspace';
 import type { SourceImportInitialSelection } from '../../components/sourceImportWizard/types';
@@ -173,6 +174,7 @@ export type CanvasShellProps = Readonly<{
   canvasContextScreenToFlowPosition?: (
     screenPosition: CanvasContextMenuPosition
   ) => CanvasContextMenuPosition;
+  onDbtProjectImported?: (result: DbtProjectImportResult) => void;
 }>;
 
 export type CanvasShellOpenDataRegistryCommand = (

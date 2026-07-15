@@ -45,6 +45,7 @@ describe('CanvasWorkspaceMenuControls', () => {
     const onImportProjectSnapshotFile = vi.fn();
     const onOpenProjectExplorer = vi.fn();
     const onOpenProjectCode = vi.fn();
+    const onImportDbtProject = vi.fn();
     const snapshotFile = new File(['{}'], 'project-snapshot.json', {
       type: 'application/json',
     });
@@ -59,10 +60,12 @@ describe('CanvasWorkspaceMenuControls', () => {
               canImportProjectSnapshot
               canOpenProjectExplorer
               canOpenProjectCode
+              canImportDbtProject
               onExportProjectSnapshot={onExportProjectSnapshot}
               onImportProjectSnapshotFile={onImportProjectSnapshotFile}
               onOpenProjectExplorer={onOpenProjectExplorer}
               onOpenProjectCode={onOpenProjectCode}
+              onImportDbtProject={onImportDbtProject}
             />
             <CanvasWorkspaceMenuControls />
           </DropdownMenuContent>
@@ -91,6 +94,14 @@ describe('CanvasWorkspaceMenuControls', () => {
 
     expect(onOpenProjectExplorer).toHaveBeenCalledTimes(1);
     expect(onOpenProjectCode).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      document.body
+        .querySelector<HTMLDivElement>('[data-slot="canvas-workspace-import-dbt-project-command"]')
+        ?.click();
+    });
+
+    expect(onImportDbtProject).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       fireEvent.change(
@@ -176,5 +187,38 @@ describe('CanvasWorkspaceMenuControls', () => {
     clearCanvasWorkspaceMenuContribution(activeContribution);
 
     expect(useCanvasWorkspaceMenuContributionStore.getState().contribution).toBeNull();
+  });
+
+  it('keeps one registered snapshot while parent callback identities change', async () => {
+    const onExportProjectSnapshot = vi.fn();
+    const onImportProjectSnapshotFile = vi.fn();
+
+    const renderRegistrar = (onImportDbtProject: () => void) => (
+      <CanvasWorkspaceMenuContributionRegistrar
+        canExportProjectSnapshot={false}
+        canImportProjectSnapshot={false}
+        canImportDbtProject
+        onExportProjectSnapshot={onExportProjectSnapshot}
+        onImportProjectSnapshotFile={onImportProjectSnapshotFile}
+        onImportDbtProject={onImportDbtProject}
+      />
+    );
+
+    const firstCommand = vi.fn();
+    await act(async () => {
+      root.render(renderRegistrar(firstCommand));
+    });
+    const firstContribution = useCanvasWorkspaceMenuContributionStore.getState().contribution;
+
+    const latestCommand = vi.fn();
+    await act(async () => {
+      root.render(renderRegistrar(latestCommand));
+    });
+
+    const latestContribution = useCanvasWorkspaceMenuContributionStore.getState().contribution;
+    expect(latestContribution).toBe(firstContribution);
+    latestContribution?.onImportDbtProject?.();
+    expect(firstCommand).not.toHaveBeenCalled();
+    expect(latestCommand).toHaveBeenCalledTimes(1);
   });
 });

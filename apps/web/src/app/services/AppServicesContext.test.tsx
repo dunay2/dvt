@@ -20,12 +20,14 @@ import type {
 } from '../ports/workspace';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
 import type { IDbtProjectGraphQueryPort } from '../ports/dbtProjectGraph';
+import type { IDbtProjectImportPort } from '../ports/dbtProjectImport';
 import { makeRunContext } from '../testing/contractTestUtils';
 import {
   AppServicesProvider,
   useAppDataSourceMode,
   useCapabilitiesPort,
   useDbtProjectGraphQueryPort,
+  useDbtProjectImportPort,
   usePlansService,
   useRunsService,
   useSessionContext,
@@ -67,6 +69,7 @@ describe('AppServicesProvider', () => {
     workspaceFileContentCommand: IWorkspaceFileContentCommandPort | null;
     workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort | null;
     dbtProjectGraphQueryPort: IDbtProjectGraphQueryPort | null;
+    dbtProjectImportPort: IDbtProjectImportPort | null;
     runsService: IRunsPort | null;
     plansService: IPlansPort | null;
     capabilitiesPort: CapabilitiesPort | null;
@@ -83,6 +86,7 @@ describe('AppServicesProvider', () => {
     workspaceFileContentCommand: null,
     workspaceGraphDraftAuthoringPort: null,
     dbtProjectGraphQueryPort: null,
+    dbtProjectImportPort: null,
     runsService: null,
     plansService: null,
     capabilitiesPort: null,
@@ -101,6 +105,7 @@ describe('AppServicesProvider', () => {
     captured.workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
     captured.workspaceGraphDraftAuthoringPort = useWorkspaceGraphDraftAuthoringPort();
     captured.dbtProjectGraphQueryPort = useDbtProjectGraphQueryPort();
+    captured.dbtProjectImportPort = useDbtProjectImportPort();
     captured.runsService = useRunsService();
     captured.plansService = usePlansService();
     captured.capabilitiesPort = useCapabilitiesPort();
@@ -133,6 +138,7 @@ describe('AppServicesProvider', () => {
     captured.workspaceFileContentCommand = null;
     captured.workspaceGraphDraftAuthoringPort = null;
     captured.dbtProjectGraphQueryPort = null;
+    captured.dbtProjectImportPort = null;
     captured.runsService = null;
     captured.plansService = null;
     captured.capabilitiesPort = null;
@@ -169,6 +175,7 @@ describe('AppServicesProvider', () => {
     expect(captured.workspaceFileContentCommand).not.toBeNull();
     expect(captured.workspaceGraphDraftAuthoringPort).not.toBeNull();
     expect(captured.dbtProjectGraphQueryPort).not.toBeNull();
+    expect(captured.dbtProjectImportPort).not.toBeNull();
     expect(captured.runsService).not.toBeNull();
     expect(captured.plansService).not.toBeNull();
     expect(captured.capabilitiesPort).not.toBeNull();
@@ -259,6 +266,10 @@ describe('AppServicesProvider', () => {
         revision: 'rev-1',
       }),
     };
+    const dbtProjectImportPort: IDbtProjectImportPort = {
+      validateProject: vi.fn(),
+      importProject: vi.fn(),
+    };
     const plansService = {
       previewPlan: async () => ({
         planId: 'plan_1',
@@ -334,6 +345,7 @@ describe('AppServicesProvider', () => {
             warehouseSourceImport,
             workspaceFileContentCommand,
             workspaceGraphDraftAuthoringPort,
+            dbtProjectImportPort,
             plansService,
             runsService,
             capabilitiesPort,
@@ -355,6 +367,7 @@ describe('AppServicesProvider', () => {
     expect(captured.warehouseSourceImport).toBe(warehouseSourceImport);
     expect(captured.workspaceFileContentCommand).toBe(workspaceFileContentCommand);
     expect(captured.workspaceGraphDraftAuthoringPort).toBe(workspaceGraphDraftAuthoringPort);
+    expect(captured.dbtProjectImportPort).toBe(dbtProjectImportPort);
     expect(captured.plansService).toBe(plansService);
     expect(captured.runsService).toBe(runsService);
     expect(captured.capabilitiesPort).toBe(capabilitiesPort);

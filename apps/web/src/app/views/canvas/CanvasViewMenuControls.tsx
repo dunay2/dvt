@@ -1,5 +1,5 @@
 /** Owned concern: render Canvas-specific visual controls inside the shell View menu. */
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import {
   BookOpenCheck,
   Columns,
@@ -28,13 +28,48 @@ import { useCanvasViewMenuContributionStore } from './canvasViewMenuContribution
 type CanvasViewMenuContributionRegistrarProps = CanvasViewMenuContribution;
 
 export function CanvasViewMenuContributionRegistrar(
-  contribution: CanvasViewMenuContributionRegistrarProps
+  props: CanvasViewMenuContributionRegistrarProps
 ): null {
   const registerCanvasViewMenuContribution = useCanvasViewMenuContributionStore(
     (state) => state.registerCanvasViewMenuContribution
   );
   const clearCanvasViewMenuContribution = useCanvasViewMenuContributionStore(
     (state) => state.clearCanvasViewMenuContribution
+  );
+  const latestPropsRef = useRef(props);
+  latestPropsRef.current = props;
+  const contribution = useMemo<CanvasViewMenuContribution>(
+    () => ({
+      canEditEdges: props.canEditEdges,
+      canUseCostOverlay: props.canUseCostOverlay,
+      exclusiveOverlayMode: props.exclusiveOverlayMode,
+      impactOverlayEnabled: props.impactOverlayEnabled,
+      columnLevelLineageEnabled: props.columnLevelLineageEnabled,
+      canvasGridVisible: props.canvasGridVisible,
+      canvasGridColor: props.canvasGridColor,
+      canvasSnapToGrid: props.canvasSnapToGrid,
+      canvasEmptyStateGuideVisible: props.canvasEmptyStateGuideVisible,
+      onAutoLayout: () => latestPropsRef.current.onAutoLayout(),
+      onToggleCostOverlay: () => latestPropsRef.current.onToggleCostOverlay(),
+      onToggleImpact: () => latestPropsRef.current.onToggleImpact(),
+      onToggleColumns: () => latestPropsRef.current.onToggleColumns(),
+      onToggleGridVisible: () => latestPropsRef.current.onToggleGridVisible(),
+      onGridColorChange: (color) => latestPropsRef.current.onGridColorChange(color),
+      onToggleSnapToGrid: () => latestPropsRef.current.onToggleSnapToGrid(),
+      onSetCanvasEmptyStateGuideVisible: (visible) =>
+        latestPropsRef.current.onSetCanvasEmptyStateGuideVisible(visible),
+    }),
+    [
+      props.canEditEdges,
+      props.canUseCostOverlay,
+      props.exclusiveOverlayMode,
+      props.impactOverlayEnabled,
+      props.columnLevelLineageEnabled,
+      props.canvasGridVisible,
+      props.canvasGridColor,
+      props.canvasSnapToGrid,
+      props.canvasEmptyStateGuideVisible,
+    ]
   );
 
   useEffect(() => {

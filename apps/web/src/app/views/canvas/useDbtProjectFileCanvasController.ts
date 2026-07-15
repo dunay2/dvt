@@ -6,6 +6,7 @@ import DbtNodeComponent, { type DbtNodeData } from '../../components/canvas/DbtN
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
 import { getRegisteredPluginIds } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { ImportSourcesResult } from '../../ports/workspace';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
 import { observePlanRunReadiness } from './canvasPlanReadiness';
 import {
@@ -67,6 +68,22 @@ function buildProjectionErrorMessage(error: unknown): string {
     : 'The dbt project graph could not be loaded.';
 }
 
+export function resolveDbtProjectFileSourceImportFocus(
+  authorityBinding: DbtProjectFilesAuthorityBinding,
+  result: ImportSourcesResult
+): string[] | null {
+  if (
+    result.outcome.kind !== 'dbt-project-files' ||
+    result.authorityBinding.canvasId !== authorityBinding.canvasId ||
+    result.authorityBinding.authority.kind !== 'dbt-project-files' ||
+    result.authorityBinding.authority.projectRoot !== authorityBinding.authority.projectRoot
+  ) {
+    return null;
+  }
+
+  return [...result.outcome.projectedSourceUniqueIds];
+}
+
 export function useDbtProjectFileCanvasController(
   authorityBinding: DbtProjectFilesAuthorityBinding
 ) {
@@ -103,6 +120,7 @@ export function useDbtProjectFileCanvasController(
     workspaceLayoutKey,
   } = store;
   const [projectCodeWorkbench, setProjectCodeWorkbench] = useState<ProjectCodeWorkbenchState>(null);
+  const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
   const layoutKey = useMemo(
     () => buildLayoutKey(workspaceLayoutKey, authorityBinding),
     [authorityBinding, workspaceLayoutKey]
@@ -215,6 +233,21 @@ export function useDbtProjectFileCanvasController(
     event.preventDefault();
     event.dataTransfer.dropEffect = 'none';
   }, []);
+  const handleSourceImportComplete = useCallback(
+    (result: ImportSourcesResult) => {
+      const nextFocusIds = resolveDbtProjectFileSourceImportFocus(authorityBinding, result);
+      if (nextFocusIds == null) {
+        return;
+      }
+
+      void query.refetch().then((refreshResult) => {
+        if (refreshResult.isSuccess) {
+          setImportedNodeFocusIds(nextFocusIds);
+        }
+      });
+    },
+    [authorityBinding, query]
+  );
   const inspectorNode =
     inspectorNodeId == null ? null : (canonicalNodesById.get(inspectorNodeId) ?? null);
   const transformationValidation = useMemo(
@@ -256,6 +289,7 @@ export function useDbtProjectFileCanvasController(
     nodeTypes: DBT_PROJECT_FILE_NODE_TYPES,
     persistedViewport,
     frozenNodeIds,
+    importedNodeFocusIds,
     presentation: {
       focusMode,
       inspectorPanelVisible,
@@ -287,8 +321,8 @@ export function useDbtProjectFileCanvasController(
       onDragOver: handleDragOver,
       onToggleFrozenNode: (nodeId: string) => toggleFrozenCanvasNode(layoutKey, nodeId),
       onCreateAuthoringNode: () => unsupportedSemanticMutation('Create node'),
-      onSourceImportComplete: () => unsupportedSemanticMutation('Import sources'),
-      onImportedNodeFocusComplete: () => undefined,
+      onSourceImportComplete: handleSourceImportComplete,
+      onImportedNodeFocusComplete: () => setImportedNodeFocusIds([]),
     },
     chromeCommands: {
       onHideInspector: hideInspectorPanel,

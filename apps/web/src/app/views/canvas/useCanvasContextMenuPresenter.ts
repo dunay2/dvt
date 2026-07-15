@@ -56,6 +56,7 @@ export function useCanvasContextMenuPresenter({
               flowPosition,
             },
             canMutateGraph: canEditEdges,
+            canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
             canOpenCanvasSettings: Boolean(canOpenCanvasSettings && onOpenCanvasSettings),
             authoringNodeKinds,
           })
@@ -66,8 +67,10 @@ export function useCanvasContextMenuPresenter({
       authoringNodeKinds,
       canEditEdges,
       canOpenCanvasSettings,
+      canOpenSourceImport,
       markContextMenuOpened,
       onOpenCanvasSettings,
+      onOpenSourceImport,
       screenToFlowPosition,
     ]
   );
@@ -136,6 +139,7 @@ export function useCanvasContextMenuPresenter({
           sourceModel: model,
           authoringNodeKinds,
           canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
+          canCreateAuthoringNodes: canEditEdges,
         });
         if (catalogModel != null) {
           setModel(catalogModel);
@@ -151,6 +155,7 @@ export function useCanvasContextMenuPresenter({
     },
     [
       authoringNodeKinds,
+      canEditEdges,
       closeContextMenu,
       model,
       canOpenSourceImport,

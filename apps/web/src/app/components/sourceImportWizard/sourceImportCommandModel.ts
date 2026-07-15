@@ -1,5 +1,6 @@
 /** Owned concern: construct one retry-safe Source Import command from wizard intent. */
 import type { ImportSourcesInput } from '../../ports/workspace';
+import { createBrowserIdempotencyKey } from '../../services/idempotency/createBrowserIdempotencyKey';
 
 export type SourceImportCommandDraft = Omit<ImportSourcesInput, 'schemaVersion' | 'idempotencyKey'>;
 
@@ -23,12 +24,7 @@ function buildCommandSignature(command: SourceImportCommandDraft): string {
 }
 
 export function createSourceImportIdempotencyKey(): string {
-  const uuid = globalThis.crypto?.randomUUID?.();
-  if (uuid == null) {
-    throw new Error('Secure browser UUID support is required for Source Import.');
-  }
-
-  return `source-import:${uuid}`;
+  return createBrowserIdempotencyKey('source-import');
 }
 
 export function resolveSourceImportCommandIdentity(

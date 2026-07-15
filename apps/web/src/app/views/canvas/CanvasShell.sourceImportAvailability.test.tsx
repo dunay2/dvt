@@ -64,7 +64,7 @@ describe('CanvasShell source import availability', () => {
     expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeUndefined();
   });
 
-  it('hides viewport source import affordances when graph mutation is blocked', async () => {
+  it('keeps file-authoritative source import available when edge mutation is blocked', async () => {
     await renderShell({
       panels: {
         userPermissions: {
@@ -76,9 +76,9 @@ describe('CanvasShell source import availability', () => {
     });
 
     expect(shellState.canvasViewportProps).toMatchObject({
-      canOpenSourceImport: false,
+      canOpenSourceImport: true,
     });
-    expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeUndefined();
+    expect(shellState.canvasViewportProps?.onOpenSourceImport).toBeTypeOf('function');
   });
 
   it('keeps viewport source import affordances when dbt is unavailable but warehouse import is available', async () => {

@@ -21,8 +21,12 @@ describe('buildCanvasOperationalDrawerContribution', () => {
 
     const contribution = buildCanvasOperationalDrawerContribution({
       policy: props.layout.surfaceStrategy!.operationalDrawer!,
-      panels: props.panels,
-      chromeState: props.chromeState,
+      canPlan: props.panels.userPermissions.canPlan,
+      activeRunId: props.panels.activeRunId ?? null,
+      canPlanGraph: props.chromeState.canPlanGraph,
+      canStartRun: props.chromeState.canStartRun,
+      planRunReadiness: props.chromeState.planRunReadiness,
+      planStatusSummary: props.chromeState.planStatusSummary,
       onPreviewExecutionPlan,
       onStartRun: vi.fn(),
     });
@@ -79,8 +83,12 @@ describe('buildCanvasOperationalDrawerContribution', () => {
 
     const contribution = buildCanvasOperationalDrawerContribution({
       policy: props.layout.surfaceStrategy!.operationalDrawer!,
-      panels: props.panels,
-      chromeState: props.chromeState,
+      canPlan: props.panels.userPermissions.canPlan,
+      activeRunId: props.panels.activeRunId ?? null,
+      canPlanGraph: props.chromeState.canPlanGraph,
+      canStartRun: props.chromeState.canStartRun,
+      planRunReadiness: props.chromeState.planRunReadiness,
+      planStatusSummary: props.chromeState.planStatusSummary,
       onPreviewExecutionPlan: vi.fn(),
       onStartRun: vi.fn(),
     });
