@@ -1,5 +1,6 @@
 import {
   DbtProjectGraphProjectionSchema,
+  asSha256HexString,
   parseExecutionSelection,
   type DbtProjectFilesProvenance,
   type GenericGraphSourceV1,
@@ -15,8 +16,8 @@ import { ResolveAuthorizedPreviewSelectionService } from '../../../src/applicati
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 const MODEL_ID = 'model.analytics.orders';
-const CONTENT_SHA = 'a'.repeat(64);
-const ANALYSIS_SHA = 'b'.repeat(64);
+const CONTENT_SHA = asSha256HexString('a'.repeat(64));
+const ANALYSIS_SHA = asSha256HexString('b'.repeat(64));
 
 const GRAPH_SOURCE: GenericGraphSourceV1 = {
   kind: 'generic-graph-v1',
