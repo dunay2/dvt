@@ -10,5 +10,20 @@ export type CanvasExecutionStrategy =
       sourceFamily: 'dbt';
     }
   | {
+      kind: 'dbt_project_file_preview';
+      previewProfile: 'planner-generic-v1';
+      sourceFamily: 'dbt';
+      projectRoot: string;
+      contentSetSha256: string;
+      analysisSha256: string;
+      dbtVersion: string;
+      executionTarget: {
+        provider: string;
+        adapter: string;
+        targetName: string;
+        credentialRef: string;
+      };
+    }
+  | {
       kind: 'not_executable';
     };
