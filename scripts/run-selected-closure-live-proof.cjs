@@ -573,6 +573,7 @@ async function main() {
       apiBaseUrl: `http://127.0.0.1:${DEFAULT_API_PORT}`,
       bearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+      commandTimeoutMs: DEFAULT_READY_TIMEOUT_MS,
     });
 
     const temporalWorkerReadyzUrl = readNonEmptyEnv(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL);

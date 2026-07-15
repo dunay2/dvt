@@ -279,7 +279,7 @@ function request(url) {
   });
 }
 
-function sendJsonCommand(url, bearerToken, payload) {
+function sendJsonCommand(url, bearerToken, payload, timeoutMs = 15_000) {
   const body = JSON.stringify(payload);
   const endpoint = new URL(url);
   const transport = endpoint.protocol === 'https:' ? https : http;
@@ -289,7 +289,7 @@ function sendJsonCommand(url, bearerToken, payload) {
       endpoint,
       {
         method: 'POST',
-        timeout: 15_000,
+        timeout: timeoutMs,
         headers: {
           Accept: 'application/json',
           Authorization: `Bearer ${bearerToken}`,
@@ -326,7 +326,8 @@ async function ensureLocalWarehouseConnectionViaApi(args) {
   const response = await sendJsonCommand(
     endpoint.href,
     args.bearerToken,
-    buildLocalWarehouseConnectionRequest()
+    buildLocalWarehouseConnectionRequest(),
+    args.commandTimeoutMs
   );
   if (response.statusCode === 201) {
     return response.statusCode;
