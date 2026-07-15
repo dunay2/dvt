@@ -17,6 +17,11 @@ function protectedRuntimeModule(): ProtectedRuntimeModule {
     authorizer: { authorize: async () => ({ ok: false, reason: 'missing_scope' }) },
     close: async () => undefined,
     createProjectUseCase: { execute: async () => ({ kind: 'tenant_not_granted' }) },
+    dbtProjectImport: {
+      projectGraphUseCase: {},
+      validateUseCase: {},
+      importUseCase: {},
+    },
     engine: {},
     executablePlanResolver: { fetch: async () => ({}) },
     facade: {},

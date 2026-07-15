@@ -8,6 +8,7 @@ import {
   createSourceImportWizardHarness,
 } from './SourceImportWizard.testHarness';
 import type { ImportSourcesInput } from '../ports/workspace';
+import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTestFixtures';
 import { buildSourceImportTestMetricEvidence } from './sourceImportWizard/sourceImportWizard.testFixtures';
 
 describe('SourceImportWizard', () => {
@@ -205,10 +206,13 @@ describe('SourceImportWizard', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledWith(
       expect.objectContaining({
-        importedNodeIds: ['src_erp_orders'],
+        outcome: expect.objectContaining({
+          kind: 'graph-draft',
+          importedNodeIds: ['src_erp_orders'],
+        }),
       })
     );
-    expect(document.body.textContent).toContain('Sources attached');
+    expect(document.body.textContent).toContain('Sources imported');
     expect(document.body.textContent).toContain('Groups created:');
     expect(document.body.textContent).toContain('models/sources/erp.yml');
     expect(document.body.textContent).toContain(
@@ -223,20 +227,22 @@ describe('SourceImportWizard', () => {
   });
 
   it('selects all visible source tables in a database category before attaching sources', async () => {
-    const importSources = vi.fn(async (input: ImportSourcesInput) => ({
-      success: true as const,
-      draftRevision: 'draft-revision-2',
-      sourcesCreated: input.objects.length,
-      objectsImported: input.objects.length,
-      yamlFiles: ['models/sources/raw.yml'],
-      importedNodeIds: input.objects.map((sourceObject) => `src_${sourceObject.objectId}`),
-      grouping: 'database' as const,
-      options: {
-        includeColumns: input.includeColumns,
-        addTests: input.addTests,
-        addFreshness: input.addFreshness,
-      },
-    }));
+    const importSources = vi.fn(async (input: ImportSourcesInput) =>
+      buildGraphDraftSourceImportResult({
+        canvasId: input.canvasId,
+        idempotencyKey: input.idempotencyKey,
+        sourcesCreated: input.objects.length,
+        objectsImported: input.objects.length,
+        yamlFiles: ['models/sources/raw.yml'],
+        importedNodeIds: input.objects.map((sourceObject) => `src_${sourceObject.objectId}`),
+        grouping: 'database',
+        options: {
+          includeColumns: input.includeColumns,
+          addTests: input.addTests,
+          addFreshness: input.addFreshness,
+        },
+      })
+    );
 
     await harness.renderWizard({
       warehouseSourceImport: buildWarehouseSourceImportPort({
@@ -271,6 +277,9 @@ describe('SourceImportWizard', () => {
     await harness.clickButtonContaining('Attach sources to canvas');
 
     expect(importSources).toHaveBeenCalledWith({
+      schemaVersion: 'source-import-request.v2',
+      canvasId: 'canvas-orders',
+      idempotencyKey: expect.stringMatching(/^source-import:/),
       connectionId: 'conn-1',
       objects: [
         {
@@ -288,26 +297,24 @@ describe('SourceImportWizard', () => {
     });
   });
 
-  it('surfaces a no-op result when the selected sources already exist and does not fire the canvas handoff', async () => {
+  it('reuses the command identity when a transient failure is retried unchanged', async () => {
     const onComplete = vi.fn();
+    const importSources = vi
+      .fn<
+        (input: ImportSourcesInput) => Promise<ReturnType<typeof buildGraphDraftSourceImportResult>>
+      >()
+      .mockRejectedValueOnce(new Error('Connection interrupted'))
+      .mockImplementation(async (input) =>
+        buildGraphDraftSourceImportResult({
+          canvasId: input.canvasId,
+          idempotencyKey: input.idempotencyKey,
+        })
+      );
 
     await harness.renderWizard({
       onComplete,
       warehouseSourceImport: buildWarehouseSourceImportPort({
-        importSources: async () => ({
-          success: true,
-          draftRevision: 'draft-revision-2',
-          sourcesCreated: 0,
-          objectsImported: 1,
-          yamlFiles: ['models/sources/erp.yml'],
-          importedNodeIds: [],
-          grouping: 'schema',
-          options: {
-            includeColumns: false,
-            addTests: false,
-            addFreshness: false,
-          },
-        }),
+        importSources,
       }),
     });
 
@@ -316,9 +323,17 @@ describe('SourceImportWizard', () => {
     await harness.clickSourceObjectSelectionCheckbox(buildSourceObject().objectId);
     await harness.clickTab('Selected');
     await harness.clickButtonContaining('Attach sources to canvas');
+    await harness.flushPendingWork();
 
     expect(onComplete).not.toHaveBeenCalled();
-    expect(document.body.textContent).toContain('No new data objects were added');
-    expect(document.body.textContent).toContain('Canvas stayed unchanged');
+
+    await harness.clickButtonContaining('Attach sources to canvas');
+    await harness.flushPendingWork();
+
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(importSources).toHaveBeenCalledTimes(2);
+    expect(importSources.mock.calls[1]?.[0].idempotencyKey).toBe(
+      importSources.mock.calls[0]?.[0].idempotencyKey
+    );
   });
 });

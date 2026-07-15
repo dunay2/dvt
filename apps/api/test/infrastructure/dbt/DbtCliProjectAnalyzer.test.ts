@@ -145,6 +145,7 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(path.relative(projectDirectory, isolatedTargetPath)).toMatch(/^\.\./);
     expect(path.relative(projectDirectory, isolatedLogPath)).toMatch(/^\.\./);
     expect(path.relative(projectDirectory, isolatedProjectDirectory)).toMatch(/^\.\./);
+    await expect(stat(path.join(isolatedProjectDirectory, 'target'))).rejects.toThrow();
     await expect(stat(isolatedTargetPath)).rejects.toThrow();
     await expect(stat(isolatedProjectDirectory)).rejects.toThrow();
   });
@@ -172,6 +173,86 @@ describe('DbtCliProjectAnalyzer', () => {
     expect(second.analysisSha256).toBe(first.analysisSha256);
   });
 
+  it('excludes generated artifacts while preserving installed dependencies for parsing', async () => {
+    await writeFile(
+      path.join(projectDirectory, 'dbt_project.yml'),
+      [
+        'name: analytics',
+        'version: 1.0.0',
+        'profile: analytics',
+        'model-paths: [models]',
+        'target-path: generated/target',
+        'log-path: generated/logs',
+        'packages-install-path: vendor/dbt',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    await rm(path.join(projectDirectory, 'target'), { recursive: true, force: true });
+    const processRunner = {
+      run: vi.fn().mockImplementation(async (input: { args: readonly string[] }) => {
+        const projectPath = readFlag(input.args, '--project-dir');
+        await expect(stat(path.join(projectPath, 'generated', 'target'))).rejects.toThrow();
+        await expect(stat(path.join(projectPath, 'generated', 'logs'))).rejects.toThrow();
+        await expect(
+          readFile(path.join(projectPath, 'vendor', 'dbt', 'macros', 'package_macro.sql'), 'utf8')
+        ).resolves.toContain('macro package_macro');
+        const targetPath = readFlag(input.args, '--target-path');
+        await mkdir(targetPath, { recursive: true });
+        await writeFile(path.join(targetPath, 'manifest.json'), JSON.stringify(manifest()), 'utf8');
+        return { kind: 'completed' as const, exitCode: 0, stdout: '', stderr: '' };
+      }),
+    };
+    const analyzer = new DbtCliProjectAnalyzer({
+      workspaceFilesRoot,
+      profilesDirectory,
+      processRunner,
+      maxProjectBytes: 512,
+      now: () => new Date('2026-07-13T10:00:00.000Z'),
+    });
+    await mkdir(path.join(projectDirectory, 'generated', 'target'), { recursive: true });
+    await mkdir(path.join(projectDirectory, 'generated', 'logs'), { recursive: true });
+    await mkdir(path.join(projectDirectory, 'vendor', 'dbt', 'macros'), { recursive: true });
+    await writeFile(path.join(projectDirectory, 'generated', 'target', 'manifest.json'), '{}');
+    await writeFile(
+      path.join(projectDirectory, 'vendor', 'dbt', 'macros', 'package_macro.sql'),
+      '{% macro package_macro() %}1{% endmacro %}\n'
+    );
+
+    const first = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
+    await writeFile(
+      path.join(projectDirectory, 'generated', 'target', 'manifest.json'),
+      'x'.repeat(4_096)
+    );
+    await writeFile(
+      path.join(projectDirectory, 'generated', 'logs', 'dbt.log'),
+      'changed runtime log'
+    );
+    const afterGeneratedArtifactChange = await analyzer.analyze({
+      scope: SCOPE,
+      projectRoot: 'analytics',
+    });
+    await writeFile(
+      path.join(projectDirectory, 'vendor', 'dbt', 'macros', 'package_macro.sql'),
+      '{% macro package_macro() %}2{% endmacro %}\n'
+    );
+    const afterDependencyChange = await analyzer.analyze({
+      scope: SCOPE,
+      projectRoot: 'analytics',
+    });
+
+    expect(first.status).toBe('valid');
+    expect(afterGeneratedArtifactChange.status).toBe('valid');
+    expect(afterDependencyChange.status).toBe('valid');
+    expect(afterGeneratedArtifactChange.projectRevision.contentSetSha256).toBe(
+      first.projectRevision.contentSetSha256
+    );
+    expect(afterGeneratedArtifactChange.analysisSha256).toBe(first.analysisSha256);
+    expect(afterDependencyChange.projectRevision.contentSetSha256).not.toBe(
+      afterGeneratedArtifactChange.projectRevision.contentSetSha256
+    );
+  });
+
   it('hashes and parses the same isolated project snapshot', async () => {
     const originalSql = "select * from {{ source('raw', 'orders') }}\n";
     const changedSql = 'select 1 as changed_while_parsing\n';
@@ -197,12 +278,18 @@ describe('DbtCliProjectAnalyzer', () => {
       processRunner: { run },
       now: () => new Date('2026-07-13T10:00:00.000Z'),
     });
-    const expectedRevision = await hashProjectContent(projectDirectory, {
-      maxFiles: 10_000,
-      maxBytes: 50_000_000,
-      maxDirectories: 5_000,
-      maxDepth: 64,
-    });
+    const expectedRevision = await hashProjectContent(
+      projectDirectory,
+      {
+        maxFiles: 10_000,
+        maxBytes: 50_000_000,
+        maxDirectories: 5_000,
+        maxDepth: 64,
+      },
+      {
+        excludedDirectoryPaths: ['target', 'logs'],
+      }
+    );
 
     const result = await analyzer.analyze({ scope: SCOPE, projectRoot: 'analytics' });
 

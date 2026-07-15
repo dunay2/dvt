@@ -28,7 +28,11 @@ import {
   type LocalWorkspaceFileMutationCoordinator,
   sharedLocalWorkspaceFileMutationCoordinator,
 } from './LocalWorkspaceFileMutationCoordinator.js';
-import { resolveWorkspaceScopeStorageRoot } from './workspaceScopeStoragePath.js';
+import {
+  isAllowedWorkspaceFileName,
+  resolveWorkspaceFileStoragePath,
+  resolveWorkspaceScopeStorageRoot,
+} from './workspaceScopeStoragePath.js';
 
 const EXCLUDED_NAMES = new Set([
   '.git',
@@ -38,23 +42,6 @@ const EXCLUDED_NAMES = new Set([
   'coverage',
   'dist',
   'node_modules',
-]);
-
-const ALLOWED_EXTENSIONS = new Set([
-  '.cjs',
-  '.csv',
-  '.css',
-  '.html',
-  '.js',
-  '.json',
-  '.md',
-  '.mjs',
-  '.sql',
-  '.ts',
-  '.tsx',
-  '.txt',
-  '.yaml',
-  '.yml',
 ]);
 
 const MAX_LISTED_FILES = 500;
@@ -202,7 +189,7 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
         continue;
       }
 
-      if (!entry.isFile() || !isAllowedFileName(entry.name)) {
+      if (!entry.isFile() || !isAllowedWorkspaceFileName(entry.name)) {
         continue;
       }
 
@@ -224,25 +211,7 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
     readonly absolutePath: string;
     readonly workspacePath: string;
   } {
-    const scopeRoot = this.resolveScopeRoot(scope);
-    const workspacePath = decodeURIComponent(requestPath).replaceAll('\\', '/').trim();
-    const segments = workspacePath.split('/');
-    if (
-      workspacePath.length === 0 ||
-      workspacePath.startsWith('/') ||
-      segments.some((segment) => segment.length === 0 || segment === '..') ||
-      !isAllowedFileName(path.basename(workspacePath))
-    ) {
-      throw new InvalidWorkspacePathError(requestPath);
-    }
-
-    const absolutePath = path.resolve(scopeRoot, workspacePath);
-    const relativePath = path.relative(scopeRoot, absolutePath);
-    if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
-      throw new InvalidWorkspacePathError(requestPath);
-    }
-
-    return { absolutePath, workspacePath };
+    return resolveWorkspaceFileStoragePath(this.root, scope, requestPath);
   }
 
   private resolveScopeRoot(scope: WorkspaceStorageScope): string {
@@ -287,10 +256,6 @@ function matchesExpectedRevision(
 
 function joinWorkspacePath(directoryPath: string, name: string): string {
   return directoryPath.length === 0 ? name : `${directoryPath}/${name}`;
-}
-
-function isAllowedFileName(fileName: string): boolean {
-  return ALLOWED_EXTENSIONS.has(path.extname(fileName).toLowerCase());
 }
 
 function inferLanguage(filePath: string): string {

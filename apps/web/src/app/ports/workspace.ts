@@ -3,8 +3,8 @@ import {
   SOURCE_IMPORT_GROUPING,
   WAREHOUSE_CONNECTION_TYPE,
   type CreateWarehouseConnectionRequest,
-  type ImportSourceObjectsRequest,
-  type ImportSourceObjectsResult,
+  type ImportSourceObjectsRequestV2,
+  type ImportSourceObjectsResultV2,
   type SourceObject,
   type TestWarehouseConnectionResult as ContractTestWarehouseConnectionResult,
   type WarehouseConnection as ContractWarehouseConnection,
@@ -43,8 +43,7 @@ export type FileContent = {
 };
 
 export type ExpectedWorkspaceFileRevision =
-  | { readonly kind: 'absent' }
-  | { readonly kind: 'content_sha256'; readonly value: string };
+  { readonly kind: 'absent' } | { readonly kind: 'content_sha256'; readonly value: string };
 
 export type SaveWorkspaceFileContentInput = {
   readonly path: string;
@@ -101,11 +100,11 @@ export type TestWarehouseConnectionResult = ContractTestWarehouseConnectionResul
 
 export const SUPPORTED_SOURCE_IMPORT_GROUPINGS = SOURCE_IMPORT_GROUPING;
 
-export type SourceImportGrouping = ImportSourceObjectsRequest['groupingStrategy'];
+export type SourceImportGrouping = ImportSourceObjectsRequestV2['groupingStrategy'];
 
-export type ImportSourcesInput = ImportSourceObjectsRequest;
+export type ImportSourcesInput = ImportSourceObjectsRequestV2;
 
-export type ImportSourcesResult = ImportSourceObjectsResult;
+export type ImportSourcesResult = ImportSourceObjectsResultV2;
 
 // ---------------------------------------------------------------------------
 // Workspace port — presentation-layer contract for workspace operations

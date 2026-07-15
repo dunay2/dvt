@@ -5,6 +5,7 @@ import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { ImportSourcesResult, IWarehouseSourceImportPort } from '../../ports/workspace';
+import { buildGraphDraftSourceImportResult } from '../../../testing/sourceImportTestFixtures';
 import {
   buildCanvasShellProps,
   createCanvasShellHarness,
@@ -43,6 +44,7 @@ describe('CanvasShell source import lifecycle', () => {
       onImportedNodeFocusComplete: props.graphCommands.onImportedNodeFocusComplete,
     });
     expect(shellState.sourceImportWizardProps).toMatchObject({
+      canvasId: props.panels.activeCanvasId,
       onComplete: expect.any(Function),
     });
   });
@@ -62,8 +64,7 @@ describe('CanvasShell source import lifecycle', () => {
 
     await act(async () => {
       const openDataRegistry = shellState.canvasViewportProps?.onOpenSourceImport as
-        | (() => void)
-        | undefined;
+        (() => void) | undefined;
       openDataRegistry?.();
     });
 
@@ -83,33 +84,20 @@ describe('CanvasShell source import lifecycle', () => {
 
     await act(async () => {
       const openDataRegistry = shellState.canvasViewportProps?.onOpenSourceImport as
-        | ((flowPosition?: { x: number; y: number }) => void)
-        | undefined;
+        ((flowPosition?: { x: number; y: number }) => void) | undefined;
       openDataRegistry?.({ x: 420, y: 260 });
     });
 
     await act(async () => {
       const complete = shellState.sourceImportWizardProps?.onComplete as
-        | ((result: ImportSourcesResult) => void)
-        | undefined;
-      complete?.({
-        success: true,
-        draftRevision: 'draft-revision-2',
-        importedNodeIds: ['src_erp_orders'],
-        sourcesCreated: 1,
-        objectsImported: 1,
-        yamlFiles: ['models/sources/src_erp.yml'],
-        grouping: 'schema',
-        options: {
-          includeColumns: true,
-          addTests: false,
-          addFreshness: false,
-        },
-      });
+        ((result: ImportSourcesResult) => void) | undefined;
+      complete?.(buildGraphDraftSourceImportResult());
     });
 
     expect(onSourceImportComplete).toHaveBeenCalledWith(
-      expect.objectContaining({ importedNodeIds: ['src_erp_orders'] }),
+      expect.objectContaining({
+        outcome: expect.objectContaining({ importedNodeIds: ['src_erp_orders'] }),
+      }),
       { canvasPosition: { x: 420, y: 260 } }
     );
   });
@@ -119,8 +107,7 @@ describe('CanvasShell source import lifecycle', () => {
 
     await act(async () => {
       const openDataRegistry = shellState.canvasViewportProps?.onOpenSourceImport as
-        | (() => void)
-        | undefined;
+        (() => void) | undefined;
       openDataRegistry?.();
     });
 

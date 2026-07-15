@@ -74,6 +74,7 @@ function createMemoryOperations(
   overrides: Partial<LocalWorkspaceFileMutationOperations> = {}
 ): LocalWorkspaceFileMutationOperations {
   return {
+    createDirectory: vi.fn(async () => undefined),
     writeTemporaryFile: vi.fn(async (path: string, content: string) => {
       files.set(path, content);
     }),
@@ -89,6 +90,7 @@ function createMemoryOperations(
     deleteFile: vi.fn(async (path: string) => {
       files.delete(path);
     }),
+    removeDirectory: vi.fn(async () => undefined),
     ...overrides,
   };
 }

@@ -12,6 +12,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidAfterSeq: 'invalid_after_seq',
   invalidBody: 'invalid_body',
   invalidDbtProjectGraphRequest: 'invalid_dbt_project_graph_request',
+  invalidDbtProjectImportRequest: 'invalid_dbt_project_import_request',
   invalidEnrichedFlag: 'invalid_enriched_flag',
   invalidEnvironmentId: 'invalid_environment_id',
   invalidLimit: 'invalid_limit',
@@ -43,10 +44,22 @@ export const HTTP_ERROR_REASON = Object.freeze({
   unsupportedWarehouseAdapter: 'unsupported_warehouse_adapter',
   unsupportedPlanVersion: 'unsupported_plan_version',
   workspaceGraphDraftIdempotencyKeyReused: 'workspace_graph_draft_idempotency_key_reused',
+  workspaceGraphDraftAuthoringAuthorityConflict:
+    'workspace_graph_draft_authoring_authority_conflict',
   workspaceGraphDraftNotFound: 'workspace_graph_draft_not_found',
   workspaceGraphDraftUnsupportedSchemaVersion: 'workspace_graph_draft_unsupported_schema_version',
   workspaceFileNotFound: 'workspace_file_not_found',
   workspaceFileRevisionConflict: 'workspace_file_revision_conflict',
+  workspaceSourceImportCanvasNotFound: 'workspace_source_import_canvas_not_found',
+  workspaceSourceImportProjectionFailed: 'workspace_source_import_projection_failed',
+  workspaceSourceImportIdempotencyMismatch: 'workspace_source_import_idempotency_mismatch',
+  dbtProjectImportRejected: 'dbt_project_import_rejected',
+  dbtProjectImportStaleReceipt: 'dbt_project_import_stale_receipt',
+  dbtProjectImportCanvasOccupied: 'dbt_project_import_canvas_occupied',
+  dbtProjectImportAuthorityConflict: 'dbt_project_import_authority_conflict',
+  dbtProjectImportIdempotencyMismatch: 'dbt_project_import_idempotency_mismatch',
+  dbtProjectImportProjectionFailed: 'dbt_project_import_projection_failed',
+  dbtProjectFileAuthorityRequired: 'dbt_project_file_authority_required',
 } as const);
 
 export type HttpErrorReason = (typeof HTTP_ERROR_REASON)[keyof typeof HTTP_ERROR_REASON];

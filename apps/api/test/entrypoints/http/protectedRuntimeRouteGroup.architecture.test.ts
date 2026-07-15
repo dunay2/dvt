@@ -39,6 +39,8 @@ const RUNTIME_ROUTE_METHOD_BY_KEY = {
   workspacePlugins: ['GET'],
   workspaceGraphDraft: ['GET', 'PUT'],
   dbtProjectGraph: ['GET'],
+  dbtProjectImportValidate: ['POST'],
+  dbtProjectImport: ['POST'],
   workspaceDiffChanges: ['GET'],
   warehouseConnections: ['GET', 'POST'],
   warehouseConnectionSourceObjects: ['GET'],

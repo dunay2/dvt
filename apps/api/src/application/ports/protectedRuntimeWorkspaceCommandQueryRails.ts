@@ -112,13 +112,73 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
         PROTECTED_RUNTIME_TEST_REF.dbtProjectGraphRoutes,
       ],
       [
-        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtProjectRoot,
-        PROTECTED_RUNTIME_TEST_REF.dbtProjectGraphRoutes,
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingFileAuthority,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportUseCases,
       ],
       [PROTECTED_RUNTIME_NEGATIVE_CASE.missingFile, PROTECTED_RUNTIME_TEST_REF.dbtProjectAnalyzer],
       [
         PROTECTED_RUNTIME_NEGATIVE_CASE.missingWorkspaceFileReadAuthority,
         PROTECTED_RUNTIME_TEST_REF.dbtProjectGraphRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.validateDbtProjectImport,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingAction,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtProjectImport,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtProjectRoot,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportInspector,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingFile,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportInspector,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.importDbtProject,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.command,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingAction,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtProjectImport,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.staleValidationReceipt,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportUseCases,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.occupiedCanvas,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportUseCases,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.idempotencyConflict,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportUseCases,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.projectionFailure,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectImportUseCases,
       ],
     ],
   }),
@@ -356,6 +416,21 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
       [
         PROTECTED_RUNTIME_NEGATIVE_CASE.invalidSelection,
         PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingIdempotencyKey,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.idempotencyConflict,
+        [
+          PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportRoutes,
+          PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportGraphStrategy,
+        ],
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.projectionFailure,
+        PROTECTED_RUNTIME_TEST_REF.warehouseSourceImportDbtFilesStrategy,
       ],
     ],
   }),

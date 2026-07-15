@@ -10,6 +10,7 @@ import type { SourceImportOptionContribution } from '../../plugins/registry';
 
 export interface SourceImportWizardProps {
   open: boolean;
+  canvasId: string;
   onClose: () => void;
   onComplete?: (result: ImportSourcesResult) => void;
   sourceImportOptions?: readonly SourceImportOptionContribution[];

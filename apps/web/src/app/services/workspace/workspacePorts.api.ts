@@ -1,6 +1,6 @@
 /** Owned concern: adapt workspace capability ports to protected API rails. */
 import {
-  ImportSourceObjectsResultSchema,
+  ImportSourceObjectsResultV2Schema,
   SourceObjectCatalogResponseSchema,
   TestWarehouseConnectionResultSchema,
   WarehouseConnectionListSchema,
@@ -194,7 +194,7 @@ export function createApiWarehouseSourceImportPort(
         await apiClient.postJson(buildWarehouseConnectionTestEndpoint(connectionId), {})
       ),
     importSources: async (input) =>
-      ImportSourceObjectsResultSchema.parse(
+      ImportSourceObjectsResultV2Schema.parse(
         await apiClient.postJson(buildWarehouseSourcesImportEndpoint(), input)
       ),
   };

@@ -1,5 +1,4 @@
 /** Owned concern: adapt the protected ProjectDbtGraphFromFiles query rail to HTTP. */
-import { CanvasAuthoringAuthorityBindingSchema } from '@dvt/contracts';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 import {
@@ -7,6 +6,7 @@ import {
   buildEnvironmentAccessScope,
 } from '../../application/ports/accessDecision.js';
 import type { IAuthenticator } from '../../application/ports/auth.js';
+import { DbtProjectFileAuthorityRequiredError } from '../../application/ports/dbtProjectImport.js';
 import type { WorkspaceStorageScope } from '../../application/ports/workspaceFiles.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import type { ProjectDbtGraphFromFilesUseCase } from '../../application/services/projectDbtGraphFromFilesUseCase.js';
@@ -24,7 +24,6 @@ type DbtProjectGraphQuery = {
   readonly projectId?: string;
   readonly environmentId?: string;
   readonly canvasId?: string;
-  readonly projectRoot?: string;
 };
 
 type DbtProjectGraphRouteDeps = {
@@ -51,29 +50,38 @@ export function registerDbtProjectGraphRoutes(
       const authorized = await authorizeDbtProjectGraphRequest(request, reply, deps, parsed.value);
       if (!authorized) return;
 
-      reply.code(200).send(
-        await deps.useCase.execute({
-          scope: authorized.scope,
-          authorityBinding: parsed.value.authorityBinding,
-        })
-      );
+      try {
+        reply.code(200).send(
+          await deps.useCase.execute({
+            scope: authorized.scope,
+            canvasId: parsed.value.canvasId,
+          })
+        );
+      } catch (error) {
+        if (error instanceof DbtProjectFileAuthorityRequiredError) {
+          reply.code(409).send({
+            error: {
+              type: 'conflict',
+              reason: HTTP_ERROR_REASON.dbtProjectFileAuthorityRequired,
+            },
+          });
+          return;
+        }
+        throw error;
+      }
     }
   );
 }
 
 function parseDbtProjectGraphQuery(input: DbtProjectGraphQuery): RouteParseResult<{
   readonly accessScope: ReturnType<typeof buildEnvironmentAccessScope>;
-  readonly authorityBinding: ReturnType<typeof CanvasAuthoringAuthorityBindingSchema.parse>;
+  readonly canvasId: string;
 }> {
   const tenantId = TenantId.parse(input.tenantId ?? '');
   const projectId = ProjectId.parse(input.projectId ?? '');
   const environmentId = EnvironmentId.parse(input.environmentId ?? '');
-  const authorityBinding = CanvasAuthoringAuthorityBindingSchema.safeParse({
-    schemaVersion: 'canvas-authoring-authority-binding.v1',
-    canvasId: input.canvasId,
-    authority: { kind: 'dbt-project-files', projectRoot: input.projectRoot },
-  });
-  if (!tenantId.ok || !projectId.ok || !environmentId.ok || !authorityBinding.success) {
+  const canvasId = input.canvasId?.trim();
+  if (!tenantId.ok || !projectId.ok || !environmentId.ok || !canvasId) {
     return {
       ok: false,
       issue: badRequestIssue(HTTP_ERROR_REASON.invalidDbtProjectGraphRequest, {
@@ -90,7 +98,7 @@ function parseDbtProjectGraphQuery(input: DbtProjectGraphQuery): RouteParseResul
         projectId.value,
         environmentId.value
       ),
-      authorityBinding: authorityBinding.data,
+      canvasId,
     },
   };
 }

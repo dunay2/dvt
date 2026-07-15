@@ -11,6 +11,7 @@ import { SourceImportWizardFrame } from './sourceImportWizard/SourceImportWizard
 
 export default function SourceImportWizard({
   open,
+  canvasId,
   onClose,
   onComplete,
   sourceImportOptions: declaredSourceImportOptions,
@@ -23,6 +24,7 @@ export default function SourceImportWizard({
   );
   const controller = useSourceImportWizard({
     open,
+    canvasId,
     warehouseSourceImport,
     sourceImportOptions,
     onComplete,

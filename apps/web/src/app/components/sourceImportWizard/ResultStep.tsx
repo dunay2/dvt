@@ -10,12 +10,10 @@ type ResultStepProps = Readonly<{
 }>;
 
 export function ResultStep({ result }: ResultStepProps) {
-  const importedSourcesWereMaterialized = (result.importedNodeIds?.length ?? 0) > 0;
-  const title = importedSourcesWereMaterialized ? copy.result.title : copy.result.noopTitle;
-  const description = importedSourcesWereMaterialized
-    ? copy.result.description
-    : copy.result.noopDescription;
-  const warning = importedSourcesWereMaterialized ? copy.result.warning : copy.result.noopWarning;
+  const warning =
+    result.outcome.kind === 'graph-draft'
+      ? copy.result.graphDraftWarning
+      : copy.result.dbtProjectFilesWarning;
 
   return (
     <div className="space-y-4 text-center">
@@ -25,8 +23,8 @@ export function ResultStep({ result }: ResultStepProps) {
         </div>
       </div>
       <div>
-        <h3 className="mb-2 text-lg font-medium">{title}</h3>
-        <p className="text-sm text-slate-300">{description}</p>
+        <h3 className="mb-2 text-lg font-medium">{copy.result.title}</h3>
+        <p className="text-sm text-slate-300">{copy.result.description}</p>
       </div>
 
       <Card className="border-slate-600 p-4 text-left">

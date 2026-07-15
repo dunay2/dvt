@@ -42,6 +42,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Consumers may expect DVT lifecycle statuses (PAUSED, CANCELLING) in ProviderRunStatusView](R-20260409-PROVIDER-STATUS-SEMANTIC-DRIFT.yaml)
 - [Contract mapper boundary type aliases can drift from schema-level non-blank semantics](R-20260410-CONTRACT-MAPPER-BOUNDARY-TYPE-SEMANTICS.yaml)
 - [Contracts hash-compare scope change lacks PR-runtime E2E validation](R-20260515-CI-CONTRACTS-HASH-SCOPE-E2E.yaml)
+- [dbt import authority or atomic file mutation can diverge under runtime failure](R-20260714-DBT-PROJECT-IMPORT-AUTHORITY.yaml)
 - [dbt manifest or analysis-profile drift can make file projection unavailable](R-20260713-DBT-PROJECT-FILE-PROJECTION.yaml)
 - [DBT plan-store replay reuse must keep canonical payload comparison stable](R-20260526-DBT-PLAN-STORE-REUSE.yaml)
 - [DBT runtime capability posture can drift between API and worker deployment](R-20260603-DBT-CAPABILITY-ADMISSION.yaml)

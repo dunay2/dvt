@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 
 import {
   buildRelationalSourceObjectId,
+  type CanvasAuthoringAuthorityBinding,
   type SourceObject,
   type SourceObjectColumn,
   type SourceObjectConstraint,
@@ -12,6 +13,7 @@ import Fastify from 'fastify';
 import type { FastifyInstance } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
+import type { CanvasAuthoringAuthorityKey } from '../../../src/application/ports/canvasAuthoringAuthority.js';
 import {
   DuplicateWarehouseConnectionError,
   WarehouseConnectionNotFoundError,
@@ -28,8 +30,10 @@ import type {
 import { WorkspaceFileNotFoundError } from '../../../src/application/ports/workspaceFiles.js';
 import type {
   DeleteWorkspaceFileContentInput,
-  IWorkspaceFileRepository,
+  IWorkspaceFileBatchMutationPort,
   SaveWorkspaceFileContentInput,
+  WorkspaceFileBatchMutation,
+  WorkspaceFileBatchMutationResult,
   WorkspaceFileContent,
   WorkspaceFileDeleteResult,
   WorkspaceFileEntry,
@@ -37,6 +41,7 @@ import type {
   WorkspaceStorageScope,
 } from '../../../src/application/ports/workspaceFiles.js';
 import { CreateWarehouseConnectionUseCase } from '../../../src/application/services/createWarehouseConnectionUseCase.js';
+import { GraphDraftWarehouseSourceImportStrategy } from '../../../src/application/services/graphDraftWarehouseSourceImportStrategy.js';
 import { ImportWarehouseSourcesUseCase } from '../../../src/application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionSourceObjectsUseCase } from '../../../src/application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../../src/application/services/listWarehouseConnectionsUseCase.js';
@@ -54,6 +59,11 @@ const ROUTE_SCOPE = {
   projectId: 'project-a',
   environmentId: 'env-a',
 } as const satisfies WorkspaceGraphDraftScope;
+const SOURCE_IMPORT_REQUEST_BASE = {
+  schemaVersion: 'source-import-request.v2',
+  canvasId: 'canvas-a',
+  idempotencyKey: 'source-import-route-test',
+} as const;
 
 function measuredMetrics(rowCount: number, byteSize: number): SourceObjectMetricEvidence {
   return {
@@ -270,6 +280,9 @@ function buildApp(
           readonly currentRevision: string;
           readonly storedSchemaVersion: string;
           readonly updatedAt: string | null;
+        }
+      | {
+          readonly kind: 'idempotency_mismatch';
         };
     readonly existingSourceFileContent?: string;
     readonly connectionTestResult?: TestWarehouseConnectionProbeFailure;
@@ -375,6 +388,53 @@ function buildApp(
       ) => Promise<WorkspaceFileDeleteResult>
     >(async (_scope, _input) => ({ kind: 'deleted' })),
   };
+  const batchMutation: IWorkspaceFileBatchMutationPort = {
+    apply: vi.fn(
+      async (
+        scope: WorkspaceStorageScope,
+        mutation: WorkspaceFileBatchMutation
+      ): Promise<WorkspaceFileBatchMutationResult> => {
+        const writes: { path: string; contentSha256: string }[] = [];
+        for (const write of mutation.writes) {
+          const expected = mutation.expectedFiles.find(
+            (candidate) => candidate.path === write.path
+          );
+          const result = await workspaceFiles.saveFileContent(scope, {
+            path: write.path,
+            content: write.content,
+            expectedRevision: expected?.expectedContentSha256
+              ? { kind: 'content_sha256', value: expected.expectedContentSha256 }
+              : { kind: 'absent' },
+          });
+          if (result.kind === 'conflict') {
+            return {
+              kind: 'conflict',
+              conflicts: [{ path: write.path, currentContentSha256: result.currentContentSha256 }],
+            };
+          }
+          writes.push({ path: write.path, contentSha256: result.contentSha256 });
+        }
+        for (const filePath of mutation.deletes) {
+          const expected = mutation.expectedFiles.find(
+            (candidate) => candidate.path === filePath
+          )?.expectedContentSha256;
+          if (!expected) throw new Error(`Missing rollback revision for ${filePath}`);
+          await workspaceFiles.deleteFileContent(scope, {
+            path: filePath,
+            expectedRevision: { kind: 'content_sha256', value: expected },
+          });
+        }
+        return {
+          kind: 'applied',
+          idempotencyKey: mutation.idempotencyKey,
+          requestHash: sha256(JSON.stringify(mutation)),
+          deduplicated: false,
+          writes,
+          deletes: [...mutation.deletes],
+        };
+      }
+    ),
+  };
   const catalog = new TestWarehouseConnectionCatalog(
     catalogEntries,
     async (scope, _input, entries) => {
@@ -423,12 +483,25 @@ function buildApp(
     listSourceObjectsUseCase: new ListWarehouseConnectionSourceObjectsUseCase(sourceObjectReader),
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
-    importSourcesUseCase: new ImportWarehouseSourcesUseCase(
+    importSourcesUseCase: new ImportWarehouseSourcesUseCase({
       sourceObjectReader,
-      draftStore as never,
-      workspaceFiles as IWorkspaceFileRepository,
-      () => new Date('2026-05-30T00:00:01.000Z')
-    ),
+      authorityPolicy: {
+        resolve: vi.fn(
+          async (key: CanvasAuthoringAuthorityKey): Promise<CanvasAuthoringAuthorityBinding> => ({
+            schemaVersion: 'canvas-authoring-authority-binding.v1',
+            canvasId: key.canvasId,
+            authority: { kind: 'graph-draft' },
+          })
+        ),
+      },
+      graphDraftStrategy: new GraphDraftWarehouseSourceImportStrategy({
+        draftStore: draftStore as never,
+        workspaceFiles,
+        batchMutation,
+        now: () => new Date('2026-05-30T00:00:01.000Z'),
+      }),
+      dbtProjectFilesStrategy: { execute: vi.fn() },
+    }),
     rateLimit: { max: 100, timeWindow: 60_000 },
   });
 
@@ -657,6 +730,7 @@ describe('warehouseSourceImportRoutes', () => {
       method: 'POST',
       url: `/workspace/sources/import?${SCOPE_QUERY}`,
       payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
         connectionId: 'warehouse-prod',
         objects: [
           { objectId: defaultOrdersSourceObject.objectId },
@@ -677,6 +751,29 @@ describe('warehouseSourceImportRoutes', () => {
     expect(draftStore.save).not.toHaveBeenCalled();
   });
 
+  it('requires the V2 idempotency key before command side effects', async () => {
+    const { app, draftStore, workspaceFiles } = buildApp();
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/sources/import?${SCOPE_QUERY}`,
+      payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
+        idempotencyKey: undefined,
+        connectionId: 'warehouse-prod',
+        objects: [{ objectId: defaultOrdersSourceObject.objectId }],
+        groupingStrategy: 'schema',
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(workspaceFiles.saveFileContent).not.toHaveBeenCalled();
+    expect(draftStore.save).not.toHaveBeenCalled();
+  });
+
   it('imports selected source objects into the authoritative workspace graph draft', async () => {
     const { app, authorize, workspaceFiles } = buildApp();
 
@@ -684,6 +781,7 @@ describe('warehouseSourceImportRoutes', () => {
       method: 'POST',
       url: `/workspace/sources/import?${SCOPE_QUERY}`,
       payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
@@ -696,11 +794,15 @@ describe('warehouseSourceImportRoutes', () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
       success: true,
-      draftRevision: 'rev-2',
+      schemaVersion: 'source-import-result.v2',
       sourcesCreated: 1,
       objectsImported: 1,
       yamlFiles: ['models/sources/src_erp.yml'],
-      importedNodeIds: ['src_warehouse_prod_analytics_erp_orders'],
+      outcome: {
+        kind: 'graph-draft',
+        draftRevision: 'rev-2',
+        importedNodeIds: ['src_warehouse_prod_analytics_erp_orders'],
+      },
       grouping: 'schema',
     });
     expect(authorize).toHaveBeenCalledWith(
@@ -740,6 +842,7 @@ describe('warehouseSourceImportRoutes', () => {
       method: 'POST',
       url: `/workspace/sources/import?${SCOPE_QUERY}`,
       payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
@@ -779,6 +882,7 @@ describe('warehouseSourceImportRoutes', () => {
         method: 'POST',
         url: `/workspace/sources/import?${SCOPE_QUERY}`,
         payload: {
+          ...SOURCE_IMPORT_REQUEST_BASE,
           connectionId: 'warehouse-prod',
           objects: [{ objectId: defaultOrdersSourceObject.objectId, ...metrics }],
           groupingStrategy: 'schema',
@@ -821,6 +925,7 @@ describe('warehouseSourceImportRoutes', () => {
       method: 'POST',
       url: `/workspace/sources/import?${SCOPE_QUERY}`,
       payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
         connectionId: 'warehouse-sandbox',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
@@ -833,7 +938,10 @@ describe('warehouseSourceImportRoutes', () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
       sourcesCreated: 1,
-      importedNodeIds: ['src_warehouse_sandbox_analytics_erp_orders'],
+      outcome: {
+        kind: 'graph-draft',
+        importedNodeIds: ['src_warehouse_sandbox_analytics_erp_orders'],
+      },
     });
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
       ROUTE_SCOPE,
@@ -887,6 +995,7 @@ describe('warehouseSourceImportRoutes', () => {
       method: 'POST',
       url: `/workspace/sources/import?${SCOPE_QUERY}`,
       payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
         connectionId: 'warehouse-prod',
         objects: [
           { objectId: relationSourceObject({ catalog: 'analytics' }).objectId },
@@ -905,10 +1014,13 @@ describe('warehouseSourceImportRoutes', () => {
       sourcesCreated: 2,
       objectsImported: 2,
       yamlFiles: ['models/sources/src_analytics.yml', 'models/sources/src_finance.yml'],
-      importedNodeIds: [
-        'src_warehouse_prod_analytics_erp_orders',
-        'src_warehouse_prod_finance_erp_orders',
-      ],
+      outcome: {
+        kind: 'graph-draft',
+        importedNodeIds: [
+          'src_warehouse_prod_analytics_erp_orders',
+          'src_warehouse_prod_finance_erp_orders',
+        ],
+      },
       grouping: 'database',
     });
   });
@@ -920,6 +1032,7 @@ describe('warehouseSourceImportRoutes', () => {
       method: 'POST',
       url: `/workspace/sources/import?${SCOPE_QUERY}`,
       payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'custom',
@@ -965,6 +1078,7 @@ describe('warehouseSourceImportRoutes', () => {
       method: 'POST',
       url: `/workspace/sources/import?${SCOPE_QUERY}`,
       payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
         connectionId: 'warehouse-prod',
         objects: [
           { objectId: relationSourceObject({ catalog: 'analytics' }).objectId },
@@ -980,13 +1094,16 @@ describe('warehouseSourceImportRoutes', () => {
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
       success: true,
-      sourcesCreated: 2,
+      sourcesCreated: 1,
       objectsImported: 2,
       yamlFiles: ['models/sources/src_erp.yml'],
-      importedNodeIds: [
-        'src_warehouse_prod_analytics_erp_orders',
-        'src_warehouse_prod_finance_erp_orders',
-      ],
+      outcome: {
+        kind: 'graph-draft',
+        importedNodeIds: [
+          'src_warehouse_prod_analytics_erp_orders',
+          'src_warehouse_prod_finance_erp_orders',
+        ],
+      },
       grouping: 'schema',
     });
     expect(workspaceFiles.saveFileContent).toHaveBeenCalledWith(
@@ -1049,6 +1166,7 @@ describe('warehouseSourceImportRoutes', () => {
       method: 'POST',
       url: `/workspace/sources/import?${SCOPE_QUERY}`,
       payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
         connectionId: 'missing',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
@@ -1078,6 +1196,7 @@ describe('warehouseSourceImportRoutes', () => {
       method: 'POST',
       url: `/workspace/sources/import?${SCOPE_QUERY}`,
       payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',
@@ -1093,6 +1212,32 @@ describe('warehouseSourceImportRoutes', () => {
     });
   });
 
+  it('returns a stable conflict when an idempotency key is reused', async () => {
+    const { app } = buildApp({ saveResult: { kind: 'idempotency_mismatch' } });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/sources/import?${SCOPE_QUERY}`,
+      payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
+        connectionId: 'warehouse-prod',
+        objects: [{ objectId: defaultOrdersSourceObject.objectId }],
+        groupingStrategy: 'schema',
+        includeColumns: true,
+        addTests: false,
+        addFreshness: false,
+      },
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toEqual({
+      error: {
+        type: 'conflict',
+        reason: 'workspace_source_import_idempotency_mismatch',
+      },
+    });
+  });
+
   it('rejects malformed existing source YAML before mutating the draft', async () => {
     const { app, draftStore, workspaceFiles } = buildApp({
       existingSourceFileContent: 'version: 2\nsources:\n  - name: [',
@@ -1102,6 +1247,7 @@ describe('warehouseSourceImportRoutes', () => {
       method: 'POST',
       url: `/workspace/sources/import?${SCOPE_QUERY}`,
       payload: {
+        ...SOURCE_IMPORT_REQUEST_BASE,
         connectionId: 'warehouse-prod',
         objects: [{ objectId: defaultOrdersSourceObject.objectId }],
         groupingStrategy: 'schema',

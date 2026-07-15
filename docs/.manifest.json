@@ -1,10 +1,10 @@
 {
   "summary": {
     "adrs": 64,
-    "evidenceDocs": 123,
-    "normativeDocs": 533,
+    "evidenceDocs": 124,
+    "normativeDocs": 534,
     "statusDocs": 68,
-    "total": 788
+    "total": 790
   },
   "catalogs": [
     {
@@ -14,13 +14,13 @@
     },
     {
       "name": "evidenceDocs",
-      "count": 123,
-      "contentSha256": "a3e98025b9c8022f938a9531232d8baaa05aeaf41a827ce16c410ae268ddc37a"
+      "count": 124,
+      "contentSha256": "9fd909e142a15add8693968204309b985586c3495150a1cb12238bf70a58ce99"
     },
     {
       "name": "normativeDocs",
-      "count": 533,
-      "contentSha256": "251b1e2a1c6db963f1cc7d429056daca4b651d92003f6c07e1cda22520b3da87"
+      "count": 534,
+      "contentSha256": "5faa45f4af9ec64a4a80f4f238000e0d3c38906f416ca6d72035d650b57a745a"
     },
     {
       "name": "statusDocs",

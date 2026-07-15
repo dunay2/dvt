@@ -67,6 +67,10 @@ export type WorkspaceGraphDraftSaveStoreResult =
     }
   | {
       readonly kind: 'idempotency_mismatch';
+    }
+  | {
+      readonly kind: 'authoring_authority_conflict';
+      readonly canvasIds: readonly string[];
     };
 
 export interface IWorkspaceGraphDraftStore {
@@ -79,10 +83,23 @@ export interface IWorkspaceGraphDraftStore {
     readonly expectedRevision: string;
     readonly idempotencyKey: string;
     readonly draft: WorkspaceGraphAuthoringDraft;
+    readonly canvasIds: readonly string[];
     readonly requestHash: string;
     readonly revision: string;
     readonly nowIso: string;
   }): Promise<WorkspaceGraphDraftSaveStoreResult>;
+}
+
+export function resolveWorkspaceGraphDraftCanvasIds(
+  draft: WorkspaceGraphAuthoringDraft
+): readonly string[] {
+  const canvasIds = new Set<string>();
+  if (draft.canvas.id) canvasIds.add(draft.canvas.id);
+  if (draft.activeCanvasId) canvasIds.add(draft.activeCanvasId);
+  for (const workspace of draft.canvases ?? []) {
+    canvasIds.add(workspace.canvas.id);
+  }
+  return [...canvasIds].sort((left, right) => left.localeCompare(right));
 }
 
 export interface WorkspaceGraphDraftDecisionContext {
@@ -107,15 +124,9 @@ export interface IWorkspaceGraphDraftAuditPort {
 }
 
 export type WorkspaceGraphDraftReadTelemetryOutcome =
-  | 'ok'
-  | 'format_error'
-  | 'denied'
-  | 'not_found';
+  'ok' | 'format_error' | 'denied' | 'not_found';
 export type WorkspaceGraphDraftWriteTelemetryOutcome =
-  | 'saved'
-  | 'conflict'
-  | 'denied'
-  | 'idempotency_mismatch';
+  'saved' | 'conflict' | 'denied' | 'idempotency_mismatch';
 
 export interface IWorkspaceGraphDraftTelemetry {
   recordRead(

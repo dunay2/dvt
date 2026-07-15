@@ -3,6 +3,10 @@ import { resolve } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import {
+  buildGraphDraftSourceImportResult,
+  buildSourceImportCommandInput,
+} from '../../../testing/sourceImportTestFixtures';
 import { ApiError } from '../api/createApiClient';
 import { WorkspaceFileRevisionConflictError } from './workspaceErrors';
 import { buildDraftReadOkResponse } from './workspaceGraphDraftProtocol.test.fixtures';
@@ -374,41 +378,26 @@ describe('workspace ports api warehouse source import', () => {
     setWorkspaceScope(scope);
     const { postJson, warehouseSourceImport } = createApiWorkspacePortHarness({
       postJson: async <_TRequest, TResponse>() =>
-        ({
-          success: true,
-          draftRevision: 'draft-revision-2',
-          sourcesCreated: 1,
-          objectsImported: 1,
-          yamlFiles: ['models/sources/src_erp.yml'],
-          importedNodeIds: ['src_erp_orders'],
-          grouping: 'schema',
-          options: { includeColumns: true, addTests: false, addFreshness: false },
+        buildGraphDraftSourceImportResult({
+          canvasId: 'canvas-orders',
+          idempotencyKey: 'source-import:orders-1',
         }) as TResponse,
     });
+    const command = buildSourceImportCommandInput({
+      canvasId: 'canvas-orders',
+      idempotencyKey: 'source-import:orders-1',
+    });
 
-    await expect(
-      warehouseSourceImport.importSources({
-        connectionId: 'warehouse-prod',
-        objects: [{ objectId: 'relation/analytics/erp/orders' }],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
-      })
-    ).resolves.toMatchObject({
+    await expect(warehouseSourceImport.importSources(command)).resolves.toMatchObject({
       success: true,
-      importedNodeIds: ['src_erp_orders'],
+      outcome: {
+        kind: 'graph-draft',
+        importedNodeIds: ['src_erp_orders'],
+      },
     });
     expect(postJson).toHaveBeenCalledWith(
       `/workspace/sources/import?tenantId=${scope.tenantId}&projectId=${scope.projectId}&environmentId=${scope.environmentId}`,
-      {
-        connectionId: 'warehouse-prod',
-        objects: [{ objectId: 'relation/analytics/erp/orders' }],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
-      }
+      command
     );
   });
 
@@ -426,14 +415,7 @@ describe('workspace ports api warehouse source import', () => {
     });
 
     await expect(
-      warehouseSourceImport.importSources({
-        connectionId: 'warehouse-prod',
-        objects: [{ objectId: 'relation/analytics/erp/orders' }],
-        groupingStrategy: 'schema',
-        includeColumns: true,
-        addTests: false,
-        addFreshness: false,
-      })
+      warehouseSourceImport.importSources(buildSourceImportCommandInput())
     ).rejects.toThrow();
   });
 

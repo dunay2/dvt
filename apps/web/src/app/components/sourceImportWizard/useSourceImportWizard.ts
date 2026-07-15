@@ -1,5 +1,5 @@
 /** Owned concern: coordinate source import wizard state through the import port. */
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import type {
@@ -10,6 +10,11 @@ import type {
 } from '../../ports/workspace';
 import type { SourceImportOptionContribution, SourceImportOptionId } from '../../plugins/registry';
 import { sourceImportWizardCopy as copy } from './copy';
+import {
+  buildSourceImportCommand,
+  resolveSourceImportCommandIdentity,
+  type SourceImportCommandIdentity,
+} from './sourceImportCommandModel';
 import { buildSourceObjectIdentityKey, isSourceObjectImportable } from './sourceImportCatalogModel';
 import {
   applySourceImportOptionDefaults,
@@ -39,6 +44,7 @@ import type {
 
 interface UseSourceImportWizardParams {
   open: boolean;
+  canvasId: string;
   warehouseSourceImport: IWarehouseSourceImportPort;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   onComplete?: (result: ImportSourcesResult) => void;
@@ -75,10 +81,6 @@ const initialState: SourceImportWizardState = {
   sourceObjectSearchQuery: '',
 };
 
-function hasImportedCanvasNodes(result: ImportSourcesResult): boolean {
-  return (result.importedNodeIds?.length ?? 0) > 0;
-}
-
 function normalizeCreateConnectionInput(
   input: CreateWarehouseConnectionInput
 ): CreateWarehouseConnectionInput {
@@ -108,6 +110,7 @@ function upsertWarehouseConnection(
 
 export function useSourceImportWizard({
   open,
+  canvasId,
   warehouseSourceImport,
   sourceImportOptions,
   onComplete,
@@ -119,6 +122,12 @@ export function useSourceImportWizard({
     [sourceImportOptions]
   );
   const [state, setState] = useState<SourceImportWizardState>(initialWizardState);
+  const pendingImportIdentity = useRef<SourceImportCommandIdentity | null>(null);
+  useEffect(() => {
+    if (!open) {
+      pendingImportIdentity.current = null;
+    }
+  }, [open]);
   useEffect(() => {
     setState((prev) => ({
       ...prev,
@@ -332,7 +341,8 @@ export function useSourceImportWizard({
     }
     setState((prev) => ({ ...prev, isProcessing: true, loadError: null }));
     try {
-      const result = await warehouseSourceImport.importSources({
+      const commandDraft = {
+        canvasId,
         connectionId: state.selectedConnection,
         objects: selectedSourceObjects.map((sourceObject) => ({
           objectId: sourceObject.objectId,
@@ -341,18 +351,23 @@ export function useSourceImportWizard({
         includeColumns: state.includeColumns,
         addTests: state.addTests,
         addFreshness: state.addFreshness,
-      });
+      };
+      const commandIdentity = resolveSourceImportCommandIdentity(
+        commandDraft,
+        pendingImportIdentity.current
+      );
+      pendingImportIdentity.current = commandIdentity;
+      const result = await warehouseSourceImport.importSources(
+        buildSourceImportCommand(commandDraft, commandIdentity)
+      );
+      pendingImportIdentity.current = null;
       setState((prev) => ({
         ...prev,
         importResult: result,
         currentStep: 'result',
       }));
-      if (hasImportedCanvasNodes(result)) {
-        onComplete?.(result);
-        toast.success(copy.importSuccess);
-      } else {
-        toast.info(copy.importNoop);
-      }
+      onComplete?.(result);
+      toast.success(copy.importSuccess);
     } catch (error) {
       const message = error instanceof Error ? error.message : copy.importError;
       setState((prev) => ({ ...prev, loadError: message }));

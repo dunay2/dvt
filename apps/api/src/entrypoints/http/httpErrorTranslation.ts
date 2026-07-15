@@ -84,6 +84,20 @@ export const httpErrorTranslation = {
           },
         });
       },
+      authoringAuthorityConflict(
+        trace: DecisionTrace,
+        canvasIds: readonly string[]
+      ): HttpResponseModel {
+        return createHttpErrorResponse({
+          type: HTTP_ERROR_TYPE.conflict,
+          reason: HTTP_ERROR_REASON.workspaceGraphDraftAuthoringAuthorityConflict,
+          details: {
+            correlationId: trace.correlationId,
+            decisionId: trace.decisionId,
+            canvasIds,
+          },
+        });
+      },
     },
   },
   workspaceFiles: {

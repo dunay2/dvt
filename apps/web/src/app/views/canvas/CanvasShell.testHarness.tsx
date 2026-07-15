@@ -89,9 +89,19 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
     },
     panels: {
       authoringNodeKinds: [buildTestNodeKind()],
-      activeCanvasId: null,
-      activeCanvas: null,
-      canvasDocuments: [],
+      activeCanvasId: 'canvas-test',
+      activeCanvas: {
+        id: 'canvas-test',
+        kind: 'transformation',
+        title: 'Transformation canvas',
+      },
+      canvasDocuments: [
+        {
+          id: 'canvas-test',
+          kind: 'transformation',
+          title: 'Transformation canvas',
+        },
+      ],
       executionEnvironmentOptions: [{ value: 'dev', label: 'dev' }],
       canEditCanvas: true,
       canDeleteActiveCanvas: false,

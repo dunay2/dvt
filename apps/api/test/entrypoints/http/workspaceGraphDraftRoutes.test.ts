@@ -1,4 +1,5 @@
 import { createNoopObservability } from '@dvt/observability';
+import rateLimit from '@fastify/rate-limit';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -24,11 +25,13 @@ interface TestAppContext {
 }
 
 function createApp(options?: {
+  readonly app?: FastifyInstance;
   readonly decision?: Record<string, unknown>;
   readonly readResult?: Record<string, unknown>;
+  readonly rateLimit?: { readonly max: number; readonly timeWindow: number };
   readonly saveResult?: Record<string, unknown>;
 }): TestAppContext {
-  const app = Fastify({ logger: false });
+  const app = options?.app ?? Fastify({ logger: false });
   const capabilityService = {
     authorize: vi.fn(async () => ({
       authentication: 'authenticated',
@@ -64,10 +67,11 @@ function createApp(options?: {
     execute: vi.fn(async () => options?.readResult ?? { kind: 'not_found' }),
   };
   const saveUseCase = {
-    execute: vi.fn(async () =>
-      options?.saveResult ?? {
-        kind: 'unsupported_schema_version',
-      }
+    execute: vi.fn(
+      async () =>
+        options?.saveResult ?? {
+          kind: 'unsupported_schema_version',
+        }
     ),
   };
   const telemetry = {
@@ -81,6 +85,7 @@ function createApp(options?: {
     saveUseCase: saveUseCase as never,
     telemetry,
     observability: createNoopObservability(),
+    rateLimit: options?.rateLimit ?? { max: 100, timeWindow: 60_000 },
   });
 
   return { app, capabilityService, getUseCase, saveUseCase, telemetry };
@@ -129,7 +134,11 @@ describe('workspaceGraphDraftRoutes', () => {
           },
         },
       });
-      expect(telemetry.recordRead).toHaveBeenCalledWith('not_found', 'writable', expect.any(Number));
+      expect(telemetry.recordRead).toHaveBeenCalledWith(
+        'not_found',
+        'writable',
+        expect.any(Number)
+      );
     } finally {
       await app.close();
     }
@@ -159,6 +168,70 @@ describe('workspaceGraphDraftRoutes', () => {
         },
       });
       expect(telemetry.recordWrite).toHaveBeenCalledWith('denied', 'writable', expect.any(Number));
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('maps file-authority conflicts on save to an actionable 409 envelope', async () => {
+    const { app, telemetry } = createApp({
+      saveResult: {
+        kind: 'authoring_authority_conflict',
+        canvasIds: ['orders-canvas'],
+      },
+    });
+
+    try {
+      const response = await app.inject({
+        method: 'PUT',
+        url: '/workspace/graph/draft',
+        payload: buildWorkspaceGraphDraftSaveRequest(),
+      });
+
+      expect(response.statusCode).toBe(409);
+      expect(response.json()).toEqual({
+        error: {
+          type: 'conflict',
+          reason: 'workspace_graph_draft_authoring_authority_conflict',
+          details: {
+            correlationId: 'req-1',
+            decisionId: 'dec-1',
+            canvasIds: ['orders-canvas'],
+          },
+        },
+      });
+      expect(telemetry.recordWrite).toHaveBeenCalledWith(
+        'conflict',
+        'writable',
+        expect.any(Number)
+      );
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('rate limits repeated save attempts before authorizing them again', async () => {
+    const app = Fastify({ logger: false });
+    const routeRateLimit = { max: 1, timeWindow: 60_000 } as const;
+    await app.register(rateLimit, { global: false, ...routeRateLimit });
+    const context = createApp({ app, rateLimit: routeRateLimit });
+
+    try {
+      const payload = buildWorkspaceGraphDraftSaveRequest();
+      const first = await app.inject({
+        method: 'PUT',
+        url: '/workspace/graph/draft',
+        payload,
+      });
+      const second = await app.inject({
+        method: 'PUT',
+        url: '/workspace/graph/draft',
+        payload,
+      });
+
+      expect(first.statusCode).not.toBe(429);
+      expect(second.statusCode).toBe(429);
+      expect(context.capabilityService.authorize).toHaveBeenCalledTimes(1);
     } finally {
       await app.close();
     }

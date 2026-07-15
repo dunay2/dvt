@@ -13,7 +13,6 @@ export const sourceImportWizardCopy = {
   loadConnectionsError: 'Failed to load warehouse connections.',
   loadSourceObjectsError: 'Failed to load source objects.',
   importSuccess: 'Sources attached successfully',
-  importNoop: 'Selected data objects are already present in the workspace graph',
   importError: 'Failed to register data objects.',
   connection: {
     title: 'Choose database connection',
@@ -154,16 +153,14 @@ export const sourceImportWizardCopy = {
       'Visible for inspection. This importer currently attaches relational source objects only.',
   },
   result: {
-    title: 'Sources attached',
-    description: 'Your selected source objects have been attached to the workspace graph.',
-    noopTitle: 'No new data objects were added',
-    noopDescription:
-      'The selected source objects are already registered, so Canvas did not need to materialize new source nodes.',
-    filesTitle: 'Registry files created',
-    warning:
+    title: 'Sources imported',
+    description:
+      'The selected source objects were written through the active Canvas authoring authority.',
+    filesTitle: 'Source files updated',
+    graphDraftWarning:
       'Canvas queued the imported source ids and will focus them when the governed draft authority refreshes.',
-    noopWarning:
-      'Canvas stayed unchanged because the selected registry entries already existed in the workspace graph.',
+    dbtProjectFilesWarning:
+      'The dbt project files were updated and the file-backed graph projection will refresh from project authority.',
   },
 } as const;
 

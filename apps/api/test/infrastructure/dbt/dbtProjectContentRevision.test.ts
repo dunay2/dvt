@@ -83,4 +83,37 @@ describe('hashProjectContent', () => {
       await rm(snapshotDirectory, { recursive: true, force: true });
     }
   });
+
+  it('excludes only configured runtime directories from snapshots and revisions', async () => {
+    const snapshotDirectory = await mkdtemp(path.join(tmpdir(), 'dvt-dbt-project-snapshot-'));
+    await mkdir(path.join(projectDirectory, 'models', 'target'), { recursive: true });
+    await mkdir(path.join(projectDirectory, 'generated', 'target'), { recursive: true });
+    await writeFile(path.join(projectDirectory, 'models', 'target', 'model.sql'), 'select 1\n');
+    await writeFile(path.join(projectDirectory, 'generated', 'target', 'manifest.json'), '{}');
+
+    try {
+      const selection = { excludedDirectoryPaths: ['generated/target'] } as const;
+      const revision = await snapshotProjectContent(
+        projectDirectory,
+        snapshotDirectory,
+        DEFAULT_LIMITS,
+        selection
+      );
+      const expectedRevision = await hashProjectContent(
+        projectDirectory,
+        DEFAULT_LIMITS,
+        selection
+      );
+
+      expect(revision).toEqual(expectedRevision);
+      await expect(
+        readFile(path.join(snapshotDirectory, 'models', 'target', 'model.sql'), 'utf8')
+      ).resolves.toBe('select 1\n');
+      await expect(
+        readFile(path.join(snapshotDirectory, 'generated', 'target', 'manifest.json'), 'utf8')
+      ).rejects.toThrow();
+    } finally {
+      await rm(snapshotDirectory, { recursive: true, force: true });
+    }
+  });
 });

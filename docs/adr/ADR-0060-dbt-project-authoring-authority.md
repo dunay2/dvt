@@ -170,6 +170,14 @@ authority policy:
   workspace-file mutation and then refreshes the analyzer projection;
 - it never writes both semantic authorities.
 
+Project validation keeps generated dbt output separate from installed package
+dependencies. `target-path` and `log-path` are excluded from isolated analysis;
+materialized `packages-install-path` content is excluded from imported source
+but retained in the analysis snapshot because `dbt parse` executes package
+macros, tests, and models. Source import limits and bounded filesystem traversal
+therefore use separate counters. Generated and dependency paths must not overlap
+or shadow configured source paths; ambiguous partitions fail closed.
+
 ## Preview And Run
 
 In graph-draft mode, preview may generate workspace artifacts from the graph.

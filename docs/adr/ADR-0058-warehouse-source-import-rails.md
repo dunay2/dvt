@@ -88,6 +88,13 @@ objects are rejected before graph or workspace-file side effects.
 
 Import is idempotent with respect to existing node IDs in the draft: selecting
 an object whose source node already exists does not duplicate the node.
+An idempotency-key replay must never construct its response from a candidate
+draft that the store did not apply. When the graph-draft store reports a
+deduplicated save, the strategy verifies the requested source-object
+postcondition against the persisted authoritative draft and returns those
+persisted node identities. If the postcondition no longer holds, the command
+fails with a draft conflict and does not compensate a file batch applied by the
+original command.
 Duplicate selections, malformed input, unknown connection IDs, unknown object
 IDs, unsupported locator kinds, unavailable catalog data, missing
 authentication, missing scope, and unauthorized actions fail closed.

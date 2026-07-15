@@ -1,6 +1,7 @@
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { buildGraphDraftSourceImportResult } from '../../../testing/sourceImportTestFixtures';
 import {
   buildRemoteDraftRecord,
   createHarnessWithDraft,
@@ -42,20 +43,11 @@ describe('useCanvasController active draft source import', () => {
     expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_1']);
 
     await act(async () => {
-      harness.getLatestResult()?.handleSourceImportComplete({
-        success: true,
-        draftRevision: 'draft-revision-2',
-        sourcesCreated: 1,
-        objectsImported: 1,
-        yamlFiles: ['models/sources/src_erp.yml'],
-        importedNodeIds: ['node_3'],
-        grouping: 'schema',
-        options: {
-          includeColumns: true,
-          addTests: false,
-          addFreshness: false,
-        },
-      });
+      harness.getLatestResult()?.handleSourceImportComplete(
+        buildGraphDraftSourceImportResult({
+          importedNodeIds: ['node_3'],
+        })
+      );
     });
 
     harness.state.graphData.nodes = [...harness.state.graphData.nodes, { id: 'node_3' }];

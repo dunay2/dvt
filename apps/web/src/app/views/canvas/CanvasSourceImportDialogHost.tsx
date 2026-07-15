@@ -7,6 +7,7 @@ import type { CanvasShellSourceImportPlacement } from './canvasShell.types';
 
 type CanvasSourceImportDialogHostProps = Readonly<{
   open: boolean;
+  canvasId: string;
   initialSelection?: SourceImportInitialSelection | null;
   placement?: CanvasShellSourceImportPlacement;
   sourceImportOptions: readonly SourceImportOptionContribution[];
@@ -16,6 +17,7 @@ type CanvasSourceImportDialogHostProps = Readonly<{
 
 export function CanvasSourceImportDialogHost({
   open,
+  canvasId,
   initialSelection,
   placement,
   sourceImportOptions,
@@ -25,6 +27,7 @@ export function CanvasSourceImportDialogHost({
   return (
     <SourceImportWizard
       open={open}
+      canvasId={canvasId}
       onClose={onClose}
       onComplete={(result) => onComplete(result, placement)}
       sourceImportOptions={sourceImportOptions}

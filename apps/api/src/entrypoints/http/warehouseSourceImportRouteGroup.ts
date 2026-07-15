@@ -2,6 +2,8 @@
 import type { FastifyInstance } from 'fastify';
 
 import { CreateWarehouseConnectionUseCase } from '../../application/services/createWarehouseConnectionUseCase.js';
+import { DbtProjectFilesWarehouseSourceImportStrategy } from '../../application/services/dbtProjectFilesWarehouseSourceImportStrategy.js';
+import { GraphDraftWarehouseSourceImportStrategy } from '../../application/services/graphDraftWarehouseSourceImportStrategy.js';
 import { ImportWarehouseSourcesUseCase } from '../../application/services/importWarehouseSourcesUseCase.js';
 import { ListWarehouseConnectionSourceObjectsUseCase } from '../../application/services/listWarehouseConnectionSourceObjectsUseCase.js';
 import { ListWarehouseConnectionsUseCase } from '../../application/services/listWarehouseConnectionsUseCase.js';
@@ -12,6 +14,7 @@ import {
   EnvironmentWarehouseCredentialResolver,
   WorkspaceWarehouseConnectionProbe,
 } from '../../infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionProbe.js';
+import { LocalWorkspaceFileBatchMutationGateway } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.js';
 import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
 import { resolveWorkspaceFilesRoot } from '../../infrastructure/workspaceFiles/resolveWorkspaceFilesRoot.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
@@ -30,9 +33,11 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
   app: FastifyInstance,
   options: ProtectedWarehouseSourceImportRouteGroupOptions
 ): void {
+  const workspaceFilesRoot = resolveWorkspaceFilesRoot(options.env);
   const workspaceFiles = new LocalWorkspaceFileRepository({
-    root: resolveWorkspaceFilesRoot(options.env),
+    root: workspaceFilesRoot,
   });
+  const batchMutation = new LocalWorkspaceFileBatchMutationGateway({ root: workspaceFilesRoot });
   const catalog = new WorkspaceWarehouseConnectionCatalog({ repository: workspaceFiles });
   const probe = new WorkspaceWarehouseConnectionProbe({
     credentialResolver: new EnvironmentWarehouseCredentialResolver(),
@@ -45,12 +50,21 @@ export function registerProtectedWarehouseSourceImportRouteGroup(
     listSourceObjectsUseCase: new ListWarehouseConnectionSourceObjectsUseCase(sourceObjectReader),
     createConnectionUseCase: new CreateWarehouseConnectionUseCase(catalog, probe),
     testConnectionUseCase: new TestWarehouseConnectionUseCase(catalog, probe),
-    importSourcesUseCase: new ImportWarehouseSourcesUseCase(
+    importSourcesUseCase: new ImportWarehouseSourcesUseCase({
       sourceObjectReader,
-      options.protectedModule.workspaceGraphDraftStore,
-      workspaceFiles,
-      () => new Date()
-    ),
+      authorityPolicy: options.protectedModule.canvasAuthoringAuthorityPolicy,
+      graphDraftStrategy: new GraphDraftWarehouseSourceImportStrategy({
+        draftStore: options.protectedModule.workspaceGraphDraftStore,
+        workspaceFiles,
+        batchMutation,
+        now: () => new Date(),
+      }),
+      dbtProjectFilesStrategy: new DbtProjectFilesWarehouseSourceImportStrategy({
+        workspaceFiles,
+        batchMutation,
+        projectGraph: options.protectedModule.dbtProjectImport.projectGraphUseCase,
+      }),
+    }),
     rateLimit: {
       max: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_MAX,
       timeWindow: options.env.DVT_PROTECTED_RUNTIME_RATE_LIMIT_TIME_WINDOW_MS,

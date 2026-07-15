@@ -7,7 +7,6 @@ import type {
   DbtProjectAnalysis,
   IDbtProjectAnalyzerPort,
 } from '../../application/ports/dbtProjectAnalysis.js';
-import { resolveWorkspaceScopeStorageRoot } from '../workspaceFiles/workspaceScopeStoragePath.js';
 
 import { hashDbtAnalysis, sha256Hex } from './dbtAnalysisHash.js';
 import {
@@ -17,7 +16,11 @@ import {
 } from './dbtAnalyzerProcess.js';
 import { projectDbtManifest } from './dbtManifestProjection.js';
 import { snapshotProjectContent } from './dbtProjectContentRevision.js';
-import { evaluateDbtProjectSnapshotPathPolicy } from './dbtProjectPathPolicy.js';
+import {
+  evaluateDbtProjectSnapshotPathPolicy,
+  resolveDbtProjectDirectoryPartition,
+} from './dbtProjectPathPolicy.js';
+import { resolveDbtProjectDirectory } from './dbtProjectWorkspaceBoundary.js';
 
 const ANALYZER_VERSION = 'dvt-dbt-analyzer.v1';
 const DEFAULT_TIMEOUT_MS = 30_000;
@@ -103,15 +106,35 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     try {
       const snapshotDirectory = path.join(analysisRoot, 'project');
       let contentSetSha256: string;
+      let projectConfigContent: string;
       try {
+        projectConfigContent = await readFile(
+          path.join(projectDirectory, 'dbt_project.yml'),
+          'utf8'
+        );
+        const directoryPartition = resolveDbtProjectDirectoryPartition(projectConfigContent);
         contentSetSha256 = (
-          await snapshotProjectContent(projectDirectory, snapshotDirectory, {
-            maxFiles: this.maxProjectFiles,
-            maxBytes: this.maxProjectBytes,
-            maxDirectories: this.maxProjectDirectories,
-            maxDepth: this.maxProjectDepth,
-          })
+          await snapshotProjectContent(
+            projectDirectory,
+            snapshotDirectory,
+            {
+              maxFiles: this.maxProjectFiles,
+              maxBytes: this.maxProjectBytes,
+              maxDirectories: this.maxProjectDirectories,
+              maxDepth: this.maxProjectDepth,
+            },
+            {
+              excludedDirectoryPaths: directoryPartition.generatedArtifactDirectories,
+            }
+          )
         ).sha256;
+        const snapshotConfigContent = await readFile(
+          path.join(snapshotDirectory, 'dbt_project.yml'),
+          'utf8'
+        );
+        if (snapshotConfigContent !== projectConfigContent) {
+          throw new Error('The dbt project changed while its source snapshot was created.');
+        }
       } catch {
         return this.unavailable(
           unavailableRevision(`unreadable:${input.projectRoot}`),
@@ -205,19 +228,11 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
   }
 
   private async resolveProjectDirectory(input: AnalyzeDbtProjectInput): Promise<string> {
-    const scopeRoot = resolveWorkspaceScopeStorageRoot(this.workspaceFilesRoot, input.scope);
-    const requestedDirectory = path.resolve(scopeRoot, ...input.projectRoot.split('/'));
-    assertContainedPath(scopeRoot, requestedDirectory);
-
-    const [realScopeRoot, realProjectDirectory] = await Promise.all([
-      realpath(scopeRoot),
-      realpath(requestedDirectory),
-    ]);
-    assertContainedPath(realScopeRoot, realProjectDirectory);
-    if (!(await isFile(path.join(realProjectDirectory, 'dbt_project.yml')))) {
-      throw new Error('dbt_project.yml was not found.');
-    }
-    return realProjectDirectory;
+    return resolveDbtProjectDirectory({
+      workspaceFilesRoot: this.workspaceFilesRoot,
+      scope: input.scope,
+      projectRoot: input.projectRoot,
+    });
   }
 
   private async resolveProfilesDirectory(): Promise<string | null> {
@@ -287,12 +302,6 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       dependencies: [],
       diagnostics,
     };
-  }
-}
-
-function assertContainedPath(root: string, candidate: string): void {
-  if (!isContainedPath(root, candidate)) {
-    throw new Error('The dbt project root escaped the authorized workspace scope.');
   }
 }
 

@@ -14526,3 +14526,139 @@ test('tracked migrations promote the dbt file projection family to architecture 
   assert.doesNotMatch(migration.sql, /legacy/i);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations seed the graph-draft command before governance import', () => {
+  const migrations = readMigrationFiles();
+  const authorityMigration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '676_canvas_authoring_authority_transactional_exclusion.sql'
+  );
+  const rateLimitMigration = migrations.find(
+    (candidate) => candidate.fileName === '679_workspace_graph_draft_http_rate_limit.sql'
+  );
+  const canonicalRailId =
+    'docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md#DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG#command#00121#saveworkspacegraphdraft';
+
+  assert.ok(authorityMigration);
+  assert.ok(rateLimitMigration);
+  assert.match(authorityMigration.sql, /with canonical_rail_identity as/);
+  assert.match(authorityMigration.sql, /where not exists/);
+  assert.ok(authorityMigration.sql.includes(canonicalRailId));
+  assert.match(
+    authorityMigration.sql,
+    /insert into planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.ok(rateLimitMigration.sql.includes(canonicalRailId));
+  assert.match(rateLimitMigration.sql, /updated_rail_count <> 1/);
+  assert.doesNotMatch(authorityMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(rateLimitMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations govern one shared dbt runtime-artifact source policy', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '682_dbt_project_runtime_artifact_source_policy.sql'
+  );
+  const maturityMigration = migrations.find(
+    (candidate) => candidate.fileName === '683_dbt_project_source_path_policy_maturity.sql'
+  );
+  const mechanizationMigration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '684_dbt_project_source_path_policy_feature_mechanization.sql'
+  );
+
+  assert.ok(migration);
+  assert.ok(maturityMigration);
+  assert.ok(mechanizationMigration);
+  assert.match(migration.sql, /SYS-API-INFRA-DBT-PROJECT-SOURCE-PATH-POLICY/);
+  assert.match(migration.sql, /RESP-DBT-PROJECT-SOURCE-PATH-POLICY/);
+  assert.match(migration.sql, /REL-DBT-ANALYZER-DEPENDS-ON-SOURCE-PATH-POLICY/);
+  assert.match(migration.sql, /REL-DBT-IMPORT-INSPECTOR-DEPENDS-ON-SOURCE-PATH-POLICY/);
+  assert.match(migration.sql, /runtimeArtifactSourcePolicy/);
+  assert.match(migration.sql, /ProjectDbtGraphFromFiles/);
+  assert.match(migration.sql, /ValidateDbtProjectImport/);
+  assert.match(maturityMigration.sql, /architecture\.component_observability/);
+  assert.match(maturityMigration.sql, /architecture\.evidence/);
+  assert.match(mechanizationMigration.sql, /E-DBT-PROJECT-FILE-PROJECTION-PHASE2-20260713/);
+  assert.match(mechanizationMigration.sql, /evaluateDbtProjectPathPolicy/);
+  assert.match(mechanizationMigration.sql, /normalizeContainedRelativePath/);
+  assert.match(mechanizationMigration.sql, /parseDbtProjectDocument/);
+  assert.match(mechanizationMigration.sql, /ValidateDbtProjectImport/);
+  assert.match(mechanizationMigration.sql, /ProjectDbtGraphFromFiles/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+  assert.doesNotMatch(maturityMigration.sql, /truncate\s+/i);
+  assert.doesNotMatch(mechanizationMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations require persisted postconditions for source-import replays', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '685_graph_draft_source_import_replay_postcondition.sql'
+  );
+  const symbolMigration = migrations.find(
+    (candidate) => candidate.fileName === '686_graph_draft_source_import_replay_feature_symbol.sql'
+  );
+
+  assert.ok(migration);
+  assert.ok(symbolMigration);
+  assert.match(migration.sql, /SYS-API-APPLICATION-WAREHOUSE-SOURCE-IMPORT-GRAPH-DRAFT/);
+  assert.match(migration.sql, /deduplicated draft save/);
+  assert.match(migration.sql, /persisted authoritative draft/);
+  assert.match(migration.sql, /fails closed without compensating/);
+  assert.match(migration.sql, /RESP-GRAPH-DRAFT-WAREHOUSE-SOURCE-IMPORT/);
+  assert.match(migration.sql, /OBS-GRAPH-DRAFT-SOURCE-IMPORT/);
+  assert.match(symbolMigration.sql, /readPersistedImportedNodeIds/);
+  assert.match(symbolMigration.sql, /ImportWarehouseSources/);
+  assert.match(symbolMigration.sql, /Postcondition Verification/);
+  assert.match(symbolMigration.sql, /reconciled_rail_count <> 2/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+  assert.doesNotMatch(symbolMigration.sql, /truncate\s+/i);
+});
+
+test('tracked migrations separate generated dbt artifacts from installed dependencies', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '687_dbt_project_dependency_path_partition.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /generated_artifact_installed_dependency_partition/);
+  assert.match(migration.sql, /resolveDbtProjectDirectoryPartition/);
+  assert.match(migration.sql, /installed parse dependencies/);
+  assert.match(migration.sql, /separate inspected-file budget/);
+  assert.match(migration.sql, /ProjectDbtGraphFromFiles/);
+  assert.match(migration.sql, /ValidateDbtProjectImport/);
+  assert.match(migration.sql, /resolveDbtRuntimeArtifactDirectoryPaths/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration rejects overlapping dbt generated and dependency paths', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '688_dbt_project_non_source_path_overlap_guard.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /mutually non-overlapping/);
+  assert.match(migration.sql, /nonSourcePathsOverlap/);
+  assert.match(migration.sql, /projectdbtgraphfromfiles/i);
+  assert.match(migration.sql, /validatedbtprojectimport/i);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration reconciles dbt path partition source symbols and surfaces', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) =>
+      candidate.fileName === '689_dbt_project_path_partition_manifest_reconciliation.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /DirectoryRole/);
+  assert.match(migration.sql, /excludedDirectoryReason/);
+  assert.match(migration.sql, /resolveDirectoryRole/);
+  assert.match(migration.sql, /RUNTIME_DIRECTORIES/);
+  assert.match(migration.sql, /688_dbt_project_non_source_path_overlap_guard/);
+  assert.match(migration.sql, /689_dbt_project_path_partition_manifest_reconciliation/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});

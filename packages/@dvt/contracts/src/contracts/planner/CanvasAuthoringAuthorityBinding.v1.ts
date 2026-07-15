@@ -11,7 +11,7 @@ import { z } from 'zod';
 
 const NonBlankStringSchema = z.string().trim().min(1);
 
-const WorkspaceRelativeProjectRootSchema = NonBlankStringSchema.superRefine((value, ctx) => {
+export const WorkspaceRelativeProjectRootSchema = NonBlankStringSchema.superRefine((value, ctx) => {
   if (value === '.') {
     return;
   }

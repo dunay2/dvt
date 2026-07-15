@@ -1,6 +1,7 @@
 import React, { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { buildGraphDraftSourceImportResult } from '../../../testing/sourceImportTestFixtures';
 import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
 import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import type { CanvasDraftSession } from './canvasDraftSession';
@@ -119,20 +120,11 @@ describe('useCanvasController autosave race guards', () => {
     ).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      targetHarness.getLatestResult()?.handleSourceImportComplete({
-        success: true,
-        sourcesCreated: 1,
-        objectsImported: 1,
-        yamlFiles: ['models/sources/src_erp.yml'],
-        importedNodeIds: ['src_erp_orders'],
-        grouping: 'schema',
-        draftRevision: 'rev-imported',
-        options: {
-          includeColumns: true,
-          addTests: false,
-          addFreshness: false,
-        },
-      });
+      targetHarness.getLatestResult()?.handleSourceImportComplete(
+        buildGraphDraftSourceImportResult({
+          draftRevision: 'rev-imported',
+        })
+      );
       await Promise.resolve();
     });
     targetHarness.state.queryClient.setQueryData.mockClear();

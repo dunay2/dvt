@@ -16,29 +16,39 @@ type ProjectContentLimits = Readonly<{
   maxDepth: number;
 }>;
 
+export type ProjectContentSelection = Readonly<{
+  excludedDirectoryPaths?: readonly string[];
+}>;
+
 export async function hashProjectContent(
   projectDirectory: string,
-  limits: ProjectContentLimits
+  limits: ProjectContentLimits,
+  selection: ProjectContentSelection = {}
 ): Promise<ProjectContentRevision> {
-  return collectProjectContent(projectDirectory, null, limits);
+  return collectProjectContent(projectDirectory, null, limits, selection);
 }
 
 export async function snapshotProjectContent(
   projectDirectory: string,
   snapshotDirectory: string,
-  limits: ProjectContentLimits
+  limits: ProjectContentLimits,
+  selection: ProjectContentSelection = {}
 ): Promise<ProjectContentRevision> {
   await mkdir(snapshotDirectory, { recursive: true });
-  return collectProjectContent(projectDirectory, snapshotDirectory, limits);
+  return collectProjectContent(projectDirectory, snapshotDirectory, limits, selection);
 }
 
 async function collectProjectContent(
   projectDirectory: string,
   snapshotDirectory: string | null,
-  limits: ProjectContentLimits
+  limits: ProjectContentLimits,
+  selection: ProjectContentSelection
 ): Promise<ProjectContentRevision> {
   const entries: Array<{ path: string; sha256: string; bytes: number }> = [];
   const state = { bytes: 0, directories: 1 };
+  const excludedDirectoryPaths = normalizeExcludedDirectoryPaths(
+    selection.excludedDirectoryPaths ?? []
+  );
   if (state.directories > limits.maxDirectories || limits.maxDepth < 0) {
     throw new Error('The dbt project exceeds configured analysis limits.');
   }
@@ -49,6 +59,7 @@ async function collectProjectContent(
     entries,
     limits,
     state,
+    excludedDirectoryPaths,
     0
   );
   entries.sort((left, right) => left.path.localeCompare(right.path));
@@ -66,6 +77,7 @@ async function visitProjectDirectory(
   entries: Array<{ path: string; sha256: string; bytes: number }>,
   limits: ProjectContentLimits,
   state: { bytes: number; directories: number },
+  excludedDirectoryPaths: ReadonlySet<string>,
   depth: number
 ): Promise<void> {
   const directoryEntries = await readdir(currentDirectory, { withFileTypes: true });
@@ -74,6 +86,12 @@ async function visitProjectDirectory(
       throw new Error(`Symbolic links are not accepted in analyzed dbt projects: ${entry.name}`);
     }
     if (entry.isDirectory()) {
+      const absoluteDirectory = path.join(currentDirectory, entry.name);
+      const relativeDirectory = path
+        .relative(projectDirectory, absoluteDirectory)
+        .replaceAll('\\', '/');
+      if (excludedDirectoryPaths.has(relativeDirectory)) continue;
+
       const nextDepth = depth + 1;
       state.directories += 1;
       if (state.directories > limits.maxDirectories || nextDepth > limits.maxDepth) {
@@ -86,11 +104,12 @@ async function visitProjectDirectory(
       }
       await visitProjectDirectory(
         projectDirectory,
-        path.join(currentDirectory, entry.name),
+        absoluteDirectory,
         nextSnapshotDirectory,
         entries,
         limits,
         state,
+        excludedDirectoryPaths,
         nextDepth
       );
       continue;
@@ -139,6 +158,24 @@ async function visitProjectDirectory(
     });
     state.bytes += contentBytes;
   }
+}
+
+function normalizeExcludedDirectoryPaths(paths: readonly string[]): ReadonlySet<string> {
+  const normalizedPaths = paths.map((configuredPath) => {
+    const portablePath = configuredPath.replaceAll('\\', '/');
+    const normalizedPath = path.posix.normalize(portablePath);
+    if (
+      normalizedPath === '.' ||
+      normalizedPath === '..' ||
+      normalizedPath.startsWith('../') ||
+      path.posix.isAbsolute(portablePath) ||
+      path.win32.parse(configuredPath).root.length > 0
+    ) {
+      throw new Error('Excluded project directory paths must be contained relative paths.');
+    }
+    return normalizedPath;
+  });
+  return new Set(normalizedPaths);
 }
 
 async function writeAll(handle: FileHandle, content: Buffer): Promise<void> {

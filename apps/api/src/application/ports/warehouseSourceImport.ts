@@ -11,8 +11,8 @@
  */
 import type {
   CreateWarehouseConnectionRequest,
-  ImportSourceObjectsRequest,
-  ImportSourceObjectsResult,
+  ImportSourceObjectsRequestV2,
+  ImportSourceObjectsResultV2,
   SourceObject,
   SourceImportGrouping as ContractSourceImportGrouping,
   TestWarehouseConnectionResult as ContractTestWarehouseConnectionResult,
@@ -77,11 +77,11 @@ export const SUPPORTED_SOURCE_IMPORT_GROUPINGS = SOURCE_IMPORT_GROUPING;
 
 export type SourceImportGrouping = ContractSourceImportGrouping;
 
-export type ImportWarehouseSourcesInput = ImportSourceObjectsRequest & {
+export type ImportWarehouseSourcesInput = ImportSourceObjectsRequestV2 & {
   readonly scope: WorkspaceGraphDraftScope;
 };
 
-export type ImportWarehouseSourcesResult = ImportSourceObjectsResult;
+export type ImportWarehouseSourcesResult = ImportSourceObjectsResultV2;
 
 export interface IWarehouseConnectionCatalog {
   listConnections(scope: WorkspaceGraphDraftScope): Promise<readonly WarehouseConnection[]>;
@@ -177,6 +177,13 @@ export class WarehouseSourceImportDraftConflictError extends Error {
   public constructor() {
     super('The workspace graph draft changed before the warehouse sources could be imported.');
     this.name = 'WarehouseSourceImportDraftConflictError';
+  }
+}
+
+export class WarehouseSourceImportIdempotencyMismatchError extends Error {
+  public constructor(readonly idempotencyKey: string) {
+    super(`Warehouse Source Import idempotency key was reused: ${idempotencyKey}`);
+    this.name = 'WarehouseSourceImportIdempotencyMismatchError';
   }
 }
 

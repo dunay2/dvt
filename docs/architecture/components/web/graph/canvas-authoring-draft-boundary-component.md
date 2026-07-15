@@ -105,6 +105,11 @@ only protected contract/port names may keep `WorkspaceGraphDraft`.
   authoring aggregate.
 - Read denial, format error, unsupported schema version, idempotency mismatch,
   conflict, and not-found remain typed outcomes.
+- A draft save must lock every Canvas identity in the aggregate and reject the
+  complete save when any Canvas is already bound to file-backed authority.
+- File-authority binding and graph-draft persistence use the same scoped
+  transaction lock identity. A preflight read is advisory only; both write
+  paths revalidate ownership inside their transaction.
 - Zero nodes, one node, disconnected graphs, and partially connected graphs
   are valid authoring states.
 - Compile validity is evaluated only after explicit preview/run selection.
@@ -115,13 +120,13 @@ only protected contract/port names may keep `WorkspaceGraphDraft`.
 
 ## Command And Query Rails
 
-| Rail                                  | Type    | Bounded context             | DDD owner                                     | Application port                                     | Negative tests                                                                 |
-| ------------------------------------- | ------- | --------------------------- | --------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `GetWorkspaceGraphDraft`              | query   | Workspace authoring         | `WorkspaceGraphDraftReadResponse` read model  | `IWorkspaceGraphDraftAuthoringPort.readGraphDraft()` | unauthenticated, forbidden, not found, format error, unsupported schema        |
-| `SaveWorkspaceGraphDraft`             | command | Workspace authoring         | `WorkspaceGraphAuthoringDraft` aggregate      | `IWorkspaceGraphDraftAuthoringPort.saveGraphDraft()` | read-only, forbidden, stale revision, idempotency mismatch, unsupported schema |
-| `ApplyWorkspaceGraphAuthoringCommand` | command | Canvas authoring            | `WorkspaceGraphAuthoringCommand` value object | Canvas authoring application service                 | duplicate node id, missing node ref, invalid edge ref, non-writable posture    |
-| `ProjectCanvasAuthoringViewportGraph` | query   | Canvas presentation         | `CanvasViewportGraphModel` projection         | Canvas viewport mapper                               | projection cannot mutate draft, missing semantic node fails closed             |
-| `ProjectSelectedExecutableSubgraph`   | query   | Planner execution selection | `ExecutableSubgraph` read model               | planner preview/run boundary                         | loose unselected nodes do not block selected executable closure                |
+| Rail                                  | Type    | Bounded context             | DDD owner                                     | Application port                                     | Negative tests                                                                                                                                    |
+| ------------------------------------- | ------- | --------------------------- | --------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GetWorkspaceGraphDraft`              | query   | Workspace authoring         | `WorkspaceGraphDraftReadResponse` read model  | `IWorkspaceGraphDraftAuthoringPort.readGraphDraft()` | unauthenticated, forbidden, not found, format error, unsupported schema                                                                           |
+| `SaveWorkspaceGraphDraft`             | command | Workspace authoring         | `WorkspaceGraphAuthoringDraft` aggregate      | `SaveWorkspaceGraphDraftUseCase.execute()`           | rate limited, read-only, forbidden, stale revision, idempotency mismatch, unsupported schema, file-authority conflict, concurrent authority claim |
+| `ApplyWorkspaceGraphAuthoringCommand` | command | Canvas authoring            | `WorkspaceGraphAuthoringCommand` value object | Canvas authoring application service                 | duplicate node id, missing node ref, invalid edge ref, non-writable posture                                                                       |
+| `ProjectCanvasAuthoringViewportGraph` | query   | Canvas presentation         | `CanvasViewportGraphModel` projection         | Canvas viewport mapper                               | projection cannot mutate draft, missing semantic node fails closed                                                                                |
+| `ProjectSelectedExecutableSubgraph`   | query   | Planner execution selection | `ExecutableSubgraph` read model               | planner preview/run boundary                         | loose unselected nodes do not block selected executable closure                                                                                   |
 
 No implementation for `TF-E2-A` may add a UI action, service method, route
 helper, Cypress workflow, or architecture test outside these rails without
