@@ -61,4 +61,28 @@ describe('LocalWorkspaceMetadataFileRepository', () => {
       InvalidWorkspacePathError
     );
   });
+
+  it('migrates metadata from the project-file namespace and removes the old copy', async () => {
+    const projectFiles = new LocalWorkspaceFileRepository({ root: namespaceRoot });
+    const metadataFiles = new LocalWorkspaceMetadataFileRepository({ root: namespaceRoot });
+    const logicalPath = '.dvt/warehouse-connections.json';
+    const content = JSON.stringify({ connections: [{ id: 'warehouse-a' }] });
+
+    await projectFiles.saveFileContent(SCOPE, {
+      path: logicalPath,
+      content,
+      expectedRevision: { kind: 'absent' },
+    });
+
+    await expect(metadataFiles.getFileContent(SCOPE, logicalPath)).resolves.toMatchObject({
+      path: logicalPath,
+      content,
+    });
+    await expect(projectFiles.getFileContent(SCOPE, logicalPath)).rejects.toBeInstanceOf(
+      WorkspaceFileNotFoundError
+    );
+    await expect(metadataFiles.getFileContent(SCOPE, logicalPath)).resolves.toMatchObject({
+      content,
+    });
+  });
 });
