@@ -5,11 +5,10 @@ import {
   buildDbtProjectFileExecutionDraftSignature,
   buildDbtProjectFileExecutionStrategy,
   buildDbtProjectFilePreviewProvenance,
+  isDbtProjectFilePreviewProvenanceCurrent,
 } from './dbtProjectFileExecutionStrategy';
 
-function buildProjection(
-  overrides: Partial<DbtProjectGraphProjection> = {}
-): DbtProjectGraphProjection {
+function buildProjection(overrides: Record<string, unknown> = {}): DbtProjectGraphProjection {
   return DbtProjectGraphProjectionSchema.parse({
     schemaVersion: 'dbt-project-graph-projection.v1',
     authorityBinding: {
@@ -126,5 +125,26 @@ describe('dbt project file execution strategy', () => {
     expect(buildDbtProjectFileExecutionDraftSignature(first, 'planner-signature')).not.toBe(
       buildDbtProjectFileExecutionDraftSignature(second, 'planner-signature')
     );
+  });
+
+  it('rejects persisted provenance from another revision or selection', () => {
+    const strategy = buildDbtProjectFileExecutionStrategy(buildProjection());
+    expect(strategy.kind).toBe('dbt_project_file_preview');
+    if (strategy.kind !== 'dbt_project_file_preview') return;
+
+    const provenance = buildDbtProjectFilePreviewProvenance(strategy, ['model.analytics.orders']);
+    expect(
+      isDbtProjectFilePreviewProvenanceCurrent(strategy, ['model.analytics.orders'], provenance)
+    ).toBe(true);
+    expect(
+      isDbtProjectFilePreviewProvenanceCurrent(
+        { ...strategy, analysisSha256: '3'.repeat(64) },
+        ['model.analytics.orders'],
+        provenance
+      )
+    ).toBe(false);
+    expect(
+      isDbtProjectFilePreviewProvenanceCurrent(strategy, ['model.analytics.other'], provenance)
+    ).toBe(false);
   });
 });

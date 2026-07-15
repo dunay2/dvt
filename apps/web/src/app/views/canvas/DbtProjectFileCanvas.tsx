@@ -13,6 +13,7 @@ import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGrap
 import { CANVAS_ROUTE_ID } from './canvasDraftPresentationStore';
 import { DbtProjectFileCanvasView } from './DbtProjectFileCanvasView';
 import { CanvasErrorStateView } from './CanvasStateViews';
+import CanvasModalHost from './CanvasModalHost';
 import { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
 import type { DbtProjectImportResult } from '@dvt/contracts';
 
@@ -65,10 +66,24 @@ export function DbtProjectFileCanvas({
   usePublishedRouteBootstrap(CANVAS_ROUTE_ID, bootstrapPresentation);
 
   return (
-    <DbtProjectFileCanvasView
-      controller={controller}
-      screenToFlowPosition={(screenPosition) => reactFlow.screenToFlowPosition(screenPosition)}
-      onDbtProjectImported={onDbtProjectImported}
-    />
+    <>
+      <DbtProjectFileCanvasView
+        controller={controller}
+        screenToFlowPosition={(screenPosition) => reactFlow.screenToFlowPosition(screenPosition)}
+        onDbtProjectImported={onDbtProjectImported}
+      />
+      <CanvasModalHost
+        planPreview={{
+          open: controller.execution.planModalOpen,
+          plan: controller.currentPlan,
+          canStartRun: controller.execution.canStartRun,
+          planStatusSummary: controller.execution.planStatusSummary,
+          onClose: () => controller.execution.setPlanModalOpen(false),
+          onStartRun: () => {
+            void controller.execution.handleStartRun();
+          },
+        }}
+      />
+    </>
   );
 }

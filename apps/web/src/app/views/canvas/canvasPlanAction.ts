@@ -153,7 +153,10 @@ export async function executeCanvasPlanAction({
         context: sessionContext.buildRunContext('preview_context'),
         ...(executionStrategy.kind === 'dbt_project_file_preview'
           ? {
-              provenance: buildDbtProjectFilePreviewProvenance(executionStrategy, scopedNodeIds),
+              provenance: buildDbtProjectFilePreviewProvenance(
+                executionStrategy,
+                plannerProjection.selection.nodeIds
+              ),
             }
           : {}),
         persist: true,

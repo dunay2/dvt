@@ -4,10 +4,7 @@
 import { ConfirmEdgeModal, PlanPreviewModal } from '../../components/Modals';
 import type { CanvasModalHostProps } from './canvasModalHost.types';
 
-export default function CanvasModalHost({
-  planPreview,
-  edgeConfirmation,
-}: CanvasModalHostProps) {
+export default function CanvasModalHost({ planPreview, edgeConfirmation }: CanvasModalHostProps) {
   return (
     <>
       <PlanPreviewModal
@@ -19,12 +16,14 @@ export default function CanvasModalHost({
         onStartRun={planPreview.onStartRun}
       />
 
-      <ConfirmEdgeModal
-        open={edgeConfirmation.open}
-        onClose={edgeConfirmation.onClose}
-        edge={edgeConfirmation.edge}
-        onConfirm={edgeConfirmation.onConfirm}
-      />
+      {edgeConfirmation == null ? null : (
+        <ConfirmEdgeModal
+          open={edgeConfirmation.open}
+          onClose={edgeConfirmation.onClose}
+          edge={edgeConfirmation.edge}
+          onConfirm={edgeConfirmation.onConfirm}
+        />
+      )}
     </>
   );
 }

@@ -237,19 +237,48 @@ export function PlanPreviewModal({
             {provenance ? (
               <PlanPreviewSection
                 title="Provenance"
-                caption="Repository artifacts used to generate the preview."
+                caption={
+                  provenance.kind === 'dbt-project-files'
+                    ? 'Authoritative dbt project revision and server-owned execution target.'
+                    : 'Repository artifacts used to generate the preview.'
+                }
               >
                 <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                  {provenance.graphArtifact ? (
-                    <PlanPreviewField label="Graph artifact" long>
-                      {provenance.graphArtifact.repo}: {provenance.graphArtifact.path}
-                    </PlanPreviewField>
-                  ) : null}
-                  {provenance.sqlArtifact ? (
-                    <PlanPreviewField label="SQL artifact" long>
-                      {provenance.sqlArtifact.repo}: {provenance.sqlArtifact.path}
-                    </PlanPreviewField>
-                  ) : null}
+                  {provenance.kind === 'dbt-project-files' ? (
+                    <>
+                      <PlanPreviewField label="Project root" long>
+                        {provenance.projectRoot}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="dbt version">
+                        {provenance.dbtVersion}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="Project revision" long>
+                        {provenance.contentSetSha256}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="Analysis revision" long>
+                        {provenance.analysisSha256}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="Selected resources" long>
+                        {provenance.selectedUniqueIds.join(', ')}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="Execution target">
+                        {`${provenance.executionTarget.provider} / ${provenance.executionTarget.adapter} / ${provenance.executionTarget.targetName}`}
+                      </PlanPreviewField>
+                    </>
+                  ) : (
+                    <>
+                      {provenance.graphArtifact ? (
+                        <PlanPreviewField label="Graph artifact" long>
+                          {provenance.graphArtifact.repo}: {provenance.graphArtifact.path}
+                        </PlanPreviewField>
+                      ) : null}
+                      {provenance.sqlArtifact ? (
+                        <PlanPreviewField label="SQL artifact" long>
+                          {provenance.sqlArtifact.repo}: {provenance.sqlArtifact.path}
+                        </PlanPreviewField>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               </PlanPreviewSection>
             ) : null}

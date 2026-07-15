@@ -22,5 +22,5 @@ export type CanvasEdgeConfirmationModalContract = Readonly<{
 
 export type CanvasModalHostProps = Readonly<{
   planPreview: CanvasPlanPreviewModalContract;
-  edgeConfirmation: CanvasEdgeConfirmationModalContract;
+  edgeConfirmation?: CanvasEdgeConfirmationModalContract;
 }>;

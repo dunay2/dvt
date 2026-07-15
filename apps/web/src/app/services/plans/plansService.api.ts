@@ -1,6 +1,7 @@
 import {
   PREVIEW_PROFILE,
   parseExecutionPlan,
+  parsePlanPreviewProvenance,
   parsePlanPreviewPersistResponse,
   parsePlanRef,
   type ExecutionPlan as ContractExecutionPlan,
@@ -65,6 +66,26 @@ function parseArtifactRef(value: unknown):
   };
 }
 
+function parsePreviewProvenance(value: unknown): PlanPreviewView['provenance'] {
+  const record = asRecord(value);
+  if (record == null) {
+    return undefined;
+  }
+
+  if (typeof record.kind === 'string') {
+    return parsePlanPreviewProvenance(value);
+  }
+
+  const graphArtifact = parseArtifactRef(record.graphArtifact);
+  const sqlArtifact = parseArtifactRef(record.sqlArtifact);
+  return graphArtifact == null && sqlArtifact == null
+    ? undefined
+    : {
+        ...(graphArtifact == null ? {} : { graphArtifact }),
+        ...(sqlArtifact == null ? {} : { sqlArtifact }),
+      };
+}
+
 function parseContractPlanPayload(payload: unknown): {
   contractPlan: ContractExecutionPlan;
   planRef: PlanRef;
@@ -95,10 +116,6 @@ function parseContractPlanPayload(payload: unknown): {
     envelope.persisted && typeof envelope.persisted === 'object'
       ? (envelope.persisted as Record<string, unknown>)
       : undefined;
-  const provenanceRecord =
-    envelope.provenance && typeof envelope.provenance === 'object'
-      ? (envelope.provenance as Record<string, unknown>)
-      : undefined;
 
   return {
     contractPlan: parseExecutionPlan(envelope.plan),
@@ -126,16 +143,7 @@ function parseContractPlanPayload(payload: unknown): {
             canonicalPlanSha256: asString(persistedRecord.canonicalPlanSha256)!,
           }
         : undefined,
-    provenance: provenanceRecord
-      ? {
-          ...(parseArtifactRef(provenanceRecord.graphArtifact)
-            ? { graphArtifact: parseArtifactRef(provenanceRecord.graphArtifact) }
-            : {}),
-          ...(parseArtifactRef(provenanceRecord.sqlArtifact)
-            ? { sqlArtifact: parseArtifactRef(provenanceRecord.sqlArtifact) }
-            : {}),
-        }
-      : undefined,
+    provenance: parsePreviewProvenance(envelope.provenance),
   };
 }
 

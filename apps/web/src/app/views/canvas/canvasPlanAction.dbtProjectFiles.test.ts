@@ -8,6 +8,7 @@ import type {
 } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
+import { makeRunContext } from '../../testing/contractTestUtils';
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import { validateTransformationGraph } from './transformationGraphValidation';
@@ -51,20 +52,21 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
         credentialRef: 'vault:dbt/development',
       },
     };
+    const runContext = makeRunContext('preview_context', {
+      tenantId: 'tenant',
+      projectId: 'project',
+      environmentId: 'dev',
+    });
+    const workspaceScope = {
+      tenantId: runContext.tenantId,
+      projectId: runContext.projectId,
+      environmentId: runContext.environmentId,
+      targetAdapter: runContext.targetAdapter,
+    };
     const sessionContext = {
-      buildRunContext: (runId: string) => ({
-        tenantId: 'tenant',
-        projectId: 'project',
-        environmentId: 'dev',
-        targetAdapter: 'temporal' as const,
-        runId,
-      }),
-      getWorkspaceScope: () => ({ tenantId: 'tenant', projectId: 'project', environmentId: 'dev' }),
-      getWorkspaceScopeSnapshot: () => ({
-        tenantId: 'tenant',
-        projectId: 'project',
-        environmentId: 'dev',
-      }),
+      buildRunContext: (runId: string) => makeRunContext(runId, workspaceScope),
+      getWorkspaceScope: () => workspaceScope,
+      getWorkspaceScopeSnapshot: () => workspaceScope,
       subscribeWorkspaceScope: () => () => undefined,
     } satisfies SessionContextPort;
 

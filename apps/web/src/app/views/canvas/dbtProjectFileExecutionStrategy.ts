@@ -1,7 +1,9 @@
 /** Owned concern: derive file-authoritative dbt execution identity from its projection. */
 import type { DbtProjectFilesProvenance, DbtProjectGraphProjection } from '@dvt/contracts';
+import { PlanPreviewProvenanceSchema } from '@dvt/contracts';
 
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
+import type { PlanPreviewProvenanceViewModel } from '../../types/plans';
 
 export type DbtProjectFileExecutionStrategy = Extract<
   CanvasExecutionStrategy,
@@ -37,7 +39,7 @@ export function buildDbtProjectFilePreviewProvenance(
   strategy: DbtProjectFileExecutionStrategy,
   selectedUniqueIds: readonly string[]
 ): DbtProjectFilesProvenance {
-  return {
+  const provenance = PlanPreviewProvenanceSchema.parse({
     kind: 'dbt-project-files',
     projectRoot: strategy.projectRoot,
     contentSetSha256: strategy.contentSetSha256,
@@ -47,7 +49,11 @@ export function buildDbtProjectFilePreviewProvenance(
       left.localeCompare(right)
     ),
     executionTarget: strategy.executionTarget,
-  };
+  });
+  if (provenance.kind !== 'dbt-project-files') {
+    throw new Error('Expected dbt-project-files preview provenance.');
+  }
+  return provenance;
 }
 
 export function buildDbtProjectFileExecutionDraftSignature(
@@ -62,4 +68,19 @@ export function buildDbtProjectFileExecutionDraftSignature(
     dbtVersion: strategy.dbtVersion,
     executionTarget: strategy.executionTarget,
   });
+}
+
+export function isDbtProjectFilePreviewProvenanceCurrent(
+  strategy: DbtProjectFileExecutionStrategy,
+  selectedUniqueIds: readonly string[],
+  provenance: PlanPreviewProvenanceViewModel | undefined
+): boolean {
+  if (provenance?.kind !== 'dbt-project-files') {
+    return false;
+  }
+
+  return (
+    JSON.stringify(provenance) ===
+    JSON.stringify(buildDbtProjectFilePreviewProvenance(strategy, selectedUniqueIds))
+  );
 }

@@ -1,5 +1,6 @@
 /** Owned concern: resolve plan preview provenance through workspace file read/write ports. */
-import type { PlanPreviewProvenance } from '../../ports/plans';
+import type { GitArtifactRef, TransformationGitArtifactsProvenance } from '@dvt/contracts';
+import { asSha256HexString } from '@dvt/contracts';
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type {
   IWorkspaceFileContentCommandPort,
@@ -30,8 +31,8 @@ import {
 export type PreviewProvenanceResolution =
   | {
       ok: true;
-      provenance?: PlanPreviewProvenance;
-      sqlArtifact?: PlanPreviewProvenance['sqlArtifact'];
+      provenance?: TransformationGitArtifactsProvenance;
+      sqlArtifact?: GitArtifactRef;
       sqlText?: string;
     }
   | { ok: false; message: string };
@@ -145,8 +146,8 @@ async function savePreviewGraphArtifact(args: {
   canonicalNodes: readonly CanonicalNode[];
   canonicalEdges: readonly CanonicalEdge[];
   scopedNodeIds: readonly string[];
-  sqlArtifact: PlanPreviewProvenance['sqlArtifact'];
-}): Promise<PlanPreviewProvenance['graphArtifact']> {
+  sqlArtifact: GitArtifactRef;
+}): Promise<GitArtifactRef> {
   const graphArtifactContent = buildPreviewDesignGraphArtifactContent({
     nodes: args.canonicalNodes,
     edges: args.canonicalEdges,
@@ -172,7 +173,7 @@ async function savePreviewGraphArtifact(args: {
     path: args.graphArtifactPath,
     ref: args.gitRef,
     commitSha: args.gitSha,
-    contentSha256: graphArtifactReceipt.contentSha256,
+    contentSha256: asSha256HexString(graphArtifactReceipt.contentSha256),
   };
 }
 
@@ -186,7 +187,7 @@ async function resolvePreviewSqlArtifact(args: {
   gitRef: string;
   gitSha: string;
 }): Promise<{
-  sqlArtifact: PlanPreviewProvenance['sqlArtifact'];
+  sqlArtifact: GitArtifactRef;
   sqlText: string;
 }> {
   const { transformArtifactSource } = args;
@@ -211,7 +212,7 @@ async function resolvePreviewSqlArtifact(args: {
           path: transformArtifactSource.path,
           ref: args.gitRef,
           commitSha: args.gitSha,
-          contentSha256: savedSqlArtifactReceipt.contentSha256,
+          contentSha256: asSha256HexString(savedSqlArtifactReceipt.contentSha256),
         },
       };
     }
@@ -252,7 +253,7 @@ async function resolvePreviewSqlArtifact(args: {
       path: transformArtifactSource.path,
       ref: args.gitRef,
       commitSha: args.gitSha,
-      contentSha256: savedSqlArtifactReceipt.contentSha256,
+      contentSha256: asSha256HexString(savedSqlArtifactReceipt.contentSha256),
     },
   };
 }
@@ -343,6 +344,7 @@ export async function resolvePreviewProvenance({
       sqlArtifact,
       sqlText,
       provenance: {
+        kind: 'transformation-git-artifacts',
         graphArtifact,
         sqlArtifact,
       },

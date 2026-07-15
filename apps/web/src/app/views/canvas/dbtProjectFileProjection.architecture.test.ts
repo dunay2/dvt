@@ -33,13 +33,17 @@ describe('dbt project file Canvas architecture', () => {
     expect(view).not.toContain('WorkspaceGraphAuthoringDraft');
   });
 
-  it('uses an inspectable file-authoritative strategy with contextual source import but no preview or run', () => {
+  it('keeps file authority read-only while delegating Preview and Run to its execution child', () => {
     const strategy = readAppSource('../../plugins/dbt/dbtProjectFileCanvasSurfaceStrategy.ts');
+    const controller = readAppSource('useDbtProjectFileCanvasController.ts');
+    const execution = readAppSource('useDbtProjectFileExecution.ts');
 
     expect(strategy).toContain("id: 'dbt-project-files-read-only-canvas'");
-    expect(strategy).toContain('operationalDrawer: null');
+    expect(strategy).toContain('operationalDrawer');
     expect(strategy).toContain("openedFrom: ['canvas-context-menu']");
-    expect(strategy).not.toMatch(/sections:[\s\S]*'preview'/);
-    expect(strategy).not.toMatch(/sections:[\s\S]*'runs'/);
+    expect(controller).toContain('useDbtProjectFileExecution');
+    expect(execution).toContain('useCanvasExecutionActions');
+    expect(execution).not.toContain('saveFileContent');
+    expect(execution).not.toContain('WorkspaceGraphAuthoringDraft');
   });
 });

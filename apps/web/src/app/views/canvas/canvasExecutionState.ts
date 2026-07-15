@@ -17,7 +17,10 @@ import {
   buildDbtPlannerGraphSource,
   resolveDbtExecutionScopeNodeIds,
 } from './canvasDbtPlannerGraphSource';
-import { buildDbtProjectFileExecutionDraftSignature } from './dbtProjectFileExecutionStrategy';
+import {
+  buildDbtProjectFileExecutionDraftSignature,
+  isDbtProjectFilePreviewProvenanceCurrent,
+} from './dbtProjectFileExecutionStrategy';
 
 type DeriveCanvasExecutionStateArgs = {
   canRun: boolean;
@@ -69,7 +72,7 @@ export function deriveCanvasExecutionState({
   workspaceNodeIds,
 }: DeriveCanvasExecutionStateArgs): CanvasExecutionState {
   const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
-  const persistedPreviewIdentityMismatch = hasPersistedPreviewIdentityMismatch(currentPlan);
+  const persistedPlanIdentityMismatch = hasPersistedPreviewIdentityMismatch(currentPlan);
   const transformationValidation = validateTransformationGraph({
     nodes: canonicalNodes,
     edges: canonicalEdges,
@@ -107,10 +110,21 @@ export function deriveCanvasExecutionState({
     executionStrategy != null &&
     executionStrategy.kind !== 'not_executable' &&
     isExecutableGraphReady;
+  const dbtProjectFilePreviewIdentityMismatch =
+    currentPlan != null &&
+    executionStrategy?.kind === 'dbt_project_file_preview' &&
+    dbtPlannerGraphSource?.ok === true &&
+    !isDbtProjectFilePreviewProvenanceCurrent(
+      executionStrategy,
+      dbtPlannerGraphSource.selection.nodeIds,
+      currentPlan.preview?.provenance
+    );
+  const persistedPreviewIdentityMismatch =
+    persistedPlanIdentityMismatch || dbtProjectFilePreviewIdentityMismatch;
   const isCurrentPlanStale =
     currentPlan != null &&
-    lastPlannedDraftSignature != null &&
-    lastPlannedDraftSignature !== activeDraftSignature;
+    (dbtProjectFilePreviewIdentityMismatch ||
+      (lastPlannedDraftSignature != null && lastPlannedDraftSignature !== activeDraftSignature));
   const canStartRun =
     canRun &&
     executionStrategy != null &&

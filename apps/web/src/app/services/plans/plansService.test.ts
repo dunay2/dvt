@@ -247,6 +247,7 @@ function buildTransformationPreviewPayload(
       warnings: [],
     },
     provenance: {
+      kind: 'transformation-git-artifacts',
       graphArtifact: {
         repo: 'dunay2/dvt',
         path: 'graphs/orders.json',

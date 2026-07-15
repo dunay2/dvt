@@ -8,7 +8,6 @@ import { getRegisteredPluginIds } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { ImportSourcesResult } from '../../ports/workspace';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
-import { observePlanRunReadiness } from './canvasPlanReadiness';
 import {
   buildDbtProjectFileInitialNodePositions,
   mergeDbtProjectFileNodePositions,
@@ -18,6 +17,7 @@ import { validateTransformationGraph } from './transformationGraphValidation';
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import { useCanvasStoreFacade } from './useCanvasStoreFacade';
 import { useCanvasViewportGraphModel } from './useCanvasViewportGraphModel';
+import { useDbtProjectFileExecution } from './useDbtProjectFileExecution';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -150,6 +150,10 @@ export function useDbtProjectFileCanvasController(
     [canonicalEdges]
   );
   const visibleNodeIds = useMemo(() => canonicalNodes.map((node) => node.id), [canonicalNodes]);
+  const selectedNodeIds = useMemo(
+    () => store.selectedNodeIds.filter((nodeId) => canonicalNodesById.has(nodeId)),
+    [canonicalNodesById, store.selectedNodeIds]
+  );
   const visibleEdges = useMemo(
     () =>
       canonicalEdges.map((edge) => ({
@@ -177,6 +181,23 @@ export function useDbtProjectFileCanvasController(
     setCanvasViewport,
     setCanvasNodePositions,
   });
+  const execution = useDbtProjectFileExecution({
+    projection: query.data ?? null,
+    canonicalNodes,
+    canonicalEdges,
+    selectedNodeIds,
+    workspaceNodeIds: visibleNodeIds,
+    store,
+  });
+
+  useEffect(() => {
+    if (
+      selectedNodeIds.length !== store.selectedNodeIds.length ||
+      selectedNodeIds.some((nodeId, index) => nodeId !== store.selectedNodeIds[index])
+    ) {
+      store.setSelectedNodes(selectedNodeIds);
+    }
+  }, [selectedNodeIds, store.selectedNodeIds, store.setSelectedNodes]);
 
   const openNodeWorkbench = useCallback(
     (nodeId: string, preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null) => {
@@ -206,10 +227,26 @@ export function useDbtProjectFileCanvasController(
           ...(node.data as DbtNodeData),
           canvasKind: 'dbt',
           canMutateGraph: false,
+          selectedForExecution: selectedNodeIds.includes(node.id),
           onInspectNode: openNodeWorkbench,
+          onToggleNodeSelection: execution.canSelectExecution
+            ? (nodeId: string, shouldSelect: boolean) => {
+                store.setSelectedNodes(
+                  shouldSelect
+                    ? [...new Set([...selectedNodeIds, nodeId])]
+                    : selectedNodeIds.filter((selectedNodeId) => selectedNodeId !== nodeId)
+                );
+              }
+            : undefined,
         },
       })),
-    [graphModel.nodes, openNodeWorkbench]
+    [
+      execution.canSelectExecution,
+      graphModel.nodes,
+      openNodeWorkbench,
+      selectedNodeIds,
+      store.setSelectedNodes,
+    ]
   );
 
   useEffect(() => {
@@ -221,7 +258,14 @@ export function useDbtProjectFileCanvasController(
 
   const handleSelectionChange = useCallback<
     NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>
-  >(() => undefined, []);
+  >(
+    ({ nodes }) => {
+      if (execution.canSelectExecution) {
+        store.setSelectedNodes(nodes.map((node) => node.id));
+      }
+    },
+    [execution.canSelectExecution, store.setSelectedNodes]
+  );
   const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
     () => undefined,
     []
@@ -255,21 +299,10 @@ export function useDbtProjectFileCanvasController(
       validateTransformationGraph({
         nodes: canonicalNodes,
         edges: canonicalEdges,
-        selectedNodeIds: [],
+        selectedNodeIds,
         workspaceNodeIds: visibleNodeIds,
       }),
-    [canonicalEdges, canonicalNodes, visibleNodeIds]
-  );
-  const planRunReadiness = useMemo(
-    () =>
-      observePlanRunReadiness({
-        canRun: false,
-        currentPlan: null,
-        isCurrentPlanStale: false,
-        persistedPreviewIdentityMismatch: false,
-        hasPersistedPlanForRun: false,
-      }),
-    []
+    [canonicalEdges, canonicalNodes, selectedNodeIds, visibleNodeIds]
   );
 
   return {
@@ -305,7 +338,9 @@ export function useDbtProjectFileCanvasController(
       columnLevelLineageEnabled,
     },
     transformationValidation,
-    planRunReadiness,
+    execution,
+    currentPlan: store.currentPlan,
+    activeRunId: store.currentRun?.runId ?? null,
     registeredPlugins: getRegisteredPluginIds(),
     graphCommands: {
       onNodesChange: graphModel.onNodesChange,
@@ -340,8 +375,12 @@ export function useDbtProjectFileCanvasController(
       onReloadLatestDraft: () => {
         void query.refetch();
       },
-      onPreviewExecutionPlan: () => unsupportedSemanticMutation('Preview execution plan'),
-      onRun: () => unsupportedSemanticMutation('Run project'),
+      onPreviewExecutionPlan: () => {
+        void execution.handlePreviewExecutionPlan();
+      },
+      onRun: () => {
+        void execution.handleStartRun();
+      },
     },
     canvasCommands: {
       onSelectCanvas: () => unsupportedSemanticMutation('Select draft canvas'),
