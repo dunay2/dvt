@@ -108,6 +108,53 @@ describe('DbtProjectImportDialogView', () => {
     expect(onImport).toHaveBeenCalledTimes(1);
   });
 
+  it('preserves an in-progress identity draft across an intermediate presentation rerender', async () => {
+    const onProjectRootChange = vi.fn();
+    const idleModel = buildModel({
+      phase: 'idle',
+      projectRoot: '',
+      canvasId: '',
+      status: { label: 'Not validated', tone: 'neutral', busy: false },
+      canValidate: false,
+      canImport: false,
+      project: null,
+      inventory: null,
+      diagnostics: [],
+    });
+
+    const renderDialog = async (): Promise<void> => {
+      await act(async () => {
+        root.render(
+          <DbtProjectImportDialogView
+            open
+            model={idleModel}
+            onOpenChange={vi.fn()}
+            onProjectRootChange={onProjectRootChange}
+            onCanvasIdChange={vi.fn()}
+            onValidate={vi.fn()}
+            onImport={vi.fn()}
+          />
+        );
+      });
+    };
+
+    await renderDialog();
+    const projectRootInput = document.body.querySelector<HTMLInputElement>(
+      '[data-slot="dbt-project-import-root"]'
+    )!;
+    projectRootInput.focus();
+    fireEvent.input(projectRootInput, { target: { value: 'analytics' } });
+    expect(onProjectRootChange).toHaveBeenLastCalledWith('analytics');
+
+    await renderDialog();
+
+    expect(
+      document.body.querySelector<HTMLInputElement>('[data-slot="dbt-project-import-root"]')
+    ).toBe(projectRootInput);
+    expect(projectRootInput.value).toBe('analytics');
+    expect(document.activeElement).toBe(projectRootInput);
+  });
+
   it('keeps import disabled for rejected validation while preserving diagnostics', async () => {
     await act(async () => {
       root.render(

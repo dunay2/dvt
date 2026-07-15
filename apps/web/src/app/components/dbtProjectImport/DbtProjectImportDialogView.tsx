@@ -239,7 +239,7 @@ export function DbtProjectImportDialogView({
               <Input
                 id="dbt-project-root"
                 data-slot="dbt-project-import-root"
-                value={model.projectRoot}
+                defaultValue={model.projectRoot}
                 disabled={model.status.busy || model.phase === 'imported'}
                 onChange={(event) => onProjectRootChange(event.currentTarget.value)}
                 placeholder="analytics/dbt"
@@ -254,7 +254,7 @@ export function DbtProjectImportDialogView({
               <Input
                 id="dbt-project-canvas-id"
                 data-slot="dbt-project-import-canvas-id"
-                value={model.canvasId}
+                defaultValue={model.canvasId}
                 disabled={model.status.busy || model.phase === 'imported'}
                 onChange={(event) => onCanvasIdChange(event.currentTarget.value)}
                 placeholder="warehouse-analytics"
