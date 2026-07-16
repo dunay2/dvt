@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseExecutionSelection, type GenericGraphSourceV1 } from '@dvt/contracts';
 
 import {
+  applyDbtExecutionSelectionToggle,
   buildDbtExecutionIntentDraftSignature,
   canOfferDbtExecutionSelectionToggle,
   resolveDbtExecutionScope,
@@ -17,7 +18,7 @@ describe('resolveDbtExecutionScope', () => {
   it('defaults an absent selection to executable workspace nodes', () => {
     expect(
       resolveDbtExecutionScope({
-        selectedNodeIds: [],
+        selectionIntent: { mode: 'workspace', nodeIds: [] },
         workspaceNodeIds: ['source.raw', 'model.base', 'model.orders'],
         executableNodeIds,
         dependencyIdsByNodeId,
@@ -34,7 +35,7 @@ describe('resolveDbtExecutionScope', () => {
   it('rejects an explicit selection with no executable DBT resource', () => {
     expect(
       resolveDbtExecutionScope({
-        selectedNodeIds: ['source.raw'],
+        selectionIntent: { mode: 'explicit', nodeIds: ['source.raw'] },
         workspaceNodeIds: ['source.raw', 'model.base', 'model.orders'],
         executableNodeIds,
         dependencyIdsByNodeId,
@@ -49,7 +50,7 @@ describe('resolveDbtExecutionScope', () => {
   it('rejects the complete intent when a mixed explicit selection contains an invalid member', () => {
     expect(
       resolveDbtExecutionScope({
-        selectedNodeIds: ['source.raw', 'test.orders'],
+        selectionIntent: { mode: 'explicit', nodeIds: ['source.raw', 'test.orders'] },
         workspaceNodeIds: ['source.raw', ...executableNodeIds],
         executableNodeIds,
         dependencyIdsByNodeId,
@@ -64,7 +65,7 @@ describe('resolveDbtExecutionScope', () => {
   it('distinguishes requested executable roots from dependencies included by closure', () => {
     expect(
       resolveDbtExecutionScope({
-        selectedNodeIds: ['test.orders'],
+        selectionIntent: { mode: 'explicit', nodeIds: ['test.orders'] },
         workspaceNodeIds: ['source.raw', ...executableNodeIds],
         executableNodeIds,
         dependencyIdsByNodeId,
@@ -81,7 +82,7 @@ describe('resolveDbtExecutionScope', () => {
   it('keeps canonical executable order and terminates for cyclic dependency input', () => {
     expect(
       resolveDbtExecutionScope({
-        selectedNodeIds: ['model.orders', 'model.orders'],
+        selectionIntent: { mode: 'explicit', nodeIds: ['model.orders', 'model.orders'] },
         workspaceNodeIds: executableNodeIds,
         executableNodeIds: ['model.orders', 'model.base', 'model.orders'],
         dependencyIdsByNodeId: new Map([
@@ -96,6 +97,56 @@ describe('resolveDbtExecutionScope', () => {
       derivedDependencyNodeIds: ['model.base'],
       nodeIds: ['model.orders', 'model.base'],
     });
+  });
+
+  it('rejects explicit empty intent instead of widening to workspace scope', () => {
+    expect(
+      resolveDbtExecutionScope({
+        selectionIntent: { mode: 'explicit', nodeIds: [] },
+        workspaceNodeIds: ['model.base', 'model.orders'],
+        executableNodeIds,
+        dependencyIdsByNodeId,
+      })
+    ).toEqual({
+      ok: false,
+      cause: 'explicit_selection_is_empty',
+      invalidNodeIds: [],
+    });
+  });
+});
+
+describe('applyDbtExecutionSelectionToggle', () => {
+  it('retains hidden requested ids when a visible member is deselected', () => {
+    expect(
+      applyDbtExecutionSelectionToggle({
+        requestedNodeIds: ['model.hidden', 'model.visible'],
+        visibleNodeIds: ['model.visible', 'model.available'],
+        nodeId: 'model.visible',
+        shouldSelect: false,
+      })
+    ).toEqual({ mode: 'explicit', nodeIds: ['model.hidden'] });
+  });
+
+  it('replaces an unavailable-only recovery set when an available root is selected', () => {
+    expect(
+      applyDbtExecutionSelectionToggle({
+        requestedNodeIds: ['model.hidden'],
+        visibleNodeIds: ['model.available'],
+        nodeId: 'model.available',
+        shouldSelect: true,
+      })
+    ).toEqual({ mode: 'explicit', nodeIds: ['model.available'] });
+  });
+
+  it('keeps explicit-empty intent when the final visible invalid resource is deselected', () => {
+    expect(
+      applyDbtExecutionSelectionToggle({
+        requestedNodeIds: ['source.visible'],
+        visibleNodeIds: ['source.visible', 'model.available'],
+        nodeId: 'source.visible',
+        shouldSelect: false,
+      })
+    ).toEqual({ mode: 'explicit', nodeIds: [] });
   });
 });
 

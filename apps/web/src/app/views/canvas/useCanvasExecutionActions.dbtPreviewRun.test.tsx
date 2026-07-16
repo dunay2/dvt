@@ -126,7 +126,7 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
         previewProfile: 'planner-generic-v1',
         sourceFamily: 'dbt',
       },
-      selectedNodeIds: ['model-orders'],
+      selectionIntent: { mode: 'explicit', nodeIds: ['model-orders'] },
       workspaceNodeIds: ['source-orders', 'model-orders'],
     });
     await harness.render();
@@ -212,7 +212,7 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
         previewProfile: 'planner-generic-v1',
         sourceFamily: 'dbt',
       },
-      selectedNodeIds: ['model-orders'],
+      selectionIntent: { mode: 'explicit', nodeIds: ['model-orders'] },
       workspaceNodeIds: ['source-orders', 'model-orders'],
     });
     await harness.render();

@@ -174,7 +174,7 @@ describe('canvasPlanReadiness', () => {
         },
       ],
       canonicalEdges: [],
-      selectedNodeIds: [],
+      selectionIntent: { mode: 'workspace', nodeIds: [] },
       workspaceNodeIds: ['transform_1'],
     });
 
@@ -263,7 +263,7 @@ describe('canvasPlanReadiness', () => {
         },
       ],
       canonicalEdges: [],
-      selectedNodeIds: ['model.analytics.orders'],
+      selectionIntent: { mode: 'explicit', nodeIds: ['model.analytics.orders'] },
       workspaceNodeIds: ['model.analytics.orders'],
     });
 
@@ -321,7 +321,10 @@ describe('canvasPlanReadiness', () => {
         },
       ],
       canonicalEdges: [],
-      selectedNodeIds: ['source.analytics.raw.orders'],
+      selectionIntent: {
+        mode: 'explicit',
+        nodeIds: ['source.analytics.raw.orders'],
+      },
       workspaceNodeIds: ['source.analytics.raw.orders', 'model.analytics.orders'],
     });
 

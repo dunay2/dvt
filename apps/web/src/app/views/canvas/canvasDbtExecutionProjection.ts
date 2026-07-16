@@ -12,6 +12,7 @@ import {
   buildDbtProjectFilePlannerProjection,
 } from './dbtProjectFileExecutionStrategy';
 import { buildDbtExecutionIntentDraftSignature } from './dbtExecutionScopePolicy';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 type DbtPreviewExecutionStrategy = Extract<
   CanvasExecutionStrategy,
@@ -22,15 +23,15 @@ export function buildCanvasDbtExecutionProjection(args: {
   readonly strategy: DbtPreviewExecutionStrategy;
   readonly canonicalNodes: readonly CanonicalNode[];
   readonly canonicalEdges: readonly CanonicalEdge[];
-  readonly selectedNodeIds: readonly string[];
+  readonly selectionIntent: CanvasExecutionSelectionIntent;
   readonly workspaceNodeIds: readonly string[];
 }) {
   if (args.strategy.kind === 'dbt_project_file_preview') {
-    const projection = buildDbtProjectFilePlannerProjection(
-      args.strategy,
-      args.selectedNodeIds,
-      args.workspaceNodeIds
-    );
+    const projection = buildDbtProjectFilePlannerProjection({
+      strategy: args.strategy,
+      selectionIntent: args.selectionIntent,
+      workspaceNodeIds: args.workspaceNodeIds,
+    });
     if (!projection.ok) {
       return {
         ok: false as const,
@@ -51,7 +52,7 @@ export function buildCanvasDbtExecutionProjection(args: {
   const executionScope = resolveDbtExecutionScopeNodeIds({
     nodes: args.canonicalNodes,
     edges: args.canonicalEdges,
-    selectedNodeIds: args.selectedNodeIds,
+    selectionIntent: args.selectionIntent,
     workspaceNodeIds: args.workspaceNodeIds,
   });
   if (!executionScope.ok) {

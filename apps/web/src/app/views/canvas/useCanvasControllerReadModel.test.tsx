@@ -80,6 +80,7 @@ function buildReadModelArgs(
       handleToggleNodeSelection: vi.fn(),
       handleAttachSchemaToNode: vi.fn(),
     },
+    onToggleExecutionSelection: vi.fn(),
     activeCanvasKind: 'transformation',
     canMutateGraph: false,
     canSelectExecution: true,
@@ -157,7 +158,7 @@ describe('useCanvasControllerReadModel', () => {
       expect(nodeData?.onDuplicateNode).toBe(args.graphHandlers.handleDuplicateNode);
       expect(nodeData?.onRemoveNode).toBe(args.graphHandlers.handleRemoveNode);
       expect(nodeData?.onAttachSchemaToNode).toBe(args.graphHandlers.handleAttachSchemaToNode);
-      expect(nodeData?.onToggleNodeSelection).toBe(args.graphHandlers.handleToggleNodeSelection);
+      expect(nodeData?.onToggleNodeSelection).toBe(args.onToggleExecutionSelection);
     } finally {
       await mounted.cleanup();
     }
@@ -229,7 +230,7 @@ describe('useCanvasControllerReadModel', () => {
       expect(nodeData?.onDuplicateNode).toBeUndefined();
       expect(nodeData?.onRemoveNode).toBeUndefined();
       expect(nodeData?.onAttachSchemaToNode).toBeUndefined();
-      expect(nodeData?.onToggleNodeSelection).toBe(args.graphHandlers.handleToggleNodeSelection);
+      expect(nodeData?.onToggleNodeSelection).toBe(args.onToggleExecutionSelection);
     } finally {
       await mounted.cleanup();
     }
@@ -274,7 +275,7 @@ describe('useCanvasControllerReadModel', () => {
       const modelData = nodes.find((node) => node.id === modelNode.id)?.data as ReadModelNodeData;
 
       expect(sourceData.onToggleNodeSelection).toBeUndefined();
-      expect(modelData.onToggleNodeSelection).toBe(args.graphHandlers.handleToggleNodeSelection);
+      expect(modelData.onToggleNodeSelection).toBe(args.onToggleExecutionSelection);
     } finally {
       await mounted.cleanup();
     }
@@ -306,7 +307,7 @@ describe('useCanvasControllerReadModel', () => {
     try {
       expect(readProjectedNodeData(mounted.readState())?.selectedForExecution).toBe(true);
       expect(readProjectedNodeData(mounted.readState())?.onToggleNodeSelection).toBe(
-        args.graphHandlers.handleToggleNodeSelection
+        args.onToggleExecutionSelection
       );
     } finally {
       await mounted.cleanup();
@@ -353,7 +354,7 @@ describe('useCanvasControllerReadModel', () => {
       });
 
       expect(readProjectedNodeData(mounted.readState())?.onToggleNodeSelection).toBe(
-        args.graphHandlers.handleToggleNodeSelection
+        args.onToggleExecutionSelection
       );
     } finally {
       await mounted.cleanup();

@@ -16,6 +16,7 @@ import { buildDbtProjectFileExecutionStrategy } from './dbtProjectFileExecutionS
 import { useCanvasExecutionActions } from './useCanvasExecutionActions';
 import { useCanvasNavigationActions } from './useCanvasNavigationActions';
 import type { CanvasStoreView } from './useCanvasStoreFacade';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 type DbtProjectFileExecutionStore = Pick<
   CanvasStoreView,
@@ -32,7 +33,7 @@ export function useDbtProjectFileExecution(args: {
   projection: DbtProjectGraphProjection | null;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
-  selectedNodeIds: string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
   workspaceNodeIds: string[];
   store: DbtProjectFileExecutionStore;
 }) {
@@ -59,7 +60,7 @@ export function useDbtProjectFileExecution(args: {
     executionStrategy,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
-    selectedNodeIds: args.selectedNodeIds,
+    selectionIntent: args.selectionIntent,
     workspaceNodeIds: args.workspaceNodeIds,
     canPlan,
     canRun,

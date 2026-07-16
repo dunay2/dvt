@@ -8,12 +8,13 @@ import {
   type CanvasControllerHarness,
   waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 function readLatestExecutionCall(harness: CanvasControllerHarness):
   | {
       canonicalNodes?: Array<{ id: string }>;
       canonicalEdges?: Array<{ id: string }>;
-      selectedNodeIds?: string[];
+      selectionIntent?: CanvasExecutionSelectionIntent;
       workspaceNodeIds?: string[];
       canPlan?: boolean;
       canRun?: boolean;
@@ -23,7 +24,7 @@ function readLatestExecutionCall(harness: CanvasControllerHarness):
     | {
         canonicalNodes?: Array<{ id: string }>;
         canonicalEdges?: Array<{ id: string }>;
-        selectedNodeIds?: string[];
+        selectionIntent?: CanvasExecutionSelectionIntent;
         workspaceNodeIds?: string[];
         canPlan?: boolean;
         canRun?: boolean;
@@ -44,7 +45,7 @@ function expectExecutionScopeSubset(harness: CanvasControllerHarness): void {
   expect(harness.getLatestResult()?.transformationValidation.scopedNodeIds).toEqual(['node_1']);
   expect(latestExecutionCall?.canonicalNodes?.map((node) => node.id)).toEqual(['node_1']);
   expect(latestExecutionCall?.canonicalEdges).toEqual([]);
-  expect(latestExecutionCall?.selectedNodeIds).toEqual([]);
+  expect(latestExecutionCall?.selectionIntent).toEqual({ mode: 'explicit', nodeIds: [] });
   expect(latestExecutionCall?.workspaceNodeIds).toEqual(['node_1']);
 }
 
@@ -129,7 +130,10 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
         '2026-04-17T00:00:00Z'
       )
     );
-    harness.state.store.selectedNodes = ['node_2'];
+    harness.state.store.setExecutionSelectionIntent({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
     harness.state.store.inspectorNodeId = 'node_2';
 
     await harness.renderProbe();
@@ -153,14 +157,20 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
         '2026-04-17T00:00:00Z'
       )
     );
-    harness.state.store.selectedNodes = ['node_2'];
+    harness.state.store.setExecutionSelectionIntent({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
     harness.state.store.inspectorNodeId = 'node_2';
 
     await harness.renderProbe();
 
     expect(harness.state.store.setSelectedNodes).not.toHaveBeenCalledWith([]);
     expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith(null);
-    expect(readLatestExecutionCall(harness)?.selectedNodeIds).toEqual(['node_2']);
+    expect(readLatestExecutionCall(harness)?.selectionIntent).toEqual({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
     expect(readLatestExecutionCall(harness)?.workspaceNodeIds).toEqual(['node_1']);
   });
 

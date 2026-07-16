@@ -5,6 +5,7 @@ import { parseExecutionSelection } from '@dvt/contracts';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { resolveDbtExecutableStepKind, resolveDbtExecutionScope } from './dbtExecutionScopePolicy';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 export type DbtPlannerGraphSourceResult =
   | Readonly<{
@@ -27,7 +28,7 @@ function resolveScopedNodeIds(
 export function resolveDbtExecutionScopeNodeIds(args: {
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
-  selectedNodeIds: readonly string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
   workspaceNodeIds: readonly string[];
 }) {
   const nodeById = new Map(args.nodes.map((node) => [node.id, node]));
@@ -47,7 +48,7 @@ export function resolveDbtExecutionScopeNodeIds(args: {
   }
 
   return resolveDbtExecutionScope({
-    selectedNodeIds: args.selectedNodeIds,
+    selectionIntent: args.selectionIntent,
     workspaceNodeIds: args.workspaceNodeIds,
     executableNodeIds,
     dependencyIdsByNodeId,

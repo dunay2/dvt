@@ -3,6 +3,11 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+import {
+  createCanvasExecutionSelectionIntent,
+  type CanvasExecutionSelectionIntent,
+} from '../types/canvasExecutionSelection';
+
 type CanvasPosition = {
   x: number;
   y: number;
@@ -61,7 +66,7 @@ function toggleFrozenNodeId(currentNodeIds: readonly string[], nodeId: string): 
 
 interface CanvasInteractionState {
   _hasHydrated: boolean;
-  selectedNodes: string[];
+  executionSelectionIntent: CanvasExecutionSelectionIntent;
   impactOverlayEnabled: boolean;
   columnLevelLineageEnabled: boolean;
   canvasLayouts: Record<string, WorkspaceCanvasLayout>;
@@ -70,6 +75,7 @@ interface CanvasInteractionState {
   inspectorPreferredTabRequestId: number;
 
   setSelectedNodes: (nodes: string[]) => void;
+  setExecutionSelectionIntent: (intent: CanvasExecutionSelectionIntent) => void;
   toggleImpactOverlay: () => void;
   toggleColumnLevelLineage: () => void;
   setCanvasViewport: (workspaceKey: string, viewport: CanvasViewportState | null) => void;
@@ -120,7 +126,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
   persist(
     (set) => ({
       _hasHydrated: false,
-      selectedNodes: [],
+      executionSelectionIntent: createCanvasExecutionSelectionIntent([]),
       impactOverlayEnabled: false,
       columnLevelLineageEnabled: false,
       canvasLayouts: {},
@@ -129,9 +135,30 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
       inspectorPreferredTabRequestId: 0,
 
       setSelectedNodes: (nodes) =>
-        set((state) =>
-          areSelectedNodeIdsEqual(state.selectedNodes, nodes) ? state : { selectedNodes: nodes }
-        ),
+        set((state) => {
+          const executionSelectionIntent = createCanvasExecutionSelectionIntent(nodes);
+
+          return areSelectedNodeIdsEqual(
+            state.executionSelectionIntent.nodeIds,
+            executionSelectionIntent.nodeIds
+          ) && state.executionSelectionIntent.mode === executionSelectionIntent.mode
+            ? state
+            : { executionSelectionIntent };
+        }),
+      setExecutionSelectionIntent: (intent) =>
+        set((state) => {
+          const executionSelectionIntent = createCanvasExecutionSelectionIntent(
+            intent.nodeIds,
+            intent.mode
+          );
+
+          return areSelectedNodeIdsEqual(
+            state.executionSelectionIntent.nodeIds,
+            executionSelectionIntent.nodeIds
+          ) && state.executionSelectionIntent.mode === executionSelectionIntent.mode
+            ? state
+            : { executionSelectionIntent };
+        }),
       toggleImpactOverlay: () =>
         set((state) => ({ impactOverlayEnabled: !state.impactOverlayEnabled })),
       toggleColumnLevelLineage: () =>

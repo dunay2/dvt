@@ -194,7 +194,7 @@ describe('canvas dbt planner graph source', () => {
       resolveDbtExecutionScopeNodeIds({
         nodes: [sourceNode, modelNode, testNode],
         edges,
-        selectedNodeIds: ['source-orders'],
+        selectionIntent: { mode: 'explicit', nodeIds: ['source-orders'] },
         workspaceNodeIds: ['source-orders', 'model-orders', 'test-orders'],
       })
     ).toEqual({
@@ -209,7 +209,7 @@ describe('canvas dbt planner graph source', () => {
       resolveDbtExecutionScopeNodeIds({
         nodes: [sourceNode, modelNode, testNode],
         edges,
-        selectedNodeIds: [],
+        selectionIntent: { mode: 'workspace', nodeIds: [] },
         workspaceNodeIds: ['source-orders', 'model-orders', 'test-orders'],
       })
     ).toEqual({
@@ -226,7 +226,7 @@ describe('canvas dbt planner graph source', () => {
       resolveDbtExecutionScopeNodeIds({
         nodes: [sourceNode, modelNode, downstreamModelNode, testNode],
         edges: dependencyEdges,
-        selectedNodeIds: ['model-order-revenue'],
+        selectionIntent: { mode: 'explicit', nodeIds: ['model-order-revenue'] },
         workspaceNodeIds: ['source-orders', 'model-orders', 'model-order-revenue', 'test-orders'],
       })
     ).toEqual({
@@ -270,14 +270,17 @@ describe('canvas dbt planner graph source', () => {
       strategy,
       canonicalNodes: nodes,
       canonicalEdges: dependencyEdges,
-      selectedNodeIds: ['model-order-revenue'],
+      selectionIntent: { mode: 'explicit', nodeIds: ['model-order-revenue'] },
       workspaceNodeIds,
     });
     const bothRoots = buildCanvasDbtExecutionProjection({
       strategy,
       canonicalNodes: nodes,
       canonicalEdges: dependencyEdges,
-      selectedNodeIds: ['model-orders', 'model-order-revenue'],
+      selectionIntent: {
+        mode: 'explicit',
+        nodeIds: ['model-orders', 'model-order-revenue'],
+      },
       workspaceNodeIds,
     });
 

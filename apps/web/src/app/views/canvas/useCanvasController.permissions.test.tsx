@@ -103,8 +103,13 @@ describe('useCanvasController permission and posture contract', () => {
 
     expect(latestBuildNodesCall?.handlers?.onDuplicateNode).toBeUndefined();
     expect(latestBuildNodesCall?.handlers?.onRemoveNode).toBeUndefined();
-    expect(latestBuildNodesCall?.handlers?.onToggleNodeSelection).toBe(
-      harness.state.graphHandlersResult.handleToggleNodeSelection
+    const toggleExecutionSelection = latestBuildNodesCall?.handlers?.onToggleNodeSelection as
+      ((nodeId: string, shouldSelect: boolean) => void) | undefined;
+    expect(toggleExecutionSelection).toEqual(expect.any(Function));
+    toggleExecutionSelection?.('node_1', true);
+    expect(harness.state.graphHandlersResult.handleToggleNodeSelection).toHaveBeenCalledWith(
+      'node_1',
+      true
     );
     expect(harness.mocks.useCanvasGraphHandlers).toHaveBeenCalledWith(
       expect.objectContaining({

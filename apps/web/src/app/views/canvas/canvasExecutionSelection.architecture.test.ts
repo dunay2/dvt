@@ -2,6 +2,9 @@
  * Owned concern: verify that Canvas preview and run both emit canonical
  * execution selection through one browser-local semantic seam.
  */
+import { readdirSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import type { PlanViewModel } from '../../types/plans';
@@ -28,6 +31,31 @@ const EXECUTION_STATE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasExecutionState.ts'
 );
+const SELECTION_INTENT_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../types/canvasExecutionSelection.ts'
+);
+const INTERACTION_STORE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  '../../stores/canvasInteractionStore.ts'
+);
+const EXECUTION_ACTIONS_TYPES_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasExecutionActions.types.ts'
+);
+const DRAFT_SCOPE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDraftScope.ts'
+);
+const AUTHORED_CONTROLLER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasController.ts'
+);
+const PROJECT_FILE_CONTROLLER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useDbtProjectFileCanvasController.ts'
+);
+const STORE_ROOT = path.resolve(import.meta.dirname, '../../stores');
 const RUN_START_ACTION_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasRunStartAction.ts'
@@ -49,6 +77,7 @@ describe('canvas execution selection architecture', () => {
     expect(EXECUTION_STATE_SOURCE).toContain("from './canvasDbtExecutionProjection'");
     expect(DBT_EXECUTION_PROJECTION_SOURCE).toContain('buildCanvasDbtExecutionProjection');
     expect(DBT_SCOPE_POLICY_SOURCE).toContain('isDbtExecutionSelectableNode');
+    expect(DBT_SCOPE_POLICY_SOURCE).toContain('applyDbtExecutionSelectionToggle');
     expect(DBT_SCOPE_POLICY_SOURCE).toContain('requestedRootNodeIds');
     expect(DBT_SCOPE_POLICY_SOURCE).toContain('derivedDependencyNodeIds');
     expect(RUN_START_ACTION_SOURCE).toContain("from './canvasRunSelection'");
@@ -57,7 +86,47 @@ describe('canvas execution selection architecture', () => {
     expect(COMPONENT_GUIDE_SOURCE).toContain('## Invariants');
     expect(COMPONENT_GUIDE_SOURCE).toContain('## Transitions');
     expect(COMPONENT_GUIDE_SOURCE).toContain('## Consumers');
+    expect(COMPONENT_GUIDE_SOURCE).toContain(
+      'workspace fallback and explicit empty intent are different states'
+    );
+    expect(COMPONENT_GUIDE_SOURCE).toContain(
+      'selection gestures mutate the complete requested-id set'
+    );
     expect(COMPONENT_GUIDE_SOURCE).toContain('```mermaid');
+  });
+
+  it('keeps one atomic route-local selection intent authority', () => {
+    const storesImportingSelectionIntent = readdirSync(STORE_ROOT)
+      .filter((fileName) => fileName.endsWith('.ts') && !fileName.endsWith('.test.ts'))
+      .filter((fileName) =>
+        readFileSync(path.join(STORE_ROOT, fileName), 'utf8').includes(
+          'CanvasExecutionSelectionIntent'
+        )
+      );
+
+    expect(storesImportingSelectionIntent).toEqual(['canvasInteractionStore.ts']);
+    expect(SELECTION_INTENT_SOURCE).toContain('type CanvasExecutionSelectionIntent =');
+    expect(SELECTION_INTENT_SOURCE).toContain("readonly mode: 'workspace'");
+    expect(SELECTION_INTENT_SOURCE).toContain("readonly mode: 'explicit'");
+    expect(INTERACTION_STORE_SOURCE).toContain(
+      'executionSelectionIntent: CanvasExecutionSelectionIntent'
+    );
+    expect(INTERACTION_STORE_SOURCE).not.toContain('executionSelectionMode:');
+    expect(INTERACTION_STORE_SOURCE).not.toContain('selectedNodes: string[]');
+  });
+
+  it('carries the atomic intent through state commands and execution boundaries', () => {
+    expect(INTERACTION_STORE_SOURCE).toContain(
+      'setExecutionSelectionIntent: (intent: CanvasExecutionSelectionIntent)'
+    );
+    expect(DBT_SCOPE_POLICY_SOURCE).toContain('): CanvasExecutionSelectionIntent {');
+    expect(EXECUTION_ACTIONS_TYPES_SOURCE).toContain(
+      'selectionIntent: CanvasExecutionSelectionIntent;'
+    );
+    expect(DRAFT_SCOPE_SOURCE).toContain('selectionIntent: CanvasExecutionSelectionIntent;');
+    expect(AUTHORED_CONTROLLER_SOURCE).toContain('store.setExecutionSelectionIntent(');
+    expect(PROJECT_FILE_CONTROLLER_SOURCE).toContain('store.setExecutionSelectionIntent(');
+    expect(INTERACTION_STORE_SOURCE).not.toContain("mode?: CanvasExecutionSelectionIntent['mode']");
   });
 
   it('emits canonical explicit selection for preview from the selected node scope', () => {

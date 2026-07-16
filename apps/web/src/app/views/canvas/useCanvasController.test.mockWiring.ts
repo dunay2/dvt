@@ -7,11 +7,17 @@ import {
 } from './useCanvasController.test.draftAuthoring';
 import type { CanvasHarnessState, MockFn } from './useCanvasController.test.types';
 import type { PlanViewModel } from '../../types/plans';
+import {
+  createCanvasExecutionSelectionIntent,
+  type CanvasExecutionSelectionIntent,
+} from '../../types/canvasExecutionSelection';
 import type { WorkspaceGraphDraftAuthoringSaveResult } from '../../ports/workspaceGraphDraftAuthoring';
 
 type MutableStoreState = CanvasHarnessState['store'] & {
   selectedNodes: string[];
+  executionSelectionIntent: CanvasExecutionSelectionIntent;
   setSelectedNodes: MockFn;
+  setExecutionSelectionIntent: MockFn;
   inspectorNodeId: string | null;
   setInspectorNode: MockFn;
   currentPlan: PlanViewModel | null;
@@ -23,7 +29,17 @@ export function configureCanvasHarnessStoreStateMocks(state: CanvasHarnessState)
 
   storeState.setSelectedNodes.mockImplementation((nodeIds: string[]) => {
     storeState.selectedNodes = nodeIds;
+    storeState.executionSelectionIntent = createCanvasExecutionSelectionIntent(nodeIds);
   });
+  storeState.setExecutionSelectionIntent.mockImplementation(
+    (intent: CanvasExecutionSelectionIntent) => {
+      storeState.executionSelectionIntent = createCanvasExecutionSelectionIntent(
+        intent.nodeIds,
+        intent.mode
+      );
+      storeState.selectedNodes = storeState.executionSelectionIntent.nodeIds;
+    }
+  );
   storeState.setInspectorNode.mockImplementation((nodeId: string | null) => {
     storeState.inspectorNodeId = nodeId;
   });

@@ -7,6 +7,7 @@ import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGrap
 import { getRegisteredPluginIds } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { ImportSourcesResult } from '../../ports/workspace';
+import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
 import {
   buildDbtProjectFileInitialNodePositions,
@@ -19,7 +20,10 @@ import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import { useCanvasStoreFacade } from './useCanvasStoreFacade';
 import { useCanvasViewportGraphModel } from './useCanvasViewportGraphModel';
 import { useDbtProjectFileExecution } from './useDbtProjectFileExecution';
-import { canOfferDbtExecutionSelectionToggle } from './dbtExecutionScopePolicy';
+import {
+  applyDbtExecutionSelectionToggle,
+  canOfferDbtExecutionSelectionToggle,
+} from './dbtExecutionScopePolicy';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -156,9 +160,9 @@ export function useDbtProjectFileCanvasController(
     () =>
       deriveExecutionScope({
         visibleNodeIds,
-        selectedNodeIds: store.selectedNodeIds,
+        selectionIntent: store.executionSelectionIntent,
       }),
-    [store.selectedNodeIds, visibleNodeIds]
+    [store.executionSelectionIntent, visibleNodeIds]
   );
   const selectedNodeIds = executionScope.selectedNodeIds;
   const visibleEdges = useMemo(
@@ -192,7 +196,10 @@ export function useDbtProjectFileCanvasController(
     projection: query.data ?? null,
     canonicalNodes,
     canonicalEdges,
-    selectedNodeIds: executionScope.requestedNodeIds,
+    selectionIntent: createCanvasExecutionSelectionIntent(
+      executionScope.requestedNodeIds,
+      executionScope.selectionMode
+    ),
     workspaceNodeIds: visibleNodeIds,
     store,
   });
@@ -243,10 +250,13 @@ export function useDbtProjectFileCanvasController(
               selectedForExecution: selectedNodeIds.includes(node.id),
             })
               ? (nodeId: string, shouldSelect: boolean) => {
-                  store.setSelectedNodes(
-                    shouldSelect
-                      ? [...new Set([...selectedNodeIds, nodeId])]
-                      : selectedNodeIds.filter((selectedNodeId) => selectedNodeId !== nodeId)
+                  store.setExecutionSelectionIntent(
+                    applyDbtExecutionSelectionToggle({
+                      requestedNodeIds: executionScope.requestedNodeIds,
+                      visibleNodeIds,
+                      nodeId,
+                      shouldSelect,
+                    })
                   );
                 }
               : undefined,
@@ -255,10 +265,12 @@ export function useDbtProjectFileCanvasController(
     [
       execution.canSelectExecution,
       executionSelectableNodeIds,
+      executionScope.requestedNodeIds,
       graphModel.nodes,
       openNodeWorkbench,
       selectedNodeIds,
-      store.setSelectedNodes,
+      store.setExecutionSelectionIntent,
+      visibleNodeIds,
     ]
   );
 

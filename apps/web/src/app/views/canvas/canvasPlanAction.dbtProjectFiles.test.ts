@@ -114,7 +114,10 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       executionStrategy: strategy,
       plansService: { previewPlan, importPlan: vi.fn() },
       previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
-      selectedNodeIds: ['test.analytics.orders_not_null'],
+      selectionIntent: {
+        mode: 'explicit',
+        nodeIds: ['test.analytics.orders_not_null'],
+      },
       sessionContext,
       transformationValidation: validateTransformationGraph({
         nodes: [modelNode],
@@ -212,7 +215,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       executionStrategy: strategy,
       plansService: { previewPlan, importPlan: vi.fn() },
       previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
-      selectedNodeIds: [sourceNode.id],
+      selectionIntent: { mode: 'explicit', nodeIds: [sourceNode.id] },
       sessionContext,
       transformationValidation: validateTransformationGraph({
         nodes: [sourceNode, modelNode],
@@ -271,7 +274,10 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       executionStrategy: strategy,
       plansService: { previewPlan, importPlan: vi.fn() },
       previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
-      selectedNodeIds: [sourceNode.id, modelNode.id],
+      selectionIntent: {
+        mode: 'explicit',
+        nodeIds: [sourceNode.id, modelNode.id],
+      },
       sessionContext,
       transformationValidation: validateTransformationGraph({
         nodes: [sourceNode, modelNode],

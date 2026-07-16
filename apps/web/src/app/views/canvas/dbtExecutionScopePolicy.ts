@@ -1,9 +1,14 @@
 import type { ExecutionSelection, GenericGraphSourceV1 } from '@dvt/contracts';
 
 import type { CanonicalNode } from '../../types/canonical';
+import {
+  createCanvasExecutionSelectionIntent,
+  type CanvasExecutionSelectionIntent,
+} from '../../types/canvasExecutionSelection';
 
 /** Owned concern: preserve DBT execution-selection intent while deriving executable scope. */
 export const DBT_EXECUTION_SCOPE_REJECTION = {
+  explicitSelectionIsEmpty: 'explicit_selection_is_empty',
   explicitSelectionContainsUnavailableOrNonExecutableNodes:
     'explicit_selection_contains_unavailable_or_non_executable_nodes',
 } as const;
@@ -40,7 +45,7 @@ export function canOfferDbtExecutionSelectionToggle(args: {
 export type DbtExecutionScopeResolution =
   | {
       readonly ok: true;
-      readonly selectionMode: 'explicit' | 'workspace';
+      readonly selectionMode: CanvasExecutionSelectionIntent['mode'];
       readonly requestedRootNodeIds: readonly string[];
       readonly derivedDependencyNodeIds: readonly string[];
       readonly nodeIds: readonly string[];
@@ -54,7 +59,7 @@ export type DbtExecutionScopeResolution =
 export function buildDbtExecutionIntentDraftSignature(args: {
   readonly graphSource: GenericGraphSourceV1;
   readonly selection: ExecutionSelection;
-  readonly selectionMode: 'explicit' | 'workspace';
+  readonly selectionMode: CanvasExecutionSelectionIntent['mode'];
   readonly requestedRootNodeIds: readonly string[];
 }): string {
   return JSON.stringify({
@@ -68,16 +73,25 @@ export function buildDbtExecutionIntentDraftSignature(args: {
 }
 
 export function resolveDbtExecutionScope(args: {
-  readonly selectedNodeIds: readonly string[];
+  readonly selectionIntent: CanvasExecutionSelectionIntent;
   readonly workspaceNodeIds: readonly string[];
   readonly executableNodeIds: readonly string[];
   readonly dependencyIdsByNodeId: ReadonlyMap<string, readonly string[]>;
 }): DbtExecutionScopeResolution {
   const executableNodeIds = [...new Set(args.executableNodeIds)];
   const executableNodeIdSet = new Set(executableNodeIds);
-  const hasExplicitSelection = args.selectedNodeIds.length > 0;
+  const hasExplicitSelection = args.selectionIntent.mode === 'explicit';
+
+  if (hasExplicitSelection && args.selectionIntent.nodeIds.length === 0) {
+    return {
+      ok: false,
+      cause: DBT_EXECUTION_SCOPE_REJECTION.explicitSelectionIsEmpty,
+      invalidNodeIds: [],
+    };
+  }
+
   const requestedNodeIds = [
-    ...new Set(hasExplicitSelection ? args.selectedNodeIds : args.workspaceNodeIds),
+    ...new Set(hasExplicitSelection ? args.selectionIntent.nodeIds : args.workspaceNodeIds),
   ];
   const invalidNodeIds = hasExplicitSelection
     ? requestedNodeIds.filter((nodeId) => !executableNodeIdSet.has(nodeId))
@@ -109,9 +123,41 @@ export function resolveDbtExecutionScope(args: {
 
   return {
     ok: true,
-    selectionMode: hasExplicitSelection ? 'explicit' : 'workspace',
+    selectionMode: args.selectionIntent.mode,
     requestedRootNodeIds: executableNodeIds.filter((nodeId) => requestedRootNodeIdSet.has(nodeId)),
     derivedDependencyNodeIds: nodeIds.filter((nodeId) => !requestedRootNodeIdSet.has(nodeId)),
     nodeIds,
   };
+}
+
+export function applyDbtExecutionSelectionToggle(args: {
+  readonly requestedNodeIds: readonly string[];
+  readonly visibleNodeIds: readonly string[];
+  readonly nodeId: string;
+  readonly shouldSelect: boolean;
+}): CanvasExecutionSelectionIntent {
+  const requestedNodeIds = [...new Set(args.requestedNodeIds)];
+
+  if (!args.shouldSelect) {
+    return createCanvasExecutionSelectionIntent(
+      requestedNodeIds.filter((nodeId) => nodeId !== args.nodeId),
+      'explicit'
+    );
+  }
+
+  if (requestedNodeIds.includes(args.nodeId)) {
+    return createCanvasExecutionSelectionIntent(requestedNodeIds, 'explicit');
+  }
+
+  const visibleNodeIdSet = new Set(args.visibleNodeIds);
+  const hasVisibleRequestedNode = requestedNodeIds.some((nodeId) => visibleNodeIdSet.has(nodeId));
+  if (
+    requestedNodeIds.length > 0 &&
+    !hasVisibleRequestedNode &&
+    visibleNodeIdSet.has(args.nodeId)
+  ) {
+    return createCanvasExecutionSelectionIntent([args.nodeId], 'explicit');
+  }
+
+  return createCanvasExecutionSelectionIntent([...requestedNodeIds, args.nodeId], 'explicit');
 }

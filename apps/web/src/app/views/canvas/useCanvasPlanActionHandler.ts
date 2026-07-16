@@ -21,7 +21,7 @@ type UseCanvasPlanActionHandlerArgs = Pick<
   | 'executionStrategy'
   | 'plansService'
   | 'previewProvenanceConfig'
-  | 'selectedNodeIds'
+  | 'selectionIntent'
   | 'sessionContext'
   | 'shellFeedback'
   | 'flushDraftForExecution'
@@ -42,7 +42,7 @@ export function useCanvasPlanActionHandler({
   executionStrategy,
   plansService,
   previewProvenanceConfig,
-  selectedNodeIds,
+  selectionIntent,
   sessionContext,
   shellFeedback,
   flushDraftForExecution,
@@ -81,7 +81,7 @@ export function useCanvasPlanActionHandler({
         ? validateTransformationGraph({
             nodes: planCanonicalNodes,
             edges: planCanonicalEdges,
-            selectedNodeIds,
+            selectedNodeIds: selectionIntent.nodeIds,
             workspaceNodeIds: planWorkspaceNodeIds,
           })
         : transformationValidation;
@@ -93,7 +93,7 @@ export function useCanvasPlanActionHandler({
       executionStrategy,
       plansService,
       previewProvenanceConfig,
-      selectedNodeIds,
+      selectionIntent,
       sessionContext,
       transformationValidation: planTransformationValidation,
       workspaceNodeIds: planWorkspaceNodeIds,
@@ -130,7 +130,7 @@ export function useCanvasPlanActionHandler({
     executionStrategy,
     plansService,
     previewProvenanceConfig,
-    selectedNodeIds,
+    selectionIntent,
     sessionContext,
     transformationValidation,
     workspaceNodeIds,

@@ -14,6 +14,7 @@ import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceCo
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 export type CanvasExecutionDraftGraph =
   | {
@@ -35,7 +36,7 @@ export type UseCanvasExecutionActionsParams = {
   executionStrategy: CanvasExecutionStrategy | null;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
-  selectedNodeIds: string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
   workspaceNodeIds: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;

@@ -22,6 +22,7 @@ import { collectPreviewSelection } from './canvasRunSelection';
 import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
 import { buildPreviewGraphSource } from './previewGraphSource';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 type CanvasPlanActionFailure = {
   ok: false;
@@ -84,7 +85,7 @@ export async function executeCanvasPlanAction({
   executionStrategy,
   plansService,
   previewProvenanceConfig,
-  selectedNodeIds,
+  selectionIntent,
   sessionContext,
   transformationValidation,
   workspaceNodeIds,
@@ -100,7 +101,7 @@ export async function executeCanvasPlanAction({
     WorkspaceBootstrapConfig,
     'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
   >;
-  selectedNodeIds: readonly string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
   sessionContext: SessionContextPort;
   transformationValidation: TransformationGraphValidationResult;
   workspaceNodeIds: readonly string[];
@@ -127,7 +128,7 @@ export async function executeCanvasPlanAction({
         strategy: executionStrategy,
         canonicalNodes,
         canonicalEdges,
-        selectedNodeIds,
+        selectionIntent,
         workspaceNodeIds,
       });
       if (!plannerProjection.ok) {

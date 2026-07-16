@@ -112,11 +112,14 @@ describe('dbt project file execution strategy', () => {
     if (strategy.kind !== 'dbt_project_file_preview') return;
 
     expect(
-      buildDbtProjectFilePlannerProjection(
+      buildDbtProjectFilePlannerProjection({
         strategy,
-        ['source.analytics.raw.orders'],
-        ['source.analytics.raw.orders', 'model.analytics.orders']
-      )
+        selectionIntent: {
+          mode: 'explicit',
+          nodeIds: ['source.analytics.raw.orders'],
+        },
+        workspaceNodeIds: ['source.analytics.raw.orders', 'model.analytics.orders'],
+      })
     ).toEqual({
       ok: false,
       cause: 'explicit_selection_contains_unavailable_or_non_executable_nodes',
@@ -130,14 +133,32 @@ describe('dbt project file execution strategy', () => {
     if (strategy.kind !== 'dbt_project_file_preview') return;
 
     expect(
-      buildDbtProjectFilePlannerProjection(
+      buildDbtProjectFilePlannerProjection({
         strategy,
-        [],
-        ['source.analytics.raw.orders', 'model.analytics.orders']
-      )
+        selectionIntent: { mode: 'workspace', nodeIds: [] },
+        workspaceNodeIds: ['source.analytics.raw.orders', 'model.analytics.orders'],
+      })
     ).toMatchObject({
       ok: true,
       selection: { mode: 'explicit', nodeIds: ['model.analytics.orders'] },
+    });
+  });
+
+  it('rejects an explicitly empty selection instead of widening to the project workspace', () => {
+    const strategy = buildDbtProjectFileExecutionStrategy(buildProjection());
+    expect(strategy.kind).toBe('dbt_project_file_preview');
+    if (strategy.kind !== 'dbt_project_file_preview') return;
+
+    expect(
+      buildDbtProjectFilePlannerProjection({
+        strategy,
+        selectionIntent: { mode: 'explicit', nodeIds: [] },
+        workspaceNodeIds: ['model.analytics.orders'],
+      })
+    ).toEqual({
+      ok: false,
+      cause: 'explicit_selection_is_empty',
+      invalidNodeIds: [],
     });
   });
 
@@ -147,11 +168,11 @@ describe('dbt project file execution strategy', () => {
     if (strategy.kind !== 'dbt_project_file_preview') return;
 
     expect(
-      buildDbtProjectFilePlannerProjection(
+      buildDbtProjectFilePlannerProjection({
         strategy,
-        ['model.analytics.orders'],
-        ['source.analytics.raw.orders']
-      )
+        selectionIntent: { mode: 'explicit', nodeIds: ['model.analytics.orders'] },
+        workspaceNodeIds: ['source.analytics.raw.orders'],
+      })
     ).toEqual({
       ok: false,
       cause: 'explicit_selection_contains_unavailable_or_non_executable_nodes',
@@ -244,16 +265,16 @@ describe('dbt project file execution strategy', () => {
     if (strategy.kind !== 'dbt_project_file_preview') return;
 
     const workspaceNodeIds = ['model.analytics.base', 'model.analytics.orders'];
-    const downstreamOnly = buildDbtProjectFilePlannerProjection(
+    const downstreamOnly = buildDbtProjectFilePlannerProjection({
       strategy,
-      ['model.analytics.orders'],
-      workspaceNodeIds
-    );
-    const bothRoots = buildDbtProjectFilePlannerProjection(
-      strategy,
+      selectionIntent: { mode: 'explicit', nodeIds: ['model.analytics.orders'] },
       workspaceNodeIds,
-      workspaceNodeIds
-    );
+    });
+    const bothRoots = buildDbtProjectFilePlannerProjection({
+      strategy,
+      selectionIntent: { mode: 'explicit', nodeIds: workspaceNodeIds },
+      workspaceNodeIds,
+    });
 
     expect(downstreamOnly.ok).toBe(true);
     expect(bothRoots.ok).toBe(true);

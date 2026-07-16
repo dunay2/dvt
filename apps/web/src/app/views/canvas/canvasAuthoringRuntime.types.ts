@@ -4,6 +4,7 @@ import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGra
 import type { DataSourceMode } from '../../services/config/dataSource';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { PlatformHealthSnapshot } from '../../../capabilities/platform-health';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 export type CanvasNodePositions = Record<string, { x: number; y: number }>;
 
@@ -29,7 +30,7 @@ export type UseCanvasAuthoringRuntimeArgs = {
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: CanvasNodePositions;
   frozenNodeIds: ReadonlySet<string>;
-  selectedNodeIds: string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
   inspectorNodeId: string | null;
   canPersistGraphDraftTransport: boolean;
   canMutateGraphTransport: boolean;

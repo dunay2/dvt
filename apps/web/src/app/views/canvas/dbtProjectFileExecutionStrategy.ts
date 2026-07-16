@@ -9,6 +9,7 @@ import { parseExecutionSelection, PlanPreviewProvenanceSchema } from '@dvt/contr
 
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { PlanPreviewProvenanceViewModel } from '../../types/plans';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import {
   buildDbtExecutionIntentDraftSignature,
   resolveDbtExecutionScope,
@@ -104,14 +105,17 @@ export function buildDbtProjectFileExecutionStrategy(
 }
 
 export function buildDbtProjectFilePlannerProjection(
-  strategy: DbtProjectFileExecutionStrategy,
-  selectedNodeIds: readonly string[],
-  workspaceNodeIds: readonly string[]
+  args: Readonly<{
+    strategy: DbtProjectFileExecutionStrategy;
+    selectionIntent: CanvasExecutionSelectionIntent;
+    workspaceNodeIds: readonly string[];
+  }>
 ) {
+  const { strategy, selectionIntent, workspaceNodeIds } = args;
   const nodeById = new Map(strategy.plannerGraphSource.nodes.map((node) => [node.nodeId, node]));
   const workspaceNodeIdSet = new Set(workspaceNodeIds);
   const executionScope = resolveDbtExecutionScope({
-    selectedNodeIds,
+    selectionIntent,
     workspaceNodeIds,
     executableNodeIds: [...nodeById.keys()].filter((nodeId) => workspaceNodeIdSet.has(nodeId)),
     dependencyIdsByNodeId: new Map(

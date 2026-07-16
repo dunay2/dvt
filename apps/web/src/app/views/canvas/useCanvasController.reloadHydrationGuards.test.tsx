@@ -199,7 +199,10 @@ describe('useCanvasController reload hydration guards', () => {
       )
     );
 
-    harness.state.store.selectedNodes = ['node_2'];
+    harness.state.store.setExecutionSelectionIntent({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
     harness.state.store.inspectorNodeId = 'node_2';
     const storeActions = harness.state.store;
     storeActions.setSelectedNodes.mockClear();

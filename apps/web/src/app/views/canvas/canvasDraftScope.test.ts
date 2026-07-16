@@ -103,9 +103,13 @@ describe('canvasDraftScope', () => {
 
     const executionScope = deriveExecutionScope({
       visibleNodeIds: visibleScope.visibleNodeIds,
-      selectedNodeIds: ['node_hidden', 'node_2'],
+      selectionIntent: {
+        mode: 'explicit',
+        nodeIds: ['node_hidden', 'node_2'],
+      },
     });
 
+    expect(executionScope.selectionMode).toBe('explicit');
     expect(executionScope.requestedNodeIds).toEqual(['node_hidden', 'node_2']);
     expect(executionScope.selectedNodeIds).toEqual(['node_2']);
     expect(executionScope.workspaceNodeIds).toEqual(['node_2', 'node_1']);

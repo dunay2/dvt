@@ -15,7 +15,7 @@ export function useCanvasAuthoringRuntime({
   columnLevelLineageEnabled,
   persistedNodePositions,
   frozenNodeIds,
-  selectedNodeIds,
+  selectionIntent,
   inspectorNodeId,
   canPersistGraphDraftTransport,
   canMutateGraphTransport,
@@ -54,7 +54,7 @@ export function useCanvasAuthoringRuntime({
         draftSession: draftFlow.draftSession,
         canonicalNodes: draftFlow.graphModel.canonicalNodes,
         canonicalEdges: draftFlow.graphModel.canonicalEdges,
-        selectedNodeIds,
+        selectionIntent,
         inspectorNodeId,
         draftSaveStatus: draftFlow.draftSaveStatus,
         draftReadModel: draftFlow.draftReadModel,
@@ -70,7 +70,7 @@ export function useCanvasAuthoringRuntime({
       draftFlow.graphModel.canonicalEdges,
       draftFlow.graphModel.canonicalNodes,
       inspectorNodeId,
-      selectedNodeIds,
+      selectionIntent,
     ]
   );
 

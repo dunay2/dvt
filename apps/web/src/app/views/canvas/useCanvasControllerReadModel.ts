@@ -42,6 +42,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'handleToggleNodeSelection'
     | 'handleAttachSchemaToNode'
   >;
+  onToggleExecutionSelection: (nodeId: string, shouldSelect: boolean) => void;
   activeCanvasKind: string;
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph: boolean;
@@ -57,6 +58,7 @@ export function useCanvasControllerReadModel({
   uiScope,
   overlayModel,
   graphHandlers,
+  onToggleExecutionSelection,
   activeCanvasKind,
   runtimeCapabilities,
   canMutateGraph,
@@ -93,9 +95,7 @@ export function useCanvasControllerReadModel({
           onInspectNode: graphHandlers.handleInspectNode,
           onDuplicateNode: canMutateGraph ? graphHandlers.handleDuplicateNode : undefined,
           onRemoveNode: canMutateGraph ? graphHandlers.handleRemoveNode : undefined,
-          onToggleNodeSelection: canSelectExecution
-            ? graphHandlers.handleToggleNodeSelection
-            : undefined,
+          onToggleNodeSelection: canSelectExecution ? onToggleExecutionSelection : undefined,
           onAttachSchemaToNode: canMutateGraph ? graphHandlers.handleAttachSchemaToNode : undefined,
         },
       }).map((node) => {
@@ -114,9 +114,7 @@ export function useCanvasControllerReadModel({
           ...node,
           data: {
             ...node.data,
-            onToggleNodeSelection: canSelectNode
-              ? graphHandlers.handleToggleNodeSelection
-              : undefined,
+            onToggleNodeSelection: canSelectNode ? onToggleExecutionSelection : undefined,
             activeRunId: overlayModel.activeRunId,
             canvasKind: activeCanvasKind,
             runStatusByNodeId: overlayModel.runStatusByNodeId,
@@ -132,8 +130,8 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleInspectNode,
       graphHandlers.handleDuplicateNode,
       graphHandlers.handleRemoveNode,
-      graphHandlers.handleToggleNodeSelection,
       graphHandlers.handleAttachSchemaToNode,
+      onToggleExecutionSelection,
       graphModel.canonicalNodesById,
       graphModel.edges,
       graphModel.nodes,
