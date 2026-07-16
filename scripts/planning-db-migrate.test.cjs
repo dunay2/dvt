@@ -14662,3 +14662,112 @@ test('tracked migration reconciles dbt path partition source symbols and surface
   assert.match(migration.sql, /689_dbt_project_path_partition_manifest_reconciliation/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migration distinguishes explicit empty dbt selection from workspace fallback', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '713_dbt_selection_explicit_empty_intent.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /AD-DBT-SELECTION-INTENT-INTEGRITY-20260716/);
+  assert.match(migration.sql, /CollectCanvasExecutionSelection/);
+  assert.match(migration.sql, /explicit empty intent fails closed/i);
+  assert.match(migration.sql, /complete requested-id set/i);
+  assert.match(migration.sql, /applyDbtExecutionSelectionToggle/);
+  assert.match(migration.sql, /CanvasExecutionSelectionIntentMode/);
+  assert.match(migration.sql, /frontend_component_local_files/);
+  assert.match(migration.sql, /frontend_component_validation_evidence/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration maps the complete dbt selection slice without duplicate file roles', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '714_dbt_selection_component_file_ownership.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-WEB-CANVAS-EXECUTION-SELECTION/);
+  assert.match(migration.sql, /canvasAuthoringRuntime\.types\.ts/);
+  assert.match(migration.sql, /useCanvasExecutionActions\.test\.support\.tsx/);
+  assert.match(migration.sql, /mapped_slice_file_count <> 33/);
+  assert.match(migration.sql, /duplicate_file_role_count <> 0/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration governs one atomic dbt selection-intent authority', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '715_dbt_selection_atomic_intent_authority.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /CanvasExecutionSelectionIntent/);
+  assert.match(migration.sql, /createCanvasExecutionSelectionIntent/);
+  assert.match(migration.sql, /applyDbtExecutionSelectionToggle/);
+  assert.match(migration.sql, /singleStoreAuthority/);
+  assert.match(migration.sql, /canvasExecutionSelection\.architecture\.test\.ts/);
+  assert.match(migration.sql, /must declare twenty implementation symbols/i);
+  assert.doesNotMatch(migration.sql, /insert into architecture\.component_port/i);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration maps atomic selection controller evidence without duplicate roles', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '716_dbt_selection_controller_test_ownership.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /useCanvasController\.inspector\.test\.tsx/);
+  assert.match(migration.sql, /useCanvasController\.reloadHydrationGuards\.test\.tsx/);
+  assert.match(migration.sql, /mapped_test_count <> 2/);
+  assert.match(migration.sql, /duplicate_file_role_count <> 0/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration governs atomic dbt selection commands and execution boundaries', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '717_dbt_selection_atomic_boundary_contract.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /setExecutionSelectionIntent/);
+  assert.match(migration.sql, /CanvasExecutionSelectionIntent atomically/);
+  assert.match(migration.sql, /useCanvasController\.permissions\.test\.tsx/);
+  assert.match(migration.sql, /useCanvasExecutionActions\.dbtDraftFlush\.test\.tsx/);
+  assert.match(migration.sql, /useCanvasExecutionActions\.dbtPreviewRun\.test\.tsx/);
+  assert.match(migration.sql, /mapped_test_count <> 3/);
+  assert.match(migration.sql, /atomic_boundary_evidence_count <> 2/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration relates the dbt projector guard to the canonical selection policy', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '718_dbt_selection_projector_policy_guard.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /canvasDbtAuthoringRun\.architecture\.test\.ts/);
+  assert.match(migration.sql, /singleClassificationAuthority/);
+  assert.match(migration.sql, /mapped_guard_count <> 1/);
+  assert.match(migration.sql, /policy_evidence_count <> 1/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration maps the atomic controller test contract without duplicate roles', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '719_dbt_selection_controller_test_contract_ownership.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /useCanvasController\.test\.types\.ts/);
+  assert.match(migration.sql, /CanvasControllerStateOverrides/);
+  assert.match(migration.sql, /mapped_contract_count <> 1/);
+  assert.match(migration.sql, /duplicate_file_role_count <> 0/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});

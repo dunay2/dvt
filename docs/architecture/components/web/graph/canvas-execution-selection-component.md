@@ -55,6 +55,11 @@ It does **not** own:
 - `canOfferDbtExecutionSelectionToggle(...)`
   Expose `Select` only for executable roots while preserving `Deselect` as the
   recovery action for an invalid resource selected by an older client.
+- `applyDbtExecutionSelectionToggle(...)`
+  Apply a user selection gesture to the complete requested-id set and return
+  one atomic explicit intent. Hidden requested ids survive visible-node
+  toggles; selecting an available root replaces an unavailable-only recovery
+  set, while deselecting the final root remains explicit-empty.
 - `buildDbtExecutionIntentDraftSignature(...)`
   Bind preview identity to selection mode and requested roots as well as the
   executable graph projection, so equal dependency closure does not erase a
@@ -83,6 +88,8 @@ It does **not** own:
 - preview and run actions import the named selection seam instead of redoing
   local array shaping inline.
 - absent preview selection may default to visible workspace node ids.
+- workspace fallback and explicit empty intent are different states. Explicit
+  empty intent fails closed and never expands to the executable workspace.
 - every id in a non-empty explicit DBT selection must be an available executable
   root; source, seed, macro, exposure, metric, unknown, and out-of-workspace ids
   make the complete selection fail closed.
@@ -91,6 +98,11 @@ It does **not** own:
 - raw non-empty DBT selection intent reaches execution validation before UI
   visibility reconciliation; presentation may hide unavailable ids but cannot
   silently remove them from the execution request.
+- DBT selection gestures mutate the complete requested-id set rather than the
+  filtered visible selection. Deselecting one visible root therefore preserves
+  hidden requested ids.
+- an unavailable-only recovery set changes to an available executable root only
+  after the caller deliberately selects that root.
 - successful DBT scope resolution exposes requested root ids separately from
   dependency ids that were included by transitive closure.
 - DBT draft identity includes selection mode and requested roots in addition to
@@ -104,6 +116,9 @@ It does **not** own:
   renders only `Deselect` so the caller can recover without scope widening.
 - `canvasDbtExecutionProjection.ts` is shared by Preview and readiness so the
   enabled action and the emitted request cannot disagree.
+- route state commands, scope projectors, readiness, and Preview consume one
+  `CanvasExecutionSelectionIntent`; they never transport mode and requested ids
+  as independently mutable parameters.
 - SQL-first Plan never calls `previewPlan` with browser-only graph state:
   `GenerateTransformationWorkspaceArtifacts` must provide SQL and graph
   artifact provenance first.
@@ -121,9 +136,12 @@ It does **not** own:
 
 ```mermaid
 flowchart LR
-  Canvas["Canvas state"] --> Selection["canvasRunSelection.ts"]
+  Canvas["Canvas state: atomic selection intent"] --> Selection["canvasRunSelection.ts"]
   Canvas --> DbtPolicy["dbtExecutionScopePolicy.ts"]
+  Canvas --> DraftScope["canvasDraftScope.ts"]
+  DraftScope -->|complete requested ids| DbtPolicy
   Card["GraphNodeCard"] -->|queries eligibility| DbtPolicy
+  Card -->|selection gesture| DbtPolicy
   Plan["Persisted plan view"] --> Selection
   Selection --> Preview["canvasPlanAction.ts"]
   DbtPolicy --> Projection["canvasDbtExecutionProjection.ts"]
@@ -139,6 +157,25 @@ flowchart LR
 
 ## Transitions
 
+The route-local state forms a closed selection algebra:
+
+```mermaid
+stateDiagram-v2
+  [*] --> Workspace
+  Workspace --> ExplicitNonEmpty: select executable root
+  ExplicitNonEmpty --> ExplicitNonEmpty: select or deselect while roots remain
+  ExplicitNonEmpty --> ExplicitEmpty: deselect final requested root
+  ExplicitEmpty --> ExplicitNonEmpty: select executable root
+  ExplicitNonEmpty --> ExplicitNonEmpty: select visible root from unavailable-only set
+
+  Workspace: derive executable workspace roots
+  ExplicitNonEmpty: validate every requested id
+  ExplicitEmpty: reject without widening
+```
+
+Visibility is a presentation projection, not another selection state. It cannot
+turn `ExplicitNonEmpty` into `Workspace` or remove hidden requested ids.
+
 ```mermaid
 sequenceDiagram
   participant Canvas as Canvas actions
@@ -151,7 +188,7 @@ sequenceDiagram
     Canvas->>Selection: collectPreviewSelection(selectedNodeIds, workspaceNodeIds)
     Selection-->>Canvas: ExecutionSelection
   else DBT Canvas preview
-    Canvas->>DbtScope: resolve explicit or absent selection
+    Canvas->>DbtScope: resolve workspace or explicit selection mode
     DbtScope-->>Canvas: roots + derived dependencies or fail-closed cause
   end
   Canvas->>Canvas: resolve SQL and graph artifact provenance
@@ -322,6 +359,10 @@ The governed proof surface for that lane is:
 ## Consumers
 
 - `apps/web/src/app/views/canvas/canvasRunSelection.ts`
+- `apps/web/src/app/types/canvasExecutionSelection.ts`
+- `apps/web/src/app/stores/canvasInteractionStore.ts`
+- `apps/web/src/app/views/canvas/canvasDraftScope.ts`
+- `apps/web/src/app/views/canvas/dbtExecutionScopePolicy.ts`
 - `apps/web/src/app/views/canvas/canvasPlanAction.ts`
 - `apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts`
 - `apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts`
@@ -343,7 +384,17 @@ The governed proof surface for that lane is:
 - keep canonical selection parsing in `canvasRunSelection.ts`
 - keep DBT root eligibility and closure classification in
   `dbtExecutionScopePolicy.ts`; renderers and controllers only consume it
+- keep the atomic discriminated intent in `canvasExecutionSelection.ts` and its
+  sole route-local snapshot in the pre-existing `canvasInteractionStore.ts`
+- never split intent mode and requested ids into independently mutable state,
+  and never create a second selection store
+- use the explicit intent replacement command for DBT selection gestures; do
+  not pass optional mode flags through generic selected-node setters
 - do not silently filter invalid ids from a non-empty explicit selection
+- do not infer workspace fallback from an empty requested-id array without also
+  reading the intent mode
+- apply DBT selection gestures through `applyDbtExecutionSelectionToggle(...)`;
+  do not rebuild requested intent from the visible-node projection
 - reconcile visible selection and inspector state without mutating raw DBT
   execution intent before validation
 - keep requested roots and derived dependencies distinct in the Preview read
