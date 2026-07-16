@@ -1,6 +1,7 @@
 /** Owned concern: define read-only surfaces for file-authoritative dbt Canvas. */
 import {
   contextualCanvasGlobalNavigationPolicy,
+  contextualCanvasOperationalDrawerPolicy,
   type CanvasSurfaceStrategy,
 } from '../canvasSurfaceStrategyContracts';
 
@@ -15,6 +16,6 @@ export const dbtProjectFileCanvasSurfaceStrategy: CanvasSurfaceStrategy = {
     openedFrom: ['node-context-menu', 'double-click'],
     sections: ['properties', 'columns', 'tests', 'lineage', 'code'],
   },
-  operationalDrawer: null,
+  operationalDrawer: contextualCanvasOperationalDrawerPolicy,
   globalNavigation: contextualCanvasGlobalNavigationPolicy,
 };

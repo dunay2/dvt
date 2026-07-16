@@ -62,6 +62,9 @@ describe('RunStates snapshot evidence', () => {
       harness.container.querySelector('[data-slot="run-plan-provenance-card"]')
     ).not.toBeNull();
     expect(harness.container.textContent).toContain('plan-record-1');
+    expect(
+      harness.container.querySelector('[data-slot="run-plan-record-value"]')?.className
+    ).toContain('break-all');
     expect(harness.container.textContent).toContain('plan://persisted/plan-record-1');
     expect(harness.container.textContent).toContain('a'.repeat(64));
     expect(harness.container.textContent).toContain('Graph artifact');

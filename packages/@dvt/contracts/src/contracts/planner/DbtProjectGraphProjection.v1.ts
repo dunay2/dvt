@@ -17,6 +17,7 @@ import {
 } from '../../utils/contractPrimitives.js';
 
 import { CanvasAuthoringAuthorityBindingSchema } from './CanvasAuthoringAuthorityBinding.v1.js';
+import { DbtExecutionTargetIdentitySchema } from './PlanPreviewProvenance.v1.js';
 
 const NonBlankStringSchema = z.string().trim().min(1);
 const Sha256HexStringSchema = NonBlankStringSchema.refine(isSha256HexString, {
@@ -154,9 +155,11 @@ export const DbtProjectGraphProjectionSchema = z
     freshness: z.enum(['fresh', 'stale-last-valid', 'invalid', 'unavailable']),
     projectRevision: DbtProjectRevisionSchema,
     analysisSha256: Sha256HexStringSchema,
+    adapterType: NonBlankStringSchema.optional(),
     nodes: z.array(DbtProjectedNodeSchema),
     edges: z.array(DbtProjectedEdgeSchema),
     diagnostics: z.array(DbtDiagnosticSchema),
+    executionTarget: DbtExecutionTargetIdentitySchema.optional(),
     capabilities: z
       .object({
         canPreview: z.boolean(),
@@ -233,6 +236,47 @@ export const DbtProjectGraphProjectionSchema = z
         message: 'Only a fresh dbt analysis may advertise preview or run capabilities',
         path: ['capabilities'],
       });
+    }
+
+    if (projection.capabilities.canRun && !projection.capabilities.canPreview) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Run capability requires preview capability',
+        path: ['capabilities', 'canRun'],
+      });
+    }
+
+    if (projection.capabilities.canPreview || projection.capabilities.canRun) {
+      if (projection.projectRevision.dbtVersion === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Executable dbt projections require dbtVersion',
+          path: ['projectRevision', 'dbtVersion'],
+        });
+      }
+      if (projection.adapterType === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Executable dbt projections require adapterType',
+          path: ['adapterType'],
+        });
+      }
+      if (projection.executionTarget === undefined) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Executable dbt projections require a server-owned executionTarget',
+          path: ['executionTarget'],
+        });
+      } else if (
+        projection.adapterType !== undefined &&
+        projection.executionTarget.adapter !== projection.adapterType
+      ) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Execution target adapter must match the analyzed dbt adapter',
+          path: ['executionTarget', 'adapter'],
+        });
+      }
     }
   });
 

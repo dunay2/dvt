@@ -35,7 +35,7 @@ export function bindScopeToPlannerEnvelope(
       ? extraWithRuntimeBinding
       : {
           ...extraWithRuntimeBinding,
-          transformationFlowProvenance: provenance,
+          planPreviewProvenance: provenance,
         };
   const hasExtra = Object.keys(extraWithProvenance).length > 0;
 

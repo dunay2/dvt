@@ -414,6 +414,38 @@ test('ensureLocalWarehouseConnectionViaApi accepts only the canonical duplicate 
   }
 });
 
+test('ensureLocalWarehouseConnectionViaApi honors the caller command timeout', async () => {
+  const server = http.createServer((_request, response) => {
+    setTimeout(() => {
+      response.writeHead(201, { 'content-type': 'application/json' });
+      response.end('{}');
+    }, 100);
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+
+  try {
+    const address = server.address();
+    assert.ok(address && typeof address !== 'string');
+    await assert.rejects(
+      ensureLocalWarehouseConnectionViaApi({
+        apiBaseUrl: `http://127.0.0.1:${address.port}`,
+        bearerToken: 'proof-token',
+        workspaceScope: {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'env-a',
+        },
+        commandTimeoutMs: 5,
+      }),
+      /Timeout while sending command/
+    );
+  } finally {
+    await new Promise((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve()))
+    );
+  }
+});
+
 test('ensureLocalWarehouseConnectionViaApi rejects unrelated conflicts', async () => {
   const server = http.createServer((_request, response) => {
     response.writeHead(409, { 'content-type': 'application/json' });

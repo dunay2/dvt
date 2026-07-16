@@ -119,6 +119,11 @@ describe('buildProtectedRuntimeRouteDependencies', () => {
       authorizer: {},
       close: async () => undefined,
       createProjectUseCase: {},
+      dbtProjectImport: {
+        projectGraphUseCase: {
+          execute: vi.fn(),
+        },
+      },
       engine: {},
       executablePlanResolver: {},
       facade: {},

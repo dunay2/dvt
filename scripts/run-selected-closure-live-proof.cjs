@@ -3,6 +3,7 @@
  * Owned concern: boot a live protected-runtime browser proof lane for selected closure.
  */
 const { spawn, spawnSync } = require('node:child_process');
+const { existsSync } = require('node:fs');
 const { mkdir, rm, writeFile } = require('node:fs/promises');
 const http = require('node:http');
 const https = require('node:https');
@@ -187,6 +188,57 @@ function readNonEmptyEnv(value) {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : undefined;
 }
 
+function discoverLiveProofDbtExecutable(sourceEnv = process.env) {
+  const lookup = spawnSync(process.platform === 'win32' ? 'where.exe' : 'which', ['dbt'], {
+    encoding: 'utf8',
+    env: sourceEnv,
+    windowsHide: true,
+  });
+  const commandPath = readNonEmptyEnv(lookup.stdout)?.split(/\r?\n/u)[0];
+  if (lookup.status === 0 && commandPath !== undefined) return commandPath;
+
+  const pythonCommand =
+    readNonEmptyEnv(sourceEnv.PYTHON) ?? (process.platform === 'win32' ? 'python.exe' : 'python3');
+  const userScripts = spawnSync(
+    pythonCommand,
+    [
+      '-c',
+      `import sysconfig; print(sysconfig.get_path('scripts', scheme='${process.platform === 'win32' ? 'nt_user' : 'posix_user'}'))`,
+    ],
+    { encoding: 'utf8', env: sourceEnv, windowsHide: true }
+  );
+  const scriptsDirectory = readNonEmptyEnv(userScripts.stdout);
+  if (userScripts.status !== 0 || scriptsDirectory === undefined) return undefined;
+
+  const candidate = path.join(scriptsDirectory, process.platform === 'win32' ? 'dbt.exe' : 'dbt');
+  return existsSync(candidate) ? candidate : undefined;
+}
+
+function resolveLiveProofDbtExecutable(
+  sourceEnv = process.env,
+  discover = discoverLiveProofDbtExecutable
+) {
+  const analyzerExecutable = readNonEmptyEnv(sourceEnv.DVT_DBT_ANALYZER_BIN);
+  const workerExecutable = readNonEmptyEnv(sourceEnv.DVT_DBT_BIN);
+  if (
+    analyzerExecutable !== undefined &&
+    workerExecutable !== undefined &&
+    analyzerExecutable !== workerExecutable
+  ) {
+    throw new Error(
+      'Selected-closure live proof requires API and worker to use the same dbt executable.'
+    );
+  }
+
+  const executable = analyzerExecutable ?? workerExecutable ?? discover(sourceEnv);
+  if (executable === undefined) {
+    throw new Error(
+      'Selected-closure live proof requires a real dbt executable. Configure DVT_DBT_BIN or install dbt-postgres.'
+    );
+  }
+  return executable;
+}
+
 function resolveLiveProofSpecPath(argv = process.argv.slice(2)) {
   if (argv.length === 0) {
     return `/repo/${DEFAULT_SPEC_RELATIVE_PATH}`;
@@ -335,6 +387,7 @@ function buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort) 
 
 function buildLiveProofApiEnv({
   databaseUrl,
+  dbtExecutable = 'dbt',
   liveProofSchema,
   temporalWorkerAdminPort,
   temporalAddress,
@@ -342,9 +395,21 @@ function buildLiveProofApiEnv({
   oidcEnv = {},
   sourceEnv = process.env,
 }) {
+  const profilesDirectory = resolveLiveProofDbtAnalyzerProfilesDirectory(
+    liveProofSchema,
+    sourceEnv
+  );
   const temporalSourceEnv = {
     ...buildLiveProofTemporalEnvOverrides(sourceEnv, temporalWorkerAdminPort),
     DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DBT_ENABLED) ?? 'true',
+    DVT_DBT_ANALYZER_BIN: dbtExecutable,
+    DVT_DBT_BIN: dbtExecutable,
+    DVT_DBT_EXECUTION_ADAPTER: readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_ADAPTER) ?? 'postgres',
+    DVT_DBT_EXECUTION_TARGET_NAME:
+      readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_TARGET_NAME) ?? 'analysis',
+    DVT_DBT_EXECUTION_CREDENTIAL_REF:
+      readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_CREDENTIAL_REF) ?? 'env:DBT_PROFILES_DIR',
+    DBT_PROFILES_DIR: readNonEmptyEnv(sourceEnv.DBT_PROFILES_DIR) ?? profilesDirectory,
   };
   const artifactEnv = buildLocalDbtArtifactEnv({
     ...temporalSourceEnv,
@@ -367,10 +432,7 @@ function buildLiveProofApiEnv({
     DATABASE_URL: databaseUrl,
     DVT_LOCAL_POSTGRES_WAREHOUSE_URL: databaseUrl,
     DVT_PG_SCHEMA: liveProofSchema,
-    DVT_DBT_ANALYZER_PROFILES_DIR: resolveLiveProofDbtAnalyzerProfilesDirectory(
-      liveProofSchema,
-      temporalSourceEnv
-    ),
+    DVT_DBT_ANALYZER_PROFILES_DIR: profilesDirectory,
     DVT_READYZ_ENABLED: 'true',
     DVT_VERSION_ENABLED: 'true',
     DVT_DB_READY_ENABLED: 'true',
@@ -387,10 +449,14 @@ function buildLiveProofTemporalWorkerEnv(apiEnv, sourceEnv = process.env) {
     sourceEnv
   );
   const workspaceFilesRoot = readNonEmptyEnv(apiEnv.DVT_WORKSPACE_FILES_ROOT);
+  const dbtProfilesDirectory = readNonEmptyEnv(apiEnv.DBT_PROFILES_DIR);
+  const dbtExecutable = readNonEmptyEnv(apiEnv.DVT_DBT_BIN);
 
   return {
     ...workerEnv,
     ...(workspaceFilesRoot === undefined ? {} : { DVT_WORKSPACE_FILES_ROOT: workspaceFilesRoot }),
+    ...(dbtProfilesDirectory === undefined ? {} : { DBT_PROFILES_DIR: dbtProfilesDirectory }),
+    ...(dbtExecutable === undefined ? {} : { DVT_DBT_BIN: dbtExecutable }),
   };
 }
 
@@ -435,6 +501,7 @@ async function runCypress(args) {
 
 async function main() {
   const specPath = resolveLiveProofSpecPath();
+  const dbtExecutable = resolveLiveProofDbtExecutable();
   ensureLocalPostgresReady();
 
   const { TestWorkflowEnvironment } = await loadTemporalTesting();
@@ -458,6 +525,7 @@ async function main() {
       readNonEmptyEnv(process.env.DVT_DBT_ANALYZER_PROFILES_DIR) !== undefined;
     const apiEnv = buildLiveProofApiEnv({
       databaseUrl: defaultPgUrl,
+      dbtExecutable,
       liveProofSchema,
       temporalWorkerAdminPort: await allocateFreePort(LOCAL_AUTH_HOST),
       temporalAddress: temporalEnv.connection.options.address,
@@ -505,6 +573,7 @@ async function main() {
       apiBaseUrl: `http://127.0.0.1:${DEFAULT_API_PORT}`,
       bearerToken: localProtectedRuntimeAuth.webEnv.VITE_API_BEARER_TOKEN,
       workspaceScope: localProtectedRuntimeAuth.workspaceScope,
+      commandTimeoutMs: DEFAULT_READY_TIMEOUT_MS,
     });
 
     const temporalWorkerReadyzUrl = readNonEmptyEnv(apiEnv.DVT_TEMPORAL_WORKER_READYZ_URL);
@@ -586,6 +655,7 @@ module.exports = {
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
   prepareLiveProofDbtAnalyzerProfile,
+  resolveLiveProofDbtExecutable,
   resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 };

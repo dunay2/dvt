@@ -81,6 +81,7 @@ function PlanPreviewField({
     <div className="min-w-0 rounded-md border border-slate-800 bg-slate-950/45 px-3 py-2">
       <div className="text-[11px] font-medium uppercase tracking-wide text-slate-400">{label}</div>
       <div
+        aria-label={`${label} value`}
         data-testid={long ? 'plan-preview-long-value' : undefined}
         className={`mt-1 ${valueClassName}`}
       >
@@ -237,19 +238,51 @@ export function PlanPreviewModal({
             {provenance ? (
               <PlanPreviewSection
                 title="Provenance"
-                caption="Repository artifacts used to generate the preview."
+                caption={
+                  provenance.kind === 'dbt-project-files'
+                    ? 'Authoritative dbt project revision and server-owned execution target.'
+                    : 'Repository artifacts used to generate the preview.'
+                }
               >
                 <div className="grid min-w-0 gap-3 md:grid-cols-2">
-                  {provenance.graphArtifact ? (
-                    <PlanPreviewField label="Graph artifact" long>
-                      {provenance.graphArtifact.repo}: {provenance.graphArtifact.path}
-                    </PlanPreviewField>
-                  ) : null}
-                  {provenance.sqlArtifact ? (
-                    <PlanPreviewField label="SQL artifact" long>
-                      {provenance.sqlArtifact.repo}: {provenance.sqlArtifact.path}
-                    </PlanPreviewField>
-                  ) : null}
+                  {provenance.kind === 'dbt-project-files' ? (
+                    <>
+                      <PlanPreviewField label="Canvas" long>
+                        {provenance.canvasId}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="Project root" long>
+                        {provenance.projectRoot}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="dbt version">
+                        {provenance.dbtVersion}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="Project revision" long>
+                        {provenance.contentSetSha256}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="Analysis revision" long>
+                        {provenance.analysisSha256}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="Selected resources" long>
+                        {provenance.selectedUniqueIds.join(', ')}
+                      </PlanPreviewField>
+                      <PlanPreviewField label="Execution target">
+                        {`${provenance.executionTarget.provider} / ${provenance.executionTarget.adapter} / ${provenance.executionTarget.targetName}`}
+                      </PlanPreviewField>
+                    </>
+                  ) : (
+                    <>
+                      {provenance.graphArtifact ? (
+                        <PlanPreviewField label="Graph artifact" long>
+                          {provenance.graphArtifact.repo}: {provenance.graphArtifact.path}
+                        </PlanPreviewField>
+                      ) : null}
+                      {provenance.sqlArtifact ? (
+                        <PlanPreviewField label="SQL artifact" long>
+                          {provenance.sqlArtifact.repo}: {provenance.sqlArtifact.path}
+                        </PlanPreviewField>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               </PlanPreviewSection>
             ) : null}

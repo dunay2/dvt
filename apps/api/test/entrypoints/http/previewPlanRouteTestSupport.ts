@@ -14,7 +14,7 @@ export type PreviewRouteTestDeps = TestAuthDeps & {
     getStoredPlanValidationRecord: ReturnType<typeof vi.fn>;
   };
   planValidator: { validatePlan: ReturnType<typeof vi.fn> };
-  executableSubgraphResolver: { execute: ReturnType<typeof vi.fn> };
+  previewSelectionResolver: { execute: ReturnType<typeof vi.fn> };
   useCase: Pick<PreviewPlanUseCase, 'execute'>;
 };
 
@@ -24,7 +24,7 @@ type PreviewRouteTestOverrides = Partial<
   planner?: Partial<PreviewRouteTestDeps['planner']>;
   planStore?: Partial<PreviewRouteTestDeps['planStore']>;
   planValidator?: Partial<PreviewRouteTestDeps['planValidator']>;
-  executableSubgraphResolver?: Partial<PreviewRouteTestDeps['executableSubgraphResolver']>;
+  previewSelectionResolver?: Partial<PreviewRouteTestDeps['previewSelectionResolver']>;
 };
 
 export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): PreviewRouteTestDeps {
@@ -44,18 +44,20 @@ export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): Pr
     validatePlan: vi.fn(async () => ({ status: 'OK' })),
     ...overrides.planValidator,
   };
-  const executableSubgraphResolver = {
-    execute: vi.fn(async (input: { selection: { mode: string; nodeIds: readonly string[] } }) => ({
-      ok: true as const,
-      value: {
-        selection: input.selection,
-        nodeIds: [...input.selection.nodeIds],
-        edgeIds: [],
-        executable: true,
-        diagnostics: [],
-      },
-    })),
-    ...overrides.executableSubgraphResolver,
+  const previewSelectionResolver = {
+    execute: vi.fn(
+      async (input: {
+        selection: { mode: string; nodeIds: readonly string[] };
+        graphSource: unknown;
+      }) => ({
+        ok: true as const,
+        value: {
+          graphSource: input.graphSource,
+          nodeIds: [...input.selection.nodeIds],
+        },
+      })
+    ),
+    ...overrides.previewSelectionResolver,
   };
 
   return {
@@ -64,12 +66,12 @@ export function createPreviewDeps(overrides: PreviewRouteTestOverrides = {}): Pr
     planner,
     planStore,
     planValidator,
-    executableSubgraphResolver,
+    previewSelectionResolver,
     useCase: new PreviewPlanUseCase({
       planner,
       planStore,
       planValidator,
-      executableSubgraphResolver: executableSubgraphResolver as never,
+      previewSelectionResolver: previewSelectionResolver as never,
     }),
   };
 }

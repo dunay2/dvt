@@ -542,7 +542,7 @@ function deriveProvenance(
     return undefined;
   }
 
-  const provenance = planExtra?.['transformationFlowProvenance'];
+  const provenance = planExtra?.['planPreviewProvenance'];
   const provenanceRecord = isRecord(provenance) ? provenance : undefined;
   const graphArtifact = parseGitArtifactRef(provenanceRecord?.['graphArtifact']);
   const sqlArtifact = parseGitArtifactRef(provenanceRecord?.['sqlArtifact']);

@@ -42,10 +42,27 @@ export interface PlanPreviewArtifactRefViewModel {
   contentSha256?: string;
 }
 
-export interface PlanPreviewProvenanceViewModel {
-  graphArtifact?: PlanPreviewArtifactRefViewModel;
-  sqlArtifact?: PlanPreviewArtifactRefViewModel;
-}
+export type PlanPreviewProvenanceViewModel =
+  | {
+      kind?: 'transformation-git-artifacts';
+      graphArtifact?: PlanPreviewArtifactRefViewModel;
+      sqlArtifact?: PlanPreviewArtifactRefViewModel;
+    }
+  | {
+      kind: 'dbt-project-files';
+      canvasId: string;
+      projectRoot: string;
+      contentSetSha256: string;
+      analysisSha256: string;
+      dbtVersion: string;
+      selectedUniqueIds: string[];
+      executionTarget: {
+        provider: string;
+        adapter: string;
+        targetName: string;
+        credentialRef: string;
+      };
+    };
 
 export interface PlanPreviewViewModel {
   summary?: PlanPreviewSummaryViewModel;

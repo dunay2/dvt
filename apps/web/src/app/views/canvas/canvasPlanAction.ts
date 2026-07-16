@@ -18,6 +18,11 @@ import {
   resolveDbtExecutionScopeNodeIds,
 } from './canvasDbtPlannerGraphSource';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
+import {
+  buildDbtProjectFilePlannerProjection,
+  buildDbtProjectFileExecutionDraftSignature,
+  buildDbtProjectFilePreviewProvenance,
+} from './dbtProjectFileExecutionStrategy';
 import { readExpectedWorkspaceFileRevision } from './canvasGitProvenance';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { collectPreviewSelection } from './canvasRunSelection';
@@ -97,42 +102,55 @@ export async function executeCanvasPlanAction({
     };
   }
 
-  if (executionStrategy.kind === 'planner_generic_preview') {
+  if (
+    executionStrategy.kind === 'planner_generic_preview' ||
+    executionStrategy.kind === 'dbt_project_file_preview'
+  ) {
     try {
       const scopeSelection = collectPreviewSelection(selectedNodeIds, workspaceNodeIds);
-      const scopedNodeIds = resolveDbtExecutionScopeNodeIds({
-        nodes: canonicalNodes,
-        edges: canonicalEdges,
-        selectedNodeIds: scopeSelection.nodeIds,
-        workspaceNodeIds,
-      });
-      const artifactProjection = buildDbtWorkspaceArtifacts({
-        nodes: canonicalNodes,
-        edges: canonicalEdges,
-        scopedNodeIds,
-      });
-      if (!artifactProjection.ok) {
-        return { ok: false, message: artifactProjection.message };
-      }
-
-      const plannerProjection = buildDbtPlannerGraphSource({
-        nodes: canonicalNodes,
-        edges: canonicalEdges,
-        scopedNodeIds,
-      });
+      const scopedNodeIds =
+        executionStrategy.kind === 'dbt_project_file_preview'
+          ? []
+          : resolveDbtExecutionScopeNodeIds({
+              nodes: canonicalNodes,
+              edges: canonicalEdges,
+              selectedNodeIds: scopeSelection.nodeIds,
+              workspaceNodeIds,
+            });
+      const plannerProjection =
+        executionStrategy.kind === 'dbt_project_file_preview'
+          ? buildDbtProjectFilePlannerProjection(executionStrategy, scopeSelection.nodeIds)
+          : buildDbtPlannerGraphSource({
+              nodes: canonicalNodes,
+              edges: canonicalEdges,
+              scopedNodeIds,
+            });
       if (!plannerProjection.ok) {
         return { ok: false, message: plannerProjection.message };
       }
 
-      for (const artifact of artifactProjection.artifacts) {
-        await workspaceFileContentCommand.saveFileContent({
-          path: artifact.path,
-          content: artifact.content,
-          expectedRevision: await readExpectedWorkspaceFileRevision(
-            workspaceFilesQuery,
-            artifact.path
-          ),
+      const writtenArtifacts = [];
+      if (executionStrategy.kind === 'planner_generic_preview') {
+        const artifactProjection = buildDbtWorkspaceArtifacts({
+          nodes: canonicalNodes,
+          edges: canonicalEdges,
+          scopedNodeIds,
         });
+        if (!artifactProjection.ok) {
+          return { ok: false, message: artifactProjection.message };
+        }
+
+        for (const artifact of artifactProjection.artifacts) {
+          await workspaceFileContentCommand.saveFileContent({
+            path: artifact.path,
+            content: artifact.content,
+            expectedRevision: await readExpectedWorkspaceFileRevision(
+              workspaceFilesQuery,
+              artifact.path
+            ),
+          });
+        }
+        writtenArtifacts.push(...artifactProjection.artifacts);
       }
 
       const plan = await plansService.previewPlan({
@@ -140,14 +158,28 @@ export async function executeCanvasPlanAction({
         graphSource: plannerProjection.graphSource,
         selection: plannerProjection.selection,
         context: sessionContext.buildRunContext('preview_context'),
+        ...(executionStrategy.kind === 'dbt_project_file_preview'
+          ? {
+              provenance: buildDbtProjectFilePreviewProvenance(
+                executionStrategy,
+                plannerProjection.selection.nodeIds
+              ),
+            }
+          : {}),
         persist: true,
       });
 
       return {
         ok: true,
-        draftSignature: plannerProjection.draftSignature,
+        draftSignature:
+          executionStrategy.kind === 'dbt_project_file_preview'
+            ? buildDbtProjectFileExecutionDraftSignature(
+                executionStrategy,
+                plannerProjection.draftSignature
+              )
+            : plannerProjection.draftSignature,
         plan,
-        writtenArtifactPaths: artifactProjection.artifacts.map((artifact) => artifact.path),
+        writtenArtifactPaths: writtenArtifacts.map((artifact) => artifact.path),
       };
     } catch (error) {
       return {

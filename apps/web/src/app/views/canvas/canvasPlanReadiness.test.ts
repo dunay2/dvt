@@ -185,4 +185,85 @@ describe('canvasPlanReadiness', () => {
       executionState.executableGraphFailureMessage
     );
   });
+
+  it('blocks a persisted dbt project preview when its authoritative revision is stale', () => {
+    const plan = {
+      ...mockExecutionPlan,
+      planId: 'plan_dbt_files_1',
+      planRef: makePlanRef({
+        ...mockExecutionPlan.planRef!,
+        planId: 'plan_dbt_files_1',
+        sha256: 'a'.repeat(64),
+      }),
+      preview: {
+        ...mockExecutionPlan.preview!,
+        persisted: {
+          planRecordId: 'plan_dbt_files_1',
+          canonicalPlanSha256: 'b'.repeat(64),
+        },
+        provenance: {
+          kind: 'dbt-project-files' as const,
+          canvasId: 'analytics-canvas',
+          projectRoot: 'analytics',
+          contentSetSha256: '1'.repeat(64),
+          analysisSha256: '2'.repeat(64),
+          dbtVersion: '1.10.0',
+          selectedUniqueIds: ['model.analytics.orders'],
+          executionTarget: {
+            provider: 'server-config',
+            adapter: 'postgres',
+            targetName: 'development',
+            credentialRef: 'vault:dbt/development',
+          },
+        },
+      },
+    };
+
+    const executionState = deriveCanvasExecutionState({
+      canRun: true,
+      executionStrategy: {
+        kind: 'dbt_project_file_preview',
+        previewProfile: 'planner-generic-v1',
+        sourceFamily: 'dbt',
+        canvasId: 'analytics-canvas',
+        projectRoot: 'analytics',
+        contentSetSha256: '1'.repeat(64),
+        analysisSha256: '3'.repeat(64),
+        dbtVersion: '1.10.0',
+        plannerGraphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: '1.0',
+          nodes: [],
+        },
+        executionTarget: {
+          provider: 'server-config',
+          adapter: 'postgres',
+          targetName: 'development',
+          credentialRef: 'vault:dbt/development',
+        },
+      },
+      currentPlan: plan,
+      lastPlannedDraftSignature: null,
+      canonicalNodes: [
+        {
+          id: 'model.analytics.orders',
+          name: 'orders',
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      canonicalEdges: [],
+      selectedNodeIds: ['model.analytics.orders'],
+      workspaceNodeIds: ['model.analytics.orders'],
+    });
+
+    expect(executionState.persistedPreviewIdentityMismatch).toBe(true);
+    expect(executionState.isCurrentPlanStale).toBe(true);
+    expect(executionState.canStartRun).toBe(false);
+    expect(executionState.planRunReadiness.blockers).toContain('plan_integrity');
+  });
 });

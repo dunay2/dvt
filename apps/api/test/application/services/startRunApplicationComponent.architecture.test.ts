@@ -53,7 +53,6 @@ const CANONICAL_START_RUN_IMPORT_CASES = [
       'START_RUN_RESULT_KIND',
       'StartRunCommand',
       'parseRunExecutionContext',
-      'parseRunExecutionContextRef',
     ],
   },
   {

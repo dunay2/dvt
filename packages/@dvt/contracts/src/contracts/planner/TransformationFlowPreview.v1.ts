@@ -11,11 +11,12 @@ import type { PlanRef, RunContext } from '../../types/contracts.js';
 
 import type { ExecutionPlan, GenericGraphSourceV1 } from './ExecutionPlan.v1.js';
 import type { ExecutionSelection } from './ExecutionSelection.v1.js';
+import type {
+  PlanPreviewProvenance,
+  TransformationGitArtifactsProvenance,
+} from './PlanPreviewProvenance.v1.js';
 import type { TransformationSqlFirstCompilerGraphSourceV1 } from './TransformationFlowCompiler.v1.js';
-import {
-  TRANSFORMATION_SQL_FIRST_SOURCE_VERSION,
-  type PlanPreviewProvenance,
-} from './TransformationFlowDesignGraph.v1.js';
+import { TRANSFORMATION_SQL_FIRST_SOURCE_VERSION } from './TransformationFlowDesignGraph.v1.js';
 
 export const PREVIEW_PROFILE = {
   plannerGenericV1: 'planner-generic-v1',
@@ -40,7 +41,7 @@ export interface TransformationSqlFirstPlanPreviewRequest extends Omit<
 > {
   previewProfile: typeof PREVIEW_PROFILE.transformationSqlFirstV1;
   graphSource: TransformationSqlFirstCompilerGraphSourceV1;
-  provenance: PlanPreviewProvenance;
+  provenance: TransformationGitArtifactsProvenance;
 }
 
 export interface PlanPreviewSummary {
@@ -76,5 +77,5 @@ export interface TransformationSqlFirstPlanPreviewPersistResponse extends PlanPr
   planSummary: PlanPreviewSummary & {
     executor: 'postgres';
   };
-  provenance: PlanPreviewProvenance;
+  provenance: TransformationGitArtifactsProvenance;
 }

@@ -46,6 +46,7 @@ export const DBT_INSTALLED_DEPENDENCY_DIRECTORY_DEFAULTS = Object.freeze(
 export type DbtProjectDirectoryPartition = Readonly<{
   generatedArtifactDirectories: readonly string[];
   installedDependencyDirectories: readonly string[];
+  sourceDirectories: readonly string[];
 }>;
 
 export function evaluateDbtProjectPathPolicy(dbtProjectYaml: string): DbtProjectPathPolicyResult {
@@ -90,6 +91,9 @@ export function resolveDbtProjectDirectoryPartition(
     return {
       generatedArtifactDirectories: DBT_GENERATED_ARTIFACT_DIRECTORY_DEFAULTS,
       installedDependencyDirectories: DBT_INSTALLED_DEPENDENCY_DIRECTORY_DEFAULTS,
+      sourceDirectories: Object.values(SOURCE_PATH_SETTING_DEFAULTS).sort((left, right) =>
+        left.localeCompare(right)
+      ),
     };
   }
   return {
@@ -101,6 +105,7 @@ export function resolveDbtProjectDirectoryPartition(
       document,
       INSTALLED_DEPENDENCY_PATH_SETTING_DEFAULTS
     ).filter((configuredPath) => configuredPath !== '.'),
+    sourceDirectories: resolveEffectivePathSettings(document, SOURCE_PATH_SETTING_DEFAULTS),
   };
 }
 

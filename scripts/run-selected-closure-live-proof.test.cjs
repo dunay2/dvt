@@ -10,6 +10,7 @@ const {
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
   prepareLiveProofDbtAnalyzerProfile,
+  resolveLiveProofDbtExecutable,
   resolveLiveProofSpecPath,
   seedSelectedClosureLocalWarehouseProof,
 } = require('./run-selected-closure-live-proof.cjs');
@@ -119,6 +120,42 @@ test('resolveLiveProofSpecPath rejects spec lists and glob patterns', () => {
   );
 });
 
+test('resolveLiveProofDbtExecutable keeps API analysis and worker execution on one binary', () => {
+  assert.equal(
+    resolveLiveProofDbtExecutable(
+      {
+        DVT_DBT_ANALYZER_BIN: 'C:\\tools\\dbt.exe',
+        DVT_DBT_BIN: 'C:\\tools\\dbt.exe',
+      },
+      () => undefined
+    ),
+    'C:\\tools\\dbt.exe'
+  );
+
+  assert.throws(
+    () =>
+      resolveLiveProofDbtExecutable(
+        {
+          DVT_DBT_ANALYZER_BIN: 'C:\\tools\\analyzer-dbt.exe',
+          DVT_DBT_BIN: 'C:\\tools\\worker-dbt.exe',
+        },
+        () => undefined
+      ),
+    /same dbt executable/
+  );
+});
+
+test('resolveLiveProofDbtExecutable discovers dbt or fails before stack startup', () => {
+  assert.equal(
+    resolveLiveProofDbtExecutable({}, () => 'C:\\python-scripts\\dbt.exe'),
+    'C:\\python-scripts\\dbt.exe'
+  );
+  assert.throws(
+    () => resolveLiveProofDbtExecutable({}, () => undefined),
+    /requires a real dbt executable/
+  );
+});
+
 test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catalog discovery', () => {
   const apiEnv = buildLiveProofApiEnv({
     databaseUrl: defaultPgUrl,
@@ -146,6 +183,12 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
     apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR,
     /[\\/]\.dvt[\\/]live-proofs[\\/]selected-closure[\\/]dvt_live_selected_closure_test[\\/]server-dbt-profiles$/
   );
+  assert.equal(apiEnv.DBT_PROFILES_DIR, apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR);
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_ADAPTER, 'postgres');
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_TARGET_NAME, 'analysis');
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_CREDENTIAL_REF, 'env:DBT_PROFILES_DIR');
+  assert.equal(apiEnv.DVT_DBT_ANALYZER_BIN, 'dbt');
+  assert.equal(apiEnv.DVT_DBT_BIN, 'dbt');
   assert.equal(apiEnv.OIDC_ISSUER, 'https://issuer.local.dvt/');
 });
 
@@ -210,6 +253,8 @@ test('buildLiveProofTemporalWorkerEnv derives the worker from the selected live 
   assert.equal(workerEnv.DVT_DBT_BUNDLE_STORE_BACKEND, 'file');
   assert.equal(workerEnv.DVT_TEMPORAL_DBT_ENABLED, 'true');
   assert.equal(workerEnv.DVT_DBT_BUNDLE_FILE_ROOT, apiEnv.DVT_DBT_BUNDLE_FILE_ROOT);
+  assert.equal(workerEnv.DBT_PROFILES_DIR, apiEnv.DBT_PROFILES_DIR);
+  assert.equal(workerEnv.DVT_DBT_BIN, apiEnv.DVT_DBT_BIN);
 });
 
 test('seedSelectedClosureLocalWarehouseProof seeds source data before the API command creates the catalog', async () => {

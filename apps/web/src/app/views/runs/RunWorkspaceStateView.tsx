@@ -492,9 +492,9 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           {planProvenance ? (
             <div className="space-y-4 text-sm text-slate-300">
               <div className="grid gap-3 md:grid-cols-2">
-                <div>
+                <div className="min-w-0">
                   <span className="text-slate-400">{copy.planRecordLabel}</span>
-                  <div className="font-mono text-xs">
+                  <div data-slot="run-plan-record-value" className="break-all font-mono text-xs">
                     {planProvenance.persistedPlan.planRecordId}
                   </div>
                 </div>

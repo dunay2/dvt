@@ -22,6 +22,7 @@ const FILE_AUTHORITY: CanvasAuthoringAuthorityBinding = {
 function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): DbtProjectAnalysis {
   return {
     status,
+    adapterType: 'postgres',
     projectRevision: {
       projectRoot: 'analytics',
       contentSetSha256: 'a'.repeat(64),
@@ -82,7 +83,18 @@ function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): 
 
 function buildUseCase(
   analyze: IDbtProjectAnalyzerPort['analyze'],
-  binding = FILE_AUTHORITY
+  binding = FILE_AUTHORITY,
+  executionTarget: {
+    readonly provider: string;
+    readonly adapter: string;
+    readonly targetName: string;
+    readonly credentialRef: string;
+  } | null = {
+    provider: 'temporal',
+    adapter: 'postgres',
+    targetName: 'production',
+    credentialRef: 'env:DBT_PROFILES_DIR',
+  }
 ): {
   readonly useCase: ProjectDbtGraphFromFilesUseCase;
   readonly resolve: ReturnType<typeof vi.fn>;
@@ -92,6 +104,7 @@ function buildUseCase(
     useCase: new ProjectDbtGraphFromFilesUseCase({
       analyzer: { analyze },
       authorityPolicy: { resolve },
+      executionTargetResolver: { resolve: () => executionTarget },
     }),
     resolve,
   };
@@ -122,9 +135,16 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
       true
     );
     expect(projection.capabilities).toEqual({
-      canPreview: false,
-      canRun: false,
+      canPreview: true,
+      canRun: true,
       codeOnlyResourceCount: 2,
+    });
+    expect(projection.adapterType).toBe('postgres');
+    expect(projection.executionTarget).toEqual({
+      provider: 'temporal',
+      adapter: 'postgres',
+      targetName: 'production',
+      credentialRef: 'env:DBT_PROFILES_DIR',
     });
   });
 
@@ -140,6 +160,35 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
       expect(projection.capabilities.canPreview).toBe(false);
       expect(projection.capabilities.canRun).toBe(false);
       expect(projection.diagnostics).toHaveLength(1);
+    }
+  );
+
+  it.each([
+    { target: null, diagnostic: 'dbt_execution_target_unavailable' },
+    {
+      target: {
+        provider: 'temporal',
+        adapter: 'snowflake',
+        targetName: 'production',
+        credentialRef: 'env:DBT_PROFILES_DIR',
+      },
+      diagnostic: 'dbt_execution_target_adapter_mismatch',
+    },
+  ])(
+    'blocks execution with actionable target diagnostic $diagnostic',
+    async ({ target, diagnostic }) => {
+      const { useCase } = buildUseCase(
+        vi.fn().mockResolvedValue(analyzerResult()),
+        FILE_AUTHORITY,
+        target
+      );
+
+      const projection = await useCase.execute({ scope: SCOPE, canvasId: FILE_AUTHORITY.canvasId });
+
+      expect(projection.capabilities).toMatchObject({ canPreview: false, canRun: false });
+      expect(projection.diagnostics).toContainEqual(
+        expect.objectContaining({ code: diagnostic, severity: 'error' })
+      );
     }
   );
 

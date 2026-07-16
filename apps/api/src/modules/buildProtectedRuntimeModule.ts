@@ -10,6 +10,7 @@ import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
 import { getPgPool } from '../db/pool.js';
+import { ConfiguredDbtExecutionTargetResolver } from '../infrastructure/dbt/ConfiguredDbtExecutionTargetResolver.js';
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
 import { PostgresDbtProjectImportProcessStore } from '../infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
@@ -113,8 +114,22 @@ export async function buildProtectedRuntimeModule(
     schema: env.DVT_PG_SCHEMA,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
   });
+  const dbtExecutionTargetResolver = new ConfiguredDbtExecutionTargetResolver({
+    enabled: env.DVT_TEMPORAL_DBT_ENABLED,
+    provider: 'temporal',
+    ...(env.DVT_DBT_EXECUTION_ADAPTER === undefined
+      ? {}
+      : { adapter: env.DVT_DBT_EXECUTION_ADAPTER }),
+    ...(env.DVT_DBT_EXECUTION_TARGET_NAME === undefined
+      ? {}
+      : { targetName: env.DVT_DBT_EXECUTION_TARGET_NAME }),
+    ...(env.DVT_DBT_EXECUTION_CREDENTIAL_REF === undefined
+      ? {}
+      : { credentialRef: env.DVT_DBT_EXECUTION_CREDENTIAL_REF }),
+  });
   const dbtProjectImport = buildDbtProjectImportRuntime({
     analyzer: dbtProjectAnalyzer,
+    executionTargetResolver: dbtExecutionTargetResolver,
     inspector: new LocalDbtProjectImportInspector({
       workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
     }),
@@ -144,6 +159,7 @@ export async function buildProtectedRuntimeModule(
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
     workspaceRoot: storageRuntime.workspaceFilesRoot,
     dbtBundleStore: storageRuntime.dbtBundleStore,
+    dbtExecutionTargetResolver,
   });
 
   return {

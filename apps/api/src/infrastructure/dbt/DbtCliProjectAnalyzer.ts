@@ -15,18 +15,17 @@ import {
   type DbtProcessRunner,
 } from './dbtAnalyzerProcess.js';
 import { projectDbtManifest } from './dbtManifestProjection.js';
-import { snapshotProjectContent } from './dbtProjectContentRevision.js';
+import { evaluateDbtProjectSnapshotPathPolicy } from './dbtProjectPathPolicy.js';
 import {
-  evaluateDbtProjectSnapshotPathPolicy,
-  resolveDbtProjectDirectoryPartition,
-} from './dbtProjectPathPolicy.js';
+  DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
+  DbtProjectSourcePolicyError,
+  snapshotDbtProjectSource,
+} from './dbtProjectSourceSnapshot.js';
 import { resolveDbtProjectDirectory } from './dbtProjectWorkspaceBoundary.js';
 
 const ANALYZER_VERSION = 'dvt-dbt-analyzer.v1';
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_MAX_OUTPUT_BYTES = 1_000_000;
-const DEFAULT_MAX_PROJECT_FILES = 10_000;
-const DEFAULT_MAX_PROJECT_BYTES = 50_000_000;
 const INVALID_PROJECT_DIAGNOSTIC_MESSAGE =
   'dbt parse rejected the project. Review it in a trusted dbt environment.';
 
@@ -66,10 +65,11 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     this.dbtExecutable = options.dbtExecutable ?? 'dbt';
     this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
     this.maxOutputBytes = options.maxOutputBytes ?? DEFAULT_MAX_OUTPUT_BYTES;
-    this.maxProjectFiles = options.maxProjectFiles ?? DEFAULT_MAX_PROJECT_FILES;
-    this.maxProjectBytes = options.maxProjectBytes ?? DEFAULT_MAX_PROJECT_BYTES;
-    this.maxProjectDirectories = options.maxProjectDirectories ?? 5_000;
-    this.maxProjectDepth = options.maxProjectDepth ?? 64;
+    this.maxProjectFiles = options.maxProjectFiles ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxFiles;
+    this.maxProjectBytes = options.maxProjectBytes ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxBytes;
+    this.maxProjectDirectories =
+      options.maxProjectDirectories ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDirectories;
+    this.maxProjectDepth = options.maxProjectDepth ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDepth;
     this.processRunner = options.processRunner ?? NODE_DBT_PROCESS_RUNNER;
     this.processEnvironment = options.processEnvironment ?? process.env;
     this.now = options.now ?? (() => new Date());
@@ -106,36 +106,28 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
     try {
       const snapshotDirectory = path.join(analysisRoot, 'project');
       let contentSetSha256: string;
-      let projectConfigContent: string;
       try {
-        projectConfigContent = await readFile(
-          path.join(projectDirectory, 'dbt_project.yml'),
-          'utf8'
-        );
-        const directoryPartition = resolveDbtProjectDirectoryPartition(projectConfigContent);
         contentSetSha256 = (
-          await snapshotProjectContent(
+          await snapshotDbtProjectSource({
             projectDirectory,
             snapshotDirectory,
-            {
+            limits: {
               maxFiles: this.maxProjectFiles,
               maxBytes: this.maxProjectBytes,
               maxDirectories: this.maxProjectDirectories,
               maxDepth: this.maxProjectDepth,
             },
-            {
-              excludedDirectoryPaths: directoryPartition.generatedArtifactDirectories,
-            }
-          )
+          })
         ).sha256;
-        const snapshotConfigContent = await readFile(
-          path.join(snapshotDirectory, 'dbt_project.yml'),
-          'utf8'
-        );
-        if (snapshotConfigContent !== projectConfigContent) {
-          throw new Error('The dbt project changed while its source snapshot was created.');
+      } catch (error) {
+        if (error instanceof DbtProjectSourcePolicyError) {
+          const invalidRevision = this.buildRevision(
+            input.projectRoot,
+            error.contentSetSha256,
+            analyzedAt
+          );
+          return this.invalid(invalidRevision, error.contentSetSha256);
         }
-      } catch {
         return this.unavailable(
           unavailableRevision(`unreadable:${input.projectRoot}`),
           'dbt_project_unreadable',

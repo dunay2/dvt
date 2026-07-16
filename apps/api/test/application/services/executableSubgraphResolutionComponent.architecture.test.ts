@@ -67,19 +67,38 @@ describe('Executable-subgraph resolution component architecture', () => {
     }
   });
 
-  it('forces preview and planner-backed start-run through the resolver before planner build', () => {
+  it('routes preview by authority while planner-backed start-run keeps graph-draft resolution', () => {
+    const previewSource = artifacts.previewUseCase.readSource();
+    expect(
+      previewSource.hasNamedImport({
+        importedName: 'ResolveAuthorizedPreviewSelectionService',
+        moduleSpecifier: './resolveAuthorizedPreviewSelection.js',
+      })
+    ).toBe(true);
+    expect(artifacts.previewUseCase.readText()).toContain(
+      'this.deps.previewSelectionResolver.execute('
+    );
+    expect(artifacts.previewUseCase.readText()).toContain('previewSelection.value.nodeIds');
+
+    const startRunSource = artifacts.plannerBackedUseCase.readSource();
+    expect(
+      startRunSource.hasNamedImport({
+        importedName: 'ResolveAuthorizedExecutableSubgraphService',
+        moduleSpecifier: './resolveAuthorizedExecutableSubgraph.js',
+      })
+    ).toBe(true);
+    expect(artifacts.plannerBackedUseCase.readText()).toContain(
+      'this.deps.executableSubgraphResolver.execute('
+    );
+    expect(artifacts.plannerBackedUseCase.readText()).toContain('executableSubgraph.value.nodeIds');
+
     for (const artifact of [artifacts.previewUseCase, artifacts.plannerBackedUseCase]) {
-      const source = artifact.readSource();
-      expect(
-        source.hasNamedImport({
-          importedName: 'ResolveAuthorizedExecutableSubgraphService',
-          moduleSpecifier: './resolveAuthorizedExecutableSubgraph.js',
-        })
-      ).toBe(true);
-      expect(artifact.readText()).toContain('this.deps.executableSubgraphResolver.execute(');
-      expect(artifact.readText()).toContain('executableSubgraph.value.nodeIds');
       expect(artifact.readText()).not.toContain('selectedNodeIds: command.selection.nodeIds');
     }
+
+    expect(artifacts.previewSelectionAuthority.readText()).toContain(
+      'this.deps.graphDraftResolver.execute(input, context)'
+    );
   });
 
   it('wires the resolver from the protected draft store into both runtime composition paths', () => {
@@ -94,6 +113,12 @@ describe('Executable-subgraph resolution component architecture', () => {
     );
     expect(artifacts.routeDependencies.readText()).toContain(
       'workspaceGraphDraftStore: protectedModule.workspaceGraphDraftStore'
+    );
+    expect(artifacts.routeDependencies.readText()).toContain(
+      'new ResolveAuthorizedPreviewSelectionService({'
+    );
+    expect(artifacts.routeDependencies.readText()).toContain(
+      'projectGraph: protectedModule.dbtProjectImport.projectGraphUseCase'
     );
   });
 });

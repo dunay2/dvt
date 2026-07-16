@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
+import {
+  PLAN_PREVIEW_PROVENANCE_KIND,
+  PlanPreviewProvenanceSchema,
+} from '../contracts/planner/PlanPreviewProvenance.v1.js';
 import { summarizeTransformationSqlFirstPlan } from '../contracts/planner/TransformationFlowCompiler.v1.js';
-import { PlanPreviewProvenanceSchema } from '../contracts/planner/TransformationFlowDesignGraph.v1.js';
 import { PREVIEW_PROFILE } from '../contracts/planner/TransformationFlowPreview.v1.js';
 
 import {
@@ -81,6 +84,14 @@ export const PlanPreviewPersistResponseSchema = z
         ctx,
         ['provenance'],
         'transformation-sql-first-v1 responses require graphArtifact and sqlArtifact provenance.'
+      );
+    } else if (
+      response.provenance.kind !== PLAN_PREVIEW_PROVENANCE_KIND.transformationGitArtifacts
+    ) {
+      addPlanPreviewResponseIssue(
+        ctx,
+        ['provenance', 'kind'],
+        'transformation-sql-first-v1 responses require transformation Git artifact provenance.'
       );
     }
 

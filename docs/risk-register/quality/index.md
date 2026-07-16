@@ -45,6 +45,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [dbt import authority or atomic file mutation can diverge under runtime failure](R-20260714-DBT-PROJECT-IMPORT-AUTHORITY.yaml)
 - [dbt manifest or analysis-profile drift can make file projection unavailable](R-20260713-DBT-PROJECT-FILE-PROJECTION.yaml)
 - [DBT plan-store replay reuse must keep canonical payload comparison stable](R-20260526-DBT-PLAN-STORE-REUSE.yaml)
+- [dbt preview provenance can drift before runtime admission](R-20260715-DBT-PROJECT-ROUNDTRIP-P4.yaml)
 - [DBT runtime capability posture can drift between API and worker deployment](R-20260603-DBT-CAPABILITY-ADMISSION.yaml)
 - [Delivery-owned in-memory outbox core can mask durable adapter parity gaps](R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP.yaml)
 - [Documentary misalignment risk for snapshot ownership and fallback polling traceability](R-20260402-SNAPSHOT-RETRY-FALLBACK-CADENCE.yaml)

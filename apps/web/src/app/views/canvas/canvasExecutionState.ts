@@ -17,6 +17,10 @@ import {
   buildDbtPlannerGraphSource,
   resolveDbtExecutionScopeNodeIds,
 } from './canvasDbtPlannerGraphSource';
+import {
+  buildDbtProjectFileExecutionDraftSignature,
+  isDbtProjectFilePreviewProvenanceCurrent,
+} from './dbtProjectFileExecutionStrategy';
 
 type DeriveCanvasExecutionStateArgs = {
   canRun: boolean;
@@ -68,42 +72,59 @@ export function deriveCanvasExecutionState({
   workspaceNodeIds,
 }: DeriveCanvasExecutionStateArgs): CanvasExecutionState {
   const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
-  const persistedPreviewIdentityMismatch = hasPersistedPreviewIdentityMismatch(currentPlan);
+  const persistedPlanIdentityMismatch = hasPersistedPreviewIdentityMismatch(currentPlan);
   const transformationValidation = validateTransformationGraph({
     nodes: canonicalNodes,
     edges: canonicalEdges,
     selectedNodeIds,
     workspaceNodeIds,
   });
-  const dbtPlannerGraphSource =
-    executionStrategy?.kind === 'planner_generic_preview'
-      ? buildDbtPlannerGraphSource({
+  const usesDbtPlanner =
+    executionStrategy?.kind === 'planner_generic_preview' ||
+    executionStrategy?.kind === 'dbt_project_file_preview';
+  const dbtPlannerGraphSource = usesDbtPlanner
+    ? buildDbtPlannerGraphSource({
+        nodes: canonicalNodes,
+        edges: canonicalEdges,
+        scopedNodeIds: resolveDbtExecutionScopeNodeIds({
           nodes: canonicalNodes,
           edges: canonicalEdges,
-          scopedNodeIds: resolveDbtExecutionScopeNodeIds({
-            nodes: canonicalNodes,
-            edges: canonicalEdges,
-            selectedNodeIds,
-            workspaceNodeIds,
-          }),
-        })
-      : null;
+          selectedNodeIds,
+          workspaceNodeIds,
+        }),
+      })
+    : null;
   const activeDraftSignature =
     dbtPlannerGraphSource?.ok === true
-      ? dbtPlannerGraphSource.draftSignature
+      ? executionStrategy?.kind === 'dbt_project_file_preview'
+        ? buildDbtProjectFileExecutionDraftSignature(
+            executionStrategy,
+            dbtPlannerGraphSource.draftSignature
+          )
+        : dbtPlannerGraphSource.draftSignature
       : transformationValidation.draftSignature;
-  const isExecutableGraphReady =
-    executionStrategy?.kind === 'planner_generic_preview'
-      ? dbtPlannerGraphSource?.ok === true
-      : transformationValidation.valid;
+  const isExecutableGraphReady = usesDbtPlanner
+    ? dbtPlannerGraphSource?.ok === true
+    : transformationValidation.valid;
   const canPlanGraph =
     executionStrategy != null &&
     executionStrategy.kind !== 'not_executable' &&
     isExecutableGraphReady;
+  const dbtProjectFilePreviewIdentityMismatch =
+    currentPlan != null &&
+    executionStrategy?.kind === 'dbt_project_file_preview' &&
+    dbtPlannerGraphSource?.ok === true &&
+    !isDbtProjectFilePreviewProvenanceCurrent(
+      executionStrategy,
+      dbtPlannerGraphSource.selection.nodeIds,
+      currentPlan.preview?.provenance
+    );
+  const persistedPreviewIdentityMismatch =
+    persistedPlanIdentityMismatch || dbtProjectFilePreviewIdentityMismatch;
   const isCurrentPlanStale =
     currentPlan != null &&
-    lastPlannedDraftSignature != null &&
-    lastPlannedDraftSignature !== activeDraftSignature;
+    (dbtProjectFilePreviewIdentityMismatch ||
+      (lastPlannedDraftSignature != null && lastPlannedDraftSignature !== activeDraftSignature));
   const canStartRun =
     canRun &&
     executionStrategy != null &&

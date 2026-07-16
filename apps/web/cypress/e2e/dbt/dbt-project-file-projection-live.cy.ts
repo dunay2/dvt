@@ -3,14 +3,28 @@
  * files, protected HTTP, server-side dbt parse, and browser rendering.
  */
 import {
+  adoptLiveDbtProjectFileAuthority,
+  replaceLiveWorkspaceFile,
+  requestLiveDbtProjectGraph,
+  seedLiveWorkspaceFiles,
+} from '../../support/dbtProjectLive';
+import {
   hasLiveProtectedRuntimeEnv,
-  resolveLiveWorkspaceSession,
   visitWithLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
 
 const PROJECT_ROOT = 'analytics';
 const INVALID_PROJECT_ROOT = 'analytics-invalid';
 const CANVAS_ID = 'analytics-files';
+const INVALID_CANVAS_ID = 'analytics-invalid-files';
+
+const INVALID_PROJECT_CONFIG = `
+name: analytics_invalid
+version: '1.0.0'
+config-version: 2
+profile: dvt_live_proof
+model-paths: ['../outside-project']
+`;
 
 const PROJECT_FILES: Readonly<Record<string, string>> = {
   [`${PROJECT_ROOT}/dbt_project.yml`]: `
@@ -81,70 +95,11 @@ name: analytics_invalid
 version: '1.0.0'
 config-version: 2
 profile: dvt_live_proof
-model-paths: ['../outside-project']
+model-paths: ['models']
 `,
 };
 
 type DragPoint = Readonly<{ x: number; y: number }>;
-
-function readRequiredEnv(name: string): string {
-  const value = Cypress.env(name);
-  if (typeof value !== 'string' || value.trim().length === 0) {
-    throw new Error(`Cypress env ${name} is required for the live dbt projection proof.`);
-  }
-  return value.trim();
-}
-
-function saveWorkspaceFile(path: string, content: string): Cypress.Chainable<void> {
-  const scope = resolveLiveWorkspaceSession();
-  const query = new URLSearchParams(scope);
-  const bearer = readRequiredEnv('apiBearerToken');
-
-  return cy
-    .request({
-      method: 'POST',
-      url: `${readRequiredEnv('apiBaseUrl')}/workspace/files/${encodeURIComponent(path)}?${query.toString()}`,
-      auth: { bearer },
-      headers: {
-        Authorization: `Bearer ${bearer}`,
-        Accept: 'application/json',
-      },
-      body: {
-        content,
-        expectedRevision: { kind: 'absent' },
-      },
-    })
-    .then((response) => {
-      expect(response.status).to.equal(200);
-      expect(response.body.kind).to.equal('saved');
-    });
-}
-
-function seedDbtProjectFiles(): Cypress.Chainable<void> {
-  return Object.entries(PROJECT_FILES).reduce<Cypress.Chainable<void>>(
-    (chain, [path, content]) => chain.then(() => saveWorkspaceFile(path, content)),
-    cy.wrap(undefined)
-  );
-}
-
-function requestDbtProjectGraph(
-  projectRoot: string,
-  canvasId: string
-): Cypress.Chainable<Cypress.Response<unknown>> {
-  const scope = resolveLiveWorkspaceSession();
-  const query = new URLSearchParams({ ...scope, projectRoot, canvasId });
-  const bearer = readRequiredEnv('apiBearerToken');
-
-  return cy.request({
-    method: 'GET',
-    url: `${readRequiredEnv('apiBaseUrl')}/workspace/dbt/graph?${query.toString()}`,
-    auth: { bearer },
-    headers: {
-      Authorization: `Bearer ${bearer}`,
-      Accept: 'application/json',
-    },
-  });
-}
 
 function buildMouseEvent(
   point: DragPoint,
@@ -217,13 +172,18 @@ describe('dbt project file projection live vertical', () => {
       return;
     }
 
-    return seedDbtProjectFiles();
+    return seedLiveWorkspaceFiles(PROJECT_FILES)
+      .then(() => adoptLiveDbtProjectFileAuthority(PROJECT_ROOT, CANVAS_ID))
+      .then(() => adoptLiveDbtProjectFileAuthority(INVALID_PROJECT_ROOT, INVALID_CANVAS_ID))
+      .then(() =>
+        replaceLiveWorkspaceFile(`${INVALID_PROJECT_ROOT}/dbt_project.yml`, INVALID_PROJECT_CONFIG)
+      );
   });
 
   it('projects real dbt files without draft semantics and remains inspectable', () => {
     const observedRequests: string[] = [];
     cy.viewport(1500, 900);
-    requestDbtProjectGraph(PROJECT_ROOT, CANVAS_ID).then((response) => {
+    requestLiveDbtProjectGraph(PROJECT_ROOT, CANVAS_ID).then((response) => {
       const body = response.body as {
         readonly freshness?: unknown;
         readonly diagnostics?: unknown;
@@ -356,7 +316,7 @@ describe('dbt project file projection live vertical', () => {
   it('keeps invalid projects file-authoritative and reports the analyzer diagnostic', () => {
     const observedRequests: string[] = [];
     visitWithLiveWorkspaceSession(
-      `/canvas?authority=dbt-project-files&canvasId=invalid-files&projectRoot=${INVALID_PROJECT_ROOT}`,
+      `/canvas?authority=dbt-project-files&canvasId=${INVALID_CANVAS_ID}&projectRoot=${INVALID_PROJECT_ROOT}`,
       {
         onBeforeLoad(window) {
           const originalFetch = window.fetch.bind(window);

@@ -49,6 +49,10 @@ function areCanvasNodePositionsEqual(
   });
 }
 
+function areSelectedNodeIdsEqual(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((nodeId, index) => nodeId === right[index]);
+}
+
 function toggleFrozenNodeId(currentNodeIds: readonly string[], nodeId: string): string[] {
   return currentNodeIds.includes(nodeId)
     ? currentNodeIds.filter((currentNodeId) => currentNodeId !== nodeId)
@@ -124,7 +128,10 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
 
-      setSelectedNodes: (nodes) => set({ selectedNodes: nodes }),
+      setSelectedNodes: (nodes) =>
+        set((state) =>
+          areSelectedNodeIdsEqual(state.selectedNodes, nodes) ? state : { selectedNodes: nodes }
+        ),
       toggleImpactOverlay: () =>
         set((state) => ({ impactOverlayEnabled: !state.impactOverlayEnabled })),
       toggleColumnLevelLineage: () =>

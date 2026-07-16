@@ -221,6 +221,7 @@ export function registerValidationPreviewSuite(): void {
         },
         graphSource: transformationGraphSource,
         provenance: {
+          kind: 'transformation-git-artifacts',
           graphArtifact: {
             repo: 'org/repo',
             path: 'graphs/orders.yml',

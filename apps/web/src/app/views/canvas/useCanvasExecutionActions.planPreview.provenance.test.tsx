@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { sha256HexUtf8 } from '@dvt/contracts';
+import { asSha256HexString, sha256HexUtf8 } from '@dvt/contracts';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -138,6 +138,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
           ]),
         }),
         provenance: {
+          kind: 'transformation-git-artifacts',
           graphArtifact: expect.objectContaining({
             repo: 'workspace://tenant/project',
             path: 'pipelines/project-transformation-preview.yaml',
@@ -268,7 +269,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
         path: 'models/transform.sql',
         ref: 'refs/heads/main',
         commitSha: 'abc123',
-        contentSha256: sha256HexUtf8('select * from analytics.orders'),
+        contentSha256: asSha256HexString(sha256HexUtf8('select * from analytics.orders')),
       },
       context: {
         tenantId: 'tenant',
@@ -281,6 +282,7 @@ describe('useCanvasExecutionActions plan preview provenance', () => {
       expect.objectContaining({
         previewProfile: 'transformation-sql-first-v1',
         provenance: {
+          kind: 'transformation-git-artifacts',
           graphArtifact: {
             repo: 'dunay2/dvt',
             path: 'pipelines/sales_pipeline.yaml',
