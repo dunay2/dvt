@@ -14,6 +14,10 @@ const PLAN_ACTION_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasPlanAction.ts'
 );
+const DBT_EXECUTION_PROJECTION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDbtExecutionProjection.ts'
+);
 const DBT_ARTIFACT_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDbtWorkspaceArtifacts.ts'
@@ -51,7 +55,9 @@ describe('canvas dbt authoring/code/run architecture', () => {
 
   it('keeps dbt code generation and planner source projection behind named rails', () => {
     expect(PLAN_ACTION_SOURCE).toContain("from './canvasDbtWorkspaceArtifacts'");
-    expect(PLAN_ACTION_SOURCE).toContain("from './canvasDbtPlannerGraphSource'");
+    expect(PLAN_ACTION_SOURCE).toContain("from './canvasDbtExecutionProjection'");
+    expect(PLAN_ACTION_SOURCE).toContain("from './previewGraphSource'");
+    expect(DBT_EXECUTION_PROJECTION_SOURCE).toContain("from './canvasDbtPlannerGraphSource'");
     expect(PLAN_ACTION_SOURCE).toContain('workspaceFileContentCommand.saveFileContent');
     expect(PLAN_ACTION_SOURCE).toContain('previewProfile: executionStrategy.previewProfile');
     expect(DBT_ARTIFACT_SOURCE).toContain('buildDbtWorkspaceArtifacts');
