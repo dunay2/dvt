@@ -12,6 +12,7 @@ export type VisibleCanvasScope = {
 };
 
 export type ExecutionCanvasScope = {
+  requestedNodeIds: string[];
   selectedNodeIds: string[];
   workspaceNodeIds: string[];
 };
@@ -28,7 +29,7 @@ type DeriveVisibleScopeArgs = {
 };
 
 type DeriveExecutionScopeArgs = {
-  visibleScope: VisibleCanvasScope;
+  visibleNodeIds: string[];
   selectedNodeIds: string[];
 };
 
@@ -92,7 +93,7 @@ export function deriveVisibleScope({
   );
   const visibleEdges = dedupeEdges(
     draftSession.workingSet.visibleEdges.filter(
-        (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
+      (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
     )
   );
   const unresolvedEdges = dedupeEdges(
@@ -123,14 +124,16 @@ export function deriveVisibleScope({
 }
 
 export function deriveExecutionScope({
-  visibleScope,
+  visibleNodeIds,
   selectedNodeIds,
 }: DeriveExecutionScopeArgs): ExecutionCanvasScope {
-  const visibleNodeIdSet = new Set(visibleScope.visibleNodeIds);
+  const requestedNodeIds = dedupeNodeIds(selectedNodeIds);
+  const visibleNodeIdSet = new Set(visibleNodeIds);
 
   return {
-    selectedNodeIds: filterNodeIds(selectedNodeIds, visibleNodeIdSet),
-    workspaceNodeIds: visibleScope.visibleNodeIds,
+    requestedNodeIds,
+    selectedNodeIds: filterNodeIds(requestedNodeIds, visibleNodeIdSet),
+    workspaceNodeIds: visibleNodeIds,
   };
 }
 

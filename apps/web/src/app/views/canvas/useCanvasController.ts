@@ -118,9 +118,11 @@ export function useCanvasController() {
   ]);
   const canMutateActiveCanvas = runtimePolicy.commands.canMutateGraph;
   const canSelectExecution = runtimePolicy.commands.canPlan || runtimePolicy.commands.canRun;
+  const preservesDbtExecutionSelectionIntent = canvasAuthoringMode === 'dbt';
 
   useCanvasSelectionSync({
     isBootstrapping: draftSession.syncState === 'bootstrapping',
+    preserveSelectionIntent: preservesDbtExecutionSelectionIntent,
     storeSelection: store.selectedNodeIds,
     storeInspectorNodeId: store.inspectorNodeId,
     uiScope,
@@ -196,7 +198,9 @@ export function useCanvasController() {
     executionStrategy,
     canonicalNodes: visibleScope.canonicalNodes,
     canonicalEdges: visibleScope.canonicalEdges,
-    selectedNodeIds: executionScope.selectedNodeIds,
+    selectedNodeIds: preservesDbtExecutionSelectionIntent
+      ? executionScope.requestedNodeIds
+      : executionScope.selectedNodeIds,
     workspaceNodeIds: executionScope.workspaceNodeIds,
     flushDraftForExecution: authoringRuntime.flushDraftForExecution,
     canPlan: runtimePolicy.commands.canPlan,

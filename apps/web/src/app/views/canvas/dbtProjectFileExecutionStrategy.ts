@@ -9,7 +9,10 @@ import { parseExecutionSelection, PlanPreviewProvenanceSchema } from '@dvt/contr
 
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { PlanPreviewProvenanceViewModel } from '../../types/plans';
-import { resolveDbtExecutionScope } from './dbtExecutionScopePolicy';
+import {
+  buildDbtExecutionIntentDraftSignature,
+  resolveDbtExecutionScope,
+} from './dbtExecutionScopePolicy';
 
 export type DbtProjectFileExecutionStrategy = Extract<
   CanvasExecutionStrategy,
@@ -134,7 +137,12 @@ export function buildDbtProjectFilePlannerProjection(
     derivedDependencyNodeIds: executionScope.derivedDependencyNodeIds,
     graphSource,
     selection,
-    draftSignature: JSON.stringify({ graphSource, selection }),
+    draftSignature: buildDbtExecutionIntentDraftSignature({
+      graphSource,
+      selection,
+      selectionMode: executionScope.selectionMode,
+      requestedRootNodeIds: executionScope.requestedRootNodeIds,
+    }),
   };
 }
 

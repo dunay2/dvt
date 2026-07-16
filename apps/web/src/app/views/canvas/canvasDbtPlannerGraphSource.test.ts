@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import {
   buildDbtPlannerGraphSource,
   resolveDbtExecutionScopeNodeIds,
@@ -146,7 +147,6 @@ describe('canvas dbt planner graph source', () => {
         },
       ],
     });
-    expect(result.draftSignature).toContain('model-orders');
   });
 
   it('fails closed when the selected dbt graph has no executable nodes', () => {
@@ -256,5 +256,35 @@ describe('canvas dbt planner graph source', () => {
         dependsOn: ['model-orders'],
       }),
     ]);
+  });
+
+  it('changes the authored draft signature when requested roots change but closure does not', () => {
+    const strategy = {
+      kind: 'planner_generic_preview',
+      previewProfile: 'planner-generic-v1',
+      sourceFamily: 'dbt',
+    } as const;
+    const nodes = [sourceNode, modelNode, downstreamModelNode];
+    const workspaceNodeIds = nodes.map((node) => node.id);
+    const downstreamOnly = buildCanvasDbtExecutionProjection({
+      strategy,
+      canonicalNodes: nodes,
+      canonicalEdges: dependencyEdges,
+      selectedNodeIds: ['model-order-revenue'],
+      workspaceNodeIds,
+    });
+    const bothRoots = buildCanvasDbtExecutionProjection({
+      strategy,
+      canonicalNodes: nodes,
+      canonicalEdges: dependencyEdges,
+      selectedNodeIds: ['model-orders', 'model-order-revenue'],
+      workspaceNodeIds,
+    });
+
+    expect(downstreamOnly.ok).toBe(true);
+    expect(bothRoots.ok).toBe(true);
+    if (!downstreamOnly.ok || !bothRoots.ok) return;
+    expect(downstreamOnly.selection).toEqual(bothRoots.selection);
+    expect(downstreamOnly.draftSignature).not.toBe(bothRoots.draftSignature);
   });
 });

@@ -12,6 +12,7 @@ import {
   buildDbtProjectFileInitialNodePositions,
   mergeDbtProjectFileNodePositions,
 } from './dbtProjectFileLayout';
+import { deriveExecutionScope } from './canvasDraftScope';
 import { projectDbtProjectGraphToCanonicalCanvas } from './dbtProjectFileProjection';
 import { validateTransformationGraph } from './transformationGraphValidation';
 import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
@@ -151,10 +152,15 @@ export function useDbtProjectFileCanvasController(
     [canonicalEdges]
   );
   const visibleNodeIds = useMemo(() => canonicalNodes.map((node) => node.id), [canonicalNodes]);
-  const selectedNodeIds = useMemo(
-    () => store.selectedNodeIds.filter((nodeId) => canonicalNodesById.has(nodeId)),
-    [canonicalNodesById, store.selectedNodeIds]
+  const executionScope = useMemo(
+    () =>
+      deriveExecutionScope({
+        visibleNodeIds,
+        selectedNodeIds: store.selectedNodeIds,
+      }),
+    [store.selectedNodeIds, visibleNodeIds]
   );
+  const selectedNodeIds = executionScope.selectedNodeIds;
   const visibleEdges = useMemo(
     () =>
       canonicalEdges.map((edge) => ({
@@ -186,7 +192,7 @@ export function useDbtProjectFileCanvasController(
     projection: query.data ?? null,
     canonicalNodes,
     canonicalEdges,
-    selectedNodeIds,
+    selectedNodeIds: executionScope.requestedNodeIds,
     workspaceNodeIds: visibleNodeIds,
     store,
   });
@@ -199,15 +205,6 @@ export function useDbtProjectFileCanvasController(
       ),
     [execution.executionStrategy]
   );
-
-  useEffect(() => {
-    if (
-      selectedNodeIds.length !== store.selectedNodeIds.length ||
-      selectedNodeIds.some((nodeId, index) => nodeId !== store.selectedNodeIds[index])
-    ) {
-      store.setSelectedNodes(selectedNodeIds);
-    }
-  }, [selectedNodeIds, store.selectedNodeIds, store.setSelectedNodes]);
 
   const openNodeWorkbench = useCallback(
     (nodeId: string, preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null) => {

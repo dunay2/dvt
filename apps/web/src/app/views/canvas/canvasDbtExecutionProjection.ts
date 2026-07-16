@@ -11,6 +11,7 @@ import {
   buildDbtProjectFileExecutionDraftSignature,
   buildDbtProjectFilePlannerProjection,
 } from './dbtProjectFileExecutionStrategy';
+import { buildDbtExecutionIntentDraftSignature } from './dbtExecutionScopePolicy';
 
 type DbtPreviewExecutionStrategy = Extract<
   CanvasExecutionStrategy,
@@ -72,6 +73,12 @@ export function buildCanvasDbtExecutionProjection(args: {
         requestedRootNodeIds: executionScope.requestedRootNodeIds,
         derivedDependencyNodeIds: executionScope.derivedDependencyNodeIds,
         scopedNodeIds: executionScope.nodeIds,
+        draftSignature: buildDbtExecutionIntentDraftSignature({
+          graphSource: projection.graphSource,
+          selection: projection.selection,
+          selectionMode: executionScope.selectionMode,
+          requestedRootNodeIds: executionScope.requestedRootNodeIds,
+        }),
       }
     : projection;
 }

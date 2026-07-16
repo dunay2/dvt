@@ -11,7 +11,6 @@ export type DbtPlannerGraphSourceResult =
       ok: true;
       graphSource: GenericGraphSourceV1;
       selection: ExecutionSelection;
-      draftSignature: string;
     }>
   | Readonly<{
       ok: false;
@@ -152,9 +151,5 @@ export function buildDbtPlannerGraphSource(args: {
     ok: true,
     graphSource,
     selection,
-    draftSignature: JSON.stringify({
-      graphSource,
-      selection,
-    }),
   };
 }

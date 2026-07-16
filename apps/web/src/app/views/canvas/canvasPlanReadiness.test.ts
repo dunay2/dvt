@@ -327,7 +327,7 @@ describe('canvasPlanReadiness', () => {
 
     expect(executionState.canPlanGraph).toBe(false);
     expect(executionState.executableGraphFailureMessage).toBe(
-      'Execution selection contains unavailable or non-executable resources. Deselect them and keep only DBT models, tests, or snapshots.'
+      'Execution selection contains unavailable or non-executable resources. Re-select available DBT models, tests, or snapshots to replace it.'
     );
     expect(executionState.planRunReadiness.blockers).toContain('plan_integrity');
   });

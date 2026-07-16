@@ -200,8 +200,8 @@ export function deriveCanvasAuthoringState({
     visibleScope,
     uiScope,
     executionScope: deriveExecutionScope({
-      visibleScope,
-      selectedNodeIds: uiScope.selectedNodeIds,
+      visibleNodeIds: visibleScope.visibleNodeIds,
+      selectedNodeIds,
     }),
     ...draftAccessState,
     ...draftRecoveryState,

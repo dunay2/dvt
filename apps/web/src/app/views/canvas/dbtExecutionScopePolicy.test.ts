@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { parseExecutionSelection, type GenericGraphSourceV1 } from '@dvt/contracts';
 
 import {
+  buildDbtExecutionIntentDraftSignature,
   canOfferDbtExecutionSelectionToggle,
   resolveDbtExecutionScope,
 } from './dbtExecutionScopePolicy';
@@ -94,6 +96,43 @@ describe('resolveDbtExecutionScope', () => {
       derivedDependencyNodeIds: ['model.base'],
       nodeIds: ['model.orders', 'model.base'],
     });
+  });
+});
+
+describe('buildDbtExecutionIntentDraftSignature', () => {
+  it('distinguishes workspace fallback from an explicit selection with the same closure', () => {
+    const graphSource = {
+      kind: 'generic-graph-v1',
+      sourceFamily: 'dbt',
+      sourceVersion: '1.0',
+      nodes: [
+        {
+          nodeId: 'model.orders',
+          stepKind: 'DBT_MODEL',
+          dependsOn: [],
+          metadata: { displayName: 'Orders' },
+        },
+      ],
+    } satisfies GenericGraphSourceV1;
+    const selection = parseExecutionSelection({
+      mode: 'explicit',
+      nodeIds: ['model.orders'],
+    });
+
+    const workspaceSignature = buildDbtExecutionIntentDraftSignature({
+      graphSource,
+      selection,
+      selectionMode: 'workspace',
+      requestedRootNodeIds: ['model.orders'],
+    });
+    const explicitSignature = buildDbtExecutionIntentDraftSignature({
+      graphSource,
+      selection,
+      selectionMode: 'explicit',
+      requestedRootNodeIds: ['model.orders'],
+    });
+
+    expect(workspaceSignature).not.toBe(explicitSignature);
   });
 });
 

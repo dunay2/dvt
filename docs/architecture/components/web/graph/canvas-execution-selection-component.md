@@ -55,6 +55,10 @@ It does **not** own:
 - `canOfferDbtExecutionSelectionToggle(...)`
   Expose `Select` only for executable roots while preserving `Deselect` as the
   recovery action for an invalid resource selected by an older client.
+- `buildDbtExecutionIntentDraftSignature(...)`
+  Bind preview identity to selection mode and requested roots as well as the
+  executable graph projection, so equal dependency closure does not erase a
+  caller-intent change.
 - `buildCanvasDbtExecutionProjection(...)`
   Build the one DBT projection consumed by both Preview and readiness.
 - `executeCanvasPlanAction(...)`
@@ -84,8 +88,17 @@ It does **not** own:
   make the complete selection fail closed.
 - a rejected explicit selection is never filtered into a smaller successful
   selection and never defaults to the whole workspace.
+- raw non-empty DBT selection intent reaches execution validation before UI
+  visibility reconciliation; presentation may hide unavailable ids but cannot
+  silently remove them from the execution request.
 - successful DBT scope resolution exposes requested root ids separately from
   dependency ids that were included by transitive closure.
+- DBT draft identity includes selection mode and requested roots in addition to
+  the derived executable closure. Selecting a downstream root is not identical
+  to selecting that root and its already-included dependency.
+- the execution-projection compositor is the only authority that builds DBT
+  draft identity; the lower-level graph-source projector cannot emit a partial
+  signature without caller intent.
 - DBT node cards render `Select` only for roots admitted by
   `isDbtExecutionSelectableNode(...)`; an already-selected invalid resource
   renders only `Deselect` so the caller can recover without scope widening.
@@ -331,6 +344,8 @@ The governed proof surface for that lane is:
 - keep DBT root eligibility and closure classification in
   `dbtExecutionScopePolicy.ts`; renderers and controllers only consume it
 - do not silently filter invalid ids from a non-empty explicit selection
+- reconcile visible selection and inspector state without mutating raw DBT
+  execution intent before validation
 - keep requested roots and derived dependencies distinct in the Preview read
   model even though the canonical server selection contains their complete
   authorized closure

@@ -9,6 +9,7 @@ import type {
 import type { CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { makeRunContext } from '../../testing/contractTestUtils';
+import { canvasViewCopy } from './copy';
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import { validateTransformationGraph } from './transformationGraphValidation';
@@ -226,8 +227,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
 
     expect(result).toEqual({
       ok: false,
-      message:
-        'Execution selection contains unavailable or non-executable resources. Deselect them and keep only DBT models, tests, or snapshots.',
+      message: canvasViewCopy.dbtExplicitSelectionRequiresExecutableResourceMessage,
     });
     expect(previewPlan).not.toHaveBeenCalled();
   });
@@ -286,8 +286,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
 
     expect(result).toEqual({
       ok: false,
-      message:
-        'Execution selection contains unavailable or non-executable resources. Deselect them and keep only DBT models, tests, or snapshots.',
+      message: canvasViewCopy.dbtExplicitSelectionRequiresExecutableResourceMessage,
     });
     expect(previewPlan).not.toHaveBeenCalled();
   });

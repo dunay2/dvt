@@ -1,3 +1,5 @@
+import type { ExecutionSelection, GenericGraphSourceV1 } from '@dvt/contracts';
+
 import type { CanonicalNode } from '../../types/canonical';
 
 /** Owned concern: preserve DBT execution-selection intent while deriving executable scope. */
@@ -48,6 +50,22 @@ export type DbtExecutionScopeResolution =
       readonly cause: (typeof DBT_EXECUTION_SCOPE_REJECTION)[keyof typeof DBT_EXECUTION_SCOPE_REJECTION];
       readonly invalidNodeIds: readonly string[];
     };
+
+export function buildDbtExecutionIntentDraftSignature(args: {
+  readonly graphSource: GenericGraphSourceV1;
+  readonly selection: ExecutionSelection;
+  readonly selectionMode: 'explicit' | 'workspace';
+  readonly requestedRootNodeIds: readonly string[];
+}): string {
+  return JSON.stringify({
+    graphSource: args.graphSource,
+    selection: args.selection,
+    selectionIntent: {
+      mode: args.selectionMode,
+      requestedRootNodeIds: [...new Set(args.requestedRootNodeIds)].sort(),
+    },
+  });
+}
 
 export function resolveDbtExecutionScope(args: {
   readonly selectedNodeIds: readonly string[];

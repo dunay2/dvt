@@ -203,6 +203,65 @@ describe('dbt project file execution strategy', () => {
     );
   });
 
+  it('invalidates the planner draft signature when requested roots change but closure does not', () => {
+    const strategy = buildDbtProjectFileExecutionStrategy(
+      buildProjection({
+        nodes: [
+          {
+            uniqueId: 'model.analytics.base',
+            resourceType: 'model',
+            name: 'base',
+            packageName: 'analytics',
+            originalFilePath: 'models/base.sql',
+            materialized: 'view',
+            columns: [],
+            tags: [],
+            visualEditability: { status: 'editable', operations: ['edit-sql'] },
+          },
+          {
+            uniqueId: 'model.analytics.orders',
+            resourceType: 'model',
+            name: 'orders',
+            packageName: 'analytics',
+            originalFilePath: 'models/orders.sql',
+            materialized: 'table',
+            columns: [],
+            tags: [],
+            visualEditability: { status: 'editable', operations: ['edit-sql'] },
+          },
+        ],
+        edges: [
+          {
+            id: 'edge.analytics.base.orders',
+            sourceUniqueId: 'model.analytics.base',
+            targetUniqueId: 'model.analytics.orders',
+            relation: 'dependency',
+          },
+        ],
+      })
+    );
+    expect(strategy.kind).toBe('dbt_project_file_preview');
+    if (strategy.kind !== 'dbt_project_file_preview') return;
+
+    const workspaceNodeIds = ['model.analytics.base', 'model.analytics.orders'];
+    const downstreamOnly = buildDbtProjectFilePlannerProjection(
+      strategy,
+      ['model.analytics.orders'],
+      workspaceNodeIds
+    );
+    const bothRoots = buildDbtProjectFilePlannerProjection(
+      strategy,
+      workspaceNodeIds,
+      workspaceNodeIds
+    );
+
+    expect(downstreamOnly.ok).toBe(true);
+    expect(bothRoots.ok).toBe(true);
+    if (!downstreamOnly.ok || !bothRoots.ok) return;
+    expect(downstreamOnly.selection).toEqual(bothRoots.selection);
+    expect(downstreamOnly.draftSignature).not.toBe(bothRoots.draftSignature);
+  });
+
   it('rejects persisted provenance from another revision or selection', () => {
     const strategy = buildDbtProjectFileExecutionStrategy(buildProjection());
     expect(strategy.kind).toBe('dbt_project_file_preview');

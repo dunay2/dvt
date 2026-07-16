@@ -9,9 +9,7 @@ import {
   waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
 
-function readLatestExecutionCall(
-  harness: CanvasControllerHarness
-):
+function readLatestExecutionCall(harness: CanvasControllerHarness):
   | {
       canonicalNodes?: Array<{ id: string }>;
       canonicalEdges?: Array<{ id: string }>;
@@ -140,6 +138,32 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
     expectExecutionScopeSubset(harness);
   });
 
+  it('preserves hidden explicit DBT selection intent until execution validation rejects it', async () => {
+    harness = await createHarnessWithDraft(
+      buildRemoteDraftRecord(
+        {
+          canvas: { kind: 'dbt', title: 'DBT canvas' },
+          nodeIds: ['node_1'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+          },
+          edges: [],
+        },
+        'rev-dbt-1',
+        '2026-04-17T00:00:00Z'
+      )
+    );
+    harness.state.store.selectedNodes = ['node_2'];
+    harness.state.store.inspectorNodeId = 'node_2';
+
+    await harness.renderProbe();
+
+    expect(harness.state.store.setSelectedNodes).not.toHaveBeenCalledWith([]);
+    expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith(null);
+    expect(readLatestExecutionCall(harness)?.selectedNodeIds).toEqual(['node_2']);
+    expect(readLatestExecutionCall(harness)?.workspaceNodeIds).toEqual(['node_1']);
+  });
+
   it('projects the full persisted draft from protected semantic truth even before snapshot hydration catches up', async () => {
     harness = createUnrenderedHarness();
     configureProtectedSemanticProjectionHarness(harness);
@@ -150,7 +174,9 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
     expectProtectedSemanticProjectionState(harness, true, true);
 
     await waitForAutosaveDebounce();
-    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).not.toHaveBeenCalled();
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).not.toHaveBeenCalled();
 
     harness.state.graphData = {
       nodes: [{ id: 'node_1' }, { id: 'node_remote_only' }],

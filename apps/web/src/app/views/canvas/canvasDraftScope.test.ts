@@ -57,7 +57,9 @@ describe('canvasDraftScope', () => {
           tags: [],
         },
       ],
-      canonicalEdges: [{ id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' }],
+      canonicalEdges: [
+        { id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' },
+      ],
     });
 
     expect(visibleScope.visibleNodeIds).toEqual(['node_2', 'node_1']);
@@ -94,14 +96,17 @@ describe('canvasDraftScope', () => {
           tags: [],
         },
       ],
-      canonicalEdges: [{ id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' }],
+      canonicalEdges: [
+        { id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' },
+      ],
     });
 
     const executionScope = deriveExecutionScope({
-      visibleScope,
+      visibleNodeIds: visibleScope.visibleNodeIds,
       selectedNodeIds: ['node_hidden', 'node_2'],
     });
 
+    expect(executionScope.requestedNodeIds).toEqual(['node_hidden', 'node_2']);
     expect(executionScope.selectedNodeIds).toEqual(['node_2']);
     expect(executionScope.workspaceNodeIds).toEqual(['node_2', 'node_1']);
   });
@@ -129,7 +134,9 @@ describe('canvasDraftScope', () => {
           tags: [],
         },
       ],
-      canonicalEdges: [{ id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' }],
+      canonicalEdges: [
+        { id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' },
+      ],
     });
 
     const uiScope = reconcileUiScope({
@@ -173,7 +180,9 @@ describe('canvasDraftScope', () => {
           tags: [],
         },
       ],
-      canonicalEdges: [{ id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' }],
+      canonicalEdges: [
+        { id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' },
+      ],
     });
 
     expect(visibleScope.unresolvedNodeIds).toEqual([]);
