@@ -1,0 +1,31 @@
+---
+id: R-20260715-DBT-PROJECT-ROUNDTRIP-P4
+title: dbt preview provenance can drift before runtime admission
+status: Open
+date: 2026-07-15
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: High
+probability: Low
+context: >
+  Phase four allows a file-authoritative dbt Canvas to preview and run a selected model from a
+  server-analyzed project revision using a server-owned target and credential-reference identity.
+risk: >
+  Project bytes, dbt analysis, executable selection, target identity, or runtime bundle policy could
+  drift after Preview and cause StartRun to execute content other than the content the user
+  reviewed.
+mitigations:
+  - 'Persist versioned provenance containing the project root, content SHA-256, analysis SHA-256,
+    dbt version, selected unique IDs, and secret-free target identity.'
+  - 'Re-resolve project authority, analysis, executable closure, and target identity server-side;
+    reject stale or caller-expanded values before plan persistence and run dispatch.'
+  - 'Build the dbt runtime bundle from the same immutable allowed-source snapshot and verify its
+    content revision against persisted preview provenance.'
+  - 'Exclude profiles.yml, generated output, VCS metadata, links, editor temporaries, and credential
+    material from analysis and runtime bundles.'
+  - 'Exercise RT-006 through the real protected API, PostgreSQL, dbt CLI, Temporal worker, persisted
+    plan, run events, and reloaded provenance without graph-draft interception or file regeneration.'
+review_after: 2026-08-15
+---

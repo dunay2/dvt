@@ -30,6 +30,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyClassSet.v2.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanPreviewProvenance.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlanRecord.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanVersion.v1.ts`
