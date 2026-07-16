@@ -14771,3 +14771,36 @@ test('tracked migration maps the atomic controller test contract without duplica
   assert.match(migration.sql, /duplicate_file_role_count <> 0/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migration preserves hidden dbt selection through graph lifecycle updates', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '720_dbt_selection_lifecycle_hidden_intent.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /SYS-WEB-CANVAS-EXECUTION-SELECTION/);
+  assert.match(migration.sql, /CollectCanvasExecutionSelection/);
+  assert.match(migration.sql, /graph lifecycle updates operate on the complete requested-id set/i);
+  assert.match(migration.sql, /reconcileDbtExecutionSelectionVisibleSubset/);
+  assert.match(migration.sql, /useCanvasController\.draftLifecycle\.scopeAndProjection\.test\.tsx/);
+  assert.match(migration.sql, /VAL-WEB-DBT-SELECTION-LIFECYCLE-HIDDEN-IDS/);
+  assert.match(migration.sql, /duplicate_file_role_count <> 0/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});
+
+test('tracked migration mechanizes the dbt selection lifecycle policy symbol', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '721_dbt_selection_lifecycle_feature_symbol.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /reconcileDbtExecutionSelectionVisibleSubset/);
+  assert.match(migration.sql, /CollectCanvasExecutionSelection/);
+  assert.match(migration.sql, /dbtExecutionScopePolicy\.test\.ts/);
+  assert.match(migration.sql, /useCanvasController\.draftLifecycle\.scopeAndProjection\.test\.tsx/);
+  assert.match(migration.sql, /relational_symbol_count <> 1/);
+  assert.match(migration.sql, /manifest_symbol_count <> 1/);
+  assert.doesNotMatch(migration.sql, /truncate\s+/i);
+});

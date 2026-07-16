@@ -21,7 +21,10 @@ import { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import { useCanvasOverlayModel } from './useCanvasOverlayModel';
 import { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import { useCanvasSelectionSync } from './useCanvasSelectionSync';
-import { applyDbtExecutionSelectionToggle } from './dbtExecutionScopePolicy';
+import {
+  applyDbtExecutionSelectionToggle,
+  reconcileDbtExecutionSelectionVisibleSubset,
+} from './dbtExecutionScopePolicy';
 import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 export function useCanvasController() {
@@ -125,7 +128,11 @@ export function useCanvasController() {
     (nodeIds: string[]) => {
       if (preservesDbtExecutionSelectionIntent) {
         store.setExecutionSelectionIntent(
-          createCanvasExecutionSelectionIntent(nodeIds, 'explicit')
+          reconcileDbtExecutionSelectionVisibleSubset({
+            requestedNodeIds: executionScope.requestedNodeIds,
+            visibleNodeIds: executionScope.workspaceNodeIds,
+            nextSelectedNodeIds: nodeIds,
+          })
         );
         return;
       }
@@ -133,6 +140,8 @@ export function useCanvasController() {
       store.setSelectedNodes(nodeIds);
     },
     [
+      executionScope.requestedNodeIds,
+      executionScope.workspaceNodeIds,
       preservesDbtExecutionSelectionIntent,
       store.setExecutionSelectionIntent,
       store.setSelectedNodes,

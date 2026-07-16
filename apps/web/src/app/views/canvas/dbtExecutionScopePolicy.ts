@@ -161,3 +161,19 @@ export function applyDbtExecutionSelectionToggle(args: {
 
   return createCanvasExecutionSelectionIntent([...requestedNodeIds, args.nodeId], 'explicit');
 }
+
+export function reconcileDbtExecutionSelectionVisibleSubset(args: {
+  readonly requestedNodeIds: readonly string[];
+  readonly visibleNodeIds: readonly string[];
+  readonly nextSelectedNodeIds: readonly string[];
+}): CanvasExecutionSelectionIntent {
+  const visibleNodeIdSet = new Set(args.visibleNodeIds);
+  const hiddenRequestedNodeIds = [...new Set(args.requestedNodeIds)].filter(
+    (nodeId) => !visibleNodeIdSet.has(nodeId)
+  );
+
+  return createCanvasExecutionSelectionIntent(
+    [...hiddenRequestedNodeIds, ...args.nextSelectedNodeIds],
+    'explicit'
+  );
+}

@@ -32,6 +32,19 @@ function readLatestExecutionCall(harness: CanvasControllerHarness):
     | undefined;
 }
 
+function readLatestGraphSelectionSetter(
+  harness: CanvasControllerHarness
+): (nodeIds: string[]) => void {
+  const graphHandlerArgs = harness.mocks.useCanvasGraphHandlers.mock.calls.at(-1)?.[0] as
+    { setSelectedNodes?: (nodeIds: string[]) => void } | undefined;
+
+  if (!graphHandlerArgs?.setSelectedNodes) {
+    throw new Error('Canvas graph handlers did not receive a selection lifecycle adapter.');
+  }
+
+  return graphHandlerArgs.setSelectedNodes;
+}
+
 function expectSelectionPrunedToVisibleScope(harness: CanvasControllerHarness): void {
   expect(harness.state.store.setSelectedNodes).toHaveBeenCalledWith([]);
   expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith(null);
@@ -173,6 +186,41 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
       nodeIds: ['node_2'],
     });
     expect(readLatestExecutionCall(harness)?.workspaceNodeIds).toEqual(['node_1']);
+  });
+
+  it('retains hidden DBT intent when graph lifecycle removes the visible selected member', async () => {
+    harness = await createHarnessWithDraft(
+      buildRemoteDraftRecord(
+        {
+          canvas: { kind: 'dbt', title: 'DBT canvas' },
+          nodeIds: ['node_1'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+          },
+          edges: [],
+        },
+        'rev-dbt-lifecycle-1',
+        '2026-04-17T00:00:00Z'
+      )
+    );
+    harness.state.store.setExecutionSelectionIntent({
+      mode: 'explicit',
+      nodeIds: ['node_1', 'node_2'],
+    });
+    await harness.renderProbe();
+    harness.state.store.setExecutionSelectionIntent.mockClear();
+
+    readLatestGraphSelectionSetter(harness)([]);
+
+    expect(harness.state.store.setExecutionSelectionIntent).toHaveBeenCalledWith({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
+    await harness.renderProbe();
+    expect(readLatestExecutionCall(harness)?.selectionIntent).toEqual({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
   });
 
   it('projects the full persisted draft from protected semantic truth even before snapshot hydration catches up', async () => {

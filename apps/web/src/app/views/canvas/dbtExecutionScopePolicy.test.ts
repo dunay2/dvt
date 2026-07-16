@@ -5,6 +5,7 @@ import {
   applyDbtExecutionSelectionToggle,
   buildDbtExecutionIntentDraftSignature,
   canOfferDbtExecutionSelectionToggle,
+  reconcileDbtExecutionSelectionVisibleSubset,
   resolveDbtExecutionScope,
 } from './dbtExecutionScopePolicy';
 
@@ -145,6 +146,31 @@ describe('applyDbtExecutionSelectionToggle', () => {
         visibleNodeIds: ['source.visible', 'model.available'],
         nodeId: 'source.visible',
         shouldSelect: false,
+      })
+    ).toEqual({ mode: 'explicit', nodeIds: [] });
+  });
+});
+
+describe('reconcileDbtExecutionSelectionVisibleSubset', () => {
+  it('replaces the visible subset while retaining hidden requested members', () => {
+    expect(
+      reconcileDbtExecutionSelectionVisibleSubset({
+        requestedNodeIds: ['model.visible', 'model.hidden'],
+        visibleNodeIds: ['model.visible', 'model.other'],
+        nextSelectedNodeIds: ['model.other'],
+      })
+    ).toEqual({
+      mode: 'explicit',
+      nodeIds: ['model.hidden', 'model.other'],
+    });
+  });
+
+  it('keeps explicit-empty intent after removing the final visible member', () => {
+    expect(
+      reconcileDbtExecutionSelectionVisibleSubset({
+        requestedNodeIds: ['model.visible'],
+        visibleNodeIds: ['model.visible'],
+        nextSelectedNodeIds: [],
       })
     ).toEqual({ mode: 'explicit', nodeIds: [] });
   });
