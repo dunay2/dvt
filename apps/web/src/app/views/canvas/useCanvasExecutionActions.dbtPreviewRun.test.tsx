@@ -126,7 +126,7 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
         previewProfile: 'planner-generic-v1',
         sourceFamily: 'dbt',
       },
-      selectedNodeIds: ['source-orders'],
+      selectedNodeIds: ['model-orders'],
       workspaceNodeIds: ['source-orders', 'model-orders'],
     });
     await harness.render();
