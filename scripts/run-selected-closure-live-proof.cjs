@@ -404,11 +404,9 @@ function buildLiveProofApiEnv({
     DVT_TEMPORAL_DBT_ENABLED: readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_DBT_ENABLED) ?? 'true',
     DVT_DBT_ANALYZER_BIN: dbtExecutable,
     DVT_DBT_BIN: dbtExecutable,
-    DVT_DBT_EXECUTION_ADAPTER: readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_ADAPTER) ?? 'postgres',
-    DVT_DBT_EXECUTION_TARGET_NAME:
-      readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_TARGET_NAME) ?? 'analysis',
-    DVT_DBT_EXECUTION_CREDENTIAL_REF:
-      readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_CREDENTIAL_REF) ?? 'env:DBT_PROFILES_DIR',
+    DVT_DBT_EXECUTION_ADAPTER: 'postgres',
+    DVT_DBT_EXECUTION_TARGET_NAME: 'analysis',
+    DVT_DBT_EXECUTION_CREDENTIAL_REF: 'env:DBT_PROFILES_DIR',
     DBT_PROFILES_DIR: profilesDirectory,
   };
   const artifactEnv = buildLocalDbtArtifactEnv({

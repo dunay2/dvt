@@ -200,11 +200,17 @@ test('buildLiveProofApiEnv keeps execution on the generated live-proof profile',
     temporalNamespace: 'default',
     sourceEnv: {
       DBT_PROFILES_DIR: 'C:\\developer\\unrelated-dbt-profiles',
+      DVT_DBT_EXECUTION_ADAPTER: 'snowflake',
+      DVT_DBT_EXECUTION_TARGET_NAME: 'developer-target',
+      DVT_DBT_EXECUTION_CREDENTIAL_REF: 'env:DEVELOPER_DBT_CREDENTIAL',
     },
   });
 
   assert.equal(apiEnv.DBT_PROFILES_DIR, apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR);
   assert.notEqual(apiEnv.DBT_PROFILES_DIR, 'C:\\developer\\unrelated-dbt-profiles');
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_ADAPTER, 'postgres');
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_TARGET_NAME, 'analysis');
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_CREDENTIAL_REF, 'env:DBT_PROFILES_DIR');
 });
 
 test('prepareLiveProofDbtAnalyzerProfile creates an isolated server-owned analysis profile', async () => {
