@@ -38,14 +38,14 @@ function expectSelectionPrunedToVisibleScope(harness: CanvasControllerHarness): 
   expect(harness.getLatestResult()?.inspectorNode).toBeNull();
 }
 
-function expectExecutionScopeSubset(harness: CanvasControllerHarness): void {
+function expectTransformationExecutionScopeSubset(harness: CanvasControllerHarness): void {
   const latestExecutionCall = readLatestExecutionCall(harness);
 
   expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_1']);
   expect(harness.getLatestResult()?.transformationValidation.scopedNodeIds).toEqual(['node_1']);
   expect(latestExecutionCall?.canonicalNodes?.map((node) => node.id)).toEqual(['node_1']);
   expect(latestExecutionCall?.canonicalEdges).toEqual([]);
-  expect(latestExecutionCall?.selectionIntent).toEqual({ mode: 'explicit', nodeIds: [] });
+  expect(latestExecutionCall?.selectionIntent).toEqual({ mode: 'workspace', nodeIds: [] });
   expect(latestExecutionCall?.workspaceNodeIds).toEqual(['node_1']);
 }
 
@@ -137,9 +137,10 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
     harness.state.store.inspectorNodeId = 'node_2';
 
     await harness.renderProbe();
+    await harness.renderProbe();
 
     expectSelectionPrunedToVisibleScope(harness);
-    expectExecutionScopeSubset(harness);
+    expectTransformationExecutionScopeSubset(harness);
   });
 
   it('preserves hidden explicit DBT selection intent until execution validation rejects it', async () => {
