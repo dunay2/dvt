@@ -192,6 +192,27 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
   assert.equal(apiEnv.OIDC_ISSUER, 'https://issuer.local.dvt/');
 });
 
+test('buildLiveProofApiEnv keeps execution on the generated live-proof profile', () => {
+  const apiEnv = buildLiveProofApiEnv({
+    databaseUrl: defaultPgUrl,
+    liveProofSchema: 'dvt_live_selected_closure_profile_authority_test',
+    temporalAddress: '127.0.0.1:7233',
+    temporalNamespace: 'default',
+    sourceEnv: {
+      DBT_PROFILES_DIR: 'C:\\developer\\unrelated-dbt-profiles',
+      DVT_DBT_EXECUTION_ADAPTER: 'snowflake',
+      DVT_DBT_EXECUTION_TARGET_NAME: 'developer-target',
+      DVT_DBT_EXECUTION_CREDENTIAL_REF: 'env:DEVELOPER_DBT_CREDENTIAL',
+    },
+  });
+
+  assert.equal(apiEnv.DBT_PROFILES_DIR, apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR);
+  assert.notEqual(apiEnv.DBT_PROFILES_DIR, 'C:\\developer\\unrelated-dbt-profiles');
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_ADAPTER, 'postgres');
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_TARGET_NAME, 'analysis');
+  assert.equal(apiEnv.DVT_DBT_EXECUTION_CREDENTIAL_REF, 'env:DBT_PROFILES_DIR');
+});
+
 test('prepareLiveProofDbtAnalyzerProfile creates an isolated server-owned analysis profile', async () => {
   const proofRoot = await mkdtemp(path.join(tmpdir(), 'dvt-selected-closure-profile-'));
   const profilesDirectory = path.join(proofRoot, 'server-dbt-profiles');
