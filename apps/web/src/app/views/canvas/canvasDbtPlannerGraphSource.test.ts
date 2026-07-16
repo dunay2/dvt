@@ -189,7 +189,7 @@ describe('canvas dbt planner graph source', () => {
     );
   });
 
-  it('falls back to the visible dbt workflow when the selected node is non-executable', () => {
+  it('rejects an explicit selection that has no executable dbt resources', () => {
     expect(
       resolveDbtExecutionScopeNodeIds({
         nodes: [sourceNode, modelNode, testNode],
@@ -197,7 +197,24 @@ describe('canvas dbt planner graph source', () => {
         selectedNodeIds: ['source-orders'],
         workspaceNodeIds: ['source-orders', 'model-orders', 'test-orders'],
       })
-    ).toEqual(['source-orders', 'model-orders', 'test-orders']);
+    ).toEqual({
+      ok: false,
+      cause: 'explicit_selection_has_no_executable_nodes',
+    });
+  });
+
+  it('uses the visible executable dbt workflow only when there is no explicit selection', () => {
+    expect(
+      resolveDbtExecutionScopeNodeIds({
+        nodes: [sourceNode, modelNode, testNode],
+        edges,
+        selectedNodeIds: [],
+        workspaceNodeIds: ['source-orders', 'model-orders', 'test-orders'],
+      })
+    ).toEqual({
+      ok: true,
+      nodeIds: ['model-orders', 'test-orders'],
+    });
   });
 
   it('includes upstream executable dbt dependencies for partial executable selection', () => {
@@ -208,7 +225,10 @@ describe('canvas dbt planner graph source', () => {
         selectedNodeIds: ['model-order-revenue'],
         workspaceNodeIds: ['source-orders', 'model-orders', 'model-order-revenue', 'test-orders'],
       })
-    ).toEqual(['model-orders', 'model-order-revenue']);
+    ).toEqual({
+      ok: true,
+      nodeIds: ['model-orders', 'model-order-revenue'],
+    });
 
     const result = buildDbtPlannerGraphSource({
       nodes: [sourceNode, modelNode, downstreamModelNode, testNode],

@@ -9,6 +9,7 @@ import { parseExecutionSelection, PlanPreviewProvenanceSchema } from '@dvt/contr
 
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { PlanPreviewProvenanceViewModel } from '../../types/plans';
+import { resolveDbtExecutionScope } from './dbtExecutionScopePolicy';
 
 export type DbtProjectFileExecutionStrategy = Extract<
   CanvasExecutionStrategy,
@@ -101,22 +102,20 @@ export function buildDbtProjectFileExecutionStrategy(
 
 export function buildDbtProjectFilePlannerProjection(
   strategy: DbtProjectFileExecutionStrategy,
-  selectedNodeIds: readonly string[]
+  selectedNodeIds: readonly string[],
+  workspaceNodeIds: readonly string[]
 ) {
   const nodeById = new Map(strategy.plannerGraphSource.nodes.map((node) => [node.nodeId, node]));
-  const selectedExecutableIds = selectedNodeIds.filter((nodeId) => nodeById.has(nodeId));
-  const scopedIds = new Set(
-    selectedExecutableIds.length > 0 ? selectedExecutableIds : [...nodeById.keys()]
-  );
-
-  const includeDependencies = (nodeId: string): void => {
-    for (const dependencyId of nodeById.get(nodeId)?.dependsOn ?? []) {
-      if (scopedIds.has(dependencyId)) continue;
-      scopedIds.add(dependencyId);
-      includeDependencies(dependencyId);
-    }
-  };
-  for (const nodeId of [...scopedIds]) includeDependencies(nodeId);
+  const executionScope = resolveDbtExecutionScope({
+    selectedNodeIds,
+    workspaceNodeIds,
+    executableNodeIds: [...nodeById.keys()],
+    dependencyIdsByNodeId: new Map(
+      strategy.plannerGraphSource.nodes.map((node) => [node.nodeId, node.dependsOn])
+    ),
+  });
+  if (!executionScope.ok) return executionScope;
+  const scopedIds = new Set(executionScope.nodeIds);
 
   const graphSource: GenericGraphSourceV1 = {
     ...strategy.plannerGraphSource,

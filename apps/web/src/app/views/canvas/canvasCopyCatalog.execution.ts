@@ -64,6 +64,10 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.execution.unavailableMessage',
     fallback: 'Execution Preview and run start are not available for this canvas kind.',
   },
+  dbtExplicitSelectionRequiresExecutableResourceMessage: {
+    key: 'canvas.dbt.explicitSelectionRequiresExecutableResourceMessage',
+    fallback: 'Select at least one DBT model, test, or snapshot before previewing this selection.',
+  },
   planCreatedMessage: {
     key: 'canvas.plan.createdMessage',
     fallback: 'Execution Preview created',

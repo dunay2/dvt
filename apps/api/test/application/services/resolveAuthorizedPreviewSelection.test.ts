@@ -220,6 +220,25 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
     });
   });
 
+  it('rejects a file-backed selection that names only a non-executable dbt resource', async () => {
+    const { service } = buildService();
+    const sourceId = 'source.analytics.raw.orders';
+
+    await expect(
+      service.execute(
+        {
+          selection: parseExecutionSelection({ mode: 'explicit', nodeIds: [sourceId] }),
+          graphSource: GRAPH_SOURCE,
+          provenance: { ...PROVENANCE, selectedUniqueIds: [sourceId] },
+        },
+        buildContext()
+      )
+    ).resolves.toMatchObject({
+      ok: false,
+      rejection: { cause: 'dbt_project_selected_resource_not_executable' },
+    });
+  });
+
   it('delegates non-file Preview to protected graph-draft selection resolution', async () => {
     const graphDraftResult = {
       ok: true as const,

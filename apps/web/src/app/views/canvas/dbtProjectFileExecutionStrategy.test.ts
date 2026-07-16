@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   buildDbtProjectFileExecutionDraftSignature,
+  buildDbtProjectFilePlannerProjection,
   buildDbtProjectFileExecutionStrategy,
   buildDbtProjectFilePreviewProvenance,
   isDbtProjectFilePreviewProvenanceCurrent,
@@ -102,6 +103,40 @@ describe('dbt project file execution strategy', () => {
 
     expect(buildDbtProjectFileExecutionStrategy(projection)).toEqual({
       kind: 'not_executable',
+    });
+  });
+
+  it('rejects an explicit selection that contains only non-executable project resources', () => {
+    const strategy = buildDbtProjectFileExecutionStrategy(buildProjection());
+    expect(strategy.kind).toBe('dbt_project_file_preview');
+    if (strategy.kind !== 'dbt_project_file_preview') return;
+
+    expect(
+      buildDbtProjectFilePlannerProjection(
+        strategy,
+        ['source.analytics.raw.orders'],
+        ['source.analytics.raw.orders', 'model.analytics.orders']
+      )
+    ).toEqual({
+      ok: false,
+      cause: 'explicit_selection_has_no_executable_nodes',
+    });
+  });
+
+  it('defaults to the executable workspace only when no project resource is selected', () => {
+    const strategy = buildDbtProjectFileExecutionStrategy(buildProjection());
+    expect(strategy.kind).toBe('dbt_project_file_preview');
+    if (strategy.kind !== 'dbt_project_file_preview') return;
+
+    expect(
+      buildDbtProjectFilePlannerProjection(
+        strategy,
+        [],
+        ['source.analytics.raw.orders', 'model.analytics.orders']
+      )
+    ).toMatchObject({
+      ok: true,
+      selection: { mode: 'explicit', nodeIds: ['model.analytics.orders'] },
     });
   });
 
