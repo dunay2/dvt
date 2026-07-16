@@ -192,6 +192,21 @@ test('buildLiveProofApiEnv exposes workspace file roots for live warehouse catal
   assert.equal(apiEnv.OIDC_ISSUER, 'https://issuer.local.dvt/');
 });
 
+test('buildLiveProofApiEnv keeps execution on the generated live-proof profile', () => {
+  const apiEnv = buildLiveProofApiEnv({
+    databaseUrl: defaultPgUrl,
+    liveProofSchema: 'dvt_live_selected_closure_profile_authority_test',
+    temporalAddress: '127.0.0.1:7233',
+    temporalNamespace: 'default',
+    sourceEnv: {
+      DBT_PROFILES_DIR: 'C:\\developer\\unrelated-dbt-profiles',
+    },
+  });
+
+  assert.equal(apiEnv.DBT_PROFILES_DIR, apiEnv.DVT_DBT_ANALYZER_PROFILES_DIR);
+  assert.notEqual(apiEnv.DBT_PROFILES_DIR, 'C:\\developer\\unrelated-dbt-profiles');
+});
+
 test('prepareLiveProofDbtAnalyzerProfile creates an isolated server-owned analysis profile', async () => {
   const proofRoot = await mkdtemp(path.join(tmpdir(), 'dvt-selected-closure-profile-'));
   const profilesDirectory = path.join(proofRoot, 'server-dbt-profiles');

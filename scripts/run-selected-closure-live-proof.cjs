@@ -409,7 +409,7 @@ function buildLiveProofApiEnv({
       readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_TARGET_NAME) ?? 'analysis',
     DVT_DBT_EXECUTION_CREDENTIAL_REF:
       readNonEmptyEnv(sourceEnv.DVT_DBT_EXECUTION_CREDENTIAL_REF) ?? 'env:DBT_PROFILES_DIR',
-    DBT_PROFILES_DIR: readNonEmptyEnv(sourceEnv.DBT_PROFILES_DIR) ?? profilesDirectory,
+    DBT_PROFILES_DIR: profilesDirectory,
   };
   const artifactEnv = buildLocalDbtArtifactEnv({
     ...temporalSourceEnv,
