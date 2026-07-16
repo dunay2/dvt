@@ -2,6 +2,7 @@ import {
   DbtProjectGraphProjectionSchema,
   asSha256HexString,
   parseExecutionSelection,
+  type DbtProjectGraphProjection,
   type DbtProjectFilesProvenance,
   type GenericGraphSourceV1,
 } from '@dvt/contracts';
@@ -76,7 +77,7 @@ function buildContext(): AuthorizedCommandExecutionContext {
   };
 }
 
-function buildProjection(overrides: Record<string, unknown> = {}) {
+function buildProjection(overrides: Record<string, unknown> = {}): DbtProjectGraphProjection {
   return DbtProjectGraphProjectionSchema.parse({
     schemaVersion: 'dbt-project-graph-projection.v1',
     authorityBinding: {
@@ -132,7 +133,11 @@ function buildProjection(overrides: Record<string, unknown> = {}) {
   });
 }
 
-function buildService(projection = buildProjection()) {
+function buildService(projection = buildProjection()): {
+  readonly graphDraftResolver: { readonly execute: ReturnType<typeof vi.fn> };
+  readonly projectGraph: { readonly execute: ReturnType<typeof vi.fn> };
+  readonly service: ResolveAuthorizedPreviewSelectionService;
+} {
   const graphDraftResolver = { execute: vi.fn() };
   const projectGraph = { execute: vi.fn(async () => projection) };
   return {

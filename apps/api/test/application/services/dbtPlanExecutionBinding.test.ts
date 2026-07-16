@@ -1,4 +1,4 @@
-import type { ExecutionPlan } from '@dvt/contracts';
+import { asSha256HexString, type ExecutionPlan, type GitArtifactRef } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import { resolveDbtPlanExecutionBinding } from '../../../src/application/services/dbtPlanExecutionBinding.js';
@@ -99,12 +99,12 @@ function buildPlan(provenance: unknown): ExecutionPlan {
   };
 }
 
-function gitRef(path: string, hashDigit: string) {
+function gitRef(path: string, hashDigit: string): GitArtifactRef {
   return {
     repo: 'org/repo',
     path,
     ref: 'refs/heads/main',
     commitSha: hashDigit.repeat(40),
-    contentSha256: hashDigit.repeat(64),
+    contentSha256: asSha256HexString(hashDigit.repeat(64)),
   };
 }

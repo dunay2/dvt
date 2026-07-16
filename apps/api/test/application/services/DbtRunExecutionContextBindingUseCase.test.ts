@@ -11,6 +11,8 @@ import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/typ
 
 import { buildAuthorizedContext } from './engineStartRunUseCase.test.support.js';
 
+type BindingDependencies = ConstructorParameters<typeof DbtRunExecutionContextBindingUseCase>[0];
+
 const PLAN_ID = 'd'.repeat(64);
 const PROJECT_REVISION = '1'.repeat(64);
 const BUNDLE_SHA = '2'.repeat(64);
@@ -170,7 +172,7 @@ const DBT_PROVENANCE = {
   executionTarget: TARGET,
 } as const;
 
-function makeDelegate() {
+function makeDelegate(): BindingDependencies['delegate'] {
   return {
     execute: vi.fn(async () => ({
       ok: true as const,
@@ -179,7 +181,10 @@ function makeDelegate() {
   };
 }
 
-function makePlanStore(stepKind: string | undefined, provenance: unknown) {
+function makePlanStore(
+  stepKind: string | undefined,
+  provenance: unknown
+): BindingDependencies['planStore'] {
   return {
     fetchStoredPlanArtifactForValidation: vi.fn(async () => ({
       executionPolicy: {},

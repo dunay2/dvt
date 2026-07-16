@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { URL } from 'node:url';
 
-import { parseRunExecutionContext } from '@dvt/contracts';
+import { parseRunExecutionContext, type RunExecutionContext } from '@dvt/contracts';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { FileDbtRunExecutionContextWriter } from '../../../src/infrastructure/dbt/FileDbtRunExecutionContextWriter.js';
@@ -30,7 +30,7 @@ describe('FileDbtRunExecutionContextWriter', () => {
   });
 });
 
-function buildContext() {
+function buildContext(): RunExecutionContext {
   return parseRunExecutionContext({
     schemaVersion: 'v1.0',
     planId: 'a'.repeat(64),
