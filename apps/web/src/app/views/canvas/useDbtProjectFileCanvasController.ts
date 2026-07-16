@@ -18,6 +18,7 @@ import { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import { useCanvasStoreFacade } from './useCanvasStoreFacade';
 import { useCanvasViewportGraphModel } from './useCanvasViewportGraphModel';
 import { useDbtProjectFileExecution } from './useDbtProjectFileExecution';
+import { canOfferDbtExecutionSelectionToggle } from './dbtExecutionScopePolicy';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -189,6 +190,15 @@ export function useDbtProjectFileCanvasController(
     workspaceNodeIds: visibleNodeIds,
     store,
   });
+  const executionSelectableNodeIds = useMemo(
+    () =>
+      new Set(
+        execution.executionStrategy?.kind === 'dbt_project_file_preview'
+          ? execution.executionStrategy.plannerGraphSource.nodes.map((node) => node.nodeId)
+          : []
+      ),
+    [execution.executionStrategy]
+  );
 
   useEffect(() => {
     if (
@@ -229,19 +239,25 @@ export function useDbtProjectFileCanvasController(
           canMutateGraph: false,
           selectedForExecution: selectedNodeIds.includes(node.id),
           onInspectNode: openNodeWorkbench,
-          onToggleNodeSelection: execution.canSelectExecution
-            ? (nodeId: string, shouldSelect: boolean) => {
-                store.setSelectedNodes(
-                  shouldSelect
-                    ? [...new Set([...selectedNodeIds, nodeId])]
-                    : selectedNodeIds.filter((selectedNodeId) => selectedNodeId !== nodeId)
-                );
-              }
-            : undefined,
+          onToggleNodeSelection:
+            execution.canSelectExecution &&
+            canOfferDbtExecutionSelectionToggle({
+              isExecutableRoot: executionSelectableNodeIds.has(node.id),
+              selectedForExecution: selectedNodeIds.includes(node.id),
+            })
+              ? (nodeId: string, shouldSelect: boolean) => {
+                  store.setSelectedNodes(
+                    shouldSelect
+                      ? [...new Set([...selectedNodeIds, nodeId])]
+                      : selectedNodeIds.filter((selectedNodeId) => selectedNodeId !== nodeId)
+                  );
+                }
+              : undefined,
         },
       })),
     [
       execution.canSelectExecution,
+      executionSelectableNodeIds,
       graphModel.nodes,
       openNodeWorkbench,
       selectedNodeIds,

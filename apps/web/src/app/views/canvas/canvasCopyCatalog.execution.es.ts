@@ -25,7 +25,7 @@ export const canvasViewExecutionCopyEs = {
   canvasExecutionUnavailableMessage:
     'Execution Preview y el arranque de run no estan disponibles para este tipo de canvas.',
   dbtExplicitSelectionRequiresExecutableResourceMessage:
-    'Selecciona al menos un modelo, test o snapshot DBT antes de previsualizar esta seleccion.',
+    'La seleccion contiene recursos no disponibles o no ejecutables. Deseleccionalos y conserva solo modelos, tests o snapshots DBT.',
   planCreatedMessage: 'Execution Preview creado',
   runStartedMessage: 'Run arrancado',
   planStatusRunUnavailableMessage: 'El arranque de runs no esta disponible en este contexto.',

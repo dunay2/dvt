@@ -52,6 +52,9 @@ It does **not** own:
 - `isDbtExecutionSelectableNode(...)`
   Report whether a canonical DBT node can be an explicit execution root. The
   graph card consumes this query; it does not reimplement the kind policy.
+- `canOfferDbtExecutionSelectionToggle(...)`
+  Expose `Select` only for executable roots while preserving `Deselect` as the
+  recovery action for an invalid resource selected by an older client.
 - `buildCanvasDbtExecutionProjection(...)`
   Build the one DBT projection consumed by both Preview and readiness.
 - `executeCanvasPlanAction(...)`
@@ -83,8 +86,9 @@ It does **not** own:
   selection and never defaults to the whole workspace.
 - successful DBT scope resolution exposes requested root ids separately from
   dependency ids that were included by transitive closure.
-- DBT node cards render execution selection only for roots admitted by
-  `isDbtExecutionSelectableNode(...)`.
+- DBT node cards render `Select` only for roots admitted by
+  `isDbtExecutionSelectableNode(...)`; an already-selected invalid resource
+  renders only `Deselect` so the caller can recover without scope widening.
 - `canvasDbtExecutionProjection.ts` is shared by Preview and readiness so the
   enabled action and the emitted request cannot disagree.
 - SQL-first Plan never calls `previewPlan` with browser-only graph state:

@@ -48,8 +48,9 @@ describe('canvas execution selection architecture', () => {
     expect(PLAN_ACTION_SOURCE).toContain("from './canvasDbtExecutionProjection'");
     expect(EXECUTION_STATE_SOURCE).toContain("from './canvasDbtExecutionProjection'");
     expect(DBT_EXECUTION_PROJECTION_SOURCE).toContain('buildCanvasDbtExecutionProjection');
-    expect(DBT_SCOPE_POLICY_SOURCE).toContain('hasExplicitSelection');
-    expect(DBT_SCOPE_POLICY_SOURCE).toContain('explicit_selection_has_no_executable_nodes');
+    expect(DBT_SCOPE_POLICY_SOURCE).toContain('isDbtExecutionSelectableNode');
+    expect(DBT_SCOPE_POLICY_SOURCE).toContain('requestedRootNodeIds');
+    expect(DBT_SCOPE_POLICY_SOURCE).toContain('derivedDependencyNodeIds');
     expect(RUN_START_ACTION_SOURCE).toContain("from './canvasRunSelection'");
     expect(RUN_START_ACTION_SOURCE).toContain('collectPlanSelection(currentPlan)');
     expect(COMPONENT_GUIDE_SOURCE).toContain('## Public API');

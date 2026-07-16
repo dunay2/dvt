@@ -106,10 +106,11 @@ export function buildDbtProjectFilePlannerProjection(
   workspaceNodeIds: readonly string[]
 ) {
   const nodeById = new Map(strategy.plannerGraphSource.nodes.map((node) => [node.nodeId, node]));
+  const workspaceNodeIdSet = new Set(workspaceNodeIds);
   const executionScope = resolveDbtExecutionScope({
     selectedNodeIds,
     workspaceNodeIds,
-    executableNodeIds: [...nodeById.keys()],
+    executableNodeIds: [...nodeById.keys()].filter((nodeId) => workspaceNodeIdSet.has(nodeId)),
     dependencyIdsByNodeId: new Map(
       strategy.plannerGraphSource.nodes.map((node) => [node.nodeId, node.dependsOn])
     ),
@@ -128,6 +129,9 @@ export function buildDbtProjectFilePlannerProjection(
 
   return {
     ok: true as const,
+    selectionMode: executionScope.selectionMode,
+    requestedRootNodeIds: executionScope.requestedRootNodeIds,
+    derivedDependencyNodeIds: executionScope.derivedDependencyNodeIds,
     graphSource,
     selection,
     draftSignature: JSON.stringify({ graphSource, selection }),

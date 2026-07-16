@@ -130,7 +130,17 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
 
     expect(result).toMatchObject({
       ok: true,
-      plan: persistedPlan,
+      plan: {
+        ...persistedPlan,
+        preview: {
+          selectionIntent: {
+            mode: 'explicit',
+            requestedRootNodeIds: ['test.analytics.orders_not_null'],
+            derivedDependencyNodeIds: ['model.analytics.orders'],
+            authorizedScopeNodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
+          },
+        },
+      },
       writtenArtifactPaths: [],
     });
     expect(saveFileContent).not.toHaveBeenCalled();
@@ -216,7 +226,68 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
 
     expect(result).toEqual({
       ok: false,
-      message: 'Select at least one DBT model, test, or snapshot before previewing this selection.',
+      message:
+        'Execution selection contains unavailable or non-executable resources. Deselect them and keep only DBT models, tests, or snapshots.',
+    });
+    expect(previewPlan).not.toHaveBeenCalled();
+  });
+
+  it('rejects a mixed explicit selection instead of dropping its source member', async () => {
+    const previewPlan = vi.fn<IPlansPort['previewPlan']>();
+    const strategy: CanvasExecutionStrategy = {
+      kind: 'dbt_project_file_preview',
+      previewProfile: 'planner-generic-v1',
+      sourceFamily: 'dbt',
+      canvasId: 'analytics-canvas',
+      projectRoot: 'analytics',
+      contentSetSha256: '1'.repeat(64),
+      analysisSha256: '2'.repeat(64),
+      dbtVersion: '1.10.0',
+      plannerGraphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: '1.0',
+        nodes: [{ nodeId: modelNode.id, stepKind: 'DBT_MODEL', dependsOn: [] }],
+      },
+      executionTarget: {
+        provider: 'server-config',
+        adapter: 'postgres',
+        targetName: 'development',
+        credentialRef: 'vault:dbt/development',
+      },
+    };
+    const runContext = makeRunContext('preview_context');
+    const sessionContext = {
+      buildRunContext: () => runContext,
+      getWorkspaceScope: () => runContext,
+      getWorkspaceScopeSnapshot: () => runContext,
+      subscribeWorkspaceScope: () => () => undefined,
+    } as unknown as SessionContextPort;
+
+    const result = await executeCanvasPlanAction({
+      canPlan: true,
+      canonicalEdges: [],
+      canonicalNodes: [sourceNode, modelNode],
+      executionStrategy: strategy,
+      plansService: { previewPlan, importPlan: vi.fn() },
+      previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
+      selectedNodeIds: [sourceNode.id, modelNode.id],
+      sessionContext,
+      transformationValidation: validateTransformationGraph({
+        nodes: [sourceNode, modelNode],
+        edges: [],
+        selectedNodeIds: [sourceNode.id, modelNode.id],
+        workspaceNodeIds: [sourceNode.id, modelNode.id],
+      }),
+      workspaceNodeIds: [sourceNode.id, modelNode.id],
+      workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
+      workspaceFileContentCommand: {} as IWorkspaceFileContentCommandPort,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      message:
+        'Execution selection contains unavailable or non-executable resources. Deselect them and keep only DBT models, tests, or snapshots.',
     });
     expect(previewPlan).not.toHaveBeenCalled();
   });

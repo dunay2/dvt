@@ -199,7 +199,8 @@ describe('canvas dbt planner graph source', () => {
       })
     ).toEqual({
       ok: false,
-      cause: 'explicit_selection_has_no_executable_nodes',
+      cause: 'explicit_selection_contains_unavailable_or_non_executable_nodes',
+      invalidNodeIds: ['source-orders'],
     });
   });
 
@@ -213,6 +214,9 @@ describe('canvas dbt planner graph source', () => {
       })
     ).toEqual({
       ok: true,
+      selectionMode: 'workspace',
+      requestedRootNodeIds: ['model-orders', 'test-orders'],
+      derivedDependencyNodeIds: [],
       nodeIds: ['model-orders', 'test-orders'],
     });
   });
@@ -227,6 +231,9 @@ describe('canvas dbt planner graph source', () => {
       })
     ).toEqual({
       ok: true,
+      selectionMode: 'explicit',
+      requestedRootNodeIds: ['model-order-revenue'],
+      derivedDependencyNodeIds: ['model-orders'],
       nodeIds: ['model-orders', 'model-order-revenue'],
     });
 

@@ -119,7 +119,8 @@ describe('dbt project file execution strategy', () => {
       )
     ).toEqual({
       ok: false,
-      cause: 'explicit_selection_has_no_executable_nodes',
+      cause: 'explicit_selection_contains_unavailable_or_non_executable_nodes',
+      invalidNodeIds: ['source.analytics.raw.orders'],
     });
   });
 
@@ -137,6 +138,24 @@ describe('dbt project file execution strategy', () => {
     ).toMatchObject({
       ok: true,
       selection: { mode: 'explicit', nodeIds: ['model.analytics.orders'] },
+    });
+  });
+
+  it('rejects an executable project resource that is unavailable in the visible workspace', () => {
+    const strategy = buildDbtProjectFileExecutionStrategy(buildProjection());
+    expect(strategy.kind).toBe('dbt_project_file_preview');
+    if (strategy.kind !== 'dbt_project_file_preview') return;
+
+    expect(
+      buildDbtProjectFilePlannerProjection(
+        strategy,
+        ['model.analytics.orders'],
+        ['source.analytics.raw.orders']
+      )
+    ).toEqual({
+      ok: false,
+      cause: 'explicit_selection_contains_unavailable_or_non_executable_nodes',
+      invalidNodeIds: ['model.analytics.orders'],
     });
   });
 

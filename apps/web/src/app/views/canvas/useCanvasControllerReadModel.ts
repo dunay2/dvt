@@ -6,6 +6,10 @@ import { validateTransformationGraph } from './transformationGraphValidation';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
+import {
+  canOfferDbtExecutionSelectionToggle,
+  isDbtExecutionSelectableNode,
+} from './dbtExecutionScopePolicy';
 
 type UseCanvasControllerReadModelArgs = {
   graphModel: {
@@ -94,17 +98,33 @@ export function useCanvasControllerReadModel({
             : undefined,
           onAttachSchemaToNode: canMutateGraph ? graphHandlers.handleAttachSchemaToNode : undefined,
         },
-      }).map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          activeRunId: overlayModel.activeRunId,
-          canvasKind: activeCanvasKind,
-          runStatusByNodeId: overlayModel.runStatusByNodeId,
-          overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
-          runtimeCapabilities,
-        },
-      })),
+      }).map((node) => {
+        const canonicalNode = graphModel.canonicalNodesById.get(node.id);
+        const selectedForExecution = uiScope.selectedNodeIds.includes(node.id);
+        const canSelectNode =
+          canSelectExecution &&
+          (activeCanvasKind !== 'dbt' ||
+            canOfferDbtExecutionSelectionToggle({
+              isExecutableRoot:
+                canonicalNode != null && isDbtExecutionSelectableNode(canonicalNode),
+              selectedForExecution,
+            }));
+
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            onToggleNodeSelection: canSelectNode
+              ? graphHandlers.handleToggleNodeSelection
+              : undefined,
+            activeRunId: overlayModel.activeRunId,
+            canvasKind: activeCanvasKind,
+            runStatusByNodeId: overlayModel.runStatusByNodeId,
+            overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
+            runtimeCapabilities,
+          },
+        };
+      }),
     [
       canMutateGraph,
       canSelectExecution,
@@ -114,6 +134,7 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleRemoveNode,
       graphHandlers.handleToggleNodeSelection,
       graphHandlers.handleAttachSchemaToNode,
+      graphModel.canonicalNodesById,
       graphModel.edges,
       graphModel.nodes,
       activeCanvasKind,

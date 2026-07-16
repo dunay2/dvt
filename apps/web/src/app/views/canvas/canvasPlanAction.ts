@@ -37,6 +37,29 @@ type CanvasPlanActionSuccess = {
 
 export type CanvasPlanActionResult = CanvasPlanActionFailure | CanvasPlanActionSuccess;
 
+function attachDbtSelectionIntent(
+  plan: PlanViewModel,
+  selection: {
+    readonly selectionMode: 'explicit' | 'workspace';
+    readonly requestedRootNodeIds: readonly string[];
+    readonly derivedDependencyNodeIds: readonly string[];
+    readonly scopedNodeIds: readonly string[];
+  }
+): PlanViewModel {
+  return {
+    ...plan,
+    preview: {
+      ...(plan.preview ?? {}),
+      selectionIntent: {
+        mode: selection.selectionMode,
+        requestedRootNodeIds: [...selection.requestedRootNodeIds],
+        derivedDependencyNodeIds: [...selection.derivedDependencyNodeIds],
+        authorizedScopeNodeIds: [...selection.scopedNodeIds],
+      },
+    },
+  };
+}
+
 function formatPlanActionErrorMessage(error: unknown): string {
   if (!(error instanceof Error)) {
     return canvasViewCopy.planUnableToCreateMessage;
@@ -136,7 +159,7 @@ export async function executeCanvasPlanAction({
         writtenArtifacts.push(...artifactProjection.artifacts);
       }
 
-      const plan = await plansService.previewPlan({
+      const previewedPlan = await plansService.previewPlan({
         previewProfile: executionStrategy.previewProfile,
         graphSource: plannerProjection.graphSource,
         selection: plannerProjection.selection,
@@ -151,6 +174,7 @@ export async function executeCanvasPlanAction({
           : {}),
         persist: true,
       });
+      const plan = attachDbtSelectionIntent(previewedPlan, plannerProjection);
 
       return {
         ok: true,

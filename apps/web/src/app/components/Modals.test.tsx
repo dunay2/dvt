@@ -134,6 +134,12 @@ describe('PlanPreviewModal', () => {
       ...mockExecutionPlan,
       preview: {
         ...mockExecutionPlan.preview!,
+        selectionIntent: {
+          mode: 'explicit' as const,
+          requestedRootNodeIds: ['test.analytics.orders_not_null'],
+          derivedDependencyNodeIds: ['model.analytics.orders'],
+          authorizedScopeNodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
+        },
         provenance: {
           kind: 'dbt-project-files' as const,
           canvasId: 'analytics-canvas',
@@ -141,7 +147,7 @@ describe('PlanPreviewModal', () => {
           contentSetSha256: '1'.repeat(64),
           analysisSha256: '2'.repeat(64),
           dbtVersion: '1.10.0',
-          selectedUniqueIds: ['model.analytics.orders'],
+          selectedUniqueIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
           executionTarget: {
             provider: 'server-config',
             adapter: 'postgres',
@@ -165,6 +171,15 @@ describe('PlanPreviewModal', () => {
     );
     expect(bodyText).toContain('analytics');
     expect(bodyText).toContain('model.analytics.orders');
+    expect(document.querySelector('[aria-label="Requested resources value"]')?.textContent).toBe(
+      'test.analytics.orders_not_null'
+    );
+    expect(document.querySelector('[aria-label="Included dependencies value"]')?.textContent).toBe(
+      'model.analytics.orders'
+    );
+    expect(
+      document.querySelector('[aria-label="Authorized execution scope value"]')?.textContent
+    ).toBe('model.analytics.orders, test.analytics.orders_not_null');
     expect(bodyText).toContain('server-config / postgres / development');
     expect(document.querySelector('[aria-label="Execution target value"]')?.textContent).toBe(
       'server-config / postgres / development'

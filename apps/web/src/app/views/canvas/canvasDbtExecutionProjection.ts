@@ -65,5 +65,13 @@ export function buildCanvasDbtExecutionProjection(args: {
     edges: args.canonicalEdges,
     scopedNodeIds: executionScope.nodeIds,
   });
-  return projection.ok ? { ...projection, scopedNodeIds: executionScope.nodeIds } : projection;
+  return projection.ok
+    ? {
+        ...projection,
+        selectionMode: executionScope.selectionMode,
+        requestedRootNodeIds: executionScope.requestedRootNodeIds,
+        derivedDependencyNodeIds: executionScope.derivedDependencyNodeIds,
+        scopedNodeIds: executionScope.nodeIds,
+      }
+    : projection;
 }

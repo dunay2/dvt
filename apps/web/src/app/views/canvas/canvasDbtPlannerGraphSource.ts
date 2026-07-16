@@ -3,7 +3,7 @@ import type { ExecutionSelection, GenericGraphSourceV1, GenericGraphNodeV1 } fro
 import { parseExecutionSelection } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { resolveDbtExecutionScope } from './dbtExecutionScopePolicy';
+import { resolveDbtExecutableStepKind, resolveDbtExecutionScope } from './dbtExecutionScopePolicy';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 
 export type DbtPlannerGraphSourceResult =
@@ -18,29 +18,11 @@ export type DbtPlannerGraphSourceResult =
       message: string;
     }>;
 
-const EXECUTABLE_DBT_STEP_KIND_BY_NODE_KIND = {
-  'dbt:model': 'DBT_MODEL',
-  'dbt:test': 'DBT_TEST',
-  'dbt:snapshot': 'DBT_SNAPSHOT',
-} as const;
-
 function resolveScopedNodeIds(
   nodes: readonly CanonicalNode[],
   scopedNodeIds: readonly string[]
 ): Set<string> {
   return scopedNodeIds.length > 0 ? new Set(scopedNodeIds) : new Set(nodes.map((node) => node.id));
-}
-
-function resolveDbtStepKind(node: CanonicalNode): string | null {
-  if (node.pluginId !== 'dbt') {
-    return null;
-  }
-
-  return (
-    EXECUTABLE_DBT_STEP_KIND_BY_NODE_KIND[
-      node.kind as keyof typeof EXECUTABLE_DBT_STEP_KIND_BY_NODE_KIND
-    ] ?? null
-  );
 }
 
 export function resolveDbtExecutionScopeNodeIds(args: {
@@ -52,7 +34,7 @@ export function resolveDbtExecutionScopeNodeIds(args: {
   const nodeById = new Map(args.nodes.map((node) => [node.id, node]));
   const executableNodeIds = args.workspaceNodeIds.filter((nodeId) => {
     const node = nodeById.get(nodeId);
-    return node != null && resolveDbtStepKind(node) !== null;
+    return node != null && resolveDbtExecutableStepKind(node) !== null;
   });
   const executableNodeIdSet = new Set(executableNodeIds);
   const dependencyIdsByNodeId = new Map<string, string[]>();
@@ -79,7 +61,7 @@ function resolveExecutableDbtNodes(args: {
 }): CanonicalNode[] {
   const scopedNodeIdSet = resolveScopedNodeIds(args.nodes, args.scopedNodeIds);
   return args.nodes.filter(
-    (node) => scopedNodeIdSet.has(node.id) && resolveDbtStepKind(node) !== null
+    (node) => scopedNodeIdSet.has(node.id) && resolveDbtExecutableStepKind(node) !== null
   );
 }
 
@@ -104,7 +86,7 @@ function buildGenericGraphNode(args: {
   edges: readonly CanonicalEdge[];
   executableNodeIdSet: ReadonlySet<string>;
 }): GenericGraphNodeV1 {
-  const stepKind = resolveDbtStepKind(args.node);
+  const stepKind = resolveDbtExecutableStepKind(args.node);
   if (stepKind == null) {
     throw new Error(`Node ${args.node.id} is not an executable dbt node.`);
   }

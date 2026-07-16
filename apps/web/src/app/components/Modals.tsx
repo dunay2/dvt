@@ -2,7 +2,7 @@ import { XCircle, Clock, Zap, AlertTriangle, Download } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import type { DbtEdge } from '../types/dbt';
-import type { PlanViewModel } from '../types/plans';
+import type { PlanPreviewSelectionIntentViewModel, PlanViewModel } from '../types/plans';
 
 import {
   AlertDialog,
@@ -91,6 +91,32 @@ function PlanPreviewField({
   );
 }
 
+function PlanPreviewSelectionReview({
+  selectionIntent,
+}: Readonly<{ selectionIntent: PlanPreviewSelectionIntentViewModel }>) {
+  return (
+    <PlanPreviewSection
+      title="Execution selection"
+      caption="Requested execution roots and dependencies included by the governed closure policy."
+    >
+      <div className="grid min-w-0 gap-3 md:grid-cols-2">
+        <PlanPreviewField label="Selection mode">
+          {selectionIntent.mode === 'explicit' ? 'Explicit' : 'Workspace default'}
+        </PlanPreviewField>
+        <PlanPreviewField label="Requested resources" long>
+          {selectionIntent.requestedRootNodeIds.join(', ')}
+        </PlanPreviewField>
+        <PlanPreviewField label="Included dependencies" long>
+          {selectionIntent.derivedDependencyNodeIds.join(', ') || 'None'}
+        </PlanPreviewField>
+        <PlanPreviewField label="Authorized execution scope" long>
+          {selectionIntent.authorizedScopeNodeIds.join(', ')}
+        </PlanPreviewField>
+      </div>
+    </PlanPreviewSection>
+  );
+}
+
 export function PlanPreviewModal({
   open,
   onClose,
@@ -104,6 +130,7 @@ export function PlanPreviewModal({
   const previewSummary = plan.preview?.summary;
   const persistedPreview = plan.preview?.persisted;
   const provenance = plan.preview?.provenance;
+  const selectionIntent = plan.preview?.selectionIntent;
 
   return (
     <Dialog
@@ -235,6 +262,10 @@ export function PlanPreviewModal({
               </PlanPreviewSection>
             ) : null}
 
+            {selectionIntent ? (
+              <PlanPreviewSelectionReview selectionIntent={selectionIntent} />
+            ) : null}
+
             {provenance ? (
               <PlanPreviewSection
                 title="Provenance"
@@ -262,9 +293,11 @@ export function PlanPreviewModal({
                       <PlanPreviewField label="Analysis revision" long>
                         {provenance.analysisSha256}
                       </PlanPreviewField>
-                      <PlanPreviewField label="Selected resources" long>
-                        {provenance.selectedUniqueIds.join(', ')}
-                      </PlanPreviewField>
+                      {!selectionIntent ? (
+                        <PlanPreviewField label="Selected resources" long>
+                          {provenance.selectedUniqueIds.join(', ')}
+                        </PlanPreviewField>
+                      ) : null}
                       <PlanPreviewField label="Execution target">
                         {`${provenance.executionTarget.provider} / ${provenance.executionTarget.adapter} / ${provenance.executionTarget.targetName}`}
                       </PlanPreviewField>

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveDbtExecutionScope } from './dbtExecutionScopePolicy';
+import {
+  canOfferDbtExecutionSelectionToggle,
+  resolveDbtExecutionScope,
+} from './dbtExecutionScopePolicy';
 
 describe('resolveDbtExecutionScope', () => {
   const executableNodeIds = ['model.base', 'model.orders', 'test.orders'];
@@ -17,7 +20,13 @@ describe('resolveDbtExecutionScope', () => {
         executableNodeIds,
         dependencyIdsByNodeId,
       })
-    ).toEqual({ ok: true, nodeIds: ['model.base', 'model.orders'] });
+    ).toEqual({
+      ok: true,
+      selectionMode: 'workspace',
+      requestedRootNodeIds: ['model.base', 'model.orders'],
+      derivedDependencyNodeIds: [],
+      nodeIds: ['model.base', 'model.orders'],
+    });
   });
 
   it('rejects an explicit selection with no executable DBT resource', () => {
@@ -28,10 +37,14 @@ describe('resolveDbtExecutionScope', () => {
         executableNodeIds,
         dependencyIdsByNodeId,
       })
-    ).toEqual({ ok: false, cause: 'explicit_selection_has_no_executable_nodes' });
+    ).toEqual({
+      ok: false,
+      cause: 'explicit_selection_contains_unavailable_or_non_executable_nodes',
+      invalidNodeIds: ['source.raw'],
+    });
   });
 
-  it('preserves executable roots from a mixed selection and includes their closure', () => {
+  it('rejects the complete intent when a mixed explicit selection contains an invalid member', () => {
     expect(
       resolveDbtExecutionScope({
         selectedNodeIds: ['source.raw', 'test.orders'],
@@ -39,7 +52,28 @@ describe('resolveDbtExecutionScope', () => {
         executableNodeIds,
         dependencyIdsByNodeId,
       })
-    ).toEqual({ ok: true, nodeIds: executableNodeIds });
+    ).toEqual({
+      ok: false,
+      cause: 'explicit_selection_contains_unavailable_or_non_executable_nodes',
+      invalidNodeIds: ['source.raw'],
+    });
+  });
+
+  it('distinguishes requested executable roots from dependencies included by closure', () => {
+    expect(
+      resolveDbtExecutionScope({
+        selectedNodeIds: ['test.orders'],
+        workspaceNodeIds: ['source.raw', ...executableNodeIds],
+        executableNodeIds,
+        dependencyIdsByNodeId,
+      })
+    ).toEqual({
+      ok: true,
+      selectionMode: 'explicit',
+      requestedRootNodeIds: ['test.orders'],
+      derivedDependencyNodeIds: ['model.base', 'model.orders'],
+      nodeIds: executableNodeIds,
+    });
   });
 
   it('keeps canonical executable order and terminates for cyclic dependency input', () => {
@@ -53,6 +87,38 @@ describe('resolveDbtExecutionScope', () => {
           ['model.base', ['model.orders']],
         ]),
       })
-    ).toEqual({ ok: true, nodeIds: ['model.orders', 'model.base'] });
+    ).toEqual({
+      ok: true,
+      selectionMode: 'explicit',
+      requestedRootNodeIds: ['model.orders'],
+      derivedDependencyNodeIds: ['model.base'],
+      nodeIds: ['model.orders', 'model.base'],
+    });
+  });
+});
+
+describe('canOfferDbtExecutionSelectionToggle', () => {
+  it('offers selection for executable roots and cleanup for an invalid persisted selection', () => {
+    expect(
+      canOfferDbtExecutionSelectionToggle({
+        isExecutableRoot: true,
+        selectedForExecution: false,
+      })
+    ).toBe(true);
+    expect(
+      canOfferDbtExecutionSelectionToggle({
+        isExecutableRoot: false,
+        selectedForExecution: true,
+      })
+    ).toBe(true);
+  });
+
+  it('does not offer selection for an unselected non-executable resource', () => {
+    expect(
+      canOfferDbtExecutionSelectionToggle({
+        isExecutableRoot: false,
+        selectedForExecution: false,
+      })
+    ).toBe(false);
   });
 });

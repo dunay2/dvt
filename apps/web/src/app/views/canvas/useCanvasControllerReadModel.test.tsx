@@ -17,6 +17,7 @@ type ReadModelNodeData = {
   onRemoveNode?: unknown;
   onAttachSchemaToNode?: unknown;
   onToggleNodeSelection?: unknown;
+  selectedForExecution?: unknown;
   showColumns?: unknown;
 };
 
@@ -90,12 +91,14 @@ function buildReadModelArgs(
 
 async function renderReadModel(args: ReadModelArgs): Promise<{
   readState: () => ReadModelState | undefined;
+  rerender: (nextArgs: ReadModelArgs) => Promise<void>;
   cleanup: () => Promise<void>;
 }> {
   let observedState: ReadModelState | undefined;
+  let currentArgs = args;
 
   function ReadModelProbe(): null {
-    observedState = useCanvasControllerReadModel(args);
+    observedState = useCanvasControllerReadModel(currentArgs);
     return null;
   }
 
@@ -109,6 +112,12 @@ async function renderReadModel(args: ReadModelArgs): Promise<{
 
   return {
     readState: () => observedState,
+    rerender: async (nextArgs) => {
+      currentArgs = nextArgs;
+      await act(async () => {
+        root.render(createElement(ReadModelProbe));
+      });
+    },
     cleanup: async () => {
       await act(async () => {
         root.unmount();
@@ -221,6 +230,131 @@ describe('useCanvasControllerReadModel', () => {
       expect(nodeData?.onRemoveNode).toBeUndefined();
       expect(nodeData?.onAttachSchemaToNode).toBeUndefined();
       expect(nodeData?.onToggleNodeSelection).toBe(args.graphHandlers.handleToggleNodeSelection);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('exposes DBT execution selection only on executable roots', async () => {
+    const sourceNode = {
+      ...testNode,
+      id: 'dbt-source',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+    } satisfies CanonicalNode;
+    const modelNode = {
+      ...testNode,
+      id: 'dbt-model',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+    } satisfies CanonicalNode;
+    const canonicalNodes = [sourceNode, modelNode];
+    const args: ReadModelArgs = {
+      ...buildReadModelArgs({ canSelectExecution: true }),
+      activeCanvasKind: 'dbt',
+      graphModel: {
+        nodes: canonicalNodes.map((canonicalNode, index) =>
+          mapCanonicalNodeToCanvasNode({ canonicalNode, index, showColumns: false })
+        ),
+        edges: [],
+        canonicalNodesById: new Map(canonicalNodes.map((node) => [node.id, node])),
+      },
+      visibleScope: { canonicalNodes, canonicalEdges: [] },
+      executionScope: {
+        selectedNodeIds: [],
+        workspaceNodeIds: canonicalNodes.map((node) => node.id),
+      },
+    };
+    const mounted = await renderReadModel(args);
+
+    try {
+      const nodes = mounted.readState()?.nodesWithImpact ?? [];
+      const sourceData = nodes.find((node) => node.id === sourceNode.id)?.data as ReadModelNodeData;
+      const modelData = nodes.find((node) => node.id === modelNode.id)?.data as ReadModelNodeData;
+
+      expect(sourceData.onToggleNodeSelection).toBeUndefined();
+      expect(modelData.onToggleNodeSelection).toBe(args.graphHandlers.handleToggleNodeSelection);
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('keeps only the deselection path for a persisted non-executable DBT selection', async () => {
+    const sourceNode = {
+      ...testNode,
+      id: 'selected-dbt-source',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+    } satisfies CanonicalNode;
+    const args: ReadModelArgs = {
+      ...buildReadModelArgs({ canSelectExecution: true }),
+      activeCanvasKind: 'dbt',
+      graphModel: {
+        nodes: [
+          mapCanonicalNodeToCanvasNode({ canonicalNode: sourceNode, index: 0, showColumns: false }),
+        ],
+        edges: [],
+        canonicalNodesById: new Map([[sourceNode.id, sourceNode]]),
+      },
+      visibleScope: { canonicalNodes: [sourceNode], canonicalEdges: [] },
+      executionScope: { selectedNodeIds: [sourceNode.id], workspaceNodeIds: [sourceNode.id] },
+      uiScope: { selectedNodeIds: [sourceNode.id], inspectorNodeId: null },
+    };
+    const mounted = await renderReadModel(args);
+
+    try {
+      expect(readProjectedNodeData(mounted.readState())?.selectedForExecution).toBe(true);
+      expect(readProjectedNodeData(mounted.readState())?.onToggleNodeSelection).toBe(
+        args.graphHandlers.handleToggleNodeSelection
+      );
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('re-evaluates DBT selection eligibility when canonical node identity changes', async () => {
+    const sourceNode = {
+      ...testNode,
+      id: 'dbt-resource',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+    } satisfies CanonicalNode;
+    const modelNode = {
+      ...sourceNode,
+      kind: 'dbt:model',
+      role: 'transform',
+    } satisfies CanonicalNode;
+    const graphNodes = [
+      mapCanonicalNodeToCanvasNode({ canonicalNode: sourceNode, index: 0, showColumns: false }),
+    ];
+    const args: ReadModelArgs = {
+      ...buildReadModelArgs({ canSelectExecution: true }),
+      activeCanvasKind: 'dbt',
+      graphModel: {
+        nodes: graphNodes,
+        edges: [],
+        canonicalNodesById: new Map([[sourceNode.id, sourceNode]]),
+      },
+      visibleScope: { canonicalNodes: [sourceNode], canonicalEdges: [] },
+      executionScope: { selectedNodeIds: [], workspaceNodeIds: [sourceNode.id] },
+    };
+    const mounted = await renderReadModel(args);
+
+    try {
+      expect(readProjectedNodeData(mounted.readState())?.onToggleNodeSelection).toBeUndefined();
+
+      await mounted.rerender({
+        ...args,
+        graphModel: {
+          ...args.graphModel,
+          canonicalNodesById: new Map([[modelNode.id, modelNode]]),
+        },
+      });
+
+      expect(readProjectedNodeData(mounted.readState())?.onToggleNodeSelection).toBe(
+        args.graphHandlers.handleToggleNodeSelection
+      );
     } finally {
       await mounted.cleanup();
     }
