@@ -7,8 +7,9 @@ last_reviewed: 2026-04-24
 
 # Canvas execution selection component
 
-This local guide documents the `apps/web` Canvas seam that turns authoring and
-plan context into canonical `ExecutionSelection` for preview and run.
+This local guide projects the Planning DB component that turns authoring and
+plan context into canonical `ExecutionSelection` for preview and run while
+preserving the difference between absent selection and invalid explicit intent.
 
 It exists so the browser emits one governed selection shape and does not invent
 frontend-only execution DTOs.
@@ -25,6 +26,7 @@ The component owns exactly one concern:
 
 - derive caller-owned preview/run selection from Canvas state and persisted plan
   state as canonical `ExecutionSelection`
+- derive DBT executable scope without widening a non-empty explicit selection
 
 It does **not** own:
 
@@ -39,6 +41,11 @@ It does **not** own:
   Resolve preview intent from current Canvas selection or workspace fallback.
 - `collectPlanSelection(plan)`
   Resolve run intent from the persisted plan view.
+- `resolveDbtExecutionScope(...)`
+  Resolve executable DBT roots and dependencies while rejecting an explicit
+  selection that contains no model, test, or snapshot.
+- `buildCanvasDbtExecutionProjection(...)`
+  Build the one DBT projection consumed by both Preview and readiness.
 - `executeCanvasPlanAction(...)`
   Uses `collectPreviewSelection(...)` before calling `plansService.previewPlan`.
   For SQL-first transformation canvases, it also requires preview provenance to
@@ -51,8 +58,8 @@ It does **not** own:
 
 ## Invariants
 
-- `canvasRunSelection.ts` is the only module in this component that builds the
-  canonical selection payload.
+- `canvasRunSelection.ts` owns generic preview/run selection payloads;
+  `dbtExecutionScopePolicy.ts` owns DBT executable-scope intent.
 - `IRunsPort.startRun(...)` returns a presentation receipt
   (`RunStartReceipt`) containing `runId` plus acceptance posture, not an
   engine-owned provider run reference.
@@ -60,8 +67,11 @@ It does **not** own:
   canonical `ExecutionSelection` via `parseExecutionSelection(...)`.
 - preview and run actions import the named selection seam instead of redoing
   local array shaping inline.
-- preview selection falls back from explicit selected nodes to visible
-  workspace node ids only inside the same canonical seam.
+- absent preview selection may default to visible workspace node ids.
+- a non-empty explicit DBT selection with no executable resource fails closed;
+  it never defaults to the whole workspace.
+- `canvasDbtExecutionProjection.ts` is shared by Preview and readiness so the
+  enabled action and the emitted request cannot disagree.
 - SQL-first Plan never calls `previewPlan` with browser-only graph state:
   `GenerateTransformationWorkspaceArtifacts` must provide SQL and graph
   artifact provenance first.
@@ -80,8 +90,12 @@ It does **not** own:
 ```mermaid
 flowchart LR
   Canvas["Canvas state"] --> Selection["canvasRunSelection.ts"]
+  Canvas --> DbtPolicy["dbtExecutionScopePolicy.ts"]
   Plan["Persisted plan view"] --> Selection
   Selection --> Preview["canvasPlanAction.ts"]
+  DbtPolicy --> Projection["canvasDbtExecutionProjection.ts"]
+  Projection --> Preview
+  Projection --> Readiness["canvasExecutionState.ts"]
   Selection --> Run["canvasRunStartAction.ts"]
   Preview --> PlansPort["IPlansPort.previewPlan"]
   Run --> RunsPort["IRunsPort.startRun"]
@@ -95,11 +109,17 @@ flowchart LR
 sequenceDiagram
   participant Canvas as Canvas actions
   participant Selection as canvasRunSelection
+  participant DbtScope as dbtExecutionScopePolicy
   participant Plans as plansService.previewPlan
   participant Runs as runsService.startRun
 
-  Canvas->>Selection: collectPreviewSelection(selectedNodeIds, workspaceNodeIds)
-  Selection-->>Canvas: ExecutionSelection
+  alt generic Canvas preview
+    Canvas->>Selection: collectPreviewSelection(selectedNodeIds, workspaceNodeIds)
+    Selection-->>Canvas: ExecutionSelection
+  else DBT Canvas preview
+    Canvas->>DbtScope: resolve explicit or absent selection
+    DbtScope-->>Canvas: executable scope or fail-closed cause
+  end
   Canvas->>Canvas: resolve SQL and graph artifact provenance
   Canvas->>Plans: previewPlan(..., selection, provenance)
 

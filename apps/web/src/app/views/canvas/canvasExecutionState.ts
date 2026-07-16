@@ -13,14 +13,8 @@ import {
   type TransformationGraphValidationResult,
 } from './transformationGraphValidation';
 import { formatTransformationGraphValidationSummary } from './canvasCopyFormatting';
-import {
-  buildDbtPlannerGraphSource,
-  resolveDbtExecutionScopeNodeIds,
-} from './canvasDbtPlannerGraphSource';
-import {
-  buildDbtProjectFileExecutionDraftSignature,
-  isDbtProjectFilePreviewProvenanceCurrent,
-} from './dbtProjectFileExecutionStrategy';
+import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
+import { isDbtProjectFilePreviewProvenanceCurrent } from './dbtProjectFileExecutionStrategy';
 
 type DeriveCanvasExecutionStateArgs = {
   canRun: boolean;
@@ -82,29 +76,21 @@ export function deriveCanvasExecutionState({
   const usesDbtPlanner =
     executionStrategy?.kind === 'planner_generic_preview' ||
     executionStrategy?.kind === 'dbt_project_file_preview';
-  const dbtPlannerGraphSource = usesDbtPlanner
-    ? buildDbtPlannerGraphSource({
-        nodes: canonicalNodes,
-        edges: canonicalEdges,
-        scopedNodeIds: resolveDbtExecutionScopeNodeIds({
-          nodes: canonicalNodes,
-          edges: canonicalEdges,
-          selectedNodeIds,
-          workspaceNodeIds,
-        }),
+  const dbtPlannerProjection = usesDbtPlanner
+    ? buildCanvasDbtExecutionProjection({
+        strategy: executionStrategy,
+        canonicalNodes,
+        canonicalEdges,
+        selectedNodeIds,
+        workspaceNodeIds,
       })
     : null;
   const activeDraftSignature =
-    dbtPlannerGraphSource?.ok === true
-      ? executionStrategy?.kind === 'dbt_project_file_preview'
-        ? buildDbtProjectFileExecutionDraftSignature(
-            executionStrategy,
-            dbtPlannerGraphSource.draftSignature
-          )
-        : dbtPlannerGraphSource.draftSignature
+    dbtPlannerProjection?.ok === true
+      ? dbtPlannerProjection.draftSignature
       : transformationValidation.draftSignature;
   const isExecutableGraphReady = usesDbtPlanner
-    ? dbtPlannerGraphSource?.ok === true
+    ? dbtPlannerProjection?.ok === true
     : transformationValidation.valid;
   const canPlanGraph =
     executionStrategy != null &&
@@ -113,10 +99,10 @@ export function deriveCanvasExecutionState({
   const dbtProjectFilePreviewIdentityMismatch =
     currentPlan != null &&
     executionStrategy?.kind === 'dbt_project_file_preview' &&
-    dbtPlannerGraphSource?.ok === true &&
+    dbtPlannerProjection?.ok === true &&
     !isDbtProjectFilePreviewProvenanceCurrent(
       executionStrategy,
-      dbtPlannerGraphSource.selection.nodeIds,
+      dbtPlannerProjection.selection.nodeIds,
       currentPlan.preview?.provenance
     );
   const persistedPreviewIdentityMismatch =
@@ -138,8 +124,8 @@ export function deriveCanvasExecutionState({
     executionStrategy.kind !== 'not_executable' &&
     !isCurrentPlanStale &&
     !isExecutableGraphReady
-      ? dbtPlannerGraphSource?.ok === false
-        ? dbtPlannerGraphSource.message
+      ? dbtPlannerProjection?.ok === false
+        ? dbtPlannerProjection.message
         : formatTransformationGraphValidationSummary(transformationValidation.summaryCode)
       : null;
   const planRunReadinessSource = observePlanRunReadiness({

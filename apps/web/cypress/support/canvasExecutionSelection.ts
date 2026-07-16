@@ -63,7 +63,7 @@ export function clickCanvasAddCatalogAction(action: string, registrationKind?: s
   cy.get(selector).should('be.visible').should('be.enabled').click();
 }
 
-function revealOperationalDrawer(): void {
+export function revealOperationalDrawer(): void {
   cy.get('body').then(($body) => {
     if ($body.find('[data-slot="bottom-operational-drawer-tab"]').length > 0) {
       return;

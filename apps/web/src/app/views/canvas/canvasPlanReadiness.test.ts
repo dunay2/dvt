@@ -234,7 +234,13 @@ describe('canvasPlanReadiness', () => {
           kind: 'generic-graph-v1',
           sourceFamily: 'dbt',
           sourceVersion: '1.0',
-          nodes: [],
+          nodes: [
+            {
+              nodeId: 'model.analytics.orders',
+              stepKind: 'DBT_MODEL',
+              dependsOn: [],
+            },
+          ],
         },
         executionTarget: {
           provider: 'server-config',
@@ -264,6 +270,65 @@ describe('canvasPlanReadiness', () => {
     expect(executionState.persistedPreviewIdentityMismatch).toBe(true);
     expect(executionState.isCurrentPlanStale).toBe(true);
     expect(executionState.canStartRun).toBe(false);
+    expect(executionState.planRunReadiness.blockers).toContain('plan_integrity');
+  });
+
+  it('blocks Preview when an explicit dbt selection has no executable resources', () => {
+    const executionState = deriveCanvasExecutionState({
+      canRun: true,
+      executionStrategy: {
+        kind: 'dbt_project_file_preview',
+        previewProfile: 'planner-generic-v1',
+        sourceFamily: 'dbt',
+        canvasId: 'analytics-canvas',
+        projectRoot: 'analytics',
+        contentSetSha256: '1'.repeat(64),
+        analysisSha256: '2'.repeat(64),
+        dbtVersion: '1.10.0',
+        plannerGraphSource: {
+          kind: 'generic-graph-v1',
+          sourceFamily: 'dbt',
+          sourceVersion: '1.0',
+          nodes: [{ nodeId: 'model.analytics.orders', stepKind: 'DBT_MODEL', dependsOn: [] }],
+        },
+        executionTarget: {
+          provider: 'server-config',
+          adapter: 'postgres',
+          targetName: 'development',
+          credentialRef: 'vault:dbt/development',
+        },
+      },
+      currentPlan: null,
+      lastPlannedDraftSignature: null,
+      canonicalNodes: [
+        {
+          id: 'source.analytics.raw.orders',
+          name: 'raw_orders',
+          pluginId: 'dbt',
+          kind: 'dbt:source',
+          role: 'input',
+          status: 'idle',
+          tags: [],
+        },
+        {
+          id: 'model.analytics.orders',
+          name: 'orders',
+          pluginId: 'dbt',
+          kind: 'dbt:model',
+          role: 'transform',
+          status: 'idle',
+          tags: [],
+        },
+      ],
+      canonicalEdges: [],
+      selectedNodeIds: ['source.analytics.raw.orders'],
+      workspaceNodeIds: ['source.analytics.raw.orders', 'model.analytics.orders'],
+    });
+
+    expect(executionState.canPlanGraph).toBe(false);
+    expect(executionState.executableGraphFailureMessage).toBe(
+      'Select at least one DBT model, test, or snapshot before previewing this selection.'
+    );
     expect(executionState.planRunReadiness.blockers).toContain('plan_integrity');
   });
 });

@@ -13,16 +13,9 @@ import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceCo
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 
-import {
-  buildDbtPlannerGraphSource,
-  resolveDbtExecutionScopeNodeIds,
-} from './canvasDbtPlannerGraphSource';
+import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
-import {
-  buildDbtProjectFilePlannerProjection,
-  buildDbtProjectFileExecutionDraftSignature,
-  buildDbtProjectFilePreviewProvenance,
-} from './dbtProjectFileExecutionStrategy';
+import { buildDbtProjectFilePreviewProvenance } from './dbtProjectFileExecutionStrategy';
 import { readExpectedWorkspaceFileRevision } from './canvasGitProvenance';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { collectPreviewSelection } from './canvasRunSelection';
@@ -107,27 +100,17 @@ export async function executeCanvasPlanAction({
     executionStrategy.kind === 'dbt_project_file_preview'
   ) {
     try {
-      const scopeSelection = collectPreviewSelection(selectedNodeIds, workspaceNodeIds);
-      const scopedNodeIds =
-        executionStrategy.kind === 'dbt_project_file_preview'
-          ? []
-          : resolveDbtExecutionScopeNodeIds({
-              nodes: canonicalNodes,
-              edges: canonicalEdges,
-              selectedNodeIds: scopeSelection.nodeIds,
-              workspaceNodeIds,
-            });
-      const plannerProjection =
-        executionStrategy.kind === 'dbt_project_file_preview'
-          ? buildDbtProjectFilePlannerProjection(executionStrategy, scopeSelection.nodeIds)
-          : buildDbtPlannerGraphSource({
-              nodes: canonicalNodes,
-              edges: canonicalEdges,
-              scopedNodeIds,
-            });
+      const plannerProjection = buildCanvasDbtExecutionProjection({
+        strategy: executionStrategy,
+        canonicalNodes,
+        canonicalEdges,
+        selectedNodeIds,
+        workspaceNodeIds,
+      });
       if (!plannerProjection.ok) {
         return { ok: false, message: plannerProjection.message };
       }
+      const scopedNodeIds = plannerProjection.scopedNodeIds;
 
       const writtenArtifacts = [];
       if (executionStrategy.kind === 'planner_generic_preview') {
@@ -171,13 +154,7 @@ export async function executeCanvasPlanAction({
 
       return {
         ok: true,
-        draftSignature:
-          executionStrategy.kind === 'dbt_project_file_preview'
-            ? buildDbtProjectFileExecutionDraftSignature(
-                executionStrategy,
-                plannerProjection.draftSignature
-              )
-            : plannerProjection.draftSignature,
+        draftSignature: plannerProjection.draftSignature,
         plan,
         writtenArtifactPaths: writtenArtifacts.map((artifact) => artifact.path),
       };

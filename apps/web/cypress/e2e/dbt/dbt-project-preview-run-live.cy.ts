@@ -5,6 +5,7 @@
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
+  revealOperationalDrawer,
 } from '../../support/canvasExecutionSelection';
 import {
   adoptLiveDbtProjectFileAuthority,
@@ -22,6 +23,7 @@ import {
 const PROJECT_ROOT = 'analytics-run';
 const CANVAS_ID = 'analytics-run-files';
 const MODEL_UNIQUE_ID = 'model.analytics_run.orders';
+const SOURCE_UNIQUE_ID = 'source.analytics_run.raw.orders';
 
 const PROJECT_FILES: Readonly<Record<string, string>> = {
   [`${PROJECT_ROOT}/dbt_project.yml`]: `
@@ -108,8 +110,8 @@ function waitForCompletedDbtRun(runId: string, attempt = 0): Cypress.Chainable<L
   });
 }
 
-function selectModelForExecution(): void {
-  cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`, { timeout: 60_000 })
+function selectResourceForExecution(uniqueId: string): void {
+  cy.get(`.react-flow__node[data-id="${uniqueId}"]`, { timeout: 60_000 })
     .should('be.visible')
     .within(() => {
       cy.get('button[aria-label="Select for execution"]')
@@ -118,6 +120,31 @@ function selectModelForExecution(): void {
         .click();
       cy.get('button[aria-label="Deselect for execution"]').should('be.visible');
     });
+}
+
+function visitProjectWithRequestObservations(observedRequests: ObservedRequest[]): void {
+  cy.viewport(1500, 900);
+  visitWithLiveWorkspaceSession(
+    `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`,
+    {
+      onBeforeLoad(window) {
+        const originalFetch = window.fetch.bind(window);
+        window.fetch = (input, init) => {
+          const request = input instanceof window.Request ? input : undefined;
+          const observation: ObservedRequest = {
+            method: (init?.method ?? request?.method ?? 'GET').toUpperCase(),
+            url: typeof input === 'string' ? input : (request?.url ?? input.toString()),
+          };
+          observedRequests.push(observation);
+          return originalFetch(input, init).then(async (response) => {
+            observation.status = response.status;
+            if (!response.ok) observation.responseBody = await response.clone().text();
+            return response;
+          });
+        };
+      },
+    }
+  );
 }
 
 describe('dbt project file Preview and Run live vertical', () => {
@@ -161,32 +188,9 @@ describe('dbt project file Preview and Run live vertical', () => {
       expect(projection.capabilities).to.deep.include({ canPreview: true, canRun: true });
     });
 
-    cy.viewport(1500, 900);
-    visitWithLiveWorkspaceSession(
-      `/canvas?authority=dbt-project-files&canvasId=${CANVAS_ID}&projectRoot=${PROJECT_ROOT}`,
-      {
-        onBeforeLoad(window) {
-          const originalFetch = window.fetch.bind(window);
-          window.fetch = (input, init) => {
-            const request = input instanceof window.Request ? input : undefined;
-            const observation: ObservedRequest = {
-              method: (init?.method ?? request?.method ?? 'GET').toUpperCase(),
-              url: typeof input === 'string' ? input : (request?.url ?? input.toString()),
-            };
-            observedRequests.push(observation);
-            return originalFetch(input, init).then(async (response) => {
-              observation.status = response.status;
-              if (!response.ok) {
-                observation.responseBody = await response.clone().text();
-              }
-              return response;
-            });
-          };
-        },
-      }
-    );
+    visitProjectWithRequestObservations(observedRequests);
 
-    cy.get(`.react-flow__node[data-id="source.analytics_run.raw.orders"]`, {
+    cy.get(`.react-flow__node[data-id="${SOURCE_UNIQUE_ID}"]`, {
       timeout: 60_000,
     })
       .should('be.visible')
@@ -194,7 +198,7 @@ describe('dbt project file Preview and Run live vertical', () => {
     cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`)
       .should('be.visible')
       .and('contain.text', 'Orders');
-    selectModelForExecution();
+    selectResourceForExecution(MODEL_UNIQUE_ID);
 
     clickPreviewExecutionPlanFromOperationalDrawer();
 
@@ -280,6 +284,32 @@ describe('dbt project file Preview and Run live vertical', () => {
       .and('not.contain.text', 'DBT_PROFILES_DIR');
     cy.get('[data-slot="run-plan-record-value"]').should(($value) => {
       expect($value[0]?.scrollWidth).to.be.at.most($value[0]?.clientWidth ?? 0);
+    });
+  });
+
+  it('keeps an explicit source-only selection blocked without widening Preview scope', () => {
+    const observedRequests: ObservedRequest[] = [];
+    visitProjectWithRequestObservations(observedRequests);
+
+    selectResourceForExecution(SOURCE_UNIQUE_ID);
+    revealOperationalDrawer();
+    cy.contains('[data-slot="bottom-operational-drawer-tab"]', 'Preview').click();
+    cy.get('[data-slot="bottom-operational-drawer-preview"]')
+      .should('be.visible')
+      .and(
+        'contain.text',
+        'Select at least one DBT model, test, or snapshot before previewing this selection.'
+      )
+      .within(() => {
+        cy.contains('button', 'Preview execution plan').should('be.disabled');
+      });
+
+    cy.wrap(null).should(() => {
+      expect(
+        observedRequests.some(
+          ({ method, url }) => method === 'POST' && url.includes('/plans/preview')
+        )
+      ).to.equal(false);
     });
   });
 });

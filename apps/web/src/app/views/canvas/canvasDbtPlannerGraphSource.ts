@@ -3,6 +3,7 @@ import type { ExecutionSelection, GenericGraphSourceV1, GenericGraphNodeV1 } fro
 import { parseExecutionSelection } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { resolveDbtExecutionScope } from './dbtExecutionScopePolicy';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 
 export type DbtPlannerGraphSourceResult =
@@ -47,41 +48,29 @@ export function resolveDbtExecutionScopeNodeIds(args: {
   edges: readonly CanonicalEdge[];
   selectedNodeIds: readonly string[];
   workspaceNodeIds: readonly string[];
-}): string[] {
+}) {
   const nodeById = new Map(args.nodes.map((node) => [node.id, node]));
-  const selectedExecutableNodeIds = args.selectedNodeIds.filter((nodeId) => {
+  const executableNodeIds = args.workspaceNodeIds.filter((nodeId) => {
     const node = nodeById.get(nodeId);
     return node != null && resolveDbtStepKind(node) !== null;
   });
+  const executableNodeIdSet = new Set(executableNodeIds);
+  const dependencyIdsByNodeId = new Map<string, string[]>();
 
-  if (selectedExecutableNodeIds.length === 0) {
-    return [...args.workspaceNodeIds];
+  for (const edge of args.edges) {
+    if (!executableNodeIdSet.has(edge.sourceId) || !executableNodeIdSet.has(edge.targetId))
+      continue;
+    const dependencyIds = dependencyIdsByNodeId.get(edge.targetId) ?? [];
+    dependencyIds.push(edge.sourceId);
+    dependencyIdsByNodeId.set(edge.targetId, dependencyIds);
   }
 
-  const scopedNodeIdSet = new Set(args.selectedNodeIds);
-  const visitExecutableUpstreamDependencies = (targetNodeId: string): void => {
-    for (const edge of args.edges) {
-      if (edge.targetId !== targetNodeId) {
-        continue;
-      }
-
-      const sourceNode = nodeById.get(edge.sourceId);
-      if (sourceNode == null || resolveDbtStepKind(sourceNode) === null) {
-        continue;
-      }
-
-      if (!scopedNodeIdSet.has(edge.sourceId)) {
-        scopedNodeIdSet.add(edge.sourceId);
-        visitExecutableUpstreamDependencies(edge.sourceId);
-      }
-    }
-  };
-
-  for (const selectedNodeId of selectedExecutableNodeIds) {
-    visitExecutableUpstreamDependencies(selectedNodeId);
-  }
-
-  return args.workspaceNodeIds.filter((nodeId) => scopedNodeIdSet.has(nodeId));
+  return resolveDbtExecutionScope({
+    selectedNodeIds: args.selectedNodeIds,
+    workspaceNodeIds: args.workspaceNodeIds,
+    executableNodeIds,
+    dependencyIdsByNodeId,
+  });
 }
 
 function resolveExecutableDbtNodes(args: {

@@ -8,8 +8,26 @@ import type { PlanViewModel } from '../../types/plans';
 import { readArchitectureSiblingSource } from '../architecture.test.support';
 import { collectPlanSelection, collectPreviewSelection } from './canvasRunSelection';
 
-const RUN_SELECTION_SOURCE = readArchitectureSiblingSource(import.meta.dirname, 'canvasRunSelection.ts');
-const PLAN_ACTION_SOURCE = readArchitectureSiblingSource(import.meta.dirname, 'canvasPlanAction.ts');
+const RUN_SELECTION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasRunSelection.ts'
+);
+const DBT_SCOPE_POLICY_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'dbtExecutionScopePolicy.ts'
+);
+const DBT_EXECUTION_PROJECTION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasDbtExecutionProjection.ts'
+);
+const PLAN_ACTION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasPlanAction.ts'
+);
+const EXECUTION_STATE_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasExecutionState.ts'
+);
 const RUN_START_ACTION_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasRunStartAction.ts'
@@ -21,10 +39,17 @@ const COMPONENT_GUIDE_SOURCE = readArchitectureSiblingSource(
 
 describe('canvas execution selection architecture', () => {
   it('documents one selection seam used by both preview and run', () => {
-    expect(RUN_SELECTION_SOURCE).toContain('Owned concern: derive caller-owned start-run selection');
+    expect(RUN_SELECTION_SOURCE).toContain(
+      'Owned concern: derive caller-owned start-run selection'
+    );
     expect(RUN_SELECTION_SOURCE).toContain('parseExecutionSelection');
     expect(PLAN_ACTION_SOURCE).toContain("from './canvasRunSelection'");
     expect(PLAN_ACTION_SOURCE).toContain('collectPreviewSelection(');
+    expect(PLAN_ACTION_SOURCE).toContain("from './canvasDbtExecutionProjection'");
+    expect(EXECUTION_STATE_SOURCE).toContain("from './canvasDbtExecutionProjection'");
+    expect(DBT_EXECUTION_PROJECTION_SOURCE).toContain('buildCanvasDbtExecutionProjection');
+    expect(DBT_SCOPE_POLICY_SOURCE).toContain('hasExplicitSelection');
+    expect(DBT_SCOPE_POLICY_SOURCE).toContain('explicit_selection_has_no_executable_nodes');
     expect(RUN_START_ACTION_SOURCE).toContain("from './canvasRunSelection'");
     expect(RUN_START_ACTION_SOURCE).toContain('collectPlanSelection(currentPlan)');
     expect(COMPONENT_GUIDE_SOURCE).toContain('## Public API');
@@ -43,10 +68,7 @@ describe('canvas execution selection architecture', () => {
 
   it('falls back preview selection to workspace nodes and deduplicates persisted run selection', () => {
     const plan = {
-      steps: [
-        { nodes: ['node-a', 'node-b', 'node-a'] },
-        { nodes: ['node-b', 'node-c'] },
-      ],
+      steps: [{ nodes: ['node-a', 'node-b', 'node-a'] }, { nodes: ['node-b', 'node-c'] }],
     } as PlanViewModel;
 
     expect(collectPreviewSelection([], ['node-a', 'node-b'])).toEqual({

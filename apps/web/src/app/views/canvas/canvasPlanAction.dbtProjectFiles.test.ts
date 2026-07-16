@@ -23,6 +23,16 @@ const modelNode: CanonicalNode = {
   tags: [],
 };
 
+const sourceNode: CanonicalNode = {
+  id: 'source.analytics.raw.orders',
+  name: 'raw_orders',
+  pluginId: 'dbt',
+  kind: 'dbt:source',
+  role: 'input',
+  status: 'idle',
+  tags: [],
+};
+
 const persistedPlan: PlanViewModel = {
   planId: 'plan-file-dbt',
   planVersion: '1.0.0',
@@ -144,5 +154,70 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       },
       persist: true,
     });
+  });
+
+  it('does not widen an explicit source-only selection into the executable project', async () => {
+    const previewPlan = vi.fn<IPlansPort['previewPlan']>();
+    const strategy: CanvasExecutionStrategy = {
+      kind: 'dbt_project_file_preview',
+      previewProfile: 'planner-generic-v1',
+      sourceFamily: 'dbt',
+      canvasId: 'analytics-canvas',
+      projectRoot: 'analytics',
+      contentSetSha256: '1'.repeat(64),
+      analysisSha256: '2'.repeat(64),
+      dbtVersion: '1.10.0',
+      plannerGraphSource: {
+        kind: 'generic-graph-v1',
+        sourceFamily: 'dbt',
+        sourceVersion: '1.0',
+        nodes: [
+          {
+            nodeId: 'model.analytics.orders',
+            stepKind: 'DBT_MODEL',
+            dependsOn: [],
+          },
+        ],
+      },
+      executionTarget: {
+        provider: 'server-config',
+        adapter: 'postgres',
+        targetName: 'development',
+        credentialRef: 'vault:dbt/development',
+      },
+    };
+    const runContext = makeRunContext('preview_context');
+    const sessionContext = {
+      buildRunContext: () => runContext,
+      getWorkspaceScope: () => runContext,
+      getWorkspaceScopeSnapshot: () => runContext,
+      subscribeWorkspaceScope: () => () => undefined,
+    } as unknown as SessionContextPort;
+
+    const result = await executeCanvasPlanAction({
+      canPlan: true,
+      canonicalEdges: [],
+      canonicalNodes: [sourceNode, modelNode],
+      executionStrategy: strategy,
+      plansService: { previewPlan, importPlan: vi.fn() },
+      previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
+      selectedNodeIds: [sourceNode.id],
+      sessionContext,
+      transformationValidation: validateTransformationGraph({
+        nodes: [sourceNode, modelNode],
+        edges: [],
+        selectedNodeIds: [sourceNode.id],
+        workspaceNodeIds: [sourceNode.id, modelNode.id],
+      }),
+      workspaceNodeIds: [sourceNode.id, modelNode.id],
+      workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
+      workspaceFileContentCommand: {} as IWorkspaceFileContentCommandPort,
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      message: 'Select at least one DBT model, test, or snapshot before previewing this selection.',
+    });
+    expect(previewPlan).not.toHaveBeenCalled();
   });
 });
