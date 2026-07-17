@@ -3,7 +3,7 @@ title: DVT dbt Project Round-Trip — Hard Fowler QA and Revised Architecture Sp
 status: Accepted
 version: 2.0
 date: 2026-07-10
-last_reviewed: 2026-07-12
+last_reviewed: 2026-07-17
 reviewed_repository: dunay2/dvt
 reviewed_ref: main
 reviewed_commit: 800be353aee4bf85c03be671e142fe7d5dd11df1
@@ -16,6 +16,7 @@ owners:
 planning_type: mandatory-proposal
 task_ids:
   - E-DBT-PROJECT-ROUNDTRIP-1
+  - E-DBT-PROJECT-ROUNDTRIP-P4-TRUTH-SYNC
 refines:
   - docs/planning/proposals/mandatory/frontend-and-ux/dbt-authoring-code-run-vertical-plan-20260526.md
 canonical_path: docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
@@ -1221,7 +1222,12 @@ still requires planner/contracts ARC-2 evidence before code changes.
 | `GetRunStatus`                  | query   | reuse                                              |
 | `GetRunEvents`                  | query   | reuse                                              |
 
-## 8.2 Product intents not yet implemented
+## 8.2 Acceptance-time product-intent baseline
+
+The following table is the immutable acceptance-time baseline reviewed at
+`800be353aee4bf85c03be671e142fe7d5dd11df1`. Its status cells explain the
+implementation decisions that were still open when this plan was accepted;
+they are historical evidence, not the current capability authority.
 
 | Rail                       | Type    | Owner                           | Status          |
 | -------------------------- | ------- | ------------------------------- | --------------- |
@@ -1230,10 +1236,55 @@ still requires planner/contracts ARC-2 evidence before code changes.
 | `ProjectDbtGraphFromFiles` | query   | dbt project analysis/projection | not implemented |
 | `ExportDbtProject`         | command | dbt project export              | not implemented |
 
-The three historical import/export intents remain retired in the executable
-catalog until their implementation slices establish real ownership and ports.
-`ProjectDbtGraphFromFiles` is a required future query intent, but it is not an
-active rail or implemented capability in the current system.
+At acceptance, the three historical import/export intents remained retired in
+the executable catalog pending implementation slices with real ownership and
+ports. `ProjectDbtGraphFromFiles` was a required future query intent, but it was
+not yet an active rail or implemented capability in that baseline.
+
+### 8.2.1 Current capability truth projection
+
+Current state is owned by Planning DB and queried through
+`ProjectDbtRoundtripCapabilityStatus`. The projection joins each phase/rail
+expectation to the canonical command/query catalog rather than copying rail
+status into another document. A reviewed Git commit is evidence, not status:
+the checker proves that every recorded commit exists and is an ancestor of the
+checked repository ref.
+
+```mermaid
+flowchart LR
+  Evidence[Phase and reviewed-commit evidence]
+  Rails[Canonical command/query rail query]
+  Projection[DbtProjectRoundtripCapabilityStatus]
+  Query[planning:db:query dbt-roundtrip-capabilities]
+  Git[Git commit ancestry]
+  Check[Capability freshness check]
+  Render[Local generated status render]
+
+  Evidence --> Projection
+  Rails --> Projection
+  Projection --> Query
+  Query --> Check
+  Git --> Check
+  Check --> Render
+```
+
+Invariants:
+
+1. One row exists for every governed Phase 2-4 rail and for the deferred export
+   boundary; duplicate phase/rail rows fail closed.
+2. `rail_status` and `mechanization_status` come only from the canonical rail
+   projection. The evidence relation stores no second copy of current status.
+3. The expected posture is explicit and compared mechanically with current
+   rail state. A missing, renamed, retired, or unexpectedly implemented rail
+   makes the check fail.
+4. Every row carries the reviewed commit and PR that justified its expected
+   posture. Missing, unknown, or non-ancestor commits make the check fail.
+5. The Markdown render is generated under `.generated-docs`; it is a reading
+   surface and never a write authority.
+6. The historical table above remains unchanged when current capability state
+   evolves. Reviewers use:
+   `pnpm planning:db:query dbt-roundtrip-capabilities --limit 20` and
+   `pnpm docs:dbt-roundtrip-capabilities:check`.
 
 ## 8.3 Deferred visual-edit rail decision
 
