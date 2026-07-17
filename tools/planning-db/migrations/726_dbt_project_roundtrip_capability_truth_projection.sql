@@ -776,11 +776,12 @@ on conflict (rail_id) do update set
   revision = planning_query_store.feature_mechanization_local_rails.revision + 1,
   updated_at = now();
 
+-- Canonical rail posture depends on the governance import that follows migration.
+-- The post-import ProjectDbtRoundtripCapabilityStatus check owns that validation.
 do $$
 declare
   phase_count integer;
   evidence_count integer;
-  drift_count integer;
   component_count integer;
   relation_count integer;
   rail_count integer;
@@ -789,9 +790,6 @@ begin
   from planning_query_store.dbt_project_roundtrip_phases;
   select count(*) into evidence_count
   from planning_query_store.dbt_project_roundtrip_phase_rail_evidence;
-  select count(*) into drift_count
-  from planning_query_store.dbt_project_roundtrip_capability_status_query
-  where projection_state <> 'current';
   select count(*) into component_count
   from architecture.component
   where component_id in (
@@ -811,9 +809,6 @@ begin
 
   if phase_count <> 4 or evidence_count <> 8 then
     raise exception 'DBT round-trip truth projection requires 4 phases and 8 relational rail rows, found % phases and % rows', phase_count, evidence_count;
-  end if;
-  if drift_count <> 0 then
-    raise exception 'DBT round-trip truth projection contains % drift rows at migration time', drift_count;
   end if;
   if component_count <> 2 or relation_count <> 1 then
     raise exception 'DBT round-trip truth projection component model is incomplete';

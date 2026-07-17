@@ -67,3 +67,13 @@ test('DBT round-trip capability migration enumerates implemented and deferred ra
   assert.doesNotMatch(sql, /rail_names\s+text\[\]/i);
   assert.doesNotMatch(sql, /evidence_refs\s+jsonb/i);
 });
+
+test('DBT round-trip bootstrap validates only migration-owned records before governance import', () => {
+  const sql = fs.readFileSync(migrationPath, 'utf8');
+
+  assert.match(sql, /if phase_count <> 4 or evidence_count <> 8 then/);
+  assert.match(sql, /if component_count <> 2 or relation_count <> 1 then/);
+  assert.match(sql, /if rail_count <> 1 then/);
+  assert.doesNotMatch(sql, /drift_count/);
+  assert.doesNotMatch(sql, /drift rows at migration time/);
+});
