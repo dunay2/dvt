@@ -1,5 +1,5 @@
 /** Owned concern: mutate one dbt resource description without serializing unrelated YAML. */
-import { isMap, isScalar, isSeq, parseDocument, type Pair, type YAMLMap } from 'yaml';
+import { isMap, isScalar, isSeq, parseDocument, stringify, type Pair, type YAMLMap } from 'yaml';
 
 import {
   DbtYamlDescriptionDocumentInvalidError,
@@ -164,10 +164,10 @@ function patchDescription(
   if (input.nextDescription === null) {
     return input.content.slice(0, pairRange.start) + input.content.slice(pairRange.end);
   }
-  const replacement = `${pairRange.indent}description: ${JSON.stringify(input.nextDescription)}${
-    pairRange.hasLineEnding ? lineEnding : ''
-  }`;
-  return input.content.slice(0, pairRange.start) + replacement + input.content.slice(pairRange.end);
+  const valueRange = requiredRange(input.descriptionPair.value);
+  const previousToken = input.content.slice(valueRange[0], valueRange[1]);
+  const replacement = formatScalar(input.nextDescription, previousToken);
+  return input.content.slice(0, valueRange[0]) + replacement + input.content.slice(valueRange[1]);
 }
 
 function insertDescription(
@@ -184,9 +184,19 @@ function insertDescription(
   const precedingValue = content.slice(lineStart, insertionPoint);
   const followsExistingLineEnding = precedingValue.endsWith('\n');
   const insertion = followsExistingLineEnding
-    ? `${indent}description: ${JSON.stringify(nextDescription)}${lineEnding}`
-    : `${lineEnding}${indent}description: ${JSON.stringify(nextDescription)}`;
+    ? `${indent}description: ${formatScalar(nextDescription)}${lineEnding}`
+    : `${lineEnding}${indent}description: ${formatScalar(nextDescription)}`;
   return content.slice(0, insertionPoint) + insertion + content.slice(insertionPoint);
+}
+
+function formatScalar(value: string, previousToken?: string): string {
+  if (previousToken?.startsWith("'")) {
+    return `'${value.replaceAll("'", "''")}'`;
+  }
+  if (previousToken?.startsWith('"')) {
+    return JSON.stringify(value);
+  }
+  return stringify(value).trimEnd();
 }
 
 function resolvePairLineRange(

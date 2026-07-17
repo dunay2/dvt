@@ -37,7 +37,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
     expect(result.content).toBe(
       content.replace(
         "    description: 'Old description' # replaced target comment\n",
-        '    description: "Canonical order facts"\n'
+        "    description: 'Canonical order facts' # replaced target comment\n"
       )
     );
   });
@@ -66,7 +66,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
     expect(result.content).toBe(
       content.replace(
         '  - name: orders\n',
-        '  - name: orders\n    description: "Canonical order facts"\n'
+        '  - name: orders\n    description: Canonical order facts\n'
       )
     );
   });
@@ -97,7 +97,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
     });
 
     expect(result.content).toContain('    description: Source description remains');
-    expect(result.content).toContain('        description: "Raw order records"');
+    expect(result.content).toContain('        description: Raw order records');
     expect(result.content).toContain('        description: Customer description remains');
   });
 
