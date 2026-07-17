@@ -300,8 +300,8 @@ PR body must be at least 50 characters or CI will reject it.
 pnpm pr:validate-title "<title>"
 ```
 
-This replicates the `amannn/action-semantic-pull-request` check in CI exactly.
-A failed validation here means a failed CI check — fix the title before creating the PR.
+This runs the same canonical validator used by the CI title check. A failed
+validation here means a failed CI check — fix the title before creating the PR.
 
 **Full PR creation sequence:**
 
