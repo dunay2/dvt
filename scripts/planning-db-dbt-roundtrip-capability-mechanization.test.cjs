@@ -3,25 +3,54 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const migrationPath = path.join(
+const {
+  extractFeatureMechanizationManifests,
+} = require('./lib/feature-mechanization-manifest.cjs');
+
+const featureId = 'E-DBT-PROJECT-ROUNDTRIP-P4-TRUTH-SYNC';
+const proposalRelativePath =
+  'docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md';
+const proposalPath = path.join(__dirname, '..', ...proposalRelativePath.split('/'));
+const authorityCorrectionPath = path.join(
   __dirname,
   '..',
   'tools',
   'planning-db',
   'migrations',
-  '728_dbt_roundtrip_capability_mechanization_alignment.sql'
+  '729_dbt_roundtrip_manifest_authority_correction.sql'
 );
 
-test('DBT round-trip capability mechanization is Fowler-governed and symbol-complete', () => {
-  const sql = fs.readFileSync(migrationPath, 'utf8');
+test('DBT round-trip capability mechanization is proposal-owned and symbol-complete', () => {
+  const manifests = extractFeatureMechanizationManifests(
+    fs.readFileSync(proposalPath, 'utf8'),
+    proposalRelativePath
+  );
+  const entry = manifests.find((candidate) => candidate.manifest?.featureId === featureId);
 
-  assert.match(sql, /docs\/architecture\/fowler-opportunity-planning-governance\.md/);
-  assert.match(sql, /with declared_symbol\(path, name\)/);
-  assert.match(sql, /createDbtProjectRoundtripCapabilityStatusReadModel/);
-  assert.match(sql, /runDbtRoundtripCapabilityStatusGenerator/);
-  assert.match(sql, /verifyGitCommitAncestry/);
-  assert.match(sql, /must declare 24 implementation symbols/);
-  assert.match(sql, /symbol_refs = symbol_manifest\.symbol_refs/);
-  assert.doesNotMatch(sql, /delete\s+from/i);
-  assert.doesNotMatch(sql, /truncate\s+/i);
+  assert.ok(entry, 'the mandatory proposal must declare the Phase 4 feature');
+  assert.equal(entry.sourcePath, proposalRelativePath);
+  assert.equal(entry.manifest.mechanizationStatus, 'implemented');
+  assert.equal(entry.manifest.noHumanDecisionsRemaining, true);
+  assert.equal(entry.manifest.symbols.length, 25);
+  assert.deepEqual(entry.manifest.commandQueryRails, [
+    {
+      name: 'ProjectDbtRoundtripCapabilityStatus',
+      type: 'query',
+      dddOwner: 'DbtProjectRoundtripCapabilityStatus',
+    },
+  ]);
+  assert.ok(
+    entry.manifest.governingSources.includes(
+      'docs/architecture/fowler-opportunity-planning-governance.md'
+    )
+  );
+});
+
+test('append-only correction retires the migration-owned feature manifest copy', () => {
+  const sql = fs.readFileSync(authorityCorrectionPath, 'utf8');
+
+  assert.match(sql, /delete from planning_query_store\.feature_mechanization_local_rails/i);
+  assert.match(sql, new RegExp(featureId));
+  assert.match(sql, /must be proposal-owned/);
+  assert.doesNotMatch(sql, /insert into planning_query_store\.feature_mechanization_local_rails/i);
 });
