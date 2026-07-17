@@ -6,6 +6,7 @@ const path = require('node:path');
 
 const {
   analyzeMigrationOrdinals,
+  assertAppliedMigrationIdentities,
   assertMigrationOrdinalPolicy,
   buildMigrationRecords,
   buildMigrationFileNameFingerprint,
@@ -64,6 +65,70 @@ test('migration ordinal policy rejects changes to the applied filename history',
       ),
     /Applied migration filename history changed below strict ordinal 003/
   );
+});
+
+test('migration files sort by numeric ordinal after the three-digit range', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-planning-migrations-'));
+
+  try {
+    fs.writeFileSync(path.join(directory, '1000_after.sql'), 'select 1000;', 'utf8');
+    fs.writeFileSync(path.join(directory, '999_before.sql'), 'select 999;', 'utf8');
+
+    assert.deepEqual(
+      readMigrationFiles(directory).map((migration) => migration.fileName),
+      ['999_before.sql', '1000_after.sql']
+    );
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('applied strict migration identities reject a renamed filename', () => {
+  const records = buildMigrationRecords([
+    { fileName: '722_new_name.sql', sql: 'select 722;' },
+    { fileName: '723_next.sql', sql: 'select 723;' },
+  ]);
+
+  assert.throws(
+    () =>
+      assertAppliedMigrationIdentities(
+        records,
+        [{ version: '722_old_name', checksum_sha256: 'applied-checksum' }],
+        { firstStrictOrdinal: 722 }
+      ),
+    /Applied strict migration files are missing or renamed: 722_old_name\.sql/
+  );
+});
+
+test('migration runner rejects a renamed applied strict migration before replaying SQL', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-planning-migrations-'));
+  const queryCalls = [];
+
+  try {
+    fs.writeFileSync(path.join(directory, '001_new_name.sql'), 'select 1;', 'utf8');
+
+    await assert.rejects(
+      runMigrations({
+        migrationsDir: directory,
+        client: {
+          query: async (sql) => {
+            queryCalls.push(sql);
+            if (/select version, checksum_sha256/u.test(sql)) {
+              return {
+                rows: [{ version: '001_old_name', checksum_sha256: 'applied-checksum' }],
+              };
+            }
+            return { rows: [] };
+          },
+        },
+        silent: true,
+      }),
+      /Applied strict migration files are missing or renamed: 001_old_name\.sql/
+    );
+    assert.equal(queryCalls.includes('select 1;'), false);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('tracked migrations preserve applied identities and use unique strict ordinals', () => {
