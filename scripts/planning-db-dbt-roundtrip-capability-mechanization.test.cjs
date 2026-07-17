@@ -31,7 +31,34 @@ test('DBT round-trip capability mechanization is proposal-owned and symbol-compl
   assert.equal(entry.sourcePath, proposalRelativePath);
   assert.equal(entry.manifest.mechanizationStatus, 'implemented');
   assert.equal(entry.manifest.noHumanDecisionsRemaining, true);
-  assert.equal(entry.manifest.symbols.length, 25);
+  assert.deepEqual(entry.manifest.symbols.map((symbol) => symbol.name).sort(), [
+    'childProcess',
+    'createDbtProjectRoundtripCapabilityStatusReadModel',
+    'databaseUrl',
+    'defaultOutputPath',
+    'fs',
+    'governedCapabilityKeys',
+    'main',
+    'markdownCell',
+    'markdownTable',
+    'normalizeDbtRoundtripCapabilityRow',
+    'parseArgs',
+    'path',
+    'railCommonFilterQueryNames',
+    'readDbtProjectRoundtripCapabilityStatusRows',
+    'relativeOutputPath',
+    'renderDbtRoundtripCapabilityStatus',
+    'repoRoot',
+    'reviewedPrLabel',
+    'runDbtRoundtripCapabilityStatusGenerator',
+    'runGit',
+    'sortRows',
+    'sourceView',
+    'toBoolean',
+    'toNumber',
+    'validateDbtRoundtripCapabilityRows',
+    'verifyGitCommitAncestry',
+  ]);
   assert.deepEqual(entry.manifest.commandQueryRails, [
     {
       name: 'ProjectDbtRoundtripCapabilityStatus',
