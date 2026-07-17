@@ -1286,6 +1286,323 @@ Invariants:
    `pnpm planning:db:query dbt-roundtrip-capabilities --limit 20` and
    `pnpm docs:dbt-roundtrip-capabilities:check`.
 
+### 8.2.2 Phase-four mechanization authority
+
+The initial Phase 4 implementation incorrectly declared feature mechanization
+inside migration `726` and completed it in migration `728`. Review of the slice
+identified that this bypassed the mandatory proposal placement rule. Those
+applied migrations remain immutable; migration `729` removes their local
+manifest copy. The fenced manifest below is the reviewable authority imported
+into Planning DB. This is a corrective append-only transition, not a second
+source of feature truth.
+
+```feature-mechanization
+version: 1
+featureId: E-DBT-PROJECT-ROUNDTRIP-P4-TRUTH-SYNC
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+owner: Architecture / Planning DB
+implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
+componentGuides:
+  - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
+userStories:
+  - Operators query current DBT round-trip rail posture without interpreting a historical plan table.
+  - Reviewers receive a failing check when canonical rail posture or reviewed Git ancestry drifts.
+  - Shallow-clone users can validate reviewed evidence without false missing-commit failures.
+governingSources:
+  - AGENTS.md
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+allowedImplementationSurfaces:
+  - .github/workflows/pr-quality-gate.yml
+  - docs/generated-docs-policy.json
+  - docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
+  - package.json
+  - scripts/check-generated-docs-policy.cjs
+  - scripts/check-generated-docs-policy.test.cjs
+  - scripts/generate-dbt-project-roundtrip-capability-status.cjs
+  - scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+  - scripts/governance-refresh.cjs
+  - scripts/governance-refresh.test.cjs
+  - scripts/planning-db-dbt-roundtrip-capability-maturity.test.cjs
+  - scripts/planning-db-dbt-roundtrip-capability-mechanization.test.cjs
+  - scripts/planning-db-dbt-roundtrip-capability-status.test.cjs
+  - scripts/planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs
+  - scripts/planning-db-query.cjs
+  - scripts/planning-db-query.test.cjs
+  - scripts/planning-db/queries/dbt-project-roundtrip-capability-status-query.cjs
+  - tools/ci/repository-command-catalog.mjs
+  - tools/ci/repository-command-catalog.test.mjs
+  - tools/ci/workflow-pattern-parity.test.mjs
+  - tools/planning-db/migrations/726_dbt_project_roundtrip_capability_truth_projection.sql
+  - tools/planning-db/migrations/727_dbt_project_roundtrip_capability_maturity.sql
+  - tools/planning-db/migrations/728_dbt_roundtrip_capability_mechanization_alignment.sql
+  - tools/planning-db/migrations/729_dbt_roundtrip_manifest_authority_correction.sql
+forbiddenImplementationSurfaces:
+  - apps/**
+  - packages/**
+  - docs/**#manual_current_capability_table
+  - scripts/**#parallel_command_query_catalog
+commandQueryRails:
+  - name: ProjectDbtRoundtripCapabilityStatus
+    type: query
+    dddOwner: DbtProjectRoundtripCapabilityStatus
+domainObjects:
+  - name: DbtProjectRoundtripCapabilityStatus
+    type: read-model
+    owner: Architecture / Planning DB
+  - name: DbtProjectRoundtripPhaseRailEvidence
+    type: entity
+    owner: Architecture / Planning DB
+fowlerSignals:
+  - Hidden authority
+  - Duplicated truth
+  - Separated interface
+  - Fail-closed evidence
+architectureGuards:
+  - node --test scripts/planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs
+  - node --test scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+  - node --test scripts/planning-db-dbt-roundtrip-capability-mechanization.test.cjs
+  - node --test tools/ci/workflow-pattern-parity.test.mjs
+cypressFlows:
+  - not_applicable:governance_read_model
+completionGate:
+  - pnpm planning:db:migrate
+  - pnpm planning:db:query dbt-roundtrip-capabilities --limit 20
+  - pnpm docs:dbt-roundtrip-capabilities:check
+  - pnpm docs:feature-mechanization:implementation -- --feature E-DBT-PROJECT-ROUNDTRIP-P4-TRUTH-SYNC
+  - pnpm governance:refresh
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: dbt-roundtrip-capability-truth
+    redTest: node --test scripts/planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs scripts/generate-dbt-project-roundtrip-capability-status.test.cjs scripts/planning-db-dbt-roundtrip-capability-status.test.cjs
+    expectedFailure: No normalized DB projection, query adapter, Git evidence validator, or deterministic render exists.
+    patchSurfaces:
+      - scripts/planning-db/queries/dbt-project-roundtrip-capability-status-query.cjs
+      - scripts/generate-dbt-project-roundtrip-capability-status.cjs
+      - tools/planning-db/migrations/726_dbt_project_roundtrip_capability_truth_projection.sql
+    greenTest: pnpm docs:dbt-roundtrip-capabilities:check
+  - id: dbt-roundtrip-shallow-git-evidence
+    redTest: node --test scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    expectedFailure: A shallow checkout reports valid reviewed commits as missing evidence.
+    patchSurfaces:
+      - scripts/generate-dbt-project-roundtrip-capability-status.cjs
+      - scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    greenTest: node --test scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+  - id: dbt-roundtrip-authoritative-closeout
+    redTest: node --test scripts/planning-db-dbt-roundtrip-capability-mechanization.test.cjs tools/ci/workflow-pattern-parity.test.mjs
+    expectedFailure: Mechanization is migration-owned and the authoritative CI workflow does not run the capability check.
+    patchSurfaces:
+      - docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
+      - tools/planning-db/migrations/729_dbt_roundtrip_manifest_authority_correction.sql
+      - .github/workflows/pr-quality-gate.yml
+      - package.json
+    greenTest: node --test scripts/planning-db-dbt-roundtrip-capability-mechanization.test.cjs tools/ci/workflow-pattern-parity.test.mjs
+symbols:
+  - name: createDbtProjectRoundtripCapabilityStatusReadModel
+    path: scripts/planning-db/queries/dbt-project-roundtrip-capability-status-query.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatus
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Query Model, Single Source of Truth]
+    architectureGuard: scripts/planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs]
+  - name: readDbtProjectRoundtripCapabilityStatusRows
+    path: scripts/planning-db/queries/dbt-project-roundtrip-capability-status-query.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatus
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Query Model, Single Source of Truth]
+    architectureGuard: scripts/planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs]
+  - name: railCommonFilterQueryNames
+    path: scripts/planning-db-query.cjs
+    dddOwner: PlanningDbQueryCli
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Published Language]
+    architectureGuard: scripts/planning-db-query.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/planning-db-query.test.cjs]
+  - name: childProcess
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: databaseUrl
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: defaultOutputPath
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: fs
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: main
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: markdownCell
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: markdownTable
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: normalizeDbtRoundtripCapabilityRow
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: parseArgs
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: path
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: relativeOutputPath
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: renderDbtRoundtripCapabilityStatus
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: repoRoot
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: reviewedPrLabel
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: runDbtRoundtripCapabilityStatusGenerator
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: runGit
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: sortRows
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: sourceView
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: toBoolean
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: toNumber
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: validateDbtRoundtripCapabilityRows
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Fail Closed, Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: verifyGitCommitAncestry
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Fail Closed, Separated Interface]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+```
+
 ## 8.3 Deferred visual-edit rail decision
 
 No generic visual-edit command is accepted in Phase 0. A command may be
