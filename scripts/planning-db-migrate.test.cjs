@@ -1,18 +1,115 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 
 const {
+  analyzeMigrationOrdinals,
+  assertMigrationOrdinalPolicy,
   buildMigrationRecords,
+  buildMigrationFileNameFingerprint,
   detectChecksumMismatch,
+  migrationOrdinalPolicy,
   readMigrationFiles,
+  runMigrations,
   schemaName,
   sha256,
 } = require('./planning-db-migrate.cjs');
 
 test('planning DB migrations target the dedicated query-store schema', () => {
   assert.equal(schemaName, 'planning_query_store');
+});
+
+test('migration ordinal analysis reports the next safe ordinal', () => {
+  const historicalFileNames = ['001_init.sql', '002_content.sql'];
+  const report = analyzeMigrationOrdinals([...historicalFileNames, '003_add_query.sql'], {
+    firstStrictOrdinal: 3,
+    historicalFileNameSha256: buildMigrationFileNameFingerprint(historicalFileNames),
+  });
+
+  assert.equal(report.highestOrdinal, 3);
+  assert.equal(report.nextSafeOrdinal, 4);
+  assert.deepEqual(report.strictDuplicateOrdinals, []);
+  assert.equal(report.historicalFileNamesMatch, true);
+});
+
+test('migration ordinal policy rejects duplicate strict ordinals', () => {
+  const historicalFileNames = ['001_init.sql', '002_content.sql'];
+
+  assert.throws(
+    () =>
+      assertMigrationOrdinalPolicy(
+        [...historicalFileNames, '003_add_query.sql', '003_add_command.sql'],
+        {
+          firstStrictOrdinal: 3,
+          historicalFileNameSha256: buildMigrationFileNameFingerprint(historicalFileNames),
+        }
+      ),
+    /Duplicate strict migration ordinal 003: 003_add_command\.sql, 003_add_query\.sql\. Highest ordinal=3; next safe ordinal=4\./
+  );
+});
+
+test('migration ordinal policy rejects changes to the applied filename history', () => {
+  const historicalFileNames = ['001_init.sql', '002_content.sql'];
+
+  assert.throws(
+    () =>
+      assertMigrationOrdinalPolicy(
+        [...historicalFileNames, '002_parallel_history.sql', '003_add_query.sql'],
+        {
+          firstStrictOrdinal: 3,
+          historicalFileNameSha256: buildMigrationFileNameFingerprint(historicalFileNames),
+        }
+      ),
+    /Applied migration filename history changed below strict ordinal 003/
+  );
+});
+
+test('tracked migrations preserve applied identities and use unique strict ordinals', () => {
+  const migrations = readMigrationFiles();
+  const report = analyzeMigrationOrdinals(
+    migrations.map((migration) => migration.fileName),
+    migrationOrdinalPolicy
+  );
+  const policyMigration = migrations.find(
+    (migration) => migration.fileName === '722_planning_db_migration_ordinal_uniqueness.sql'
+  );
+
+  assert.equal(report.historicalFileNamesMatch, true);
+  assert.deepEqual(report.strictDuplicateOrdinals, []);
+  assert.ok(report.highestOrdinal >= migrationOrdinalPolicy.firstStrictOrdinal);
+  assert.equal(report.nextSafeOrdinal, report.highestOrdinal + 1);
+  assert.ok(policyMigration);
+  assert.match(policyMigration.sql, /PreparePlanningDbForCiGate/);
+  assert.match(policyMigration.sql, /Renaming those applied files would replay their SQL/);
+});
+
+test('migration ordinal policy fails before issuing database queries', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-planning-migrations-'));
+  const queryCalls = [];
+
+  try {
+    fs.writeFileSync(path.join(directory, '001_first.sql'), 'select 1;', 'utf8');
+    fs.writeFileSync(path.join(directory, '001_parallel.sql'), 'select 2;', 'utf8');
+
+    await assert.rejects(
+      runMigrations({
+        migrationsDir: directory,
+        client: {
+          query: async (...args) => {
+            queryCalls.push(args);
+            return { rows: [] };
+          },
+        },
+        silent: true,
+      }),
+      /Duplicate strict migration ordinal 001/
+    );
+    assert.deepEqual(queryCalls, []);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
 });
 
 test('buildMigrationRecords derives stable versions and sha256 checksums', () => {
