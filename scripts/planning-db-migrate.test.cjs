@@ -11,7 +11,9 @@ const {
   buildMigrationRecords,
   buildMigrationFileNameFingerprint,
   detectChecksumMismatch,
+  migrationVersionsFromRepoPaths,
   migrationOrdinalPolicy,
+  readKnownCanonicalMigrationVersions,
   readMigrationFiles,
   runMigrations,
   schemaName,
@@ -118,6 +120,37 @@ test('applied strict migration identities allow newer shared-worktree migrations
   );
 });
 
+test('applied strict migration identities reject a deleted trailing checkout migration', () => {
+  const records = buildMigrationRecords([
+    { fileName: '722_current.sql', sql: 'select 722;' },
+    { fileName: '723_current.sql', sql: 'select 723;' },
+  ]);
+
+  assert.throws(
+    () =>
+      assertAppliedMigrationIdentities(
+        records,
+        [{ version: '724_deleted_from_checkout', checksum_sha256: 'applied-checksum' }],
+        { firstStrictOrdinal: 722 },
+        new Set(['724_deleted_from_checkout'])
+      ),
+    /Applied strict migration files are missing or renamed: 724_deleted_from_checkout\.sql/
+  );
+});
+
+test('applied strict migration identities reject all deleted strict checkout migrations', () => {
+  assert.throws(
+    () =>
+      assertAppliedMigrationIdentities(
+        [],
+        [{ version: '722_deleted_from_checkout', checksum_sha256: 'applied-checksum' }],
+        { firstStrictOrdinal: 722 },
+        new Set(['722_deleted_from_checkout'])
+      ),
+    /Applied strict migration files are missing or renamed: 722_deleted_from_checkout\.sql/
+  );
+});
+
 test('applied strict migration identities reject a rename to a different local ordinal', () => {
   const records = buildMigrationRecords([
     { fileName: '723_current.sql', sql: 'select 723;' },
@@ -132,6 +165,67 @@ test('applied strict migration identities reject a rename to a different local o
         { firstStrictOrdinal: 722 }
       ),
     /Applied strict migration files are missing or renamed: 722_original\.sql/
+  );
+});
+
+test('known migration versions include checkout history and branch deletions', () => {
+  const runGitLines = (args) => {
+    if (args[0] === 'ls-tree') {
+      return ['tools/planning-db/migrations/723_current.sql'];
+    }
+    if (args[0] === 'log') {
+      return ['tools/planning-db/migrations/724_deleted_after_commit.sql'];
+    }
+    if (args[0] === 'merge-base') {
+      return ['base-sha'];
+    }
+    if (args[0] === 'diff' && args.includes('base-sha')) {
+      return ['tools/planning-db/migrations/725_deleted_on_branch.sql'];
+    }
+    return [];
+  };
+
+  assert.deepEqual([...readKnownCanonicalMigrationVersions({ runGitLines })].sort(), [
+    '723_current',
+    '724_deleted_after_commit',
+    '725_deleted_on_branch',
+  ]);
+});
+
+test('known migration versions use the GitHub merge diff in a shallow PR checkout', () => {
+  const runGitLines = (args) => {
+    if (args[0] === 'merge-base') {
+      throw new Error('shallow checkout');
+    }
+    if (args[0] === 'diff' && args.includes('origin/main') && args.includes('merge-sha')) {
+      return ['tools/planning-db/migrations/726_deleted_in_pr.sql'];
+    }
+    return [];
+  };
+
+  assert.deepEqual(
+    [
+      ...readKnownCanonicalMigrationVersions({
+        baseRef: 'origin/main',
+        headRef: 'merge-sha',
+        pullRequestMergeCheckout: true,
+        runGitLines,
+      }),
+    ],
+    ['726_deleted_in_pr']
+  );
+});
+
+test('migration repo paths only project canonical SQL identities', () => {
+  assert.deepEqual(
+    [
+      ...migrationVersionsFromRepoPaths([
+        'tools/planning-db/migrations/722_current.sql',
+        'tools/planning-db/migrations/README.md',
+        'scripts/723_unrelated.sql',
+      ]),
+    ],
+    ['722_current']
   );
 });
 
@@ -161,6 +255,40 @@ test('migration runner rejects a renamed applied strict migration before replayi
       /Applied strict migration files are missing or renamed: 001_old_name\.sql/
     );
     assert.equal(queryCalls.includes('select 1;'), false);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test('migration runner rejects a trailing migration known by the checkout', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-planning-migrations-'));
+
+  try {
+    fs.writeFileSync(path.join(directory, '001_current.sql'), 'select 1;', 'utf8');
+
+    await assert.rejects(
+      runMigrations({
+        migrationsDir: directory,
+        knownMigrationVersions: ['002_deleted_from_checkout'],
+        client: {
+          query: async (sql) => {
+            if (/select version, checksum_sha256/u.test(sql)) {
+              return {
+                rows: [
+                  {
+                    version: '002_deleted_from_checkout',
+                    checksum_sha256: 'applied-checksum',
+                  },
+                ],
+              };
+            }
+            return { rows: [] };
+          },
+        },
+        silent: true,
+      }),
+      /Applied strict migration files are missing or renamed: 002_deleted_from_checkout\.sql/
+    );
   } finally {
     fs.rmSync(directory, { recursive: true, force: true });
   }
