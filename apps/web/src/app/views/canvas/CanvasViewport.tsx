@@ -154,6 +154,7 @@ function CanvasViewportWithPresenter({
     }
 
     const inspectNode = (ownerNode.data as Record<string, unknown>).onInspectNode;
+    const contextMenuTrigger = nodeFloatingToolbarAnchor.contextMenuTrigger;
     const model = buildCanvasNodeFloatingToolbarModel({
       nodeId: nodeFloatingToolbarAnchor.nodeId,
       nodeName: nodeFloatingToolbarAnchor.nodeName,
@@ -168,10 +169,10 @@ function CanvasViewportWithPresenter({
           : undefined,
       onToggleFreeze: props.onToggleFrozenNode,
       onOpenMore:
-        nodeFloatingToolbarAnchor.contextMenuTrigger == null
+        contextMenuTrigger == null
           ? undefined
           : () => {
-              const { contextMenuTrigger, nodeTop, position } = nodeFloatingToolbarAnchor;
+              const { nodeTop, position } = nodeFloatingToolbarAnchor;
               closeNodeFloatingToolbar();
               contextMenuTrigger.dispatchEvent(
                 new MouseEvent('contextmenu', {
