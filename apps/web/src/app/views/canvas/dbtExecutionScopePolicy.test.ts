@@ -121,29 +121,26 @@ describe('applyDbtExecutionSelectionToggle', () => {
     expect(
       applyDbtExecutionSelectionToggle({
         requestedNodeIds: ['model.hidden', 'model.visible'],
-        visibleNodeIds: ['model.visible', 'model.available'],
         nodeId: 'model.visible',
         shouldSelect: false,
       })
     ).toEqual({ mode: 'explicit', nodeIds: ['model.hidden'] });
   });
 
-  it('replaces an unavailable-only recovery set when an available root is selected', () => {
+  it('preserves unavailable requested roots when an available root is selected', () => {
     expect(
       applyDbtExecutionSelectionToggle({
         requestedNodeIds: ['model.hidden'],
-        visibleNodeIds: ['model.available'],
         nodeId: 'model.available',
         shouldSelect: true,
       })
-    ).toEqual({ mode: 'explicit', nodeIds: ['model.available'] });
+    ).toEqual({ mode: 'explicit', nodeIds: ['model.hidden', 'model.available'] });
   });
 
   it('keeps explicit-empty intent when the final visible invalid resource is deselected', () => {
     expect(
       applyDbtExecutionSelectionToggle({
         requestedNodeIds: ['source.visible'],
-        visibleNodeIds: ['source.visible', 'model.available'],
         nodeId: 'source.visible',
         shouldSelect: false,
       })

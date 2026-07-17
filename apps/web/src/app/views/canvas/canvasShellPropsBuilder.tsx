@@ -133,6 +133,7 @@ function buildCanvasShellChromeStateArgs({
       canImportProjectSnapshot: controller.canImportProjectSnapshot,
       planStatusSummary: controller.planStatusSummary,
       planRunReadiness: controller.planRunReadiness,
+      executionSelectionRecovery: controller.executionSelectionRecovery,
       exclusiveOverlayMode: controller.exclusiveOverlayMode,
       canUseCostOverlay: controller.canUseCostOverlay,
       impactOverlayEnabled: controller.impactOverlayEnabled,
@@ -191,6 +192,7 @@ function buildCanvasShellChromeCommandsArgs({
       reloadLatestDraft: controller.reloadLatestDraft,
       handlePreviewExecutionPlan: controller.handlePreviewExecutionPlan,
       handleStartRun: controller.handleStartRun,
+      executionSelectionRecoveryCommands: controller.executionSelectionRecoveryCommands,
     },
   };
 }

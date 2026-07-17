@@ -33,5 +33,6 @@ export function buildCanvasShellChromeCommands({
     onRun: () => {
       void chromeCommands.handleStartRun();
     },
+    executionSelectionRecovery: chromeCommands.executionSelectionRecoveryCommands,
   };
 }

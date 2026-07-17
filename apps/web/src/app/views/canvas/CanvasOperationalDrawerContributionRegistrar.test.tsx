@@ -45,6 +45,7 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
         }}
         onPreviewExecutionPlan={onPreviewExecutionPlan}
         onStartRun={vi.fn()}
+        selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}
       />
     );
 

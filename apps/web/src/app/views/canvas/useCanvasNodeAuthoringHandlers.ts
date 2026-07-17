@@ -78,7 +78,13 @@ export function useCanvasNodeAuthoringHandlers({
 
   const nodeRemovalContracts: CanvasNodeRemovalContracts = {
     state,
-    effects,
+    effects: {
+      setNodes: effects.setNodes,
+      setEdges: effects.setEdges,
+      setDraftSession: effects.setDraftSession,
+      reconcileSelectionAfterNodeRemoval: effects.reconcileSelectionAfterNodeRemoval,
+      setInspectorNode: effects.setInspectorNode,
+    },
     policy: {
       canEditEdges: policy.canEditEdges,
     },

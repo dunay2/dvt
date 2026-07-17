@@ -231,13 +231,15 @@ export function OperationalDrawerPrimaryAction({
 
 export function OperationalDrawerSecondaryAction({
   children,
+  disabled = false,
   onClick,
 }: Readonly<{
   children: ReactNode;
+  disabled?: boolean;
   onClick: () => void;
 }>): JSX.Element {
   return (
-    <Button type="button" variant="outline" size="sm" onClick={onClick}>
+    <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={onClick}>
       {children}
     </Button>
   );

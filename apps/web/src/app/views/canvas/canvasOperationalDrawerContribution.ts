@@ -5,7 +5,13 @@ import type {
   OperationalDrawerTabId,
 } from '../../components/shell/operationalDrawerContributionStore';
 import type { CanvasOperationalDrawerSurfacePolicy } from '../../plugins/canvasSurfaceStrategyContracts';
+import type {
+  CanvasExecutionSelectionRecoveryCommands,
+  CanvasExecutionSelectionRecoveryReadModel,
+} from '../../types/canvasExecutionSelectionRecovery';
+import type { OperationalDrawerSelectionRecoveryMessages } from '../../components/shell/operationalDrawerSelectionRecoveryMessages';
 import type { PlanRunReadinessBlocker, PlanRunReadinessReadModel } from './canvasPlanReadiness';
+import { canvasViewCopy } from './copy';
 
 type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   policy: CanvasOperationalDrawerSurfacePolicy;
@@ -15,6 +21,9 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   canStartRun: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
   planStatusSummary: string;
+  selectionRecovery?: CanvasExecutionSelectionRecoveryReadModel | null;
+  selectionRecoveryCommands?: CanvasExecutionSelectionRecoveryCommands | null;
+  selectionRecoveryMessages?: OperationalDrawerSelectionRecoveryMessages;
   onPreviewExecutionPlan: () => void;
   onStartRun: () => void;
 }>;
@@ -70,8 +79,12 @@ export function buildCanvasOperationalDrawerContribution({
   planRunReadiness,
   planStatusSummary,
   policy,
+  selectionRecovery = null,
+  selectionRecoveryCommands = null,
+  selectionRecoveryMessages = canvasViewCopy,
 }: BuildCanvasOperationalDrawerContributionArgs): OperationalDrawerContribution {
-  const canPreviewExecutionPlan = canPlan && canPlanGraph;
+  const selectionRecoveryBlocked = selectionRecovery?.status === 'blocked';
+  const canPreviewExecutionPlan = canPlan && canPlanGraph && !selectionRecoveryBlocked;
   const labelBlocker = (blocker: PlanRunReadinessBlocker): string =>
     blocker === 'plan_integrity'
       ? 'Execution Preview integrity'
@@ -85,7 +98,7 @@ export function buildCanvasOperationalDrawerContribution({
       : planRunReadiness.blockers.length > 0
         ? planRunReadiness.blockers
         : ['plan_integrity'];
-  const problems = buildReadinessProblems({
+  const readinessProblems = buildReadinessProblems({
     blockers: readinessBlockers,
     canPreviewExecutionPlan,
     planRunReadiness,
@@ -93,8 +106,23 @@ export function buildCanvasOperationalDrawerContribution({
     labelBlocker,
     onPreviewExecutionPlan,
   });
-  const previewStatus = planRunReadiness.status === 'ready' ? 'ready' : 'blocked';
-  const previewBlockers = readinessBlockers.map(labelBlocker);
+  const selectionProblem: OperationalDrawerProblem | null = selectionRecoveryBlocked
+    ? {
+        id: 'execution_selection',
+        severity: 'warning',
+        message: selectionRecoveryMessages.selectionRecoveryProblemSummary,
+        detail: selectionRecoveryMessages.selectionRecoveryProblemDetail,
+        action: null,
+      }
+    : null;
+  const problems =
+    selectionProblem == null ? readinessProblems : [...readinessProblems, selectionProblem];
+  const previewStatus =
+    planRunReadiness.status === 'ready' && !selectionRecoveryBlocked ? 'ready' : 'blocked';
+  const previewBlockers = [
+    ...readinessBlockers.map(labelBlocker),
+    ...(selectionRecoveryBlocked ? [selectionRecoveryMessages.selectionRecoveryBlockerLabel] : []),
+  ];
   const runsStatus = activeRunId != null ? 'active' : canStartRun ? 'ready' : 'blocked';
 
   return {
@@ -133,6 +161,14 @@ export function buildCanvasOperationalDrawerContribution({
       blockers: previewBlockers,
       canPreview: canPreviewExecutionPlan,
       onPreviewExecutionPlan,
+      selectionRecovery:
+        selectionRecovery == null || selectionRecoveryCommands == null
+          ? null
+          : {
+              model: selectionRecovery,
+              commands: selectionRecoveryCommands,
+              messages: selectionRecoveryMessages,
+            },
     },
   };
 }

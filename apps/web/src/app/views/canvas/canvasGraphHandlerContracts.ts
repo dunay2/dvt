@@ -29,6 +29,7 @@ export type CanvasGraphInteractionEffects = {
   setEdges: CanvasEdgeSetter;
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (ids: string[]) => void;
+  reconcileSelectionAfterNodeRemoval: (remainingVisibleNodeIds: string[]) => void;
   setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
   toggleInspectorPanel: () => void;
   onLayoutComplete: (positions: Record<string, { x: number; y: number }>) => void;
@@ -69,6 +70,7 @@ export type CanvasNodeAuthoringEffects = {
   setEdges: CanvasEdgeSetter;
   setDraftSession: CanvasDraftSessionSetter;
   setSelectedNodes: (ids: string[]) => void;
+  reconcileSelectionAfterNodeRemoval: (remainingVisibleNodeIds: string[]) => void;
   setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 };
 
@@ -175,7 +177,7 @@ export type CanvasNodeRemovalEffects = {
   setNodes: CanvasNodeSetter;
   setEdges: CanvasEdgeSetter;
   setDraftSession: CanvasDraftSessionSetter;
-  setSelectedNodes: (ids: string[]) => void;
+  reconcileSelectionAfterNodeRemoval: (remainingVisibleNodeIds: string[]) => void;
   setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
 };
 

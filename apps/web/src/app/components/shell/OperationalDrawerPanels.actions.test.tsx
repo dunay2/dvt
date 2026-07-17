@@ -51,6 +51,7 @@ function buildContribution(
       blockers: ['Execution Preview integrity'],
       canPreview: true,
       onPreviewExecutionPlan: vi.fn(),
+      selectionRecovery: null,
     },
     ...overrides,
   };

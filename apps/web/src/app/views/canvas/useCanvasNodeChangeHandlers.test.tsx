@@ -61,6 +61,7 @@ function renderHookHost({
   setEdges = vi.fn(),
   setDraftSession = vi.fn(),
   setSelectedNodes = vi.fn(),
+  reconcileSelectionAfterNodeRemoval = setSelectedNodes,
   setInspectorNode = vi.fn(),
   onLayoutComplete = vi.fn(),
 }: {
@@ -73,6 +74,7 @@ function renderHookHost({
   setEdges?: ReturnType<typeof vi.fn>;
   setDraftSession?: ReturnType<typeof vi.fn>;
   setSelectedNodes?: ReturnType<typeof vi.fn>;
+  reconcileSelectionAfterNodeRemoval?: ReturnType<typeof vi.fn>;
   setInspectorNode?: ReturnType<typeof vi.fn>;
   onLayoutComplete?: ReturnType<typeof vi.fn>;
 }): NodeChangeHarness {
@@ -99,7 +101,7 @@ function renderHookHost({
       },
       effects: {
         setDraftSession,
-        setSelectedNodes,
+        reconcileSelectionAfterNodeRemoval,
         setInspectorNode,
         onLayoutComplete,
       },

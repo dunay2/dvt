@@ -2721,6 +2721,110 @@ Deliver:
 - profiles exclusion;
 - run E2E.
 
+### Phase 4 closeout — explicit execution-selection recovery
+
+#### Think-First
+
+The Phase 4 execution boundary already fails closed when an explicit DBT
+selection contains a resource that is unavailable in the current projection or
+is not executable. The remaining product gap is recovery: the browser currently
+has an exceptional toggle path that can replace an unavailable-only selection
+when a visible root is selected. That replacement is safe for execution, but it
+changes caller intent without an explicit command or receipt.
+
+The alternatives are:
+
+1. keep implicit replacement in the selection toggle policy — rejected because
+   a gesture on one node must not silently discard other requested roots;
+2. filter invalid roots and preview the remaining subset — rejected because it
+   widens the meaning of successful Preview and violates fail-closed selection;
+3. preserve the complete requested set and expose explicit recovery commands in
+   the operational drawer — selected because query state, user intent, mutation,
+   and presentation remain independently testable.
+
+#### Component and rail design
+
+| Concern               | Component                                          | Rail                                                  | Responsibility                                            |
+| --------------------- | -------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------- |
+| selection truth       | `SYS-WEB-CANVAS-EXECUTION-SELECTION`               | `CollectCanvasExecutionSelection` query               | preserve complete intent and derive executable closure    |
+| recovery command      | `SYS-WEB-CANVAS-EXECUTION-SELECTION-RECOVERY`      | `RecoverCanvasExecutionSelection` command             | apply one explicit recovery strategy and return a receipt |
+| recovery presentation | `SYS-WEB-CANVAS-EXECUTION-SELECTION-RECOVERY-VIEW` | consumes both rails                                   | render supplied status and actions without deriving scope |
+| operational host      | `SYS-WEB-CANVAS-OPERATIONAL-DRAWER-CONTRIBUTION`   | `RegisterCanvasOperationalDrawerContribution` command | publish the route-owned recovery contribution             |
+
+`RecoverCanvasExecutionSelection` has a closed strategy vocabulary:
+
+- `discard_unavailable`: remove unavailable requested roots only;
+- `use_workspace_scope`: replace explicit intent with workspace intent;
+- `refresh_analysis`: preserve intent, refresh authoritative analysis, and keep
+  Preview blocked until the query becomes valid.
+
+The command does not discard non-executable roots under
+`discard_unavailable`; those are a distinct classification and remain blocked
+until the user deselects them or chooses workspace scope.
+
+```mermaid
+flowchart LR
+  Intent[CanvasExecutionSelectionIntent]
+  Query[CollectCanvasExecutionSelection]
+  Status[SelectionRecoveryReadModel]
+  View[SelectionRecoveryView]
+  Command[RecoverCanvasExecutionSelection]
+  Store[Canvas interaction store]
+  Refresh[Authoritative graph refresh]
+
+  Intent --> Query --> Status --> View
+  View -->|discard unavailable| Command --> Store --> Query
+  View -->|use workspace scope| Command --> Store
+  View -->|keep blocked and refresh| Command --> Refresh --> Query
+```
+
+```mermaid
+sequenceDiagram
+  actor User
+  participant Drawer as Operational drawer
+  participant Recovery as Recovery command adapter
+  participant Selection as Selection policy/store
+  participant Authority as Graph authority query
+
+  User->>Drawer: Inspect blocked Preview scope
+  Drawer-->>User: Requested, unavailable, non-executable, derived, admitted, revision
+  alt Discard unavailable
+    User->>Recovery: discard_unavailable
+    Recovery->>Selection: Persist remaining explicit roots
+  else Use workspace scope
+    User->>Recovery: use_workspace_scope
+    Recovery->>Selection: Persist workspace intent
+  else Keep blocked and refresh
+    User->>Recovery: refresh_analysis
+    Recovery->>Authority: Refresh authoritative analysis
+  end
+  Recovery-->>Drawer: Action receipt
+```
+
+#### Definition of Done
+
+1. Planning DB contains the recovery architecture component, presentation
+   component, command rail, ports, relations, source ownership, tests, and
+   validation evidence.
+2. Selecting a visible executable root never removes unavailable requested
+   roots. Invalid explicit intent remains blocked until an explicit recovery
+   command is executed.
+3. The Preview drawer displays requested roots, unavailable roots,
+   non-executable roots, derived dependencies, admitted scope, and the last
+   preview revision without inventing data.
+4. The three recovery strategies are distinct, deterministic, and return a
+   visible receipt describing exactly what was discarded, replaced, or kept.
+5. The presentation component receives a complete read model and command ports;
+   it does not inspect graph nodes, derive scope, access stores, or refresh data.
+6. Unit tests prove set algebra and command receipts; presentation tests prove
+   status and actions; integration tests prove controller/drawer wiring; strict
+   browser evidence proves blocked selection and explicit recovery without
+   intercepted graph-draft success.
+7. DBT authored and file-backed Canvas modes use the same policy and command
+   vocabulary while retaining their own authoritative refresh adapters.
+8. No test, lint, CI, authorization, Preview, or server validation rule is
+   relaxed, and no stub, placeholder, fake adapter, or hidden debt is added.
+
 ## Phase 5 — Conservative visual edits
 
 Order:

@@ -15,6 +15,7 @@ import type { useCanvasInspectorCommands } from './useCanvasInspectorCommands';
 import type { useCanvasLayoutPersistence } from './useCanvasLayoutPersistence';
 import type { useCanvasMutationHandlers } from './useCanvasMutationHandlers';
 import type { useCanvasOverlayModel } from './useCanvasOverlayModel';
+import type { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
 import {
   listProjectCanvasDocuments,
   resolveActiveProjectCanvasId,
@@ -33,6 +34,7 @@ type CanvasOverlayModel = ReturnType<typeof useCanvasOverlayModel>;
 type CanvasExecutionActions = ReturnType<typeof useCanvasExecutionActions>;
 type CanvasControllerReadModel = ReturnType<typeof useCanvasControllerReadModel>;
 type CanvasInspectorCommands = ReturnType<typeof useCanvasInspectorCommands>;
+type CanvasExecutionSelectionRecovery = ReturnType<typeof useCanvasExecutionSelectionRecovery>;
 type CanvasControllerGraphPolicy = {
   canvasAuthoringMode: CanvasGraphAuthoringMode;
   runtimePolicy: CanvasRuntimePolicy;
@@ -50,6 +52,7 @@ type CanvasControllerViewModelArgs = {
   graphPolicy: CanvasControllerGraphPolicy;
   readModel: CanvasControllerReadModel;
   inspectorCommands: CanvasInspectorCommands;
+  executionSelectionRecovery: CanvasExecutionSelectionRecovery;
 };
 
 function resolveCanvasGraphErrorMessage(authoringRuntime: CanvasAuthoringRuntime): string | null {
@@ -218,6 +221,8 @@ function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,
     currentPlan: store.currentPlan,
+    executionSelectionRecovery: args.executionSelectionRecovery.model,
+    executionSelectionRecoveryCommands: args.executionSelectionRecovery.commands,
   };
 }
 

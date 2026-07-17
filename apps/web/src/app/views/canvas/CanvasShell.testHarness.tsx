@@ -158,6 +158,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       canImportProjectSnapshot: true,
       planStatusSummary: canvasViewCopy.planStatusPreviewRequiredMessage,
       planRunReadiness: buildPlanRunReadiness(),
+      executionSelectionRecovery: null,
       exclusiveOverlayMode: 'runtime',
       canUseCostOverlay: false,
       impactOverlayEnabled: false,
@@ -206,6 +207,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       onReloadLatestDraft: vi.fn(),
       onPreviewExecutionPlan: vi.fn(),
       onRun: vi.fn(),
+      executionSelectionRecovery: null,
       ...overrides?.chromeCommands,
     },
     canvasCommands: {

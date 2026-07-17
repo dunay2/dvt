@@ -24,6 +24,12 @@ import {
   applyDbtExecutionSelectionToggle,
   canOfferDbtExecutionSelectionToggle,
 } from './dbtExecutionScopePolicy';
+import {
+  buildCanvasExecutionSelectionRecoveryGraph,
+  resolveCanvasExecutionSelectionLastPreviewRevision,
+} from './canvasExecutionSelectionRecovery';
+import { refreshCanvasExecutionSelectionAuthority } from './canvasExecutionSelectionRecoveryAuthorityAdapter';
+import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -164,6 +170,14 @@ export function useDbtProjectFileCanvasController(
       }),
     [store.executionSelectionIntent, visibleNodeIds]
   );
+  const executionSelectionIntent = useMemo(
+    () =>
+      createCanvasExecutionSelectionIntent(
+        executionScope.requestedNodeIds,
+        executionScope.selectionMode
+      ),
+    [executionScope.requestedNodeIds, executionScope.selectionMode]
+  );
   const selectedNodeIds = executionScope.selectedNodeIds;
   const visibleEdges = useMemo(
     () =>
@@ -196,10 +210,7 @@ export function useDbtProjectFileCanvasController(
     projection: query.data ?? null,
     canonicalNodes,
     canonicalEdges,
-    selectionIntent: createCanvasExecutionSelectionIntent(
-      executionScope.requestedNodeIds,
-      executionScope.selectionMode
-    ),
+    selectionIntent: executionSelectionIntent,
     workspaceNodeIds: visibleNodeIds,
     store,
   });
@@ -212,6 +223,35 @@ export function useDbtProjectFileCanvasController(
       ),
     [execution.executionStrategy]
   );
+  const executionSelectionRecoveryGraph = useMemo(
+    () =>
+      buildCanvasExecutionSelectionRecoveryGraph({
+        canonicalNodes,
+        canonicalEdges,
+        workspaceNodeIds: visibleNodeIds,
+        plannerGraphSource:
+          execution.executionStrategy?.kind === 'dbt_project_file_preview'
+            ? execution.executionStrategy.plannerGraphSource
+            : null,
+      }),
+    [canonicalEdges, canonicalNodes, execution.executionStrategy, visibleNodeIds]
+  );
+  const refetchProjectGraph = query.refetch;
+  const refreshExecutionSelectionAnalysis = useCallback(
+    () => refreshCanvasExecutionSelectionAuthority(refetchProjectGraph),
+    [refetchProjectGraph]
+  );
+  const executionSelectionRecovery = useCanvasExecutionSelectionRecovery({
+    enabled: true,
+    selectionIntent: executionSelectionIntent,
+    workspaceNodeIds: visibleNodeIds,
+    executableNodeIds: executionSelectionRecoveryGraph.executableNodeIds,
+    dependencyIdsByNodeId: executionSelectionRecoveryGraph.dependencyIdsByNodeId,
+    lastPreviewRevision: resolveCanvasExecutionSelectionLastPreviewRevision(store.currentPlan),
+    canRefreshAnalysis: true,
+    setSelectionIntent: store.setExecutionSelectionIntent,
+    refreshAnalysis: refreshExecutionSelectionAnalysis,
+  });
 
   const openNodeWorkbench = useCallback(
     (nodeId: string, preferredTabId?: 'general' | 'inputs-outputs' | 'tests' | 'code' | null) => {
@@ -253,7 +293,6 @@ export function useDbtProjectFileCanvasController(
                   store.setExecutionSelectionIntent(
                     applyDbtExecutionSelectionToggle({
                       requestedNodeIds: executionScope.requestedNodeIds,
-                      visibleNodeIds,
                       nodeId,
                       shouldSelect,
                     })
@@ -357,6 +396,7 @@ export function useDbtProjectFileCanvasController(
     },
     transformationValidation,
     execution,
+    executionSelectionRecovery: executionSelectionRecovery.model,
     currentPlan: store.currentPlan,
     activeRunId: store.currentRun?.runId ?? null,
     registeredPlugins: getRegisteredPluginIds(),
@@ -399,6 +439,7 @@ export function useDbtProjectFileCanvasController(
       onRun: () => {
         void execution.handleStartRun();
       },
+      executionSelectionRecovery: executionSelectionRecovery.commands,
     },
     canvasCommands: {
       onSelectCanvas: () => unsupportedSemanticMutation('Select draft canvas'),

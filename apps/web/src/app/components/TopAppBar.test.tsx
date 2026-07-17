@@ -93,6 +93,7 @@ describe('ShellTopBar workspace context', () => {
         blockers: ['plan_integrity'],
         canPreview: true,
         onPreviewExecutionPlan: vi.fn(),
+        selectionRecovery: null,
       },
       ...overrides,
     };
@@ -249,6 +250,7 @@ describe('ShellTopBar workspace context', () => {
           blockers: [],
           canPreview: true,
           onPreviewExecutionPlan: vi.fn(),
+          selectionRecovery: null,
         },
       }),
     });

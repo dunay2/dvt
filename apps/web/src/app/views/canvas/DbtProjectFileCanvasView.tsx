@@ -229,6 +229,7 @@ export function DbtProjectFileCanvasView({
       canImportProjectSnapshot: false,
       planStatusSummary: controller.execution.planStatusSummary,
       planRunReadiness: controller.execution.planRunReadiness,
+      executionSelectionRecovery: controller.executionSelectionRecovery,
       exclusiveOverlayMode: 'runtime',
       canUseCostOverlay: false,
       impactOverlayEnabled: controller.presentation.impactOverlayEnabled,

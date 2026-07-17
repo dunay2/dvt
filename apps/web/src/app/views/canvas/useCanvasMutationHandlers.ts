@@ -20,6 +20,7 @@ export function useCanvasMutationHandlers({
   selectedNodeIds,
   setDraftSession,
   setSelectedNodes,
+  reconcileSelectionAfterNodeRemoval,
   setInspectorNode,
   showInspectorPanel,
   setCurrentPlan,
@@ -35,6 +36,7 @@ export function useCanvasMutationHandlers({
   const mutationEffects: CanvasMutationEffects = {
     setDraftSession,
     setSelectedNodes,
+    reconcileSelectionAfterNodeRemoval,
     setInspectorNode,
     showInspectorPanel,
     setCurrentPlan,

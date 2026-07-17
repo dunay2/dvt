@@ -40,7 +40,12 @@ export function useCanvasNodeChangeHandlers({
   effects,
 }: UseCanvasNodeChangeHandlersArgs): UseCanvasNodeChangeHandlersResult {
   const { graphModel, draftSession, uiScope, selectedNodeIds } = state;
-  const { setDraftSession, setSelectedNodes, setInspectorNode, onLayoutComplete } = effects;
+  const {
+    setDraftSession,
+    reconcileSelectionAfterNodeRemoval,
+    setInspectorNode,
+    onLayoutComplete,
+  } = effects;
 
   const handleNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -73,7 +78,7 @@ export function useCanvasNodeChangeHandlers({
         setNodes: graphModel.setNodes,
         setEdges: graphModel.setEdges,
         setDraftSession,
-        setSelectedNodes,
+        setSelectedNodes: reconcileSelectionAfterNodeRemoval,
         setInspectorNode,
       });
     },
@@ -84,7 +89,7 @@ export function useCanvasNodeChangeHandlers({
       selectedNodeIds,
       setDraftSession,
       setInspectorNode,
-      setSelectedNodes,
+      reconcileSelectionAfterNodeRemoval,
       uiScope.inspectorNodeId,
     ]
   );

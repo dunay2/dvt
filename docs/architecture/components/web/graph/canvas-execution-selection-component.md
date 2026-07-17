@@ -2,7 +2,7 @@
 title: Canvas execution selection component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-07-16
+last_reviewed: 2026-07-17
 ---
 
 # Canvas execution selection component
@@ -31,6 +31,8 @@ The component owns exactly one concern:
   selection intent
 - distinguish roots requested by the user from executable dependencies included
   by closure
+- project blocked selection facts and execute only explicit recovery strategies
+  with immutable action receipts
 
 It does **not** own:
 
@@ -58,8 +60,17 @@ It does **not** own:
 - `applyDbtExecutionSelectionToggle(...)`
   Apply a user selection gesture to the complete requested-id set and return
   one atomic explicit intent. Hidden requested ids survive visible-node
-  toggles; selecting an available root replaces an unavailable-only recovery
-  set, while deselecting the final root remains explicit-empty.
+  toggles and selecting another available root; deselecting the final root
+  remains explicit-empty.
+- `buildCanvasExecutionSelectionRecoveryReadModel(...)`
+  Classify requested, unavailable, non-executable, derived, and admitted ids
+  without admitting a partial scope.
+- `recoverCanvasExecutionSelection(...)`
+  Execute one named `RecoverCanvasExecutionSelection` strategy and return the
+  resulting atomic intent plus an exact receipt.
+- `useCanvasExecutionSelectionRecovery(...)`
+  Adapt recovery commands to the existing selection store and authoritative
+  graph refresh without owning either authority.
 - `buildDbtExecutionIntentDraftSignature(...)`
   Bind preview identity to selection mode and requested roots as well as the
   executable graph projection, so equal dependency closure does not erase a
@@ -101,8 +112,17 @@ It does **not** own:
 - DBT selection gestures mutate the complete requested-id set rather than the
   filtered visible selection. Deselecting one visible root therefore preserves
   hidden requested ids.
-- an unavailable-only recovery set changes to an available executable root only
-  after the caller deliberately selects that root.
+- selecting an available executable root never discards unavailable requested
+  ids. Replacement happens only through an explicit recovery command.
+- blocked recovery never exposes a filtered admitted scope: requested,
+  unavailable, and non-executable ids remain visible while admitted scope is
+  empty.
+- the three recovery strategies are disjoint: discard removes unavailable ids
+  only; workspace replacement changes mode explicitly; refresh preserves the
+  complete intent until authoritative analysis completes.
+- every successful recovery command emits a receipt naming the strategy,
+  affected ids, retained ids, and resulting mode. Refresh failure emits an
+  error and never fabricates a receipt.
 - successful DBT scope resolution exposes requested root ids separately from
   dependency ids that were included by transitive closure.
 - DBT draft identity includes selection mode and requested roots in addition to
@@ -145,6 +165,11 @@ flowchart LR
   Plan["Persisted plan view"] --> Selection
   Selection --> Preview["canvasPlanAction.ts"]
   DbtPolicy --> Projection["canvasDbtExecutionProjection.ts"]
+  DbtPolicy --> RecoveryQuery["SelectionRecoveryReadModel"]
+  RecoveryQuery --> Drawer["Operational drawer Preview"]
+  Drawer --> RecoveryCommand["RecoverCanvasExecutionSelection"]
+  RecoveryCommand --> Canvas
+  RecoveryCommand --> AuthorityRefresh["Authoritative graph refresh"]
   Projection --> Preview
   Preview --> Review["Execution Preview selection review"]
   Projection --> Readiness["canvasExecutionState.ts"]
@@ -166,7 +191,11 @@ stateDiagram-v2
   ExplicitNonEmpty --> ExplicitNonEmpty: select or deselect while roots remain
   ExplicitNonEmpty --> ExplicitEmpty: deselect final requested root
   ExplicitEmpty --> ExplicitNonEmpty: select executable root
-  ExplicitNonEmpty --> ExplicitNonEmpty: select visible root from unavailable-only set
+  ExplicitNonEmpty --> ExplicitNonEmpty: select or deselect while hidden roots survive
+  ExplicitNonEmpty --> RecoveryBlocked: requested root unavailable or non-executable
+  RecoveryBlocked --> ExplicitNonEmpty: discard unavailable roots
+  RecoveryBlocked --> Workspace: use workspace scope
+  RecoveryBlocked --> RecoveryBlocked: refresh authoritative analysis
 
   Workspace: derive executable workspace roots
   ExplicitNonEmpty: validate every requested id
@@ -176,11 +205,16 @@ stateDiagram-v2
 Visibility is a presentation projection, not another selection state. It cannot
 turn `ExplicitNonEmpty` into `Workspace` or remove hidden requested ids.
 
+Recovery is a named command, not a side effect of ordinary selection. The
+`CollectCanvasExecutionSelection` query and `RecoverCanvasExecutionSelection`
+command therefore remain separate rails.
+
 ```mermaid
 sequenceDiagram
   participant Canvas as Canvas actions
   participant Selection as canvasRunSelection
   participant DbtScope as dbtExecutionScopePolicy
+  participant Recovery as selection recovery
   participant Plans as plansService.previewPlan
   participant Runs as runsService.startRun
 
@@ -190,6 +224,12 @@ sequenceDiagram
   else DBT Canvas preview
     Canvas->>DbtScope: resolve workspace or explicit selection mode
     DbtScope-->>Canvas: roots + derived dependencies or fail-closed cause
+  end
+  alt explicit selection is blocked
+    DbtScope-->>Recovery: requested + unavailable + non-executable ids
+    Recovery-->>Canvas: blocked read model, no admitted partial scope
+    Canvas->>Recovery: named discard, workspace, or refresh command
+    Recovery-->>Canvas: exact receipt or refresh failure
   end
   Canvas->>Canvas: resolve SQL and graph artifact provenance
   Canvas->>Plans: previewPlan(..., selection, provenance)
@@ -363,6 +403,9 @@ The governed proof surface for that lane is:
 - `apps/web/src/app/stores/canvasInteractionStore.ts`
 - `apps/web/src/app/views/canvas/canvasDraftScope.ts`
 - `apps/web/src/app/views/canvas/dbtExecutionScopePolicy.ts`
+- `apps/web/src/app/views/canvas/canvasExecutionSelectionRecovery.ts`
+- `apps/web/src/app/views/canvas/useCanvasExecutionSelectionRecovery.ts`
+- `apps/web/src/app/components/shell/OperationalDrawerSelectionRecoveryView.tsx`
 - `apps/web/src/app/views/canvas/canvasPlanAction.ts`
 - `apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts`
 - `apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts`
@@ -395,6 +438,8 @@ The governed proof surface for that lane is:
   reading the intent mode
 - apply DBT selection gestures through `applyDbtExecutionSelectionToggle(...)`;
   do not rebuild requested intent from the visible-node projection
+- use `RecoverCanvasExecutionSelection` for discard, workspace replacement, or
+  authoritative refresh; ordinary selection gestures cannot perform recovery
 - reconcile visible selection and inspector state without mutating raw DBT
   execution intent before validation
 - keep requested roots and derived dependencies distinct in the Preview read
