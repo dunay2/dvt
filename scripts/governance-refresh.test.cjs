@@ -53,6 +53,7 @@ test('governance refresh defers governance reports to DB-backed final generation
       'planning:db:import',
       'planning:db:check',
       'planning:db:inventory:check',
+      'docs:dbt-roundtrip-capabilities:generate',
       'docs:db-surface-inventory:generate',
       'planning:db:export:check',
       'governance:db:import',
@@ -208,6 +209,8 @@ test('package scripts expose governance refresh instead of the obsolete artifact
   assert.equal(typeof packageJson.scripts['governance:db:export:check'], 'string');
   assert.equal(typeof packageJson.scripts['docs:knowledge-intake:generate'], 'string');
   assert.equal(typeof packageJson.scripts['docs:knowledge-intake:check'], 'string');
+  assert.equal(typeof packageJson.scripts['docs:dbt-roundtrip-capabilities:generate'], 'string');
+  assert.equal(typeof packageJson.scripts['docs:dbt-roundtrip-capabilities:check'], 'string');
   assert.equal(Object.hasOwn(packageJson.scripts, 'governance:artifacts:generate'), false);
 });
 

@@ -19,6 +19,7 @@ const validDbBackedQueryViews = new Set([
   'planning_query_store.governance_file_query',
   'planning_query_store.db_governance_surface_query',
   'planning_query_store.knowledge_intake_retirement_query',
+  'planning_query_store.dbt_project_roundtrip_capability_status_query',
 ]);
 
 function toPosix(filePath) {
