@@ -18,7 +18,7 @@ export type DbtYamlDescriptionResourceIdentity = Readonly<{
   uniqueId: string;
   resourceType: DbtYamlDescriptionResourceType;
   name: string;
-  sourceName?: string;
+  sourceName?: string | undefined;
 }>;
 
 export type DbtYamlDescriptionMutation = Readonly<{

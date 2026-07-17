@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 
-import type { DbtProjectGraphProjection } from '@dvt/contracts';
+import { DbtProjectGraphProjectionSchema, type DbtProjectGraphProjection } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -236,13 +236,10 @@ function createHarness(startingContent: string): Readonly<{
 }
 
 function projection(contentSetSha256: string): DbtProjectGraphProjection {
-  return {
+  return DbtProjectGraphProjectionSchema.parse({
     schemaVersion: 'dbt-project-graph-projection.v1',
     authorityBinding: {
       schemaVersion: 'canvas-authoring-authority-binding.v1',
-      tenantId: scope.tenantId,
-      projectId: scope.projectId,
-      environmentId: scope.environmentId,
       canvasId: 'canvas-1',
       authority: { kind: 'dbt-project-files', projectRoot: 'analytics' },
     },
@@ -270,9 +267,14 @@ function projection(contentSetSha256: string): DbtProjectGraphProjection {
     ],
     edges: [],
     diagnostics: [],
-    executionTarget: { adapter: 'postgres', targetName: 'dev' },
+    executionTarget: {
+      provider: 'postgres-local',
+      adapter: 'postgres',
+      targetName: 'dev',
+      credentialRef: 'env:DBT_TEST_CREDENTIAL',
+    },
     capabilities: { canPreview: true, canRun: true, codeOnlyResourceCount: 1 },
-  };
+  });
 }
 
 function sha256(value: string): string {

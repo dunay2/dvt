@@ -123,6 +123,60 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.proposeDbtYamlDescriptionEdit,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingWorkspaceFileReadAuthority,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtYamlDescriptionRequest,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.applyDbtYamlDescriptionEdit,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.command,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.staleDbtYamlDescriptionRevision,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditTransaction,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.idempotencyConflict,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.revertDbtYamlDescriptionEdit,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.command,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtYamlDescriptionReceipt,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.staleDbtYamlDescriptionRevision,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditTransaction,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.idempotencyConflict,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     ...PROTECTED_RUNTIME_WORKSPACE_RAIL.validateDbtProjectImport,
     kind: PROTECTED_RUNTIME_RAIL_KIND.query,
     coverage: [

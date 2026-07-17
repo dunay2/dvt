@@ -13,6 +13,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidBody: 'invalid_body',
   invalidDbtProjectGraphRequest: 'invalid_dbt_project_graph_request',
   invalidDbtProjectImportRequest: 'invalid_dbt_project_import_request',
+  invalidDbtYamlDescriptionEditRequest: 'invalid_dbt_yaml_description_edit_request',
   invalidEnrichedFlag: 'invalid_enriched_flag',
   invalidEnvironmentId: 'invalid_environment_id',
   invalidLimit: 'invalid_limit',
@@ -61,6 +62,14 @@ export const HTTP_ERROR_REASON = Object.freeze({
   dbtProjectImportInProgress: 'dbt_project_import_in_progress',
   dbtProjectImportProjectionFailed: 'dbt_project_import_projection_failed',
   dbtProjectFileAuthorityRequired: 'dbt_project_file_authority_required',
+  dbtYamlDescriptionDocumentInvalid: 'dbt_yaml_description_document_invalid',
+  dbtYamlDescriptionIdempotencyConflict: 'dbt_yaml_description_idempotency_conflict',
+  dbtYamlDescriptionProposalMismatch: 'dbt_yaml_description_proposal_mismatch',
+  dbtYamlDescriptionReceiptInvalid: 'dbt_yaml_description_receipt_invalid',
+  dbtYamlDescriptionResourceAmbiguous: 'dbt_yaml_description_resource_ambiguous',
+  dbtYamlDescriptionResourceNotFound: 'dbt_yaml_description_resource_not_found',
+  dbtYamlDescriptionResourceUnsupported: 'dbt_yaml_description_resource_unsupported',
+  dbtYamlDescriptionRevisionConflict: 'dbt_yaml_description_revision_conflict',
 } as const);
 
 export type HttpErrorReason = (typeof HTTP_ERROR_REASON)[keyof typeof HTTP_ERROR_REASON];
