@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import {
   buildDbtPlannerGraphSource,
   resolveDbtExecutionScopeNodeIds,
@@ -146,7 +147,6 @@ describe('canvas dbt planner graph source', () => {
         },
       ],
     });
-    expect(result.draftSignature).toContain('model-orders');
   });
 
   it('fails closed when the selected dbt graph has no executable nodes', () => {
@@ -194,12 +194,13 @@ describe('canvas dbt planner graph source', () => {
       resolveDbtExecutionScopeNodeIds({
         nodes: [sourceNode, modelNode, testNode],
         edges,
-        selectedNodeIds: ['source-orders'],
+        selectionIntent: { mode: 'explicit', nodeIds: ['source-orders'] },
         workspaceNodeIds: ['source-orders', 'model-orders', 'test-orders'],
       })
     ).toEqual({
       ok: false,
-      cause: 'explicit_selection_has_no_executable_nodes',
+      cause: 'explicit_selection_contains_unavailable_or_non_executable_nodes',
+      invalidNodeIds: ['source-orders'],
     });
   });
 
@@ -208,11 +209,14 @@ describe('canvas dbt planner graph source', () => {
       resolveDbtExecutionScopeNodeIds({
         nodes: [sourceNode, modelNode, testNode],
         edges,
-        selectedNodeIds: [],
+        selectionIntent: { mode: 'workspace', nodeIds: [] },
         workspaceNodeIds: ['source-orders', 'model-orders', 'test-orders'],
       })
     ).toEqual({
       ok: true,
+      selectionMode: 'workspace',
+      requestedRootNodeIds: ['model-orders', 'test-orders'],
+      derivedDependencyNodeIds: [],
       nodeIds: ['model-orders', 'test-orders'],
     });
   });
@@ -222,11 +226,14 @@ describe('canvas dbt planner graph source', () => {
       resolveDbtExecutionScopeNodeIds({
         nodes: [sourceNode, modelNode, downstreamModelNode, testNode],
         edges: dependencyEdges,
-        selectedNodeIds: ['model-order-revenue'],
+        selectionIntent: { mode: 'explicit', nodeIds: ['model-order-revenue'] },
         workspaceNodeIds: ['source-orders', 'model-orders', 'model-order-revenue', 'test-orders'],
       })
     ).toEqual({
       ok: true,
+      selectionMode: 'explicit',
+      requestedRootNodeIds: ['model-order-revenue'],
+      derivedDependencyNodeIds: ['model-orders'],
       nodeIds: ['model-orders', 'model-order-revenue'],
     });
 
@@ -249,5 +256,38 @@ describe('canvas dbt planner graph source', () => {
         dependsOn: ['model-orders'],
       }),
     ]);
+  });
+
+  it('changes the authored draft signature when requested roots change but closure does not', () => {
+    const strategy = {
+      kind: 'planner_generic_preview',
+      previewProfile: 'planner-generic-v1',
+      sourceFamily: 'dbt',
+    } as const;
+    const nodes = [sourceNode, modelNode, downstreamModelNode];
+    const workspaceNodeIds = nodes.map((node) => node.id);
+    const downstreamOnly = buildCanvasDbtExecutionProjection({
+      strategy,
+      canonicalNodes: nodes,
+      canonicalEdges: dependencyEdges,
+      selectionIntent: { mode: 'explicit', nodeIds: ['model-order-revenue'] },
+      workspaceNodeIds,
+    });
+    const bothRoots = buildCanvasDbtExecutionProjection({
+      strategy,
+      canonicalNodes: nodes,
+      canonicalEdges: dependencyEdges,
+      selectionIntent: {
+        mode: 'explicit',
+        nodeIds: ['model-orders', 'model-order-revenue'],
+      },
+      workspaceNodeIds,
+    });
+
+    expect(downstreamOnly.ok).toBe(true);
+    expect(bothRoots.ok).toBe(true);
+    if (!downstreamOnly.ok || !bothRoots.ok) return;
+    expect(downstreamOnly.selection).toEqual(bothRoots.selection);
+    expect(downstreamOnly.draftSignature).not.toBe(bothRoots.draftSignature);
   });
 });

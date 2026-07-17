@@ -6,6 +6,7 @@ import { useExecutionStore } from '../../stores/executionStore';
 import { useSessionStore } from '../../stores/sessionStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import type { CanvasPaletteId } from './canvasPalette';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 const EMPTY_PERSISTED_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -17,7 +18,11 @@ type CanvasStoreFacade = {
   selectedProject: string;
   selectedEnvironment: string;
   selectedNodes: string[];
-  setSelectedNodes: (nodes: string[]) => void;
+  executionSelectionIntent: CanvasExecutionSelectionIntent;
+  setSelectedNodes: ReturnType<typeof useCanvasInteractionStore.getState>['setSelectedNodes'];
+  setExecutionSelectionIntent: ReturnType<
+    typeof useCanvasInteractionStore.getState
+  >['setExecutionSelectionIntent'];
   inspectorNodeId: string | null;
   inspectorPreferredTabId: string | null;
   inspectorPreferredTabRequestId: number;
@@ -71,8 +76,14 @@ export function useCanvasStoreFacade(): CanvasStoreView {
   const selectedTenant = useSessionStore((state) => state.tenantId);
   const selectedProject = useSessionStore((state) => state.projectId);
   const selectedEnvironment = useSessionStore((state) => state.environmentId);
-  const selectedNodes = useCanvasInteractionStore((state) => state.selectedNodes);
+  const executionSelectionIntent = useCanvasInteractionStore(
+    (state) => state.executionSelectionIntent
+  );
+  const selectedNodes = executionSelectionIntent.nodeIds;
   const setSelectedNodes = useCanvasInteractionStore((state) => state.setSelectedNodes);
+  const setExecutionSelectionIntent = useCanvasInteractionStore(
+    (state) => state.setExecutionSelectionIntent
+  );
   const inspectorNodeId = useCanvasInteractionStore((state) => state.inspectorNodeId);
   const inspectorPreferredTabId = useCanvasInteractionStore(
     (state) => state.inspectorPreferredTabId
@@ -143,7 +154,9 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     selectedProject,
     selectedEnvironment,
     selectedNodes,
+    executionSelectionIntent,
     setSelectedNodes,
+    setExecutionSelectionIntent,
     inspectorNodeId,
     inspectorPreferredTabId,
     inspectorPreferredTabRequestId,

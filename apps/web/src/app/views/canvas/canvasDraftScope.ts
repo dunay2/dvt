@@ -1,4 +1,5 @@
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import type { CanvasDraftEdge, CanvasDraftSession } from './canvasDraftSession';
 
 export type VisibleCanvasScope = {
@@ -12,6 +13,8 @@ export type VisibleCanvasScope = {
 };
 
 export type ExecutionCanvasScope = {
+  selectionMode: CanvasExecutionSelectionIntent['mode'];
+  requestedNodeIds: string[];
   selectedNodeIds: string[];
   workspaceNodeIds: string[];
 };
@@ -28,8 +31,8 @@ type DeriveVisibleScopeArgs = {
 };
 
 type DeriveExecutionScopeArgs = {
-  visibleScope: VisibleCanvasScope;
-  selectedNodeIds: string[];
+  visibleNodeIds: string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
 };
 
 type ReconcileUiScopeArgs = {
@@ -92,7 +95,7 @@ export function deriveVisibleScope({
   );
   const visibleEdges = dedupeEdges(
     draftSession.workingSet.visibleEdges.filter(
-        (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
+      (edge) => visibleNodeIdSet.has(edge.sourceId) && visibleNodeIdSet.has(edge.targetId)
     )
   );
   const unresolvedEdges = dedupeEdges(
@@ -123,14 +126,17 @@ export function deriveVisibleScope({
 }
 
 export function deriveExecutionScope({
-  visibleScope,
-  selectedNodeIds,
+  visibleNodeIds,
+  selectionIntent,
 }: DeriveExecutionScopeArgs): ExecutionCanvasScope {
-  const visibleNodeIdSet = new Set(visibleScope.visibleNodeIds);
+  const requestedNodeIds = dedupeNodeIds(selectionIntent.nodeIds);
+  const visibleNodeIdSet = new Set(visibleNodeIds);
 
   return {
-    selectedNodeIds: filterNodeIds(selectedNodeIds, visibleNodeIdSet),
-    workspaceNodeIds: visibleScope.visibleNodeIds,
+    selectionMode: selectionIntent.mode,
+    requestedNodeIds,
+    selectedNodeIds: filterNodeIds(requestedNodeIds, visibleNodeIdSet),
+    workspaceNodeIds: visibleNodeIds,
   };
 }
 

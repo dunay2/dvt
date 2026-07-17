@@ -9,7 +9,11 @@ import { parseExecutionSelection, PlanPreviewProvenanceSchema } from '@dvt/contr
 
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { PlanPreviewProvenanceViewModel } from '../../types/plans';
-import { resolveDbtExecutionScope } from './dbtExecutionScopePolicy';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
+import {
+  buildDbtExecutionIntentDraftSignature,
+  resolveDbtExecutionScope,
+} from './dbtExecutionScopePolicy';
 
 export type DbtProjectFileExecutionStrategy = Extract<
   CanvasExecutionStrategy,
@@ -101,15 +105,19 @@ export function buildDbtProjectFileExecutionStrategy(
 }
 
 export function buildDbtProjectFilePlannerProjection(
-  strategy: DbtProjectFileExecutionStrategy,
-  selectedNodeIds: readonly string[],
-  workspaceNodeIds: readonly string[]
+  args: Readonly<{
+    strategy: DbtProjectFileExecutionStrategy;
+    selectionIntent: CanvasExecutionSelectionIntent;
+    workspaceNodeIds: readonly string[];
+  }>
 ) {
+  const { strategy, selectionIntent, workspaceNodeIds } = args;
   const nodeById = new Map(strategy.plannerGraphSource.nodes.map((node) => [node.nodeId, node]));
+  const workspaceNodeIdSet = new Set(workspaceNodeIds);
   const executionScope = resolveDbtExecutionScope({
-    selectedNodeIds,
+    selectionIntent,
     workspaceNodeIds,
-    executableNodeIds: [...nodeById.keys()],
+    executableNodeIds: [...nodeById.keys()].filter((nodeId) => workspaceNodeIdSet.has(nodeId)),
     dependencyIdsByNodeId: new Map(
       strategy.plannerGraphSource.nodes.map((node) => [node.nodeId, node.dependsOn])
     ),
@@ -128,9 +136,17 @@ export function buildDbtProjectFilePlannerProjection(
 
   return {
     ok: true as const,
+    selectionMode: executionScope.selectionMode,
+    requestedRootNodeIds: executionScope.requestedRootNodeIds,
+    derivedDependencyNodeIds: executionScope.derivedDependencyNodeIds,
     graphSource,
     selection,
-    draftSignature: JSON.stringify({ graphSource, selection }),
+    draftSignature: buildDbtExecutionIntentDraftSignature({
+      graphSource,
+      selection,
+      selectionMode: executionScope.selectionMode,
+      requestedRootNodeIds: executionScope.requestedRootNodeIds,
+    }),
   };
 }
 

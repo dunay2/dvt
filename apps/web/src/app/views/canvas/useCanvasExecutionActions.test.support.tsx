@@ -21,6 +21,10 @@ import {
 } from '../../services/workspace/workspaceErrors';
 import { makeRunContext, nb } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import {
+  createCanvasExecutionSelectionIntent,
+  type CanvasExecutionSelectionIntent,
+} from '../../types/canvasExecutionSelection';
 import type { PlanViewModel } from '../../types/plans';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { CanvasExecutionDraftGraph } from './canvasExecutionActions.types';
@@ -48,7 +52,7 @@ type ExecutionActionsHookCommonProps = Readonly<{
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
   executionStrategy: CanvasExecutionStrategy;
-  selectedNodeIds: string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
   workspaceNodeIds: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
@@ -86,7 +90,7 @@ export type RenderExecutionActionsHarnessArgs = {
   canonicalEdges?: CanonicalEdge[];
   executionStrategy?: CanvasExecutionStrategy;
   executionEnvironmentId?: string;
-  selectedNodeIds?: string[];
+  selectionIntent?: CanvasExecutionSelectionIntent;
   workspaceNodeIds?: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan?: boolean;
@@ -102,7 +106,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'initialPlan'
   | 'stateful'
   | 'workspaceNodeIds'
-  | 'selectedNodeIds'
+  | 'selectionIntent'
   | 'canonicalNodes'
   | 'canonicalEdges'
   | 'onRunStarted'
@@ -131,7 +135,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   canonicalEdges: CanonicalEdge[];
   executionStrategy: CanvasExecutionStrategy;
   executionEnvironmentId?: string;
-  selectedNodeIds: string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
   workspaceNodeIds?: string[];
   flushDraftForExecution?: () => Promise<CanvasExecutionDraftGraph>;
   canPlan: boolean;
@@ -233,7 +237,7 @@ function resolveCommonHookProps(
     ...(args.executionEnvironmentId == null
       ? {}
       : { executionEnvironmentId: args.executionEnvironmentId }),
-    selectedNodeIds: args.selectedNodeIds,
+    selectionIntent: args.selectionIntent,
     workspaceNodeIds: args.workspaceNodeIds ?? args.canonicalNodes.map((node) => node.id),
     ...(args.flushDraftForExecution == null
       ? {}
@@ -281,7 +285,7 @@ function resolveHarnessArgs(
     ...(args.executionEnvironmentId == null
       ? {}
       : { executionEnvironmentId: args.executionEnvironmentId }),
-    selectedNodeIds: args.selectedNodeIds ?? [],
+    selectionIntent: args.selectionIntent ?? createCanvasExecutionSelectionIntent([]),
     canPlan: args.canPlan ?? true,
     canRun: args.canRun ?? true,
     bottomDrawerVisible: args.bottomDrawerVisible ?? false,

@@ -34,6 +34,13 @@ export interface PlanPreviewPersistedViewModel {
   canonicalPlanSha256: string;
 }
 
+export interface PlanPreviewSelectionIntentViewModel {
+  mode: 'explicit' | 'workspace';
+  requestedRootNodeIds: string[];
+  derivedDependencyNodeIds: string[];
+  authorizedScopeNodeIds: string[];
+}
+
 export interface PlanPreviewArtifactRefViewModel {
   repo: string;
   path: string;
@@ -68,6 +75,7 @@ export interface PlanPreviewViewModel {
   summary?: PlanPreviewSummaryViewModel;
   persisted?: PlanPreviewPersistedViewModel;
   provenance?: PlanPreviewProvenanceViewModel;
+  selectionIntent?: PlanPreviewSelectionIntentViewModel;
 }
 
 export interface PlanViewModel {

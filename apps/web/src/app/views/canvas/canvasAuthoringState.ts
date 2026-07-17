@@ -24,12 +24,13 @@ import {
 } from './canvasDraftStatusState';
 import type { CanvasDraftAccessMode, CanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
 import type { DraftSaveStatus } from './canvasDraftLifecycle.types';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 type DeriveCanvasAuthoringStateArgs = {
   draftSession: CanvasDraftSession;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
-  selectedNodeIds: string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
   inspectorNodeId: string | null;
   draftSaveStatus: DraftSaveStatus;
   canMutateGraphTransport: boolean;
@@ -167,7 +168,7 @@ export function deriveCanvasAuthoringState({
   draftSession,
   canonicalNodes,
   canonicalEdges,
-  selectedNodeIds,
+  selectionIntent,
   inspectorNodeId,
   draftSaveStatus,
   canMutateGraphTransport,
@@ -179,7 +180,12 @@ export function deriveCanvasAuthoringState({
     canonicalNodes,
     canonicalEdges,
   });
-  const uiScope = deriveCanvasUiScope(draftSession, visibleScope, selectedNodeIds, inspectorNodeId);
+  const uiScope = deriveCanvasUiScope(
+    draftSession,
+    visibleScope,
+    selectionIntent.nodeIds,
+    inspectorNodeId
+  );
   const draftRecoveryState = deriveCanvasDraftRecoveryState({
     draftSession,
     visibleScope,
@@ -200,8 +206,8 @@ export function deriveCanvasAuthoringState({
     visibleScope,
     uiScope,
     executionScope: deriveExecutionScope({
-      visibleScope,
-      selectedNodeIds: uiScope.selectedNodeIds,
+      visibleNodeIds: visibleScope.visibleNodeIds,
+      selectionIntent,
     }),
     ...draftAccessState,
     ...draftRecoveryState,

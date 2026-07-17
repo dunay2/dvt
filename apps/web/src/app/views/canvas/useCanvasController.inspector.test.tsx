@@ -66,7 +66,10 @@ describe('useCanvasController inspector contract', () => {
   });
 
   it('clears selection and inspector state when a node is removed through onNodesChange', async () => {
-    harness.state.store.selectedNodes = ['node_1', 'node_2'];
+    harness.state.store.setExecutionSelectionIntent({
+      mode: 'explicit',
+      nodeIds: ['node_1', 'node_2'],
+    });
     harness.state.store.inspectorNodeId = 'node_1';
     await harness.renderProbe();
 

@@ -26,6 +26,10 @@ const DBT_GRAPH_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDbtPlannerGraphSource.ts'
 );
+const DBT_SCOPE_POLICY_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'dbtExecutionScopePolicy.ts'
+);
 const DBT_AUTHORING_FIELDS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'DbtAuthoringFields.tsx'
@@ -64,9 +68,10 @@ describe('canvas dbt authoring/code/run architecture', () => {
     expect(DBT_ARTIFACT_SOURCE).toContain('dbt_project.yml');
     expect(DBT_ARTIFACT_SOURCE).toContain('models/schema.yml');
     expect(DBT_GRAPH_SOURCE).toContain('buildDbtPlannerGraphSource');
-    expect(DBT_GRAPH_SOURCE).toContain("'DBT_MODEL'");
-    expect(DBT_GRAPH_SOURCE).toContain("'DBT_TEST'");
-    expect(DBT_GRAPH_SOURCE).toContain("'DBT_SNAPSHOT'");
+    expect(DBT_GRAPH_SOURCE).toContain('resolveDbtExecutableStepKind');
+    expect(DBT_SCOPE_POLICY_SOURCE).toContain("'dbt:model': 'DBT_MODEL'");
+    expect(DBT_SCOPE_POLICY_SOURCE).toContain("'dbt:test': 'DBT_TEST'");
+    expect(DBT_SCOPE_POLICY_SOURCE).toContain("'dbt:snapshot': 'DBT_SNAPSHOT'");
   });
 
   it('keeps dbt card configuration in route-owned inspector authoring', () => {

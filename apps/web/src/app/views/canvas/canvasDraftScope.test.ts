@@ -57,7 +57,9 @@ describe('canvasDraftScope', () => {
           tags: [],
         },
       ],
-      canonicalEdges: [{ id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' }],
+      canonicalEdges: [
+        { id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' },
+      ],
     });
 
     expect(visibleScope.visibleNodeIds).toEqual(['node_2', 'node_1']);
@@ -94,14 +96,21 @@ describe('canvasDraftScope', () => {
           tags: [],
         },
       ],
-      canonicalEdges: [{ id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' }],
+      canonicalEdges: [
+        { id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' },
+      ],
     });
 
     const executionScope = deriveExecutionScope({
-      visibleScope,
-      selectedNodeIds: ['node_hidden', 'node_2'],
+      visibleNodeIds: visibleScope.visibleNodeIds,
+      selectionIntent: {
+        mode: 'explicit',
+        nodeIds: ['node_hidden', 'node_2'],
+      },
     });
 
+    expect(executionScope.selectionMode).toBe('explicit');
+    expect(executionScope.requestedNodeIds).toEqual(['node_hidden', 'node_2']);
     expect(executionScope.selectedNodeIds).toEqual(['node_2']);
     expect(executionScope.workspaceNodeIds).toEqual(['node_2', 'node_1']);
   });
@@ -129,7 +138,9 @@ describe('canvasDraftScope', () => {
           tags: [],
         },
       ],
-      canonicalEdges: [{ id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' }],
+      canonicalEdges: [
+        { id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' },
+      ],
     });
 
     const uiScope = reconcileUiScope({
@@ -173,7 +184,9 @@ describe('canvasDraftScope', () => {
           tags: [],
         },
       ],
-      canonicalEdges: [{ id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' }],
+      canonicalEdges: [
+        { id: 'edge_1', sourceId: 'node_2', targetId: 'node_1', relation: 'lineage' },
+      ],
     });
 
     expect(visibleScope.unresolvedNodeIds).toEqual([]);

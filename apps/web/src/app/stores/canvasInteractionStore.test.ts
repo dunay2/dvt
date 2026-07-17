@@ -12,7 +12,7 @@ describe('useCanvasInteractionStore', () => {
     localStorage.clear();
     useCanvasInteractionStore.setState({
       _hasHydrated: false,
-      selectedNodes: [],
+      executionSelectionIntent: { mode: 'workspace', nodeIds: [] },
       impactOverlayEnabled: false,
       columnLevelLineageEnabled: false,
       canvasLayouts: {},
@@ -45,15 +45,43 @@ describe('useCanvasInteractionStore', () => {
 
   it('does not publish a new execution selection snapshot when node identities are unchanged', () => {
     useCanvasInteractionStore.getState().setSelectedNodes(['source.orders', 'model.orders']);
-    const selection = useCanvasInteractionStore.getState().selectedNodes;
+    const selection = useCanvasInteractionStore.getState().executionSelectionIntent;
     const subscriber = vi.fn();
     const unsubscribe = useCanvasInteractionStore.subscribe(subscriber);
 
     useCanvasInteractionStore.getState().setSelectedNodes(['source.orders', 'model.orders']);
 
-    expect(useCanvasInteractionStore.getState().selectedNodes).toBe(selection);
+    expect(useCanvasInteractionStore.getState().executionSelectionIntent).toBe(selection);
     expect(subscriber).not.toHaveBeenCalled();
     unsubscribe();
+  });
+
+  it('preserves explicit execution intent when the requested set becomes empty', () => {
+    useCanvasInteractionStore
+      .getState()
+      .setExecutionSelectionIntent({ mode: 'explicit', nodeIds: ['model.orders'] });
+    useCanvasInteractionStore
+      .getState()
+      .setExecutionSelectionIntent({ mode: 'explicit', nodeIds: [] });
+
+    expect(useCanvasInteractionStore.getState().executionSelectionIntent).toEqual({
+      mode: 'explicit',
+      nodeIds: [],
+    });
+  });
+
+  it('keeps workspace and explicit-empty intent as different atomic snapshots', () => {
+    const workspaceIntent = useCanvasInteractionStore.getState().executionSelectionIntent;
+
+    useCanvasInteractionStore
+      .getState()
+      .setExecutionSelectionIntent({ mode: 'explicit', nodeIds: [] });
+
+    expect(workspaceIntent).toEqual({ mode: 'workspace', nodeIds: [] });
+    expect(useCanvasInteractionStore.getState().executionSelectionIntent).toEqual({
+      mode: 'explicit',
+      nodeIds: [],
+    });
   });
 
   it('marks the store hydrated through the persist lifecycle', async () => {

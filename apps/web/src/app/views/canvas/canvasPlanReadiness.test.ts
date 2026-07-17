@@ -174,7 +174,7 @@ describe('canvasPlanReadiness', () => {
         },
       ],
       canonicalEdges: [],
-      selectedNodeIds: [],
+      selectionIntent: { mode: 'workspace', nodeIds: [] },
       workspaceNodeIds: ['transform_1'],
     });
 
@@ -263,7 +263,7 @@ describe('canvasPlanReadiness', () => {
         },
       ],
       canonicalEdges: [],
-      selectedNodeIds: ['model.analytics.orders'],
+      selectionIntent: { mode: 'explicit', nodeIds: ['model.analytics.orders'] },
       workspaceNodeIds: ['model.analytics.orders'],
     });
 
@@ -321,13 +321,16 @@ describe('canvasPlanReadiness', () => {
         },
       ],
       canonicalEdges: [],
-      selectedNodeIds: ['source.analytics.raw.orders'],
+      selectionIntent: {
+        mode: 'explicit',
+        nodeIds: ['source.analytics.raw.orders'],
+      },
       workspaceNodeIds: ['source.analytics.raw.orders', 'model.analytics.orders'],
     });
 
     expect(executionState.canPlanGraph).toBe(false);
     expect(executionState.executableGraphFailureMessage).toBe(
-      'Select at least one DBT model, test, or snapshot before previewing this selection.'
+      'Execution selection contains unavailable or non-executable resources. Re-select available DBT models, tests, or snapshots to replace it.'
     );
     expect(executionState.planRunReadiness.blockers).toContain('plan_integrity');
   });

@@ -2,7 +2,7 @@
 title: Canvas execution selection component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-24
+last_reviewed: 2026-07-16
 ---
 
 # Canvas execution selection component
@@ -26,11 +26,16 @@ The component owns exactly one concern:
 
 - derive caller-owned preview/run selection from Canvas state and persisted plan
   state as canonical `ExecutionSelection`
-- derive DBT executable scope without widening a non-empty explicit selection
+- classify which DBT resources are valid execution-selection roots
+- derive DBT executable scope without dropping or widening non-empty explicit
+  selection intent
+- distinguish roots requested by the user from executable dependencies included
+  by closure
 
 It does **not** own:
 
 - planner executability rules
+- graph-node-card rendering
 - protected draft reads
 - runtime execution identity
 - preview/result transport parsing
@@ -42,8 +47,23 @@ It does **not** own:
 - `collectPlanSelection(plan)`
   Resolve run intent from the persisted plan view.
 - `resolveDbtExecutionScope(...)`
-  Resolve executable DBT roots and dependencies while rejecting an explicit
-  selection that contains no model, test, or snapshot.
+  Resolve executable DBT roots and dependencies while rejecting any explicit
+  selection that contains an unavailable or non-executable resource.
+- `isDbtExecutionSelectableNode(...)`
+  Report whether a canonical DBT node can be an explicit execution root. The
+  graph card consumes this query; it does not reimplement the kind policy.
+- `canOfferDbtExecutionSelectionToggle(...)`
+  Expose `Select` only for executable roots while preserving `Deselect` as the
+  recovery action for an invalid resource selected by an older client.
+- `applyDbtExecutionSelectionToggle(...)`
+  Apply a user selection gesture to the complete requested-id set and return
+  one atomic explicit intent. Hidden requested ids survive visible-node
+  toggles; selecting an available root replaces an unavailable-only recovery
+  set, while deselecting the final root remains explicit-empty.
+- `buildDbtExecutionIntentDraftSignature(...)`
+  Bind preview identity to selection mode and requested roots as well as the
+  executable graph projection, so equal dependency closure does not erase a
+  caller-intent change.
 - `buildCanvasDbtExecutionProjection(...)`
   Build the one DBT projection consumed by both Preview and readiness.
 - `executeCanvasPlanAction(...)`
@@ -68,10 +88,37 @@ It does **not** own:
 - preview and run actions import the named selection seam instead of redoing
   local array shaping inline.
 - absent preview selection may default to visible workspace node ids.
-- a non-empty explicit DBT selection with no executable resource fails closed;
-  it never defaults to the whole workspace.
+- workspace fallback and explicit empty intent are different states. Explicit
+  empty intent fails closed and never expands to the executable workspace.
+- every id in a non-empty explicit DBT selection must be an available executable
+  root; source, seed, macro, exposure, metric, unknown, and out-of-workspace ids
+  make the complete selection fail closed.
+- a rejected explicit selection is never filtered into a smaller successful
+  selection and never defaults to the whole workspace.
+- raw non-empty DBT selection intent reaches execution validation before UI
+  visibility reconciliation; presentation may hide unavailable ids but cannot
+  silently remove them from the execution request.
+- DBT selection gestures mutate the complete requested-id set rather than the
+  filtered visible selection. Deselecting one visible root therefore preserves
+  hidden requested ids.
+- an unavailable-only recovery set changes to an available executable root only
+  after the caller deliberately selects that root.
+- successful DBT scope resolution exposes requested root ids separately from
+  dependency ids that were included by transitive closure.
+- DBT draft identity includes selection mode and requested roots in addition to
+  the derived executable closure. Selecting a downstream root is not identical
+  to selecting that root and its already-included dependency.
+- the execution-projection compositor is the only authority that builds DBT
+  draft identity; the lower-level graph-source projector cannot emit a partial
+  signature without caller intent.
+- DBT node cards render `Select` only for roots admitted by
+  `isDbtExecutionSelectableNode(...)`; an already-selected invalid resource
+  renders only `Deselect` so the caller can recover without scope widening.
 - `canvasDbtExecutionProjection.ts` is shared by Preview and readiness so the
   enabled action and the emitted request cannot disagree.
+- route state commands, scope projectors, readiness, and Preview consume one
+  `CanvasExecutionSelectionIntent`; they never transport mode and requested ids
+  as independently mutable parameters.
 - SQL-first Plan never calls `previewPlan` with browser-only graph state:
   `GenerateTransformationWorkspaceArtifacts` must provide SQL and graph
   artifact provenance first.
@@ -89,12 +136,17 @@ It does **not** own:
 
 ```mermaid
 flowchart LR
-  Canvas["Canvas state"] --> Selection["canvasRunSelection.ts"]
+  Canvas["Canvas state: atomic selection intent"] --> Selection["canvasRunSelection.ts"]
   Canvas --> DbtPolicy["dbtExecutionScopePolicy.ts"]
+  Canvas --> DraftScope["canvasDraftScope.ts"]
+  DraftScope -->|complete requested ids| DbtPolicy
+  Card["GraphNodeCard"] -->|queries eligibility| DbtPolicy
+  Card -->|selection gesture| DbtPolicy
   Plan["Persisted plan view"] --> Selection
   Selection --> Preview["canvasPlanAction.ts"]
   DbtPolicy --> Projection["canvasDbtExecutionProjection.ts"]
   Projection --> Preview
+  Preview --> Review["Execution Preview selection review"]
   Projection --> Readiness["canvasExecutionState.ts"]
   Selection --> Run["canvasRunStartAction.ts"]
   Preview --> PlansPort["IPlansPort.previewPlan"]
@@ -104,6 +156,25 @@ flowchart LR
 ```
 
 ## Transitions
+
+The route-local state forms a closed selection algebra:
+
+```mermaid
+stateDiagram-v2
+  [*] --> Workspace
+  Workspace --> ExplicitNonEmpty: select executable root
+  ExplicitNonEmpty --> ExplicitNonEmpty: select or deselect while roots remain
+  ExplicitNonEmpty --> ExplicitEmpty: deselect final requested root
+  ExplicitEmpty --> ExplicitNonEmpty: select executable root
+  ExplicitNonEmpty --> ExplicitNonEmpty: select visible root from unavailable-only set
+
+  Workspace: derive executable workspace roots
+  ExplicitNonEmpty: validate every requested id
+  ExplicitEmpty: reject without widening
+```
+
+Visibility is a presentation projection, not another selection state. It cannot
+turn `ExplicitNonEmpty` into `Workspace` or remove hidden requested ids.
 
 ```mermaid
 sequenceDiagram
@@ -117,8 +188,8 @@ sequenceDiagram
     Canvas->>Selection: collectPreviewSelection(selectedNodeIds, workspaceNodeIds)
     Selection-->>Canvas: ExecutionSelection
   else DBT Canvas preview
-    Canvas->>DbtScope: resolve explicit or absent selection
-    DbtScope-->>Canvas: executable scope or fail-closed cause
+    Canvas->>DbtScope: resolve workspace or explicit selection mode
+    DbtScope-->>Canvas: roots + derived dependencies or fail-closed cause
   end
   Canvas->>Canvas: resolve SQL and graph artifact provenance
   Canvas->>Plans: previewPlan(..., selection, provenance)
@@ -207,15 +278,16 @@ Browser proof for this posture now lives in:
 These stories are the regression checklist for the product promise. They must
 stay tied to executable browser proof instead of remaining a loose QA note.
 
-| Story       | User intent                                                           | Proof surface                                                                                         |
-| ----------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `UX-E2E-01` | Create the first graph/canvas node through the UI and restore it.     | `apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts`                                       |
-| `UX-E2E-02` | Build a graph, plan the selected closure, execute it, and see result. | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`                                      |
-| `UX-E2E-03` | Return from run result to Canvas, plan again, and execute again.      | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`                                      |
-| `UX-E2E-04` | Prove the same selected-closure flow against the protected runtime.   | `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`                                           |
-| `UX-E2E-05` | Configure dbt cards, select origin, view generated code, and run.     | `apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts`                                   |
-| `UX-E2E-06` | Verify Graph, Code, Lineage, and Artifacts describe the same project. | `apps/web/cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts`                                |
-| `UX-E2E-07` | See explicit re-plan guidance instead of raw transport failures.      | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts` and plan action unit coverage below. |
+| Story       | User intent                                                                                                    | Proof surface                                                                                         |
+| ----------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `UX-E2E-01` | Create the first graph/canvas node through the UI and restore it.                                              | `apps/web/cypress/e2e/canvas/canvas-first-authoring-live.cy.ts`                                       |
+| `UX-E2E-02` | Build a graph, plan the selected closure, execute it, and see result.                                          | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`                                      |
+| `UX-E2E-03` | Return from run result to Canvas, plan again, and execute again.                                               | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts`                                      |
+| `UX-E2E-04` | Prove the same selected-closure flow against the protected runtime.                                            | `apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts`                                           |
+| `UX-E2E-05` | Configure dbt cards, select origin, view generated code, and run.                                              | `apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts`                                   |
+| `UX-E2E-06` | Verify Graph, Code, Lineage, and Artifacts describe the same project.                                          | `apps/web/cypress/e2e/canvas/canvas-graph-code-artifacts-parity.cy.ts`                                |
+| `UX-E2E-07` | See explicit re-plan guidance instead of raw transport failures.                                               | `apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts` and plan action unit coverage below. |
+| `UX-E2E-08` | Select only executable DBT roots and verify Preview distinguishes requested resources from dependency closure. | `apps/web/cypress/e2e/dbt/dbt-project-preview-run-live.cy.ts`                                         |
 
 Minimum local product gate for this component:
 
@@ -287,7 +359,14 @@ The governed proof surface for that lane is:
 ## Consumers
 
 - `apps/web/src/app/views/canvas/canvasRunSelection.ts`
+- `apps/web/src/app/types/canvasExecutionSelection.ts`
+- `apps/web/src/app/stores/canvasInteractionStore.ts`
+- `apps/web/src/app/views/canvas/canvasDraftScope.ts`
+- `apps/web/src/app/views/canvas/dbtExecutionScopePolicy.ts`
 - `apps/web/src/app/views/canvas/canvasPlanAction.ts`
+- `apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts`
+- `apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts`
+- `apps/web/src/app/components/Modals.tsx`
 - `apps/web/src/app/views/canvas/canvasRunStartAction.ts`
 - `apps/web/src/app/ports/runs.ts`
 - `apps/web/src/app/services/runs/runsService.api.ts`
@@ -303,6 +382,24 @@ The governed proof surface for that lane is:
 ## Extension rules
 
 - keep canonical selection parsing in `canvasRunSelection.ts`
+- keep DBT root eligibility and closure classification in
+  `dbtExecutionScopePolicy.ts`; renderers and controllers only consume it
+- keep the atomic discriminated intent in `canvasExecutionSelection.ts` and its
+  sole route-local snapshot in the pre-existing `canvasInteractionStore.ts`
+- never split intent mode and requested ids into independently mutable state,
+  and never create a second selection store
+- use the explicit intent replacement command for DBT selection gestures; do
+  not pass optional mode flags through generic selected-node setters
+- do not silently filter invalid ids from a non-empty explicit selection
+- do not infer workspace fallback from an empty requested-id array without also
+  reading the intent mode
+- apply DBT selection gestures through `applyDbtExecutionSelectionToggle(...)`;
+  do not rebuild requested intent from the visible-node projection
+- reconcile visible selection and inspector state without mutating raw DBT
+  execution intent before validation
+- keep requested roots and derived dependencies distinct in the Preview read
+  model even though the canonical server selection contains their complete
+  authorized closure
 - do not add a web-local preview/run selection DTO
 - do not push planner-local diagnostics into the browser selection seam
 - keep protected runtime rejection normalization in service adapters, not in

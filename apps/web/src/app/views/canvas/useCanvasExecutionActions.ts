@@ -63,7 +63,7 @@ export function useCanvasExecutionActions({
   executionStrategy,
   canonicalNodes,
   canonicalEdges,
-  selectedNodeIds,
+  selectionIntent,
   workspaceNodeIds,
   flushDraftForExecution,
   canPlan,
@@ -92,7 +92,7 @@ export function useCanvasExecutionActions({
     lastPlannedDraftSignature,
     canonicalNodes,
     canonicalEdges,
-    selectedNodeIds,
+    selectionIntent,
     workspaceNodeIds,
   });
   const {
@@ -118,7 +118,7 @@ export function useCanvasExecutionActions({
     plansService,
     executionStrategy,
     previewProvenanceConfig,
-    selectedNodeIds,
+    selectionIntent,
     sessionContext: executionSessionContext,
     shellFeedback,
     flushDraftForExecution,

@@ -66,7 +66,8 @@ export const canvasViewExecutionCopyByKey = {
   },
   dbtExplicitSelectionRequiresExecutableResourceMessage: {
     key: 'canvas.dbt.explicitSelectionRequiresExecutableResourceMessage',
-    fallback: 'Select at least one DBT model, test, or snapshot before previewing this selection.',
+    fallback:
+      'Execution selection contains unavailable or non-executable resources. Re-select available DBT models, tests, or snapshots to replace it.',
   },
   planCreatedMessage: {
     key: 'canvas.plan.createdMessage',

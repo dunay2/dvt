@@ -41,6 +41,7 @@ export type CanvasHarnessState = {
     setCanvasNodePositions: MockFn;
     setInspectorNode: MockFn;
     setSelectedNodes: MockFn;
+    setExecutionSelectionIntent: MockFn;
   } & Record<string, unknown>;
   queryClient: {
     cancelQueries: MockFn;

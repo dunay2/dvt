@@ -15,6 +15,7 @@ import {
 import { formatTransformationGraphValidationSummary } from './canvasCopyFormatting';
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import { isDbtProjectFilePreviewProvenanceCurrent } from './dbtProjectFileExecutionStrategy';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 type DeriveCanvasExecutionStateArgs = {
   canRun: boolean;
@@ -23,7 +24,7 @@ type DeriveCanvasExecutionStateArgs = {
   lastPlannedDraftSignature: string | null;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
-  selectedNodeIds: string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
   workspaceNodeIds: string[];
 };
 
@@ -62,7 +63,7 @@ export function deriveCanvasExecutionState({
   lastPlannedDraftSignature,
   canonicalNodes,
   canonicalEdges,
-  selectedNodeIds,
+  selectionIntent,
   workspaceNodeIds,
 }: DeriveCanvasExecutionStateArgs): CanvasExecutionState {
   const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
@@ -70,7 +71,7 @@ export function deriveCanvasExecutionState({
   const transformationValidation = validateTransformationGraph({
     nodes: canonicalNodes,
     edges: canonicalEdges,
-    selectedNodeIds,
+    selectedNodeIds: selectionIntent.nodeIds,
     workspaceNodeIds,
   });
   const usesDbtPlanner =
@@ -81,7 +82,7 @@ export function deriveCanvasExecutionState({
         strategy: executionStrategy,
         canonicalNodes,
         canonicalEdges,
-        selectedNodeIds,
+        selectionIntent,
         workspaceNodeIds,
       })
     : null;

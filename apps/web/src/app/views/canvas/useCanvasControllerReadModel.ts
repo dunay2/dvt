@@ -6,6 +6,10 @@ import { validateTransformationGraph } from './transformationGraphValidation';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { UseCanvasGraphHandlersResult } from './useCanvasGraphHandlers.types';
+import {
+  canOfferDbtExecutionSelectionToggle,
+  isDbtExecutionSelectableNode,
+} from './dbtExecutionScopePolicy';
 
 type UseCanvasControllerReadModelArgs = {
   graphModel: {
@@ -38,6 +42,7 @@ type UseCanvasControllerReadModelArgs = {
     | 'handleToggleNodeSelection'
     | 'handleAttachSchemaToNode'
   >;
+  onToggleExecutionSelection: (nodeId: string, shouldSelect: boolean) => void;
   activeCanvasKind: string;
   runtimeCapabilities?: RuntimeCapabilities;
   canMutateGraph: boolean;
@@ -53,6 +58,7 @@ export function useCanvasControllerReadModel({
   uiScope,
   overlayModel,
   graphHandlers,
+  onToggleExecutionSelection,
   activeCanvasKind,
   runtimeCapabilities,
   canMutateGraph,
@@ -89,22 +95,34 @@ export function useCanvasControllerReadModel({
           onInspectNode: graphHandlers.handleInspectNode,
           onDuplicateNode: canMutateGraph ? graphHandlers.handleDuplicateNode : undefined,
           onRemoveNode: canMutateGraph ? graphHandlers.handleRemoveNode : undefined,
-          onToggleNodeSelection: canSelectExecution
-            ? graphHandlers.handleToggleNodeSelection
-            : undefined,
+          onToggleNodeSelection: canSelectExecution ? onToggleExecutionSelection : undefined,
           onAttachSchemaToNode: canMutateGraph ? graphHandlers.handleAttachSchemaToNode : undefined,
         },
-      }).map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          activeRunId: overlayModel.activeRunId,
-          canvasKind: activeCanvasKind,
-          runStatusByNodeId: overlayModel.runStatusByNodeId,
-          overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
-          runtimeCapabilities,
-        },
-      })),
+      }).map((node) => {
+        const canonicalNode = graphModel.canonicalNodesById.get(node.id);
+        const selectedForExecution = uiScope.selectedNodeIds.includes(node.id);
+        const canSelectNode =
+          canSelectExecution &&
+          (activeCanvasKind !== 'dbt' ||
+            canOfferDbtExecutionSelectionToggle({
+              isExecutableRoot:
+                canonicalNode != null && isDbtExecutionSelectableNode(canonicalNode),
+              selectedForExecution,
+            }));
+
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            onToggleNodeSelection: canSelectNode ? onToggleExecutionSelection : undefined,
+            activeRunId: overlayModel.activeRunId,
+            canvasKind: activeCanvasKind,
+            runStatusByNodeId: overlayModel.runStatusByNodeId,
+            overlayDecoration: overlayModel.overlayDecorations.get(node.id) ?? null,
+            runtimeCapabilities,
+          },
+        };
+      }),
     [
       canMutateGraph,
       canSelectExecution,
@@ -112,8 +130,9 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleInspectNode,
       graphHandlers.handleDuplicateNode,
       graphHandlers.handleRemoveNode,
-      graphHandlers.handleToggleNodeSelection,
       graphHandlers.handleAttachSchemaToNode,
+      onToggleExecutionSelection,
+      graphModel.canonicalNodesById,
       graphModel.edges,
       graphModel.nodes,
       activeCanvasKind,

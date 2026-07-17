@@ -59,7 +59,10 @@ describe('useCanvasExecutionActions plan preview selection', () => {
           relation: 'lineage',
         },
       ],
-      selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+      selectionIntent: {
+        mode: 'explicit',
+        nodeIds: ['source-node', 'transform-node', 'sink-node'],
+      },
       workspaceNodeIds: ['source-node', 'transform-node', 'sink-node', 'quality-node'],
     });
     await harness.render();
@@ -141,7 +144,7 @@ describe('useCanvasExecutionActions plan preview selection', () => {
       runsService: createRunsServiceMock(),
       canonicalNodes,
       canonicalEdges: buildCanonicalEdges(),
-      selectedNodeIds: ['source-node'],
+      selectionIntent: { mode: 'explicit', nodeIds: ['source-node'] },
       workspaceNodeIds: canonicalNodes.map((node) => node.id),
     });
     await harness.render();
@@ -206,7 +209,10 @@ describe('useCanvasExecutionActions plan preview selection', () => {
           relation: 'lineage',
         },
       ],
-      selectedNodeIds: ['source-node', 'transform-node', 'sink-node'],
+      selectionIntent: {
+        mode: 'explicit',
+        nodeIds: ['source-node', 'transform-node', 'sink-node'],
+      },
       workspaceNodeIds: ['source-node', 'transform-node', 'sink-node', 'quality-node'],
     });
     await harness.render();

@@ -200,7 +200,7 @@ describe('useCanvasExecutionActions dbt draft flush', () => {
         previewProfile: 'planner-generic-v1',
         sourceFamily: 'dbt',
       },
-      selectedNodeIds: ['model-orders'],
+      selectionIntent: { mode: 'explicit', nodeIds: ['model-orders'] },
       workspaceNodeIds: ['source-orders', 'model-orders'],
       flushDraftForExecution,
     });

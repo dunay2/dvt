@@ -22,6 +22,7 @@ import { collectPreviewSelection } from './canvasRunSelection';
 import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
 import { buildPreviewGraphSource } from './previewGraphSource';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 type CanvasPlanActionFailure = {
   ok: false;
@@ -36,6 +37,29 @@ type CanvasPlanActionSuccess = {
 };
 
 export type CanvasPlanActionResult = CanvasPlanActionFailure | CanvasPlanActionSuccess;
+
+function attachDbtSelectionIntent(
+  plan: PlanViewModel,
+  selection: {
+    readonly selectionMode: 'explicit' | 'workspace';
+    readonly requestedRootNodeIds: readonly string[];
+    readonly derivedDependencyNodeIds: readonly string[];
+    readonly scopedNodeIds: readonly string[];
+  }
+): PlanViewModel {
+  return {
+    ...plan,
+    preview: {
+      ...(plan.preview ?? {}),
+      selectionIntent: {
+        mode: selection.selectionMode,
+        requestedRootNodeIds: [...selection.requestedRootNodeIds],
+        derivedDependencyNodeIds: [...selection.derivedDependencyNodeIds],
+        authorizedScopeNodeIds: [...selection.scopedNodeIds],
+      },
+    },
+  };
+}
 
 function formatPlanActionErrorMessage(error: unknown): string {
   if (!(error instanceof Error)) {
@@ -61,7 +85,7 @@ export async function executeCanvasPlanAction({
   executionStrategy,
   plansService,
   previewProvenanceConfig,
-  selectedNodeIds,
+  selectionIntent,
   sessionContext,
   transformationValidation,
   workspaceNodeIds,
@@ -77,7 +101,7 @@ export async function executeCanvasPlanAction({
     WorkspaceBootstrapConfig,
     'gitBranch' | 'gitSha' | 'gitRepo' | 'graphArtifactPath'
   >;
-  selectedNodeIds: readonly string[];
+  selectionIntent: CanvasExecutionSelectionIntent;
   sessionContext: SessionContextPort;
   transformationValidation: TransformationGraphValidationResult;
   workspaceNodeIds: readonly string[];
@@ -104,7 +128,7 @@ export async function executeCanvasPlanAction({
         strategy: executionStrategy,
         canonicalNodes,
         canonicalEdges,
-        selectedNodeIds,
+        selectionIntent,
         workspaceNodeIds,
       });
       if (!plannerProjection.ok) {
@@ -136,7 +160,7 @@ export async function executeCanvasPlanAction({
         writtenArtifacts.push(...artifactProjection.artifacts);
       }
 
-      const plan = await plansService.previewPlan({
+      const previewedPlan = await plansService.previewPlan({
         previewProfile: executionStrategy.previewProfile,
         graphSource: plannerProjection.graphSource,
         selection: plannerProjection.selection,
@@ -151,6 +175,7 @@ export async function executeCanvasPlanAction({
           : {}),
         persist: true,
       });
+      const plan = attachDbtSelectionIntent(previewedPlan, plannerProjection);
 
       return {
         ok: true,

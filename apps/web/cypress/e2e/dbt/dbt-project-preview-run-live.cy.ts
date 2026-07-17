@@ -5,7 +5,6 @@
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
-  revealOperationalDrawer,
 } from '../../support/canvasExecutionSelection';
 import {
   adoptLiveDbtProjectFileAuthority,
@@ -23,6 +22,7 @@ import {
 const PROJECT_ROOT = 'analytics-run';
 const CANVAS_ID = 'analytics-run-files';
 const MODEL_UNIQUE_ID = 'model.analytics_run.orders';
+const SUMMARY_MODEL_UNIQUE_ID = 'model.analytics_run.order_summary';
 const SOURCE_UNIQUE_ID = 'source.analytics_run.raw.orders';
 
 const PROJECT_FILES: Readonly<Record<string, string>> = {
@@ -62,12 +62,20 @@ models:
         data_type: text
       - name: amount
         data_type: numeric
+  - name: order_summary
+    description: Downstream order totals used to prove dependency closure
 `,
   [`${PROJECT_ROOT}/models/orders.sql`]: `
 {{ config(materialized='view') }}
 
 select order_id, customer, amount
 from {{ source('raw', 'orders') }}
+`,
+  [`${PROJECT_ROOT}/models/order_summary.sql`]: `
+{{ config(materialized='view') }}
+
+select count(*) as order_count, sum(amount) as gross_amount
+from {{ ref('orders') }}
 `,
 };
 
@@ -198,7 +206,14 @@ describe('dbt project file Preview and Run live vertical', () => {
     cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`)
       .should('be.visible')
       .and('contain.text', 'Orders');
-    selectResourceForExecution(MODEL_UNIQUE_ID);
+    cy.get(`.react-flow__node[data-id="${SOURCE_UNIQUE_ID}"]`).within(() => {
+      cy.get('button[aria-label="Select for execution"]').should('not.exist');
+      cy.get('button[aria-label="Deselect for execution"]').should('not.exist');
+    });
+    cy.get(`.react-flow__node[data-id="${SUMMARY_MODEL_UNIQUE_ID}"]`)
+      .should('be.visible')
+      .and('contain.text', 'order_summary');
+    selectResourceForExecution(SUMMARY_MODEL_UNIQUE_ID);
 
     clickPreviewExecutionPlanFromOperationalDrawer();
 
@@ -221,7 +236,14 @@ describe('dbt project file Preview and Run live vertical', () => {
         cy.get('[aria-label="Analysis revision value"]')
           .invoke('text')
           .should('match', /[a-f0-9]{64}/);
-        cy.get('[aria-label="Selected resources value"]').should('contain.text', MODEL_UNIQUE_ID);
+        cy.get('[aria-label="Requested resources value"]').should(
+          'have.text',
+          SUMMARY_MODEL_UNIQUE_ID
+        );
+        cy.get('[aria-label="Included dependencies value"]').should('have.text', MODEL_UNIQUE_ID);
+        cy.get('[aria-label="Authorized execution scope value"]')
+          .should('contain.text', MODEL_UNIQUE_ID)
+          .and('contain.text', SUMMARY_MODEL_UNIQUE_ID);
         cy.get('[aria-label="Execution target value"]').should(
           'contain.text',
           'temporal / postgres / analysis'
@@ -270,6 +292,12 @@ describe('dbt project file Preview and Run live vertical', () => {
               ({ eventType, stepId }) => eventType === 'StepCompleted' && stepId === MODEL_UNIQUE_ID
             )
           ).to.equal(true);
+          expect(
+            events.some(
+              ({ eventType, stepId }) =>
+                eventType === 'StepCompleted' && stepId === SUMMARY_MODEL_UNIQUE_ID
+            )
+          ).to.equal(true);
         });
       });
     });
@@ -287,22 +315,19 @@ describe('dbt project file Preview and Run live vertical', () => {
     });
   });
 
-  it('keeps an explicit source-only selection blocked without widening Preview scope', () => {
+  it('does not present a DBT source as an executable selection root', () => {
     const observedRequests: ObservedRequest[] = [];
     visitProjectWithRequestObservations(observedRequests);
 
-    selectResourceForExecution(SOURCE_UNIQUE_ID);
-    revealOperationalDrawer();
-    cy.contains('[data-slot="bottom-operational-drawer-tab"]', 'Preview').click();
-    cy.get('[data-slot="bottom-operational-drawer-preview"]')
+    cy.get(`.react-flow__node[data-id="${SOURCE_UNIQUE_ID}"]`, { timeout: 60_000 })
       .should('be.visible')
-      .and(
-        'contain.text',
-        'Select at least one DBT model, test, or snapshot before previewing this selection.'
-      )
       .within(() => {
-        cy.contains('button', 'Preview execution plan').should('be.disabled');
+        cy.get('button[aria-label="Select for execution"]').should('not.exist');
+        cy.get('button[aria-label="Deselect for execution"]').should('not.exist');
       });
+    cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`).within(() => {
+      cy.get('button[aria-label="Select for execution"]').should('be.visible').and('be.enabled');
+    });
 
     cy.wrap(null).should(() => {
       expect(

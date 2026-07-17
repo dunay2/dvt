@@ -8,14 +8,13 @@ import {
   type CanvasControllerHarness,
   waitForAutosaveDebounce,
 } from './useCanvasController.draftLifecycle.test.support';
+import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
-function readLatestExecutionCall(
-  harness: CanvasControllerHarness
-):
+function readLatestExecutionCall(harness: CanvasControllerHarness):
   | {
       canonicalNodes?: Array<{ id: string }>;
       canonicalEdges?: Array<{ id: string }>;
-      selectedNodeIds?: string[];
+      selectionIntent?: CanvasExecutionSelectionIntent;
       workspaceNodeIds?: string[];
       canPlan?: boolean;
       canRun?: boolean;
@@ -25,12 +24,25 @@ function readLatestExecutionCall(
     | {
         canonicalNodes?: Array<{ id: string }>;
         canonicalEdges?: Array<{ id: string }>;
-        selectedNodeIds?: string[];
+        selectionIntent?: CanvasExecutionSelectionIntent;
         workspaceNodeIds?: string[];
         canPlan?: boolean;
         canRun?: boolean;
       }
     | undefined;
+}
+
+function readLatestGraphSelectionSetter(
+  harness: CanvasControllerHarness
+): (nodeIds: string[]) => void {
+  const graphHandlerArgs = harness.mocks.useCanvasGraphHandlers.mock.calls.at(-1)?.[0] as
+    { setSelectedNodes?: (nodeIds: string[]) => void } | undefined;
+
+  if (!graphHandlerArgs?.setSelectedNodes) {
+    throw new Error('Canvas graph handlers did not receive a selection lifecycle adapter.');
+  }
+
+  return graphHandlerArgs.setSelectedNodes;
 }
 
 function expectSelectionPrunedToVisibleScope(harness: CanvasControllerHarness): void {
@@ -39,14 +51,14 @@ function expectSelectionPrunedToVisibleScope(harness: CanvasControllerHarness): 
   expect(harness.getLatestResult()?.inspectorNode).toBeNull();
 }
 
-function expectExecutionScopeSubset(harness: CanvasControllerHarness): void {
+function expectTransformationExecutionScopeSubset(harness: CanvasControllerHarness): void {
   const latestExecutionCall = readLatestExecutionCall(harness);
 
   expect(harness.getLatestResult()?.nodesWithImpact.map((node) => node.id)).toEqual(['node_1']);
   expect(harness.getLatestResult()?.transformationValidation.scopedNodeIds).toEqual(['node_1']);
   expect(latestExecutionCall?.canonicalNodes?.map((node) => node.id)).toEqual(['node_1']);
   expect(latestExecutionCall?.canonicalEdges).toEqual([]);
-  expect(latestExecutionCall?.selectedNodeIds).toEqual([]);
+  expect(latestExecutionCall?.selectionIntent).toEqual({ mode: 'workspace', nodeIds: [] });
   expect(latestExecutionCall?.workspaceNodeIds).toEqual(['node_1']);
 }
 
@@ -131,13 +143,84 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
         '2026-04-17T00:00:00Z'
       )
     );
-    harness.state.store.selectedNodes = ['node_2'];
+    harness.state.store.setExecutionSelectionIntent({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
+    harness.state.store.inspectorNodeId = 'node_2';
+
+    await harness.renderProbe();
+    await harness.renderProbe();
+
+    expectSelectionPrunedToVisibleScope(harness);
+    expectTransformationExecutionScopeSubset(harness);
+  });
+
+  it('preserves hidden explicit DBT selection intent until execution validation rejects it', async () => {
+    harness = await createHarnessWithDraft(
+      buildRemoteDraftRecord(
+        {
+          canvas: { kind: 'dbt', title: 'DBT canvas' },
+          nodeIds: ['node_1'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+          },
+          edges: [],
+        },
+        'rev-dbt-1',
+        '2026-04-17T00:00:00Z'
+      )
+    );
+    harness.state.store.setExecutionSelectionIntent({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
     harness.state.store.inspectorNodeId = 'node_2';
 
     await harness.renderProbe();
 
-    expectSelectionPrunedToVisibleScope(harness);
-    expectExecutionScopeSubset(harness);
+    expect(harness.state.store.setSelectedNodes).not.toHaveBeenCalledWith([]);
+    expect(harness.state.store.setInspectorNode).toHaveBeenCalledWith(null);
+    expect(readLatestExecutionCall(harness)?.selectionIntent).toEqual({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
+    expect(readLatestExecutionCall(harness)?.workspaceNodeIds).toEqual(['node_1']);
+  });
+
+  it('retains hidden DBT intent when graph lifecycle removes the visible selected member', async () => {
+    harness = await createHarnessWithDraft(
+      buildRemoteDraftRecord(
+        {
+          canvas: { kind: 'dbt', title: 'DBT canvas' },
+          nodeIds: ['node_1'],
+          nodePositions: {
+            node_1: { x: 0, y: 0 },
+          },
+          edges: [],
+        },
+        'rev-dbt-lifecycle-1',
+        '2026-04-17T00:00:00Z'
+      )
+    );
+    harness.state.store.setExecutionSelectionIntent({
+      mode: 'explicit',
+      nodeIds: ['node_1', 'node_2'],
+    });
+    await harness.renderProbe();
+    harness.state.store.setExecutionSelectionIntent.mockClear();
+
+    readLatestGraphSelectionSetter(harness)([]);
+
+    expect(harness.state.store.setExecutionSelectionIntent).toHaveBeenCalledWith({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
+    await harness.renderProbe();
+    expect(readLatestExecutionCall(harness)?.selectionIntent).toEqual({
+      mode: 'explicit',
+      nodeIds: ['node_2'],
+    });
   });
 
   it('projects the full persisted draft from protected semantic truth even before snapshot hydration catches up', async () => {
@@ -150,7 +233,9 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
     expectProtectedSemanticProjectionState(harness, true, true);
 
     await waitForAutosaveDebounce();
-    expect(harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft).not.toHaveBeenCalled();
+    expect(
+      harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
+    ).not.toHaveBeenCalled();
 
     harness.state.graphData = {
       nodes: [{ id: 'node_1' }, { id: 'node_remote_only' }],

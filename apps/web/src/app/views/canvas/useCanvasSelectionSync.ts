@@ -4,6 +4,7 @@ import { areNodeIdsEqual, type CanvasUiScope } from './canvasDraftScope';
 
 type UseCanvasSelectionSyncArgs = {
   isBootstrapping: boolean;
+  preserveSelectionIntent: boolean;
   storeSelection: string[];
   storeInspectorNodeId: string | null;
   uiScope: CanvasUiScope;
@@ -13,6 +14,7 @@ type UseCanvasSelectionSyncArgs = {
 
 export function useCanvasSelectionSync({
   isBootstrapping,
+  preserveSelectionIntent,
   storeSelection,
   storeInspectorNodeId,
   uiScope,
@@ -24,7 +26,7 @@ export function useCanvasSelectionSync({
       return;
     }
 
-    if (!areNodeIdsEqual(storeSelection, uiScope.selectedNodeIds)) {
+    if (!preserveSelectionIntent && !areNodeIdsEqual(storeSelection, uiScope.selectedNodeIds)) {
       setSelectedNodes(uiScope.selectedNodeIds);
     }
     if (storeInspectorNodeId !== uiScope.inspectorNodeId) {
@@ -32,6 +34,7 @@ export function useCanvasSelectionSync({
     }
   }, [
     isBootstrapping,
+    preserveSelectionIntent,
     setInspectorNode,
     setSelectedNodes,
     storeInspectorNodeId,
