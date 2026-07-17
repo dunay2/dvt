@@ -78,6 +78,7 @@ userStories:
   - As an engineer, PR scope detectors avoid full-history checkout before deciding whether expensive lanes apply.
   - As an engineer, scheduled adapter-postgres smoke coverage uses the same Turbo dependency build wrapper as PR test lanes.
   - As an AI agent, changed CI-tooling files can prove the local slice through direct adjacent tests instead of the full CI tools suite.
+  - As an engineer, Planning DB migrations retain append-only applied identities, reject parallel ordinals, and report the next safe ordinal before integration.
   - As an engineer, moving a draft PR to ready reopens affected Test Suite coverage without restoring duplicate Code Quality tests.
   - As an engineer, draft-aware quality, contracts, and security gates reopen on ready-for-review without spending draft runners.
   - As an engineer, converting a ready PR back to draft cancels stale ready-PR gate work and records skipped draft posture.
@@ -120,7 +121,13 @@ allowedImplementationSurfaces:
   - scripts/check-governance-changed-files.cjs
   - scripts/check-governance-changed-files.test.cjs
   - scripts/local-validation-plan.cjs
+  - scripts/planning-db-migrate.cjs
+  - scripts/planning-db-migrate.test.cjs
   - scripts/verify-changed.test.cjs
+  - tools/planning-db/migrations/722_planning_db_migration_ordinal_uniqueness.sql
+  - tools/planning-db/migrations/723_planning_db_migration_ordinal_mechanization.sql
+  - tools/planning-db/migrations/724_planning_db_migration_ordinal_governance_alignment.sql
+  - tools/planning-db/migrations/725_retire_parallel_planning_db_preflight_rail.sql
   - tools/ci/policy/workflow-scope.json
   - tools/ci/pr-check-triage.mjs
   - tools/ci/pr-check-triage.test.mjs
@@ -180,6 +187,12 @@ domainObjects:
   - name: PlanningDbCiBootstrap
     type: CI DB-first bootstrap command
     owner: Engineering / CI
+  - name: MigrationOrdinalPolicy
+    type: migration identity policy
+    owner: Repository CI governance baseline
+  - name: MigrationOrdinalReport
+    type: migration sequence read model
+    owner: Repository CI governance baseline
   - name: RepositoryCiBaseline
     type: CI code baseline command
     owner: Engineering / CI
@@ -198,11 +211,13 @@ fowlerSignals:
   - Shallow Checkout Fragility when PR merge refs cannot provide a local merge base for raw triple-dot diffs.
   - Automation Gap when files arrive through Git operations without editor save hooks firing.
   - Hidden Authority when CI-generated documentation or mechanization gates expect DB-first projections but the workflow does not prepare the planning query store.
+  - Parallel Change when independently authored migrations reuse an ordinal or rename an already-applied identity.
 architectureGuards:
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
   - node --test scripts/format-git-operation-changes.test.cjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
   - node --test tools/ci/turbo-workspace-task-contract.test.mjs
+  - node --test scripts/planning-db-migrate.test.cjs
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - developer workflow and CI tooling only
@@ -212,6 +227,7 @@ completionGate:
   - node --test scripts/format-git-operation-changes.test.cjs
   - node --test tools/ci/workflow-pattern-parity.test.mjs
   - node --test tools/ci/turbo-workspace-task-contract.test.mjs
+  - pnpm test:planning:db:migrations
   - pnpm verify:changed
   - pnpm verify:prepush
 redGreenCycles:
@@ -332,6 +348,15 @@ redGreenCycles:
       - docs/guides/testing-and-ci-capabilities.md
       - tools/ci/turbo-workspace-task-contract.test.mjs
     greenTest: node --test tools/ci/turbo-workspace-task-contract.test.mjs
+  - id: planning-db-migration-ordinal-identity
+    redTest: node --test --test-name-pattern "migration files sort|applied strict migration identities|migration runner rejects" scripts/planning-db-migrate.test.cjs
+    expectedFailure: strict migration filenames can be renamed after application and four-digit ordinals sort before their predecessors.
+    patchSurfaces:
+      - scripts/planning-db-migrate.cjs
+      - scripts/planning-db-migrate.test.cjs
+      - tools/planning-db/migrations/722_planning_db_migration_ordinal_uniqueness.sql
+      - tools/planning-db/migrations/725_retire_parallel_planning_db_preflight_rail.sql
+    greenTest: pnpm test:planning:db:migrations
 symbols:
   - name: ci:code
     path: package.json
@@ -351,6 +376,105 @@ symbols:
     cypressCoverage: N/A - CI governance action
     unitTests:
       - tools/ci/workflow-pattern-parity.test.mjs
+  - name: migrationOrdinalPolicy
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Single Source of Truth, Fail Closed]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: buildMigrationFileNameFingerprint
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Pure Function, Append Only Identity]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: parseMigrationOrdinal
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Pure Function]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: compareMigrationFileNamesByOrdinal
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Pure Function, Deterministic Ordering]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: analyzeMigrationOrdinals
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Query Model, Pure Function]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: formatMigrationOrdinal
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Pure Function]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: assertMigrationOrdinalPolicy
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Policy, Fail Closed]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: migrationOrdinalPolicyForDirectory
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Policy]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: assertAppliedMigrationIdentities
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Policy, Fail Closed, Append Only Identity]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: readMigrationFiles
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Repository, Deterministic Ordering]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: runMigrations
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Service Layer, Unit of Work, Fail Closed]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
   - name: assert
     path: scripts/ai-preflight.test.cjs
     dddOwner: DeveloperWorkflow

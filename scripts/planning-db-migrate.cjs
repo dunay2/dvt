@@ -57,6 +57,25 @@ function parseMigrationOrdinal(fileName) {
   };
 }
 
+function compareMigrationFileNamesByOrdinal(leftFileName, rightFileName) {
+  const left = parseMigrationOrdinal(leftFileName);
+  const right = parseMigrationOrdinal(rightFileName);
+
+  if (left && right && left.ordinal !== right.ordinal) {
+    return left.ordinal - right.ordinal;
+  }
+
+  if (left && !right) {
+    return -1;
+  }
+
+  if (!left && right) {
+    return 1;
+  }
+
+  return leftFileName < rightFileName ? -1 : leftFileName > rightFileName ? 1 : 0;
+}
+
 function analyzeMigrationOrdinals(fileNames, policy = migrationOrdinalPolicy) {
   const parsed = fileNames.map(parseMigrationOrdinal);
   const invalidFileNames = fileNames
@@ -138,20 +157,42 @@ function assertMigrationOrdinalPolicy(fileNames, policy = migrationOrdinalPolicy
   return report;
 }
 
+function migrationOrdinalPolicyForDirectory(directory) {
+  return path.resolve(directory) === path.resolve(migrationsDir)
+    ? migrationOrdinalPolicy
+    : {
+        firstStrictOrdinal: 1,
+        historicalFileNameSha256: buildMigrationFileNameFingerprint([]),
+      };
+}
+
+function assertAppliedMigrationIdentities(records, appliedRows, policy = migrationOrdinalPolicy) {
+  const availableVersions = new Set(records.map((record) => record.version));
+  const missingStrictFileNames = appliedRows
+    .map((row) => `${row.version}.sql`)
+    .filter((fileName) => {
+      const parsed = parseMigrationOrdinal(fileName);
+      return (
+        parsed !== null &&
+        parsed.ordinal >= policy.firstStrictOrdinal &&
+        !availableVersions.has(fileName.replace(/\.sql$/iu, ''))
+      );
+    })
+    .sort(compareMigrationFileNamesByOrdinal);
+
+  if (missingStrictFileNames.length > 0) {
+    throw new Error(
+      `Applied strict migration files are missing or renamed: ${missingStrictFileNames.join(', ')}.`
+    );
+  }
+}
+
 function readMigrationFiles(directory = migrationsDir) {
-  const fileNames = fs
-    .readdirSync(directory)
-    .filter((fileName) => fileName.endsWith('.sql'))
-    .sort();
-  const policy =
-    path.resolve(directory) === path.resolve(migrationsDir)
-      ? migrationOrdinalPolicy
-      : {
-          firstStrictOrdinal: 1,
-          historicalFileNameSha256: buildMigrationFileNameFingerprint([]),
-        };
+  const fileNames = fs.readdirSync(directory).filter((fileName) => fileName.endsWith('.sql'));
+  const policy = migrationOrdinalPolicyForDirectory(directory);
 
   assertMigrationOrdinalPolicy(fileNames, policy);
+  fileNames.sort(compareMigrationFileNamesByOrdinal);
 
   return fileNames.map((fileName) => ({
     fileName,
@@ -196,7 +237,9 @@ async function ensureMigrationTable(client) {
 async function runMigrations(options = {}) {
   const url = options.databaseUrl || databaseUrl();
   const silent = options.silent === true;
-  const records = buildMigrationRecords(readMigrationFiles(options.migrationsDir || migrationsDir));
+  const directory = options.migrationsDir || migrationsDir;
+  const records = buildMigrationRecords(readMigrationFiles(directory));
+  const ordinalPolicy = migrationOrdinalPolicyForDirectory(directory);
 
   if (records.length === 0) {
     if (!silent) {
@@ -219,12 +262,14 @@ async function runMigrations(options = {}) {
     await client.query('begin');
     await ensureMigrationTable(client);
 
+    const appliedMigrations = await client.query(
+      `select version, checksum_sha256 from ${quoteIdentifier(schemaName)}.schema_migrations order by version`
+    );
+    assertAppliedMigrationIdentities(records, appliedMigrations.rows, ordinalPolicy);
+    const appliedByVersion = new Map(appliedMigrations.rows.map((row) => [row.version, row]));
+
     for (const record of records) {
-      const existing = await client.query(
-        `select checksum_sha256 from ${quoteIdentifier(schemaName)}.schema_migrations where version = $1`,
-        [record.version]
-      );
-      const existingRow = existing.rows[0];
+      const existingRow = appliedByVersion.get(record.version);
       const mismatch = detectChecksumMismatch(record, existingRow);
       if (mismatch) {
         throw new Error(mismatch);
@@ -273,6 +318,7 @@ if (require.main === module) {
 
 module.exports = {
   analyzeMigrationOrdinals,
+  assertAppliedMigrationIdentities,
   assertMigrationOrdinalPolicy,
   buildMigrationFileNameFingerprint,
   migrationsDir,
