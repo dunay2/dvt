@@ -59,9 +59,22 @@ function canonicalPath(filePath: string): string {
 }
 
 function resolvePlanActionImportPaths(): readonly string[] {
-  const parsedConfig = ts.getParsedCommandLineOfConfigFile(WEB_TSCONFIG_PATH, {}, ts.sys);
-  if (parsedConfig === undefined) {
-    throw new Error(`Unable to load Web TypeScript config at ${WEB_TSCONFIG_PATH}`);
+  const config = ts.readConfigFile(WEB_TSCONFIG_PATH, ts.sys.readFile);
+  if (config.error) {
+    throw new Error(ts.flattenDiagnosticMessageText(config.error.messageText, '\n'));
+  }
+
+  const parsedConfig = ts.parseJsonConfigFileContent(
+    config.config,
+    ts.sys,
+    path.dirname(WEB_TSCONFIG_PATH)
+  );
+  if (parsedConfig.errors.length > 0) {
+    throw new Error(
+      parsedConfig.errors
+        .map((diagnostic) => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'))
+        .join('\n')
+    );
   }
 
   return ts
