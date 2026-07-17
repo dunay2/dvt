@@ -8,6 +8,7 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const repoRoot = path.resolve(__dirname, '..');
 const migrationsDir = path.join(repoRoot, 'tools', 'planning-db', 'migrations');
 const schemaName = 'planning_query_store';
+const migrationAdvisoryLockKeys = Object.freeze([0x445654, 0x4d494752]);
 const migrationOrdinalPolicy = Object.freeze({
   firstStrictOrdinal: 722,
   historicalFileNameSha256: 'cf3ca7b58eb93139ab8e7357a78d5aa42439c3510b3177d1cc7a6a86cc57957e',
@@ -254,6 +255,13 @@ async function ensureMigrationTable(client) {
   `);
 }
 
+async function acquireMigrationTransactionLock(client) {
+  await client.query(
+    'select pg_advisory_xact_lock($1::integer, $2::integer)',
+    migrationAdvisoryLockKeys
+  );
+}
+
 async function runMigrations(options = {}) {
   const url = options.databaseUrl || databaseUrl();
   const silent = options.silent === true;
@@ -280,6 +288,7 @@ async function runMigrations(options = {}) {
 
   try {
     await client.query('begin');
+    await acquireMigrationTransactionLock(client);
     await ensureMigrationTable(client);
 
     const appliedMigrations = await client.query(
