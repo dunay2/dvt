@@ -212,6 +212,7 @@ fowlerSignals:
   - Automation Gap when files arrive through Git operations without editor save hooks firing.
   - Hidden Authority when CI-generated documentation or mechanization gates expect DB-first projections but the workflow does not prepare the planning query store.
   - Parallel Change when independently authored migrations reuse an ordinal or rename an already-applied identity.
+  - Race Condition when concurrent worktrees read the same applied migration snapshot before either commits.
 architectureGuards:
   - node --test scripts/ai-preflight.test.cjs scripts/verify-changed.test.cjs tools/ci/pr-check-triage.test.mjs tools/ci/repository-command-catalog.test.mjs tools/ci/repository-change-scope.test.mjs
   - node --test scripts/format-git-operation-changes.test.cjs
@@ -349,8 +350,8 @@ redGreenCycles:
       - tools/ci/turbo-workspace-task-contract.test.mjs
     greenTest: node --test tools/ci/turbo-workspace-task-contract.test.mjs
   - id: planning-db-migration-ordinal-identity
-    redTest: node --test --test-name-pattern "migration files sort|applied strict migration identities|migration runner rejects" scripts/planning-db-migrate.test.cjs
-    expectedFailure: strict migration filenames can be renamed after application and four-digit ordinals sort before their predecessors.
+    redTest: node --test --test-name-pattern "migration files sort|applied strict migration identities|migration runner rejects|serializes shared database" scripts/planning-db-migrate.test.cjs
+    expectedFailure: strict migration filenames can be renamed after application, four-digit ordinals sort before their predecessors, and concurrent migrators can replay SQL from a stale applied-version snapshot.
     patchSurfaces:
       - scripts/planning-db-migrate.cjs
       - scripts/planning-db-migrate.test.cjs
@@ -471,6 +472,24 @@ symbols:
     dddOwner: Repository CI governance baseline
     cqRails: [PreparePlanningDbForCiGate]
     fowlerSignals: [Service Layer, Unit of Work, Fail Closed]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: migrationAdvisoryLockKeys
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Concurrency Control, Unit of Work]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: acquireMigrationTransactionLock
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Concurrency Control, Unit of Work, Fail Closed]
     architectureGuard: scripts/planning-db-migrate.test.cjs
     cypressCoverage: N/A - repository migration policy
     unitTests:
