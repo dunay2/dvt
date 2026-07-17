@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.4.0](https://github.com/dunay2/dvt/compare/v0.3.0...v0.4.0) (2026-07-17)
+
+
+### Features
+
+* **docs:** Project DBT round-trip capability truth ([0ea95e7](https://github.com/dunay2/dvt/commit/0ea95e7dbbb628520fc826d8ecbdc7fdba14bdcf))
+
+
+### Bug Fixes
+
+* **ci:** Classify DBT capability status commands ([49f72c8](https://github.com/dunay2/dvt/commit/49f72c8b04b363a74344c3c4c0c1c6d064a89033))
+* **ci:** Harden DBT capability truth validation ([0cfca91](https://github.com/dunay2/dvt/commit/0cfca914f6a0197a6fe4eb90efa83df9a044fcb9))
+* **ci:** Run DBT capability truth in CI ([6ed0acf](https://github.com/dunay2/dvt/commit/6ed0acffa49a1f3bb6052c185ca4970081829ec6))
+* **ci:** Validate DBT capability drift after governance import ([56c275a](https://github.com/dunay2/dvt/commit/56c275af5c2d8707334e60407b5b8138ddb873df))
+* **ci:** Validate ignored DBT capability artifacts in CI ([f707515](https://github.com/dunay2/dvt/commit/f70751564d787681e6caddc646e8d7d1178f9cf7))
+* **docs:** Align DBT mechanization symbol contract ([dddeb9e](https://github.com/dunay2/dvt/commit/dddeb9e9b55c68e0db1e10866d43098a8126cdca))
+* **docs:** Complete DBT capability mechanization evidence ([82e2c16](https://github.com/dunay2/dvt/commit/82e2c16ebc44739e0a3a27c4305834039d03eb13))
+* **docs:** Move DBT mechanization authority to proposal ([e1c9bcf](https://github.com/dunay2/dvt/commit/e1c9bcf1e2382421340dceda92426c812268a998))
+* **docs:** Record DBT capability observability maturity ([d49b141](https://github.com/dunay2/dvt/commit/d49b1419e9d4f5a486d6d9b34b58ac0a0f655d95))
+* **docs:** Register DBT capability set contract ([a8d1769](https://github.com/dunay2/dvt/commit/a8d176935f0543ae2869c81776da97d55b9cc671))
+* **docs:** Validate DBT evidence in shallow clones ([d11eea9](https://github.com/dunay2/dvt/commit/d11eea9102e079c0f14c93a94e4dba7573ae6bfa))
+
 ## [0.3.0](https://github.com/dunay2/dvt/compare/v0.2.0...v0.3.0) (2026-07-17)
 
 
