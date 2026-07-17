@@ -167,16 +167,29 @@ function migrationOrdinalPolicyForDirectory(directory) {
 }
 
 function assertAppliedMigrationIdentities(records, appliedRows, policy = migrationOrdinalPolicy) {
-  const availableVersions = new Set(records.map((record) => record.version));
+  const localStrictVersionsByOrdinal = new Map();
+
+  for (const record of records) {
+    const parsed = parseMigrationOrdinal(record.fileName);
+    if (!parsed || parsed.ordinal < policy.firstStrictOrdinal) {
+      continue;
+    }
+
+    const versions = localStrictVersionsByOrdinal.get(parsed.ordinal) || new Set();
+    versions.add(record.version);
+    localStrictVersionsByOrdinal.set(parsed.ordinal, versions);
+  }
+
   const missingStrictFileNames = appliedRows
     .map((row) => `${row.version}.sql`)
     .filter((fileName) => {
       const parsed = parseMigrationOrdinal(fileName);
-      return (
-        parsed !== null &&
-        parsed.ordinal >= policy.firstStrictOrdinal &&
-        !availableVersions.has(fileName.replace(/\.sql$/iu, ''))
-      );
+      if (!parsed || parsed.ordinal < policy.firstStrictOrdinal) {
+        return false;
+      }
+
+      const localVersions = localStrictVersionsByOrdinal.get(parsed.ordinal);
+      return localVersions !== undefined && !localVersions.has(fileName.replace(/\.sql$/iu, ''));
     })
     .sort(compareMigrationFileNamesByOrdinal);
 

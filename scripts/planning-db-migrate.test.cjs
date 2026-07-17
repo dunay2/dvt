@@ -100,6 +100,24 @@ test('applied strict migration identities reject a renamed filename', () => {
   );
 });
 
+test('applied strict migration identities allow newer shared-worktree migrations', () => {
+  const records = buildMigrationRecords([
+    { fileName: '722_current.sql', sql: 'select 722;' },
+    { fileName: '723_current.sql', sql: 'select 723;' },
+  ]);
+
+  assert.doesNotThrow(() =>
+    assertAppliedMigrationIdentities(
+      records,
+      [
+        { version: '722_current', checksum_sha256: 'current-checksum' },
+        { version: '724_newer_worktree', checksum_sha256: 'future-checksum' },
+      ],
+      { firstStrictOrdinal: 722 }
+    )
+  );
+});
+
 test('migration runner rejects a renamed applied strict migration before replaying SQL', async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-planning-migrations-'));
   const queryCalls = [];
