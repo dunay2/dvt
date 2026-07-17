@@ -166,6 +166,42 @@ test('migration runner rejects a renamed applied strict migration before replayi
   }
 });
 
+test('migration runner serializes shared database invocations before reading applied versions', async () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-planning-migrations-'));
+  const queryCalls = [];
+
+  try {
+    fs.writeFileSync(path.join(directory, '001_current.sql'), 'select 1;', 'utf8');
+
+    await runMigrations({
+      migrationsDir: directory,
+      client: {
+        query: async (sql, parameters) => {
+          queryCalls.push({ sql, parameters });
+          if (/select version, checksum_sha256/u.test(sql)) {
+            return { rows: [] };
+          }
+          return { rows: [] };
+        },
+      },
+      silent: true,
+    });
+
+    const lockIndex = queryCalls.findIndex(({ sql }) => /pg_advisory_xact_lock/u.test(sql));
+    const appliedVersionsIndex = queryCalls.findIndex(({ sql }) =>
+      /select version, checksum_sha256/u.test(sql)
+    );
+    const migrationSqlIndex = queryCalls.findIndex(({ sql }) => sql === 'select 1;');
+
+    assert.ok(lockIndex > queryCalls.findIndex(({ sql }) => sql === 'begin'));
+    assert.ok(lockIndex < appliedVersionsIndex);
+    assert.ok(lockIndex < migrationSqlIndex);
+    assert.deepEqual(queryCalls[lockIndex].parameters, [0x445654, 0x4d494752]);
+  } finally {
+    fs.rmSync(directory, { recursive: true, force: true });
+  }
+});
+
 test('tracked migrations preserve applied identities and use unique strict ordinals', () => {
   const migrations = readMigrationFiles();
   const report = analyzeMigrationOrdinals(
