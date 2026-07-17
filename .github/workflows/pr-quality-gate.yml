@@ -267,6 +267,13 @@ jobs:
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:feature-mechanization:implementation
 
+      - name: Validate DBT round-trip capability truth
+        if:
+          github.event_name == 'push' || (github.event_name == 'pull_request' &&
+          steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
+          'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
+        run: pnpm docs:dbt-roundtrip-capabilities:check
+
       - name: ADR-0000 traceability gate
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
