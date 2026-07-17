@@ -1457,6 +1457,14 @@ symbols:
     architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
     cypressCoverage: not_applicable:governance_read_model
     unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
+  - name: governedCapabilityKeys
+    path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
+    cqRails: [ProjectDbtRoundtripCapabilityStatus]
+    fowlerSignals: [Fail Closed, Published Language]
+    architectureGuard: scripts/generate-dbt-project-roundtrip-capability-status.test.cjs
+    cypressCoverage: not_applicable:governance_read_model
+    unitTests: [scripts/generate-dbt-project-roundtrip-capability-status.test.cjs]
   - name: main
     path: scripts/generate-dbt-project-roundtrip-capability-status.cjs
     dddOwner: DbtProjectRoundtripCapabilityStatusRenderer
