@@ -1,25 +1,22 @@
 /** Owned concern: define exact dbt YAML description-edit contracts and failure vocabulary. */
 
+import type {
+  ApplyDbtYamlDescriptionEditRequest,
+  DbtYamlDescriptionResourceIdentity,
+  ProposeDbtYamlDescriptionEditRequest,
+  RevertDbtYamlDescriptionEditRequest,
+} from '@dvt/contracts';
+
 import type { WorkspaceStorageScope } from './workspaceFiles.js';
 
-export const DBT_YAML_DESCRIPTION_RESOURCE_TYPE = {
-  model: 'model',
-  seed: 'seed',
-  snapshot: 'snapshot',
-  source: 'source',
-  exposure: 'exposure',
-  metric: 'metric',
-} as const;
-
-export type DbtYamlDescriptionResourceType =
-  (typeof DBT_YAML_DESCRIPTION_RESOURCE_TYPE)[keyof typeof DBT_YAML_DESCRIPTION_RESOURCE_TYPE];
-
-export type DbtYamlDescriptionResourceIdentity = Readonly<{
-  uniqueId: string;
-  resourceType: DbtYamlDescriptionResourceType;
-  name: string;
-  sourceName?: string | undefined;
-}>;
+export type {
+  DbtYamlDescriptionAnalysisReceipt,
+  DbtYamlDescriptionAppliedReceipt,
+  DbtYamlDescriptionEditProposal,
+  DbtYamlDescriptionResourceIdentity,
+  DbtYamlDescriptionResourceType,
+  DbtYamlDescriptionRevertedReceipt,
+} from '@dvt/contracts';
 
 export type DbtYamlDescriptionMutation = Readonly<{
   content: string;
@@ -37,77 +34,23 @@ export interface IDbtYamlDescriptionMutator {
   ): DbtYamlDescriptionMutation;
 }
 
-export type DbtYamlDescriptionEditProposal = Readonly<{
-  schemaVersion: 'dbt-yaml-description-edit-proposal.v1';
-  canvasId: string;
-  resource: DbtYamlDescriptionResourceIdentity;
-  path: string;
-  previousDescription: string | null;
-  nextDescription: string | null;
-  expectedContentSha256: string;
-  candidateContent: string;
-  candidateContentSha256: string;
-  unifiedDiff: string;
-  proposalDigest: string;
-}>;
+export type ProposeDbtYamlDescriptionEditInput = Readonly<
+  ProposeDbtYamlDescriptionEditRequest & {
+    scope: WorkspaceStorageScope;
+  }
+>;
 
-export type DbtYamlDescriptionAnalysisReceipt = Readonly<{
-  freshness: 'fresh' | 'stale-last-valid' | 'invalid' | 'unavailable';
-  analysisSha256: string;
-  projectContentSetSha256: string;
-}>;
+export type ApplyDbtYamlDescriptionEditInput = Readonly<
+  ApplyDbtYamlDescriptionEditRequest & {
+    scope: WorkspaceStorageScope;
+  }
+>;
 
-export type DbtYamlDescriptionAppliedReceipt = Readonly<{
-  schemaVersion: 'dbt-yaml-description-edit-applied-receipt.v1';
-  receiptId: string;
-  canvasId: string;
-  resource: DbtYamlDescriptionResourceIdentity;
-  path: string;
-  previousDescription: string | null;
-  nextDescription: string | null;
-  expectedContentSha256: string;
-  appliedContentSha256: string;
-  proposalDigest: string;
-  idempotencyKey: string;
-  requestHash: string;
-  deduplicated: boolean;
-  analysis: DbtYamlDescriptionAnalysisReceipt;
-}>;
-
-export type DbtYamlDescriptionRevertedReceipt = Readonly<{
-  schemaVersion: 'dbt-yaml-description-edit-reverted-receipt.v1';
-  receiptId: string;
-  appliedReceiptId: string;
-  canvasId: string;
-  resource: DbtYamlDescriptionResourceIdentity;
-  path: string;
-  restoredDescription: string | null;
-  expectedContentSha256: string;
-  revertedContentSha256: string;
-  idempotencyKey: string;
-  requestHash: string;
-  deduplicated: boolean;
-  analysis: DbtYamlDescriptionAnalysisReceipt;
-}>;
-
-export type ProposeDbtYamlDescriptionEditInput = Readonly<{
-  scope: WorkspaceStorageScope;
-  canvasId: string;
-  resourceUniqueId: string;
-  nextDescription: string | null;
-}>;
-
-export type ApplyDbtYamlDescriptionEditInput = Readonly<{
-  scope: WorkspaceStorageScope;
-  proposal: DbtYamlDescriptionEditProposal;
-  idempotencyKey: string;
-}>;
-
-export type RevertDbtYamlDescriptionEditInput = Readonly<{
-  scope: WorkspaceStorageScope;
-  appliedReceipt: DbtYamlDescriptionAppliedReceipt;
-  idempotencyKey: string;
-}>;
+export type RevertDbtYamlDescriptionEditInput = Readonly<
+  RevertDbtYamlDescriptionEditRequest & {
+    scope: WorkspaceStorageScope;
+  }
+>;
 
 export class DbtYamlDescriptionResourceNotFoundError extends Error {
   public constructor(readonly resourceUniqueId: string) {

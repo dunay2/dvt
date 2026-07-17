@@ -1,4 +1,9 @@
 /** Owned concern: adapt governed dbt YAML description proposal and mutation rails to HTTP. */
+import {
+  ApplyDbtYamlDescriptionEditRequestSchema,
+  ProposeDbtYamlDescriptionEditRequestSchema,
+  RevertDbtYamlDescriptionEditRequestSchema,
+} from '@dvt/contracts';
 import type { FastifyInstance, FastifyReply } from 'fastify';
 
 import { AUTHORIZATION_ACTION } from '../../application/ports/accessDecision.js';
@@ -26,11 +31,6 @@ import {
   parseDbtProjectFileScope,
   type DbtProjectFileScopeQuery,
 } from './dbtProjectFileRouteAuthorization.js';
-import {
-  DbtYamlDescriptionApplyBodySchema,
-  DbtYamlDescriptionProposalBodySchema,
-  DbtYamlDescriptionRevertBodySchema,
-} from './dbtYamlDescriptionEditRouteSchemas.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
 import { badRequestIssue } from './routeParseIssue.js';
@@ -51,7 +51,7 @@ export function registerDbtYamlDescriptionEditRoutes(
     RUNTIME_ROUTE_PATH.dbtYamlDescriptionEditProposals,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
-      const parsed = DbtYamlDescriptionProposalBodySchema.safeParse(request.body);
+      const parsed = ProposeDbtYamlDescriptionEditRequestSchema.safeParse(request.body);
       if (!parsed.success) return respondInvalidRequest(reply);
       const authorized = await authorizeRequest(
         request,
@@ -75,7 +75,7 @@ export function registerDbtYamlDescriptionEditRoutes(
     RUNTIME_ROUTE_PATH.dbtYamlDescriptionEditApplications,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
-      const parsed = DbtYamlDescriptionApplyBodySchema.safeParse(request.body);
+      const parsed = ApplyDbtYamlDescriptionEditRequestSchema.safeParse(request.body);
       if (!parsed.success) return respondInvalidRequest(reply);
       const authorized = await authorizeRequest(
         request,
@@ -99,7 +99,7 @@ export function registerDbtYamlDescriptionEditRoutes(
     RUNTIME_ROUTE_PATH.dbtYamlDescriptionEditReverts,
     { config: { rateLimit: deps.rateLimit } },
     async (request, reply) => {
-      const parsed = DbtYamlDescriptionRevertBodySchema.safeParse(request.body);
+      const parsed = RevertDbtYamlDescriptionEditRequestSchema.safeParse(request.body);
       if (!parsed.success) return respondInvalidRequest(reply);
       const authorized = await authorizeRequest(
         request,
