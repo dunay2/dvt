@@ -25,7 +25,7 @@ export const canvasViewExecutionCopyEs = {
   canvasExecutionUnavailableMessage:
     'Execution Preview y el arranque de run no estan disponibles para este tipo de canvas.',
   dbtExplicitSelectionRequiresExecutableResourceMessage:
-    'La seleccion contiene recursos no disponibles o no ejecutables. Vuelve a seleccionar modelos, tests o snapshots DBT disponibles para reemplazarla.',
+    'La seleccion contiene recursos no disponibles o no ejecutables. Resuelve la seleccion explicita en Operaciones antes del Preview.',
   planCreatedMessage: 'Execution Preview creado',
   runStartedMessage: 'Run arrancado',
   planStatusRunUnavailableMessage: 'El arranque de runs no esta disponible en este contexto.',
@@ -35,4 +35,29 @@ export const canvasViewExecutionCopyEs = {
   planStatusPreviewNotPersistedMessage:
     'Execution Preview no esta persistido. Previsualiza la ejecucion para crear un preview persistido.',
   planStatusPreviewReadyMessage: 'El preview actual esta listo para arrancar.',
+  selectionRecoveryTitle: 'Selección de ejecución',
+  selectionRecoveryReadyStatus: 'lista',
+  selectionRecoveryBlockedStatus: 'bloqueada',
+  selectionRecoveryRequestedRootsLabel: 'Raíces solicitadas',
+  selectionRecoveryUnavailableRootsLabel: 'Raíces no disponibles',
+  selectionRecoveryNonExecutableRootsLabel: 'Raíces no ejecutables',
+  selectionRecoveryDerivedDependenciesLabel: 'Dependencias derivadas',
+  selectionRecoveryAdmittedScopeLabel: 'Alcance admitido',
+  selectionRecoveryLastPreviewRevisionLabel: 'Última revisión del preview',
+  selectionRecoveryEmptyValue: 'Ninguno',
+  selectionRecoveryDiscardUnavailableAction: 'Descartar selección no disponible',
+  selectionRecoveryUseWorkspaceScopeAction: 'Usar alcance del workspace',
+  selectionRecoveryRefreshAnalysisAction: 'Mantener bloqueo y actualizar análisis',
+  selectionRecoveryRefreshingAnalysisAction: 'Actualizando análisis autoritativo...',
+  selectionRecoveryRefreshFailureMessage: 'No se pudo actualizar el análisis autoritativo.',
+  selectionRecoveryProblemSummary: 'La selección de ejecución requiere recuperación.',
+  selectionRecoveryProblemDetail:
+    'Las raíces solicitadas no disponibles o no ejecutables deben resolverse antes del Preview.',
+  selectionRecoveryBlockerLabel: 'Selección de ejecución',
+  selectionRecoveryDiscardReceiptTemplate:
+    'Raíces no disponibles descartadas: {affected}. Raíces explícitas conservadas: {retained}.',
+  selectionRecoveryWorkspaceReceiptTemplate:
+    'Raíces explícitas reemplazadas: {affected} por el alcance del workspace.',
+  selectionRecoveryRefreshReceiptTemplate:
+    'Raíces solicitadas conservadas: {retained}. Análisis autoritativo actualizado.',
 } satisfies Partial<CanvasViewCopy>;

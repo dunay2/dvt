@@ -3,7 +3,11 @@ import type { ExecutionSelection, GenericGraphSourceV1, GenericGraphNodeV1 } fro
 import { parseExecutionSelection } from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import { resolveDbtExecutableStepKind, resolveDbtExecutionScope } from './dbtExecutionScopePolicy';
+import {
+  buildDbtExecutionScopeGraph,
+  resolveDbtExecutableStepKind,
+  resolveDbtExecutionScope,
+} from './dbtExecutionScopePolicy';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
@@ -31,21 +35,11 @@ export function resolveDbtExecutionScopeNodeIds(args: {
   selectionIntent: CanvasExecutionSelectionIntent;
   workspaceNodeIds: readonly string[];
 }) {
-  const nodeById = new Map(args.nodes.map((node) => [node.id, node]));
-  const executableNodeIds = args.workspaceNodeIds.filter((nodeId) => {
-    const node = nodeById.get(nodeId);
-    return node != null && resolveDbtExecutableStepKind(node) !== null;
+  const { executableNodeIds, dependencyIdsByNodeId } = buildDbtExecutionScopeGraph({
+    nodes: args.nodes,
+    edges: args.edges,
+    workspaceNodeIds: args.workspaceNodeIds,
   });
-  const executableNodeIdSet = new Set(executableNodeIds);
-  const dependencyIdsByNodeId = new Map<string, string[]>();
-
-  for (const edge of args.edges) {
-    if (!executableNodeIdSet.has(edge.sourceId) || !executableNodeIdSet.has(edge.targetId))
-      continue;
-    const dependencyIds = dependencyIdsByNodeId.get(edge.targetId) ?? [];
-    dependencyIds.push(edge.sourceId);
-    dependencyIdsByNodeId.set(edge.targetId, dependencyIds);
-  }
 
   return resolveDbtExecutionScope({
     selectionIntent: args.selectionIntent,

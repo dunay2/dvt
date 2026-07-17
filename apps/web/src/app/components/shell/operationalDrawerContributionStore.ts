@@ -1,5 +1,10 @@
 /** Owned concern: hold the active route contribution to the shell operational drawer. */
 import { create } from 'zustand';
+import type {
+  CanvasExecutionSelectionRecoveryCommands,
+  CanvasExecutionSelectionRecoveryReadModel,
+} from '../../types/canvasExecutionSelectionRecovery';
+import type { OperationalDrawerSelectionRecoveryMessages } from './operationalDrawerSelectionRecoveryMessages';
 
 export type OperationalDrawerTabId = 'log' | 'problems' | 'runs' | 'preview';
 
@@ -40,6 +45,11 @@ export type OperationalDrawerContribution = Readonly<{
     blockers: readonly string[];
     canPreview: boolean;
     onPreviewExecutionPlan: () => void;
+    selectionRecovery: Readonly<{
+      model: CanvasExecutionSelectionRecoveryReadModel;
+      commands: CanvasExecutionSelectionRecoveryCommands;
+      messages: OperationalDrawerSelectionRecoveryMessages;
+    }> | null;
   }>;
 }>;
 

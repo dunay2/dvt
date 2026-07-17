@@ -25,6 +25,10 @@ import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 import type { CanvasSourceImportCompletionContext } from './canvasMutationHandlerContracts';
 import type { CanvasContextMenuPosition } from './canvasInteractionCommandSurface';
+import type {
+  CanvasExecutionSelectionRecoveryCommands,
+  CanvasExecutionSelectionRecoveryReadModel,
+} from '../../types/canvasExecutionSelectionRecovery';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -104,6 +108,7 @@ export type CanvasShellChromeState = {
   canImportProjectSnapshot: boolean;
   planStatusSummary: string;
   planRunReadiness: PlanRunReadinessReadModel;
+  executionSelectionRecovery: CanvasExecutionSelectionRecoveryReadModel | null;
   exclusiveOverlayMode: 'runtime' | 'cost';
   canUseCostOverlay: boolean;
   impactOverlayEnabled: boolean;
@@ -148,6 +153,7 @@ export type CanvasShellChromeCommands = {
   onReloadLatestDraft: () => void;
   onPreviewExecutionPlan: () => void;
   onRun: () => void;
+  executionSelectionRecovery: CanvasExecutionSelectionRecoveryCommands | null;
 };
 
 export type CanvasShellCanvasCommands = {

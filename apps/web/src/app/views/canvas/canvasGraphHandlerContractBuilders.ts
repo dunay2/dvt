@@ -67,6 +67,7 @@ function nodeAuthoring(contracts: CanvasGraphInteractionContracts): CanvasNodeAu
       setEdges: contracts.effects.setEdges,
       setDraftSession: contracts.effects.setDraftSession,
       setSelectedNodes: contracts.effects.setSelectedNodes,
+      reconcileSelectionAfterNodeRemoval: contracts.effects.reconcileSelectionAfterNodeRemoval,
       setInspectorNode: contracts.effects.setInspectorNode,
     },
     policy: {

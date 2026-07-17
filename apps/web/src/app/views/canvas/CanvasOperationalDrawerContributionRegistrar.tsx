@@ -5,6 +5,7 @@ import type { CanvasOperationalDrawerSurfacePolicy } from '../../plugins/canvasS
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import type { PlanRunReadinessBlocker } from './canvasPlanReadiness';
 import type { CanvasShellPanels, CanvasShellChromeState } from './canvasShell.types';
+import type { CanvasExecutionSelectionRecoveryCommands } from '../../types/canvasExecutionSelectionRecovery';
 import { buildCanvasOperationalDrawerContribution } from './canvasOperationalDrawerContribution';
 
 type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
@@ -13,6 +14,7 @@ type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
   chromeState: CanvasShellChromeState;
   onPreviewExecutionPlan: () => void;
   onStartRun: () => void;
+  selectionRecoveryCommands: CanvasExecutionSelectionRecoveryCommands | null;
 }>;
 
 export function CanvasOperationalDrawerContributionRegistrar({
@@ -21,6 +23,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
   panels,
   policy,
   chromeState,
+  selectionRecoveryCommands,
 }: CanvasOperationalDrawerContributionRegistrarProps): null {
   const registerOperationalDrawerContribution = useOperationalDrawerContributionStore(
     (state) => state.registerOperationalDrawerContribution
@@ -51,6 +54,8 @@ export function CanvasOperationalDrawerContributionRegistrar({
             blockerKey.length === 0 ? [] : (blockerKey.split('|') as PlanRunReadinessBlocker[]),
         },
         planStatusSummary: chromeState.planStatusSummary,
+        selectionRecovery: chromeState.executionSelectionRecovery,
+        selectionRecoveryCommands,
         onPreviewExecutionPlan: () => latestCommandsRef.current.onPreviewExecutionPlan(),
         onStartRun: () => latestCommandsRef.current.onStartRun(),
       }),
@@ -62,6 +67,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
       chromeState.planRunReadiness.status,
       chromeState.planRunReadiness.summary,
       chromeState.planStatusSummary,
+      chromeState.executionSelectionRecovery,
       logTab,
       panels.activeRunId,
       panels.userPermissions.canPlan,
@@ -69,6 +75,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
       previewTab,
       problemsTab,
       runsTab,
+      selectionRecoveryCommands,
     ]
   );
 

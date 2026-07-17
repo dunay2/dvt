@@ -70,6 +70,7 @@ export function useCanvasAuthoringRuntimeDraftFlow({
 
   return {
     graphModel,
+    refreshGraphAuthority: graphDraftQuery.refetch,
     draftReadModel: graphDraftQuery.data,
     draftSession,
     setDraftSession,

@@ -17,6 +17,7 @@ import type {
   OperationalDrawerContribution,
   OperationalDrawerTabId,
 } from './operationalDrawerContributionStore';
+import { OperationalDrawerSelectionRecoveryView } from './OperationalDrawerSelectionRecoveryView';
 
 export function BottomOperationalProblemsPanel({
   contribution,
@@ -86,24 +87,33 @@ export function BottomOperationalPreviewPanel({
       ariaLabel="Canvas execution preview"
       textSm
     >
-      <OperationalDrawerPreviewLayout
-        action={
-          <OperationalDrawerPrimaryAction
-            disabled={!contribution.preview.canPreview}
-            onClick={contribution.preview.onPreviewExecutionPlan}
-          >
-            Preview execution plan
-          </OperationalDrawerPrimaryAction>
-        }
-      >
-        <OperationalDrawerPreviewSummary
-          blockers={contribution.preview.blockers}
-          statusLabel={
-            contribution.preview.status === 'ready' ? 'Preview ready' : 'Preview blocked'
+      <>
+        <OperationalDrawerPreviewLayout
+          action={
+            <OperationalDrawerPrimaryAction
+              disabled={!contribution.preview.canPreview}
+              onClick={contribution.preview.onPreviewExecutionPlan}
+            >
+              Preview execution plan
+            </OperationalDrawerPrimaryAction>
           }
-          summary={contribution.preview.summary}
-        />
-      </OperationalDrawerPreviewLayout>
+        >
+          <OperationalDrawerPreviewSummary
+            blockers={contribution.preview.blockers}
+            statusLabel={
+              contribution.preview.status === 'ready' ? 'Preview ready' : 'Preview blocked'
+            }
+            summary={contribution.preview.summary}
+          />
+        </OperationalDrawerPreviewLayout>
+        {contribution.preview.selectionRecovery == null ? null : (
+          <OperationalDrawerSelectionRecoveryView
+            model={contribution.preview.selectionRecovery.model}
+            commands={contribution.preview.selectionRecovery.commands}
+            messages={contribution.preview.selectionRecovery.messages}
+          />
+        )}
+      </>
     </OperationalDrawerPanelSurface>
   );
 }

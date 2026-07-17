@@ -84,6 +84,8 @@ type CanvasExecutionDefaultsDto = {
   transformationValidation: CanvasController['transformationValidation'];
   planModalOpen: CanvasController['planModalOpen'];
   currentPlan: CanvasController['currentPlan'];
+  executionSelectionRecovery: CanvasController['executionSelectionRecovery'];
+  executionSelectionRecoveryCommands: CanvasController['executionSelectionRecoveryCommands'];
   confirmEdgeModal: CanvasController['confirmEdgeModal'];
 };
 
@@ -255,6 +257,8 @@ function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
     transformationValidation: buildDefaultTransformationValidation(),
     planModalOpen: false,
     currentPlan: null,
+    executionSelectionRecovery: null,
+    executionSelectionRecoveryCommands: null,
     confirmEdgeModal: { open: false, edge: null },
   } satisfies CanvasExecutionDefaultsDto;
 }

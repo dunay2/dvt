@@ -118,6 +118,7 @@ export default function CanvasShell({
           chromeState={chromeState}
           onPreviewExecutionPlan={chromeCommands.onPreviewExecutionPlan}
           onStartRun={chromeCommands.onRun}
+          selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}
         />
       )}
       <CanvasShellMainPanel

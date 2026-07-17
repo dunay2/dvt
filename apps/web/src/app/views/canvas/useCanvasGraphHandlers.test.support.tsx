@@ -103,6 +103,7 @@ type RenderGraphHandlersHookArgs = {
   setEdges?: ReturnType<typeof vi.fn>;
   setDraftSession?: ReturnType<typeof vi.fn>;
   setSelectedNodes?: ReturnType<typeof vi.fn>;
+  reconcileSelectionAfterNodeRemoval?: ReturnType<typeof vi.fn>;
   setInspectorNode?: ReturnType<typeof vi.fn>;
   toggleInspectorPanel?: ReturnType<typeof vi.fn>;
   onLayoutComplete?: ReturnType<typeof vi.fn>;
@@ -134,6 +135,7 @@ export function renderGraphHandlersHook({
   setEdges = vi.fn(),
   setDraftSession = vi.fn(),
   setSelectedNodes = vi.fn(),
+  reconcileSelectionAfterNodeRemoval = setSelectedNodes,
   setInspectorNode = vi.fn(),
   toggleInspectorPanel = vi.fn(),
   onLayoutComplete = vi.fn(),
@@ -181,6 +183,7 @@ export function renderGraphHandlersHook({
       setEdges,
       setDraftSession,
       setSelectedNodes,
+      reconcileSelectionAfterNodeRemoval,
       setInspectorNode,
       toggleInspectorPanel,
       onLayoutComplete,

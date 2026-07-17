@@ -4,9 +4,7 @@ import { useCallback } from 'react';
 import { toast } from 'sonner';
 
 import { canvasGraphLifecycle } from './canvasGraphLifecycle';
-import type {
-  CanvasNodeRemovalContracts,
-} from './canvasGraphHandlerContracts';
+import type { CanvasNodeRemovalContracts } from './canvasGraphHandlerContracts';
 import { applyCanvasGraphLifecycleFallout } from './canvasGraphLifecycleFallout';
 import { canvasViewCopy, formatCanvasNodeRemovedMessage } from './copy';
 
@@ -26,7 +24,7 @@ export function useCanvasNodeRemovalHandlers({
     setNodes,
     setEdges,
     setDraftSession,
-    setSelectedNodes,
+    reconcileSelectionAfterNodeRemoval,
     setInspectorNode,
   } = effects;
   const { canEditEdges } = policy;
@@ -59,7 +57,7 @@ export function useCanvasNodeRemovalHandlers({
           setNodes,
           setEdges,
           setDraftSession,
-          setSelectedNodes,
+          setSelectedNodes: reconcileSelectionAfterNodeRemoval,
           setInspectorNode,
         });
         toast.success(formatCanvasNodeRemovedMessage(removeResult.removedNodeName));
@@ -76,7 +74,7 @@ export function useCanvasNodeRemovalHandlers({
       setEdges,
       setInspectorNode,
       setNodes,
-      setSelectedNodes,
+      reconcileSelectionAfterNodeRemoval,
     ]
   );
 

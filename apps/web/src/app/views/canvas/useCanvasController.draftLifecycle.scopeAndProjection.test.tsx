@@ -1,3 +1,4 @@
+import { act } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -32,17 +33,17 @@ function readLatestExecutionCall(harness: CanvasControllerHarness):
     | undefined;
 }
 
-function readLatestGraphSelectionSetter(
+function readLatestGraphRemovalSelectionReconciler(
   harness: CanvasControllerHarness
 ): (nodeIds: string[]) => void {
   const graphHandlerArgs = harness.mocks.useCanvasGraphHandlers.mock.calls.at(-1)?.[0] as
-    { setSelectedNodes?: (nodeIds: string[]) => void } | undefined;
+    { reconcileSelectionAfterNodeRemoval?: (nodeIds: string[]) => void } | undefined;
 
-  if (!graphHandlerArgs?.setSelectedNodes) {
-    throw new Error('Canvas graph handlers did not receive a selection lifecycle adapter.');
+  if (!graphHandlerArgs?.reconcileSelectionAfterNodeRemoval) {
+    throw new Error('Canvas graph handlers did not receive a node-removal selection adapter.');
   }
 
-  return graphHandlerArgs.setSelectedNodes;
+  return graphHandlerArgs.reconcileSelectionAfterNodeRemoval;
 }
 
 function expectSelectionPrunedToVisibleScope(harness: CanvasControllerHarness): void {
@@ -186,9 +187,25 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
       nodeIds: ['node_2'],
     });
     expect(readLatestExecutionCall(harness)?.workspaceNodeIds).toEqual(['node_1']);
+    expect(harness.getLatestResult()?.executionSelectionRecovery).toMatchObject({
+      queryRail: 'CollectCanvasExecutionSelection',
+      commandRail: 'RecoverCanvasExecutionSelection',
+      status: 'blocked',
+      requestedRootNodeIds: ['node_2'],
+      unavailableRootNodeIds: ['node_2'],
+      admittedScopeNodeIds: [],
+      canUseWorkspaceScope: false,
+    });
+
+    harness.state.store.setExecutionSelectionIntent.mockClear();
+    act(() => {
+      harness?.getLatestResult()?.executionSelectionRecoveryCommands?.useWorkspaceScope();
+    });
+
+    expect(harness.state.store.setExecutionSelectionIntent).not.toHaveBeenCalled();
   });
 
-  it('retains hidden DBT intent when graph lifecycle removes the visible selected member', async () => {
+  it('preserves the only selected DBT root when graph removal reports no visible selection', async () => {
     harness = await createHarnessWithDraft(
       buildRemoteDraftRecord(
         {
@@ -205,22 +222,14 @@ describe('useCanvasController draft lifecycle scope and projection', () => {
     );
     harness.state.store.setExecutionSelectionIntent({
       mode: 'explicit',
-      nodeIds: ['node_1', 'node_2'],
+      nodeIds: ['node_1'],
     });
     await harness.renderProbe();
     harness.state.store.setExecutionSelectionIntent.mockClear();
 
-    readLatestGraphSelectionSetter(harness)([]);
+    readLatestGraphRemovalSelectionReconciler(harness)([]);
 
-    expect(harness.state.store.setExecutionSelectionIntent).toHaveBeenCalledWith({
-      mode: 'explicit',
-      nodeIds: ['node_2'],
-    });
-    await harness.renderProbe();
-    expect(readLatestExecutionCall(harness)?.selectionIntent).toEqual({
-      mode: 'explicit',
-      nodeIds: ['node_2'],
-    });
+    expect(harness.state.store.setExecutionSelectionIntent).not.toHaveBeenCalled();
   });
 
   it('projects the full persisted draft from protected semantic truth even before snapshot hydration catches up', async () => {

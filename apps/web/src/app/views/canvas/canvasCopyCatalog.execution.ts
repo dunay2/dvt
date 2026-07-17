@@ -67,7 +67,7 @@ export const canvasViewExecutionCopyByKey = {
   dbtExplicitSelectionRequiresExecutableResourceMessage: {
     key: 'canvas.dbt.explicitSelectionRequiresExecutableResourceMessage',
     fallback:
-      'Execution selection contains unavailable or non-executable resources. Re-select available DBT models, tests, or snapshots to replace it.',
+      'Execution selection contains unavailable or non-executable resources. Resolve the explicit selection in Operations before Preview.',
   },
   planCreatedMessage: {
     key: 'canvas.plan.createdMessage',
@@ -98,5 +98,89 @@ export const canvasViewExecutionCopyByKey = {
   planStatusPreviewReadyMessage: {
     key: 'canvas.planStatus.previewReadyMessage',
     fallback: 'Preview is current and ready to run.',
+  },
+  selectionRecoveryTitle: {
+    key: 'canvas.selectionRecovery.title',
+    fallback: 'Execution selection',
+  },
+  selectionRecoveryReadyStatus: {
+    key: 'canvas.selectionRecovery.readyStatus',
+    fallback: 'ready',
+  },
+  selectionRecoveryBlockedStatus: {
+    key: 'canvas.selectionRecovery.blockedStatus',
+    fallback: 'blocked',
+  },
+  selectionRecoveryRequestedRootsLabel: {
+    key: 'canvas.selectionRecovery.requestedRootsLabel',
+    fallback: 'Requested roots',
+  },
+  selectionRecoveryUnavailableRootsLabel: {
+    key: 'canvas.selectionRecovery.unavailableRootsLabel',
+    fallback: 'Unavailable roots',
+  },
+  selectionRecoveryNonExecutableRootsLabel: {
+    key: 'canvas.selectionRecovery.nonExecutableRootsLabel',
+    fallback: 'Non-executable roots',
+  },
+  selectionRecoveryDerivedDependenciesLabel: {
+    key: 'canvas.selectionRecovery.derivedDependenciesLabel',
+    fallback: 'Derived dependencies',
+  },
+  selectionRecoveryAdmittedScopeLabel: {
+    key: 'canvas.selectionRecovery.admittedScopeLabel',
+    fallback: 'Admitted scope',
+  },
+  selectionRecoveryLastPreviewRevisionLabel: {
+    key: 'canvas.selectionRecovery.lastPreviewRevisionLabel',
+    fallback: 'Last preview revision',
+  },
+  selectionRecoveryEmptyValue: {
+    key: 'canvas.selectionRecovery.emptyValue',
+    fallback: 'None',
+  },
+  selectionRecoveryDiscardUnavailableAction: {
+    key: 'canvas.selectionRecovery.discardUnavailableAction',
+    fallback: 'Discard unavailable selection',
+  },
+  selectionRecoveryUseWorkspaceScopeAction: {
+    key: 'canvas.selectionRecovery.useWorkspaceScopeAction',
+    fallback: 'Use workspace scope',
+  },
+  selectionRecoveryRefreshAnalysisAction: {
+    key: 'canvas.selectionRecovery.refreshAnalysisAction',
+    fallback: 'Keep blocked and refresh analysis',
+  },
+  selectionRecoveryRefreshingAnalysisAction: {
+    key: 'canvas.selectionRecovery.refreshingAnalysisAction',
+    fallback: 'Refreshing authoritative analysis...',
+  },
+  selectionRecoveryRefreshFailureMessage: {
+    key: 'canvas.selectionRecovery.refreshFailureMessage',
+    fallback: 'Authoritative analysis could not be refreshed.',
+  },
+  selectionRecoveryProblemSummary: {
+    key: 'canvas.selectionRecovery.problemSummary',
+    fallback: 'Execution selection requires recovery.',
+  },
+  selectionRecoveryProblemDetail: {
+    key: 'canvas.selectionRecovery.problemDetail',
+    fallback: 'Unavailable or non-executable requested roots must be resolved before Preview.',
+  },
+  selectionRecoveryBlockerLabel: {
+    key: 'canvas.selectionRecovery.blockerLabel',
+    fallback: 'Execution selection',
+  },
+  selectionRecoveryDiscardReceiptTemplate: {
+    key: 'canvas.selectionRecovery.discardReceiptTemplate',
+    fallback: 'Discarded unavailable roots: {affected}. Retained explicit roots: {retained}.',
+  },
+  selectionRecoveryWorkspaceReceiptTemplate: {
+    key: 'canvas.selectionRecovery.workspaceReceiptTemplate',
+    fallback: 'Replaced explicit roots: {affected} with workspace scope.',
+  },
+  selectionRecoveryRefreshReceiptTemplate: {
+    key: 'canvas.selectionRecovery.refreshReceiptTemplate',
+    fallback: 'Kept requested roots: {retained}. Authoritative analysis refreshed.',
   },
 } satisfies CanvasCopySection;

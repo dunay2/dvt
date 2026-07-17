@@ -26,6 +26,12 @@ import {
   reconcileDbtExecutionSelectionVisibleSubset,
 } from './dbtExecutionScopePolicy';
 import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
+import {
+  buildCanvasExecutionSelectionRecoveryGraph,
+  resolveCanvasExecutionSelectionLastPreviewRevision,
+} from './canvasExecutionSelectionRecovery';
+import { refreshCanvasExecutionSelectionAuthority } from './canvasExecutionSelectionRecoveryAuthorityAdapter';
+import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
 
 export function useCanvasController() {
   const environment = useCanvasControllerEnvironment();
@@ -124,6 +130,21 @@ export function useCanvasController() {
   const canMutateActiveCanvas = runtimePolicy.commands.canMutateGraph;
   const canSelectExecution = runtimePolicy.commands.canPlan || runtimePolicy.commands.canRun;
   const preservesDbtExecutionSelectionIntent = canvasAuthoringMode === 'dbt';
+  const executionSelectionIntent = useMemo(
+    () =>
+      createCanvasExecutionSelectionIntent(
+        preservesDbtExecutionSelectionIntent
+          ? executionScope.requestedNodeIds
+          : executionScope.selectedNodeIds,
+        executionScope.selectionMode
+      ),
+    [
+      executionScope.requestedNodeIds,
+      executionScope.selectedNodeIds,
+      executionScope.selectionMode,
+      preservesDbtExecutionSelectionIntent,
+    ]
+  );
   const setSelectedNodesForActiveCanvas = useCallback(
     (nodeIds: string[]) => {
       if (preservesDbtExecutionSelectionIntent) {
@@ -146,6 +167,13 @@ export function useCanvasController() {
       store.setExecutionSelectionIntent,
       store.setSelectedNodes,
     ]
+  );
+  const reconcileSelectionAfterNodeRemoval = useCallback(
+    (remainingVisibleNodeIds: string[]) => {
+      if (preservesDbtExecutionSelectionIntent) return;
+      setSelectedNodesForActiveCanvas(remainingVisibleNodeIds);
+    },
+    [preservesDbtExecutionSelectionIntent, setSelectedNodesForActiveCanvas]
   );
 
   useCanvasSelectionSync({
@@ -178,6 +206,7 @@ export function useCanvasController() {
     selectedNodeIds: store.selectedNodeIds,
     setDraftSession,
     setSelectedNodes: setSelectedNodesForActiveCanvas,
+    reconcileSelectionAfterNodeRemoval,
     setInspectorNode: store.setInspectorNode,
     showInspectorPanel: store.showInspectorPanel,
     setCurrentPlan: store.setCurrentPlan,
@@ -205,6 +234,7 @@ export function useCanvasController() {
     setEdges: graphModel.setEdges,
     setDraftSession,
     setSelectedNodes: setSelectedNodesForActiveCanvas,
+    reconcileSelectionAfterNodeRemoval,
     setInspectorNode: store.setInspectorNode,
     toggleInspectorPanel: store.toggleInspectorPanel,
     onLayoutComplete: persistence.handleNodePositionsSave,
@@ -228,7 +258,6 @@ export function useCanvasController() {
       store.setExecutionSelectionIntent(
         applyDbtExecutionSelectionToggle({
           requestedNodeIds: executionScope.requestedNodeIds,
-          visibleNodeIds: executionScope.workspaceNodeIds,
           nodeId,
           shouldSelect,
         })
@@ -236,7 +265,6 @@ export function useCanvasController() {
     },
     [
       executionScope.requestedNodeIds,
-      executionScope.workspaceNodeIds,
       graphHandlers.handleToggleNodeSelection,
       preservesDbtExecutionSelectionIntent,
       store.setExecutionSelectionIntent,
@@ -251,12 +279,7 @@ export function useCanvasController() {
     executionStrategy,
     canonicalNodes: visibleScope.canonicalNodes,
     canonicalEdges: visibleScope.canonicalEdges,
-    selectionIntent: createCanvasExecutionSelectionIntent(
-      preservesDbtExecutionSelectionIntent
-        ? executionScope.requestedNodeIds
-        : executionScope.selectedNodeIds,
-      executionScope.selectionMode
-    ),
+    selectionIntent: executionSelectionIntent,
     workspaceNodeIds: executionScope.workspaceNodeIds,
     flushDraftForExecution: authoringRuntime.flushDraftForExecution,
     canPlan: runtimePolicy.commands.canPlan,
@@ -271,6 +294,40 @@ export function useCanvasController() {
     setBottomDrawerHeight: store.setBottomDrawerHeight,
     toggleBottomDrawer: store.toggleBottomDrawer,
     onRunStarted: navigationActions.handleRunStarted,
+  });
+  const executionSelectionRecoveryGraph = useMemo(
+    () =>
+      buildCanvasExecutionSelectionRecoveryGraph({
+        canonicalNodes: visibleScope.canonicalNodes,
+        canonicalEdges: visibleScope.canonicalEdges,
+        workspaceNodeIds: executionScope.workspaceNodeIds,
+        plannerGraphSource:
+          executionStrategy?.kind === 'dbt_project_file_preview'
+            ? executionStrategy.plannerGraphSource
+            : null,
+      }),
+    [
+      executionScope.workspaceNodeIds,
+      executionStrategy,
+      visibleScope.canonicalEdges,
+      visibleScope.canonicalNodes,
+    ]
+  );
+  const refetchGraphAuthority = authoringRuntime.refreshGraphAuthority;
+  const refreshExecutionSelectionAnalysis = useCallback(
+    () => refreshCanvasExecutionSelectionAuthority(refetchGraphAuthority),
+    [refetchGraphAuthority]
+  );
+  const executionSelectionRecovery = useCanvasExecutionSelectionRecovery({
+    enabled: preservesDbtExecutionSelectionIntent,
+    selectionIntent: executionSelectionIntent,
+    workspaceNodeIds: executionScope.workspaceNodeIds,
+    executableNodeIds: executionSelectionRecoveryGraph.executableNodeIds,
+    dependencyIdsByNodeId: executionSelectionRecoveryGraph.dependencyIdsByNodeId,
+    lastPreviewRevision: resolveCanvasExecutionSelectionLastPreviewRevision(store.currentPlan),
+    canRefreshAnalysis: true,
+    setSelectionIntent: store.setExecutionSelectionIntent,
+    refreshAnalysis: refreshExecutionSelectionAnalysis,
   });
 
   const { transformationValidation, nodesWithImpact, inspectorNode } = useCanvasControllerReadModel(
@@ -314,5 +371,6 @@ export function useCanvasController() {
       inspectorNode,
     },
     inspectorCommands,
+    executionSelectionRecovery,
   });
 }

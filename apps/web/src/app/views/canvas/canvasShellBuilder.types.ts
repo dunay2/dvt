@@ -106,6 +106,7 @@ export type CanvasShellChromeStateBuilderArgs = Readonly<{
     | 'canImportProjectSnapshot'
     | 'planStatusSummary'
     | 'planRunReadiness'
+    | 'executionSelectionRecovery'
     | 'exclusiveOverlayMode'
     | 'canUseCostOverlay'
     | 'impactOverlayEnabled'
@@ -156,5 +157,6 @@ export type CanvasShellChromeCommandsBuilderArgs = Readonly<{
     | 'reloadLatestDraft'
     | 'handlePreviewExecutionPlan'
     | 'handleStartRun'
+    | 'executionSelectionRecoveryCommands'
   >;
 }>;

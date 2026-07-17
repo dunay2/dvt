@@ -11,7 +11,7 @@ function graphChange(contracts: CanvasMutationContracts): CanvasGraphChangeContr
     state: contracts.state,
     effects: {
       setDraftSession: contracts.effects.setDraftSession,
-      setSelectedNodes: contracts.effects.setSelectedNodes,
+      reconcileSelectionAfterNodeRemoval: contracts.effects.reconcileSelectionAfterNodeRemoval,
       setInspectorNode: contracts.effects.setInspectorNode,
       onLayoutComplete: contracts.effects.onLayoutComplete,
     },

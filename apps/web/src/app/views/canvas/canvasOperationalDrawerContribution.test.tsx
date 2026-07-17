@@ -107,4 +107,59 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       blockers: [],
     });
   });
+
+  it('projects blocked selection recovery without admitting Preview', () => {
+    const props = buildCanvasShellProps();
+    const recoveryCommands = {
+      discardUnavailable: vi.fn(),
+      useWorkspaceScope: vi.fn(),
+      refreshAnalysis: vi.fn(),
+    };
+    const selectionRecovery = {
+      queryRail: 'CollectCanvasExecutionSelection' as const,
+      commandRail: 'RecoverCanvasExecutionSelection' as const,
+      status: 'blocked' as const,
+      selectionMode: 'explicit' as const,
+      requestedRootNodeIds: ['model.removed', 'model.orders'],
+      unavailableRootNodeIds: ['model.removed'],
+      nonExecutableRootNodeIds: [],
+      derivedDependencyNodeIds: [],
+      admittedScopeNodeIds: [],
+      lastPreviewRevision: 'analysis-sha-1',
+      canDiscardUnavailable: true,
+      canUseWorkspaceScope: true,
+      canRefreshAnalysis: true,
+      pendingStrategy: null,
+      receipt: null,
+      failure: null,
+    };
+
+    const contribution = buildCanvasOperationalDrawerContribution({
+      policy: props.layout.surfaceStrategy!.operationalDrawer!,
+      canPlan: props.panels.userPermissions.canPlan,
+      activeRunId: null,
+      canPlanGraph: false,
+      canStartRun: false,
+      planRunReadiness: props.chromeState.planRunReadiness,
+      planStatusSummary: props.chromeState.planStatusSummary,
+      selectionRecovery,
+      selectionRecoveryCommands: recoveryCommands,
+      onPreviewExecutionPlan: vi.fn(),
+      onStartRun: vi.fn(),
+    });
+
+    expect(contribution.problems.items).toContainEqual(
+      expect.objectContaining({
+        id: 'execution_selection',
+        severity: 'warning',
+        message: 'Execution selection requires recovery.',
+      })
+    );
+    expect(contribution.preview).toMatchObject({
+      status: 'blocked',
+      blockers: expect.arrayContaining(['Execution selection']),
+      canPreview: false,
+      selectionRecovery: { model: selectionRecovery, commands: recoveryCommands },
+    });
+  });
 });
