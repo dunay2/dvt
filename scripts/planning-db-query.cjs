@@ -129,6 +129,10 @@ const {
   readSourceDriftRows,
 } = require('./planning-db/queries/code-symbol-query.cjs');
 const { buildDbSurfaceRows, readDbSurfaceRows } = require('./planning-db/db-surface-inventory.cjs');
+const {
+  buildDbtProjectRoundtripCapabilityStatusRows,
+  readDbtProjectRoundtripCapabilityStatusRows,
+} = require('./planning-db/queries/dbt-project-roundtrip-capability-status-query.cjs');
 
 const architectureSchemaName = 'architecture';
 const componentEngineeringSchemaName = 'component_engineering';
@@ -226,6 +230,7 @@ const knownQueries = new Set([
   'architecture-dependency-classification',
   'architecture-fitness',
   'architecture-fitness-gaps',
+  'dbt-roundtrip-capabilities',
 ]);
 const governanceProjectionQueryNames = new Set([
   'files',
@@ -293,7 +298,7 @@ const featureIdCommonFilterQueryNames = new Set([
   'feature-mechanization-rails',
   'feature-mechanization-validations',
 ]);
-const railCommonFilterQueryNames = new Set(['command-query-rails']);
+const railCommonFilterQueryNames = new Set(['command-query-rails', 'dbt-roundtrip-capabilities']);
 const pathCommonFilterQueryNames = new Set([
   'files',
   'frontend-component-files',
@@ -398,6 +403,12 @@ function buildPlanningDbQueryHelpText(queryName) {
       examples.push(
         `  pnpm planning:db:query ${queryName} --state unmapped_canvas_component_file --limit 20`,
         `  pnpm planning:db:query ${queryName} --component web.component.canvas.CanvasViewport --limit 20`
+      );
+    } else if (queryName === 'dbt-roundtrip-capabilities') {
+      querySpecificOptions.push('--phase <number>');
+      examples.push(
+        `  pnpm planning:db:query ${queryName} --phase 4 --limit 20`,
+        `  pnpm planning:db:query ${queryName} --filter PreviewExecutionPlan --limit 20`
       );
     } else if (
       taskIdCommonFilterQueryNames.has(queryName) ||
@@ -638,6 +649,11 @@ function applyCommonFilter(filters, queryName, value) {
     return;
   }
 
+  if (queryName === 'dbt-roundtrip-capabilities') {
+    filters.rail = value;
+    return;
+  }
+
   if (railCommonFilterQueryNames.has(queryName)) {
     filters.search = value;
     return;
@@ -855,6 +871,10 @@ function parseArgs(args = process.argv.slice(2)) {
       filters.path = value;
       continue;
     }
+    if (arg === '--phase') {
+      filters.phase = value;
+      continue;
+    }
     if (arg === '--state') {
       if (
         queryName === 'frontend-surfaces' ||
@@ -888,7 +908,8 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'architecture-path-mapping' ||
         queryName === 'architecture-dependency-classification' ||
         queryName === 'architecture-fitness' ||
-        queryName === 'architecture-fitness-gaps'
+        queryName === 'architecture-fitness-gaps' ||
+        queryName === 'dbt-roundtrip-capabilities'
       ) {
         filters.state = value;
       } else {
@@ -4348,6 +4369,15 @@ async function runQuery(options = {}) {
       return railRows;
     }
 
+    if (queryName === 'dbt-roundtrip-capabilities') {
+      const rows = await readDbtProjectRoundtripCapabilityStatusRows(client, options.filters || {});
+      const capabilityRows = buildDbtProjectRoundtripCapabilityStatusRows(rows);
+      if (options.print !== false) {
+        printTaskRows(capabilityRows);
+      }
+      return capabilityRows;
+    }
+
     if (queryName === 'rail-vocabulary' || queryName === 'rail-duplicates') {
       const filters =
         queryName === 'rail-duplicates'
@@ -5226,6 +5256,7 @@ module.exports = {
   buildFrontendComponentRows,
   buildFrontendMechanicalTruthRows,
   buildDbSurfaceRows,
+  buildDbtProjectRoundtripCapabilityStatusRows,
   buildKnowledgeIntakeReferenceRows,
   buildKnowledgeIntakeRetirementRows,
   buildFowlerAnalysisCanonicalCoverageRows,
@@ -5328,6 +5359,7 @@ module.exports = {
   readFrontendComponentRows,
   readFrontendMechanicalTruthRows,
   readDbSurfaceRows,
+  readDbtProjectRoundtripCapabilityStatusRows,
   readRepositoryCommandRows,
   readComponentEngineeringRuleCatalogRows,
   readComponentEngineeringRuleEvaluationRows,

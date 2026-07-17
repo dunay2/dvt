@@ -7,6 +7,7 @@ require('./planning-db-query-tests/feature-mechanization.test.cjs');
 require('./planning-db-query-tests/fowler-analysis.test.cjs');
 require('./planning-db-query-tests/governance-refresh.test.cjs');
 require('./planning-db-query-tests/canvas-component-registry-drift.test.cjs');
+require('./planning-db-query-tests/dbt-roundtrip-capabilities.test.cjs');
 
 const {
   buildDocsDispositionRows,

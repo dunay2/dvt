@@ -71,6 +71,10 @@ function buildRefreshStages() {
         script: 'planning:db:inventory:check',
       },
       {
+        id: 'dbt-roundtrip-capability-status',
+        script: 'docs:dbt-roundtrip-capabilities:generate',
+      },
+      {
         id: 'db-surface-inventory',
         script: 'docs:db-surface-inventory:generate',
       },

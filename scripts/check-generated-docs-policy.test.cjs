@@ -207,6 +207,47 @@ test('DB-backed surface inventory can be declared as an ignored local artifact',
   assert.deepEqual(failures, []);
 });
 
+test('DB-backed DBT round-trip capability status can be declared as an ignored local artifact', () => {
+  const checker = loadChecker();
+  const artifact =
+    '.generated-docs/planning/status/generated-dbt-project-roundtrip-capability-status.md';
+  const generator = 'scripts/generate-dbt-project-roundtrip-capability-status.cjs';
+  const failures = checker.validatePolicy(
+    {
+      version: 1,
+      artifactClasses: [
+        {
+          id: 'local-dbt-roundtrip-capability-status',
+          artifacts: [artifact],
+          sourcePaths: [generator],
+          generatorCommand: 'pnpm docs:dbt-roundtrip-capabilities:generate',
+          tracking: 'untracked',
+          manualEditPolicy: 'generator-owned',
+          dbBackedArtifacts: [
+            {
+              artifacts: [artifact],
+              queryView: 'planning_query_store.dbt_project_roundtrip_capability_status_query',
+              importCommand: 'pnpm planning:db:migrate',
+              checkCommand: 'pnpm docs:dbt-roundtrip-capabilities:check',
+            },
+          ],
+        },
+      ],
+    },
+    new Set([generator]),
+    new Set([generator]),
+    {
+      'docs:dbt-roundtrip-capabilities:generate':
+        'node scripts/generate-dbt-project-roundtrip-capability-status.cjs',
+      'docs:dbt-roundtrip-capabilities:check':
+        'node scripts/generate-dbt-project-roundtrip-capability-status.cjs --check',
+      'planning:db:migrate': 'node scripts/planning-db-migrate.cjs',
+    }
+  );
+
+  assert.deepEqual(failures, []);
+});
+
 test('oversized governance file shards fail without DB-backed projection metadata', () => {
   const { artifactRoot, artifactRelPath } = makeOversizedArtifact();
   try {
