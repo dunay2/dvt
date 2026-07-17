@@ -9,6 +9,7 @@ const {
   renderDbtRoundtripCapabilityStatus,
   runDbtRoundtripCapabilityStatusGenerator,
   validateDbtRoundtripCapabilityRows,
+  verifyGitCommitAncestry,
 } = require('./generate-dbt-project-roundtrip-capability-status.cjs');
 
 function currentRow(overrides = {}) {
@@ -94,6 +95,53 @@ test('validateDbtRoundtripCapabilityRows rejects missing and non-ancestor commit
       verifyCommit: async () => ({ exists: true, isAncestor: false }),
     }),
     /is not an ancestor/
+  );
+});
+
+test('verifyGitCommitAncestry hydrates shallow history before rejecting valid evidence', async () => {
+  const calls = [];
+  let hydrated = false;
+  const runGit = (args) => {
+    calls.push(args);
+    if (args[0] === 'cat-file') {
+      return { status: hydrated ? 0 : 1, stdout: '', stderr: '' };
+    }
+    if (args[0] === 'rev-parse') {
+      return { status: 0, stdout: hydrated ? 'false\n' : 'true\n', stderr: '' };
+    }
+    if (args[0] === 'fetch') {
+      hydrated = true;
+      return { status: 0, stdout: '', stderr: '' };
+    }
+    if (args[0] === 'merge-base') {
+      return { status: 0, stdout: '', stderr: '' };
+    }
+    throw new Error(`Unexpected Git command: ${args.join(' ')}`);
+  };
+
+  const result = await verifyGitCommitAncestry(currentRow().reviewed_commit_sha, { runGit });
+
+  assert.deepEqual(result, { exists: true, isAncestor: true });
+  assert.ok(calls.some((args) => args.join(' ') === 'fetch --no-tags --unshallow origin'));
+});
+
+test('verifyGitCommitAncestry fails closed when shallow history cannot be hydrated', async () => {
+  const runGit = (args) => {
+    if (args[0] === 'cat-file') {
+      return { status: 1, stdout: '', stderr: '' };
+    }
+    if (args[0] === 'rev-parse') {
+      return { status: 0, stdout: 'true\n', stderr: '' };
+    }
+    if (args[0] === 'fetch') {
+      return { status: 128, stdout: '', stderr: 'remote unavailable' };
+    }
+    throw new Error(`Unexpected Git command: ${args.join(' ')}`);
+  };
+
+  await assert.rejects(
+    verifyGitCommitAncestry(currentRow().reviewed_commit_sha, { runGit }),
+    /Unable to hydrate shallow Git history from origin: remote unavailable/
   );
 });
 
