@@ -44,6 +44,14 @@ function countWorkflowCommand(workflow, command) {
   return workflow.split(command).length - 1;
 }
 
+function namedWorkflowStep(workflow, name) {
+  const marker = `      - name: ${name}`;
+  const start = workflow.indexOf(marker);
+  assert.notEqual(start, -1, `workflow must contain step: ${name}`);
+  const next = workflow.indexOf('\n      - name:', start + marker.length);
+  return workflow.slice(start, next === -1 ? workflow.length : next);
+}
+
 test('adapter-postgres policy stays wired into the PR quality gate and test workflow', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
   const testWorkflow = readFileSync('.github/workflows/test.yml', 'utf8');
@@ -344,6 +352,14 @@ test('PR quality gate consumes prepush-equivalent scope outputs for expensive ga
 
 test('PR quality gate prepares planning DB before DB-first feature implementation checks', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const prepareDbStep = namedWorkflowStep(
+    prQualityGate,
+    'Prepare planning DB for DB-backed validation'
+  );
+  const capabilityTruthStep = namedWorkflowStep(
+    prQualityGate,
+    'Validate DBT round-trip capability truth'
+  );
   const prepareDbIndex = prQualityGate.indexOf('Prepare planning DB for DB-backed validation');
   const prepareDbActionIndex = prQualityGate.indexOf('uses: ./.github/actions/prepare-planning-db');
   const implementationGateIndex = prQualityGate.indexOf(
@@ -365,7 +381,17 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
     prQualityGate,
     "steps.scope.outputs.feature_mechanization_relevant == 'true'"
   );
+  assertWorkflowContains(prepareDbStep, "steps.scope.outputs.governance_global_relevant == 'true'");
+  assertWorkflowContains(
+    capabilityTruthStep,
+    "steps.scope.outputs.governance_global_relevant == 'true'"
+  );
   assertWorkflowContains(prQualityGate, 'import-governance:');
+  assert.equal(
+    countWorkflowCommand(prepareDbStep, "steps.scope.outputs.governance_global_relevant == 'true'"),
+    2,
+    'governance scope must activate both DB preparation and governance import'
+  );
   assertWorkflowContains(prQualityGate, 'GIT_BASE:');
   assertWorkflowContains(prQualityGate, "format('origin/{0}', github.base_ref)");
   assertWorkflowContains(prQualityGate, 'GIT_HEAD: ${{ github.sha }}');

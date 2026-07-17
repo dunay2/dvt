@@ -53,10 +53,10 @@ test('governance refresh defers governance reports to DB-backed final generation
       'planning:db:import',
       'planning:db:check',
       'planning:db:inventory:check',
-      'docs:dbt-roundtrip-capabilities:generate',
       'docs:db-surface-inventory:generate',
       'planning:db:export:check',
       'governance:db:import',
+      'docs:dbt-roundtrip-capabilities:generate',
       'docs:knowledge-intake:generate',
       'governance:db:check',
       'docs:governance:coverage-report',
@@ -71,6 +71,12 @@ test('governance refresh defers governance reports to DB-backed final generation
   assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,
     ['--', '--if-stale']
+  );
+  assert.equal(
+    stages.databaseStages.findIndex((stage) => stage.id === 'dbt-roundtrip-capability-status') >
+      stages.databaseStages.findIndex((stage) => stage.id === 'governance-db-import-final'),
+    true,
+    'DBT capability truth must render from the final imported governance catalog'
   );
   assert.equal(
     stages.databaseStages.findIndex((stage) => stage.id === 'knowledge-intake-literature') >
@@ -211,7 +217,11 @@ test('package scripts expose governance refresh instead of the obsolete artifact
   assert.equal(typeof packageJson.scripts['docs:knowledge-intake:check'], 'string');
   assert.equal(typeof packageJson.scripts['docs:dbt-roundtrip-capabilities:generate'], 'string');
   assert.equal(typeof packageJson.scripts['docs:dbt-roundtrip-capabilities:check'], 'string');
-  assert.match(packageJson.scripts['ci:docs'], /docs:dbt-roundtrip-capabilities:check/);
+  assert.doesNotMatch(
+    packageJson.scripts['ci:docs'],
+    /docs:dbt-roundtrip-capabilities:check/,
+    'the lightweight docs baseline must not require a Planning DB connection'
+  );
   assert.equal(Object.hasOwn(packageJson.scripts, 'governance:artifacts:generate'), false);
 });
 

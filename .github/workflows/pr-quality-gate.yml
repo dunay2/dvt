@@ -116,7 +116,8 @@ jobs:
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
           (steps.scope.outputs.lane_yaml_changed == 'true' ||
-          steps.scope.outputs.feature_mechanization_relevant == 'true')) || (github.event_name ==
+          steps.scope.outputs.feature_mechanization_relevant == 'true' ||
+          steps.scope.outputs.governance_global_relevant == 'true')) || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         uses: ./.github/actions/prepare-planning-db
         env:
@@ -129,7 +130,8 @@ jobs:
             ${{ steps.scope.outputs.lane_yaml_changed == 'true' && 'true' || 'false' }}
           import-governance:
             ${{ (github.event_name != 'pull_request' ||
-            steps.scope.outputs.feature_mechanization_relevant == 'true') && 'true' || 'false' }}
+            steps.scope.outputs.feature_mechanization_relevant == 'true' ||
+            steps.scope.outputs.governance_global_relevant == 'true') && 'true' || 'false' }}
 
       - name: Validate planning workboard outputs
         if: github.event_name == 'pull_request' && steps.scope.outputs.lane_yaml_changed == 'true'
@@ -270,7 +272,8 @@ jobs:
       - name: Validate DBT round-trip capability truth
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          steps.scope.outputs.feature_mechanization_relevant == 'true') || (github.event_name ==
+          (steps.scope.outputs.feature_mechanization_relevant == 'true' ||
+          steps.scope.outputs.governance_global_relevant == 'true')) || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         run: pnpm docs:dbt-roundtrip-capabilities:check
 
