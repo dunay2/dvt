@@ -12,6 +12,7 @@ test('GitHub collaboration governance keeps ownership, dependency, and PR policy
   const pullRequestTemplate = readText('.github/pull_request_template.md');
   const prBody = readText('.github/PR_BODY.md').trim();
   const prInstructions = readText('.github/PR_INSTRUCTIONS.md');
+  const prQualityGate = readText('.github/workflows/pr-quality-gate.yml');
 
   for (const requiredPattern of [
     '* @dunay2',
@@ -35,6 +36,10 @@ test('GitHub collaboration governance keeps ownership, dependency, and PR policy
   assert.match(prInstructions, /pnpm pr:validate-title/u);
   assert.match(prInstructions, /gh pr create/u);
   assert.match(prInstructions, /--body-file \.github\/PR_BODY\.md/u);
+
+  assert.match(prQualityGate, /run: pnpm pr:validate-title "\$PR_TITLE"/u);
+  assert.match(prQualityGate, /PR_TITLE: \$\{\{ github\.event\.pull_request\.title \}\}/u);
+  assert.doesNotMatch(prQualityGate, /amannn\/action-semantic-pull-request/u);
 });
 
 function escapeRegExp(value) {

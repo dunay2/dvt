@@ -290,27 +290,9 @@ jobs:
 
       - name: Check PR title follows Conventional Commits
         if: github.event_name == 'pull_request'
-        uses: amannn/action-semantic-pull-request@48f256284bd46cdaab1048c3721360e808335d50 # v6
+        run: pnpm pr:validate-title "$PR_TITLE"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          types: |
-            feat
-            fix
-            docs
-            style
-            refactor
-            perf
-            test
-            chore
-            ci
-            build
-            revert
-          requireScope: false
-          subjectPattern: ^[A-Z].+$
-          subjectPatternError: |
-            The subject must start with an uppercase character.
-          wip: false
+          PR_TITLE: ${{ github.event.pull_request.title }}
 
       - name: Check PR size
         if: github.event_name == 'pull_request'

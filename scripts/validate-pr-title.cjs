@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 /**
  * Validates that a PR title follows the Conventional Commits format enforced
- * by the `Check PR title follows Conventional Commits` step in pr-quality-gate.yml
- * (amannn/action-semantic-pull-request v6).
+ * by the `Check PR title follows Conventional Commits` step in pr-quality-gate.yml.
  *
  * Usage:
  *   node scripts/validate-pr-title.cjs "<title>"
@@ -20,10 +19,19 @@
 
 'use strict';
 
-// Must match pr-quality-gate.yml `types` list.
+// Canonical type list shared by local and GitHub CI title validation.
 const TYPES = [
-  'feat', 'fix', 'docs', 'style', 'refactor',
-  'perf', 'test', 'chore', 'ci', 'build', 'revert',
+  'feat',
+  'fix',
+  'docs',
+  'style',
+  'refactor',
+  'perf',
+  'test',
+  'chore',
+  'ci',
+  'build',
+  'revert',
 ];
 
 const MAX_HEADER_LENGTH = 100;
@@ -41,9 +49,7 @@ function validate(title) {
   }
 
   if (title.length > MAX_HEADER_LENGTH) {
-    errors.push(
-      `Title is ${title.length} chars (max ${MAX_HEADER_LENGTH}): "${title}"`
-    );
+    errors.push(`Title is ${title.length} chars (max ${MAX_HEADER_LENGTH}): "${title}"`);
   }
 
   const match = HEADER_RE.exec(title.trim());
@@ -57,9 +63,7 @@ function validate(title) {
   const [, type, , subject] = match;
 
   if (!TYPES.includes(type)) {
-    errors.push(
-      `Unknown type "${type}". Allowed: ${TYPES.join(', ')}`
-    );
+    errors.push(`Unknown type "${type}". Allowed: ${TYPES.join(', ')}`);
   }
 
   if (!/^[A-Z]/.test(subject)) {
