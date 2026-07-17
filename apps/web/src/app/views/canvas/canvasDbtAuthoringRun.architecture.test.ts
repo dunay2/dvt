@@ -60,6 +60,7 @@ describe('canvas dbt authoring/code/run architecture', () => {
   it('keeps dbt code generation and planner source projection behind named rails', () => {
     expect(PLAN_ACTION_SOURCE).toContain("from './canvasDbtWorkspaceArtifacts'");
     expect(PLAN_ACTION_SOURCE).toContain("from './canvasDbtExecutionProjection'");
+    expect(PLAN_ACTION_SOURCE).not.toContain("from './canvasDbtPlannerGraphSource'");
     expect(PLAN_ACTION_SOURCE).toContain("from './previewGraphSource'");
     expect(DBT_EXECUTION_PROJECTION_SOURCE).toContain("from './canvasDbtPlannerGraphSource'");
     expect(PLAN_ACTION_SOURCE).toContain('workspaceFileContentCommand.saveFileContent');
