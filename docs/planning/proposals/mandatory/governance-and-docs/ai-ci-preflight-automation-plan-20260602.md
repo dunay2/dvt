@@ -351,7 +351,7 @@ redGreenCycles:
     greenTest: node --test tools/ci/turbo-workspace-task-contract.test.mjs
   - id: planning-db-migration-ordinal-identity
     redTest: node --test --test-name-pattern "migration files sort|applied strict migration identities|migration runner rejects|serializes shared database" scripts/planning-db-migrate.test.cjs
-    expectedFailure: strict migration filenames can be renamed after application, four-digit ordinals sort before their predecessors, and concurrent migrators can replay SQL from a stale applied-version snapshot.
+    expectedFailure: strict migration filenames can be renamed or deleted after application, trailing checkout identities can be mistaken for newer shared-worktree migrations, four-digit ordinals sort before their predecessors, and concurrent migrators can replay SQL from a stale applied-version snapshot.
     patchSurfaces:
       - scripts/planning-db-migrate.cjs
       - scripts/planning-db-migrate.test.cjs
@@ -454,6 +454,33 @@ symbols:
     dddOwner: Repository CI governance baseline
     cqRails: [PreparePlanningDbForCiGate]
     fowlerSignals: [Policy, Fail Closed, Append Only Identity]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: canonicalMigrationsRepoPath
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Single Source of Truth]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: migrationVersionsFromRepoPaths
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Pure Function, Identity Map]
+    architectureGuard: scripts/planning-db-migrate.test.cjs
+    cypressCoverage: N/A - repository migration policy
+    unitTests:
+      - scripts/planning-db-migrate.test.cjs
+  - name: readKnownCanonicalMigrationVersions
+    path: scripts/planning-db-migrate.cjs
+    dddOwner: Repository CI governance baseline
+    cqRails: [PreparePlanningDbForCiGate]
+    fowlerSignals: [Repository, Append Only Identity]
     architectureGuard: scripts/planning-db-migrate.test.cjs
     cypressCoverage: N/A - repository migration policy
     unitTests:

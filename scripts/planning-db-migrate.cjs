@@ -3,11 +3,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client } = require('pg');
 
+const { defaultRunGitLines } = require('./git-local-changes.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const migrationsDir = path.join(repoRoot, 'tools', 'planning-db', 'migrations');
 const schemaName = 'planning_query_store';
+const canonicalMigrationsRepoPath = 'tools/planning-db/migrations';
 const migrationAdvisoryLockKeys = Object.freeze([0x445654, 0x4d494752]);
 const migrationOrdinalPolicy = Object.freeze({
   firstStrictOrdinal: 722,
@@ -167,7 +169,12 @@ function migrationOrdinalPolicyForDirectory(directory) {
       };
 }
 
-function assertAppliedMigrationIdentities(records, appliedRows, policy = migrationOrdinalPolicy) {
+function assertAppliedMigrationIdentities(
+  records,
+  appliedRows,
+  policy = migrationOrdinalPolicy,
+  knownCheckoutVersions = new Set()
+) {
   const localStrictVersions = new Set();
   let highestLocalStrictOrdinal = null;
 
@@ -185,20 +192,23 @@ function assertAppliedMigrationIdentities(records, appliedRows, policy = migrati
   }
 
   const missingStrictFileNames = appliedRows
-    .map((row) => `${row.version}.sql`)
-    .filter((fileName) => {
+    .filter((row) => {
+      const fileName = `${row.version}.sql`;
       const parsed = parseMigrationOrdinal(fileName);
-      if (
-        !parsed ||
-        parsed.ordinal < policy.firstStrictOrdinal ||
-        highestLocalStrictOrdinal === null ||
-        parsed.ordinal > highestLocalStrictOrdinal
-      ) {
+      if (!parsed || parsed.ordinal < policy.firstStrictOrdinal) {
         return false;
       }
 
-      return !localStrictVersions.has(fileName.replace(/\.sql$/iu, ''));
+      if (localStrictVersions.has(row.version)) {
+        return false;
+      }
+
+      return (
+        knownCheckoutVersions.has(row.version) ||
+        (highestLocalStrictOrdinal !== null && parsed.ordinal <= highestLocalStrictOrdinal)
+      );
     })
+    .map((row) => `${row.version}.sql`)
     .sort(compareMigrationFileNamesByOrdinal);
 
   if (missingStrictFileNames.length > 0) {
@@ -206,6 +216,88 @@ function assertAppliedMigrationIdentities(records, appliedRows, policy = migrati
       `Applied strict migration files are missing or renamed: ${missingStrictFileNames.join(', ')}.`
     );
   }
+}
+
+function migrationVersionsFromRepoPaths(filePaths) {
+  const prefix = `${canonicalMigrationsRepoPath}/`;
+
+  return new Set(
+    filePaths
+      .map((filePath) => String(filePath).replace(/\\/gu, '/'))
+      .filter((filePath) => filePath.startsWith(prefix) && filePath.endsWith('.sql'))
+      .map((filePath) => path.posix.basename(filePath, '.sql'))
+  );
+}
+
+function readKnownCanonicalMigrationVersions(options = {}) {
+  const runGitLines = options.runGitLines || defaultRunGitLines;
+  const repoOptions = { repoRootPath: options.repoRootPath || repoRoot };
+  const baseRef = options.baseRef || process.env.GIT_BASE || 'origin/main';
+  const headRef = options.headRef || process.env.GIT_HEAD || 'HEAD';
+  const knownPaths = new Set();
+
+  const collect = (args) => {
+    try {
+      for (const filePath of runGitLines(args, repoOptions)) {
+        knownPaths.add(filePath);
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  collect(['ls-tree', '-r', '--name-only', 'HEAD', '--', canonicalMigrationsRepoPath]);
+  collect([
+    'log',
+    '-m',
+    '--format=',
+    '--name-only',
+    '--diff-filter=A',
+    'HEAD',
+    '--',
+    canonicalMigrationsRepoPath,
+  ]);
+  collect(['diff', '--name-only', '--diff-filter=D', 'HEAD', '--', canonicalMigrationsRepoPath]);
+
+  let mergeBase;
+  try {
+    [mergeBase] = runGitLines(['merge-base', baseRef, headRef], repoOptions);
+  } catch {
+    mergeBase = null;
+  }
+
+  if (mergeBase) {
+    collect([
+      'diff',
+      '--name-only',
+      '--diff-filter=D',
+      mergeBase,
+      headRef,
+      '--',
+      canonicalMigrationsRepoPath,
+    ]);
+  } else {
+    const pullRequestMergeCheckout =
+      options.pullRequestMergeCheckout === true ||
+      (process.env.GITHUB_EVENT_NAME === 'pull_request' &&
+        /^refs\/pull\/\d+\/merge$/u.test(process.env.GITHUB_REF || ''));
+
+    if (pullRequestMergeCheckout) {
+      // A shallow PR checkout lacks a merge base, but HEAD is GitHub's merge result.
+      collect([
+        'diff',
+        '--name-only',
+        '--diff-filter=D',
+        baseRef,
+        headRef,
+        '--',
+        canonicalMigrationsRepoPath,
+      ]);
+    }
+  }
+
+  return migrationVersionsFromRepoPaths([...knownPaths]);
 }
 
 function readMigrationFiles(directory = migrationsDir) {
@@ -268,6 +360,12 @@ async function runMigrations(options = {}) {
   const directory = options.migrationsDir || migrationsDir;
   const records = buildMigrationRecords(readMigrationFiles(directory));
   const ordinalPolicy = migrationOrdinalPolicyForDirectory(directory);
+  const knownCheckoutVersions =
+    options.knownMigrationVersions === undefined
+      ? path.resolve(directory) === path.resolve(migrationsDir)
+        ? readKnownCanonicalMigrationVersions(options)
+        : new Set()
+      : new Set(options.knownMigrationVersions);
 
   if (records.length === 0) {
     if (!silent) {
@@ -294,7 +392,12 @@ async function runMigrations(options = {}) {
     const appliedMigrations = await client.query(
       `select version, checksum_sha256 from ${quoteIdentifier(schemaName)}.schema_migrations order by version`
     );
-    assertAppliedMigrationIdentities(records, appliedMigrations.rows, ordinalPolicy);
+    assertAppliedMigrationIdentities(
+      records,
+      appliedMigrations.rows,
+      ordinalPolicy,
+      knownCheckoutVersions
+    );
     const appliedByVersion = new Map(appliedMigrations.rows.map((row) => [row.version, row]));
 
     for (const record of records) {
@@ -352,6 +455,8 @@ module.exports = {
   buildMigrationFileNameFingerprint,
   migrationsDir,
   migrationOrdinalPolicy,
+  migrationVersionsFromRepoPaths,
+  readKnownCanonicalMigrationVersions,
   schemaName,
   buildMigrationRecords,
   databaseUrl,
