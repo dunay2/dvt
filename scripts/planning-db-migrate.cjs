@@ -167,7 +167,8 @@ function migrationOrdinalPolicyForDirectory(directory) {
 }
 
 function assertAppliedMigrationIdentities(records, appliedRows, policy = migrationOrdinalPolicy) {
-  const localStrictVersionsByOrdinal = new Map();
+  const localStrictVersions = new Set();
+  let highestLocalStrictOrdinal = null;
 
   for (const record of records) {
     const parsed = parseMigrationOrdinal(record.fileName);
@@ -175,21 +176,27 @@ function assertAppliedMigrationIdentities(records, appliedRows, policy = migrati
       continue;
     }
 
-    const versions = localStrictVersionsByOrdinal.get(parsed.ordinal) || new Set();
-    versions.add(record.version);
-    localStrictVersionsByOrdinal.set(parsed.ordinal, versions);
+    localStrictVersions.add(record.version);
+    highestLocalStrictOrdinal = Math.max(
+      highestLocalStrictOrdinal ?? parsed.ordinal,
+      parsed.ordinal
+    );
   }
 
   const missingStrictFileNames = appliedRows
     .map((row) => `${row.version}.sql`)
     .filter((fileName) => {
       const parsed = parseMigrationOrdinal(fileName);
-      if (!parsed || parsed.ordinal < policy.firstStrictOrdinal) {
+      if (
+        !parsed ||
+        parsed.ordinal < policy.firstStrictOrdinal ||
+        highestLocalStrictOrdinal === null ||
+        parsed.ordinal > highestLocalStrictOrdinal
+      ) {
         return false;
       }
 
-      const localVersions = localStrictVersionsByOrdinal.get(parsed.ordinal);
-      return localVersions !== undefined && !localVersions.has(fileName.replace(/\.sql$/iu, ''));
+      return !localStrictVersions.has(fileName.replace(/\.sql$/iu, ''));
     })
     .sort(compareMigrationFileNamesByOrdinal);
 

@@ -118,6 +118,23 @@ test('applied strict migration identities allow newer shared-worktree migrations
   );
 });
 
+test('applied strict migration identities reject a rename to a different local ordinal', () => {
+  const records = buildMigrationRecords([
+    { fileName: '723_current.sql', sql: 'select 723;' },
+    { fileName: '726_renamed.sql', sql: 'select 722;' },
+  ]);
+
+  assert.throws(
+    () =>
+      assertAppliedMigrationIdentities(
+        records,
+        [{ version: '722_original', checksum_sha256: 'applied-checksum' }],
+        { firstStrictOrdinal: 722 }
+      ),
+    /Applied strict migration files are missing or renamed: 722_original\.sql/
+  );
+});
+
 test('migration runner rejects a renamed applied strict migration before replaying SQL', async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-planning-migrations-'));
   const queryCalls = [];
