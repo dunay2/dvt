@@ -211,6 +211,7 @@ test('package scripts expose governance refresh instead of the obsolete artifact
   assert.equal(typeof packageJson.scripts['docs:knowledge-intake:check'], 'string');
   assert.equal(typeof packageJson.scripts['docs:dbt-roundtrip-capabilities:generate'], 'string');
   assert.equal(typeof packageJson.scripts['docs:dbt-roundtrip-capabilities:check'], 'string');
+  assert.match(packageJson.scripts['ci:docs'], /docs:dbt-roundtrip-capabilities:check/);
   assert.equal(Object.hasOwn(packageJson.scripts, 'governance:artifacts:generate'), false);
 });
 

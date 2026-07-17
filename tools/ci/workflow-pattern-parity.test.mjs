@@ -349,12 +349,17 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
   const implementationGateIndex = prQualityGate.indexOf(
     'pnpm docs:feature-mechanization:implementation'
   );
+  const capabilityStatusGateIndex = prQualityGate.indexOf(
+    'pnpm docs:dbt-roundtrip-capabilities:check'
+  );
 
   assert.notEqual(prepareDbIndex, -1);
   assert.notEqual(prepareDbActionIndex, -1);
   assert.notEqual(implementationGateIndex, -1);
+  assert.notEqual(capabilityStatusGateIndex, -1);
   assert.ok(prepareDbIndex < prepareDbActionIndex);
   assert.ok(prepareDbActionIndex < implementationGateIndex);
+  assert.ok(prepareDbActionIndex < capabilityStatusGateIndex);
   assertWorkflowContains(prQualityGate, "github.event_name == 'push'");
   assertWorkflowContains(
     prQualityGate,
