@@ -19,6 +19,16 @@ const defaultOutputPath = path.join(
   'generated-dbt-project-roundtrip-capability-status.md'
 );
 const sourceView = 'planning_query_store.dbt_project_roundtrip_capability_status_query';
+const governedCapabilityKeys = Object.freeze([
+  'phase-2/ProjectDbtGraphFromFiles',
+  'phase-3/ImportDbtProject',
+  'phase-3/ValidateDbtProjectImport',
+  'phase-4/BuildDbtPlannerGraphSource',
+  'phase-4/ObservePlanRunReadiness',
+  'phase-4/PreviewExecutionPlan',
+  'phase-4/StartRun',
+  'phase-6/ExportDbtProject',
+]);
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -128,6 +138,16 @@ async function validateDbtRoundtripCapabilityRows(rows, options = {}) {
   const normalizedRows = sortRows(rows);
   if (normalizedRows.length === 0) {
     throw new Error('DBT round-trip capability projection returned no governed phases.');
+  }
+
+  const projectedKeys = new Set(normalizedRows.map((row) => `${row.phaseId}/${row.railName}`));
+  const missingKeys = governedCapabilityKeys.filter((key) => !projectedKeys.has(key));
+  const unexpectedKeys = [...projectedKeys].filter((key) => !governedCapabilityKeys.includes(key));
+  if (missingKeys.length > 0) {
+    throw new Error(`Missing governed capabilities: ${missingKeys.join(', ')}.`);
+  }
+  if (unexpectedKeys.length > 0) {
+    throw new Error(`Unexpected governed capabilities: ${unexpectedKeys.join(', ')}.`);
   }
 
   const seen = new Set();
@@ -342,6 +362,7 @@ if (require.main === module) {
 
 module.exports = {
   defaultOutputPath,
+  governedCapabilityKeys,
   normalizeDbtRoundtripCapabilityRow,
   parseArgs,
   renderDbtRoundtripCapabilityStatus,

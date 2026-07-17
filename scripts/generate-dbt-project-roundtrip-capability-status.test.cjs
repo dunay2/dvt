@@ -39,6 +39,47 @@ function currentRow(overrides = {}) {
   };
 }
 
+function completeCurrentRows() {
+  return [
+    currentRow({
+      phase_id: 'phase-2',
+      phase_order: 2,
+      phase_name: 'dbt analysis and read-only file projection',
+      phase_expected_rail_count: 1,
+      phase_actual_rail_count: 1,
+      rail_name: 'ProjectDbtGraphFromFiles',
+    }),
+    currentRow({
+      phase_id: 'phase-3',
+      phase_order: 3,
+      phase_name: 'Import and file-backed Source Import',
+      phase_expected_rail_count: 2,
+      phase_actual_rail_count: 2,
+      rail_name: 'ImportDbtProject',
+    }),
+    currentRow({
+      phase_id: 'phase-3',
+      phase_order: 3,
+      phase_name: 'Import and file-backed Source Import',
+      phase_expected_rail_count: 2,
+      phase_actual_rail_count: 2,
+      rail_name: 'ValidateDbtProjectImport',
+    }),
+    currentRow({ rail_name: 'BuildDbtPlannerGraphSource' }),
+    currentRow({ rail_name: 'ObservePlanRunReadiness' }),
+    currentRow(),
+    currentRow({ rail_name: 'StartRun' }),
+    currentRow({
+      phase_id: 'phase-6',
+      phase_order: 6,
+      phase_name: 'Export',
+      phase_expected_rail_count: 1,
+      phase_actual_rail_count: 1,
+      rail_name: 'ExportDbtProject',
+    }),
+  ];
+}
+
 test('normalizeDbtRoundtripCapabilityRow preserves relational phase and rail facts', () => {
   assert.deepEqual(normalizeDbtRoundtripCapabilityRow(currentRow()), {
     phaseId: 'phase-4',
@@ -66,8 +107,14 @@ test('normalizeDbtRoundtripCapabilityRow preserves relational phase and rail fac
 });
 
 test('validateDbtRoundtripCapabilityRows fails closed on DB projection drift', async () => {
+  const rows = completeCurrentRows().map((row) =>
+    row.rail_name === 'PreviewExecutionPlan'
+      ? { ...row, projection_state: 'rail_status_drift' }
+      : row
+  );
+
   await assert.rejects(
-    validateDbtRoundtripCapabilityRows([currentRow({ projection_state: 'rail_status_drift' })], {
+    validateDbtRoundtripCapabilityRows(rows, {
       verifyCommit: async () => ({ exists: true, isAncestor: true }),
     }),
     /PreviewExecutionPlan.*rail_status_drift/
@@ -76,22 +123,33 @@ test('validateDbtRoundtripCapabilityRows fails closed on DB projection drift', a
 
 test('validateDbtRoundtripCapabilityRows fails closed on duplicate evidence rows', async () => {
   await assert.rejects(
-    validateDbtRoundtripCapabilityRows([currentRow(), currentRow()], {
+    validateDbtRoundtripCapabilityRows([...completeCurrentRows(), currentRow()], {
       verifyCommit: async () => ({ exists: true, isAncestor: true }),
     }),
     /duplicate phase\/rail evidence/i
   );
 });
 
+test('validateDbtRoundtripCapabilityRows rejects an incomplete governed phase and rail set', async () => {
+  const incompleteRows = completeCurrentRows().filter((row) => row.phase_id !== 'phase-3');
+
+  await assert.rejects(
+    validateDbtRoundtripCapabilityRows(incompleteRows, {
+      verifyCommit: async () => ({ exists: true, isAncestor: true }),
+    }),
+    /missing governed capabilities.*phase-3\/ImportDbtProject.*phase-3\/ValidateDbtProjectImport/i
+  );
+});
+
 test('validateDbtRoundtripCapabilityRows rejects missing and non-ancestor commits', async () => {
   await assert.rejects(
-    validateDbtRoundtripCapabilityRows([currentRow()], {
+    validateDbtRoundtripCapabilityRows(completeCurrentRows(), {
       verifyCommit: async () => ({ exists: false, isAncestor: false }),
     }),
     /does not exist/
   );
   await assert.rejects(
-    validateDbtRoundtripCapabilityRows([currentRow()], {
+    validateDbtRoundtripCapabilityRows(completeCurrentRows(), {
       verifyCommit: async () => ({ exists: true, isAncestor: false }),
     }),
     /is not an ancestor/
@@ -165,7 +223,7 @@ test('renderDbtRoundtripCapabilityStatus is deterministic and links reviewed evi
 test('generator detects stale local output after validating DB and Git evidence', async () => {
   const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dbt-roundtrip-status-'));
   const outputPath = path.join(tempRoot, 'status.md');
-  const client = { query: async () => ({ rows: [currentRow()] }) };
+  const client = { query: async () => ({ rows: completeCurrentRows() }) };
   const verifyCommit = async () => ({ exists: true, isAncestor: true });
 
   try {
@@ -201,13 +259,13 @@ test('check validates governed truth when the ignored local artifact is absent',
   try {
     const result = await runDbtRoundtripCapabilityStatusGenerator({
       check: true,
-      client: { query: async () => ({ rows: [currentRow()] }) },
+      client: { query: async () => ({ rows: completeCurrentRows() }) },
       outputPath,
       verifyCommit: async () => ({ exists: true, isAncestor: true }),
       logger: { log: (message) => messages.push(message) },
     });
 
-    assert.deepEqual(result, { changed: false, outputPath, rowCount: 1 });
+    assert.deepEqual(result, { changed: false, outputPath, rowCount: 8 });
     assert.equal(fs.existsSync(outputPath), false);
     assert.match(messages.join('\n'), /governed truth is current/);
   } finally {
