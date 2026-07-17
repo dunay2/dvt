@@ -75,6 +75,15 @@ export type CanvasViewCopy = {
   readonly toolbarGridColorLabel: string;
   readonly toolbarSnapToGridLabel: string;
   readonly toolbarCanvasSettingsLabel: string;
+  readonly canvasNodeToolbarLabelTemplate: string;
+  readonly canvasNodeToolbarCodeLabel: string;
+  readonly canvasNodeToolbarCodeDescription: string;
+  readonly canvasNodeToolbarFreezeLabel: string;
+  readonly canvasNodeToolbarFreezeDescription: string;
+  readonly canvasNodeToolbarUnfreezeLabel: string;
+  readonly canvasNodeToolbarUnfreezeDescription: string;
+  readonly canvasNodeToolbarMoreLabel: string;
+  readonly canvasNodeToolbarMoreDescription: string;
   readonly canvasContextMenuAddLabel: string;
   readonly canvasContextMenuAddSourceLabel: string;
   readonly canvasContextMenuAddModelLabel: string;

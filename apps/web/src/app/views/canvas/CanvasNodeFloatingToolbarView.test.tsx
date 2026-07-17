@@ -49,17 +49,15 @@ describe('CanvasNodeFloatingToolbarView', () => {
     expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-x')).toBe('320px');
     expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-y')).toBe('160px');
 
-    expect(button('Codigo')).toBeNull();
-    expect(button('Código')).not.toBeNull();
-    expect(button('Código')?.getAttribute('data-action-state')).toBe('available');
-    expect(button('Congelar')).toBeNull();
-    expect(button('Seleccionar para ejecución')).toBeNull();
-    expect(button('Más acciones')).not.toBeNull();
-    expect(button('Más acciones')?.textContent).toBe('');
+    expect(button('Open node code')).not.toBeNull();
+    expect(button('Open node code')?.getAttribute('data-action-state')).toBe('available');
+    expect(button('Freeze node')).toBeNull();
+    expect(button('More node actions')).not.toBeNull();
+    expect(toolbar?.textContent).toBe('');
 
     act(() => {
-      button('Código')?.click();
-      button('Más acciones')?.click();
+      button('Open node code')?.click();
+      button('More node actions')?.click();
     });
 
     expect(onOpenCode).toHaveBeenCalledWith('model_orders');

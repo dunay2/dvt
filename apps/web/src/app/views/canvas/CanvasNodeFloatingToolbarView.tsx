@@ -3,6 +3,12 @@ import { Code2, MoreHorizontal, Snowflake } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../../components/ui/tooltip';
 import type { CanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
 import {
   canvasNodeFloatingToolbarClasses,
@@ -27,7 +33,7 @@ export function CanvasNodeFloatingToolbarView({
     <div
       data-slot="canvas-node-floating-toolbar"
       data-token-scope="canvas-node-floating-toolbar"
-      aria-label={`Acciones de nodo ${model.nodeName}`}
+      aria-label={model.accessibleLabel}
       className={canvasNodeFloatingToolbarClasses.surface}
       style={
         {
@@ -36,31 +42,37 @@ export function CanvasNodeFloatingToolbarView({
         } as React.CSSProperties
       }
     >
-      {model.actions.map((action) => {
-        const Icon = ACTION_ICON[action.id];
+      <TooltipProvider delayDuration={250}>
+        {model.actions.map((action) => {
+          const Icon = ACTION_ICON[action.id];
+          const tooltip = action.available ? action.description : action.unavailableReason;
 
-        return (
-          <button
-            key={action.id}
-            type="button"
-            aria-label={action.label}
-            aria-disabled={action.available ? undefined : 'true'}
-            title={action.available ? action.description : action.unavailableReason}
-            data-tone={action.tone}
-            data-action-state={resolveCanvasNodeFloatingToolbarActionState(action)}
-            className={resolveCanvasNodeFloatingToolbarActionClassName(action)}
-            onClick={(event) => {
-              event.stopPropagation();
-              if (action.available) {
-                action.onSelect?.();
-              }
-            }}
-          >
-            <Icon className={canvasNodeFloatingToolbarClasses.icon} aria-hidden="true" />
-            {action.id === 'more' ? null : <span>{action.label}</span>}
-          </button>
-        );
-      })}
+          return (
+            <Tooltip key={action.id}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label={action.label}
+                  aria-disabled={action.available ? undefined : 'true'}
+                  aria-pressed={action.id === 'freeze' ? action.pressed : undefined}
+                  data-tone={action.tone}
+                  data-action-state={resolveCanvasNodeFloatingToolbarActionState(action)}
+                  className={resolveCanvasNodeFloatingToolbarActionClassName(action)}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    if (action.available) {
+                      action.onSelect?.();
+                    }
+                  }}
+                >
+                  <Icon className={canvasNodeFloatingToolbarClasses.icon} aria-hidden="true" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{tooltip}</TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </TooltipProvider>
     </div>,
     document.body
   );

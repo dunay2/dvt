@@ -22,6 +22,17 @@ describe('buildCanvasNodeFloatingToolbarModel', () => {
       onOpenCode,
       onOpenMore,
       onToggleFreeze,
+      copy: {
+        toolbarLabelTemplate: 'Node actions: {nodeName}',
+        codeLabel: 'Open code',
+        codeDescription: 'Open the selected node file.',
+        freezeLabel: 'Freeze node',
+        freezeDescription: 'Keep the node in place.',
+        unfreezeLabel: 'Unfreeze node',
+        unfreezeDescription: 'Allow the node to move.',
+        moreLabel: 'More actions',
+        moreDescription: 'Open governed node actions.',
+      },
     } satisfies Parameters<typeof buildCanvasNodeFloatingToolbarModel>[0] & {
       frozen: boolean;
       onToggleFreeze: (nodeId: string) => void;
@@ -38,20 +49,23 @@ describe('buildCanvasNodeFloatingToolbarModel', () => {
     expect(model.actions).toEqual([
       expect.objectContaining({
         id: 'code',
-        label: 'Código',
-        description: 'Abrir edición contextual del nodo.',
+        label: 'Open code',
+        description: 'Open the selected node file.',
+        pressed: false,
         available: true,
       }),
       expect.objectContaining({
         id: 'freeze',
-        label: 'Congelar',
-        description: 'Mantener estable la posición y edición del nodo.',
+        label: 'Freeze node',
+        description: 'Keep the node in place.',
+        pressed: false,
         available: true,
       }),
       expect.objectContaining({
         id: 'more',
-        label: 'Más acciones',
-        description: 'Abrir las acciones contextuales gobernadas del nodo.',
+        label: 'More actions',
+        description: 'Open governed node actions.',
+        pressed: false,
         available: true,
       }),
     ]);
@@ -73,6 +87,17 @@ describe('buildCanvasNodeFloatingToolbarModel', () => {
       position: { x: 240, y: 120 },
       frozen: true,
       onToggleFreeze,
+      copy: {
+        toolbarLabelTemplate: 'Node actions: {nodeName}',
+        codeLabel: 'Open code',
+        codeDescription: 'Open the selected node file.',
+        freezeLabel: 'Freeze node',
+        freezeDescription: 'Keep the node in place.',
+        unfreezeLabel: 'Unfreeze node',
+        unfreezeDescription: 'Allow the node to move.',
+        moreLabel: 'More actions',
+        moreDescription: 'Open governed node actions.',
+      },
     } satisfies Parameters<typeof buildCanvasNodeFloatingToolbarModel>[0] & {
       frozen: boolean;
       onToggleFreeze: (nodeId: string) => void;
@@ -83,8 +108,10 @@ describe('buildCanvasNodeFloatingToolbarModel', () => {
 
     expect(freezeAction).toEqual(
       expect.objectContaining({
-        label: 'Descongelar',
-        description: 'Permitir de nuevo el movimiento del nodo.',
+        label: 'Unfreeze node',
+        description: 'Allow the node to move.',
+        pressed: true,
+        tone: 'active',
         available: true,
       })
     );
