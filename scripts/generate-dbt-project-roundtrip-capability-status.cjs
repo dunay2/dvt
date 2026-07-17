@@ -261,6 +261,12 @@ async function runDbtRoundtripCapabilityStatusGenerator(options = {}) {
     const content = renderDbtRoundtripCapabilityStatus(validatedRows);
     const current = fs.existsSync(outputPath) ? fs.readFileSync(outputPath, 'utf8') : null;
     if (options.check) {
+      if (current === null) {
+        logger.log(
+          `[docs:dbt-roundtrip-capabilities:check] governed truth is current; ignored local artifact ${relativeOutputPath(outputPath)} is absent.`
+        );
+        return { changed: false, outputPath, rowCount: validatedRows.length };
+      }
       if (current !== content) {
         throw new Error(
           `${relativeOutputPath(outputPath)} is stale. Run pnpm docs:dbt-roundtrip-capabilities:generate.`

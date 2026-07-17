@@ -192,3 +192,25 @@ test('generator detects stale local output after validating DB and Git evidence'
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 });
+
+test('check validates governed truth when the ignored local artifact is absent', async () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dbt-roundtrip-status-'));
+  const outputPath = path.join(tempRoot, 'status.md');
+  const messages = [];
+
+  try {
+    const result = await runDbtRoundtripCapabilityStatusGenerator({
+      check: true,
+      client: { query: async () => ({ rows: [currentRow()] }) },
+      outputPath,
+      verifyCommit: async () => ({ exists: true, isAncestor: true }),
+      logger: { log: (message) => messages.push(message) },
+    });
+
+    assert.deepEqual(result, { changed: false, outputPath, rowCount: 1 });
+    assert.equal(fs.existsSync(outputPath), false);
+    assert.match(messages.join('\n'), /governed truth is current/);
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
