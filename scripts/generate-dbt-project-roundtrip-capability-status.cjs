@@ -80,14 +80,42 @@ async function verifyGitCommitAncestry(commitSha, options = {}) {
     return { exists: false, isAncestor: false };
   }
   const git = options.runGit || runGit;
-  const exists = git(['cat-file', '-e', `${commitSha}^{commit}`], options).status === 0;
+  const checkedRef = options.checkedRef || 'HEAD';
+  const remote = options.remote || 'origin';
+  let hydrated = false;
+  const isShallowRepository = () => {
+    const result = git(['rev-parse', '--is-shallow-repository'], options);
+    if (result.status !== 0) {
+      throw new Error(
+        `Git shallow-repository detection failed: ${result.stderr || 'unknown error'}`
+      );
+    }
+    return result.stdout.trim() === 'true';
+  };
+  const hydrateShallowHistory = () => {
+    const result = git(['fetch', '--no-tags', '--unshallow', remote], options);
+    if (result.status !== 0) {
+      throw new Error(
+        `Unable to hydrate shallow Git history from ${remote}: ${result.stderr || 'unknown error'}`
+      );
+    }
+    hydrated = true;
+  };
+  let exists = git(['cat-file', '-e', `${commitSha}^{commit}`], options).status === 0;
+
+  if (!exists && isShallowRepository()) {
+    hydrateShallowHistory();
+    exists = git(['cat-file', '-e', `${commitSha}^{commit}`], options).status === 0;
+  }
   if (!exists) {
     return { exists: false, isAncestor: false };
   }
-  const ancestorResult = git(
-    ['merge-base', '--is-ancestor', commitSha, options.checkedRef || 'HEAD'],
-    options
-  );
+
+  let ancestorResult = git(['merge-base', '--is-ancestor', commitSha, checkedRef], options);
+  if (ancestorResult.status === 1 && !hydrated && isShallowRepository()) {
+    hydrateShallowHistory();
+    ancestorResult = git(['merge-base', '--is-ancestor', commitSha, checkedRef], options);
+  }
   if (ancestorResult.status !== 0 && ancestorResult.status !== 1) {
     throw new Error(
       `Git ancestry verification failed for ${commitSha}: ${ancestorResult.stderr || 'unknown error'}`
