@@ -180,3 +180,26 @@ export function readLiveWorkspaceFile(
     auth: buildBearerAuth(),
   });
 }
+
+export function waitForLiveWorkspaceFileContent(
+  path: string,
+  expectedContent: string,
+  attempt = 0
+): Cypress.Chainable<void> {
+  return readLiveWorkspaceFile(path).then((response) => {
+    expect(response.status).to.equal(200);
+    const content = String((response.body as { content?: unknown }).content ?? '');
+
+    if (content === expectedContent) {
+      return;
+    }
+
+    if (attempt >= 30) {
+      throw new Error(`Timed out waiting for live workspace content at ${path}.`);
+    }
+
+    return cy
+      .wait(250)
+      .then(() => waitForLiveWorkspaceFileContent(path, expectedContent, attempt + 1));
+  });
+}

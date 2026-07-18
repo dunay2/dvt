@@ -15,10 +15,14 @@ export type CodeViewCopy = Readonly<{
   workingTreeModifiedMessage: string;
   workingTreeSyncingLabel: string;
   workingTreeSyncingMessage: string;
+  workingTreeReconcilingLabel: string;
+  workingTreeReconcilingMessage: string;
   workingTreeConflictLabel: string;
   workingTreeConflictMessage: string;
   workingTreeFailedLabel: string;
   workingTreeFailedMessage: string;
+  workingTreeReconciliationFailedLabel: string;
+  workingTreeReconciliationFailedMessage: string;
   workingTreeReadOnlyLabel: string;
   workingTreeReadOnlyMessage: string;
   workingTreeRetryLabel: string;
@@ -77,6 +81,14 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
     key: 'code.workingTreeSyncingMessage',
     fallback: 'Updating the working tree.',
   },
+  workingTreeReconcilingLabel: {
+    key: 'code.workingTreeReconcilingLabel',
+    fallback: 'Analyzing',
+  },
+  workingTreeReconcilingMessage: {
+    key: 'code.workingTreeReconcilingMessage',
+    fallback: 'The file is saved; refreshing the authoritative project analysis.',
+  },
   workingTreeConflictLabel: { key: 'code.workingTreeConflictLabel', fallback: 'Conflict' },
   workingTreeConflictMessage: {
     key: 'code.workingTreeConflictMessage',
@@ -86,6 +98,14 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
   workingTreeFailedMessage: {
     key: 'code.workingTreeFailedMessage',
     fallback: 'The working tree could not be updated.',
+  },
+  workingTreeReconciliationFailedLabel: {
+    key: 'code.workingTreeReconciliationFailedLabel',
+    fallback: 'Analysis failed',
+  },
+  workingTreeReconciliationFailedMessage: {
+    key: 'code.workingTreeReconciliationFailedMessage',
+    fallback: 'The file is saved, but the authoritative project analysis could not be refreshed.',
   },
   workingTreeReadOnlyLabel: { key: 'code.workingTreeReadOnlyLabel', fallback: 'Read only' },
   workingTreeReadOnlyMessage: {
@@ -184,10 +204,16 @@ const SPANISH_COPY: CodeViewCopy = {
   workingTreeModifiedMessage: 'Los cambios esperan sincronizacion.',
   workingTreeSyncingLabel: 'Sincronizando',
   workingTreeSyncingMessage: 'Actualizando el arbol de trabajo.',
+  workingTreeReconcilingLabel: 'Analizando',
+  workingTreeReconcilingMessage:
+    'El archivo esta guardado; actualizando el analisis autoritativo del proyecto.',
   workingTreeConflictLabel: 'Conflicto',
   workingTreeConflictMessage: 'Recarga la revision mas reciente antes de continuar.',
   workingTreeFailedLabel: 'Actualizacion fallida',
   workingTreeFailedMessage: 'No se pudo actualizar el arbol de trabajo.',
+  workingTreeReconciliationFailedLabel: 'Analisis fallido',
+  workingTreeReconciliationFailedMessage:
+    'El archivo esta guardado, pero no se pudo actualizar el analisis autoritativo del proyecto.',
   workingTreeReadOnlyLabel: 'Solo lectura',
   workingTreeReadOnlyMessage: 'Este archivo no se puede modificar.',
   workingTreeRetryLabel: 'Reintentar',

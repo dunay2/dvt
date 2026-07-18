@@ -101,6 +101,15 @@ describe('registerProtectedRuntimeRoutes', () => {
     expect(app.hasRoute({ method: 'GET', url: '/projects' })).toBe(true);
     expect(app.hasRoute({ method: 'POST', url: '/projects' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/graph/draft' })).toBe(true);
+    expect(
+      app.hasRoute({ method: 'POST', url: '/workspace/dbt/description-edits/proposals' })
+    ).toBe(true);
+    expect(
+      app.hasRoute({ method: 'POST', url: '/workspace/dbt/description-edits/applications' })
+    ).toBe(true);
+    expect(app.hasRoute({ method: 'POST', url: '/workspace/dbt/description-edits/reverts' })).toBe(
+      true
+    );
     expect(app.hasRoute({ method: 'GET', url: '/workspace/diff/changes' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/files' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/file-history/:path' })).toBe(true);

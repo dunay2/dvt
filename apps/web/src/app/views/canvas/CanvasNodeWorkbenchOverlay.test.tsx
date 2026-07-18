@@ -59,6 +59,7 @@ function renderOverlay(
           inspectorNode: NODE,
           inspectorPreferredTabId: 'columns',
           inspectorPreferredTabRequestId: 7,
+          inspectorWorkbenchContributions: [],
           registeredPlugins: new Set(['dbt']),
         }}
         onHide={vi.fn()}
@@ -105,7 +106,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     });
   });
 
-  it('moves the contextual workbench from the panel header drag handle', () => {
+  it('moves from the header when the browser declines synthetic pointer capture', () => {
     renderOverlay(root);
 
     const overlay = container.querySelector<HTMLElement>(
@@ -117,6 +118,9 @@ describe('CanvasNodeWorkbenchOverlay', () => {
 
     expect(overlay).not.toBeNull();
     expect(dragHandle).not.toBeNull();
+    dragHandle!.setPointerCapture = vi.fn(() => {
+      throw new DOMException('No active pointer', 'NotFoundError');
+    });
 
     const initialLeft = Number.parseFloat(overlay!.style.left);
     const initialTop = Number.parseFloat(overlay!.style.top);
@@ -133,14 +137,66 @@ describe('CanvasNodeWorkbenchOverlay', () => {
       });
       fireEvent.pointerMove(overlay!, {
         pointerId: 1,
-        clientX: 148,
+        clientX: 52,
         clientY: 112,
       });
       fireEvent.pointerUp(overlay!, { pointerId: 1 });
     });
 
-    expect(Number.parseFloat(overlay!.style.left)).toBe(initialLeft + 48);
+    expect(Number.parseFloat(overlay!.style.left)).toBe(initialLeft - 48);
     expect(Number.parseFloat(overlay!.style.top)).toBe(initialTop + 32);
+    expect(dragHandle!.setPointerCapture).toHaveBeenCalledWith(1);
+  });
+
+  it('keeps pointer movement within the visible work surface', () => {
+    renderOverlay(root);
+
+    const overlay = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-overlay"]'
+    )!;
+    const dragHandle = container.querySelector<HTMLElement>(
+      '[data-testid="canvas-node-workbench-drag-handle"]'
+    )!;
+
+    act(() => {
+      fireEvent.pointerDown(dragHandle, {
+        pointerId: 2,
+        button: 0,
+        clientX: 100,
+        clientY: 80,
+      });
+      fireEvent.pointerMove(overlay, {
+        pointerId: 2,
+        clientX: 5_000,
+        clientY: 5_000,
+      });
+      fireEvent.pointerUp(overlay, { pointerId: 2 });
+    });
+
+    expect(Number.parseFloat(overlay.style.left)).toBeLessThanOrEqual(window.innerWidth - 448 - 16);
+    expect(Number.parseFloat(overlay.style.top)).toBeLessThanOrEqual(window.innerHeight - 640 - 16);
+  });
+
+  it('exposes an accessible keyboard drag handle', () => {
+    renderOverlay(root);
+
+    const overlay = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-overlay"]'
+    )!;
+    const dragHandle = container.querySelector<HTMLElement>(
+      '[data-testid="canvas-node-workbench-drag-handle"]'
+    )!;
+    const initialLeft = Number.parseFloat(overlay.style.left);
+
+    expect(dragHandle.tabIndex).toBe(0);
+    expect(dragHandle.getAttribute('role')).toBe('button');
+    expect(dragHandle.getAttribute('aria-label')).toBeTruthy();
+
+    act(() => {
+      fireEvent.keyDown(dragHandle, { key: 'ArrowLeft' });
+    });
+
+    expect(Number.parseFloat(overlay.style.left)).toBe(initialLeft - 8);
   });
 
   it('does not mount node workbench chrome when the surface strategy is unavailable', () => {
@@ -185,6 +241,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
             inspectorNode: null,
             inspectorPreferredTabId: null,
             inspectorPreferredTabRequestId: 0,
+            inspectorWorkbenchContributions: [],
             registeredPlugins: new Set(['dbt']),
           },
         },

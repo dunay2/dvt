@@ -5,7 +5,11 @@ import { projectDbtManifest } from '../../../src/infrastructure/dbt/dbtManifestP
 describe('projectDbtManifest', () => {
   it('projects supported resources and reports unsupported graph resources', () => {
     const projection = projectDbtManifest({
-      metadata: { dbt_version: '1.10.0', adapter_type: 'postgres' },
+      metadata: {
+        dbt_version: '1.10.0',
+        adapter_type: 'postgres',
+        project_name: 'analytics',
+      },
       nodes: {
         'model.analytics.orders': {
           unique_id: 'model.analytics.orders',
@@ -13,6 +17,8 @@ describe('projectDbtManifest', () => {
           name: 'orders',
           package_name: 'analytics',
           original_file_path: 'models\\orders.sql',
+          patch_path: 'analytics://models/schema.yml',
+          description: 'Curated customer orders',
           depends_on: { nodes: ['source.analytics.raw.orders'] },
           columns: {},
           tags: [],
@@ -23,6 +29,17 @@ describe('projectDbtManifest', () => {
           name: 'audit',
           package_name: 'analytics',
           depends_on: { nodes: ['model.analytics.orders'] },
+        },
+        'model.dbt_utils.orders': {
+          unique_id: 'model.dbt_utils.orders',
+          resource_type: 'model',
+          name: 'orders',
+          package_name: 'dbt_utils',
+          original_file_path: 'models/orders.sql',
+          patch_path: 'dbt_utils://models/schema.yml',
+          depends_on: { nodes: [] },
+          columns: {},
+          tags: [],
         },
       },
       sources: {
@@ -42,23 +59,29 @@ describe('projectDbtManifest', () => {
       metrics: {},
     });
 
-    expect(projection.resources.map((resource) => resource.uniqueId)).toEqual([
-      'model.analytics.orders',
-      'source.analytics.raw.orders',
-    ]);
+    expect(projection.resources.map((resource) => resource.uniqueId)).toEqual(
+      ['model.dbt_utils.orders', 'model.analytics.orders', 'source.analytics.raw.orders'].sort()
+    );
     expect(projection.adapterType).toBe('postgres');
+    expect(projection.projectName).toBe('analytics');
     expect(projection.resources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           uniqueId: 'model.analytics.orders',
           originalFilePath: 'models/orders.sql',
+          descriptionFilePath: 'models/schema.yml',
+          description: 'Curated customer orders',
         }),
         expect.objectContaining({
           uniqueId: 'source.analytics.raw.orders',
           originalFilePath: 'models/sources/src_raw.yml',
+          descriptionFilePath: 'models/sources/src_raw.yml',
         }),
       ])
     );
+    expect(
+      projection.resources.find((resource) => resource.uniqueId === 'model.dbt_utils.orders')
+    ).not.toHaveProperty('descriptionFilePath');
     expect(projection.dependencies).toEqual([
       {
         sourceUniqueId: 'source.analytics.raw.orders',
@@ -77,7 +100,7 @@ describe('projectDbtManifest', () => {
   it('rejects malformed supported graph resources', () => {
     expect(() =>
       projectDbtManifest({
-        metadata: { dbt_version: '1.10.0' },
+        metadata: { dbt_version: '1.10.0', project_name: 'analytics' },
         nodes: {
           'model.analytics.orders': {
             unique_id: 'model.analytics.orders',
@@ -87,5 +110,47 @@ describe('projectDbtManifest', () => {
         sources: {},
       })
     ).toThrow('dbt parse produced a malformed graph resource.');
+  });
+
+  it('preserves empty DBT resource descriptions as exact editable baselines', () => {
+    const projection = projectDbtManifest({
+      metadata: { dbt_version: '1.10.0', project_name: 'analytics' },
+      nodes: {
+        'model.analytics.empty_description': {
+          unique_id: 'model.analytics.empty_description',
+          resource_type: 'model',
+          name: 'empty_description',
+          package_name: 'analytics',
+          patch_path: 'analytics://models/schema.yml',
+          description: '',
+          depends_on: { nodes: [] },
+          columns: {},
+          tags: [],
+        },
+        'model.analytics.whitespace_description': {
+          unique_id: 'model.analytics.whitespace_description',
+          resource_type: 'model',
+          name: 'whitespace_description',
+          package_name: 'analytics',
+          patch_path: 'analytics://models/schema.yml',
+          description: '  ',
+          depends_on: { nodes: [] },
+          columns: {},
+          tags: [],
+        },
+      },
+      sources: {},
+    });
+
+    expect(
+      projection.resources.find(
+        (resource) => resource.uniqueId === 'model.analytics.empty_description'
+      )?.description
+    ).toBe('');
+    expect(
+      projection.resources.find(
+        (resource) => resource.uniqueId === 'model.analytics.whitespace_description'
+      )?.description
+    ).toBe('  ');
   });
 });

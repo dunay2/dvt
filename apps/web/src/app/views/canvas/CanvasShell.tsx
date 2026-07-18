@@ -1,7 +1,7 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasContextMenuLayer } from './CanvasContextMenuLayer';
@@ -14,8 +14,8 @@ import { DbtProjectImportDialog } from '../../components/dbtProjectImport/DbtPro
 import { useCanvasSourceImportDialogState } from './useCanvasSourceImportDialogState';
 import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type { CanvasShellContextualWorkbench, CanvasShellProps } from './canvasShell.types';
-
-const CodeWorkbench = lazy(() => import('../CodeView'));
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 
 export default function CanvasShell({
   layout,
@@ -29,10 +29,12 @@ export default function CanvasShell({
   canvasContextScreenToFlowPosition,
   onDbtProjectImported,
 }: CanvasShellProps): JSX.Element {
+  const copy = resolveCanvasViewCopy();
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
   const [contextualWorkbenchId, setContextualWorkbenchId] = useState<'project-code' | null>(null);
+  const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
   const openProjectCodeWorkbench = useCallback(() => setContextualWorkbenchId('project-code'), []);
   const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
   const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
@@ -56,22 +58,29 @@ export default function CanvasShell({
 
     return {
       id: 'project-code',
-      title: 'Project code',
-      description: 'Workspace files in the active project scope.',
-      onClose: () => setContextualWorkbenchId(null),
+      title: copy.sqlContextWorkbenchProjectTitle,
+      closeLabel: copy.nodeWorkbenchCloseLabel,
+      description: copy.sqlContextWorkbenchProjectDescription,
+      requestClose: async () => {
+        const flushed = (await codeWorkbenchRef.current?.flush()) ?? true;
+        if (flushed) {
+          setContextualWorkbenchId(null);
+        }
+      },
       panel: (
-        <Suspense
-          fallback={
-            <div className="flex h-full items-center justify-center text-sm text-(--text-muted)">
-              Loading project code...
-            </div>
-          }
-        >
-          <CodeWorkbench publishRouteBootstrap={false} />
-        </Suspense>
+        <SqlContextWorkbench
+          ref={codeWorkbenchRef}
+          loadingMessage={copy.sqlContextWorkbenchLoadingMessage}
+        />
       ),
     };
-  }, [contextualWorkbenchId]);
+  }, [
+    contextualWorkbenchId,
+    copy.nodeWorkbenchCloseLabel,
+    copy.sqlContextWorkbenchLoadingMessage,
+    copy.sqlContextWorkbenchProjectDescription,
+    copy.sqlContextWorkbenchProjectTitle,
+  ]);
   const shellLayout = useMemo(
     () =>
       internalContextualWorkbench == null

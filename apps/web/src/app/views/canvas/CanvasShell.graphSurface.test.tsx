@@ -112,8 +112,9 @@ describe('CanvasShell graph base surface', () => {
         contextualWorkbench: {
           id: 'project-code',
           title: 'Project code',
+          closeLabel: 'Cerrar',
           panel: <div data-testid="code-workbench-panel" />,
-          onClose: vi.fn(),
+          requestClose: vi.fn(async () => undefined),
         },
       },
       chromeState: {
@@ -131,8 +132,9 @@ describe('CanvasShell graph base surface', () => {
         contextualWorkbench: {
           id: 'project-code',
           title: 'Project code',
+          closeLabel: 'Cerrar',
           panel: <div data-testid="code-workbench-panel" />,
-          onClose: vi.fn(),
+          requestClose: vi.fn(async () => undefined),
         },
       },
     });
@@ -145,5 +147,10 @@ describe('CanvasShell graph base surface', () => {
     expect(baseSurface?.classList).toContain('min-h-0');
     expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="code-workbench-panel"]')).not.toBeNull();
+    const closeButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-contextual-workbench-header"] button'
+    );
+    expect(closeButton?.textContent).toBe('Cerrar');
+    expect(closeButton?.getAttribute('aria-label')).toBe('Cerrar: Project code');
   });
 });

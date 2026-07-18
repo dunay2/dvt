@@ -502,7 +502,7 @@ function readFlag(args: readonly string[], flag: string): string {
 
 function manifest(): Record<string, unknown> {
   return {
-    metadata: { dbt_version: '1.10.0' },
+    metadata: { dbt_version: '1.10.0', project_name: 'analytics' },
     nodes: {
       'model.analytics.orders': {
         unique_id: 'model.analytics.orders',

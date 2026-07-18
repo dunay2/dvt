@@ -17,6 +17,7 @@ planning_type: mandatory-proposal
 task_ids:
   - E-DBT-PROJECT-ROUNDTRIP-1
   - E-DBT-PROJECT-ROUNDTRIP-P4-TRUTH-SYNC
+  - E-DBT-PROJECT-ROUNDTRIP-P5-YAML-DESCRIPTION-1
 refines:
   - docs/planning/proposals/mandatory/frontend-and-ux/dbt-authoring-code-run-vertical-plan-20260526.md
 canonical_path: docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md
@@ -2835,6 +2836,147 @@ Order:
 4. unambiguous materialization.
 
 Each operation is a separate governed slice if its mutation strategy differs.
+
+### Phase 5.1 — YAML description edit transaction
+
+#### Fowler design decision
+
+The first visual edit is one explicit transaction, not a generic node update and
+not a browser-owned YAML rewrite. The UI may edit only the description of the
+selected dbt resource. The API owns comment-preserving YAML mutation, identity
+resolution, revision comparison, proposal digest calculation, and conditional
+application. Existing project analysis, workspace-file CAS, Preview, and Run
+rails remain authoritative.
+
+The slice separates four responsibilities:
+
+| Component                           | Responsibility                                                         | Reason to change                    |
+| ----------------------------------- | ---------------------------------------------------------------------- | ----------------------------------- |
+| `DbtYamlDescriptionEdit`            | Resolve and preserve one dbt YAML description edit                     | dbt YAML mutation semantics change  |
+| `DbtYamlDescriptionEditTransaction` | Propose, confirm, receipt, conflict, and conditional revert state      | transaction policy changes          |
+| `DbtYamlDescriptionEditor`          | Render editable description, diff, confirmation, receipt, and recovery | interaction design changes          |
+| `SqlContextWorkbench`               | Bind the selected node path to the existing Code workbench             | contextual Code composition changes |
+
+`NodeFloatingToolbar` remains an icon-only launcher. It owns no file mutation,
+YAML parsing, project analysis, Preview, or Run behavior. `CanvasNodeWorkbench`
+remains the node-detail host and consumes the description editor through an
+explicit contribution contract; it does not inspect dbt YAML itself.
+
+#### Command and query rails
+
+```text
+ProposeDbtYamlDescriptionEdit (query)
+  DbtYamlDescriptionEditProposal
+  -> authorized project root + YAML path + dbt resource identity + next description
+  -> preserved candidate content + unified diff + expected file revision + proposal digest
+
+ApplyDbtYamlDescriptionEdit (command)
+  DbtYamlDescriptionEditTransaction
+  -> proposal digest + expected revision + idempotency key
+  -> immutable applied receipt or explicit conflict
+
+RevertDbtYamlDescriptionEdit (command)
+  DbtYamlDescriptionEditTransaction
+  -> applied receipt + expected applied revision
+  -> conditional revert receipt or explicit conflict
+
+ProjectDbtGraphFromFiles (query, reused)
+  -> fresh post-write projection
+
+PreviewExecutionPlan / StartRun (commands, reused)
+  -> persisted preview followed by run admission
+```
+
+No generic `UpdateDbtNode`, `SaveDbtYaml`, or visible `Save` command is added.
+
+#### Component relations
+
+```mermaid
+flowchart LR
+  Toolbar[NodeFloatingToolbar] -->|Code action| SQL[SqlContextWorkbench]
+  SQL --> Code[CodeWorkingTreeSync]
+  Workbench[CanvasNodeWorkbench] --> Editor[DbtYamlDescriptionEditor]
+  Editor --> Tx[DbtYamlDescriptionEditTransaction]
+  Tx --> Mutator[DbtYamlDescriptionEdit]
+  Mutator --> Files[Workspace file repository]
+  Tx --> Analysis[ProjectDbtGraphFromFiles]
+  Analysis --> Canvas[File-backed Canvas projection]
+  Canvas --> Preview[PreviewExecutionPlan]
+  Preview --> Run[StartRun]
+```
+
+#### Transaction sequence
+
+```mermaid
+sequenceDiagram
+  actor User
+  participant UI as DbtYamlDescriptionEditor
+  participant Proposal as ProposeDbtYamlDescriptionEdit
+  participant Command as ApplyDbtYamlDescriptionEdit
+  participant Files as Workspace file CAS
+  participant Analysis as ProjectDbtGraphFromFiles
+  participant Runtime as Preview / Run
+
+  User->>UI: Edit description
+  UI->>Proposal: Propose exact resource edit
+  Proposal->>Files: Read current YAML + revision
+  Proposal-->>UI: Preserved candidate + unified diff + digest
+  User->>UI: Confirm
+  UI->>Command: Apply digest at expected revision
+  Command->>Files: Conditional write
+  alt revision unchanged
+    Files-->>Command: Applied revision
+    Command-->>UI: Immutable receipt
+    UI->>Analysis: Refetch authoritative projection
+    Analysis-->>UI: Fresh graph or explicit diagnostics
+    User->>Runtime: Preview, then Run
+  else revision changed
+    Files-->>Command: Conflict
+    Command-->>UI: Conflict; no write and no fake success
+  end
+```
+
+#### Invariants
+
+1. A proposal identifies exactly one existing dbt resource and one YAML file.
+2. Comments, ordering, anchors, unrelated resources, tests, tags, quoting, and
+   formatting outside the target description remain unchanged.
+3. Apply recomputes the candidate from authoritative content and rejects a stale
+   revision or mismatched proposal digest.
+4. Revert is allowed only when the current file revision is the revision created
+   by the applied receipt; it never overwrites a later edit.
+5. A successful write is not presented as valid until fresh dbt analysis proves
+   the resulting project state.
+6. Code opens the selected resource path; project Code remains reachable and
+   uses the same working-tree synchronization rail.
+7. The node toolbar contains icons only. Accessible labels and complete tooltips
+   come from the Canvas locale catalog. Freeze exposes a pressed state and updates
+   immediately from the current frozen-node set.
+8. Floating toolbar, node workbench, and health popover have mutually coherent
+   ownership and stacking; deleting or changing the selected node closes stale
+   surfaces.
+9. Preview and Run expose visible progress, success, blocked, and failure states;
+   Run cannot start from stale or absent Preview evidence.
+
+#### Definition of done
+
+1. Planning DB records the design, components, relations, ports, rails, source
+   ownership, tests, and evidence before the task is closed.
+2. The exact YAML edit preserves non-target bytes in preservation fixtures and
+   rejects missing, ambiguous, unsupported, stale, digest-mismatched, and
+   unauthorized requests.
+3. The browser shows a visible diff before confirmation, a receipt after apply,
+   an actionable conflict state, fresh graph analysis, Preview, Run, reopen, and
+   conditional revert.
+4. The toolbar is icon-only and localized, freeze is visibly pressed when active,
+   Code opens the selected node file, and project Code remains available.
+5. The workbench contains no duplicate property authority and no label-based
+   semantic filtering. Presentation receives typed field identities and command
+   ports.
+6. Unit, component, integration, architecture, and strict live Cypress evidence
+   pass without intercepting workspace-file, dbt-analysis, Preview, or Run success.
+7. No stub, placeholder, fake adapter, disabled rule, hidden debt, or parallel
+   command/query synonym is introduced.
 
 ## Phase 6 — Export
 

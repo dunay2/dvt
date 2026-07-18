@@ -1,5 +1,5 @@
 /** Owned concern: present the read-only file-authoritative dbt Canvas surface. */
-import { lazy, Suspense, type ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import type { DbtProjectImportResult } from '@dvt/contracts';
 
 import { cn } from '../../components/ui/utils';
@@ -7,10 +7,12 @@ import { dbtProjectFileCanvasSurfaceStrategy } from '../../plugins/dbt/dbtProjec
 import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type { CanvasShellProps } from './canvasShell.types';
 import CanvasShell from './CanvasShell';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { CanvasErrorStateView, CanvasLoadingStateView } from './CanvasStateViews';
+import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
+import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
+import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
 import type { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
-
-const CodeView = lazy(() => import('../CodeView'));
 
 type DbtProjectFileCanvasController = ReturnType<typeof useDbtProjectFileCanvasController>;
 const FILE_AUTHORITY_SOURCE_IMPORT_KINDS = DBT_NODE_KINDS.filter(
@@ -119,6 +121,8 @@ export function DbtProjectFileCanvasView({
   screenToFlowPosition: NonNullable<CanvasShellProps['canvasContextScreenToFlowPosition']>;
   onDbtProjectImported: (result: DbtProjectImportResult) => void;
 }>): JSX.Element {
+  const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
+  const copy = resolveCanvasViewCopy();
   const projectRoot = controller.authorityBinding.authority.projectRoot;
   const projectTitle = resolveProjectTitle(projectRoot);
   const activeCanvas = {
@@ -128,35 +132,20 @@ export function DbtProjectFileCanvasView({
     defaultPermission: 'read' as const,
   };
   const centerSurface = resolveCenterSurface(controller);
-  const contextualWorkbench =
-    controller.projectCodeWorkbench == null
-      ? undefined
-      : {
-          id: 'project-code' as const,
-          title: 'Project code',
-          description: projectRoot,
-          onClose: controller.closeProjectCode,
-          panel: (
-            <Suspense
-              fallback={
-                <div className="flex h-full items-center justify-center text-sm text-(--text-muted)">
-                  Loading project code...
-                </div>
-              }
-            >
-              <CodeView
-                publishRouteBootstrap={false}
-                fileScope={{
-                  kind: 'dbt-project-files',
-                  projectRoot,
-                  ...(controller.projectCodeWorkbench.initialPath == null
-                    ? {}
-                    : { initialPath: controller.projectCodeWorkbench.initialPath }),
-                }}
-              />
-            </Suspense>
-          ),
-        };
+  const inspectorWorkbenchContributions = buildDbtYamlDescriptionWorkbenchContributions({
+    canvasId: activeCanvas.id,
+    node: controller.inspectorNode,
+    onProjectChanged: controller.refreshProjectGraphAfterMutation,
+    onReloadLatest: controller.reloadNodeDescription,
+  });
+  const contextualWorkbench = buildDbtProjectFileCodeWorkbench({
+    copy,
+    workbenchRef: codeWorkbenchRef,
+    onClose: controller.closeCodeWorkbench,
+    onProjectChanged: controller.refreshProjectGraphAfterCodeMutation,
+    projectRoot,
+    target: controller.codeWorkbenchTarget,
+  });
   const shellProps: CanvasShellProps = {
     layout: {
       focusMode: controller.presentation.focusMode,
@@ -187,6 +176,7 @@ export function DbtProjectFileCanvasView({
         canEditNode: false,
         onApplyNodeDraft: () => unsupportedFileProjectionCommand('Edit graph node properties'),
       },
+      inspectorWorkbenchContributions,
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
       userPermissions: {

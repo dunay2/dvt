@@ -16,6 +16,17 @@ export const canvasViewToolbarCopyEs = {
   toolbarGridColorLabel: 'Color de rejilla',
   toolbarSnapToGridLabel: 'Ajustar',
   toolbarCanvasSettingsLabel: 'Configuracion de canvas',
+  canvasNodeToolbarLabelTemplate: 'Acciones del nodo: {nodeName}',
+  canvasNodeToolbarCodeLabel: 'Abrir codigo del nodo',
+  canvasNodeToolbarCodeDescription:
+    'Abre el fichero del nodo seleccionado en el workbench de codigo contextual.',
+  canvasNodeToolbarFreezeLabel: 'Congelar nodo',
+  canvasNodeToolbarFreezeDescription: 'Mantiene este nodo fijo en su posicion actual del canvas.',
+  canvasNodeToolbarUnfreezeLabel: 'Descongelar nodo',
+  canvasNodeToolbarUnfreezeDescription: 'Permite volver a mover este nodo por el canvas.',
+  canvasNodeToolbarMoreLabel: 'Mas acciones del nodo',
+  canvasNodeToolbarMoreDescription:
+    'Abre las acciones contextuales gobernadas disponibles para este nodo.',
   canvasContextMenuAddLabel: 'Anadir...',
   canvasContextMenuAddSourceLabel: 'Anadir origen',
   canvasContextMenuAddModelLabel: 'Anadir modelo',

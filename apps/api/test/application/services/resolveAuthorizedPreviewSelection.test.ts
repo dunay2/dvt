@@ -88,6 +88,7 @@ function buildProjection(overrides: Record<string, unknown> = {}): DbtProjectGra
     freshness: 'fresh',
     projectRevision: {
       projectRoot: 'analytics',
+      projectName: 'analytics',
       contentSetSha256: CONTENT_SHA,
       analyzedAt: '2026-07-15T10:00:00.000Z',
       analyzerVersion: 'dvt-dbt-analyzer.v1',
@@ -176,6 +177,7 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
       buildProjection({
         projectRevision: {
           projectRoot: 'analytics',
+          projectName: 'analytics',
           contentSetSha256: 'c'.repeat(64),
           analyzedAt: '2026-07-15T10:00:00.000Z',
           analyzerVersion: 'dvt-dbt-analyzer.v1',

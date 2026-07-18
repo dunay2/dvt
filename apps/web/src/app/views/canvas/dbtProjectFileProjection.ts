@@ -62,6 +62,7 @@ function projectNode(
     role: presentation.role,
     status: hasProjectionWarning ? 'warn' : 'idle',
     tags: [...node.tags],
+    ...(node.description === undefined ? {} : { description: node.description }),
     ...(node.originalFilePath === undefined
       ? {}
       : { path: normalizeWorkspacePath(node.originalFilePath) }),
@@ -69,6 +70,9 @@ function projectNode(
       dbtUniqueId: node.uniqueId,
       resourceType: node.resourceType,
       packageName: node.packageName,
+      ...(node.descriptionFilePath === undefined
+        ? {}
+        : { descriptionFilePath: normalizeWorkspacePath(node.descriptionFilePath) }),
       ...(node.sourceName === undefined ? {} : { sourceName: node.sourceName }),
       ...(node.materialized === undefined ? {} : { materialized: node.materialized }),
       columns: node.columns.map((column) => ({

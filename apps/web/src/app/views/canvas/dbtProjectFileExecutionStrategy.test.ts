@@ -20,6 +20,7 @@ function buildProjection(overrides: Record<string, unknown> = {}): DbtProjectGra
     freshness: 'fresh',
     projectRevision: {
       projectRoot: 'analytics',
+      projectName: 'analytics',
       contentSetSha256: '1'.repeat(64),
       analyzedAt: '2026-07-15T10:00:00.000Z',
       analyzerVersion: 'dbt-cli-v1',

@@ -81,6 +81,7 @@ describe('PlanPreviewProvenance.v1', () => {
       freshness: 'fresh',
       projectRevision: {
         projectRoot: 'analytics/orders',
+        projectName: 'analytics',
         contentSetSha256: 'a'.repeat(64),
         analyzedAt: '2026-07-15T10:00:00.000Z',
         analyzerVersion: 'dvt-dbt-analyzer.v1',

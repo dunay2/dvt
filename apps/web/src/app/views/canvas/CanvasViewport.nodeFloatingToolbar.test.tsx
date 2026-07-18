@@ -53,22 +53,28 @@ describe('CanvasViewport node floating toolbar', () => {
       nodeElement: document.createElement('div'),
     });
 
-    expect(toolbarText()).toContain('Código');
-    expect(toolbarText()).toContain('Congelar');
-    expect(toolbarButton('Congelar')?.getAttribute('data-action-state')).toBe('available');
-    expect(toolbarButton('Congelar')?.getAttribute('aria-disabled')).toBeNull();
-    expect(toolbarButton('Más acciones')).not.toBeNull();
-    expect(toolbarText()).not.toContain('Seleccionar para ejecución');
-    expect(toolbarButton('Seleccionar para ejecución')).toBeNull();
+    expect(toolbarText()).toBe('');
+    expect(toolbarButton('Open node code')).not.toBeNull();
+    expect(toolbarButton('Freeze node')?.getAttribute('data-action-state')).toBe('available');
+    expect(toolbarButton('Freeze node')?.getAttribute('aria-pressed')).toBe('false');
+    expect(toolbarButton('Freeze node')?.getAttribute('aria-disabled')).toBeNull();
+    expect(toolbarButton('More node actions')).not.toBeNull();
 
     await act(async () => {
-      toolbarButton('Código')?.click();
+      toolbarButton('Open node code')?.click();
     });
 
     expect(onInspectNode).toHaveBeenCalledWith('model_orders', 'code');
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+
+    await clickNode('model_orders', {
+      clientX: 420,
+      clientY: 240,
+      nodeElement: document.createElement('div'),
+    });
 
     await act(async () => {
-      toolbarButton('Congelar')?.click();
+      toolbarButton('Freeze node')?.click();
     });
 
     expect(onToggleFrozenNode).toHaveBeenCalledWith('model_orders');
@@ -76,6 +82,57 @@ describe('CanvasViewport node floating toolbar', () => {
     await paneClick(440, 260);
 
     expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+  });
+
+  it('uses the node-specific code command instead of reopening the inspector Code tab', async () => {
+    const onInspectNode = vi.fn();
+    const onOpenNodeCode = vi.fn();
+
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'model_orders',
+          position: { x: 160, y: 90 },
+          data: {
+            name: 'Orders model',
+            onInspectNode,
+            onOpenNodeCode,
+          },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('model_orders', 420, 240);
+    await act(async () => {
+      toolbarButton('Open node code')?.click();
+    });
+
+    expect(onOpenNodeCode).toHaveBeenCalledWith('model_orders');
+    expect(onInspectNode).not.toHaveBeenCalled();
+  });
+
+  it('does not offer Code when the node strategy declares no file authority', async () => {
+    await renderViewport({
+      onToggleFrozenNode: vi.fn(),
+      nodesWithImpact: [
+        {
+          id: 'metric_without_path',
+          position: { x: 160, y: 90 },
+          data: {
+            name: 'Metric without path',
+            canOpenNodeCode: false,
+            onInspectNode: vi.fn(),
+          },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('metric_without_path', 420, 240);
+
+    expect(toolbarButton('Open node code')).toBeNull();
+    expect(toolbarButton('Freeze node')).not.toBeNull();
   });
 
   it('shows an unfreeze action when the clicked node is already frozen', async () => {
@@ -101,8 +158,9 @@ describe('CanvasViewport node floating toolbar', () => {
       nodeElement: document.createElement('div'),
     });
 
-    expect(toolbarButton('Descongelar')).not.toBeNull();
-    expect(toolbarButton('Congelar')).toBeNull();
+    expect(toolbarButton('Unfreeze node')?.getAttribute('aria-pressed')).toBe('true');
+    expect(toolbarButton('Unfreeze node')?.getAttribute('data-tone')).toBe('active');
+    expect(toolbarButton('Freeze node')).toBeNull();
   });
 
   it('aligns the node floating toolbar with the node card instead of the click point', async () => {
@@ -156,7 +214,7 @@ describe('CanvasViewport node floating toolbar', () => {
     });
 
     await act(async () => {
-      toolbarButton('Más acciones')?.click();
+      toolbarButton('More node actions')?.click();
     });
 
     expect(dispatchEvent).toHaveBeenCalledTimes(1);
@@ -206,8 +264,7 @@ describe('CanvasViewport node floating toolbar', () => {
     ).not.toBeNull();
 
     const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
-      | ((event: React.MouseEvent<Element>) => void)
-      | undefined;
+      ((event: React.MouseEvent<Element>) => void) | undefined;
     await act(async () => {
       paneContextMenu?.({
         preventDefault: vi.fn(),
@@ -280,6 +337,39 @@ describe('CanvasViewport node floating toolbar', () => {
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
   });
 
+  it('closes the toolbar before the node interaction opens its workbench', async () => {
+    const onInspectNode = vi.fn();
+
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'model_orders',
+          position: { x: 160, y: 90 },
+          data: { name: 'Orders model', onInspectNode },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('model_orders', 420, 240);
+    expect(
+      document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')
+    ).not.toBeNull();
+
+    const projectedNode = (
+      xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact']
+    ).find(({ id }) => id === 'model_orders');
+    const openWorkbench = projectedNode?.data.onInspectNode as
+      ((nodeId: string, preferredTabId?: string) => void) | undefined;
+
+    await act(async () => {
+      openWorkbench?.('model_orders');
+    });
+
+    expect(onInspectNode).toHaveBeenCalledWith('model_orders');
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+  });
+
   async function clickNode(
     nodeId: string,
     eventInput:
@@ -336,8 +426,7 @@ describe('CanvasViewport node floating toolbar', () => {
 
   async function paneClick(clientX: number, clientY: number): Promise<void> {
     const onPaneClick = xyflowState.lastReactFlowProps?.onPaneClick as
-      | ((event: React.MouseEvent<Element>) => void)
-      | undefined;
+      ((event: React.MouseEvent<Element>) => void) | undefined;
 
     await act(async () => {
       onPaneClick?.({

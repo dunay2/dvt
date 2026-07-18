@@ -25,10 +25,9 @@ export type NodePropertiesTabsProps = Readonly<{
   activeTab: string;
   primarySectionIds?: readonly NodePropertySection['id'][];
   beforePanels?: ReactNode;
-  sectionChildren?: Partial<Record<NodePropertySection['id'], ReactNode>>;
-  sectionChildrenPlacement?: Partial<
-    Record<NodePropertySection['id'], 'before-body' | 'after-body'>
-  >;
+  sectionBeforeChildren?: Partial<Record<NodePropertySection['id'], ReactNode>>;
+  sectionAfterChildren?: Partial<Record<NodePropertySection['id'], ReactNode>>;
+  moreLabel: string;
   tagsEditor?: ReactNode;
   slotPrefix?: string;
   surface?: 'inspector' | 'workbench';
@@ -83,8 +82,9 @@ export function NodePropertiesTabs({
   activeTab,
   primarySectionIds,
   beforePanels,
-  sectionChildren,
-  sectionChildrenPlacement,
+  sectionBeforeChildren,
+  sectionAfterChildren,
+  moreLabel,
   tagsEditor,
   slotPrefix,
   surface = 'inspector',
@@ -164,7 +164,9 @@ export function NodePropertiesTabs({
                   activeOverflowItem != null && 'border-(--focus-ring) text-slate-50'
                 )}
               >
-                {activeOverflowItem == null ? 'More' : `More: ${activeOverflowItem.label}`}
+                {activeOverflowItem == null
+                  ? moreLabel
+                  : `${moreLabel}: ${activeOverflowItem.label}`}
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -200,10 +202,12 @@ export function NodePropertiesTabs({
             slots={slots}
             surface={surface}
             showCountBadge={showSectionCountBadge}
-            childrenPlacement={sectionChildrenPlacement?.[section.id]}
-          >
-            {sectionChildren?.[section.id] ?? (section.id === 'general' ? beforePanels : null)}
-          </NodePropertySectionView>
+            beforeBody={
+              sectionBeforeChildren?.[section.id] ??
+              (section.id === 'general' ? beforePanels : null)
+            }
+            afterBody={sectionAfterChildren?.[section.id]}
+          />
         </TabsContent>
       ))}
 

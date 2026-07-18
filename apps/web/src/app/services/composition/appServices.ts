@@ -19,6 +19,7 @@ import type {
 import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
 import type { IDbtProjectGraphQueryPort } from '../../ports/dbtProjectGraph';
 import type { IDbtProjectImportPort } from '../../ports/dbtProjectImport';
+import type { IDbtYamlDescriptionEditPort } from '../../ports/dbtYamlDescriptionEdit';
 import { createApiClient, type ApiClient } from '../api/createApiClient';
 import { createCapabilitiesPort } from '../capabilities/capabilitiesPort';
 import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
@@ -32,6 +33,7 @@ import { createWorkspaceScopeSelectionPort } from '../session/workspaceScopeSele
 import { createApiWorkspaceGraphDraftAuthoringPort } from '../workspace/workspaceGraphDraftAuthoring.api';
 import { createApiDbtProjectGraphQueryPort } from '../dbtProject/dbtProjectGraph.api';
 import { createApiDbtProjectImportPort } from '../dbtProject/dbtProjectImport.api';
+import { createApiDbtYamlDescriptionEditPort } from '../dbtProject/dbtYamlDescriptionEdit.api';
 import { createApiWorkspacePluginCatalogQueryPort } from '../workspace/workspacePluginCatalog.api';
 import { createWorkspacePorts } from '../workspace/workspacePorts';
 
@@ -49,6 +51,7 @@ export interface AppServices {
   readonly workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
   readonly dbtProjectGraphQueryPort: IDbtProjectGraphQueryPort;
   readonly dbtProjectImportPort: IDbtProjectImportPort;
+  readonly dbtYamlDescriptionEditPort: IDbtYamlDescriptionEditPort;
   readonly runsService: IRunsPort;
   readonly plansService: IPlansPort;
   readonly costAttributionSummaryPort: ICostAttributionSummaryPort;
@@ -71,6 +74,7 @@ export interface AppServicesOverrides {
   readonly workspaceGraphDraftAuthoringPort?: IWorkspaceGraphDraftAuthoringPort;
   readonly dbtProjectGraphQueryPort?: IDbtProjectGraphQueryPort;
   readonly dbtProjectImportPort?: IDbtProjectImportPort;
+  readonly dbtYamlDescriptionEditPort?: IDbtYamlDescriptionEditPort;
   readonly runsService?: IRunsPort;
   readonly plansService?: IPlansPort;
   readonly costAttributionSummaryPort?: ICostAttributionSummaryPort;
@@ -108,6 +112,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     overrides.dbtProjectGraphQueryPort ?? createApiDbtProjectGraphQueryPort(apiClient);
   const dbtProjectImportPort =
     overrides.dbtProjectImportPort ?? createApiDbtProjectImportPort(apiClient);
+  const dbtYamlDescriptionEditPort =
+    overrides.dbtYamlDescriptionEditPort ?? createApiDbtYamlDescriptionEditPort(apiClient);
 
   return {
     dataSourceMode,
@@ -123,6 +129,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     workspaceGraphDraftAuthoringPort,
     dbtProjectGraphQueryPort,
     dbtProjectImportPort,
+    dbtYamlDescriptionEditPort,
     runsService: overrides.runsService ?? createRunsService(apiClient, { sessionContext }),
     plansService: overrides.plansService ?? createPlansService(apiClient),
     costAttributionSummaryPort:

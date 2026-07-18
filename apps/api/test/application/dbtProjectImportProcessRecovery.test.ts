@@ -37,6 +37,7 @@ const PROJECTION = DbtProjectGraphProjectionSchema.parse({
   freshness: 'fresh',
   projectRevision: {
     projectRoot: RECEIPT.projectRoot,
+    projectName: 'analytics',
     contentSetSha256: RECEIPT.contentSetSha256,
     analyzedAt: NOW.toISOString(),
     analyzerVersion: 'dvt-dbt-analyzer.v1',

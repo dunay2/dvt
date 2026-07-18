@@ -16,6 +16,8 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   invalidGraphSource: 'invalid graph source',
   invalidDbtProjectRoot: 'invalid dbt project root',
   invalidDbtProjectImport: 'invalid dbt project import request',
+  invalidDbtYamlDescriptionReceipt: 'invalid dbt YAML description receipt',
+  invalidDbtYamlDescriptionRequest: 'invalid dbt YAML description request',
   invalidPath: 'invalid path',
   invalidPlanSource: 'invalid plan source',
   invalidPlanRef: 'invalid plan ref',
@@ -26,6 +28,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   missingAction: 'missing action',
   missingFile: 'missing file',
   missingWorkspaceFileReadAuthority: 'missing workspace-file read authority',
+  missingWorkspaceFileSaveAuthority: 'missing workspace-file save authority',
   missingIdempotencyKey: 'missing idempotency key',
   missingScope: 'missing scope',
   missingToken: 'missing token',
@@ -34,6 +37,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
     'workspace profiles.yml without server-owned profile reference',
   staleAuthority: 'stale authority',
   staleValidationReceipt: 'stale validation receipt',
+  staleDbtYamlDescriptionRevision: 'stale dbt YAML description revision',
   occupiedCanvas: 'occupied Canvas',
   projectionFailure: 'projection failure',
   missingFileAuthority: 'missing dbt project file authority',
@@ -90,6 +94,12 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   dbtProjectImportUseCases: 'apps/api/test/application/dbtProjectImportUseCases.test.ts',
   dbtProjectImportInspector:
     'apps/api/test/infrastructure/dbt/LocalDbtProjectImportInspector.test.ts',
+  dbtYamlDescriptionEditRoutes:
+    'apps/api/test/entrypoints/http/dbtYamlDescriptionEditRoutes.test.ts',
+  applyDbtYamlDescriptionEditCommand:
+    'apps/api/test/application/services/dbtYamlDescriptionEdit/ApplyDbtYamlDescriptionEditCommand.test.ts',
+  revertDbtYamlDescriptionEditCommand:
+    'apps/api/test/application/services/dbtYamlDescriptionEdit/RevertDbtYamlDescriptionEditCommand.test.ts',
   workspaceContextRoute: 'apps/api/test/entrypoints/http/workspaceContextRoute.test.ts',
   workspacePluginCatalogRoutes:
     'apps/api/test/entrypoints/http/workspacePluginCatalogRoutes.test.ts',
@@ -196,6 +206,36 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     adapterSurface: 'GET /workspace/dbt/graph',
     scopeAndAuthorization:
       'workspace:graph-draft:view plus workspace:files:view, tenant/project/environment scope',
+  },
+  proposeDbtYamlDescriptionEdit: {
+    name: 'ProposeDbtYamlDescriptionEdit',
+    boundedContext: 'dbt project YAML visual authoring',
+    dddObject: 'DbtYamlDescriptionEditProposal',
+    applicationPort:
+      'IProposeDbtYamlDescriptionEditQuery via IDbtYamlDescriptionResourceResolver, IDbtYamlDescriptionMutator, and IWorkspaceFileRepository',
+    adapterSurface: 'POST /workspace/dbt/description-edits/proposals',
+    scopeAndAuthorization:
+      'workspace:graph-draft:view plus workspace:files:view, tenant/project/environment scope',
+  },
+  applyDbtYamlDescriptionEdit: {
+    name: 'ApplyDbtYamlDescriptionEdit',
+    boundedContext: 'dbt project YAML visual authoring',
+    dddObject: 'DbtYamlDescriptionAppliedReceipt',
+    applicationPort:
+      'IApplyDbtYamlDescriptionEditCommand via IWorkspaceFileBatchMutationPort, IDbtYamlDescriptionReceiptStore, and ProjectDbtGraphFromFilesUseCase',
+    adapterSurface: 'POST /workspace/dbt/description-edits/applications',
+    scopeAndAuthorization:
+      'workspace:graph-draft:view plus workspace:files:save, tenant/project/environment scope and idempotency key',
+  },
+  revertDbtYamlDescriptionEdit: {
+    name: 'RevertDbtYamlDescriptionEdit',
+    boundedContext: 'dbt project YAML visual authoring',
+    dddObject: 'DbtYamlDescriptionRevertedReceipt',
+    applicationPort:
+      'IRevertDbtYamlDescriptionEditCommand via IWorkspaceFileBatchMutationPort, IDbtYamlDescriptionReceiptStore, and ProjectDbtGraphFromFilesUseCase',
+    adapterSurface: 'POST /workspace/dbt/description-edits/reverts',
+    scopeAndAuthorization:
+      'workspace:graph-draft:view plus workspace:files:save, tenant/project/environment scope, server-owned applied receipt ID, and idempotency key',
   },
   validateDbtProjectImport: {
     name: 'ValidateDbtProjectImport',

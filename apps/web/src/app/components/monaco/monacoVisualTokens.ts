@@ -23,6 +23,7 @@ export function createMonacoCodeOptions({ ariaLabel, readOnly }: CreateMonacoCod
     automaticLayout: true,
     codeLens: false,
     contextmenu: !readOnly,
+    editContext: false,
     folding: true,
     glyphMargin: false,
     lineNumbersMinChars: 3,

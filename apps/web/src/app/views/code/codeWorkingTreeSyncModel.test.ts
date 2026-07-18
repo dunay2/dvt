@@ -57,9 +57,10 @@ describe('CodeWorkingTreeSync model', () => {
     });
 
     const completed = reduceCodeWorkingTreeSync(editedAgain, {
-      type: 'sync_succeeded',
+      type: 'content_persisted',
       requestId: 1,
       receipt: savedReceipt(),
+      requiresReconciliation: false,
     });
 
     expect(completed.phase).toBe('modified');

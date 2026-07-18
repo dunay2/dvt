@@ -1,7 +1,11 @@
 /** Owned concern: orchestrate revision-guarded Code edits into the project working tree. */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { FileContent, IWorkspaceFileContentCommandPort } from '../../ports/workspace';
+import type {
+  FileContent,
+  IWorkspaceFileContentCommandPort,
+  WorkspaceFileSaveReceipt,
+} from '../../ports/workspace';
 import { WorkspaceFileRevisionConflictError } from '../../services/workspace/workspaceErrors';
 import {
   createCodeWorkingTreeSyncState,
@@ -17,12 +21,14 @@ type UseCodeWorkingTreeSyncInput = Readonly<{
   file: FileContent | undefined;
   commandPort: IWorkspaceFileContentCommandPort;
   debounceMs?: number;
+  onFileSynchronized?: (receipt: WorkspaceFileSaveReceipt) => Promise<void>;
 }>;
 
 export function useCodeWorkingTreeSync({
   file,
   commandPort,
   debounceMs = DEFAULT_DEBOUNCE_MS,
+  onFileSynchronized,
 }: UseCodeWorkingTreeSyncInput) {
   const [state, setState] = useState<CodeWorkingTreeSyncState | null>(() =>
     file ? createCodeWorkingTreeSyncState(file) : null
@@ -86,34 +92,49 @@ export function useCodeWorkingTreeSync({
       return;
     }
 
-    const operation = commandPort
-      .saveFileContent({
-        path: started.filePath,
-        content: request.content,
-        expectedRevision: {
-          kind: 'content_sha256',
-          value: request.expectedRevision,
-        },
-      })
-      .then((receipt) => {
-        transition({ type: 'sync_succeeded', requestId, receipt });
-      })
-      .catch((error: unknown) => {
+    const operation = (async () => {
+      let receipt: WorkspaceFileSaveReceipt;
+      try {
+        receipt = await commandPort.saveFileContent({
+          path: started.filePath,
+          content: request.content,
+          expectedRevision: {
+            kind: 'content_sha256',
+            value: request.expectedRevision,
+          },
+        });
+      } catch (error: unknown) {
         transition({
           type:
             error instanceof WorkspaceFileRevisionConflictError ? 'sync_conflicted' : 'sync_failed',
           requestId,
         });
-      })
-      .finally(() => {
-        if (activeSyncRef.current === operation) {
-          activeSyncRef.current = null;
-        }
+        return;
+      }
+
+      transition({
+        type: 'content_persisted',
+        requestId,
+        receipt,
+        requiresReconciliation: onFileSynchronized != null,
       });
+      if (onFileSynchronized != null) {
+        try {
+          await onFileSynchronized(receipt);
+          transition({ type: 'reconciliation_succeeded' });
+        } catch {
+          transition({ type: 'reconciliation_failed' });
+        }
+      }
+    })().finally(() => {
+      if (activeSyncRef.current === operation) {
+        activeSyncRef.current = null;
+      }
+    });
 
     activeSyncRef.current = operation;
     await operation;
-  }, [commandPort, transition]);
+  }, [commandPort, onFileSynchronized, transition]);
 
   useEffect(() => {
     if (state?.phase !== 'modified') {
@@ -139,10 +160,14 @@ export function useCodeWorkingTreeSync({
       if (!current || current.phase === 'synchronized') {
         return true;
       }
-      if (current.phase === 'conflict' || current.phase === 'failed') {
+      if (
+        current.phase === 'conflict' ||
+        current.phase === 'failed' ||
+        current.phase === 'reconciliation_failed'
+      ) {
         return false;
       }
-      if (current.phase === 'syncing') {
+      if (current.phase === 'syncing' || current.phase === 'reconciling') {
         await activeSyncRef.current;
       } else {
         await synchronizeOnce();
@@ -151,8 +176,32 @@ export function useCodeWorkingTreeSync({
   }, [synchronizeOnce]);
 
   const retry = useCallback(() => {
+    const current = stateRef.current;
+    if (
+      current?.phase === 'reconciliation_failed' &&
+      current.pendingReconciliation != null &&
+      onFileSynchronized != null
+    ) {
+      transition({ type: 'reconciliation_started' });
+      const operation = (async () => {
+        try {
+          await onFileSynchronized(current.pendingReconciliation!);
+          transition({ type: 'reconciliation_succeeded' });
+        } catch {
+          transition({ type: 'reconciliation_failed' });
+        }
+      })().finally(() => {
+        if (activeSyncRef.current === operation) {
+          activeSyncRef.current = null;
+        }
+      });
+      activeSyncRef.current = operation;
+      return operation;
+    }
+
     transition({ type: 'retry_requested' });
-  }, [transition]);
+    return Promise.resolve();
+  }, [onFileSynchronized, transition]);
 
   const loadAuthoritative = useCallback(
     (nextFile: FileContent) => {

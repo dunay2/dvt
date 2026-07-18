@@ -13,10 +13,7 @@ import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCa
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
-import {
-  buildCanvasNodeFloatingToolbarModel,
-  type CanvasNodeFloatingToolbarModel,
-} from './canvasNodeFloatingToolbarModel';
+import { buildCanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
 import { resolveCanvasViewportStyle } from './canvasViewportStyle';
 import {
@@ -74,6 +71,14 @@ type NodeHealthPopoverModel = Readonly<{
   position: { x: number; y: number };
 }>;
 
+type NodeFloatingToolbarAnchor = Readonly<{
+  nodeId: string;
+  nodeName: string;
+  position: { x: number; y: number };
+  nodeTop: number;
+  contextMenuTrigger: Element | null;
+}>;
+
 function CanvasViewportWithPresenter({
   contextMenuPresenter,
   renderContextMenuView,
@@ -81,8 +86,8 @@ function CanvasViewportWithPresenter({
 }: CanvasViewportWithPresenterProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [nodeFloatingToolbarModel, setNodeFloatingToolbarModel] =
-    useState<CanvasNodeFloatingToolbarModel | null>(null);
+  const [nodeFloatingToolbarAnchor, setNodeFloatingToolbarAnchor] =
+    useState<NodeFloatingToolbarAnchor | null>(null);
   const [nodeHealthPopoverModel, setNodeHealthPopoverModel] =
     useState<NodeHealthPopoverModel | null>(null);
   const nodeHealthPopoverTriggerRef = useRef<HTMLElement | null>(null);
@@ -92,7 +97,7 @@ function CanvasViewportWithPresenter({
     gridColor: props.canvasGridColor,
   });
   const closeNodeFloatingToolbar = useCallback(() => {
-    setNodeFloatingToolbarModel(null);
+    setNodeFloatingToolbarAnchor(null);
   }, []);
   const closeNodeHealthPopover = useCallback((restoreTriggerFocus = false) => {
     setNodeHealthPopoverModel(null);
@@ -108,7 +113,7 @@ function CanvasViewportWithPresenter({
       const anchorRect = anchorElement.getBoundingClientRect();
       const viewportRect = viewportRef.current?.getBoundingClientRect();
       nodeHealthPopoverTriggerRef.current = anchorElement;
-      setNodeFloatingToolbarModel(null);
+      setNodeFloatingToolbarAnchor(null);
       setNodeHealthPopoverModel({
         nodeId,
         detail,
@@ -123,31 +128,112 @@ function CanvasViewportWithPresenter({
 
   const nodesWithOperationalDetails = useMemo(
     () =>
-      props.nodesWithImpact.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          onOpenOperationalDetails: (
-            detail: GraphNodeOperationalDetail,
-            anchorElement: HTMLElement
-          ) => openNodeHealthPopover(node.id, detail, anchorElement),
-        },
-      })),
-    [openNodeHealthPopover, props.nodesWithImpact]
+      props.nodesWithImpact.map((node) => {
+        const nodeData = node.data as Record<string, unknown>;
+        const inspectNode =
+          typeof nodeData.onInspectNode === 'function'
+            ? (nodeData.onInspectNode as (...args: unknown[]) => void)
+            : null;
+
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            ...(inspectNode == null
+              ? {}
+              : {
+                  onInspectNode: (...args: unknown[]) => {
+                    closeNodeFloatingToolbar();
+                    closeNodeHealthPopover();
+                    inspectNode(...args);
+                  },
+                }),
+            onOpenOperationalDetails: (
+              detail: GraphNodeOperationalDetail,
+              anchorElement: HTMLElement
+            ) => openNodeHealthPopover(node.id, detail, anchorElement),
+          },
+        };
+      }),
+    [closeNodeFloatingToolbar, closeNodeHealthPopover, openNodeHealthPopover, props.nodesWithImpact]
   );
 
+  const nodeFloatingToolbarModel = useMemo(() => {
+    if (nodeFloatingToolbarAnchor == null) {
+      return null;
+    }
+
+    const ownerNode = props.nodesWithImpact.find(
+      (node) => node.id === nodeFloatingToolbarAnchor.nodeId
+    );
+    if (ownerNode == null) {
+      return null;
+    }
+
+    const ownerNodeData = ownerNode.data as Record<string, unknown>;
+    const inspectNode = ownerNodeData.onInspectNode;
+    const canOpenNodeCode = ownerNodeData.canOpenNodeCode;
+    const openNodeCode = ownerNodeData.onOpenNodeCode;
+    const contextMenuTrigger = nodeFloatingToolbarAnchor.contextMenuTrigger;
+    const model = buildCanvasNodeFloatingToolbarModel({
+      nodeId: nodeFloatingToolbarAnchor.nodeId,
+      nodeName: nodeFloatingToolbarAnchor.nodeName,
+      position: nodeFloatingToolbarAnchor.position,
+      frozen: props.frozenNodeIds?.has(nodeFloatingToolbarAnchor.nodeId) ?? false,
+      onOpenCode:
+        canOpenNodeCode === false
+          ? undefined
+          : typeof openNodeCode === 'function'
+            ? (nodeId) => {
+                closeNodeFloatingToolbar();
+                openNodeCode(nodeId);
+              }
+            : typeof inspectNode === 'function'
+              ? (nodeId) => {
+                  closeNodeFloatingToolbar();
+                  inspectNode(nodeId, 'code');
+                }
+              : undefined,
+      onToggleFreeze: props.onToggleFrozenNode,
+      onOpenMore:
+        contextMenuTrigger == null
+          ? undefined
+          : () => {
+              const { nodeTop, position } = nodeFloatingToolbarAnchor;
+              closeNodeFloatingToolbar();
+              contextMenuTrigger.dispatchEvent(
+                new MouseEvent('contextmenu', {
+                  bubbles: true,
+                  cancelable: true,
+                  button: 2,
+                  clientX: position.x,
+                  clientY: nodeTop,
+                })
+              );
+            },
+    });
+
+    return model.actions.length > 0 ? model : null;
+  }, [
+    closeNodeFloatingToolbar,
+    nodeFloatingToolbarAnchor,
+    props.frozenNodeIds,
+    props.nodesWithImpact,
+    props.onToggleFrozenNode,
+  ]);
+
   useEffect(() => {
-    if (nodeFloatingToolbarModel == null) {
+    if (nodeFloatingToolbarAnchor == null) {
       return;
     }
 
     const toolbarOwnerStillExists = props.nodesWithImpact.some(
-      (node) => node.id === nodeFloatingToolbarModel.nodeId
+      (node) => node.id === nodeFloatingToolbarAnchor.nodeId
     );
     if (!toolbarOwnerStillExists) {
-      setNodeFloatingToolbarModel(null);
+      setNodeFloatingToolbarAnchor(null);
     }
-  }, [nodeFloatingToolbarModel, props.nodesWithImpact]);
+  }, [nodeFloatingToolbarAnchor, props.nodesWithImpact]);
 
   useEffect(() => {
     if (nodeHealthPopoverModel == null) {
@@ -215,43 +301,21 @@ function CanvasViewportWithPresenter({
           : null;
       const data = node.data as Record<string, unknown>;
       const nodeName = typeof data.name === 'string' && data.name.length > 0 ? data.name : node.id;
-      const inspectNode = data.onInspectNode;
       const toolbarPosition =
         nodeRect == null
           ? { x: Math.max(8, event.clientX - 8), y: Math.max(8, event.clientY - 52) }
           : { x: Math.max(8, nodeRect.left), y: Math.max(8, nodeRect.top - 52) };
 
-      const nextToolbarModel = buildCanvasNodeFloatingToolbarModel({
+      setNodeFloatingToolbarAnchor({
         nodeId: node.id,
         nodeName,
         position: toolbarPosition,
-        frozen: props.frozenNodeIds?.has(node.id) ?? false,
-        onOpenCode:
-          typeof inspectNode === 'function'
-            ? (nodeId) => {
-                inspectNode(nodeId, 'code');
-              }
-            : undefined,
-        onToggleFreeze: props.onToggleFrozenNode,
-        onOpenMore:
-          contextMenuTrigger == null
-            ? undefined
-            : () => {
-                contextMenuTrigger.dispatchEvent(
-                  new MouseEvent('contextmenu', {
-                    bubbles: true,
-                    cancelable: true,
-                    button: 2,
-                    clientX: toolbarPosition.x,
-                    clientY: nodeRect?.top ?? toolbarPosition.y + 52,
-                  })
-                );
-              },
+        nodeTop: nodeRect?.top ?? toolbarPosition.y + 52,
+        contextMenuTrigger,
       });
-      setNodeFloatingToolbarModel(nextToolbarModel.actions.length > 0 ? nextToolbarModel : null);
       props.onNodeClick(event, node);
     },
-    [closeNodeHealthPopover, props.frozenNodeIds, props.onNodeClick, props.onToggleFrozenNode]
+    [closeNodeHealthPopover, props.onNodeClick]
   );
 
   useCanvasViewportLifecycle({

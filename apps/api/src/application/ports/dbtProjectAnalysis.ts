@@ -22,6 +22,7 @@ export type DbtProjectAnalysis = Readonly<{
   adapterType?: string;
   projectRevision: Readonly<{
     projectRoot: string;
+    projectName?: string;
     contentSetSha256: string;
     analyzedAt: string;
     analyzerVersion: string;

@@ -134,6 +134,34 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.editablePropertiesDescription',
     fallback: 'Name, tags, and description saved with this canvas.',
   },
+  nodeWorkbenchCloseLabel: {
+    key: 'canvas.nodeWorkbench.closeLabel',
+    fallback: 'Close',
+  },
+  nodeWorkbenchMoveLabel: {
+    key: 'canvas.nodeWorkbench.moveLabel',
+    fallback: 'Move node workbench',
+  },
+  nodeWorkbenchMoreLabel: {
+    key: 'canvas.nodeWorkbench.moreLabel',
+    fallback: 'More',
+  },
+  sqlContextWorkbenchNodeTitle: {
+    key: 'canvas.sqlContextWorkbench.nodeTitle',
+    fallback: 'Node code',
+  },
+  sqlContextWorkbenchProjectTitle: {
+    key: 'canvas.sqlContextWorkbench.projectTitle',
+    fallback: 'Project code',
+  },
+  sqlContextWorkbenchProjectDescription: {
+    key: 'canvas.sqlContextWorkbench.projectDescription',
+    fallback: 'Workspace files in the active project scope.',
+  },
+  sqlContextWorkbenchLoadingMessage: {
+    key: 'canvas.sqlContextWorkbench.loadingMessage',
+    fallback: 'Loading code...',
+  },
   inspectorNodeNameLabel: {
     key: 'canvas.inspector.authoring.nodeNameLabel',
     fallback: 'Name',

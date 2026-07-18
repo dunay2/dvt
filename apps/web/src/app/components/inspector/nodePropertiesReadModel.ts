@@ -24,11 +24,43 @@ export type NodePropertySectionId =
   | 'summary';
 
 export type NodePropertyRow = Readonly<{
+  id: NodePropertyRowId;
   label: string;
   value: string;
   detail?: string;
   tone?: 'measured' | 'estimated';
 }>;
+
+export const NODE_PROPERTY_ROW_ID = Object.freeze({
+  name: 'name',
+  nodeId: 'node-id',
+  kind: 'kind',
+  role: 'role',
+  status: 'status',
+  plugin: 'plugin',
+  package: 'package',
+  materialization: 'materialization',
+  database: 'database',
+  schema: 'schema',
+  table: 'table',
+  source: 'source',
+  path: 'path',
+  owner: 'owner',
+  rows: 'rows',
+  size: 'size',
+  duration: 'duration',
+  cost: 'cost',
+  destination: 'destination',
+  writeMode: 'write-mode',
+  partitionStrategy: 'partition-strategy',
+  description: 'description',
+  comment: 'comment',
+  upstreamNodes: 'upstream-nodes',
+  downstreamNodes: 'downstream-nodes',
+  tags: 'tags',
+} as const);
+
+export type NodePropertyRowId = (typeof NODE_PROPERTY_ROW_ID)[keyof typeof NODE_PROPERTY_ROW_ID];
 
 export type NodePropertyTableRow = Readonly<{
   id: string;
@@ -112,9 +144,14 @@ function formatWords(value: string): string {
   return words.length > 0 ? words.charAt(0).toUpperCase() + words.slice(1) : value;
 }
 
-function addRow(rows: NodePropertyRow[], label: string, value: string | undefined | null): void {
+function addRow(
+  rows: NodePropertyRow[],
+  id: NodePropertyRowId,
+  label: string,
+  value: string | undefined | null
+): void {
   if (value != null && value.trim().length > 0) {
-    rows.push({ label, value });
+    rows.push({ id, label, value });
   }
 }
 
@@ -163,15 +200,21 @@ function buildGeneralRows(
   const rows: NodePropertyRow[] = [];
   const numberFormatter = new Intl.NumberFormat('en-US');
 
-  addRow(rows, 'Name', node.name);
-  addRow(rows, 'Node ID', node.id);
-  addRow(rows, 'Kind', node.kind);
-  addRow(rows, 'Role', formatWords(node.role));
-  addRow(rows, 'Status', formatWords(node.status));
-  addRow(rows, 'Plugin', node.pluginId);
-  addRow(rows, 'Package', readFirstString(dbt.packageName, metadata.packageName, metadata.package));
+  addRow(rows, NODE_PROPERTY_ROW_ID.name, 'Name', node.name);
+  addRow(rows, NODE_PROPERTY_ROW_ID.nodeId, 'Node ID', node.id);
+  addRow(rows, NODE_PROPERTY_ROW_ID.kind, 'Kind', node.kind);
+  addRow(rows, NODE_PROPERTY_ROW_ID.role, 'Role', formatWords(node.role));
+  addRow(rows, NODE_PROPERTY_ROW_ID.status, 'Status', formatWords(node.status));
+  addRow(rows, NODE_PROPERTY_ROW_ID.plugin, 'Plugin', node.pluginId);
   addRow(
     rows,
+    NODE_PROPERTY_ROW_ID.package,
+    'Package',
+    readFirstString(dbt.packageName, metadata.packageName, metadata.package)
+  );
+  addRow(
+    rows,
+    NODE_PROPERTY_ROW_ID.materialization,
     'Materialization',
     readFirstString(
       config.materialization,
@@ -181,12 +224,32 @@ function buildGeneralRows(
       metadata.materialized
     )
   );
-  addRow(rows, 'Database', readFirstString(config.database, metadata.database, dbt.databaseName));
-  addRow(rows, 'Schema', readFirstString(config.schema, metadata.schema, dbt.schemaName));
-  addRow(rows, 'Table', readFirstString(config.table, metadata.tableName, dbt.tableName));
-  addRow(rows, 'Source', readFirstString(config.alias, metadata.sourceName, dbt.sourceName));
-  addRow(rows, 'Path', node.path ?? readString(metadata.path));
-  addRow(rows, 'Owner', readString(metadata.owner));
+  addRow(
+    rows,
+    NODE_PROPERTY_ROW_ID.database,
+    'Database',
+    readFirstString(config.database, metadata.database, dbt.databaseName)
+  );
+  addRow(
+    rows,
+    NODE_PROPERTY_ROW_ID.schema,
+    'Schema',
+    readFirstString(config.schema, metadata.schema, dbt.schemaName)
+  );
+  addRow(
+    rows,
+    NODE_PROPERTY_ROW_ID.table,
+    'Table',
+    readFirstString(config.table, metadata.tableName, dbt.tableName)
+  );
+  addRow(
+    rows,
+    NODE_PROPERTY_ROW_ID.source,
+    'Source',
+    readFirstString(config.alias, metadata.sourceName, dbt.sourceName)
+  );
+  addRow(rows, NODE_PROPERTY_ROW_ID.path, 'Path', node.path ?? readString(metadata.path));
+  addRow(rows, NODE_PROPERTY_ROW_ID.owner, 'Owner', readString(metadata.owner));
 
   const sourceMetricEvidence = readSourceObjectMetricEvidence(metadata.sourceMetricEvidence);
   const rowCount =
@@ -197,8 +260,9 @@ function buildGeneralRows(
     const value = numberFormatter.format(rowCount);
     rows.push(
       sourceMetricEvidence === null
-        ? { label: 'Rows', value }
+        ? { id: NODE_PROPERTY_ROW_ID.rows, label: 'Rows', value }
         : {
+            id: NODE_PROPERTY_ROW_ID.rows,
             label: 'Rows',
             value,
             tone: sourceMetricEvidence.rowCount.provenance,
@@ -215,6 +279,7 @@ function buildGeneralRows(
     const byteSize = sourceMetricEvidence.byteSize.value;
     const compactSize = formatSourceObjectMetricByteSize(byteSize);
     rows.push({
+      id: NODE_PROPERTY_ROW_ID.size,
       label: 'Size',
       value:
         sourceMetricEvidence.byteSize.provenance === 'estimated'
@@ -233,6 +298,7 @@ function buildGeneralRows(
     const estimatedByteSize = readNumber(metadata.estimatedByteSize);
     addRow(
       rows,
+      NODE_PROPERTY_ROW_ID.size,
       'Size',
       readFirstString(metadata.size, metadata.sizeLabel) ??
         (byteSize == null
@@ -244,10 +310,10 @@ function buildGeneralRows(
   }
 
   if (node.lastDuration != null) {
-    addRow(rows, 'Duration', `${node.lastDuration}s`);
+    addRow(rows, NODE_PROPERTY_ROW_ID.duration, 'Duration', `${node.lastDuration}s`);
   }
   if (node.lastCost != null) {
-    addRow(rows, 'Cost', `$${node.lastCost.toFixed(2)}`);
+    addRow(rows, NODE_PROPERTY_ROW_ID.cost, 'Cost', `$${node.lastCost.toFixed(2)}`);
   }
 
   return rows;
@@ -266,6 +332,7 @@ function buildSinkRows(node: CanonicalNode, metadata: Record<string, unknown>): 
 
   addRow(
     rows,
+    NODE_PROPERTY_ROW_ID.destination,
     'Destination',
     [database, schema, table]
       .flatMap((part): readonly string[] => {
@@ -274,17 +341,24 @@ function buildSinkRows(node: CanonicalNode, metadata: Record<string, unknown>): 
       })
       .join('.')
   );
-  addRow(rows, 'Database', database);
-  addRow(rows, 'Schema', schema);
-  addRow(rows, 'Table', table);
+  addRow(rows, NODE_PROPERTY_ROW_ID.database, 'Database', database);
+  addRow(rows, NODE_PROPERTY_ROW_ID.schema, 'Schema', schema);
+  addRow(rows, NODE_PROPERTY_ROW_ID.table, 'Table', table);
   addRow(
     rows,
+    NODE_PROPERTY_ROW_ID.materialization,
     'Materialization',
     readFirstString(config.materialization, config.materialized, metadata.materialization)
   );
-  addRow(rows, 'Write mode', readFirstString(config.writeMode, metadata.writeMode));
   addRow(
     rows,
+    NODE_PROPERTY_ROW_ID.writeMode,
+    'Write mode',
+    readFirstString(config.writeMode, metadata.writeMode)
+  );
+  addRow(
+    rows,
+    NODE_PROPERTY_ROW_ID.partitionStrategy,
     'Partition strategy',
     readFirstString(config.partitionStrategy, metadata.partitionStrategy)
   );
@@ -464,8 +538,13 @@ function buildCommentRows(
   metadata: Record<string, unknown>
 ): NodePropertyRow[] {
   const rows: NodePropertyRow[] = [];
-  addRow(rows, 'Description', node.description);
-  addRow(rows, 'Comment', readFirstString(metadata.comment, metadata.comments));
+  addRow(rows, NODE_PROPERTY_ROW_ID.description, 'Description', node.description);
+  addRow(
+    rows,
+    NODE_PROPERTY_ROW_ID.comment,
+    'Comment',
+    readFirstString(metadata.comment, metadata.comments)
+  );
   return rows;
 }
 
@@ -483,9 +562,24 @@ function buildSummaryRows(
     .filter((edge) => edge.sourceId === node.id)
     .map((edge) => nodeById.get(edge.targetId)?.name ?? edge.targetId);
 
-  addRow(rows, 'Upstream nodes', upstreamNodes.length > 0 ? upstreamNodes.join(', ') : '0');
-  addRow(rows, 'Downstream nodes', downstreamNodes.length > 0 ? downstreamNodes.join(', ') : '0');
-  addRow(rows, 'Tags', node.tags.length > 0 ? node.tags.join(', ') : '0');
+  addRow(
+    rows,
+    NODE_PROPERTY_ROW_ID.upstreamNodes,
+    'Upstream nodes',
+    upstreamNodes.length > 0 ? upstreamNodes.join(', ') : '0'
+  );
+  addRow(
+    rows,
+    NODE_PROPERTY_ROW_ID.downstreamNodes,
+    'Downstream nodes',
+    downstreamNodes.length > 0 ? downstreamNodes.join(', ') : '0'
+  );
+  addRow(
+    rows,
+    NODE_PROPERTY_ROW_ID.tags,
+    'Tags',
+    node.tags.length > 0 ? node.tags.join(', ') : '0'
+  );
   return rows;
 }
 

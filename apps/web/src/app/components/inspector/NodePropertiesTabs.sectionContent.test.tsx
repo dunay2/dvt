@@ -40,6 +40,7 @@ function renderNodePropertiesTabs(
         activeRunId={null}
         panels={[]}
         activeTab={activeTab}
+        moreLabel="More"
         onActiveTabChange={vi.fn()}
         onHide={vi.fn()}
       />

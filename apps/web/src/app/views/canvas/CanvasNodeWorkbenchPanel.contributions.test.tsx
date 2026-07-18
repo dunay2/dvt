@@ -1,0 +1,138 @@
+// @vitest-environment jsdom
+
+import React, { act } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesReadModel';
+import type { CanonicalNode } from '../../types/canonical';
+import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
+
+const NODE: CanonicalNode = {
+  id: 'model.analytics.orders',
+  name: 'orders',
+  description: 'Existing description.',
+  pluginId: 'dbt',
+  kind: 'dbt:model',
+  role: 'transform',
+  status: 'idle',
+  tags: [],
+};
+
+describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+  });
+
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+    document.documentElement.lang = '';
+    vi.restoreAllMocks();
+  });
+
+  it('renders a selected-node contribution and removes the passive row it supersedes', () => {
+    act(() => {
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={NODE}
+          nodes={[NODE]}
+          edges={[]}
+          activeRunId={null}
+          preferredTabId="general"
+          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          contributions={[
+            {
+              id: 'dbt-description-editor',
+              nodeId: NODE.id,
+              sectionId: 'general',
+              placement: 'after-body',
+              supersededRowIds: [NODE_PROPERTY_ROW_ID.description],
+              supersededSectionIds: ['code'],
+              content: <div data-slot="description-editor-contribution">Editor</div>,
+            },
+          ]}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    const generalSection = container.querySelector(
+      '[data-slot="canvas-node-workbench-general-section"]'
+    );
+    const labels = Array.from(generalSection?.querySelectorAll('dt') ?? []).map((element) =>
+      element.textContent?.trim()
+    );
+
+    expect(container.querySelector('[data-slot="description-editor-contribution"]')).not.toBeNull();
+    expect(labels).not.toContain('Description');
+    expect(generalSection?.textContent).not.toContain('Existing description.');
+    expect(container.querySelector('[data-slot="canvas-node-workbench-code-section"]')).toBeNull();
+  });
+
+  it('resolves workbench commands through the Canvas locale catalog', () => {
+    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
+
+    act(() => {
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={NODE}
+          nodes={[NODE]}
+          edges={[]}
+          activeRunId={null}
+          preferredTabId="general"
+          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    expect(
+      Array.from(container.querySelectorAll('button')).some(
+        (button) => button.textContent === 'Cerrar'
+      )
+    ).toBe(true);
+    expect(
+      container.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')?.textContent
+    ).toContain('Más');
+  });
+
+  it('removes a generic section superseded by an authoritative contribution', () => {
+    act(() => {
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={NODE}
+          nodes={[NODE]}
+          edges={[]}
+          activeRunId={null}
+          preferredTabId="code"
+          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          contributions={[
+            {
+              id: 'dbt-description-editor',
+              nodeId: NODE.id,
+              sectionId: 'general',
+              placement: 'after-body',
+              supersededSectionIds: ['code'],
+              content: <div>Description editor</div>,
+            },
+          ]}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="canvas-node-workbench-code-section"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="canvas-node-workbench-general-section"]')
+    ).not.toBeNull();
+  });
+});
