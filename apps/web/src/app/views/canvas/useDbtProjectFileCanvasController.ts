@@ -237,6 +237,27 @@ export function useDbtProjectFileCanvasController(
     [canonicalEdges, canonicalNodes, execution.executionStrategy, visibleNodeIds]
   );
   const refetchProjectGraph = query.refetch;
+  const refreshProjectGraph = useCallback(async () => {
+    const result = await refetchProjectGraph();
+    if (!result.isSuccess || result.data == null) {
+      throw result.error ?? new Error('The refreshed dbt project graph is unavailable.');
+    }
+    return projectDbtProjectGraphToCanonicalCanvas(result.data);
+  }, [refetchProjectGraph]);
+  const refreshProjectGraphAfterMutation = useCallback(async (): Promise<void> => {
+    await refreshProjectGraph();
+  }, [refreshProjectGraph]);
+  const reloadNodeDescription = useCallback(
+    async (nodeId: string): Promise<string | null> => {
+      const refreshedProjection = await refreshProjectGraph();
+      const refreshedNode = refreshedProjection.nodes.find((node) => node.id === nodeId);
+      if (refreshedNode == null) {
+        throw new Error(`The refreshed dbt resource is unavailable: ${nodeId}`);
+      }
+      return refreshedNode.description ?? null;
+    },
+    [refreshProjectGraph]
+  );
   const refreshExecutionSelectionAnalysis = useCallback(
     () => refreshCanvasExecutionSelectionAuthority(refetchProjectGraph),
     [refetchProjectGraph]
@@ -371,6 +392,8 @@ export function useDbtProjectFileCanvasController(
     projectCodeWorkbench,
     openProjectCode: () => setProjectCodeWorkbench({}),
     closeProjectCode: () => setProjectCodeWorkbench(null),
+    refreshProjectGraphAfterMutation,
+    reloadNodeDescription,
     canonicalNodes,
     canonicalEdges,
     inspectorNode,

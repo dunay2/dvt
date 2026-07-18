@@ -8,6 +8,7 @@ import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type { CanvasShellProps } from './canvasShell.types';
 import CanvasShell from './CanvasShell';
 import { CanvasErrorStateView, CanvasLoadingStateView } from './CanvasStateViews';
+import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
 import type { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
 
 const CodeView = lazy(() => import('../CodeView'));
@@ -128,6 +129,12 @@ export function DbtProjectFileCanvasView({
     defaultPermission: 'read' as const,
   };
   const centerSurface = resolveCenterSurface(controller);
+  const inspectorWorkbenchContributions = buildDbtYamlDescriptionWorkbenchContributions({
+    canvasId: activeCanvas.id,
+    node: controller.inspectorNode,
+    onProjectChanged: controller.refreshProjectGraphAfterMutation,
+    onReloadLatest: controller.reloadNodeDescription,
+  });
   const contextualWorkbench =
     controller.projectCodeWorkbench == null
       ? undefined
@@ -187,7 +194,7 @@ export function DbtProjectFileCanvasView({
         canEditNode: false,
         onApplyNodeDraft: () => unsupportedFileProjectionCommand('Edit graph node properties'),
       },
-      inspectorWorkbenchContributions: [],
+      inspectorWorkbenchContributions,
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
       userPermissions: {
