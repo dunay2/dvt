@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { NodePropertySectionView } from './NodePropertySectionView';
-import type { NodePropertySection } from './nodePropertiesReadModel';
+import { NODE_PROPERTY_ROW_ID, type NodePropertySection } from './nodePropertiesReadModel';
 
 function renderSection(section: NodePropertySection): {
   container: HTMLDivElement;
@@ -73,7 +73,7 @@ describe('NodePropertySectionView', () => {
     ({ container, root } = renderSection({
       id: 'general',
       label: 'General',
-      rows: [{ label: 'Status', value: 'Ready' }],
+      rows: [{ id: NODE_PROPERTY_ROW_ID.status, label: 'Status', value: 'Ready' }],
       tableRows: [],
     }));
 
@@ -107,6 +107,7 @@ describe('NodePropertySectionView', () => {
       label: 'General',
       rows: [
         {
+          id: NODE_PROPERTY_ROW_ID.size,
           label: 'Size',
           value: 'Estimated 99.6 KB',
           tone: 'estimated',

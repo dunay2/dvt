@@ -11,8 +11,14 @@ import { ScrollArea } from '../../components/ui/scroll-area';
 import { cn } from '../../components/ui/utils';
 import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTabs';
-import type { NodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
-import { buildNodePropertiesReadModel } from '../../components/inspector/nodePropertiesReadModel';
+import type {
+  NodePropertiesReadModel,
+  NodePropertyRowId,
+} from '../../components/inspector/nodePropertiesReadModel';
+import {
+  buildNodePropertiesReadModel,
+  NODE_PROPERTY_ROW_ID,
+} from '../../components/inspector/nodePropertiesReadModel';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
@@ -38,9 +44,21 @@ export type CanvasNodeWorkbenchDragHandleProps = HTMLAttributes<HTMLDivElement> 
     'data-slot'?: string;
   }>;
 
-const GENERAL_WORKBENCH_ALWAYS_EDITED_ROW_LABELS = new Set(['Name']);
-const DVT_SOURCE_TARGET_ROW_LABELS = new Set(['Database', 'Schema', 'Table', 'Source']);
-const DVT_SINK_TARGET_ROW_LABELS = new Set(['Database', 'Schema', 'Table', 'Materialization']);
+const GENERAL_WORKBENCH_ALWAYS_EDITED_ROW_IDS = new Set<NodePropertyRowId>([
+  NODE_PROPERTY_ROW_ID.name,
+]);
+const DVT_SOURCE_TARGET_ROW_IDS = new Set<NodePropertyRowId>([
+  NODE_PROPERTY_ROW_ID.database,
+  NODE_PROPERTY_ROW_ID.schema,
+  NODE_PROPERTY_ROW_ID.table,
+  NODE_PROPERTY_ROW_ID.source,
+]);
+const DVT_SINK_TARGET_ROW_IDS = new Set<NodePropertyRowId>([
+  NODE_PROPERTY_ROW_ID.database,
+  NODE_PROPERTY_ROW_ID.schema,
+  NODE_PROPERTY_ROW_ID.table,
+  NODE_PROPERTY_ROW_ID.materialization,
+]);
 
 function resolveActiveNodeWorkbenchTab({
   activeTab,
@@ -61,29 +79,29 @@ function resolveActiveNodeWorkbenchTab({
   return model.sections[0]?.id ?? 'general';
 }
 
-function resolveNodeWorkbenchHiddenGeneralRowLabels(
+function resolveNodeWorkbenchHiddenGeneralRowIds(
   node: CanonicalNode,
   canEditNode: boolean
-): ReadonlySet<string> {
-  const labels = new Set(GENERAL_WORKBENCH_ALWAYS_EDITED_ROW_LABELS);
+): ReadonlySet<NodePropertyRowId> {
+  const rowIds = new Set(GENERAL_WORKBENCH_ALWAYS_EDITED_ROW_IDS);
 
   if (node.id === node.name) {
-    labels.add('Node ID');
+    rowIds.add(NODE_PROPERTY_ROW_ID.nodeId);
   }
 
   if (canEditNode && node.kind === 'dvt:source') {
-    for (const label of DVT_SOURCE_TARGET_ROW_LABELS) {
-      labels.add(label);
+    for (const rowId of DVT_SOURCE_TARGET_ROW_IDS) {
+      rowIds.add(rowId);
     }
   }
 
   if (canEditNode && node.kind === 'dvt:sink') {
-    for (const label of DVT_SINK_TARGET_ROW_LABELS) {
-      labels.add(label);
+    for (const rowId of DVT_SINK_TARGET_ROW_IDS) {
+      rowIds.add(rowId);
     }
   }
 
-  return labels;
+  return rowIds;
 }
 
 function buildNodeWorkbenchReadModel({
@@ -95,9 +113,9 @@ function buildNodeWorkbenchReadModel({
   node: CanonicalNode;
   canEditNode: boolean;
 }>): NodePropertiesReadModel {
-  const hiddenGeneralRowLabels = resolveNodeWorkbenchHiddenGeneralRowLabels(node, canEditNode);
+  const hiddenGeneralRowIds = resolveNodeWorkbenchHiddenGeneralRowIds(node, canEditNode);
 
-  if (hiddenGeneralRowLabels.size === 0) {
+  if (hiddenGeneralRowIds.size === 0) {
     return model;
   }
 
@@ -107,7 +125,7 @@ function buildNodeWorkbenchReadModel({
       section.id === 'general'
         ? {
             ...section,
-            rows: section.rows.filter((row) => !hiddenGeneralRowLabels.has(row.label)),
+            rows: section.rows.filter((row) => !hiddenGeneralRowIds.has(row.id)),
           }
         : section
     ),
