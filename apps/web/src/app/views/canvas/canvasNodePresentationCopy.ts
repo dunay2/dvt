@@ -1,5 +1,5 @@
 /** Owned concern: adapt route-localized Canvas copy into the node-presentation DTO. */
-import type { CanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import type { CanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
 import type { CanvasViewCopy } from './canvasCopy.types';
 
 export function buildCanvasNodePresentationCopy(copy: CanvasViewCopy): CanvasNodePresentationCopy {

@@ -45,16 +45,6 @@ export type CanvasNodePresentationTruth = Readonly<{
   code: CanvasNodeCodeTruth;
 }>;
 
-export type CanvasNodePresentationCopy = Readonly<{
-  columnsLabel: string;
-  declaredColumnsDetailTemplate: string;
-  inheritedColumnsDetailTemplate: string;
-  noColumnsDetail: string;
-  codeLabel: string;
-  workspaceCodeDetailTemplate: string;
-  codeUnavailableMessage: string;
-}>;
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
@@ -74,18 +64,5 @@ export function isCanvasNodePresentationTruth(
     (value.code.kind === 'inline' ||
       value.code.kind === 'workspace-file' ||
       value.code.kind === 'unavailable')
-  );
-}
-
-export function isCanvasNodePresentationCopy(value: unknown): value is CanvasNodePresentationCopy {
-  return (
-    isRecord(value) &&
-    typeof value.columnsLabel === 'string' &&
-    typeof value.declaredColumnsDetailTemplate === 'string' &&
-    typeof value.inheritedColumnsDetailTemplate === 'string' &&
-    typeof value.noColumnsDetail === 'string' &&
-    typeof value.codeLabel === 'string' &&
-    typeof value.workspaceCodeDetailTemplate === 'string' &&
-    typeof value.codeUnavailableMessage === 'string'
   );
 }

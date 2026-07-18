@@ -1,9 +1,7 @@
 /** Owned concern: share pure graph card projection helpers across plugin strategies. */
 import type { CanonicalNode } from '../../types/canonical';
-import {
-  isCanvasNodePresentationCopy,
-  isCanvasNodePresentationTruth,
-} from '../../components/canvas/canvasNodePresentationTruth.contract';
+import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
+import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import { formatSourceObjectMetricByteSize } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 import type {
   GraphNodeCardAccentTone,

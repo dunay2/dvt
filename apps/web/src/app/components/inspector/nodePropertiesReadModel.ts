@@ -1,9 +1,7 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type {
-  CanvasNodePresentationColumn,
-  CanvasNodePresentationCopy,
-} from '../canvas/canvasNodePresentationTruth.contract';
+import type { CanvasNodePresentationCopy } from '../canvas/canvasNodePresentationCopy.contract';
+import type { CanvasNodePresentationColumn } from '../canvas/canvasNodePresentationTruth.contract';
 import { readSourceObjectMetricEvidence } from '../../services/workspace/sourceObjectMetricEvidence';
 import {
   describeSourceObjectMetricEvidence,

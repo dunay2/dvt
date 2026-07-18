@@ -165,16 +165,16 @@ export function mapDroppedCanonicalNodeToCanvasNode(
 ): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
   const copy = resolveCanvasViewCopy(locale);
-  const columns = presentationTruth.columns.visible.map(({ name, type }) => ({ name, type }));
-  const typeLabelFromMetadata =
-    typeof canonicalNode.metadata?.typeLabel === 'string'
-      ? canonicalNode.metadata.typeLabel
-      : undefined;
   const presentationTruth = buildCanvasNodePresentationTruth({
     node: canonicalNode,
     nodes: [canonicalNode],
     edges: [],
   });
+  const columns = presentationTruth.columns.visible.map(({ name, type }) => ({ name, type }));
+  const typeLabelFromMetadata =
+    typeof canonicalNode.metadata?.typeLabel === 'string'
+      ? canonicalNode.metadata.typeLabel
+      : undefined;
 
   return {
     id: canonicalNode.id,
