@@ -355,15 +355,6 @@ begin
   if not exists (
     select 1
     from planning_query_store.command_query_rail_query
-    where rail_name = 'SaveWorkspaceFileContent'
-      and rail_type = 'command'
-  ) then
-    raise exception 'SaveWorkspaceFileContent canonical command rail is missing';
-  end if;
-
-  if not exists (
-    select 1
-    from planning_query_store.command_query_rail_query
     where rail_name = 'ProjectDbtGraphFromFiles'
       and rail_type = 'query'
   ) then

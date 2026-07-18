@@ -15165,3 +15165,34 @@ test('tracked migration mechanizes the dbt selection lifecycle policy symbol', (
   assert.match(migration.sql, /manifest_symbol_count <> 1/);
   assert.doesNotMatch(migration.sql, /truncate\s+/i);
 });
+
+test('tracked migrations establish workspace file content rail authority after bootstrap', () => {
+  const migrations = readMigrationFiles();
+  const reanalysisDesign = migrations.find(
+    (candidate) => candidate.fileName === '737_code_working_tree_dbt_reanalysis_design.sql'
+  );
+  const authorityMigration = migrations.find(
+    (candidate) => candidate.fileName === '745_workspace_file_content_rail_db_authority.sql'
+  );
+
+  assert.ok(reanalysisDesign);
+  assert.ok(authorityMigration);
+  assert.doesNotMatch(
+    reanalysisDesign.sql,
+    /SaveWorkspaceFileContent canonical command rail is missing/
+  );
+  assert.match(reanalysisDesign.sql, /ProjectDbtGraphFromFiles canonical query rail is missing/);
+  assert.match(
+    authorityMigration.sql,
+    /insert into planning_query_store\.feature_mechanization_local_rails/
+  );
+  assert.match(authorityMigration.sql, /GetWorkspaceFileContent/);
+  assert.match(authorityMigration.sql, /SaveWorkspaceFileContent/);
+  assert.match(authorityMigration.sql, /IWorkspaceFileRepository\.getContent/);
+  assert.match(authorityMigration.sql, /IWorkspaceFileRepository\.saveContent/);
+  assert.match(authorityMigration.sql, /ddd_owner <> 'WorkspaceFileContent'/);
+  assert.match(authorityMigration.sql, /rail_source <> 'local'/);
+  assert.match(authorityMigration.sql, /authority_count <> 2/);
+  assert.match(authorityMigration.sql, /is_duplicate/);
+  assert.doesNotMatch(authorityMigration.sql, /truncate\s+/i);
+});
