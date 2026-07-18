@@ -94,6 +94,7 @@ const DbtProjectedNodeSchema = z
     packageName: NonBlankStringSchema,
     originalFilePath: NonBlankStringSchema.optional(),
     sourceName: NonBlankStringSchema.optional(),
+    description: z.string().optional(),
     materialized: NonBlankStringSchema.optional(),
     columns: z.array(DbtProjectedColumnSchema),
     tags: UniqueNonBlankStringArraySchema,

@@ -62,6 +62,7 @@ function projectNode(
     role: presentation.role,
     status: hasProjectionWarning ? 'warn' : 'idle',
     tags: [...node.tags],
+    ...(node.description === undefined ? {} : { description: node.description }),
     ...(node.originalFilePath === undefined
       ? {}
       : { path: normalizeWorkspacePath(node.originalFilePath) }),

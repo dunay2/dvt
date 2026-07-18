@@ -118,6 +118,7 @@ function projectResource(value: unknown): DbtProjectAnalysisResource | null {
 
   const projectedType = resourceType as DbtProjectAnalysisResource['resourceType'];
   const originalFilePath = stringValue(resource.original_file_path);
+  const description = stringValue(resource.description);
   const columns = collectionValues(resource.columns)
     .map((columnValue) => {
       const column = record(columnValue);
@@ -148,6 +149,7 @@ function projectResource(value: unknown): DbtProjectAnalysisResource | null {
     ...(stringValue(resource.source_name) === undefined
       ? {}
       : { sourceName: stringValue(resource.source_name) }),
+    ...(description === undefined ? {} : { description }),
     ...(stringValue(record(resource.config).materialized) === undefined
       ? {}
       : { materialized: stringValue(record(resource.config).materialized) }),

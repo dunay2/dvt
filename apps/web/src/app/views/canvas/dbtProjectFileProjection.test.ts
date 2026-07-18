@@ -44,6 +44,7 @@ function buildProjection(): DbtProjectGraphProjection {
         resourceType: 'model',
         name: 'orders',
         packageName: 'analytics',
+        description: 'Warehouse orders ready for reporting',
         originalFilePath: 'models\\orders.sql',
         materialized: 'table',
         columns: [{ name: 'order_id', dataType: 'integer' }],
@@ -170,7 +171,10 @@ describe('projectDbtProjectGraphToCanonicalCanvas', () => {
         visualEditability: { status: 'editable' },
       },
     });
-    expect(projection.nodes[1]).toMatchObject({ path: 'models/orders.sql' });
+    expect(projection.nodes[1]).toMatchObject({
+      path: 'models/orders.sql',
+      description: 'Warehouse orders ready for reporting',
+    });
     expect(projection.nodes[4]?.metadata).toMatchObject({
       testType: 'not_null',
       testTarget: 'model.analytics.orders',

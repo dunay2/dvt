@@ -13,6 +13,7 @@ describe('projectDbtManifest', () => {
           name: 'orders',
           package_name: 'analytics',
           original_file_path: 'models\\orders.sql',
+          description: 'Curated customer orders',
           depends_on: { nodes: ['source.analytics.raw.orders'] },
           columns: {},
           tags: [],
@@ -52,6 +53,7 @@ describe('projectDbtManifest', () => {
         expect.objectContaining({
           uniqueId: 'model.analytics.orders',
           originalFilePath: 'models/orders.sql',
+          description: 'Curated customer orders',
         }),
         expect.objectContaining({
           uniqueId: 'source.analytics.raw.orders',
