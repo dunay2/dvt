@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import {
   DbtProjectGraphProjectionSchema,
   type DbtYamlDescriptionAppliedReceipt,
+  type DbtYamlDescriptionEditProposal,
 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -89,7 +90,15 @@ describe('ApplyDbtYamlDescriptionEditCommand', () => {
   });
 });
 
-function createHarness(options: { changeDuringAnalysis?: boolean } = {}) {
+function createHarness(options: { changeDuringAnalysis?: boolean } = {}): {
+  command: ApplyDbtYamlDescriptionEditCommand;
+  resolve: ReturnType<typeof vi.fn>;
+  mutations: WorkspaceFileBatchMutation[];
+  appliedReceipts: Map<string, DbtYamlDescriptionAppliedReceipt>;
+  content: () => string;
+  replaceContent: (next: string) => void;
+  propose: () => Promise<DbtYamlDescriptionEditProposal>;
+} {
   let content = INITIAL_CONTENT;
   const mutations: WorkspaceFileBatchMutation[] = [];
   const appliedReceipts = new Map<string, DbtYamlDescriptionAppliedReceipt>();

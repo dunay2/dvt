@@ -39,9 +39,13 @@ export class ProjectDbtGraphFromFilesUseCase {
         ...resource,
         visualEditability: resolveVisualEditability({
           codeOnlyReasons,
-          descriptionFilePath: resource.descriptionFilePath,
           packageName: resource.packageName,
-          projectName: analysis.projectRevision.projectName,
+          ...(resource.descriptionFilePath === undefined
+            ? {}
+            : { descriptionFilePath: resource.descriptionFilePath }),
+          ...(analysis.projectRevision.projectName === undefined
+            ? {}
+            : { projectName: analysis.projectRevision.projectName }),
         }),
       }))
       .sort((left, right) => left.uniqueId.localeCompare(right.uniqueId));

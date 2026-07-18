@@ -9,6 +9,19 @@ import {
 import { YamlCstDbtDescriptionMutator } from '../../../src/infrastructure/dbtYamlDescriptionEdit/YamlCstDbtDescriptionMutator.js';
 
 const mutator = new YamlCstDbtDescriptionMutator();
+const MODEL_RESOURCE = {
+  uniqueId: 'model.shop.orders',
+  resourceType: 'model',
+  name: 'orders',
+  packageName: 'shop',
+} as const;
+const SOURCE_RESOURCE = {
+  uniqueId: 'source.shop.raw.orders',
+  resourceType: 'source',
+  sourceName: 'raw',
+  name: 'orders',
+  packageName: 'shop',
+} as const;
 
 describe('YamlCstDbtDescriptionMutator', () => {
   it('changes only an existing model description and preserves unrelated bytes', () => {
@@ -27,11 +40,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
 
     const result = mutator.mutate({
       content,
-      resource: {
-        uniqueId: 'model.shop.orders',
-        resourceType: 'model',
-        name: 'orders',
-      },
+      resource: MODEL_RESOURCE,
       nextDescription: 'Canonical order facts',
     });
 
@@ -56,11 +65,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
 
     const result = mutator.mutate({
       content,
-      resource: {
-        uniqueId: 'model.shop.orders',
-        resourceType: 'model',
-        name: 'orders',
-      },
+      resource: MODEL_RESOURCE,
       nextDescription: 'Canonical order facts',
     });
 
@@ -89,12 +94,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
 
     const result = mutator.mutate({
       content,
-      resource: {
-        uniqueId: 'source.shop.raw.orders',
-        resourceType: 'source',
-        sourceName: 'raw',
-        name: 'orders',
-      },
+      resource: SOURCE_RESOURCE,
       nextDescription: 'Raw order records',
     });
 
@@ -115,11 +115,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
 
     const result = mutator.mutate({
       content,
-      resource: {
-        uniqueId: 'model.shop.orders',
-        resourceType: 'model',
-        name: 'orders',
-      },
+      resource: MODEL_RESOURCE,
       nextDescription: null,
     });
 
@@ -139,11 +135,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
 
     const result = mutator.mutate({
       content,
-      resource: {
-        uniqueId: 'model.shop.orders',
-        resourceType: 'model',
-        name: 'orders',
-      },
+      resource: MODEL_RESOURCE,
       nextDescription: 'Canonical orders.\nIncludes settled and pending records.',
     });
 
@@ -161,11 +153,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
     expect(() =>
       mutator.mutate({
         content,
-        resource: {
-          uniqueId: 'model.shop.orders',
-          resourceType: 'model',
-          name: 'orders',
-        },
+        resource: MODEL_RESOURCE,
         nextDescription: 'Canonical orders',
       })
     ).toThrow(DbtYamlDescriptionDocumentInvalidError);
@@ -177,11 +165,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
     expect(() =>
       mutator.mutate({
         content: missing,
-        resource: {
-          uniqueId: 'model.shop.orders',
-          resourceType: 'model',
-          name: 'orders',
-        },
+        resource: MODEL_RESOURCE,
         nextDescription: 'Orders',
       })
     ).toThrow(DbtYamlDescriptionResourceNotFoundError);
@@ -190,11 +174,7 @@ describe('YamlCstDbtDescriptionMutator', () => {
     expect(() =>
       mutator.mutate({
         content: duplicate,
-        resource: {
-          uniqueId: 'model.shop.orders',
-          resourceType: 'model',
-          name: 'orders',
-        },
+        resource: MODEL_RESOURCE,
         nextDescription: 'Orders',
       })
     ).toThrow(DbtYamlDescriptionResourceAmbiguousError);

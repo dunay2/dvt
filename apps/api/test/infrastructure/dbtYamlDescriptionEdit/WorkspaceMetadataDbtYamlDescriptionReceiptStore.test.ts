@@ -71,6 +71,7 @@ function inMemoryMetadataFiles(): IWorkspaceMetadataFileRepository & { paths(): 
       files.set(input.path, input.content);
       return {
         kind: 'saved',
+        disposition: current === undefined ? 'created' : 'updated',
         path: input.path,
         contentSha256: sha256(input.content),
         lastModified: '2026-07-17T10:00:00.000Z',

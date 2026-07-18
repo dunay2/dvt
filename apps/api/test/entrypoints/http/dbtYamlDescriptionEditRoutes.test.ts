@@ -1,3 +1,7 @@
+import type {
+  DbtYamlDescriptionAppliedReceipt,
+  DbtYamlDescriptionEditProposal,
+} from '@dvt/contracts';
 import Fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -262,7 +266,7 @@ describe('dbtYamlDescriptionEditRoutes', () => {
   });
 });
 
-function proposal() {
+function proposal(): DbtYamlDescriptionEditProposal {
   return {
     schemaVersion: 'dbt-yaml-description-edit-proposal.v1' as const,
     canvasId: 'canvas-orders',
@@ -283,7 +287,7 @@ function proposal() {
   };
 }
 
-function appliedReceipt() {
+function appliedReceipt(): DbtYamlDescriptionAppliedReceipt {
   return {
     schemaVersion: 'dbt-yaml-description-edit-applied-receipt.v1' as const,
     receiptId: 'd'.repeat(64),
@@ -307,7 +311,11 @@ function appliedReceipt() {
   };
 }
 
-function authorizedRuntimeAuth(deniedAction?: string) {
+function authorizedRuntimeAuth(deniedAction?: string): {
+  authenticator: never;
+  authorizer: never;
+  actions: () => unknown[];
+} {
   const authorize = vi.fn().mockImplementation((_principal, requestedScope) =>
     requestedScope.action.name === deniedAction
       ? { ok: false, reason: 'ACTION_NOT_GRANTED' }

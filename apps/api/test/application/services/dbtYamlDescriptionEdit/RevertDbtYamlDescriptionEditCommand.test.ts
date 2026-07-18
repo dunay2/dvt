@@ -102,7 +102,15 @@ describe('RevertDbtYamlDescriptionEditCommand', () => {
   });
 });
 
-function createHarness(options: { missingTarget?: boolean } = {}) {
+function createHarness(options: { missingTarget?: boolean } = {}): {
+  command: RevertDbtYamlDescriptionEditCommand;
+  applied: DbtYamlDescriptionAppliedReceipt;
+  getFileContent: ReturnType<typeof vi.fn>;
+  mutations: WorkspaceFileBatchMutation[];
+  revertedReceipts: Map<string, DbtYamlDescriptionRevertedReceipt>;
+  content: () => string;
+  replaceContent: (next: string) => void;
+} {
   let content = APPLIED_CONTENT;
   const mutations: WorkspaceFileBatchMutation[] = [];
   const revertedReceipts = new Map<string, DbtYamlDescriptionRevertedReceipt>();
