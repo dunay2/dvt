@@ -82,11 +82,14 @@ function CanvasViewportReactFlowSurface({
   onDragOver,
   contextMenuPresenter,
   onCloseNodeFloatingToolbar,
-  nodeHealthPopoverModel,
   onCloseNodeHealthPopover,
 }: Omit<
   CanvasViewportSurfaceViewProps,
-  'viewportRef' | 'resolvedCanvasPalette' | 'renderContextMenuView' | 'nodeFloatingToolbarModel'
+  | 'viewportRef'
+  | 'resolvedCanvasPalette'
+  | 'renderContextMenuView'
+  | 'nodeFloatingToolbarModel'
+  | 'nodeHealthPopoverModel'
 >): JSX.Element {
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
     onCloseNodeFloatingToolbar();
@@ -100,13 +103,6 @@ function CanvasViewportReactFlowSurface({
   const handleSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']> = (
     selection
   ) => {
-    if (
-      nodeHealthPopoverModel != null &&
-      selection.nodes.length > 0 &&
-      !selection.nodes.some((node) => node.id === nodeHealthPopoverModel.nodeId)
-    ) {
-      onCloseNodeHealthPopover();
-    }
     onSelectionChange(selection);
   };
   const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> = (
@@ -225,7 +221,6 @@ export function CanvasViewportSurfaceView({
       <CanvasViewportReactFlowSurface
         {...reactFlowSurfaceProps}
         contextMenuPresenter={contextMenuPresenter}
-        nodeHealthPopoverModel={nodeHealthPopoverModel}
         onCloseNodeFloatingToolbar={onCloseNodeFloatingToolbar}
         onCloseNodeHealthPopover={onCloseNodeHealthPopover}
       />

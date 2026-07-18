@@ -7,6 +7,7 @@ import {
   CanvasShellReadOnlyBannerSlot,
 } from './CanvasShellMainPanelFrame';
 import { CanvasNodeWorkbenchOverlay } from './CanvasNodeWorkbenchOverlay';
+import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
 import { CanvasViewMenuContributionRegistrar } from './CanvasViewMenuControls';
 import CanvasViewport from './CanvasViewport';
 import { CanvasWorkspaceMenuContributionRegistrar } from './CanvasWorkspaceMenuControls';
@@ -117,6 +118,12 @@ function CanvasShellViewport({
   const handleNodeClick: CanvasShellGraphCommands['onNodeClick'] = (event, node) => {
     graphCommands.onNodeClick(event, node);
   };
+  const nodeWorkbenchVisible = isCanvasNodeWorkbenchVisible({
+    focusMode: layout.focusMode,
+    inspectorPanelVisible: layout.inspectorPanelVisible,
+    surfaceStrategy: layout.surfaceStrategy,
+    hasInspectorNode: panels.inspectorNode != null,
+  });
 
   return (
     <CanvasViewport
@@ -162,7 +169,7 @@ function CanvasShellViewport({
       canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
       onOpenCanvasSettings={onOpenCanvasSettings}
       contextMenuPresenter={contextMenuPresenter}
-      externalNodeSurfaceActive={panels.inspectorNode != null || layout.contextualWorkbench != null}
+      externalNodeSurfaceActive={nodeWorkbenchVisible || layout.contextualWorkbench != null}
     />
   );
 }
