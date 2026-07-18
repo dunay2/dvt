@@ -216,6 +216,7 @@ function CanvasShellMainSurface({
     <CanvasShellContextualWorkbenchSplit
       baseSurface={baseSurface}
       title={layout.contextualWorkbench.title}
+      closeLabel={layout.contextualWorkbench.closeLabel}
       description={layout.contextualWorkbench.description}
       onClose={layout.contextualWorkbench.onClose}
     >

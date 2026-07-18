@@ -5,6 +5,7 @@ import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench'
 import type { SqlContextWorkbenchProps } from './SqlContextWorkbench';
 
 const copy = {
+  nodeWorkbenchCloseLabel: 'Close',
   sqlContextWorkbenchLoadingMessage: 'Loading code',
   sqlContextWorkbenchNodeTitle: 'Node code',
   sqlContextWorkbenchProjectTitle: 'Project code',
@@ -25,6 +26,7 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
 
     expect(workbench?.id).toBe('node-code');
     expect(workbench?.title).toBe('Node code');
+    expect(workbench?.closeLabel).toBe('Close');
     expect(workbench?.description).toBe('analytics/models/marts/orders.sql');
     expect(isValidElement(workbench?.panel)).toBe(true);
     const panel = workbench?.panel as ReactElement<SqlContextWorkbenchProps>;
@@ -45,6 +47,7 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
 
     expect(workbench?.id).toBe('project-code');
     expect(workbench?.title).toBe('Project code');
+    expect(workbench?.closeLabel).toBe('Close');
     expect(isValidElement(workbench?.panel)).toBe(true);
     const panel = workbench?.panel as ReactElement<SqlContextWorkbenchProps>;
     expect(panel.props.fileScope).toEqual({

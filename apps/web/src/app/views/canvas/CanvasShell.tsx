@@ -58,12 +58,14 @@ export default function CanvasShell({
     return {
       id: 'project-code',
       title: copy.sqlContextWorkbenchProjectTitle,
+      closeLabel: copy.nodeWorkbenchCloseLabel,
       description: copy.sqlContextWorkbenchProjectDescription,
       onClose: () => setContextualWorkbenchId(null),
       panel: <SqlContextWorkbench loadingMessage={copy.sqlContextWorkbenchLoadingMessage} />,
     };
   }, [
     contextualWorkbenchId,
+    copy.nodeWorkbenchCloseLabel,
     copy.sqlContextWorkbenchLoadingMessage,
     copy.sqlContextWorkbenchProjectDescription,
     copy.sqlContextWorkbenchProjectTitle,

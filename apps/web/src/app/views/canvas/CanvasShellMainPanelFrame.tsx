@@ -54,12 +54,14 @@ export function CanvasShellOverlayCenterSurfaceFrame({
 export function CanvasShellContextualWorkbenchSplit({
   baseSurface,
   children,
+  closeLabel,
   description,
   onClose,
   title,
 }: Readonly<{
   baseSurface: ReactNode;
   children: ReactNode;
+  closeLabel: string;
   description?: string;
   onClose: () => void;
   title: string;
@@ -72,7 +74,12 @@ export function CanvasShellContextualWorkbenchSplit({
       >
         {baseSurface}
       </div>
-      <CanvasContextualWorkbenchPanel title={title} description={description} onClose={onClose}>
+      <CanvasContextualWorkbenchPanel
+        title={title}
+        closeLabel={closeLabel}
+        description={description}
+        onClose={onClose}
+      >
         {children}
       </CanvasContextualWorkbenchPanel>
     </div>
