@@ -28,7 +28,7 @@ export function proposalDigest(
   >
 ): string {
   return sha256(
-    JSON.stringify({
+    canonicalJson({
       canvasId: input.canvasId,
       resource: input.resource,
       path: input.path,
@@ -46,7 +46,7 @@ export function operationRequestHash(
   input: Readonly<Record<string, unknown>>
 ): string {
   return sha256(
-    JSON.stringify({
+    canonicalJson({
       operation,
       scope: {
         tenantId: scope.tenantId,
@@ -59,7 +59,7 @@ export function operationRequestHash(
 }
 
 export function operationReceiptId(operation: 'apply' | 'revert', requestHash: string): string {
-  return sha256(JSON.stringify({ operation, requestHash }));
+  return sha256(canonicalJson({ operation, requestHash }));
 }
 
 export function batchIdempotencyKey(operation: 'apply' | 'revert', value: string): string {
@@ -112,4 +112,27 @@ export function buildFocusedUnifiedDiff(before: string, after: string, filePath:
 
 export function sha256(value: string): string {
   return createHash('sha256').update(value, 'utf8').digest('hex');
+}
+
+function canonicalJson(value: unknown): string {
+  return JSON.stringify(canonicalJsonValue(value));
+}
+
+function canonicalJsonValue(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map((item) => canonicalJsonValue(item));
+  }
+  if (value === null || typeof value !== 'object') {
+    return value;
+  }
+  const prototype = Object.getPrototypeOf(value) as object | null;
+  if (prototype !== Object.prototype && prototype !== null) {
+    throw new TypeError('Integrity identities accept only canonical JSON values.');
+  }
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(([, item]) => item !== undefined)
+      .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
+      .map(([key, item]) => [key, canonicalJsonValue(item)])
+  );
 }
