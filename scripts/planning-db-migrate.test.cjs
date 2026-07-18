@@ -15188,8 +15188,10 @@ test('tracked migrations establish workspace file content rail authority after b
   );
   assert.match(authorityMigration.sql, /GetWorkspaceFileContent/);
   assert.match(authorityMigration.sql, /SaveWorkspaceFileContent/);
-  assert.match(authorityMigration.sql, /IWorkspaceFileRepository\.getContent/);
-  assert.match(authorityMigration.sql, /IWorkspaceFileRepository\.saveContent/);
+  assert.match(authorityMigration.sql, /IWorkspaceFileRepository\.getFileContent/);
+  assert.match(authorityMigration.sql, /IWorkspaceFileRepository\.saveFileContent/);
+  assert.match(authorityMigration.sql, /'redGreenCycles'/);
+  assert.match(authorityMigration.sql, /'symbols'/);
   assert.match(authorityMigration.sql, /ddd_owner <> 'WorkspaceFileContent'/);
   assert.match(authorityMigration.sql, /rail_source <> 'local'/);
   assert.match(authorityMigration.sql, /authority_count <> 2/);

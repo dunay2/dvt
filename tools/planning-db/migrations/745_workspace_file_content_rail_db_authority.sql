@@ -37,15 +37,15 @@ values
   (
     'GetWorkspaceFileContent',
     'query',
-    'IWorkspaceFileRepository.getContent',
+    'IWorkspaceFileRepository.getFileContent',
     'GET RUNTIME_ROUTE_PATH.workspaceFileContent;IWorkspaceFilesQueryPort.getFileContent',
     'authenticated tenant, project, and environment workspace scope with workspace:files:view',
     jsonb_build_array(
-      'apps/api/src/application/ports/workspaceFiles.ts#IWorkspaceFileRepository.getContent',
+      'apps/api/src/application/ports/workspaceFiles.ts#IWorkspaceFileRepository.getFileContent',
       'apps/api/src/application/services/getWorkspaceFileContentUseCase.ts#GetWorkspaceFileContentUseCase',
       'apps/api/src/entrypoints/http/workspaceFilesRoutes.ts#registerWorkspaceFilesRoutes',
-      'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts#getContent',
-      'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.ts#getContent',
+      'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts#getFileContent',
+      'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.ts#getFileContent',
       'apps/web/src/app/ports/workspace.ts#IWorkspaceFilesQueryPort',
       'apps/web/src/app/services/workspace/workspacePorts.api.ts#getFileContent'
     ),
@@ -58,15 +58,15 @@ values
   (
     'SaveWorkspaceFileContent',
     'command',
-    'IWorkspaceFileRepository.saveContent',
+    'IWorkspaceFileRepository.saveFileContent',
     'POST RUNTIME_ROUTE_PATH.workspaceFileContent;IWorkspaceFileContentCommandPort.saveFileContent',
     'authenticated tenant, project, and environment workspace scope with workspace:files:save',
     jsonb_build_array(
-      'apps/api/src/application/ports/workspaceFiles.ts#IWorkspaceFileRepository.saveContent',
+      'apps/api/src/application/ports/workspaceFiles.ts#IWorkspaceFileRepository.saveFileContent',
       'apps/api/src/application/services/saveWorkspaceFileContentUseCase.ts#SaveWorkspaceFileContentUseCase',
       'apps/api/src/entrypoints/http/workspaceFilesRoutes.ts#registerWorkspaceFilesRoutes',
-      'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts#saveContent',
-      'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.ts#saveContent',
+      'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts#saveFileContent',
+      'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.ts#saveFileContent',
       'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileMutationCoordinator.ts#runExclusive',
       'apps/web/src/app/ports/workspace.ts#IWorkspaceFileContentCommandPort',
       'apps/web/src/app/services/workspace/workspacePorts.api.ts#saveFileContent'
@@ -163,6 +163,67 @@ select
     'featureId', 'DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG',
     'mechanizationStatus', 'implemented',
     'noHumanDecisionsRemaining', true,
+    'implementationPlan', 'Keep one provider-neutral WorkspaceFileContent query/command pair as the revision-guarded project-file authority and project it from DB-local command/query records instead of documentation imports.',
+    'componentGuides', jsonb_build_array(
+      'docs/architecture/components/web/code-workbench-workspace-files-component.md',
+      'docs/architecture/components/web/workspace/workspace-port-decomposition-component.md'
+    ),
+    'userStories', jsonb_build_array(
+      'An authorized user can read the exact current workspace file and its content revision.',
+      'An authorized editor can persist one workspace file only when the expected revision still matches.',
+      'A conflicting or failed write preserves the newer authoritative content and returns an actionable result.'
+    ),
+    'governingSources', jsonb_build_array(
+      'AGENTS.md',
+      'docs/planning/status/governance-document-rule-inventory.md',
+      'docs/architecture/command-query-rail-governance.md',
+      'docs/architecture/fowler-opportunity-planning-governance.md',
+      'docs/architecture/adr/ADR-0060-dbt-project-authoring-authority.md'
+    ),
+    'allowedImplementationSurfaces', jsonb_build_array(
+      'apps/api/src/application/ports/workspaceFiles.ts',
+      'apps/api/src/application/services/getWorkspaceFileContentUseCase.ts',
+      'apps/api/src/application/services/saveWorkspaceFileContentUseCase.ts',
+      'apps/api/src/entrypoints/http/workspaceFilesRoutes.ts',
+      'apps/api/src/infrastructure/workspaceFiles/**',
+      'apps/web/src/app/ports/workspace.ts',
+      'apps/web/src/app/services/workspace/workspacePorts.api.ts',
+      'tools/planning-db/migrations/745_workspace_file_content_rail_db_authority.sql',
+      'scripts/planning-db-migrate.test.cjs'
+    ),
+    'forbiddenImplementationSurfaces', jsonb_build_array(
+      'apps/web/src/app/stores/**',
+      'apps/web/cypress/**/fixtures/**',
+      'buzon/**'
+    ),
+    'domainObjects', jsonb_build_array(
+      jsonb_build_object('name', 'WorkspaceFileContent', 'type', 'read model', 'owner', 'Project Workspace I/O'),
+      jsonb_build_object('name', 'WorkspaceFileSaveReceipt', 'type', 'command receipt', 'owner', 'Project Workspace I/O'),
+      jsonb_build_object('name', 'ExpectedWorkspaceFileRevision', 'type', 'value object', 'owner', 'Project Workspace I/O')
+    ),
+    'fowlerSignals', jsonb_build_array(
+      'separated interface',
+      'gateway',
+      'optimistic offline lock',
+      'hidden authority prevention'
+    ),
+    'architectureGuards', jsonb_build_array(
+      jsonb_build_object('name', 'API workspace-file suite', 'command', 'pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/workspaceFilesRoutes.test.ts test/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.test.ts test/infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.test.ts'),
+      jsonb_build_object('name', 'Web workspace-port suite', 'command', 'pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/services/workspace/workspacePorts.files.test.ts'),
+      jsonb_build_object('name', 'Planning DB migration suite', 'command', 'pnpm test:planning:db:migrations'),
+      jsonb_build_object('name', 'Feature mechanization', 'command', 'pnpm docs:feature-mechanization:implementation')
+    ),
+    'cypressFlows', jsonb_build_array(
+      jsonb_build_object('name', 'DBT author Code run live persistence', 'command', 'node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts'),
+      jsonb_build_object('name', 'DBT YAML description live roundtrip', 'command', 'node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts')
+    ),
+    'completionGate', jsonb_build_array(
+      'pnpm test:planning:db:migrations',
+      'pnpm --filter dvt-api test',
+      'pnpm --filter @dvt/web test:unit:run',
+      'pnpm docs:feature-mechanization:implementation',
+      'pnpm verify:prepush'
+    ),
     'commandQueryRails', jsonb_build_array(
       jsonb_build_object(
         'name', authority.rail_name,
@@ -170,7 +231,86 @@ select
         'status', 'implemented',
         'dddOwner', 'WorkspaceFileContent'
       )
-    )
+    ),
+    'redGreenCycles', jsonb_build_array(
+      jsonb_build_object(
+        'id', lower(authority.rail_name) || '-db-local-authority',
+        'redTest', 'pnpm test:planning:db:migrations',
+        'expectedFailure', 'A clean Planning DB bootstrap reaches a consumer assertion before the documentation-imported workspace-file rail exists.',
+        'patchSurfaces', jsonb_build_array(
+          'tools/planning-db/migrations/737_code_working_tree_dbt_reanalysis_design.sql',
+          'tools/planning-db/migrations/745_workspace_file_content_rail_db_authority.sql',
+          'scripts/planning-db-migrate.test.cjs'
+        ),
+        'greenTest', 'pnpm test:planning:db:migrations'
+      )
+    ),
+    'symbols', case authority.rail_name
+      when 'GetWorkspaceFileContent' then jsonb_build_array(
+        jsonb_build_object(
+          'name', 'GetWorkspaceFileContentUseCase',
+          'path', 'apps/api/src/application/services/getWorkspaceFileContentUseCase.ts',
+          'dddOwner', 'WorkspaceFileContent',
+          'cqRails', jsonb_build_array('GetWorkspaceFileContent'),
+          'fowlerSignals', jsonb_build_array('Application Service', 'Separated Interface'),
+          'architectureGuard', 'apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts',
+          'cypressCoverage', 'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
+          'unitTests', jsonb_build_array('apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts')
+        ),
+        jsonb_build_object(
+          'name', 'LocalWorkspaceFileRepository',
+          'path', 'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts',
+          'dddOwner', 'WorkspaceFileContent',
+          'cqRails', jsonb_build_array('GetWorkspaceFileContent'),
+          'fowlerSignals', jsonb_build_array('Gateway', 'Data Mapper'),
+          'architectureGuard', 'apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts',
+          'cypressCoverage', 'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
+          'unitTests', jsonb_build_array('apps/api/test/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.test.ts')
+        ),
+        jsonb_build_object(
+          'name', 'createApiWorkspaceFilesQueryPort',
+          'path', 'apps/web/src/app/services/workspace/workspacePorts.api.ts',
+          'dddOwner', 'WorkspaceFileContent',
+          'cqRails', jsonb_build_array('GetWorkspaceFileContent'),
+          'fowlerSignals', jsonb_build_array('Gateway', 'Separated Interface'),
+          'architectureGuard', 'apps/web/src/app/services/workspace/workspacePorts.imports.test.ts',
+          'cypressCoverage', 'apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
+          'unitTests', jsonb_build_array('apps/web/src/app/services/workspace/workspacePorts.files.test.ts')
+        )
+      )
+      else jsonb_build_array(
+        jsonb_build_object(
+          'name', 'SaveWorkspaceFileContentUseCase',
+          'path', 'apps/api/src/application/services/saveWorkspaceFileContentUseCase.ts',
+          'dddOwner', 'WorkspaceFileContent',
+          'cqRails', jsonb_build_array('SaveWorkspaceFileContent'),
+          'fowlerSignals', jsonb_build_array('Application Service', 'Separated Interface'),
+          'architectureGuard', 'apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts',
+          'cypressCoverage', 'apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts',
+          'unitTests', jsonb_build_array('apps/api/test/entrypoints/http/workspaceFilesRoutes.test.ts')
+        ),
+        jsonb_build_object(
+          'name', 'LocalWorkspaceFileMutationCoordinator',
+          'path', 'apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileMutationCoordinator.ts',
+          'dddOwner', 'WorkspaceFileContent',
+          'cqRails', jsonb_build_array('SaveWorkspaceFileContent'),
+          'fowlerSignals', jsonb_build_array('Unit of Work', 'Optimistic Offline Lock'),
+          'architectureGuard', 'apps/api/test/architecture/workspaceFilesQueryRail.architecture.test.ts',
+          'cypressCoverage', 'apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts',
+          'unitTests', jsonb_build_array('apps/api/test/infrastructure/workspaceFiles/LocalWorkspaceFileMutationCoordinator.test.ts')
+        ),
+        jsonb_build_object(
+          'name', 'createApiWorkspaceFileContentCommandPort',
+          'path', 'apps/web/src/app/services/workspace/workspacePorts.api.ts',
+          'dddOwner', 'WorkspaceFileContent',
+          'cqRails', jsonb_build_array('SaveWorkspaceFileContent'),
+          'fowlerSignals', jsonb_build_array('Gateway', 'Separated Interface'),
+          'architectureGuard', 'apps/web/src/app/services/workspace/workspacePorts.imports.test.ts',
+          'cypressCoverage', 'apps/web/cypress/e2e/dbt/dbt-project-yaml-description-edit-live.cy.ts',
+          'unitTests', jsonb_build_array('apps/web/src/app/services/workspace/workspacePorts.files.test.ts')
+        )
+      )
+    end
   ),
   0,
   'codex'
