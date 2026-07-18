@@ -192,6 +192,27 @@ function renderNodePanel(
   });
 }
 
+function renderMovablePanel(root: Root): void {
+  act(() => {
+    root.render(
+      <CanvasNodeWorkbenchPanel
+        node={SOURCE_NODE}
+        nodes={[SOURCE_NODE]}
+        edges={[]}
+        activeRunId={null}
+        authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
+        dragHandleProps={{
+          'aria-label': 'Move node workbench',
+          'data-slot': 'canvas-node-workbench-drag-handle',
+          role: 'button',
+          tabIndex: 0,
+        }}
+        onClose={vi.fn()}
+      />
+    );
+  });
+}
+
 describe('CanvasNodeWorkbenchPanel', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -229,6 +250,22 @@ describe('CanvasNodeWorkbenchPanel', () => {
     for (const label of ['General', 'Columns', 'Inputs / Outputs', 'Tests', 'Code', 'More']) {
       expect(tabsList?.textContent).toContain(label);
     }
+  });
+
+  it('keeps the accessible movement handle separate from the close command', () => {
+    renderMovablePanel(root);
+
+    const dragHandle = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-drag-handle"]'
+    );
+    const closeButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Close'
+    );
+
+    expect(dragHandle?.getAttribute('role')).toBe('button');
+    expect(dragHandle?.tabIndex).toBe(0);
+    expect(closeButton).toBeDefined();
+    expect(dragHandle?.contains(closeButton!)).toBe(false);
   });
 
   it('shows column metadata, graph IO, and test target semantics from the node read model', () => {

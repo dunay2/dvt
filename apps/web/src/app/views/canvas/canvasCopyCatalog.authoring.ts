@@ -138,6 +138,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.nodeWorkbench.closeLabel',
     fallback: 'Close',
   },
+  nodeWorkbenchMoveLabel: {
+    key: 'canvas.nodeWorkbench.moveLabel',
+    fallback: 'Move node workbench',
+  },
   nodeWorkbenchMoreLabel: {
     key: 'canvas.nodeWorkbench.moreLabel',
     fallback: 'More',

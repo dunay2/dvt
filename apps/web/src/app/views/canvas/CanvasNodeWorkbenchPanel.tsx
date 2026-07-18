@@ -37,6 +37,7 @@ import {
 } from './canvasNodeWorkbenchContribution';
 import { resolveNodeWorkbenchPrimarySectionIds } from './canvasNodeWorkbenchSectionStrategy';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -293,15 +294,14 @@ export function CanvasNodeWorkbenchPanel({
 
   return (
     <div data-slot="canvas-node-workbench-panel" className="flex h-full min-h-0 flex-col">
-      <div
-        {...dragHandleProps}
-        className={cn(
-          inspectorVisualClasses.contextPanelHeaderRow,
-          dragHandleProps?.className,
-          dragHandleProps != null && 'cursor-move select-none'
-        )}
-      >
-        <div className="min-w-0 flex-1">
+      <div className={inspectorVisualClasses.contextPanelHeaderRow}>
+        <div
+          {...dragHandleProps}
+          className={cn(
+            dragHandleProps != null && canvasNodeWorkbenchVisualTokens.dragHandle,
+            dragHandleProps?.className
+          )}
+        >
           <div className="flex items-center gap-2">
             <div className={cn('size-2 shrink-0 rounded-full', dotClass)} />
             <h2 className={cn('truncate', inspectorVisualClasses.contextPanelTitle)}>
@@ -312,13 +312,7 @@ export function CanvasNodeWorkbenchPanel({
             {node.kind}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          data-workbench-drag-excluded="true"
-          onClick={onClose}
-        >
+        <Button type="button" variant="ghost" size="sm" onClick={onClose}>
           {copy.nodeWorkbenchCloseLabel}
         </Button>
       </div>
