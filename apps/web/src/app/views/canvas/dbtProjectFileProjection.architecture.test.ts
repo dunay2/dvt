@@ -21,12 +21,17 @@ describe('dbt project file Canvas architecture', () => {
     const composition = readAppSource('DbtProjectFileCanvas.tsx');
     const controller = readAppSource('useDbtProjectFileCanvasController.ts');
     const view = readAppSource('DbtProjectFileCanvasView.tsx');
+    const codeWorkbench = readAppSource('dbtProjectFileCodeWorkbench.tsx');
+    const sqlWorkbench = readAppSource('SqlContextWorkbench.tsx');
 
     expect(composition).toContain('useDbtProjectFileCanvasController');
     expect(controller).toContain('useDbtProjectGraphQuery');
     expect(controller).toContain('projectDbtProjectGraphToCanonicalCanvas');
     expect(view).toContain('CanvasShell');
-    expect(view).toContain('CodeView');
+    expect(view).toContain('buildDbtProjectFileCodeWorkbench');
+    expect(codeWorkbench).toContain('SqlContextWorkbench');
+    expect(sqlWorkbench).toContain("lazy(() => import('../CodeView'))");
+    expect(sqlWorkbench).toContain('publishRouteBootstrap={false}');
     expect(controller).not.toContain('useCanvasController');
     expect(composition).not.toContain('WorkspaceGraphAuthoringDraft');
     expect(controller).not.toContain('WorkspaceGraphAuthoringDraft');

@@ -59,6 +59,7 @@ describe('Code Monaco editable access architecture', () => {
     const workingTreeSync = readAppSource('views/code/useCodeWorkingTreeSync.ts');
     const workingTreeStatus = readAppSource('views/code/CodeWorkingTreeStatus.tsx');
     const canvasShell = readAppSource('views/canvas/CanvasShell.tsx');
+    const sqlContextWorkbench = readAppSource('views/canvas/SqlContextWorkbench.tsx');
     const dbtContributions = readAppSource('plugins/dbt/dbtContributions.ts');
     const cypressSpec = readFileSync(
       path.join(APP_ROOT, '../../cypress/e2e/canvas/code-workbench-workspace-files.cy.ts'),
@@ -72,6 +73,7 @@ describe('Code Monaco editable access architecture', () => {
       ['components/monaco/MonacoCodeSurface.tsx', codeSurface],
       ['views/code/useCodeWorkingTreeSync.ts', workingTreeSync],
       ['views/code/CodeWorkingTreeStatus.tsx', workingTreeStatus],
+      ['views/canvas/SqlContextWorkbench.tsx', sqlContextWorkbench],
     ] as const) {
       expect(source.trimStart().startsWith('/** Owned concern:'), modulePath).toBe(true);
     }
@@ -114,7 +116,10 @@ describe('Code Monaco editable access architecture', () => {
     expect(codeSurface).toContain('onChange');
     expect(codeSurface).not.toContain('save');
 
-    expect(canvasShell).toContain('<CodeWorkbench publishRouteBootstrap={false} />');
+    expect(canvasShell).toContain('<SqlContextWorkbench');
+    expect(sqlContextWorkbench).toContain("lazy(() => import('../CodeView'))");
+    expect(sqlContextWorkbench).toContain('publishRouteBootstrap={false}');
+    expect(sqlContextWorkbench).not.toContain('useCodeWorkingTreeSync');
 
     expect(cypressSpec).toContain(
       'Owned concern: prove retired Code routes and contextual Canvas Code working-tree synchronization'
