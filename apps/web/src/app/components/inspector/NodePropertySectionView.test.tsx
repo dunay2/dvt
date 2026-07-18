@@ -38,6 +38,9 @@ describe('NodePropertySectionView', () => {
   beforeEach(() => {
     container = null;
     root = null;
+    (
+      globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
   afterEach(() => {
@@ -121,5 +124,36 @@ describe('NodePropertySectionView', () => {
     expect(hotspot?.textContent).toBe('Estimated 99.6 KB');
     expect(hotspot?.getAttribute('data-tone')).toBe('estimated');
     expect(hotspot?.getAttribute('aria-label')).toContain('Estimated using schema width');
+  });
+
+  it('places contextual contributions on their declared side of the passive body', () => {
+    const section: NodePropertySection = {
+      id: 'general',
+      label: 'General',
+      rows: [{ id: NODE_PROPERTY_ROW_ID.status, label: 'Status', value: 'Ready' }],
+      tableRows: [],
+    };
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    act(() => {
+      root?.render(
+        <NodePropertySectionView
+          section={section}
+          slots={{ code: 'node-section-code', sectionPrefix: 'node-section' }}
+          surface="workbench"
+          beforeBody={<div data-slot="before-contribution">Before</div>}
+          afterBody={<div data-slot="after-contribution">After</div>}
+        />
+      );
+    });
+
+    const before = container.querySelector('[data-slot="before-contribution"]')!;
+    const body = container.querySelector('dl')!;
+    const after = container.querySelector('[data-slot="after-contribution"]')!;
+
+    expect(before.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(body.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });

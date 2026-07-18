@@ -79,6 +79,7 @@ export function buildCanvasShellPanels({
             },
           }),
     },
+    inspectorWorkbenchContributions: [],
     activeRunId: panelState.activeRunId,
     registeredPlugins: panelState.registeredPlugins,
     runtimeCapabilities: panelState.runtimeCapabilities,

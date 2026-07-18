@@ -123,6 +123,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
         canEditNode: true,
         onApplyNodeDraft: vi.fn(),
       },
+      inspectorWorkbenchContributions: [],
       activeRunId: null,
       registeredPlugins: new Set(['dbt']),
       runtimeCapabilities: undefined,

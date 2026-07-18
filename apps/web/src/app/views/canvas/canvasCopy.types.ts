@@ -219,6 +219,8 @@ export type CanvasViewCopy = {
   readonly nodeRemovedSuffix: string;
   readonly inspectorEditablePropertiesTitle: string;
   readonly inspectorEditablePropertiesDescription: string;
+  readonly nodeWorkbenchCloseLabel: string;
+  readonly nodeWorkbenchMoreLabel: string;
   readonly inspectorNodeNameLabel: string;
   readonly inspectorNodeTagsLabel: string;
   readonly inspectorNodeTagsPlaceholder: string;

@@ -187,6 +187,7 @@ export function DbtProjectFileCanvasView({
         canEditNode: false,
         onApplyNodeDraft: () => unsupportedFileProjectionCommand('Edit graph node properties'),
       },
+      inspectorWorkbenchContributions: [],
       activeRunId: controller.activeRunId,
       registeredPlugins: controller.registeredPlugins,
       userPermissions: {

@@ -61,6 +61,7 @@ describe('NodePropertiesTabs primary sections', () => {
           activeRunId={null}
           panels={[]}
           activeTab="general"
+          moreLabel="More"
           onActiveTabChange={vi.fn()}
           onHide={vi.fn()}
         />
@@ -93,6 +94,7 @@ describe('NodePropertiesTabs primary sections', () => {
           activeRunId={null}
           panels={[]}
           activeTab="general"
+          moreLabel="More"
           primarySectionIds={['general', 'columns', 'code']}
           onActiveTabChange={vi.fn()}
           onHide={vi.fn()}

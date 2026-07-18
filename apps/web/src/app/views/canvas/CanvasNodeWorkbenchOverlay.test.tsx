@@ -59,6 +59,7 @@ function renderOverlay(
           inspectorNode: NODE,
           inspectorPreferredTabId: 'columns',
           inspectorPreferredTabRequestId: 7,
+          inspectorWorkbenchContributions: [],
           registeredPlugins: new Set(['dbt']),
         }}
         onHide={vi.fn()}
@@ -185,6 +186,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
             inspectorNode: null,
             inspectorPreferredTabId: null,
             inspectorPreferredTabRequestId: 0,
+            inspectorWorkbenchContributions: [],
             registeredPlugins: new Set(['dbt']),
           },
         },

@@ -44,6 +44,8 @@ export const canvasViewAuthoringCopyEs = {
   nodeRemovedSuffix: '',
   inspectorEditablePropertiesTitle: 'Propiedades editables',
   inspectorEditablePropertiesDescription: 'Nombre, tags y descripcion guardados con este canvas.',
+  nodeWorkbenchCloseLabel: 'Cerrar',
+  nodeWorkbenchMoreLabel: 'Mas',
   inspectorNodeNameLabel: 'Nombre',
   inspectorNodeTagsLabel: 'Tags',
   inspectorNodeTagsPlaceholder: 'finanzas, critico',

@@ -1,5 +1,12 @@
 /** Owned concern: render the Canvas-owned contextual node workbench panel. */
-import { useCallback, useEffect, useState, type HTMLAttributes } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useState,
+  type HTMLAttributes,
+  type ReactNode,
+} from 'react';
 
 import { getInspectorPanels } from '../../plugins/registry';
 import {
@@ -14,6 +21,7 @@ import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTab
 import type {
   NodePropertiesReadModel,
   NodePropertyRowId,
+  NodePropertySectionId,
 } from '../../components/inspector/nodePropertiesReadModel';
 import {
   buildNodePropertiesReadModel,
@@ -23,7 +31,12 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
 import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
+import {
+  resolveCanvasNodeWorkbenchContributions,
+  type CanvasNodeWorkbenchContribution,
+} from './canvasNodeWorkbenchContribution';
 import { resolveNodeWorkbenchPrimarySectionIds } from './canvasNodeWorkbenchSectionStrategy';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -35,6 +48,7 @@ export type CanvasNodeWorkbenchPanelProps = Readonly<{
   preferredTabRequestId?: number;
   primarySectionIds?: readonly CanvasNodeWorkbenchSectionPolicyId[];
   authoring: CanvasInspectorAuthoringContract;
+  contributions?: readonly CanvasNodeWorkbenchContribution[];
   dragHandleProps?: CanvasNodeWorkbenchDragHandleProps;
   onClose: () => void;
 }>;
@@ -108,28 +122,61 @@ function buildNodeWorkbenchReadModel({
   model,
   node,
   canEditNode,
+  supersededRowIdsBySection,
 }: Readonly<{
   model: NodePropertiesReadModel;
   node: CanonicalNode;
   canEditNode: boolean;
+  supersededRowIdsBySection: ReadonlyMap<NodePropertySectionId, ReadonlySet<NodePropertyRowId>>;
 }>): NodePropertiesReadModel {
   const hiddenGeneralRowIds = resolveNodeWorkbenchHiddenGeneralRowIds(node, canEditNode);
-
-  if (hiddenGeneralRowIds.size === 0) {
-    return model;
-  }
+  const hiddenRowIdsBySection = new Map(supersededRowIdsBySection);
+  hiddenRowIdsBySection.set(
+    'general',
+    new Set([
+      ...hiddenGeneralRowIds,
+      ...(supersededRowIdsBySection.get('general') ?? new Set<NodePropertyRowId>()),
+    ])
+  );
 
   return {
     ...model,
-    sections: model.sections.map((section) =>
-      section.id === 'general'
-        ? {
+    sections: model.sections.map((section) => {
+      const hiddenRowIds = hiddenRowIdsBySection.get(section.id);
+      return hiddenRowIds == null || hiddenRowIds.size === 0
+        ? section
+        : {
             ...section,
-            rows: section.rows.filter((row) => !hiddenGeneralRowIds.has(row.id)),
-          }
-        : section
-    ),
+            rows: section.rows.filter((row) => !hiddenRowIds.has(row.id)),
+          };
+    }),
   };
+}
+
+function renderWorkbenchContributions(
+  contributions: readonly CanvasNodeWorkbenchContribution[] | undefined
+): ReactNode {
+  if (contributions == null || contributions.length === 0) {
+    return null;
+  }
+
+  return contributions.map((contribution) => (
+    <Fragment key={contribution.id}>{contribution.content}</Fragment>
+  ));
+}
+
+function buildContributionChildrenBySection(
+  contributionsBySection: ReadonlyMap<
+    NodePropertySectionId,
+    readonly CanvasNodeWorkbenchContribution[]
+  >
+): Partial<Record<NodePropertySectionId, ReactNode>> {
+  return Object.fromEntries(
+    Array.from(contributionsBySection, ([sectionId, contributions]) => [
+      sectionId,
+      renderWorkbenchContributions(contributions),
+    ])
+  );
 }
 
 export function CanvasNodeWorkbenchPanel({
@@ -142,9 +189,11 @@ export function CanvasNodeWorkbenchPanel({
   preferredTabRequestId = 0,
   primarySectionIds,
   authoring,
+  contributions = [],
   dragHandleProps,
   onClose,
 }: CanvasNodeWorkbenchPanelProps): JSX.Element {
+  const copy = resolveCanvasViewCopy();
   const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
   const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
   const [authoringDraft, setAuthoringDraft] = useState(() => createCanvasInspectorNodeDraft(node));
@@ -152,10 +201,12 @@ export function CanvasNodeWorkbenchPanel({
     createCanvasInspectorNodeDraft(node).tags.join(', ')
   );
   const baseModel = buildNodePropertiesReadModel({ node, nodes, edges });
+  const contributionModel = resolveCanvasNodeWorkbenchContributions(node.id, contributions);
   const model = buildNodeWorkbenchReadModel({
     model: baseModel,
     node,
     canEditNode: authoring.canEditNode,
+    supersededRowIdsBySection: contributionModel.supersededRowIdsBySection,
   });
   const panels = getInspectorPanels(node, { activeRunId, registeredPlugins });
   const resolvedPrimarySectionIds =
@@ -192,6 +243,29 @@ export function CanvasNodeWorkbenchPanel({
       />
     </div>
   );
+  const sectionBeforeChildren = buildContributionChildrenBySection(
+    contributionModel.beforeBodyBySection
+  );
+  const sectionAfterChildren = buildContributionChildrenBySection(
+    contributionModel.afterBodyBySection
+  );
+
+  if (authoring.canEditNode) {
+    sectionBeforeChildren.general = (
+      <>
+        {renderAuthoringSection('general')}
+        {sectionBeforeChildren.general}
+      </>
+    );
+    for (const sectionId of ['columns', 'code', 'sink'] as const) {
+      sectionAfterChildren[sectionId] = (
+        <>
+          {sectionAfterChildren[sectionId]}
+          {renderAuthoringSection(sectionId)}
+        </>
+      );
+    }
+  }
 
   useEffect(() => {
     if (preferredTabKey == null || preferredTabKey === appliedPreferredTabKey) {
@@ -240,7 +314,7 @@ export function CanvasNodeWorkbenchPanel({
           data-workbench-drag-excluded="true"
           onClick={onClose}
         >
-          Close
+          {copy.nodeWorkbenchCloseLabel}
         </Button>
       </div>
 
@@ -253,19 +327,9 @@ export function CanvasNodeWorkbenchPanel({
             panels={panels}
             activeTab={resolvedActiveTab}
             primarySectionIds={resolvedPrimarySectionIds}
-            sectionChildren={
-              authoring.canEditNode
-                ? {
-                    general: renderAuthoringSection('general'),
-                    columns: renderAuthoringSection('columns'),
-                    code: renderAuthoringSection('code'),
-                    sink: renderAuthoringSection('sink'),
-                  }
-                : undefined
-            }
-            sectionChildrenPlacement={{
-              general: 'before-body',
-            }}
+            sectionBeforeChildren={sectionBeforeChildren}
+            sectionAfterChildren={sectionAfterChildren}
+            moreLabel={copy.nodeWorkbenchMoreLabel}
             slotPrefix="canvas-node-workbench"
             surface="workbench"
             showSectionCountBadge

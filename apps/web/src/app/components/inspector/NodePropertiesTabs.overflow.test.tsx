@@ -61,6 +61,7 @@ describe('NodePropertiesTabs overflow sections', () => {
           activeRunId={null}
           panels={[]}
           activeTab="general"
+          moreLabel="More"
           onActiveTabChange={onActiveTabChange}
           onHide={vi.fn()}
         />

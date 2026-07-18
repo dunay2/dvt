@@ -43,6 +43,7 @@ export type CanvasNodeWorkbenchOverlayProps = Readonly<{
     | 'inspectorNode'
     | 'inspectorPreferredTabId'
     | 'inspectorPreferredTabRequestId'
+    | 'inspectorWorkbenchContributions'
     | 'registeredPlugins'
   >;
   onHide: CanvasShellChromeCommands['onHideInspector'];
@@ -187,6 +188,7 @@ export function CanvasNodeWorkbenchOverlay({
         primarySectionIds={surfaceStrategy.nodeWorkbench.sections}
         onClose={onHide}
         authoring={panels.inspectorAuthoring}
+        contributions={panels.inspectorWorkbenchContributions}
         dragHandleProps={{
           'data-slot': 'canvas-node-workbench-drag-handle',
           onPointerDown: handleWorkbenchDragStart,

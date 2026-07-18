@@ -134,6 +134,14 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.editablePropertiesDescription',
     fallback: 'Name, tags, and description saved with this canvas.',
   },
+  nodeWorkbenchCloseLabel: {
+    key: 'canvas.nodeWorkbench.closeLabel',
+    fallback: 'Close',
+  },
+  nodeWorkbenchMoreLabel: {
+    key: 'canvas.nodeWorkbench.moreLabel',
+    fallback: 'More',
+  },
   inspectorNodeNameLabel: {
     key: 'canvas.inspector.authoring.nodeNameLabel',
     fallback: 'Name',
