@@ -196,6 +196,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
         ...(projection.adapterType === undefined ? {} : { adapterType: projection.adapterType }),
         projectRevision: {
           ...projectRevision,
+          projectName: projection.projectName,
           ...(projection.dbtVersion === undefined ? {} : { dbtVersion: projection.dbtVersion }),
         },
         analysisSha256: hashDbtAnalysis(

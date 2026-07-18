@@ -37,10 +37,12 @@ export class ProjectDbtGraphFromFilesUseCase {
     const nodes = analysis.resources
       .map(({ codeOnlyReasons, ...resource }) => ({
         ...resource,
-        visualEditability: {
-          status: 'code_only' as const,
-          reasons: [...new Set(codeOnlyReasons)].sort(),
-        },
+        visualEditability: resolveVisualEditability({
+          codeOnlyReasons,
+          descriptionFilePath: resource.descriptionFilePath,
+          packageName: resource.packageName,
+          projectName: analysis.projectRevision.projectName,
+        }),
       }))
       .sort((left, right) => left.uniqueId.localeCompare(right.uniqueId));
     const edges = analysis.dependencies
@@ -72,10 +74,44 @@ export class ProjectDbtGraphFromFilesUseCase {
       capabilities: {
         canPreview: executable,
         canRun: executable,
-        codeOnlyResourceCount: nodes.length,
+        codeOnlyResourceCount: nodes.filter((node) => node.visualEditability.status === 'code_only')
+          .length,
       },
     });
   }
+}
+
+function resolveVisualEditability(
+  input: Readonly<{
+    codeOnlyReasons: readonly string[];
+    descriptionFilePath?: string;
+    packageName: string;
+    projectName?: string;
+  }>
+): DbtProjectGraphProjection['nodes'][number]['visualEditability'] {
+  const reasons = [...new Set(input.codeOnlyReasons)].sort();
+  if (
+    input.projectName !== undefined &&
+    input.packageName === input.projectName &&
+    input.descriptionFilePath !== undefined
+  ) {
+    return {
+      status: 'partially_editable',
+      operations: ['yaml_description'],
+      reasons,
+    };
+  }
+  return {
+    status: 'code_only',
+    reasons: [
+      ...new Set([
+        ...reasons,
+        ...(input.projectName !== undefined && input.packageName !== input.projectName
+          ? ['external_package']
+          : []),
+      ]),
+    ].sort(),
+  };
 }
 
 function resolveExecutionDiagnostics({

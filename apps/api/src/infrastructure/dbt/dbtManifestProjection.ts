@@ -17,6 +17,7 @@ const SUPPORTED_RESOURCE_TYPES = new Set([
 export type ManifestProjection = Readonly<{
   dbtVersion?: string;
   adapterType?: string;
+  projectName: string;
   resources: readonly DbtProjectAnalysisResource[];
   dependencies: readonly DbtProjectAnalysisDependency[];
   diagnostics: DbtProjectAnalysis['diagnostics'];
@@ -24,8 +25,11 @@ export type ManifestProjection = Readonly<{
 
 export function projectDbtManifest(value: unknown): ManifestProjection {
   const manifest = record(value);
+  const metadata = record(manifest.metadata);
+  const projectName = stringValue(metadata.project_name);
   if (
-    stringValue(record(manifest.metadata).dbt_version) === undefined ||
+    stringValue(metadata.dbt_version) === undefined ||
+    projectName === undefined ||
     !isRecord(manifest.nodes) ||
     !isRecord(manifest.sources)
   ) {
@@ -40,7 +44,7 @@ export function projectDbtManifest(value: unknown): ManifestProjection {
   const diagnostics: DbtProjectAnalysis['diagnostics'][number][] = [];
   const resources: DbtProjectAnalysisResource[] = [];
   for (const candidate of candidates) {
-    const resource = projectResource(candidate);
+    const resource = projectResource(candidate, projectName);
     if (resource !== null) {
       resources.push(resource);
       continue;
@@ -89,9 +93,10 @@ export function projectDbtManifest(value: unknown): ManifestProjection {
     }
   }
 
-  const dbtVersion = stringValue(record(manifest.metadata).dbt_version);
-  const adapterType = stringValue(record(manifest.metadata).adapter_type);
+  const dbtVersion = stringValue(metadata.dbt_version);
+  const adapterType = stringValue(metadata.adapter_type);
   return {
+    projectName,
     ...(dbtVersion === undefined ? {} : { dbtVersion }),
     ...(adapterType === undefined ? {} : { adapterType }),
     resources,
@@ -100,7 +105,10 @@ export function projectDbtManifest(value: unknown): ManifestProjection {
   };
 }
 
-function projectResource(value: unknown): DbtProjectAnalysisResource | null {
+function projectResource(
+  value: unknown,
+  rootProjectName: string
+): DbtProjectAnalysisResource | null {
   const resource = record(value);
   const resourceType = stringValue(resource.resource_type);
   const uniqueId = stringValue(resource.unique_id);
@@ -121,12 +129,12 @@ function projectResource(value: unknown): DbtProjectAnalysisResource | null {
   const normalizedOriginalFilePath =
     originalFilePath === undefined ? undefined : normalizeManifestPath(originalFilePath);
   const patchPath = stringValue(resource.patch_path);
-  const descriptionFilePath =
-    patchPath === undefined
-      ? isYamlPath(normalizedOriginalFilePath)
-        ? normalizedOriginalFilePath
-        : undefined
-      : normalizeDbtOwnedPath(patchPath);
+  const descriptionFilePath = resolveDescriptionFilePath({
+    patchPath,
+    normalizedOriginalFilePath,
+    resourcePackageName: packageName,
+    rootProjectName,
+  });
   const description = stringValue(resource.description);
   const columns = collectionValues(resource.columns)
     .map((columnValue) => {
@@ -242,12 +250,35 @@ function normalizeManifestPath(value: string): string {
   return value.replaceAll('\\', '/');
 }
 
-function normalizeDbtOwnedPath(value: string): string {
+function resolveDescriptionFilePath(
+  input: Readonly<{
+    patchPath: string | undefined;
+    normalizedOriginalFilePath: string | undefined;
+    resourcePackageName: string;
+    rootProjectName: string;
+  }>
+): string | undefined {
+  if (input.resourcePackageName !== input.rootProjectName) return undefined;
+  if (input.patchPath === undefined) {
+    return isYamlPath(input.normalizedOriginalFilePath)
+      ? input.normalizedOriginalFilePath
+      : undefined;
+  }
+
+  const ownedPath = parseDbtOwnedPath(input.patchPath);
+  return ownedPath.owner === undefined || ownedPath.owner === input.rootProjectName
+    ? ownedPath.path
+    : undefined;
+}
+
+function parseDbtOwnedPath(value: string): Readonly<{ owner?: string; path: string }> {
   const normalized = normalizeManifestPath(value);
   const schemeSeparatorIndex = normalized.indexOf('://');
-  return schemeSeparatorIndex < 0
-    ? normalized
-    : normalized.slice(schemeSeparatorIndex + '://'.length);
+  if (schemeSeparatorIndex < 0) return { path: normalized };
+  return {
+    owner: normalized.slice(0, schemeSeparatorIndex),
+    path: normalized.slice(schemeSeparatorIndex + '://'.length),
+  };
 }
 
 function isYamlPath(value: string | undefined): value is string {

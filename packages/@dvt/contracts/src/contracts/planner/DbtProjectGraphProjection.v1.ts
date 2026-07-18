@@ -143,6 +143,7 @@ const DbtDiagnosticSchema = z
 export const DbtProjectRevisionSchema = z
   .object({
     projectRoot: NonBlankStringSchema,
+    projectName: NonBlankStringSchema.optional(),
     contentSetSha256: Sha256HexStringSchema,
     analyzedAt: IsoUtcStringSchema,
     analyzerVersion: NonBlankStringSchema,
@@ -237,6 +238,14 @@ export const DbtProjectGraphProjectionSchema = z
         code: 'custom',
         message: 'Only a fresh dbt analysis may advertise preview or run capabilities',
         path: ['capabilities'],
+      });
+    }
+
+    if (projection.freshness === 'fresh' && projection.projectRevision.projectName === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Fresh dbt projections require the root project name',
+        path: ['projectRevision', 'projectName'],
       });
     }
 

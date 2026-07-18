@@ -25,6 +25,7 @@ function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): 
     adapterType: 'postgres',
     projectRevision: {
       projectRoot: 'analytics',
+      projectName: 'analytics',
       contentSetSha256: 'a'.repeat(64),
       analyzedAt: '2026-07-13T10:00:00.000Z',
       analyzerVersion: 'dvt-dbt-analyzer.v1',
@@ -40,6 +41,7 @@ function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): 
               name: 'orders',
               packageName: 'analytics',
               originalFilePath: 'models/sources.yml',
+              descriptionFilePath: 'models/sources.yml',
               sourceName: 'raw',
               columns: [{ name: 'order_id', dataType: 'integer' }],
               tags: ['raw'],
@@ -51,6 +53,7 @@ function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): 
               name: 'orders',
               packageName: 'analytics',
               originalFilePath: 'models/orders.sql',
+              descriptionFilePath: 'models/schema.yml',
               materialized: 'table',
               columns: [],
               tags: [],
@@ -131,13 +134,28 @@ describe('ProjectDbtGraphFromFilesUseCase', () => {
         relation: 'dependency',
       },
     ]);
-    expect(projection.nodes.every((node) => node.visualEditability.status === 'code_only')).toBe(
-      true
+    expect(projection.nodes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          uniqueId: 'model.analytics.orders',
+          visualEditability: expect.objectContaining({
+            status: 'partially_editable',
+            operations: ['yaml_description'],
+          }),
+        }),
+        expect.objectContaining({
+          uniqueId: 'source.analytics.raw.orders',
+          visualEditability: expect.objectContaining({
+            status: 'partially_editable',
+            operations: ['yaml_description'],
+          }),
+        }),
+      ])
     );
     expect(projection.capabilities).toEqual({
       canPreview: true,
       canRun: true,
-      codeOnlyResourceCount: 2,
+      codeOnlyResourceCount: 0,
     });
     expect(projection.adapterType).toBe('postgres');
     expect(projection.executionTarget).toEqual({
