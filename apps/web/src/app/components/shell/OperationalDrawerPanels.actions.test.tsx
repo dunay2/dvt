@@ -11,6 +11,7 @@ import {
   BottomOperationalRunsPanel,
 } from './OperationalDrawerPanels';
 import type { OperationalDrawerContribution } from './operationalDrawerContributionStore';
+import { resolveCanvasViewCopy } from '../../views/canvas/canvasCopyCatalog';
 
 function buildContribution(
   overrides?: Partial<OperationalDrawerContribution>
@@ -132,5 +133,65 @@ describe('OperationalDrawerPanels action surfaces', () => {
 
     expect(container.textContent).toContain('Run ready');
     expect(container.textContent).toContain('Run is ready after the current execution preview.');
+  });
+
+  it('delegates explicit selection recovery from Preview', async () => {
+    const useWorkspaceScope = vi.fn();
+    const contribution = buildContribution({
+      preview: {
+        status: 'blocked',
+        summary: 'Execution selection requires recovery.',
+        blockers: ['Execution selection'],
+        canPreview: false,
+        onPreviewExecutionPlan: vi.fn(),
+        selectionRecovery: {
+          model: {
+            queryRail: 'CollectCanvasExecutionSelection',
+            commandRail: 'RecoverCanvasExecutionSelection',
+            status: 'blocked',
+            selectionMode: 'explicit',
+            requestedRootNodeIds: ['model.removed'],
+            unavailableRootNodeIds: ['model.removed'],
+            nonExecutableRootNodeIds: [],
+            derivedDependencyNodeIds: [],
+            admittedScopeNodeIds: [],
+            lastPreviewRevision: 'analysis-sha-1',
+            canDiscardUnavailable: true,
+            canUseWorkspaceScope: true,
+            canRefreshAnalysis: true,
+            pendingStrategy: null,
+            receipt: null,
+            failure: null,
+          },
+          commands: {
+            discardUnavailable: vi.fn(),
+            useWorkspaceScope,
+            refreshAnalysis: vi.fn(),
+          },
+          messages: resolveCanvasViewCopy('en'),
+        },
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="preview"
+          contribution={contribution}
+          logBody={null}
+        />
+      );
+    });
+
+    expect(container.textContent).toContain('Requested roots');
+    expect(container.textContent).toContain('model.removed');
+    const workspaceButton = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Use workspace scope'
+    );
+    expect(workspaceButton).toBeDefined();
+
+    await act(async () => fireEvent.click(workspaceButton!));
+
+    expect(useWorkspaceScope).toHaveBeenCalledTimes(1);
   });
 });
