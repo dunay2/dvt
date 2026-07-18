@@ -118,6 +118,15 @@ function projectResource(value: unknown): DbtProjectAnalysisResource | null {
 
   const projectedType = resourceType as DbtProjectAnalysisResource['resourceType'];
   const originalFilePath = stringValue(resource.original_file_path);
+  const normalizedOriginalFilePath =
+    originalFilePath === undefined ? undefined : normalizeManifestPath(originalFilePath);
+  const patchPath = stringValue(resource.patch_path);
+  const descriptionFilePath =
+    patchPath === undefined
+      ? isYamlPath(normalizedOriginalFilePath)
+        ? normalizedOriginalFilePath
+        : undefined
+      : normalizeDbtOwnedPath(patchPath);
   const description = stringValue(resource.description);
   const columns = collectionValues(resource.columns)
     .map((columnValue) => {
@@ -143,9 +152,10 @@ function projectResource(value: unknown): DbtProjectAnalysisResource | null {
     resourceType: projectedType,
     name,
     packageName,
-    ...(originalFilePath === undefined
+    ...(normalizedOriginalFilePath === undefined
       ? {}
-      : { originalFilePath: normalizeManifestPath(originalFilePath) }),
+      : { originalFilePath: normalizedOriginalFilePath }),
+    ...(descriptionFilePath === undefined ? {} : { descriptionFilePath }),
     ...(stringValue(resource.source_name) === undefined
       ? {}
       : { sourceName: stringValue(resource.source_name) }),
@@ -230,4 +240,16 @@ function stringArray(value: unknown): readonly string[] {
 
 function normalizeManifestPath(value: string): string {
   return value.replaceAll('\\', '/');
+}
+
+function normalizeDbtOwnedPath(value: string): string {
+  const normalized = normalizeManifestPath(value);
+  const schemeSeparatorIndex = normalized.indexOf('://');
+  return schemeSeparatorIndex < 0
+    ? normalized
+    : normalized.slice(schemeSeparatorIndex + '://'.length);
+}
+
+function isYamlPath(value: string | undefined): value is string {
+  return value != null && /\.ya?ml$/iu.test(value);
 }

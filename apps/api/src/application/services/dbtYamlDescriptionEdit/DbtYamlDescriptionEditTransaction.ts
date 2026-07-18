@@ -220,7 +220,7 @@ export class DbtYamlDescriptionEditTransaction {
     if (!isEditableResourceType(resource.resourceType)) {
       throw new DbtYamlDescriptionResourceUnsupportedError(resourceUniqueId);
     }
-    if (!resource.originalFilePath) {
+    if (!resource.descriptionFilePath) {
       throw new DbtYamlDescriptionResourceUnsupportedError(resourceUniqueId);
     }
     const authority = projection.authorityBinding.authority;
@@ -234,7 +234,7 @@ export class DbtYamlDescriptionEditTransaction {
         name: resource.name,
         ...(resource.sourceName === undefined ? {} : { sourceName: resource.sourceName }),
       },
-      path: joinProjectPath(authority.projectRoot, resource.originalFilePath),
+      path: joinProjectPath(authority.projectRoot, resource.descriptionFilePath),
     };
   }
 }

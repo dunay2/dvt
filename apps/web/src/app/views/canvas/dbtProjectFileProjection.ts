@@ -70,6 +70,9 @@ function projectNode(
       dbtUniqueId: node.uniqueId,
       resourceType: node.resourceType,
       packageName: node.packageName,
+      ...(node.descriptionFilePath === undefined
+        ? {}
+        : { descriptionFilePath: normalizeWorkspacePath(node.descriptionFilePath) }),
       ...(node.sourceName === undefined ? {} : { sourceName: node.sourceName }),
       ...(node.materialized === undefined ? {} : { materialized: node.materialized }),
       columns: node.columns.map((column) => ({
