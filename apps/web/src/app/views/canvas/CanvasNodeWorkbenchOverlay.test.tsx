@@ -106,7 +106,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     });
   });
 
-  it('moves the contextual workbench from the panel header drag handle', () => {
+  it('moves from the header when the browser declines synthetic pointer capture', () => {
     renderOverlay(root);
 
     const overlay = container.querySelector<HTMLElement>(
@@ -118,6 +118,9 @@ describe('CanvasNodeWorkbenchOverlay', () => {
 
     expect(overlay).not.toBeNull();
     expect(dragHandle).not.toBeNull();
+    dragHandle!.setPointerCapture = vi.fn(() => {
+      throw new DOMException('No active pointer', 'NotFoundError');
+    });
 
     const initialLeft = Number.parseFloat(overlay!.style.left);
     const initialTop = Number.parseFloat(overlay!.style.top);
@@ -142,6 +145,7 @@ describe('CanvasNodeWorkbenchOverlay', () => {
 
     expect(Number.parseFloat(overlay!.style.left)).toBe(initialLeft - 48);
     expect(Number.parseFloat(overlay!.style.top)).toBe(initialTop + 32);
+    expect(dragHandle!.setPointerCapture).toHaveBeenCalledWith(1);
   });
 
   it('keeps pointer movement within the visible work surface', () => {

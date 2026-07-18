@@ -116,6 +116,20 @@ function preservePositionReference(
   return current.left === next.left && current.top === next.top ? current : next;
 }
 
+function captureActivePointer(element: HTMLDivElement, pointerId: number): void {
+  if (element.setPointerCapture == null) {
+    return;
+  }
+
+  try {
+    element.setPointerCapture(pointerId);
+  } catch (error) {
+    if (!(error instanceof DOMException) || error.name !== 'NotFoundError') {
+      throw error;
+    }
+  }
+}
+
 export function useCanvasNodeWorkbenchPosition(
   enabled: boolean
 ): CanvasNodeWorkbenchPositionController {
@@ -176,7 +190,7 @@ export function useCanvasNodeWorkbenchPosition(
       }
 
       event.preventDefault();
-      event.currentTarget.setPointerCapture?.(event.pointerId);
+      captureActivePointer(event.currentTarget, event.pointerId);
       dragStateRef.current = {
         pointerId: event.pointerId,
         origin: position,

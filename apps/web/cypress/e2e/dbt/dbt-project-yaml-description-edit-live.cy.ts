@@ -118,6 +118,51 @@ function openModelWorkbench(): void {
   cy.get('[data-slot="dbt-yaml-description-editor"]', { timeout: 20_000 }).should('be.visible');
 }
 
+function proveModelWorkbenchMovement(): void {
+  cy.get('[data-slot="canvas-node-workbench-overlay"]').then(($overlay) => {
+    const initial = $overlay[0]!.getBoundingClientRect();
+
+    cy.get('[data-slot="canvas-node-workbench-drag-handle"]')
+      .focus()
+      .should('have.focus')
+      .type('{leftarrow}{downarrow}');
+    cy.get('[data-slot="canvas-node-workbench-overlay"]')
+      .should(($movedOverlay) => {
+        const moved = $movedOverlay[0]!.getBoundingClientRect();
+        expect(moved.left).to.be.lessThan(initial.left);
+        expect(moved.top).to.be.greaterThan(initial.top);
+      })
+      .then(($keyboardMovedOverlay) => {
+        const keyboardMoved = $keyboardMovedOverlay[0]!.getBoundingClientRect();
+        const pointerId = 41;
+
+        cy.get('[data-slot="canvas-node-workbench-drag-handle"]').trigger('pointerdown', {
+          button: 0,
+          clientX: keyboardMoved.left + 40,
+          clientY: keyboardMoved.top + 24,
+          pointerId,
+        });
+        cy.get('[data-slot="canvas-node-workbench-overlay"]')
+          .trigger('pointermove', {
+            clientX: keyboardMoved.left - 24,
+            clientY: keyboardMoved.top + 56,
+            pointerId,
+          })
+          .trigger('pointerup', { pointerId })
+          .should(($pointerMovedOverlay) => {
+            const moved = $pointerMovedOverlay[0]!.getBoundingClientRect();
+            const viewport = $pointerMovedOverlay[0]!.ownerDocument.defaultView;
+            expect(moved.left).to.be.lessThan(keyboardMoved.left);
+            expect(moved.top).to.be.greaterThan(keyboardMoved.top);
+            expect(moved.left).to.be.at.least(0);
+            expect(moved.top).to.be.at.least(0);
+            expect(moved.right).to.be.at.most(viewport!.innerWidth);
+            expect(moved.bottom).to.be.at.most(viewport!.innerHeight);
+          });
+      });
+  });
+}
+
 function closeModelWorkbench(): void {
   cy.get('[data-slot="canvas-node-workbench-overlay"]')
     .find('[data-slot="canvas-node-workbench-close"]')
@@ -210,6 +255,7 @@ describe('dbt YAML description edit live vertical', () => {
     visitProject(observedRequests);
 
     openModelWorkbench();
+    proveModelWorkbenchMovement();
     cy.get('[data-slot="dbt-yaml-description-input"]').should('have.value', ORIGINAL_DESCRIPTION);
     cy.get('[data-slot="canvas-node-workbench-code-section"]').should('not.exist');
 
