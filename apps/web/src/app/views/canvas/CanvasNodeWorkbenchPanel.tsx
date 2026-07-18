@@ -312,7 +312,13 @@ export function CanvasNodeWorkbenchPanel({
             {node.kind}
           </p>
         </div>
-        <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          data-slot="canvas-node-workbench-close"
+          onClick={onClose}
+        >
           {copy.nodeWorkbenchCloseLabel}
         </Button>
       </div>

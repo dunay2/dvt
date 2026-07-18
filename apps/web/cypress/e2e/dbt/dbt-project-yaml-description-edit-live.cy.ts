@@ -120,7 +120,8 @@ function openModelWorkbench(): void {
 
 function closeModelWorkbench(): void {
   cy.get('[data-slot="canvas-node-workbench-overlay"]')
-    .find('button[data-workbench-drag-excluded="true"]')
+    .find('[data-slot="canvas-node-workbench-close"]')
+    .should('be.visible')
     .click();
   cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
 }

@@ -258,13 +258,13 @@ describe('CanvasNodeWorkbenchPanel', () => {
     const dragHandle = container.querySelector<HTMLElement>(
       '[data-slot="canvas-node-workbench-drag-handle"]'
     );
-    const closeButton = Array.from(container.querySelectorAll('button')).find(
-      (button) => button.textContent === 'Close'
+    const closeButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-node-workbench-close"]'
     );
 
     expect(dragHandle?.getAttribute('role')).toBe('button');
     expect(dragHandle?.tabIndex).toBe(0);
-    expect(closeButton).toBeDefined();
+    expect(closeButton?.textContent).toBe('Close');
     expect(dragHandle?.contains(closeButton!)).toBe(false);
   });
 
