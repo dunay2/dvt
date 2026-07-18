@@ -1,0 +1,30 @@
+---
+id: R-20260717-DBT-YAML-DESCRIPTION-ROUNDTRIP
+title: dbt YAML description edits could alter unrelated project bytes
+status: Open
+date: 2026-07-17
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: High
+probability: Low
+context: >
+  Phase five lets an authorized Canvas user edit model, source, and column descriptions in the
+  canonical dbt YAML files while keeping the graph projection synchronized with file authority.
+risk: >
+  A stale, ambiguous, or lossy YAML mutation could overwrite a concurrent change, target the wrong
+  resource, or alter comments, tags, formatting, and other bytes that the user did not approve.
+mitigations:
+  - 'Bind proposals, apply, and revert operations to exact project, file, target, and content
+    revisions; reject stale or ambiguous requests before mutation.'
+  - 'Use a CST-aware adapter and assert byte preservation for every region outside the selected
+    description field.'
+  - 'Return immutable before/after SHA-256 receipts and keep the reviewed diff visible after apply
+    and revert.'
+  - 'Write the workspace file once, then rebuild the dbt graph through ProjectDbtGraphFromFiles; do
+    not introduce a parallel persistence path.'
+  - 'Exercise apply, revert, reapply, Preview, Temporal Run, and browser reload through the real
+    protected runtime without cy.intercept or graph-draft seeding.'
+review_after: 2026-08-17
+---
