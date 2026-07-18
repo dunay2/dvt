@@ -8,11 +8,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SqlContextWorkbench } from './SqlContextWorkbench';
 
 vi.mock('../CodeView', () => ({
-  default: ({ fileScope }: { fileScope?: { projectRoot: string; initialPath?: string } }) => (
+  default: ({
+    fileScope,
+    onFileSynchronized,
+  }: {
+    fileScope?: { projectRoot: string; initialPath?: string };
+    onFileSynchronized?: () => Promise<void>;
+  }) => (
     <div
       data-slot="mock-code-view"
       data-project-root={fileScope?.projectRoot}
       data-initial-path={fileScope?.initialPath}
+      data-has-sync-consumer={String(onFileSynchronized != null)}
     />
   ),
 }));
@@ -36,6 +43,7 @@ describe('SqlContextWorkbench', () => {
   });
 
   it('opens the selected node SQL path inside the existing project-scoped Code workbench', async () => {
+    const onFileSynchronized = vi.fn(async () => undefined);
     await act(async () => {
       root.render(
         <SqlContextWorkbench
@@ -45,6 +53,7 @@ describe('SqlContextWorkbench', () => {
             initialPath: 'analytics/models/marts/orders.sql',
           }}
           loadingMessage="Loading code"
+          onFileSynchronized={onFileSynchronized}
         />
       );
     });
@@ -53,6 +62,7 @@ describe('SqlContextWorkbench', () => {
       const codeView = container.querySelector('[data-slot="mock-code-view"]');
       expect(codeView?.getAttribute('data-project-root')).toBe('analytics');
       expect(codeView?.getAttribute('data-initial-path')).toBe('analytics/models/marts/orders.sql');
+      expect(codeView?.getAttribute('data-has-sync-consumer')).toBe('true');
     });
   });
 });

@@ -246,6 +246,9 @@ export function useDbtProjectFileCanvasController(
   const refreshProjectGraphAfterMutation = useCallback(async (): Promise<void> => {
     await refreshProjectGraph();
   }, [refreshProjectGraph]);
+  const refreshProjectGraphAfterCodeMutation = useCallback(async (): Promise<void> => {
+    await refetchProjectGraph();
+  }, [refetchProjectGraph]);
   const reloadNodeDescription = useCallback(
     async (nodeId: string): Promise<string | null> => {
       const refreshedProjection = await refreshProjectGraph();
@@ -400,6 +403,7 @@ export function useDbtProjectFileCanvasController(
     openProjectCode: () => setCodeWorkbenchTarget({ kind: 'project' }),
     closeCodeWorkbench: () => setCodeWorkbenchTarget(null),
     refreshProjectGraphAfterMutation,
+    refreshProjectGraphAfterCodeMutation,
     reloadNodeDescription,
     canonicalNodes,
     canonicalEdges,

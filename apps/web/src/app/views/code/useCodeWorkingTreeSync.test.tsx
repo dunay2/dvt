@@ -51,15 +51,18 @@ function deferred<T>(): {
 function SyncHarness({
   commandPort,
   onController,
+  onFileSynchronized,
 }: Readonly<{
   commandPort: IWorkspaceFileContentCommandPort;
   onController: (controller: CodeWorkingTreeSyncController) => void;
+  onFileSynchronized?: (receipt: WorkspaceFileSaveReceipt) => Promise<void>;
 }>): null {
   onController(
     useCodeWorkingTreeSync({
       file: FILE,
       commandPort,
       debounceMs: 50,
+      onFileSynchronized,
     })
   );
   return null;
@@ -86,7 +89,10 @@ describe('useCodeWorkingTreeSync', () => {
     vi.useRealTimers();
   });
 
-  async function render(commandPort: IWorkspaceFileContentCommandPort): Promise<void> {
+  async function render(
+    commandPort: IWorkspaceFileContentCommandPort,
+    onFileSynchronized?: (receipt: WorkspaceFileSaveReceipt) => Promise<void>
+  ): Promise<void> {
     await act(async () => {
       root.render(
         <SyncHarness
@@ -94,6 +100,7 @@ describe('useCodeWorkingTreeSync', () => {
           onController={(nextController) => {
             controller = nextController;
           }}
+          onFileSynchronized={onFileSynchronized}
         />
       );
     });
@@ -116,6 +123,27 @@ describe('useCodeWorkingTreeSync', () => {
       expectedRevision: { kind: 'content_sha256', value: FILE.contentSha256 },
     });
     expect(controller.phase).toBe('synchronized');
+  });
+
+  it('waits for the contextual post-save consumer before reporting synchronization', async () => {
+    const saved = receipt('b'.repeat(64));
+    const reconciliation = deferred<void>();
+    const onFileSynchronized = vi.fn(() => reconciliation.promise);
+    const saveFileContent = vi.fn(async () => saved);
+    await render({ saveFileContent }, onFileSynchronized);
+
+    act(() => controller.updateValue('select 2'));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50);
+    });
+
+    expect(onFileSynchronized).toHaveBeenCalledWith(saved);
+    expect(saveFileContent).toHaveBeenCalledTimes(1);
+    expect(controller.phase).toBe('syncing');
+
+    await act(async () => reconciliation.resolve());
+    expect(controller.phase).toBe('synchronized');
+    expect(saveFileContent).toHaveBeenCalledTimes(1);
   });
 
   it('serializes a later edit after the in-flight write completes', async () => {

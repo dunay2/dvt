@@ -13,9 +13,11 @@ const copy = {
 
 describe('buildDbtProjectFileCodeWorkbench', () => {
   it('targets the exact SQL file owned by the selected DBT node', () => {
+    const onProjectChanged = vi.fn(async () => undefined);
     const workbench = buildDbtProjectFileCodeWorkbench({
       copy,
       onClose: vi.fn(),
+      onProjectChanged,
       projectRoot: 'analytics',
       target: {
         kind: 'node',
@@ -35,12 +37,15 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
       projectRoot: 'analytics',
       initialPath: 'analytics/models/marts/orders.sql',
     });
+    expect(panel.props.onFileSynchronized).toBe(onProjectChanged);
   });
 
   it('opens the project scope without fabricating a selected file', () => {
+    const onProjectChanged = vi.fn(async () => undefined);
     const workbench = buildDbtProjectFileCodeWorkbench({
       copy,
       onClose: vi.fn(),
+      onProjectChanged,
       projectRoot: 'analytics',
       target: { kind: 'project' },
     });
@@ -54,5 +59,6 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
       kind: 'dbt-project-files',
       projectRoot: 'analytics',
     });
+    expect(panel.props.onFileSynchronized).toBe(onProjectChanged);
   });
 });

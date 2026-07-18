@@ -15,11 +15,13 @@ type DbtProjectFileCodeWorkbenchCopy = Pick<
 export function buildDbtProjectFileCodeWorkbench({
   copy,
   onClose,
+  onProjectChanged,
   projectRoot,
   target,
 }: Readonly<{
   copy: DbtProjectFileCodeWorkbenchCopy;
   onClose: () => void;
+  onProjectChanged: () => Promise<void>;
   projectRoot: string;
   target: SqlContextWorkbenchTarget | null;
 }>): CanvasShellContextualWorkbench | undefined {
@@ -44,6 +46,7 @@ export function buildDbtProjectFileCodeWorkbench({
           projectRoot,
           ...(target.kind === 'node' ? { initialPath: target.initialPath } : {}),
         }}
+        onFileSynchronized={onProjectChanged}
       />
     ),
   };

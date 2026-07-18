@@ -139,6 +139,7 @@ export function DbtProjectFileCanvasView({
   const contextualWorkbench = buildDbtProjectFileCodeWorkbench({
     copy,
     onClose: controller.closeCodeWorkbench,
+    onProjectChanged: controller.refreshProjectGraphAfterCodeMutation,
     projectRoot,
     target: controller.codeWorkbenchTarget,
   });

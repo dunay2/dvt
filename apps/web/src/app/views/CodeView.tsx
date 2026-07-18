@@ -39,6 +39,7 @@ import {
 import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchErrorModel';
 import FileTreePanel from './code/FileTreePanel';
 import { useCodeWorkingTreeSync } from './code/useCodeWorkingTreeSync';
+import type { WorkspaceFileSaveReceipt } from '../ports/workspace';
 
 const CODE_GRAPH_FILE_SCOPE_VIEW_ID = 'canvas-code-file-scope';
 
@@ -52,10 +53,12 @@ export default function CodeView({
   publishRouteBootstrap = true,
   routeBootstrapId = CANVAS_ROUTE_ID,
   fileScope,
+  onFileSynchronized,
 }: Readonly<{
   publishRouteBootstrap?: boolean;
   routeBootstrapId?: string;
   fileScope?: CodeViewFileScope;
+  onFileSynchronized?: (receipt: WorkspaceFileSaveReceipt) => Promise<void>;
 }> = {}) {
   const copy = resolveCodeViewCopy();
   const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
@@ -112,6 +115,7 @@ export default function CodeView({
   const workingTreeSync = useCodeWorkingTreeSync({
     file: fileContentQuery.data,
     commandPort: workspaceFileContentCommand,
+    onFileSynchronized,
   });
   const workingTreeStatusCopy = {
     synchronized: {
