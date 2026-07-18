@@ -14,11 +14,17 @@ const COPY = resolveDbtYamlDescriptionEditorCopy('en');
 describe('DbtYamlDescriptionEditorView', () => {
   let container: HTMLDivElement;
   let root: Root;
+  let scrollIntoView: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -27,6 +33,8 @@ describe('DbtYamlDescriptionEditorView', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    delete (HTMLElement.prototype as { scrollIntoView?: HTMLElement['scrollIntoView'] })
+      .scrollIntoView;
   });
 
   it('renders an editable description with its authoritative YAML path', async () => {
@@ -114,6 +122,7 @@ describe('DbtYamlDescriptionEditorView', () => {
     expect(container.querySelector('[data-slot="dbt-yaml-description-diff"]')?.textContent).toBe(
       state.proposal.unifiedDiff
     );
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
     expect(container.querySelector('[data-slot="dbt-yaml-description-apply"]')).not.toBeNull();
   });
 

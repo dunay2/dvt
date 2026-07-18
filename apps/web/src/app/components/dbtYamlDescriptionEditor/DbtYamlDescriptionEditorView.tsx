@@ -1,7 +1,7 @@
 /** Owned concern: render the passive dbt YAML description transaction surface. */
 import type { DbtYamlDescriptionAppliedReceipt } from '@dvt/contracts';
 import { AlertTriangle, CheckCircle2, LoaderCircle, RotateCcw } from 'lucide-react';
-import { useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -126,9 +126,16 @@ export function DbtYamlDescriptionEditorView({
   onContinueEditing,
 }: DbtYamlDescriptionEditorViewProps): JSX.Element {
   const fieldId = useId();
+  const diffRef = useRef<HTMLPreElement>(null);
   const busy = isDbtYamlDescriptionEditorBusy(state);
   const hasChanges = hasDbtYamlDescriptionChanges(state);
   const readOnly = !['editing', 'proposing'].includes(state.phase);
+
+  useEffect(() => {
+    if (state.phase === 'reviewing') {
+      diffRef.current?.scrollIntoView({ block: 'nearest' });
+    }
+  }, [state.phase, state.proposal?.proposalDigest]);
 
   return (
     <section data-slot="dbt-yaml-description-editor" className={tokens.root}>
@@ -183,6 +190,7 @@ export function DbtYamlDescriptionEditorView({
             <p>{`${copy.fileLabel}: ${state.proposal.path}`}</p>
           </AlertDescription>
           <pre
+            ref={diffRef}
             data-slot="dbt-yaml-description-diff"
             aria-label={copy.diffLabel}
             className={tokens.diff}
