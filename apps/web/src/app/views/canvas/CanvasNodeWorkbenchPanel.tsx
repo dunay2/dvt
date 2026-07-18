@@ -123,11 +123,13 @@ function buildNodeWorkbenchReadModel({
   node,
   canEditNode,
   supersededRowIdsBySection,
+  supersededSectionIds,
 }: Readonly<{
   model: NodePropertiesReadModel;
   node: CanonicalNode;
   canEditNode: boolean;
   supersededRowIdsBySection: ReadonlyMap<NodePropertySectionId, ReadonlySet<NodePropertyRowId>>;
+  supersededSectionIds: ReadonlySet<NodePropertySectionId>;
 }>): NodePropertiesReadModel {
   const hiddenGeneralRowIds = resolveNodeWorkbenchHiddenGeneralRowIds(node, canEditNode);
   const hiddenRowIdsBySection = new Map(supersededRowIdsBySection);
@@ -141,15 +143,17 @@ function buildNodeWorkbenchReadModel({
 
   return {
     ...model,
-    sections: model.sections.map((section) => {
-      const hiddenRowIds = hiddenRowIdsBySection.get(section.id);
-      return hiddenRowIds == null || hiddenRowIds.size === 0
-        ? section
-        : {
-            ...section,
-            rows: section.rows.filter((row) => !hiddenRowIds.has(row.id)),
-          };
-    }),
+    sections: model.sections
+      .filter((section) => !supersededSectionIds.has(section.id))
+      .map((section) => {
+        const hiddenRowIds = hiddenRowIdsBySection.get(section.id);
+        return hiddenRowIds == null || hiddenRowIds.size === 0
+          ? section
+          : {
+              ...section,
+              rows: section.rows.filter((row) => !hiddenRowIds.has(row.id)),
+            };
+      }),
   };
 }
 
@@ -207,6 +211,7 @@ export function CanvasNodeWorkbenchPanel({
     node,
     canEditNode: authoring.canEditNode,
     supersededRowIdsBySection: contributionModel.supersededRowIdsBySection,
+    supersededSectionIds: contributionModel.supersededSectionIds,
   });
   const panels = getInspectorPanels(node, { activeRunId, registeredPlugins });
   const resolvedPrimarySectionIds =

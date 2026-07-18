@@ -56,6 +56,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
               sectionId: 'general',
               placement: 'after-body',
               supersededRowIds: [NODE_PROPERTY_ROW_ID.description],
+              supersededSectionIds: ['code'],
               content: <div data-slot="description-editor-contribution">Editor</div>,
             },
           ]}
@@ -74,6 +75,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     expect(container.querySelector('[data-slot="description-editor-contribution"]')).not.toBeNull();
     expect(labels).not.toContain('Description');
     expect(generalSection?.textContent).not.toContain('Existing description.');
+    expect(container.querySelector('[data-slot="canvas-node-workbench-code-section"]')).toBeNull();
   });
 
   it('resolves workbench commands through the Canvas locale catalog', () => {
@@ -100,6 +102,37 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     ).toBe(true);
     expect(
       container.querySelector('[data-slot="canvas-node-workbench-more-trigger"]')?.textContent
-    ).toContain('Mas');
+    ).toContain('Más');
+  });
+
+  it('removes a generic section superseded by an authoritative contribution', () => {
+    act(() => {
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={NODE}
+          nodes={[NODE]}
+          edges={[]}
+          activeRunId={null}
+          preferredTabId="code"
+          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          contributions={[
+            {
+              id: 'dbt-description-editor',
+              nodeId: NODE.id,
+              sectionId: 'general',
+              placement: 'after-body',
+              supersededSectionIds: ['code'],
+              content: <div>Description editor</div>,
+            },
+          ]}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="canvas-node-workbench-code-section"]')).toBeNull();
+    expect(
+      container.querySelector('[data-slot="canvas-node-workbench-general-section"]')
+    ).not.toBeNull();
   });
 });

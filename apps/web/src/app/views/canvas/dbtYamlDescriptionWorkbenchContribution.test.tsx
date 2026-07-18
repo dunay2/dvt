@@ -33,6 +33,7 @@ describe('buildDbtYamlDescriptionWorkbenchContributions', () => {
       sectionId: 'general',
       placement: 'after-body',
       supersededRowIds: [NODE_PROPERTY_ROW_ID.description],
+      supersededSectionIds: ['code'],
     });
   });
 

@@ -16,6 +16,7 @@ function buildContribution(
     placement: 'after-body',
     content: 'description editor',
     supersededRowIds: [NODE_PROPERTY_ROW_ID.description],
+    supersededSectionIds: ['code'],
     ...overrides,
   };
 }
@@ -33,6 +34,7 @@ describe('resolveCanvasNodeWorkbenchContributions', () => {
     expect(model.supersededRowIdsBySection.get('general')).toEqual(
       new Set([NODE_PROPERTY_ROW_ID.description])
     );
+    expect(model.supersededSectionIds).toEqual(new Set(['code']));
   });
 
   it('rejects duplicate active contribution identities', () => {
@@ -42,5 +44,13 @@ describe('resolveCanvasNodeWorkbenchContributions', () => {
         buildContribution(),
       ])
     ).toThrow('Duplicate node workbench contribution id');
+  });
+
+  it('rejects a contribution that removes the section hosting its content', () => {
+    expect(() =>
+      resolveCanvasNodeWorkbenchContributions('model.analytics.orders', [
+        buildContribution({ supersededSectionIds: ['general'] }),
+      ])
+    ).toThrow('cannot supersede its host section');
   });
 });

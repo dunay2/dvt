@@ -13,6 +13,7 @@ export type CanvasNodeWorkbenchContribution = Readonly<{
   placement: 'before-body' | 'after-body';
   content: ReactNode;
   supersededRowIds?: readonly NodePropertyRowId[];
+  supersededSectionIds?: readonly NodePropertySectionId[];
 }>;
 
 export type CanvasNodeWorkbenchContributionModel = Readonly<{
@@ -25,6 +26,7 @@ export type CanvasNodeWorkbenchContributionModel = Readonly<{
     readonly CanvasNodeWorkbenchContribution[]
   >;
   supersededRowIdsBySection: ReadonlyMap<NodePropertySectionId, ReadonlySet<NodePropertyRowId>>;
+  supersededSectionIds: ReadonlySet<NodePropertySectionId>;
 }>;
 
 function appendContribution(
@@ -43,6 +45,7 @@ export function resolveCanvasNodeWorkbenchContributions(
   const beforeBodyBySection = new Map<NodePropertySectionId, CanvasNodeWorkbenchContribution[]>();
   const afterBodyBySection = new Map<NodePropertySectionId, CanvasNodeWorkbenchContribution[]>();
   const supersededRowIdsBySection = new Map<NodePropertySectionId, Set<NodePropertyRowId>>();
+  const supersededSectionIds = new Set<NodePropertySectionId>();
   const contributionIds = new Set<string>();
 
   for (const contribution of contributions) {
@@ -54,10 +57,20 @@ export function resolveCanvasNodeWorkbenchContributions(
     }
     contributionIds.add(contribution.id);
 
+    if (contribution.supersededSectionIds?.includes(contribution.sectionId) === true) {
+      throw new Error(
+        `Node workbench contribution cannot supersede its host section: ${contribution.id}`
+      );
+    }
+
     appendContribution(
       contribution.placement === 'before-body' ? beforeBodyBySection : afterBodyBySection,
       contribution
     );
+
+    for (const sectionId of contribution.supersededSectionIds ?? []) {
+      supersededSectionIds.add(sectionId);
+    }
 
     if (contribution.supersededRowIds == null) {
       continue;
@@ -73,5 +86,6 @@ export function resolveCanvasNodeWorkbenchContributions(
     beforeBodyBySection,
     afterBodyBySection,
     supersededRowIdsBySection,
+    supersededSectionIds,
   };
 }
