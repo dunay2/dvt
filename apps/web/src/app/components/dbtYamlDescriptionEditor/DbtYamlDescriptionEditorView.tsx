@@ -133,7 +133,7 @@ export function DbtYamlDescriptionEditorView({
 
   useEffect(() => {
     if (state.phase === 'reviewing') {
-      diffRef.current?.scrollIntoView({ block: 'nearest' });
+      diffRef.current?.scrollIntoView?.({ block: 'nearest' });
     }
   }, [state.phase, state.proposal?.proposalDigest]);
 
