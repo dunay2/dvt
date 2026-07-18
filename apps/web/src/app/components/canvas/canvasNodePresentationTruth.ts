@@ -20,6 +20,11 @@ type BuildCanvasNodePresentationTruthArgs = Readonly<{
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanvasNodePresentationEdge[];
+  generatedCode?: Readonly<{
+    content: string;
+    path: string;
+    language: CanvasNodeCodeLanguage;
+  }>;
 }>;
 
 type ColumnCandidate = Readonly<{
@@ -114,7 +119,10 @@ function resolveCodeLanguage(path: string | undefined): CanvasNodeCodeLanguage {
   return 'text';
 }
 
-function buildCodeTruth(node: CanonicalNode): CanvasNodeCodeTruth {
+function buildCodeTruth(
+  node: CanonicalNode,
+  generatedCode: BuildCanvasNodePresentationTruthArgs['generatedCode']
+): CanvasNodeCodeTruth {
   const metadata = isRecord(node.metadata) ? node.metadata : {};
   const config = isRecord(metadata.config) ? metadata.config : {};
   const path = node.path ?? readString(metadata.path);
@@ -135,6 +143,15 @@ function buildCodeTruth(node: CanonicalNode): CanvasNodeCodeTruth {
       kind: 'workspace-file',
       path,
       language: resolveCodeLanguage(path),
+    };
+  }
+
+  if (generatedCode != null) {
+    return {
+      kind: 'generated',
+      content: generatedCode.content,
+      path: generatedCode.path,
+      language: generatedCode.language,
     };
   }
 
@@ -159,6 +176,6 @@ export function buildCanvasNodePresentationTruth(
       visibleProvenance:
         declared.length > 0 ? 'declared' : inherited.length > 0 ? 'inherited' : 'none',
     },
-    code: buildCodeTruth(args.node),
+    code: buildCodeTruth(args.node, args.generatedCode),
   };
 }

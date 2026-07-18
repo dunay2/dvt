@@ -37,6 +37,12 @@ export type CanvasNodeCodeTruth =
       language: CanvasNodeCodeLanguage;
     }>
   | Readonly<{
+      kind: 'generated';
+      content: string;
+      path: string;
+      language: CanvasNodeCodeLanguage;
+    }>
+  | Readonly<{
       kind: 'unavailable';
     }>;
 
@@ -63,6 +69,7 @@ export function isCanvasNodePresentationTruth(
       value.columns.visibleProvenance === 'none') &&
     (value.code.kind === 'inline' ||
       value.code.kind === 'workspace-file' ||
+      value.code.kind === 'generated' ||
       value.code.kind === 'unavailable')
   );
 }

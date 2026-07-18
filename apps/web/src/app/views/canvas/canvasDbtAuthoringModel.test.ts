@@ -67,6 +67,7 @@ describe('canvas dbt authoring model', () => {
       tableName: 'orders',
       materialized: 'view',
       selectedSourceId: '',
+      modelSql: '',
     });
   });
 
@@ -81,6 +82,7 @@ describe('canvas dbt authoring model', () => {
         tableName: 'orders',
         materialized: 'table',
         selectedSourceId: 'source-orders',
+        modelSql: 'select order_id from raw.orders',
       })
     ).toEqual({
       ...model,
@@ -91,6 +93,7 @@ describe('canvas dbt authoring model', () => {
           schema: 'raw',
           table: 'orders',
           materialized: 'table',
+          sql: 'select order_id from raw.orders',
         },
         dbt: {
           packageName: 'analytics',
@@ -102,6 +105,21 @@ describe('canvas dbt authoring model', () => {
         },
       },
     });
+  });
+
+  it('roundtrips authored model SQL through the canonical config metadata field', () => {
+    const model = buildDbtModelNode();
+    const updated = applyDbtNodeAuthoringMetadata(model, {
+      ...createDbtNodeAuthoringMetadata(model),
+      modelSql: 'select order_id, amount\nfrom raw.orders',
+    });
+
+    expect(updated.metadata.config).toMatchObject({
+      sql: 'select order_id, amount\nfrom raw.orders',
+    });
+    expect(createDbtNodeAuthoringMetadata(updated).modelSql).toBe(
+      'select order_id, amount\nfrom raw.orders'
+    );
   });
 
   it('resolves the selected model origin from the visible dbt graph relation', () => {

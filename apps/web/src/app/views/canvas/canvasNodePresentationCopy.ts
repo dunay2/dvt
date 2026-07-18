@@ -10,6 +10,7 @@ export function buildCanvasNodePresentationCopy(copy: CanvasViewCopy): CanvasNod
     noColumnsDetail: copy.nodePresentationNoColumnsDetail,
     codeLabel: copy.nodePresentationCodeLabel,
     workspaceCodeDetailTemplate: copy.nodePresentationWorkspaceCodeDetailTemplate,
+    generatedCodeDetailTemplate: copy.nodePresentationGeneratedCodeDetailTemplate,
     codeUnavailableMessage: copy.nodePresentationCodeUnavailableMessage,
   };
 }

@@ -225,6 +225,7 @@ export type CanvasViewCopy = {
   readonly nodePresentationNoColumnsDetail: string;
   readonly nodePresentationCodeLabel: string;
   readonly nodePresentationWorkspaceCodeDetailTemplate: string;
+  readonly nodePresentationGeneratedCodeDetailTemplate: string;
   readonly nodePresentationCodeUnavailableMessage: string;
   readonly nodeWorkbenchCloseLabel: string;
   readonly nodeWorkbenchMoveLabel: string;
@@ -247,9 +248,11 @@ export type CanvasViewCopy = {
   readonly inspectorDbtTableLabel: string;
   readonly inspectorDbtMaterializedLabel: string;
   readonly inspectorDbtOriginLabel: string;
-  readonly inspectorDbtGeneratedSqlLabel: string;
+  readonly inspectorDbtModelSqlLabel: string;
+  readonly inspectorDbtModelSqlGeneratedDetailTemplate: string;
+  readonly inspectorDbtModelSqlAuthoredDetailTemplate: string;
   readonly inspectorDbtNoConnectedOriginsMessage: string;
-  readonly inspectorDbtGeneratedSqlUnavailableMessage: string;
+  readonly inspectorDbtModelSqlUnavailableMessage: string;
   readonly inspectorDbtOriginKindSourceLabel: string;
   readonly inspectorDbtOriginKindModelLabel: string;
   readonly inspectorDbtMaterializedViewLabel: string;

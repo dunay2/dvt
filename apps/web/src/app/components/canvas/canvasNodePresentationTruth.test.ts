@@ -116,4 +116,26 @@ describe('buildCanvasNodePresentationTruth', () => {
       path: 'models/orders.sql',
     });
   });
+
+  it('exposes generated code with provenance when no inline or workspace authority exists', () => {
+    const model = buildNode();
+
+    expect(
+      buildCanvasNodePresentationTruth({
+        node: model,
+        nodes: [model],
+        edges: [],
+        generatedCode: {
+          content: "select *\nfrom {{ ref('raw_orders') }}",
+          path: 'models/orders.sql',
+          language: 'sql',
+        },
+      }).code
+    ).toEqual({
+      kind: 'generated',
+      content: "select *\nfrom {{ ref('raw_orders') }}",
+      path: 'models/orders.sql',
+      language: 'sql',
+    });
+  });
 });

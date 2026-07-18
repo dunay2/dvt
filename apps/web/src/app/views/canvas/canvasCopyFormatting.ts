@@ -4,6 +4,16 @@ import type { TransformationGraphValidationSummaryCode } from './transformationG
 import type { CanvasDisabledCapability, CanvasViewCopy } from './canvasCopy.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
+export function formatCanvasCopyTemplate(
+  template: string,
+  values: Readonly<Record<string, string>>
+): string {
+  return Object.entries(values).reduce(
+    (resolved, [key, value]) => resolved.replaceAll(`{${key}}`, value),
+    template
+  );
+}
+
 function resolveCanvasDisabledCapabilityLabel(
   capability: CanvasDisabledCapability,
   copy: CanvasViewCopy

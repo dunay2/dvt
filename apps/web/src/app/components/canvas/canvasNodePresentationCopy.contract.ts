@@ -6,6 +6,7 @@ export type CanvasNodePresentationCopy = Readonly<{
   noColumnsDetail: string;
   codeLabel: string;
   workspaceCodeDetailTemplate: string;
+  generatedCodeDetailTemplate: string;
   codeUnavailableMessage: string;
 }>;
 
@@ -22,6 +23,7 @@ export function isCanvasNodePresentationCopy(value: unknown): value is CanvasNod
     typeof value.noColumnsDetail === 'string' &&
     typeof value.codeLabel === 'string' &&
     typeof value.workspaceCodeDetailTemplate === 'string' &&
+    typeof value.generatedCodeDetailTemplate === 'string' &&
     typeof value.codeUnavailableMessage === 'string'
   );
 }

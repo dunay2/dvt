@@ -71,9 +71,14 @@ export function CanvasInspectorAuthoringSection({
       (section === 'columns' && draft.dvt.kind === 'sql_transform') ||
       (section === 'code' && draft.dvt.kind === 'sql_transform') ||
       (section === 'sink' && draft.dvt.kind === 'sink'));
+  const showDbtAuthoring =
+    draft.dbt != null &&
+    (section === 'all' ||
+      section === 'general' ||
+      (section === 'code' && node.kind === 'dbt:model'));
   const dvtAuthoringSection = section === 'sink' ? 'general' : section;
 
-  if (!showGeneral && !showDvtAuthoring) {
+  if (!showGeneral && !showDvtAuthoring && !showDbtAuthoring) {
     return null;
   }
 
@@ -145,17 +150,20 @@ export function CanvasInspectorAuthoringSection({
                 }}
               />
             </div>
-
-            <DbtAuthoringFields
-              node={node}
-              nodes={nodes}
-              edges={edges}
-              disabled={!authoring.canEditNode}
-              draft={draft}
-              errors={errors}
-              onChange={setDraft}
-            />
           </>
+        ) : null}
+
+        {showDbtAuthoring ? (
+          <DbtAuthoringFields
+            node={node}
+            nodes={nodes}
+            edges={edges}
+            disabled={!authoring.canEditNode}
+            draft={draft}
+            errors={errors}
+            section={section === 'code' ? 'code' : 'general'}
+            onChange={setDraft}
+          />
         ) : null}
 
         {showDvtAuthoring ? (

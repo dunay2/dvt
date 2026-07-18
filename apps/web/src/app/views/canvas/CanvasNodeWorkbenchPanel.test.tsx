@@ -430,6 +430,21 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
   });
 
+  it('renders one DBT model editor in Code without duplicating passive generated SQL', () => {
+    renderNodePanel(root, MODEL_NODE, 'code');
+
+    const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
+    const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
+      'textarea[name="dbt-model-sql"]'
+    );
+
+    expect(codeSection).not.toBeNull();
+    expect(sqlEditor?.value).toContain('select *');
+    expect(sqlEditor?.value).toContain('{{ source(');
+    expect(codeSection?.querySelector('pre')).toBeNull();
+    expect(codeSection?.querySelectorAll('textarea[name="dbt-model-sql"]')).toHaveLength(1);
+  });
+
   it('renders DVT sink target editing in a dedicated Sink tab without duplicating it in General', () => {
     renderNodePanel(
       root,

@@ -42,6 +42,10 @@ const DBT_MODEL_SECTION_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'DbtModelAuthoringSection.tsx'
 );
+const DBT_MODEL_CODE_SECTION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'DbtModelCodeAuthoringSection.tsx'
+);
 const DVT_FIELDS_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'DvtAuthoringFields.tsx'
@@ -108,8 +112,8 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DBT_FIELDS_SOURCE).toContain(
       'Owned concern: render dbt-specific Canvas Inspector authoring fields.'
     );
-    expect(DBT_MODEL_SECTION_SOURCE).toContain('data-slot="dbt-generated-model-sql"');
-    expect(DBT_FIELDS_SOURCE).not.toContain('name="dbt-model-sql"');
+    expect(DBT_FIELDS_SOURCE).toContain('DbtModelCodeAuthoringSection');
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('name="dbt-model-sql"');
     expect(DBT_FIELDS_SOURCE).not.toContain('workspaceService');
 
     expect(DVT_FIELDS_SOURCE).toContain(
@@ -143,7 +147,7 @@ describe('canvas inspector authoring component architecture', () => {
 
     expect(SECTION_SOURCE).toContain('canvasViewCopy.inspectorEditablePropertiesTitle');
     expect(DBT_SOURCE_SECTION_SOURCE).toContain('canvasViewCopy.inspectorDbtPackageLabel');
-    expect(DBT_MODEL_SECTION_SOURCE).toContain('canvasViewCopy.inspectorDbtGeneratedSqlLabel');
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('canvasViewCopy.inspectorDbtModelSqlLabel');
     expect(DVT_SINK_SECTION_SOURCE).toContain('canvasViewCopy.inspectorDvtWriteModeLabel');
     expect(ERROR_CODES_SOURCE).toContain('export type CanvasInspectorNodeDraftErrorCode');
     expect(MODEL_SOURCE).not.toContain('canvasViewCopy');
@@ -183,13 +187,14 @@ describe('canvas inspector authoring component architecture', () => {
     expect(DBT_FIELDS_SOURCE).not.toContain('name="dbt-materialized"');
     expect(DBT_FIELDS_SOURCE).toContain('DbtSourceAuthoringSection');
     expect(DBT_FIELDS_SOURCE).toContain('DbtModelAuthoringSection');
+    expect(DBT_FIELDS_SOURCE).toContain('DbtModelCodeAuthoringSection');
     expect(DBT_FIELDS_SOURCE).toContain('buildDbtAuthoringModelProjection');
 
     expect(DBT_AUTHORING_MODEL_SOURCE).toContain(
       'Owned concern: derive dbt Inspector authoring presentation state from Canvas graph inputs.'
     );
     expect(DBT_AUTHORING_MODEL_SOURCE).toContain('buildDbtAuthoringModelProjection');
-    expect(DBT_AUTHORING_MODEL_SOURCE).toContain('buildGeneratedDbtModelSqlPreview');
+    expect(DBT_AUTHORING_MODEL_SOURCE).toContain('projectDbtModelArtifact');
     expect(DBT_AUTHORING_MODEL_SOURCE).not.toContain("from 'react'");
     expect(DBT_AUTHORING_MODEL_SOURCE).not.toContain('canvasViewCopy');
 
@@ -201,7 +206,12 @@ describe('canvas inspector authoring component architecture', () => {
 
     expect(DBT_MODEL_SECTION_SOURCE).toContain('Owned concern: render dbt model authoring fields.');
     expect(DBT_MODEL_SECTION_SOURCE).toContain('name="dbt-materialized"');
-    expect(DBT_MODEL_SECTION_SOURCE).toContain('data-slot="dbt-generated-model-sql"');
     expect(DBT_MODEL_SECTION_SOURCE).toContain('formatCanvasInspectorNodeDraftError');
+
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain(
+      'Owned concern: render the editable DBT model code surface and artifact provenance.'
+    );
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('name="dbt-model-sql"');
+    expect(DBT_MODEL_CODE_SECTION_SOURCE).toContain('formatCanvasCopyTemplate');
   });
 });

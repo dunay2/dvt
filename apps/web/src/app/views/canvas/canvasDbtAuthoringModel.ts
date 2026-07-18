@@ -8,6 +8,7 @@ export type DbtNodeAuthoringMetadata = Readonly<{
   tableName: string;
   materialized: string;
   selectedSourceId: string;
+  modelSql: string;
 }>;
 
 export type DbtSourceRelationshipSelection =
@@ -87,6 +88,7 @@ export function createDbtNodeAuthoringMetadata(node: CanonicalNode): DbtNodeAuth
       readString(dbtMetadata?.materialized) ?? readString(configMetadata?.materialized)
     ),
     selectedSourceId: readString(dbtMetadata?.selectedSourceId) ?? '',
+    modelSql: readString(configMetadata?.sql) ?? readString(node.metadata?.sql) ?? '',
   };
 }
 
@@ -96,18 +98,21 @@ export function applyDbtNodeAuthoringMetadata(
 ): CanonicalNode {
   const materialized = normalizeMaterialized(metadata.materialized);
   const existingConfig = readNodeMetadataRecord(node, 'config') ?? {};
+  const { sql: _existingSql, ...configWithoutSql } = existingConfig;
   const schemaName = metadata.schemaName.trim() || DEFAULT_SCHEMA_NAME;
   const tableName = normalizeIdentifier(metadata.tableName, 'table');
+  const modelSql = metadata.modelSql.trim();
 
   return {
     ...node,
     metadata: {
       ...node.metadata,
       config: {
-        ...existingConfig,
+        ...configWithoutSql,
         schema: schemaName,
         table: tableName,
         materialized,
+        ...(node.kind === 'dbt:model' && modelSql.length > 0 ? { sql: modelSql } : {}),
       },
       dbt: {
         packageName: metadata.packageName.trim() || DEFAULT_PACKAGE_NAME,

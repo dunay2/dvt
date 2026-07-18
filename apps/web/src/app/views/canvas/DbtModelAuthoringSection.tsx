@@ -134,24 +134,6 @@ export function DbtModelAuthoringSection({
             </p>
           )}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor={`inspector-dbt-generated-sql-${node.id}`}>
-            {canvasViewCopy.inspectorDbtGeneratedSqlLabel}
-          </Label>
-          {projection.generatedModelSql ? (
-            <pre
-              id={`inspector-dbt-generated-sql-${node.id}`}
-              data-slot="dbt-generated-model-sql"
-              className="min-h-16 overflow-auto rounded-md border border-slate-700 bg-slate-950/60 px-3 py-2 font-mono text-xs leading-5 text-slate-100"
-            >
-              {projection.generatedModelSql}
-            </pre>
-          ) : (
-            <p className={inspectorVisualClasses.inspectorBody}>
-              {canvasViewCopy.inspectorDbtGeneratedSqlUnavailableMessage}
-            </p>
-          )}
-        </div>
       </div>
     </div>
   );

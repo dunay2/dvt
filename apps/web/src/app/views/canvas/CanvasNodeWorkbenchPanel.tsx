@@ -3,6 +3,7 @@ import {
   Fragment,
   useCallback,
   useEffect,
+  useMemo,
   useState,
   type HTMLAttributes,
   type ReactNode,
@@ -39,6 +40,7 @@ import { resolveNodeWorkbenchPrimarySectionIds } from './canvasNodeWorkbenchSect
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -148,12 +150,27 @@ function buildNodeWorkbenchReadModel({
     sections: model.sections
       .filter((section) => !supersededSectionIds.has(section.id))
       .map((section) => {
+        const resolvedSection =
+          canEditNode &&
+          node.pluginId === 'dbt' &&
+          node.kind === 'dbt:model' &&
+          section.id === 'code'
+            ? (() => {
+                const {
+                  code: _passiveCode,
+                  description: _passiveDescription,
+                  emptyState: _passiveEmptyState,
+                  ...editableCodeSection
+                } = section;
+                return editableCodeSection;
+              })()
+            : section;
         const hiddenRowIds = hiddenRowIdsBySection.get(section.id);
         return hiddenRowIds == null || hiddenRowIds.size === 0
-          ? section
+          ? resolvedSection
           : {
-              ...section,
-              rows: section.rows.filter((row) => !hiddenRowIds.has(row.id)),
+              ...resolvedSection,
+              rows: resolvedSection.rows.filter((row) => !hiddenRowIds.has(row.id)),
             };
       }),
   };
@@ -206,11 +223,16 @@ export function CanvasNodeWorkbenchPanel({
   const [authoringTagsText, setAuthoringTagsText] = useState(() =>
     createCanvasInspectorNodeDraft(node).tags.join(', ')
   );
+  const presentationTruth = useMemo(
+    () => projectCanvasNodePresentationTruth({ node, nodes, edges }),
+    [edges, node, nodes]
+  );
   const baseModel = buildNodePropertiesReadModel({
     node,
     nodes,
     edges,
     presentationCopy: buildCanvasNodePresentationCopy(copy),
+    presentationTruth,
   });
   const contributionModel = resolveCanvasNodeWorkbenchContributions(node.id, contributions);
   const model = buildNodeWorkbenchReadModel({

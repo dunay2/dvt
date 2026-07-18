@@ -7,7 +7,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { buildCanvasConnectionCompatibilityByNodeId } from './canvasConnectionCompatibilityPresenter';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { resolveCanvasAuthoringVisibleEdgeId } from './canvasAuthoringGraphProjection';
-import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 type UseCanvasViewportGraphModelArgs = {
   visibleNodeIds: string[];
@@ -66,7 +66,7 @@ function projectViewportNodes(args: {
       showColumns: columnLevelLineageEnabled,
       portCompatibility: portCompatibilityByNodeId.get(canonicalNode.id),
       frozen: frozenNodeIds.has(canonicalNode.id),
-      presentationTruth: buildCanvasNodePresentationTruth({
+      presentationTruth: projectCanvasNodePresentationTruth({
         node: canonicalNode,
         nodes: visibleCanonicalNodes,
         edges: visibleEdges,

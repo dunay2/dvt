@@ -1,7 +1,10 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasNodePresentationCopy } from '../canvas/canvasNodePresentationCopy.contract';
-import type { CanvasNodePresentationColumn } from '../canvas/canvasNodePresentationTruth.contract';
+import type {
+  CanvasNodePresentationColumn,
+  CanvasNodePresentationTruth,
+} from '../canvas/canvasNodePresentationTruth.contract';
 import { readSourceObjectMetricEvidence } from '../../services/workspace/sourceObjectMetricEvidence';
 import {
   describeSourceObjectMetricEvidence,
@@ -90,6 +93,7 @@ type BuildNodePropertiesReadModelArgs = Readonly<{
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   presentationCopy?: CanvasNodePresentationCopy;
+  presentationTruth?: CanvasNodePresentationTruth;
 }>;
 
 type InspectorColumn = Readonly<{
@@ -651,10 +655,12 @@ export function buildNodePropertiesReadModel({
   nodes,
   edges,
   presentationCopy,
+  presentationTruth: suppliedPresentationTruth,
 }: BuildNodePropertiesReadModelArgs): NodePropertiesReadModel {
   const metadata = asRecord(node.metadata);
   const columns = readColumns(metadata.columns);
-  const presentationTruth = buildCanvasNodePresentationTruth({ node, nodes, edges });
+  const presentationTruth =
+    suppliedPresentationTruth ?? buildCanvasNodePresentationTruth({ node, nodes, edges });
   const columnRows =
     presentationTruth.columns.visibleProvenance === 'declared'
       ? buildColumnRows(columns)
@@ -667,7 +673,9 @@ export function buildNodePropertiesReadModel({
   const testRows = buildDbtTestRows({ node, metadata, nodes, edges });
   const sinkRows = buildSinkRows(node, metadata);
   const code =
-    presentationTruth.code.kind === 'inline' ? presentationTruth.code.content : undefined;
+    presentationTruth.code.kind === 'inline' || presentationTruth.code.kind === 'generated'
+      ? presentationTruth.code.content
+      : undefined;
   const columnsDescription =
     presentationCopy == null
       ? undefined
@@ -681,11 +689,17 @@ export function buildNodePropertiesReadModel({
             })
           : presentationCopy.noColumnsDetail;
   const codeDescription =
-    presentationCopy != null && presentationTruth.code.kind === 'workspace-file'
-      ? interpolatePresentationTemplate(presentationCopy.workspaceCodeDetailTemplate, {
-          path: presentationTruth.code.path,
-        })
-      : undefined;
+    presentationCopy == null
+      ? undefined
+      : presentationTruth.code.kind === 'workspace-file'
+        ? interpolatePresentationTemplate(presentationCopy.workspaceCodeDetailTemplate, {
+            path: presentationTruth.code.path,
+          })
+        : presentationTruth.code.kind === 'generated'
+          ? interpolatePresentationTemplate(presentationCopy.generatedCodeDetailTemplate, {
+              path: presentationTruth.code.path,
+            })
+          : undefined;
 
   return {
     nodeId: node.id,

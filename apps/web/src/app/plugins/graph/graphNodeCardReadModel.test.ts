@@ -414,6 +414,7 @@ describe('buildGraphNodeCardReadModel', () => {
           noColumnsDetail: 'No columns.',
           codeLabel: 'Code',
           workspaceCodeDetailTemplate: 'Code lives at {path}.',
+          generatedCodeDetailTemplate: 'Generated code at {path}.',
           codeUnavailableMessage: 'No code.',
         },
       },

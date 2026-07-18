@@ -53,6 +53,8 @@ export const canvasViewAuthoringCopyEs = {
   nodePresentationCodeLabel: 'Código',
   nodePresentationWorkspaceCodeDetailTemplate:
     'El código está en el archivo {path} del workspace. Abre Código para inspeccionarlo o editarlo.',
+  nodePresentationGeneratedCodeDetailTemplate:
+    'Artefacto DBT generado en {path}. Edita Código para convertirlo en código escrito.',
   nodePresentationCodeUnavailableMessage:
     'No hay código inline ni archivo del workspace registrado para este nodo.',
   nodeWorkbenchCloseLabel: 'Cerrar',
@@ -78,10 +80,13 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDbtTableLabel: 'Tabla',
   inspectorDbtMaterializedLabel: 'Materializacion',
   inspectorDbtOriginLabel: 'Entrada',
-  inspectorDbtGeneratedSqlLabel: 'SQL generada',
+  inspectorDbtModelSqlLabel: 'SQL del modelo',
+  inspectorDbtModelSqlGeneratedDetailTemplate:
+    'Artefacto DBT generado: {path}. Editalo para asumir su autoria.',
+  inspectorDbtModelSqlAuthoredDetailTemplate: 'SQL DBT escrita: {path}.',
   inspectorDbtNoConnectedOriginsMessage: 'No hay origenes dbt conectados.',
-  inspectorDbtGeneratedSqlUnavailableMessage:
-    'Conecta este modelo a un source o modelo dbt para previsualizar la SQL generada por el plugin dbt.',
+  inspectorDbtModelSqlUnavailableMessage:
+    'Conecta este modelo a un source o modelo DBT antes de generar un artefacto ejecutable.',
   inspectorDbtOriginKindSourceLabel: 'source',
   inspectorDbtOriginKindModelLabel: 'modelo',
   inspectorDbtMaterializedViewLabel: 'vista',

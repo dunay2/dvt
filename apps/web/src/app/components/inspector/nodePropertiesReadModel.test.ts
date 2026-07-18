@@ -14,6 +14,7 @@ const presentationCopy = {
   noColumnsDetail: 'No columns.',
   codeLabel: 'Code',
   workspaceCodeDetailTemplate: 'Code lives at {path}.',
+  generatedCodeDetailTemplate: 'Generated code at {path}.',
   codeUnavailableMessage: 'No code.',
 } as const;
 
@@ -726,5 +727,37 @@ describe('nodePropertiesReadModel', () => {
     });
 
     expect(sectionById(model, 'code').code).toBe(expectedCode);
+  });
+
+  it('renders supplied generated code without claiming workspace-file authority', () => {
+    const node = buildSourceNode({ path: undefined, metadata: {} });
+    const model = buildNodePropertiesReadModel({
+      node,
+      nodes: [node],
+      edges: [],
+      presentationCopy,
+      presentationTruth: {
+        columns: {
+          declared: [],
+          inherited: [],
+          visible: [],
+          declaredCount: 0,
+          inheritedCount: 0,
+          visibleCount: 0,
+          visibleProvenance: 'none',
+        },
+        code: {
+          kind: 'generated',
+          content: 'select * from raw_orders',
+          path: 'models/orders.sql',
+          language: 'sql',
+        },
+      },
+    });
+
+    expect(sectionById(model, 'code')).toMatchObject({
+      code: 'select * from raw_orders',
+      description: 'Generated code at models/orders.sql.',
+    });
   });
 });

@@ -1,10 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import {
-  buildDbtAuthoringModelProjection,
-  buildGeneratedDbtModelSqlPreview,
-} from './dbtAuthoringFieldsModel';
+import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
+import { buildDbtAuthoringModelProjection } from './dbtAuthoringFieldsModel';
 
 function buildDbtSourceNode(id: string, name: string, sourceName: string): CanonicalNode {
   return {
@@ -75,7 +73,7 @@ describe('dbtAuthoringFieldsModel', () => {
       node: model,
       nodes: [sourceA, sourceB, model],
       edges,
-      selectedOriginId: '',
+      authoringMetadata: createDbtNodeAuthoringMetadata(model),
       kindLabels: {
         'dbt:source': 'Source',
         'dbt:model': 'Model',
@@ -87,7 +85,10 @@ describe('dbtAuthoringFieldsModel', () => {
       { value: 'source-b', label: 'Staging Orders (Source)' },
     ]);
     expect(projection.selectedOriginId).toBe('source-a');
-    expect(projection.generatedModelSql).toBe("select *\nfrom {{ source('raw', 'orders') }}");
+    expect(projection.modelArtifact).toMatchObject({
+      provenance: 'generated',
+      body: "select *\nfrom {{ source('raw', 'orders') }}",
+    });
   });
 
   it('projects connected warehouse-source origins as dbt source candidates', () => {
@@ -105,7 +106,7 @@ describe('dbtAuthoringFieldsModel', () => {
           relation: 'lineage',
         },
       ],
-      selectedOriginId: '',
+      authoringMetadata: createDbtNodeAuthoringMetadata(model),
       kindLabels: {
         'dbt:source': 'Source',
         'dbt:model': 'Model',
@@ -115,7 +116,7 @@ describe('dbtAuthoringFieldsModel', () => {
     expect(projection.originOptions).toEqual([
       { value: 'warehouse-orders', label: 'Imported Orders (Source)' },
     ]);
-    expect(projection.generatedModelSql).toBe(
+    expect(projection.modelArtifact?.body).toBe(
       "select *\nfrom {{ source('warehouse_prod_analytics_erp', 'orders') }}"
     );
   });
@@ -124,20 +125,51 @@ describe('dbtAuthoringFieldsModel', () => {
     const upstreamModel = buildDbtModelNode('model-upstream', 'Customer Orders');
     const model = buildDbtModelNode();
 
-    expect(
-      buildGeneratedDbtModelSqlPreview({
-        node: model,
-        nodes: [upstreamModel, model],
-        edges: [
-          {
-            id: 'edge-upstream-model',
-            sourceId: upstreamModel.id,
-            targetId: model.id,
-            relation: 'lineage',
-          },
-        ],
-        selectedOriginId: upstreamModel.id,
-      })
-    ).toBe("select *\nfrom {{ ref('customer_orders') }}");
+    const projection = buildDbtAuthoringModelProjection({
+      node: model,
+      nodes: [upstreamModel, model],
+      edges: [
+        {
+          id: 'edge-upstream-model',
+          sourceId: upstreamModel.id,
+          targetId: model.id,
+          relation: 'lineage',
+        },
+      ],
+      authoringMetadata: {
+        ...createDbtNodeAuthoringMetadata(model),
+        selectedSourceId: upstreamModel.id,
+      },
+      kindLabels: {
+        'dbt:source': 'Source',
+        'dbt:model': 'Model',
+      },
+    });
+
+    expect(projection.modelArtifact?.body).toBe("select *\nfrom {{ ref('customer_orders') }}");
+  });
+
+  it('projects authored SQL through the same artifact used by execution', () => {
+    const source = buildDbtSourceNode('source-a', 'Raw Orders', 'raw');
+    const model = buildDbtModelNode();
+    const projection = buildDbtAuthoringModelProjection({
+      node: model,
+      nodes: [source, model],
+      edges: [{ id: 'edge-a-model', sourceId: source.id, targetId: model.id, relation: 'lineage' }],
+      authoringMetadata: {
+        ...createDbtNodeAuthoringMetadata(model),
+        modelSql: "select order_id from {{ source('raw', 'orders') }}",
+      },
+      kindLabels: {
+        'dbt:source': 'Source',
+        'dbt:model': 'Model',
+      },
+    });
+
+    expect(projection.modelArtifact).toMatchObject({
+      provenance: 'authored',
+      body: "select order_id from {{ source('raw', 'orders') }}",
+      path: 'models/orders_model.sql',
+    });
   });
 });
