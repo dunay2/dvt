@@ -27,6 +27,7 @@ export const DbtYamlDescriptionResourceIdentitySchema = z
     uniqueId: NonBlankStringSchema.max(512),
     resourceType: z.enum(DBT_YAML_DESCRIPTION_RESOURCE_TYPE),
     name: NonBlankStringSchema.max(512),
+    packageName: NonBlankStringSchema.max(512),
     sourceName: NonBlankStringSchema.max(512).optional(),
   })
   .strict()
@@ -52,6 +53,7 @@ export const DbtYamlDescriptionAnalysisReceiptSchema = z
     freshness: z.enum(['fresh', 'stale-last-valid', 'invalid', 'unavailable']),
     analysisSha256: Sha256HexStringSchema,
     projectContentSetSha256: Sha256HexStringSchema,
+    targetContentSha256: Sha256HexStringSchema,
   })
   .strict();
 
@@ -88,7 +90,16 @@ export const DbtYamlDescriptionAppliedReceiptSchema = z
     deduplicated: z.boolean(),
     analysis: DbtYamlDescriptionAnalysisReceiptSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((receipt, context) => {
+    if (receipt.analysis.targetContentSha256 !== receipt.appliedContentSha256) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Applied analysis must be bound to the written target revision.',
+        path: ['analysis', 'targetContentSha256'],
+      });
+    }
+  });
 
 export const DbtYamlDescriptionRevertedReceiptSchema = z
   .object({
@@ -106,7 +117,16 @@ export const DbtYamlDescriptionRevertedReceiptSchema = z
     deduplicated: z.boolean(),
     analysis: DbtYamlDescriptionAnalysisReceiptSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((receipt, context) => {
+    if (receipt.analysis.targetContentSha256 !== receipt.revertedContentSha256) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Revert analysis must be bound to the restored target revision.',
+        path: ['analysis', 'targetContentSha256'],
+      });
+    }
+  });
 
 export const ProposeDbtYamlDescriptionEditRequestSchema = z
   .object({
@@ -125,7 +145,7 @@ export const ApplyDbtYamlDescriptionEditRequestSchema = z
 
 export const RevertDbtYamlDescriptionEditRequestSchema = z
   .object({
-    appliedReceipt: DbtYamlDescriptionAppliedReceiptSchema,
+    appliedReceiptId: Sha256HexStringSchema,
     idempotencyKey: NonBlankStringSchema.max(256),
   })
   .strict();

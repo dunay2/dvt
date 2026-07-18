@@ -16,6 +16,7 @@ const FILE_AUTHORITY = {
 
 const PROJECT_REVISION = {
   projectRoot: 'analytics/orders',
+  projectName: 'analytics',
   contentSetSha256: 'a'.repeat(64),
   analyzedAt: '2026-07-13T10:00:00.000Z',
   analyzerVersion: 'dvt-dbt-analyzer.v1',

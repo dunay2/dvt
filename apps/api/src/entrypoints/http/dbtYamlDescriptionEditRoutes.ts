@@ -17,6 +17,9 @@ import {
   DbtYamlDescriptionResourceNotFoundError,
   DbtYamlDescriptionResourceUnsupportedError,
   DbtYamlDescriptionRevisionConflictError,
+  type IApplyDbtYamlDescriptionEditCommand,
+  type IProposeDbtYamlDescriptionEditQuery,
+  type IRevertDbtYamlDescriptionEditCommand,
 } from '../../application/ports/dbtYamlDescriptionEdit.js';
 import {
   InvalidWorkspacePathError,
@@ -24,7 +27,6 @@ import {
   WorkspaceFileNotFoundError,
 } from '../../application/ports/workspaceFiles.js';
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
-import type { DbtYamlDescriptionEditTransaction } from '../../application/services/dbtYamlDescriptionEdit/DbtYamlDescriptionEditTransaction.js';
 
 import {
   authorizeDbtProjectFileRequest,
@@ -39,7 +41,9 @@ import { RUNTIME_ROUTE_PATH } from './runtimeRoutes.constants.js';
 type DbtYamlDescriptionEditRouteDeps = Readonly<{
   authenticator: IAuthenticator;
   authorizer: AuthorizeCommandScopeService;
-  transaction: Pick<DbtYamlDescriptionEditTransaction, 'propose' | 'apply' | 'revert'>;
+  proposalQuery: IProposeDbtYamlDescriptionEditQuery;
+  applyCommand: IApplyDbtYamlDescriptionEditCommand;
+  revertCommand: IRevertDbtYamlDescriptionEditCommand;
   rateLimit: { readonly max: number; readonly timeWindow: number };
 }>;
 
@@ -63,7 +67,7 @@ export function registerDbtYamlDescriptionEditRoutes(
       try {
         reply
           .code(200)
-          .send(await deps.transaction.propose({ scope: authorized.scope, ...parsed.data }));
+          .send(await deps.proposalQuery.propose({ scope: authorized.scope, ...parsed.data }));
       } catch (error) {
         if (respondDomainError(reply, error)) return;
         throw error;
@@ -87,7 +91,7 @@ export function registerDbtYamlDescriptionEditRoutes(
       try {
         reply
           .code(200)
-          .send(await deps.transaction.apply({ scope: authorized.scope, ...parsed.data }));
+          .send(await deps.applyCommand.apply({ scope: authorized.scope, ...parsed.data }));
       } catch (error) {
         if (respondDomainError(reply, error)) return;
         throw error;
@@ -111,7 +115,7 @@ export function registerDbtYamlDescriptionEditRoutes(
       try {
         reply
           .code(200)
-          .send(await deps.transaction.revert({ scope: authorized.scope, ...parsed.data }));
+          .send(await deps.revertCommand.revert({ scope: authorized.scope, ...parsed.data }));
       } catch (error) {
         if (respondDomainError(reply, error)) return;
         throw error;

@@ -2,7 +2,10 @@
 
 import type {
   ApplyDbtYamlDescriptionEditRequest,
+  DbtYamlDescriptionAppliedReceipt,
+  DbtYamlDescriptionEditProposal,
   DbtYamlDescriptionResourceIdentity,
+  DbtYamlDescriptionRevertedReceipt,
   ProposeDbtYamlDescriptionEditRequest,
   RevertDbtYamlDescriptionEditRequest,
 } from '@dvt/contracts';
@@ -51,6 +54,52 @@ export type RevertDbtYamlDescriptionEditInput = Readonly<
     scope: WorkspaceStorageScope;
   }
 >;
+
+export type DbtYamlDescriptionResourceContext = Readonly<{
+  resource: DbtYamlDescriptionResourceIdentity;
+  path: string;
+}>;
+
+export interface IDbtYamlDescriptionResourceResolver {
+  resolve(
+    input: Readonly<{
+      scope: WorkspaceStorageScope;
+      canvasId: string;
+      resourceUniqueId: string;
+    }>
+  ): Promise<DbtYamlDescriptionResourceContext>;
+}
+
+export interface IProposeDbtYamlDescriptionEditQuery {
+  propose(input: ProposeDbtYamlDescriptionEditInput): Promise<DbtYamlDescriptionEditProposal>;
+}
+
+export interface IApplyDbtYamlDescriptionEditCommand {
+  apply(input: ApplyDbtYamlDescriptionEditInput): Promise<DbtYamlDescriptionAppliedReceipt>;
+}
+
+export interface IRevertDbtYamlDescriptionEditCommand {
+  revert(input: RevertDbtYamlDescriptionEditInput): Promise<DbtYamlDescriptionRevertedReceipt>;
+}
+
+export interface IDbtYamlDescriptionReceiptStore {
+  findApplied(
+    scope: WorkspaceStorageScope,
+    receiptId: string
+  ): Promise<DbtYamlDescriptionAppliedReceipt | null>;
+  saveApplied(
+    scope: WorkspaceStorageScope,
+    receipt: DbtYamlDescriptionAppliedReceipt
+  ): Promise<void>;
+  findReverted(
+    scope: WorkspaceStorageScope,
+    receiptId: string
+  ): Promise<DbtYamlDescriptionRevertedReceipt | null>;
+  saveReverted(
+    scope: WorkspaceStorageScope,
+    receipt: DbtYamlDescriptionRevertedReceipt
+  ): Promise<void>;
+}
 
 export class DbtYamlDescriptionResourceNotFoundError extends Error {
   public constructor(readonly resourceUniqueId: string) {
@@ -101,5 +150,12 @@ export class DbtYamlDescriptionReceiptInvalidError extends Error {
   public constructor(readonly receiptId: string) {
     super(`The dbt YAML description edit receipt is invalid: ${receiptId}`);
     this.name = 'DbtYamlDescriptionReceiptInvalidError';
+  }
+}
+
+export class DbtYamlDescriptionPersistenceInvariantError extends Error {
+  public constructor(message: string) {
+    super(message);
+    this.name = 'DbtYamlDescriptionPersistenceInvariantError';
   }
 }

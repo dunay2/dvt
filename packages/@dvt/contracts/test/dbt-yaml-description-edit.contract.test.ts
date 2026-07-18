@@ -15,6 +15,7 @@ const proposal = {
     uniqueId: 'model.analytics.orders',
     resourceType: 'model',
     name: 'orders',
+    packageName: 'analytics',
   },
   path: 'analytics/models/orders.yml',
   previousDescription: 'Old description',
@@ -44,6 +45,7 @@ const appliedReceipt = {
     freshness: 'fresh',
     analysisSha256: 'f'.repeat(64),
     projectContentSetSha256: '1'.repeat(64),
+    targetContentSha256: proposal.candidateContentSha256,
   },
 } as const;
 
@@ -59,10 +61,10 @@ describe('DbtYamlDescriptionEdit.v1', () => {
     expect(DbtYamlDescriptionAppliedReceiptSchema.parse(appliedReceipt)).toEqual(appliedReceipt);
     expect(
       RevertDbtYamlDescriptionEditRequestSchema.parse({
-        appliedReceipt,
+        appliedReceiptId: appliedReceipt.receiptId,
         idempotencyKey: 'revert-1',
       })
-    ).toEqual({ appliedReceipt, idempotencyKey: 'revert-1' });
+    ).toEqual({ appliedReceiptId: appliedReceipt.receiptId, idempotencyKey: 'revert-1' });
   });
 
   it('rejects generic resource edits, malformed hashes, and incomplete source identity', () => {
@@ -83,6 +85,24 @@ describe('DbtYamlDescriptionEdit.v1', () => {
         uniqueId: 'source.analytics.raw.orders',
         resourceType: 'source',
         name: 'orders',
+      }).success
+    ).toBe(false);
+  });
+
+  it('rejects client-supplied revert receipts and analysis not bound to the written revision', () => {
+    expect(
+      RevertDbtYamlDescriptionEditRequestSchema.safeParse({
+        appliedReceipt,
+        idempotencyKey: 'revert-1',
+      }).success
+    ).toBe(false);
+    expect(
+      DbtYamlDescriptionAppliedReceiptSchema.safeParse({
+        ...appliedReceipt,
+        analysis: {
+          ...appliedReceipt.analysis,
+          targetContentSha256: '9'.repeat(64),
+        },
       }).success
     ).toBe(false);
   });

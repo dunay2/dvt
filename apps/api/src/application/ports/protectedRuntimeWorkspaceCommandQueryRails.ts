@@ -150,7 +150,11 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
       ],
       [
         PROTECTED_RUNTIME_NEGATIVE_CASE.staleDbtYamlDescriptionRevision,
-        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditTransaction,
+        PROTECTED_RUNTIME_TEST_REF.applyDbtYamlDescriptionEditCommand,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingWorkspaceFileSaveAuthority,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
       ],
       [
         PROTECTED_RUNTIME_NEGATIVE_CASE.idempotencyConflict,
@@ -164,11 +168,19 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     coverage: [
       [
         PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtYamlDescriptionReceipt,
-        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
+        PROTECTED_RUNTIME_TEST_REF.revertDbtYamlDescriptionEditCommand,
       ],
       [
         PROTECTED_RUNTIME_NEGATIVE_CASE.staleDbtYamlDescriptionRevision,
-        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditTransaction,
+        PROTECTED_RUNTIME_TEST_REF.revertDbtYamlDescriptionEditCommand,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingWorkspaceFileSaveAuthority,
+        PROTECTED_RUNTIME_TEST_REF.dbtYamlDescriptionEditRoutes,
       ],
       [
         PROTECTED_RUNTIME_NEGATIVE_CASE.idempotencyConflict,

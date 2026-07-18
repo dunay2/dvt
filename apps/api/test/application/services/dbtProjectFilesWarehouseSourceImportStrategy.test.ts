@@ -199,6 +199,7 @@ function createProjection(): DbtProjectGraphProjection {
     freshness: 'fresh',
     projectRevision: {
       projectRoot: 'analytics',
+      projectName: 'analytics',
       contentSetSha256: 'c'.repeat(64),
       analyzedAt: '2026-07-14T00:00:00.000Z',
       analyzerVersion: 'test-analyzer',

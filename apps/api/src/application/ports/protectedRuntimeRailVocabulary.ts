@@ -28,6 +28,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   missingAction: 'missing action',
   missingFile: 'missing file',
   missingWorkspaceFileReadAuthority: 'missing workspace-file read authority',
+  missingWorkspaceFileSaveAuthority: 'missing workspace-file save authority',
   missingIdempotencyKey: 'missing idempotency key',
   missingScope: 'missing scope',
   missingToken: 'missing token',
@@ -95,8 +96,10 @@ export const PROTECTED_RUNTIME_TEST_REF = {
     'apps/api/test/infrastructure/dbt/LocalDbtProjectImportInspector.test.ts',
   dbtYamlDescriptionEditRoutes:
     'apps/api/test/entrypoints/http/dbtYamlDescriptionEditRoutes.test.ts',
-  dbtYamlDescriptionEditTransaction:
-    'apps/api/test/application/services/dbtYamlDescriptionEdit/DbtYamlDescriptionEditTransaction.test.ts',
+  applyDbtYamlDescriptionEditCommand:
+    'apps/api/test/application/services/dbtYamlDescriptionEdit/ApplyDbtYamlDescriptionEditCommand.test.ts',
+  revertDbtYamlDescriptionEditCommand:
+    'apps/api/test/application/services/dbtYamlDescriptionEdit/RevertDbtYamlDescriptionEditCommand.test.ts',
   workspaceContextRoute: 'apps/api/test/entrypoints/http/workspaceContextRoute.test.ts',
   workspacePluginCatalogRoutes:
     'apps/api/test/entrypoints/http/workspacePluginCatalogRoutes.test.ts',
@@ -209,7 +212,7 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     boundedContext: 'dbt project YAML visual authoring',
     dddObject: 'DbtYamlDescriptionEditProposal',
     applicationPort:
-      'DbtYamlDescriptionEditTransaction via IDbtYamlDescriptionMutator and IWorkspaceFileRepository',
+      'IProposeDbtYamlDescriptionEditQuery via IDbtYamlDescriptionResourceResolver, IDbtYamlDescriptionMutator, and IWorkspaceFileRepository',
     adapterSurface: 'POST /workspace/dbt/description-edits/proposals',
     scopeAndAuthorization:
       'workspace:graph-draft:view plus workspace:files:view, tenant/project/environment scope',
@@ -217,9 +220,9 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
   applyDbtYamlDescriptionEdit: {
     name: 'ApplyDbtYamlDescriptionEdit',
     boundedContext: 'dbt project YAML visual authoring',
-    dddObject: 'DbtYamlDescriptionEditTransaction',
+    dddObject: 'DbtYamlDescriptionAppliedReceipt',
     applicationPort:
-      'DbtYamlDescriptionEditTransaction via IWorkspaceFileBatchMutationPort and ProjectDbtGraphFromFilesUseCase',
+      'IApplyDbtYamlDescriptionEditCommand via IWorkspaceFileBatchMutationPort, IDbtYamlDescriptionReceiptStore, and ProjectDbtGraphFromFilesUseCase',
     adapterSurface: 'POST /workspace/dbt/description-edits/applications',
     scopeAndAuthorization:
       'workspace:graph-draft:view plus workspace:files:save, tenant/project/environment scope and idempotency key',
@@ -227,12 +230,12 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
   revertDbtYamlDescriptionEdit: {
     name: 'RevertDbtYamlDescriptionEdit',
     boundedContext: 'dbt project YAML visual authoring',
-    dddObject: 'DbtYamlDescriptionEditTransaction',
+    dddObject: 'DbtYamlDescriptionRevertedReceipt',
     applicationPort:
-      'DbtYamlDescriptionEditTransaction via IWorkspaceFileBatchMutationPort and ProjectDbtGraphFromFilesUseCase',
+      'IRevertDbtYamlDescriptionEditCommand via IWorkspaceFileBatchMutationPort, IDbtYamlDescriptionReceiptStore, and ProjectDbtGraphFromFilesUseCase',
     adapterSurface: 'POST /workspace/dbt/description-edits/reverts',
     scopeAndAuthorization:
-      'workspace:graph-draft:view plus workspace:files:save, tenant/project/environment scope, applied receipt, and idempotency key',
+      'workspace:graph-draft:view plus workspace:files:save, tenant/project/environment scope, server-owned applied receipt ID, and idempotency key',
   },
   validateDbtProjectImport: {
     name: 'ValidateDbtProjectImport',

@@ -53,6 +53,7 @@ function validAnalyzer(): IDbtProjectAnalyzerPort {
       status: 'valid',
       projectRevision: {
         projectRoot: 'analytics',
+        projectName: 'analytics',
         contentSetSha256: 'a'.repeat(64),
         analyzedAt: NOW.toISOString(),
         analyzerVersion: 'dvt-dbt-analyzer.v1',
@@ -351,6 +352,7 @@ function freshProjection(): DbtProjectGraphProjection {
     freshness: 'fresh',
     projectRevision: {
       projectRoot: 'analytics',
+      projectName: 'analytics',
       contentSetSha256: 'a'.repeat(64),
       analyzedAt: NOW.toISOString(),
       analyzerVersion: 'dvt-dbt-analyzer.v1',

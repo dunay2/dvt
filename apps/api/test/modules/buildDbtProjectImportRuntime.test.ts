@@ -13,6 +13,7 @@ describe('buildDbtProjectImportRuntime', () => {
         adapterType: 'postgres',
         projectRevision: {
           projectRoot: 'analytics',
+          projectName: 'analytics',
           contentSetSha256: 'a'.repeat(64),
           analyzedAt: '2026-07-14T10:00:00.000Z',
           analyzerVersion: 'dvt-dbt-analyzer.v1',

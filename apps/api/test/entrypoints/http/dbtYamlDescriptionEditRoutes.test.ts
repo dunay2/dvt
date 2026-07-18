@@ -1,7 +1,11 @@
 import Fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
 
-import { DbtYamlDescriptionRevisionConflictError } from '../../../src/application/ports/dbtYamlDescriptionEdit.js';
+import {
+  DbtYamlDescriptionReceiptInvalidError,
+  DbtYamlDescriptionRevisionConflictError,
+} from '../../../src/application/ports/dbtYamlDescriptionEdit.js';
+import { WorkspaceFileBatchIdempotencyConflictError } from '../../../src/application/ports/workspaceFiles.js';
 import { registerDbtYamlDescriptionEditRoutes } from '../../../src/entrypoints/http/dbtYamlDescriptionEditRoutes.js';
 
 const SCOPE_QUERY = 'tenantId=tenant-a&projectId=project-a&environmentId=env-a';
@@ -13,7 +17,9 @@ describe('dbtYamlDescriptionEditRoutes', () => {
     const app = Fastify({ logger: false });
     registerDbtYamlDescriptionEditRoutes(app, {
       ...auth,
-      transaction: { propose, apply: vi.fn(), revert: vi.fn() },
+      proposalQuery: { propose },
+      applyCommand: { apply: vi.fn() },
+      revertCommand: { revert: vi.fn() },
       rateLimit: { max: 100, timeWindow: 60_000 },
     });
 
@@ -47,7 +53,9 @@ describe('dbtYamlDescriptionEditRoutes', () => {
     const app = Fastify({ logger: false });
     registerDbtYamlDescriptionEditRoutes(app, {
       ...auth,
-      transaction: { propose: vi.fn(), apply, revert: vi.fn() },
+      proposalQuery: { propose: vi.fn() },
+      applyCommand: { apply },
+      revertCommand: { revert: vi.fn() },
       rateLimit: { max: 100, timeWindow: 60_000 },
     });
 
@@ -75,7 +83,9 @@ describe('dbtYamlDescriptionEditRoutes', () => {
     const app = Fastify({ logger: false });
     registerDbtYamlDescriptionEditRoutes(app, {
       ...auth,
-      transaction: { propose: vi.fn(), apply, revert: vi.fn() },
+      proposalQuery: { propose: vi.fn() },
+      applyCommand: { apply },
+      revertCommand: { revert: vi.fn() },
       rateLimit: { max: 100, timeWindow: 60_000 },
     });
 
@@ -89,6 +99,75 @@ describe('dbtYamlDescriptionEditRoutes', () => {
     expect(apply).not.toHaveBeenCalled();
   });
 
+  it('does not revert when file-save authority is absent', async () => {
+    const revert = vi.fn();
+    const auth = authorizedRuntimeAuth('workspace:files:save');
+    const app = Fastify({ logger: false });
+    registerDbtYamlDescriptionEditRoutes(app, {
+      ...auth,
+      proposalQuery: { propose: vi.fn() },
+      applyCommand: { apply: vi.fn() },
+      revertCommand: { revert },
+      rateLimit: { max: 100, timeWindow: 60_000 },
+    });
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/workspace/dbt/description-edits/reverts?${SCOPE_QUERY}`,
+      payload: { appliedReceiptId: appliedReceipt().receiptId, idempotencyKey: 'revert-1' },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(revert).not.toHaveBeenCalled();
+  });
+
+  it('does not execute any description rail without a bearer token', async () => {
+    const propose = vi.fn();
+    const apply = vi.fn();
+    const revert = vi.fn();
+    const app = Fastify({ logger: false });
+    registerDbtYamlDescriptionEditRoutes(app, {
+      authenticator: {
+        authenticateBearerToken: vi.fn().mockResolvedValue({ ok: false, code: 'missing_token' }),
+      } as never,
+      authorizer: {} as never,
+      proposalQuery: { propose },
+      applyCommand: { apply },
+      revertCommand: { revert },
+      rateLimit: { max: 100, timeWindow: 60_000 },
+    });
+
+    const requests = [
+      {
+        path: '/workspace/dbt/description-edits/proposals',
+        payload: {
+          canvasId: 'canvas-orders',
+          resourceUniqueId: 'model.analytics.orders',
+          nextDescription: 'Customer orders',
+        },
+      },
+      {
+        path: '/workspace/dbt/description-edits/applications',
+        payload: { proposal: proposal(), idempotencyKey: 'edit-1' },
+      },
+      {
+        path: '/workspace/dbt/description-edits/reverts',
+        payload: { appliedReceiptId: appliedReceipt().receiptId, idempotencyKey: 'revert-1' },
+      },
+    ];
+    for (const request of requests) {
+      const response = await app.inject({
+        method: 'POST',
+        url: `${request.path}?${SCOPE_QUERY}`,
+        payload: request.payload,
+      });
+      expect(response.statusCode).toBe(401);
+    }
+    expect(propose).not.toHaveBeenCalled();
+    expect(apply).not.toHaveBeenCalled();
+    expect(revert).not.toHaveBeenCalled();
+  });
+
   it('rejects malformed bodies before authorization or transaction execution', async () => {
     const propose = vi.fn();
     const authenticateBearerToken = vi.fn();
@@ -96,7 +175,9 @@ describe('dbtYamlDescriptionEditRoutes', () => {
     registerDbtYamlDescriptionEditRoutes(app, {
       authenticator: { authenticateBearerToken } as never,
       authorizer: {} as never,
-      transaction: { propose, apply: vi.fn(), revert: vi.fn() },
+      proposalQuery: { propose },
+      applyCommand: { apply: vi.fn() },
+      revertCommand: { revert: vi.fn() },
       rateLimit: { max: 100, timeWindow: 60_000 },
     });
 
@@ -120,10 +201,43 @@ describe('dbtYamlDescriptionEditRoutes', () => {
     const app = Fastify({ logger: false });
     registerDbtYamlDescriptionEditRoutes(app, {
       ...auth,
-      transaction: {
-        propose: vi.fn(),
-        apply: vi.fn().mockRejectedValue(conflict),
-        revert: vi.fn().mockRejectedValue(conflict),
+      proposalQuery: { propose: vi.fn() },
+      applyCommand: { apply: vi.fn().mockRejectedValue(conflict) },
+      revertCommand: { revert: vi.fn().mockRejectedValue(conflict) },
+      rateLimit: { max: 100, timeWindow: 60_000 },
+    });
+
+    const applyResponse = await app.inject({
+      method: 'POST',
+      url: `/workspace/dbt/description-edits/applications?${SCOPE_QUERY}`,
+      payload: { proposal: proposal(), idempotencyKey: 'edit-1' },
+    });
+    const revertResponse = await app.inject({
+      method: 'POST',
+      url: `/workspace/dbt/description-edits/reverts?${SCOPE_QUERY}`,
+      payload: { appliedReceiptId: appliedReceipt().receiptId, idempotencyKey: 'revert-1' },
+    });
+
+    expect(applyResponse.statusCode).toBe(409);
+    expect(applyResponse.json()).toEqual({
+      error: { type: 'conflict', reason: 'dbt_yaml_description_revision_conflict' },
+    });
+    expect(revertResponse.statusCode).toBe(409);
+  });
+
+  it('translates untrusted receipt IDs and idempotency collisions explicitly', async () => {
+    const auth = authorizedRuntimeAuth();
+    const app = Fastify({ logger: false });
+    registerDbtYamlDescriptionEditRoutes(app, {
+      ...auth,
+      proposalQuery: { propose: vi.fn() },
+      applyCommand: {
+        apply: vi.fn().mockRejectedValue(new WorkspaceFileBatchIdempotencyConflictError('edit-1')),
+      },
+      revertCommand: {
+        revert: vi
+          .fn()
+          .mockRejectedValue(new DbtYamlDescriptionReceiptInvalidError('d'.repeat(64))),
       },
       rateLimit: { max: 100, timeWindow: 60_000 },
     });
@@ -136,14 +250,15 @@ describe('dbtYamlDescriptionEditRoutes', () => {
     const revertResponse = await app.inject({
       method: 'POST',
       url: `/workspace/dbt/description-edits/reverts?${SCOPE_QUERY}`,
-      payload: { appliedReceipt: appliedReceipt(), idempotencyKey: 'revert-1' },
+      payload: { appliedReceiptId: 'd'.repeat(64), idempotencyKey: 'revert-1' },
     });
 
-    expect(applyResponse.statusCode).toBe(409);
     expect(applyResponse.json()).toEqual({
-      error: { type: 'conflict', reason: 'dbt_yaml_description_revision_conflict' },
+      error: { type: 'conflict', reason: 'dbt_yaml_description_idempotency_conflict' },
     });
-    expect(revertResponse.statusCode).toBe(409);
+    expect(revertResponse.json()).toEqual({
+      error: { type: 'conflict', reason: 'dbt_yaml_description_receipt_invalid' },
+    });
   });
 });
 
@@ -155,6 +270,7 @@ function proposal() {
       uniqueId: 'model.analytics.orders',
       resourceType: 'model' as const,
       name: 'orders',
+      packageName: 'analytics',
     },
     path: 'analytics/models/orders.yml',
     previousDescription: 'Old description',
@@ -186,6 +302,7 @@ function appliedReceipt() {
       freshness: 'fresh' as const,
       analysisSha256: 'f'.repeat(64),
       projectContentSetSha256: '1'.repeat(64),
+      targetContentSha256: proposal().candidateContentSha256,
     },
   };
 }
