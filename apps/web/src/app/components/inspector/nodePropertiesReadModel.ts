@@ -1,5 +1,9 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import type {
+  CanvasNodePresentationColumn,
+  CanvasNodePresentationCopy,
+} from '../canvas/canvasNodePresentationTruth.contract';
 import { readSourceObjectMetricEvidence } from '../../services/workspace/sourceObjectMetricEvidence';
 import {
   describeSourceObjectMetricEvidence,
@@ -7,7 +11,7 @@ import {
   formatSourceObjectMetricByteSize,
 } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 import { buildDbtTestRows } from './dbtTestRowsReadModel';
-import { buildTransformColumnOptions, readSelectedColumnRefs } from './dvtTransformColumnModel';
+import { buildCanvasNodePresentationTruth } from '../canvas/canvasNodePresentationTruth';
 
 export type NodePropertySectionId =
   | 'general'
@@ -73,6 +77,7 @@ export type NodePropertySection = Readonly<{
   rows: readonly NodePropertyRow[];
   tableRows: readonly NodePropertyTableRow[];
   emptyState?: string;
+  description?: string;
   code?: string;
 }>;
 
@@ -86,6 +91,7 @@ type BuildNodePropertiesReadModelArgs = Readonly<{
   node: CanonicalNode;
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
+  presentationCopy?: CanvasNodePresentationCopy;
 }>;
 
 type InspectorColumn = Readonly<{
@@ -380,35 +386,27 @@ function buildColumnRows(columns: readonly InspectorColumn[]): readonly NodeProp
   }));
 }
 
-function buildTransformInputColumnRows({
-  node,
-  nodes,
-  edges,
-}: Readonly<{
-  node: CanonicalNode;
-  nodes: readonly CanonicalNode[];
-  edges: readonly CanonicalEdge[];
-}>): readonly NodePropertyTableRow[] {
-  if (node.role !== 'transform') {
-    return [];
-  }
-
-  return buildTransformColumnOptions({
-    node,
-    nodes,
-    edges,
-    selectedColumnRefs: readSelectedColumnRefs(node.metadata),
-  }).map((option) => ({
-    id: option.columnRef,
+function buildInheritedColumnRows(
+  columns: readonly CanvasNodePresentationColumn[]
+): readonly NodePropertyTableRow[] {
+  return columns.map((column) => ({
+    id: column.reference ?? `${column.sourceNodeId ?? 'input'}.${column.name}`,
     cells: {
-      name: option.columnName,
-      type: option.dataType,
-      nullable: option.nullable === false ? 'not null' : option.nullable === true ? 'nullable' : '',
-      source: option.sourceNodeName,
-      reference: option.columnRef,
-      selection: option.selected ? 'selected' : 'available',
+      name: column.name,
+      type: column.type,
+      nullable: column.nullable === false ? 'not null' : column.nullable === true ? 'nullable' : '',
+      source: column.sourceNodeName ?? column.sourceNodeId ?? '',
+      reference: column.reference ?? '',
+      selection: column.selected ? 'selected' : 'available',
     },
   }));
+}
+
+function interpolatePresentationTemplate(template: string, values: Record<string, string>): string {
+  return Object.entries(values).reduce(
+    (resolved, [key, value]) => resolved.replaceAll(`{${key}}`, value),
+    template
+  );
 }
 
 function buildKeyRows(
@@ -628,6 +626,7 @@ function createSection({
   rows = [],
   tableRows = [],
   emptyState,
+  description,
   code,
 }: Readonly<{
   id: NodePropertySectionId;
@@ -635,6 +634,7 @@ function createSection({
   rows?: readonly NodePropertyRow[];
   tableRows?: readonly NodePropertyTableRow[];
   emptyState?: string;
+  description?: string;
   code?: string;
 }>): NodePropertySection {
   return {
@@ -643,6 +643,7 @@ function createSection({
     rows,
     tableRows,
     ...(emptyState != null ? { emptyState } : {}),
+    ...(description != null ? { description } : {}),
     ...(code != null ? { code } : {}),
   };
 }
@@ -651,14 +652,15 @@ export function buildNodePropertiesReadModel({
   node,
   nodes,
   edges,
+  presentationCopy,
 }: BuildNodePropertiesReadModelArgs): NodePropertiesReadModel {
   const metadata = asRecord(node.metadata);
-  const config = asRecord(metadata.config);
   const columns = readColumns(metadata.columns);
+  const presentationTruth = buildCanvasNodePresentationTruth({ node, nodes, edges });
   const columnRows =
-    columns.length > 0
+    presentationTruth.columns.visibleProvenance === 'declared'
       ? buildColumnRows(columns)
-      : buildTransformInputColumnRows({ node, nodes, edges });
+      : buildInheritedColumnRows(presentationTruth.columns.inherited);
   const keyRows = buildKeyRows(metadata, columns);
   const indexRows = buildIndexRows(metadata);
   const foreignKeyRows = buildForeignKeyRows(metadata);
@@ -667,7 +669,25 @@ export function buildNodePropertiesReadModel({
   const testRows = buildDbtTestRows({ node, metadata, nodes, edges });
   const sinkRows = buildSinkRows(node, metadata);
   const code =
-    readString(metadata.compiledSql) ?? readString(metadata.sql) ?? readString(config.sql);
+    presentationTruth.code.kind === 'inline' ? presentationTruth.code.content : undefined;
+  const columnsDescription =
+    presentationCopy == null
+      ? undefined
+      : presentationTruth.columns.visibleProvenance === 'declared'
+        ? interpolatePresentationTemplate(presentationCopy.declaredColumnsDetailTemplate, {
+            count: String(presentationTruth.columns.visibleCount),
+          })
+        : presentationTruth.columns.visibleProvenance === 'inherited'
+          ? interpolatePresentationTemplate(presentationCopy.inheritedColumnsDetailTemplate, {
+              count: String(presentationTruth.columns.visibleCount),
+            })
+          : presentationCopy.noColumnsDetail;
+  const codeDescription =
+    presentationCopy != null && presentationTruth.code.kind === 'workspace-file'
+      ? interpolatePresentationTemplate(presentationCopy.workspaceCodeDetailTemplate, {
+          path: presentationTruth.code.path,
+        })
+      : undefined;
 
   return {
     nodeId: node.id,
@@ -680,8 +700,9 @@ export function buildNodePropertiesReadModel({
       }),
       createSection({
         id: 'columns',
-        label: 'Columns',
+        label: presentationCopy?.columnsLabel ?? 'Columns',
         tableRows: columnRows,
+        description: columnsDescription,
         emptyState: columnRows.length === 0 ? 'No columns are recorded for this node.' : undefined,
       }),
       createSection({
@@ -754,10 +775,14 @@ export function buildNodePropertiesReadModel({
         : []),
       createSection({
         id: 'code',
-        label: 'Code',
+        label: presentationCopy?.codeLabel ?? 'Code',
         code,
+        description: codeDescription,
         emptyState:
-          code == null ? 'No SQL or generated code is recorded for this node.' : undefined,
+          presentationTruth.code.kind === 'unavailable'
+            ? (presentationCopy?.codeUnavailableMessage ??
+              'No SQL or generated code is recorded for this node.')
+            : undefined,
       }),
       createSection({
         id: 'summary',

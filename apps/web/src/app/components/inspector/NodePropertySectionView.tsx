@@ -185,6 +185,14 @@ export function NodePropertySectionView({
         <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{section.label}</h3>
         {showCountBadge ? renderSectionCountBadge(section) : null}
       </div>
+      {section.description == null ? null : (
+        <p
+          data-slot={`${slots.sectionPrefix}-${section.id}-description`}
+          className={inspectorVisualClasses.contextPanelSectionDescription}
+        >
+          {section.description}
+        </p>
+      )}
       {renderContributionSlot('before-body', beforeBody)}
       {renderSectionBody(section, slots, surface)}
       {renderContributionSlot('after-body', afterBody)}

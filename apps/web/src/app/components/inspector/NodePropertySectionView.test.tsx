@@ -56,6 +56,7 @@ describe('NodePropertySectionView', () => {
     ({ container, root } = renderSection({
       id: 'columns',
       label: 'Columns',
+      description: '2 columns inherited from the connected source.',
       rows: [],
       tableRows: [
         {
@@ -70,6 +71,9 @@ describe('NodePropertySectionView', () => {
     expect(container.textContent).toContain('order_id');
     expect(container.textContent).toContain('integer');
     expect(container.textContent).toContain('not null');
+    expect(
+      container.querySelector('[data-slot="node-section-columns-description"]')?.textContent
+    ).toBe('2 columns inherited from the connected source.');
   });
 
   it('renders scalar rows and code blocks without involving the tabs coordinator', () => {

@@ -370,6 +370,64 @@ describe('buildGraphNodeCardReadModel', () => {
     ]);
   });
 
+  it('uses inherited presentation truth instead of reporting zero model columns', () => {
+    const model = buildGraphNodeCardReadModel(
+      buildNode({
+        kind: 'dbt:model',
+        pluginId: 'dbt',
+        role: 'transform',
+        name: 'fct_orders',
+      }),
+      {
+        presentationTruth: {
+          columns: {
+            declared: [],
+            inherited: [
+              {
+                name: 'order_id',
+                type: 'integer',
+                provenance: 'inherited',
+                sourceNodeId: 'source-orders',
+              },
+              {
+                name: 'customer_id',
+                type: 'text',
+                provenance: 'inherited',
+                sourceNodeId: 'source-orders',
+              },
+            ],
+            visible: [
+              { name: 'order_id', type: 'integer', provenance: 'inherited' },
+              { name: 'customer_id', type: 'text', provenance: 'inherited' },
+            ],
+            declaredCount: 0,
+            inheritedCount: 2,
+            visibleCount: 2,
+            visibleProvenance: 'inherited',
+          },
+          code: { kind: 'workspace-file', path: 'models/fct_orders.sql', language: 'sql' },
+        },
+        presentationCopy: {
+          columnsLabel: 'Columns',
+          declaredColumnsDetailTemplate: '{count} declared columns.',
+          inheritedColumnsDetailTemplate: '{count} inherited columns.',
+          noColumnsDetail: 'No columns.',
+          codeLabel: 'Code',
+          workspaceCodeDetailTemplate: 'Code lives at {path}.',
+          codeUnavailableMessage: 'No code.',
+        },
+      },
+      [dbtGraphNodeCardStrategy]
+    );
+
+    expect(model.metrics).toContainEqual({
+      id: 'columns',
+      label: 'Columns',
+      value: '2',
+      detail: '2 inherited columns.',
+    });
+  });
+
   it('adds DBT source operational metrics from recorded warehouse metadata', () => {
     const model = buildGraphNodeCardReadModel(
       buildNode({

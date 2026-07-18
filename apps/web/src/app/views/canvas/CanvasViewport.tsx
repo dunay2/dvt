@@ -6,7 +6,7 @@ import {
   type NodeTypes,
   type ReactFlowProps,
 } from '@xyflow/react';
-import { useCallback, useEffect, useMemo, useRef, useState, type DragEventHandler } from 'react';
+import { useCallback, useEffect, useMemo, useReducer, useRef, type DragEventHandler } from 'react';
 
 import { isCanvasNodeEmbeddedControlTarget } from '../../components/canvas/canvasNodeInteractionBoundary';
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
@@ -14,6 +14,10 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 import { buildCanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
+import {
+  createCanvasNodeContextSurfaceState,
+  reduceCanvasNodeContextSurface,
+} from './canvasNodeContextSurfaceModel';
 import { CanvasViewportSurfaceView } from './CanvasViewportSurfaceView';
 import { resolveCanvasViewportStyle } from './canvasViewportStyle';
 import {
@@ -57,6 +61,7 @@ type CanvasViewportProps = {
   readonly canOpenCanvasSettings?: boolean;
   readonly onOpenCanvasSettings?: () => void;
   readonly contextMenuPresenter?: CanvasContextMenuPresenter;
+  readonly externalNodeSurfaceActive?: boolean;
 };
 
 type CanvasViewportWithPresenterProps = CanvasViewportProps &
@@ -65,20 +70,6 @@ type CanvasViewportWithPresenterProps = CanvasViewportProps &
     renderContextMenuView: boolean;
   }>;
 
-type NodeHealthPopoverModel = Readonly<{
-  nodeId: string;
-  detail: GraphNodeOperationalDetail;
-  position: { x: number; y: number };
-}>;
-
-type NodeFloatingToolbarAnchor = Readonly<{
-  nodeId: string;
-  nodeName: string;
-  position: { x: number; y: number };
-  nodeTop: number;
-  contextMenuTrigger: Element | null;
-}>;
-
 function CanvasViewportWithPresenter({
   contextMenuPresenter,
   renderContextMenuView,
@@ -86,10 +77,19 @@ function CanvasViewportWithPresenter({
 }: CanvasViewportWithPresenterProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const viewportRef = useRef<HTMLDivElement>(null);
-  const [nodeFloatingToolbarAnchor, setNodeFloatingToolbarAnchor] =
-    useState<NodeFloatingToolbarAnchor | null>(null);
-  const [nodeHealthPopoverModel, setNodeHealthPopoverModel] =
-    useState<NodeHealthPopoverModel | null>(null);
+  const [nodeContextSurfaceState, dispatchNodeContextSurface] = useReducer(
+    reduceCanvasNodeContextSurface,
+    undefined,
+    createCanvasNodeContextSurfaceState
+  );
+  const nodeFloatingToolbarAnchor =
+    nodeContextSurfaceState.activeSurface.kind === 'toolbar'
+      ? nodeContextSurfaceState.activeSurface.anchor
+      : null;
+  const nodeHealthPopoverModel =
+    nodeContextSurfaceState.activeSurface.kind === 'health'
+      ? nodeContextSurfaceState.activeSurface.model
+      : null;
   const nodeHealthPopoverTriggerRef = useRef<HTMLElement | null>(null);
   const resolvedCanvasPalette = normalizeCanvasPaletteId(props.canvasPalette);
   const canvasStyle = resolveCanvasViewportStyle(resolvedCanvasPalette, props.gridSize, {
@@ -97,10 +97,10 @@ function CanvasViewportWithPresenter({
     gridColor: props.canvasGridColor,
   });
   const closeNodeFloatingToolbar = useCallback(() => {
-    setNodeFloatingToolbarAnchor(null);
+    dispatchNodeContextSurface({ type: 'close-transient-surface' });
   }, []);
   const closeNodeHealthPopover = useCallback((restoreTriggerFocus = false) => {
-    setNodeHealthPopoverModel(null);
+    dispatchNodeContextSurface({ type: 'close-transient-surface' });
     const trigger = nodeHealthPopoverTriggerRef.current;
     nodeHealthPopoverTriggerRef.current = null;
     if (restoreTriggerFocus && trigger?.isConnected) {
@@ -110,21 +110,37 @@ function CanvasViewportWithPresenter({
 
   const openNodeHealthPopover = useCallback(
     (nodeId: string, detail: GraphNodeOperationalDetail, anchorElement: HTMLElement) => {
+      if (nodeContextSurfaceState.externalSurfaceActive) {
+        return;
+      }
       const anchorRect = anchorElement.getBoundingClientRect();
       const viewportRect = viewportRef.current?.getBoundingClientRect();
       nodeHealthPopoverTriggerRef.current = anchorElement;
-      setNodeFloatingToolbarAnchor(null);
-      setNodeHealthPopoverModel({
-        nodeId,
-        detail,
-        position: {
-          x: Math.max(8, anchorRect.left - (viewportRect?.left ?? 0)),
-          y: Math.max(8, anchorRect.bottom - (viewportRect?.top ?? 0) + 8),
+      dispatchNodeContextSurface({
+        type: 'open-health',
+        model: {
+          nodeId,
+          detail,
+          position: {
+            x: Math.max(8, anchorRect.left - (viewportRect?.left ?? 0)),
+            y: Math.max(8, anchorRect.bottom - (viewportRect?.top ?? 0) + 8),
+          },
         },
       });
     },
-    []
+    [nodeContextSurfaceState.externalSurfaceActive]
   );
+
+  useEffect(() => {
+    const externalSurfaceActive = props.externalNodeSurfaceActive ?? false;
+    if (externalSurfaceActive) {
+      nodeHealthPopoverTriggerRef.current = null;
+    }
+    dispatchNodeContextSurface({
+      type: 'synchronize-external-surface',
+      active: externalSurfaceActive,
+    });
+  }, [props.externalNodeSurfaceActive]);
 
   const nodesWithOperationalDetails = useMemo(
     () =>
@@ -231,7 +247,10 @@ function CanvasViewportWithPresenter({
       (node) => node.id === nodeFloatingToolbarAnchor.nodeId
     );
     if (!toolbarOwnerStillExists) {
-      setNodeFloatingToolbarAnchor(null);
+      dispatchNodeContextSurface({
+        type: 'remove-node',
+        nodeId: nodeFloatingToolbarAnchor.nodeId,
+      });
     }
   }, [nodeFloatingToolbarAnchor, props.nodesWithImpact]);
 
@@ -245,7 +264,10 @@ function CanvasViewportWithPresenter({
     );
     if (!popoverOwnerStillExists) {
       nodeHealthPopoverTriggerRef.current = null;
-      setNodeHealthPopoverModel(null);
+      dispatchNodeContextSurface({
+        type: 'remove-node',
+        nodeId: nodeHealthPopoverModel.nodeId,
+      });
     }
   }, [nodeHealthPopoverModel, props.nodesWithImpact]);
 
@@ -306,12 +328,15 @@ function CanvasViewportWithPresenter({
           ? { x: Math.max(8, event.clientX - 8), y: Math.max(8, event.clientY - 52) }
           : { x: Math.max(8, nodeRect.left), y: Math.max(8, nodeRect.top - 52) };
 
-      setNodeFloatingToolbarAnchor({
-        nodeId: node.id,
-        nodeName,
-        position: toolbarPosition,
-        nodeTop: nodeRect?.top ?? toolbarPosition.y + 52,
-        contextMenuTrigger,
+      dispatchNodeContextSurface({
+        type: 'open-toolbar',
+        anchor: {
+          nodeId: node.id,
+          nodeName,
+          position: toolbarPosition,
+          nodeTop: nodeRect?.top ?? toolbarPosition.y + 52,
+          contextMenuTrigger,
+        },
       });
       props.onNodeClick(event, node);
     },

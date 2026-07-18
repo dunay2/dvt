@@ -7,6 +7,16 @@ import {
   type NodePropertySection,
 } from './nodePropertiesReadModel';
 
+const presentationCopy = {
+  columnsLabel: 'Columns',
+  declaredColumnsDetailTemplate: '{count} declared columns.',
+  inheritedColumnsDetailTemplate: '{count} inherited columns.',
+  noColumnsDetail: 'No columns.',
+  codeLabel: 'Code',
+  workspaceCodeDetailTemplate: 'Code lives at {path}.',
+  codeUnavailableMessage: 'No code.',
+} as const;
+
 const expectedSectionIds = [
   'general',
   'columns',
@@ -653,6 +663,7 @@ describe('nodePropertiesReadModel', () => {
       role: 'transform',
       status: 'idle',
       tags: [],
+      path: 'models/orders.sql',
       metadata: {
         config: {
           selectedColumns: ['source-orders.customer'],
@@ -670,6 +681,7 @@ describe('nodePropertiesReadModel', () => {
       node: modelNode,
       nodes: [source, modelNode],
       edges: [edge],
+      presentationCopy,
     });
 
     expectTableCells(sectionById(model, 'columns'), 'source-orders.order_id', {
@@ -688,6 +700,14 @@ describe('nodePropertiesReadModel', () => {
       reference: 'source-orders.customer',
       selection: 'selected',
     });
+    expect(sectionById(model, 'columns').description).toBe('2 inherited columns.');
+    const codeSection = sectionById(model, 'code');
+    expect(codeSection).toMatchObject({
+      label: 'Code',
+      description: 'Code lives at models/orders.sql.',
+    });
+    expect(codeSection.emptyState).toBeUndefined();
+    expect(codeSection.code).toBeUndefined();
   });
 
   it.each([

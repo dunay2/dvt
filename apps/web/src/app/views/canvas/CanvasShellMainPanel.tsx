@@ -162,6 +162,7 @@ function CanvasShellViewport({
       canOpenCanvasSettings={typeof onOpenCanvasSettings === 'function'}
       onOpenCanvasSettings={onOpenCanvasSettings}
       contextMenuPresenter={contextMenuPresenter}
+      externalNodeSurfaceActive={panels.inspectorNode != null || layout.contextualWorkbench != null}
     />
   );
 }

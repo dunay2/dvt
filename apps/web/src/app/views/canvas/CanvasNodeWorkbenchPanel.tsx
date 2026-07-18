@@ -37,6 +37,7 @@ import {
 } from './canvasNodeWorkbenchContribution';
 import { resolveNodeWorkbenchPrimarySectionIds } from './canvasNodeWorkbenchSectionStrategy';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
@@ -205,7 +206,12 @@ export function CanvasNodeWorkbenchPanel({
   const [authoringTagsText, setAuthoringTagsText] = useState(() =>
     createCanvasInspectorNodeDraft(node).tags.join(', ')
   );
-  const baseModel = buildNodePropertiesReadModel({ node, nodes, edges });
+  const baseModel = buildNodePropertiesReadModel({
+    node,
+    nodes,
+    edges,
+    presentationCopy: buildCanvasNodePresentationCopy(copy),
+  });
   const contributionModel = resolveCanvasNodeWorkbenchContributions(node.id, contributions);
   const model = buildNodeWorkbenchReadModel({
     model: baseModel,

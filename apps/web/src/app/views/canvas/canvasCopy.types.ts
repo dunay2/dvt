@@ -219,6 +219,13 @@ export type CanvasViewCopy = {
   readonly nodeRemovedSuffix: string;
   readonly inspectorEditablePropertiesTitle: string;
   readonly inspectorEditablePropertiesDescription: string;
+  readonly nodePresentationColumnsLabel: string;
+  readonly nodePresentationDeclaredColumnsDetailTemplate: string;
+  readonly nodePresentationInheritedColumnsDetailTemplate: string;
+  readonly nodePresentationNoColumnsDetail: string;
+  readonly nodePresentationCodeLabel: string;
+  readonly nodePresentationWorkspaceCodeDetailTemplate: string;
+  readonly nodePresentationCodeUnavailableMessage: string;
   readonly nodeWorkbenchCloseLabel: string;
   readonly nodeWorkbenchMoveLabel: string;
   readonly nodeWorkbenchMoreLabel: string;

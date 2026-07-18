@@ -134,6 +134,34 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.editablePropertiesDescription',
     fallback: 'Name, tags, and description saved with this canvas.',
   },
+  nodePresentationColumnsLabel: {
+    key: 'canvas.nodePresentation.columnsLabel',
+    fallback: 'Columns',
+  },
+  nodePresentationDeclaredColumnsDetailTemplate: {
+    key: 'canvas.nodePresentation.declaredColumnsDetailTemplate',
+    fallback: '{count} columns declared by this node.',
+  },
+  nodePresentationInheritedColumnsDetailTemplate: {
+    key: 'canvas.nodePresentation.inheritedColumnsDetailTemplate',
+    fallback: '{count} columns inherited from connected inputs; none declared by this node.',
+  },
+  nodePresentationNoColumnsDetail: {
+    key: 'canvas.nodePresentation.noColumnsDetail',
+    fallback: 'No declared or inherited columns are available for this node.',
+  },
+  nodePresentationCodeLabel: {
+    key: 'canvas.nodePresentation.codeLabel',
+    fallback: 'Code',
+  },
+  nodePresentationWorkspaceCodeDetailTemplate: {
+    key: 'canvas.nodePresentation.workspaceCodeDetailTemplate',
+    fallback: 'Code is stored in workspace file {path}. Open Code to inspect or edit it.',
+  },
+  nodePresentationCodeUnavailableMessage: {
+    key: 'canvas.nodePresentation.codeUnavailableMessage',
+    fallback: 'No inline code or workspace file is recorded for this node.',
+  },
   nodeWorkbenchCloseLabel: {
     key: 'canvas.nodeWorkbench.closeLabel',
     fallback: 'Close',
