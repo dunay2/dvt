@@ -111,4 +111,46 @@ describe('projectDbtManifest', () => {
       })
     ).toThrow('dbt parse produced a malformed graph resource.');
   });
+
+  it('preserves empty DBT resource descriptions as exact editable baselines', () => {
+    const projection = projectDbtManifest({
+      metadata: { dbt_version: '1.10.0', project_name: 'analytics' },
+      nodes: {
+        'model.analytics.empty_description': {
+          unique_id: 'model.analytics.empty_description',
+          resource_type: 'model',
+          name: 'empty_description',
+          package_name: 'analytics',
+          patch_path: 'analytics://models/schema.yml',
+          description: '',
+          depends_on: { nodes: [] },
+          columns: {},
+          tags: [],
+        },
+        'model.analytics.whitespace_description': {
+          unique_id: 'model.analytics.whitespace_description',
+          resource_type: 'model',
+          name: 'whitespace_description',
+          package_name: 'analytics',
+          patch_path: 'analytics://models/schema.yml',
+          description: '  ',
+          depends_on: { nodes: [] },
+          columns: {},
+          tags: [],
+        },
+      },
+      sources: {},
+    });
+
+    expect(
+      projection.resources.find(
+        (resource) => resource.uniqueId === 'model.analytics.empty_description'
+      )?.description
+    ).toBe('');
+    expect(
+      projection.resources.find(
+        (resource) => resource.uniqueId === 'model.analytics.whitespace_description'
+      )?.description
+    ).toBe('  ');
+  });
 });

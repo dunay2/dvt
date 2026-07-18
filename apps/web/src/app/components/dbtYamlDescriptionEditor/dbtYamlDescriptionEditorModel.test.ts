@@ -15,9 +15,12 @@ describe('dbtYamlDescriptionEditorModel', () => {
 
   it('detects changes against the exact analyzed baseline', () => {
     const state = createDbtYamlDescriptionEditorState(null);
+    const emptyScalarState = createDbtYamlDescriptionEditorState('');
 
     expect(hasDbtYamlDescriptionChanges(state)).toBe(false);
     expect(hasDbtYamlDescriptionChanges({ ...state, draft: 'Order grain.' })).toBe(true);
+    expect(hasDbtYamlDescriptionChanges(emptyScalarState)).toBe(false);
+    expect(hasDbtYamlDescriptionChanges({ ...emptyScalarState, draft: 'Order grain.' })).toBe(true);
   });
 
   it('identifies only asynchronous command phases as busy', () => {

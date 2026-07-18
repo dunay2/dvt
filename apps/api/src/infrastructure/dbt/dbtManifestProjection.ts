@@ -135,7 +135,7 @@ function projectResource(
     resourcePackageName: packageName,
     rootProjectName,
   });
-  const description = stringValue(resource.description);
+  const description = stringScalarValue(resource.description);
   const columns = collectionValues(resource.columns)
     .map((columnValue) => {
       const column = record(columnValue);
@@ -238,6 +238,10 @@ function collectionValues(value: unknown): readonly unknown[] {
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === 'string' && value.trim().length > 0 ? value : undefined;
+}
+
+function stringScalarValue(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
 }
 
 function stringArray(value: unknown): readonly string[] {

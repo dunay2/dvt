@@ -44,7 +44,10 @@ export function normalizeDbtYamlDescriptionDraft(value: string): string | null {
 }
 
 export function hasDbtYamlDescriptionChanges(state: DbtYamlDescriptionEditorState): boolean {
-  return normalizeDbtYamlDescriptionDraft(state.draft) !== state.baselineDescription;
+  return (
+    state.draft !== state.baselineDescription &&
+    normalizeDbtYamlDescriptionDraft(state.draft) !== state.baselineDescription
+  );
 }
 
 export function isDbtYamlDescriptionEditorBusy(state: DbtYamlDescriptionEditorState): boolean {
