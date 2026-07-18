@@ -19,7 +19,12 @@ installWorkspaceScopeHarness();
 const PROPOSAL = DbtYamlDescriptionEditProposalSchema.parse({
   schemaVersion: 'dbt-yaml-description-edit-proposal.v1',
   canvasId: 'analytics-canvas',
-  resource: { uniqueId: 'model.analytics.orders', resourceType: 'model', name: 'orders' },
+  resource: {
+    uniqueId: 'model.analytics.orders',
+    resourceType: 'model',
+    name: 'orders',
+    packageName: 'analytics',
+  },
   path: 'models/orders.yml',
   previousDescription: 'Old description',
   nextDescription: 'New description',
@@ -48,6 +53,7 @@ const APPLIED = DbtYamlDescriptionAppliedReceiptSchema.parse({
     freshness: 'fresh',
     analysisSha256: '6'.repeat(64),
     projectContentSetSha256: '7'.repeat(64),
+    targetContentSha256: PROPOSAL.candidateContentSha256,
   },
 });
 
@@ -68,6 +74,7 @@ const REVERTED = DbtYamlDescriptionRevertedReceiptSchema.parse({
     freshness: 'fresh',
     analysisSha256: 'b'.repeat(64),
     projectContentSetSha256: 'c'.repeat(64),
+    targetContentSha256: '9'.repeat(64),
   },
 });
 
@@ -96,7 +103,7 @@ describe('dbtYamlDescriptionEdit API port', () => {
       APPLIED
     );
     await expect(
-      port.revert({ appliedReceipt: APPLIED, idempotencyKey: 'revert-1' })
+      port.revert({ appliedReceiptId: APPLIED.receiptId, idempotencyKey: 'revert-1' })
     ).resolves.toEqual(REVERTED);
 
     const query = new URLSearchParams(scope).toString();

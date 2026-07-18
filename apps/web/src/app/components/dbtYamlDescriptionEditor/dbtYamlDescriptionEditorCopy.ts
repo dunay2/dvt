@@ -24,6 +24,9 @@ export type DbtYamlDescriptionEditorCopy = Readonly<{
   diffLabel: string;
   appliedTitle: string;
   appliedMessage: string;
+  analysisStaleMessage: string;
+  analysisInvalidMessage: string;
+  analysisUnavailableMessage: string;
   receiptLabel: string;
   receiptIdLabel: string;
   fileRevisionLabel: string;
@@ -83,6 +86,18 @@ const COPY_BY_KEY: Record<keyof DbtYamlDescriptionEditorCopy, LocalizableString>
   appliedMessage: {
     key: 'dbtDescription.appliedMessage',
     fallback: 'The file changed conditionally and the dbt project was analyzed again.',
+  },
+  analysisStaleMessage: {
+    key: 'dbtDescription.analysisStaleMessage',
+    fallback: 'The file changed, but Canvas is showing the last valid project analysis.',
+  },
+  analysisInvalidMessage: {
+    key: 'dbtDescription.analysisInvalidMessage',
+    fallback: 'The file changed, but the resulting dbt project analysis is invalid.',
+  },
+  analysisUnavailableMessage: {
+    key: 'dbtDescription.analysisUnavailableMessage',
+    fallback: 'The file changed, but no authoritative dbt project analysis is available.',
   },
   receiptLabel: { key: 'dbtDescription.receiptLabel', fallback: 'Applied receipt' },
   receiptIdLabel: { key: 'dbtDescription.receiptIdLabel', fallback: 'Receipt' },
@@ -187,6 +202,12 @@ const SPANISH_COPY: DbtYamlDescriptionEditorCopy = {
   diffLabel: 'Diff YAML propuesto',
   appliedTitle: 'Descripcion actualizada',
   appliedMessage: 'El archivo cambio de forma condicional y el proyecto dbt se analizo de nuevo.',
+  analysisStaleMessage:
+    'El archivo cambio, pero Canvas muestra el ultimo analisis valido del proyecto.',
+  analysisInvalidMessage:
+    'El archivo cambio, pero el analisis resultante del proyecto dbt no es valido.',
+  analysisUnavailableMessage:
+    'El archivo cambio, pero no hay un analisis autoritativo disponible del proyecto dbt.',
   receiptLabel: 'Recibo aplicado',
   receiptIdLabel: 'Recibo',
   fileRevisionLabel: 'Revision del archivo',

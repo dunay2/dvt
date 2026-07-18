@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import { resolveDbtYamlDescriptionAnalysisPresentation } from './dbtYamlDescriptionAnalysisPresentation';
 import type { DbtYamlDescriptionEditorCopy } from './dbtYamlDescriptionEditorCopy';
 import {
   hasDbtYamlDescriptionChanges,
@@ -53,22 +54,6 @@ function ReceiptReference({
   );
 }
 
-function resolveAnalysisStatusLabel(
-  freshness: DbtYamlDescriptionAppliedReceipt['analysis']['freshness'],
-  copy: DbtYamlDescriptionEditorCopy
-): string {
-  switch (freshness) {
-    case 'fresh':
-      return copy.analysisFreshLabel;
-    case 'stale-last-valid':
-      return copy.analysisStaleLabel;
-    case 'invalid':
-      return copy.analysisInvalidLabel;
-    case 'unavailable':
-      return copy.analysisUnavailableLabel;
-  }
-}
-
 function AppliedReceiptView({
   copy,
   receipt,
@@ -76,8 +61,14 @@ function AppliedReceiptView({
   copy: DbtYamlDescriptionEditorCopy;
   receipt: DbtYamlDescriptionAppliedReceipt;
 }>): JSX.Element {
+  const analysis = resolveDbtYamlDescriptionAnalysisPresentation(receipt.analysis.freshness, copy);
+
   return (
-    <section data-slot="dbt-yaml-description-receipt" className={tokens.receipt}>
+    <section
+      data-slot="dbt-yaml-description-receipt"
+      data-analysis-tone={analysis.tone}
+      className={tokens.receipt}
+    >
       <h4 className={tokens.receiptTitle}>{copy.receiptLabel}</h4>
       <TooltipProvider delayDuration={250}>
         <dl className={tokens.receiptGrid}>
@@ -104,8 +95,11 @@ function AppliedReceiptView({
             />
           </dd>
           <dt className={tokens.receiptLabel}>{copy.analysisStatusLabel}</dt>
-          <dd className={tokens.receiptStatus}>
-            {resolveAnalysisStatusLabel(receipt.analysis.freshness, copy)}
+          <dd
+            data-analysis-freshness={receipt.analysis.freshness}
+            className={tokens.receiptStatus[analysis.tone]}
+          >
+            {analysis.label}
           </dd>
         </dl>
       </TooltipProvider>
@@ -130,6 +124,13 @@ export function DbtYamlDescriptionEditorView({
   const busy = isDbtYamlDescriptionEditorBusy(state);
   const hasChanges = hasDbtYamlDescriptionChanges(state);
   const readOnly = !['editing', 'proposing'].includes(state.phase);
+  const appliedAnalysis =
+    state.appliedReceipt == null
+      ? null
+      : resolveDbtYamlDescriptionAnalysisPresentation(
+          state.appliedReceipt.analysis.freshness,
+          copy
+        );
 
   useEffect(() => {
     if (state.phase === 'reviewing') {
@@ -175,8 +176,8 @@ export function DbtYamlDescriptionEditorView({
         </Alert>
       )}
 
-      {state.refreshFailureMessage == null ? null : (
-        <Alert className={tokens.warningAlert}>
+      {state.refreshFailureMessage == null || state.appliedReceipt != null ? null : (
+        <Alert className={tokens.analysisAlert.error}>
           <AlertTriangle />
           <AlertDescription>{state.refreshFailureMessage}</AlertDescription>
         </Alert>
@@ -200,11 +201,25 @@ export function DbtYamlDescriptionEditorView({
         </Alert>
       )}
 
-      {state.phase === 'applied' || state.phase === 'reverting' ? (
-        <Alert className={tokens.successAlert}>
-          <CheckCircle2 />
+      {(state.phase === 'applied' || state.phase === 'reverting') && appliedAnalysis != null ? (
+        <Alert
+          data-slot="dbt-yaml-description-applied-status"
+          data-analysis-tone={state.refreshFailureMessage == null ? appliedAnalysis.tone : 'error'}
+          className={
+            tokens.analysisAlert[
+              state.refreshFailureMessage == null ? appliedAnalysis.tone : 'error'
+            ]
+          }
+        >
+          {state.refreshFailureMessage == null && appliedAnalysis.tone === 'success' ? (
+            <CheckCircle2 />
+          ) : (
+            <AlertTriangle />
+          )}
           <AlertTitle>{copy.appliedTitle}</AlertTitle>
-          <AlertDescription>{copy.appliedMessage}</AlertDescription>
+          <AlertDescription>
+            {state.refreshFailureMessage ?? appliedAnalysis.message}
+          </AlertDescription>
         </Alert>
       ) : null}
 

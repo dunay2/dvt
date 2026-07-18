@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { fireEvent } from '@testing-library/dom';
+import type { DbtYamlDescriptionAppliedReceipt } from '@dvt/contracts';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -86,6 +87,7 @@ describe('DbtYamlDescriptionEditorView', () => {
           uniqueId: 'model.analytics.orders',
           resourceType: 'model' as const,
           name: 'orders',
+          packageName: 'analytics',
         },
         path: 'models/marts/schema.yml',
         previousDescription: 'Existing description.',
@@ -148,6 +150,7 @@ describe('DbtYamlDescriptionEditorView', () => {
                 uniqueId: 'model.analytics.orders',
                 resourceType: 'model',
                 name: 'orders',
+                packageName: 'analytics',
               },
               path: 'models/marts/schema.yml',
               previousDescription: 'Existing description.',
@@ -162,6 +165,7 @@ describe('DbtYamlDescriptionEditorView', () => {
                 freshness: 'fresh',
                 analysisSha256,
                 projectContentSetSha256,
+                targetContentSha256: appliedContentSha256,
               },
             },
           }}
@@ -186,5 +190,71 @@ describe('DbtYamlDescriptionEditorView', () => {
       receipt?.querySelector(`[data-full-value="${receiptId}"]`)?.getAttribute('aria-label')
     ).toContain(receiptId);
     expect(container.querySelector('[data-slot="dbt-yaml-description-revert"]')).not.toBeNull();
+  });
+
+  it('renders invalid analysis as an error instead of a green success', async () => {
+    const appliedContentSha256 = '5'.repeat(64);
+    const appliedReceipt: DbtYamlDescriptionAppliedReceipt = {
+      schemaVersion: 'dbt-yaml-description-edit-applied-receipt.v1',
+      receiptId: '4'.repeat(64),
+      canvasId: 'analytics',
+      resource: {
+        uniqueId: 'model.analytics.orders',
+        resourceType: 'model',
+        name: 'orders',
+        packageName: 'analytics',
+      },
+      path: 'models/marts/schema.yml',
+      previousDescription: 'Existing description.',
+      nextDescription: 'Changed description.',
+      expectedContentSha256: '1'.repeat(64),
+      appliedContentSha256,
+      proposalDigest: '3'.repeat(64),
+      idempotencyKey: 'apply-description-once',
+      requestHash: '8'.repeat(64),
+      deduplicated: false,
+      analysis: {
+        freshness: 'invalid',
+        analysisSha256: '6'.repeat(64),
+        projectContentSetSha256: '7'.repeat(64),
+        targetContentSha256: appliedContentSha256,
+      },
+    };
+
+    await act(async () => {
+      root.render(
+        <DbtYamlDescriptionEditorView
+          path={appliedReceipt.path}
+          copy={COPY}
+          state={{
+            ...createDbtYamlDescriptionEditorState(appliedReceipt.nextDescription),
+            phase: 'applied',
+            appliedReceipt,
+          }}
+          onDraftChange={vi.fn()}
+          onReview={vi.fn()}
+          onDiscardReview={vi.fn()}
+          onApply={vi.fn()}
+          onRevert={vi.fn()}
+          onReloadLatest={vi.fn()}
+          onContinueEditing={vi.fn()}
+        />
+      );
+    });
+
+    expect(
+      container
+        .querySelector('[data-slot="dbt-yaml-description-applied-status"]')
+        ?.getAttribute('data-analysis-tone')
+    ).toBe('error');
+    expect(
+      container
+        .querySelector('[data-slot="dbt-yaml-description-receipt"]')
+        ?.getAttribute('data-analysis-tone')
+    ).toBe('error');
+    expect(container.querySelector('[data-analysis-freshness="invalid"]')?.textContent).toContain(
+      COPY.analysisInvalidLabel
+    );
+    expect(container.textContent).toContain(COPY.analysisInvalidMessage);
   });
 });

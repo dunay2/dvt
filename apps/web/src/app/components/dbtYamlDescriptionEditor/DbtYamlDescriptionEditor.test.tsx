@@ -34,6 +34,7 @@ const PROPOSAL = DbtYamlDescriptionEditProposalSchema.parse({
     uniqueId: NODE.id,
     resourceType: 'model',
     name: NODE.name,
+    packageName: 'analytics',
   },
   path: 'models/marts/schema.yml',
   previousDescription: NODE.description,
@@ -63,6 +64,7 @@ const APPLIED_RECEIPT = DbtYamlDescriptionAppliedReceiptSchema.parse({
     freshness: 'fresh',
     analysisSha256: '6'.repeat(64),
     projectContentSetSha256: '7'.repeat(64),
+    targetContentSha256: PROPOSAL.candidateContentSha256,
   },
 });
 
@@ -83,6 +85,7 @@ const REVERTED_RECEIPT = DbtYamlDescriptionRevertedReceiptSchema.parse({
     freshness: 'fresh',
     analysisSha256: 'b'.repeat(64),
     projectContentSetSha256: 'c'.repeat(64),
+    targetContentSha256: '9'.repeat(64),
   },
 });
 
@@ -163,7 +166,7 @@ describe('DbtYamlDescriptionEditor', () => {
     });
     await waitFor(() => {
       expect(port.revert).toHaveBeenCalledWith({
-        appliedReceipt: APPLIED_RECEIPT,
+        appliedReceiptId: APPLIED_RECEIPT.receiptId,
         idempotencyKey: REVERTED_RECEIPT.idempotencyKey,
       });
       expect(onProjectChanged).toHaveBeenCalledTimes(2);

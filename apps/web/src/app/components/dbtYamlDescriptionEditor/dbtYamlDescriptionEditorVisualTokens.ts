@@ -20,6 +20,15 @@ export const dbtYamlDescriptionEditorVisualTokens = Object.freeze({
   receiptLabel: 'text-[11px] text-(--text-muted)',
   receiptValue:
     'min-w-0 truncate font-mono text-[11px] text-(--text-default) underline decoration-dotted underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
-  receiptStatus: 'text-[11px] font-medium text-(--status-success)',
+  receiptStatus: Object.freeze({
+    success: 'text-[11px] font-medium text-(--status-success)',
+    warning: 'text-[11px] font-medium text-(--status-warning)',
+    error: 'text-[11px] font-medium text-(--status-error)',
+  }),
+  analysisAlert: Object.freeze({
+    success: 'border-(--status-success) bg-(--surface-elevated)',
+    warning: 'border-(--status-warning) bg-(--surface-elevated)',
+    error: 'border-(--status-error) bg-(--surface-elevated)',
+  }),
   spinner: 'animate-spin',
 } as const);

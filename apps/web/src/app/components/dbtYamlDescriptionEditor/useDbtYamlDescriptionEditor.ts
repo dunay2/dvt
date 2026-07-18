@@ -229,7 +229,10 @@ export function useDbtYamlDescriptionEditor(options: UseDbtYamlDescriptionEditor
     revertKeyByReceipt.current.set(appliedReceipt.receiptId, idempotencyKey);
     setState((current) => ({ ...current, phase: 'reverting', failureMessage: null }));
     try {
-      const receipt = await port.revert({ appliedReceipt, idempotencyKey });
+      const receipt = await port.revert({
+        appliedReceiptId: appliedReceipt.receiptId,
+        idempotencyKey,
+      });
       if (operationRevision.current !== revision) return;
       setState((current) => ({
         ...current,
