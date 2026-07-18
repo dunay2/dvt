@@ -14,6 +14,7 @@ function buildProjection(): DbtProjectGraphProjection {
     freshness: 'fresh',
     projectRevision: {
       projectRoot: '.',
+      projectName: 'analytics',
       contentSetSha256: '1'.repeat(64),
       analyzedAt: '2026-07-13T10:00:00.000Z',
       analyzerVersion: 'dbt-cli-v1',
