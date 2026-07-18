@@ -1,0 +1,18 @@
+/** Owned concern: centralize visual tokens for the dbt YAML description editor. */
+export const dbtYamlDescriptionEditorVisualTokens = Object.freeze({
+  root: 'space-y-3 border-t border-(--border-default) pt-3',
+  headingRow: 'flex min-w-0 items-start justify-between gap-3',
+  formGroup: 'space-y-1.5',
+  title: 'text-xs font-semibold uppercase text-(--text-default)',
+  path: 'max-w-[16rem] truncate font-mono text-[11px] text-(--text-muted)',
+  label: 'text-xs font-medium text-(--text-default)',
+  hint: 'text-[11px] leading-4 text-(--text-muted)',
+  textarea: 'min-h-28 font-mono text-xs leading-5',
+  metadataRow: 'flex items-center justify-between gap-3 text-[11px] text-(--text-muted)',
+  actions: 'flex flex-wrap items-center justify-end gap-2',
+  diff: 'max-h-64 overflow-auto rounded-sm border border-(--border-default) bg-(--surface-canvas) p-3 font-mono text-[11px] leading-5 text-(--text-default)',
+  alert: 'border-(--border-default) bg-(--surface-elevated)',
+  successAlert: 'border-(--status-success) bg-(--surface-elevated)',
+  warningAlert: 'border-(--status-warning) bg-(--surface-elevated)',
+  spinner: 'animate-spin',
+} as const);

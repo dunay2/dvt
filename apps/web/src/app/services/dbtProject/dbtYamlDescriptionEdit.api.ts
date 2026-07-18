@@ -18,6 +18,18 @@ const DBT_YAML_DESCRIPTION_EDIT_ENDPOINT = Object.freeze({
   revert: '/workspace/dbt/description-edits/reverts',
 } as const);
 
+export const DBT_YAML_DESCRIPTION_EDIT_HTTP_REASON = Object.freeze({
+  authorityRequired: 'dbt_project_file_authority_required',
+  documentInvalid: 'dbt_yaml_description_document_invalid',
+  idempotencyConflict: 'dbt_yaml_description_idempotency_conflict',
+  proposalMismatch: 'dbt_yaml_description_proposal_mismatch',
+  receiptInvalid: 'dbt_yaml_description_receipt_invalid',
+  resourceAmbiguous: 'dbt_yaml_description_resource_ambiguous',
+  resourceNotFound: 'dbt_yaml_description_resource_not_found',
+  resourceUnsupported: 'dbt_yaml_description_resource_unsupported',
+  revisionConflict: 'dbt_yaml_description_revision_conflict',
+} as const);
+
 function buildScopedEndpoint(endpoint: string): string {
   return `${endpoint}?${new URLSearchParams(readWorkspaceFilesScope()).toString()}`;
 }
