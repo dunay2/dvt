@@ -221,6 +221,10 @@ export type CanvasViewCopy = {
   readonly inspectorEditablePropertiesDescription: string;
   readonly nodeWorkbenchCloseLabel: string;
   readonly nodeWorkbenchMoreLabel: string;
+  readonly sqlContextWorkbenchNodeTitle: string;
+  readonly sqlContextWorkbenchProjectTitle: string;
+  readonly sqlContextWorkbenchProjectDescription: string;
+  readonly sqlContextWorkbenchLoadingMessage: string;
   readonly inspectorNodeNameLabel: string;
   readonly inspectorNodeTagsLabel: string;
   readonly inspectorNodeTagsPlaceholder: string;

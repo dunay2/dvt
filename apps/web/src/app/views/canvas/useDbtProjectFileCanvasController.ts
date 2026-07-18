@@ -29,6 +29,7 @@ import {
   resolveCanvasExecutionSelectionLastPreviewRevision,
 } from './canvasExecutionSelectionRecovery';
 import { refreshCanvasExecutionSelectionAuthority } from './canvasExecutionSelectionRecoveryAuthorityAdapter';
+import type { SqlContextWorkbenchTarget } from './sqlContextWorkbenchModel';
 import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
@@ -38,10 +39,6 @@ const EMPTY_CANONICAL_EDGES: CanonicalEdge[] = [];
 const DBT_PROJECT_FILE_NODE_TYPES: NodeTypes = {
   dbtNode: DbtNodeComponent,
 };
-
-type ProjectCodeWorkbenchState = Readonly<{
-  initialPath?: string;
-}> | null;
 
 function unsupportedSemanticMutation(commandName: string): never {
   throw new Error(
@@ -131,7 +128,9 @@ export function useDbtProjectFileCanvasController(
     toggleImpactOverlay,
     workspaceLayoutKey,
   } = store;
-  const [projectCodeWorkbench, setProjectCodeWorkbench] = useState<ProjectCodeWorkbenchState>(null);
+  const [codeWorkbenchTarget, setCodeWorkbenchTarget] = useState<SqlContextWorkbenchTarget | null>(
+    null
+  );
   const [importedNodeFocusIds, setImportedNodeFocusIds] = useState<string[]>([]);
   const layoutKey = useMemo(
     () => buildLayoutKey(workspaceLayoutKey, authorityBinding),
@@ -282,13 +281,16 @@ export function useDbtProjectFileCanvasController(
       }
 
       if (preferredTabId === 'code') {
+        if (node.path == null) {
+          return;
+        }
         setInspectorNode(null);
         hideInspectorPanel();
-        setProjectCodeWorkbench(node.path == null ? {} : { initialPath: node.path });
+        setCodeWorkbenchTarget({ kind: 'node', nodeId: node.id, initialPath: node.path });
         return;
       }
 
-      setProjectCodeWorkbench(null);
+      setCodeWorkbenchTarget(null);
       setInspectorNode(nodeId, preferredTabId ?? 'general');
       showInspectorPanel();
     },
@@ -304,6 +306,8 @@ export function useDbtProjectFileCanvasController(
           canMutateGraph: false,
           selectedForExecution: selectedNodeIds.includes(node.id),
           onInspectNode: openNodeWorkbench,
+          canOpenNodeCode: node.data.path != null,
+          onOpenNodeCode: node.data.path == null ? undefined : openNodeWorkbench,
           onToggleNodeSelection:
             execution.canSelectExecution &&
             canOfferDbtExecutionSelectionToggle({
@@ -389,9 +393,9 @@ export function useDbtProjectFileCanvasController(
     projection,
     projectionErrorMessage: query.isError ? buildProjectionErrorMessage(query.error) : null,
     layoutKey,
-    projectCodeWorkbench,
-    openProjectCode: () => setProjectCodeWorkbench({}),
-    closeProjectCode: () => setProjectCodeWorkbench(null),
+    codeWorkbenchTarget,
+    openProjectCode: () => setCodeWorkbenchTarget({ kind: 'project' }),
+    closeCodeWorkbench: () => setCodeWorkbenchTarget(null),
     refreshProjectGraphAfterMutation,
     reloadNodeDescription,
     canonicalNodes,

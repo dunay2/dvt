@@ -84,6 +84,57 @@ describe('CanvasViewport node floating toolbar', () => {
     expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
   });
 
+  it('uses the node-specific code command instead of reopening the inspector Code tab', async () => {
+    const onInspectNode = vi.fn();
+    const onOpenNodeCode = vi.fn();
+
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'model_orders',
+          position: { x: 160, y: 90 },
+          data: {
+            name: 'Orders model',
+            onInspectNode,
+            onOpenNodeCode,
+          },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('model_orders', 420, 240);
+    await act(async () => {
+      toolbarButton('Open node code')?.click();
+    });
+
+    expect(onOpenNodeCode).toHaveBeenCalledWith('model_orders');
+    expect(onInspectNode).not.toHaveBeenCalled();
+  });
+
+  it('does not offer Code when the node strategy declares no file authority', async () => {
+    await renderViewport({
+      onToggleFrozenNode: vi.fn(),
+      nodesWithImpact: [
+        {
+          id: 'metric_without_path',
+          position: { x: 160, y: 90 },
+          data: {
+            name: 'Metric without path',
+            canOpenNodeCode: false,
+            onInspectNode: vi.fn(),
+          },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('metric_without_path', 420, 240);
+
+    expect(toolbarButton('Open node code')).toBeNull();
+    expect(toolbarButton('Freeze node')).not.toBeNull();
+  });
+
   it('shows an unfreeze action when the clicked node is already frozen', async () => {
     await renderViewport({
       frozenNodeIds: new Set(['model_orders']),

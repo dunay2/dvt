@@ -45,7 +45,12 @@ export const canvasViewAuthoringCopyEs = {
   inspectorEditablePropertiesTitle: 'Propiedades editables',
   inspectorEditablePropertiesDescription: 'Nombre, tags y descripcion guardados con este canvas.',
   nodeWorkbenchCloseLabel: 'Cerrar',
-  nodeWorkbenchMoreLabel: 'Mas',
+  nodeWorkbenchMoreLabel: 'Más',
+  sqlContextWorkbenchNodeTitle: 'Código del nodo',
+  sqlContextWorkbenchProjectTitle: 'Código del proyecto',
+  sqlContextWorkbenchProjectDescription:
+    'Archivos del workspace en el alcance del proyecto activo.',
+  sqlContextWorkbenchLoadingMessage: 'Cargando código...',
   inspectorNodeNameLabel: 'Nombre',
   inspectorNodeTagsLabel: 'Tags',
   inspectorNodeTagsPlaceholder: 'finanzas, critico',

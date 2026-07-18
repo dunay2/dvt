@@ -153,7 +153,10 @@ function CanvasViewportWithPresenter({
       return null;
     }
 
-    const inspectNode = (ownerNode.data as Record<string, unknown>).onInspectNode;
+    const ownerNodeData = ownerNode.data as Record<string, unknown>;
+    const inspectNode = ownerNodeData.onInspectNode;
+    const canOpenNodeCode = ownerNodeData.canOpenNodeCode;
+    const openNodeCode = ownerNodeData.onOpenNodeCode;
     const contextMenuTrigger = nodeFloatingToolbarAnchor.contextMenuTrigger;
     const model = buildCanvasNodeFloatingToolbarModel({
       nodeId: nodeFloatingToolbarAnchor.nodeId,
@@ -161,12 +164,19 @@ function CanvasViewportWithPresenter({
       position: nodeFloatingToolbarAnchor.position,
       frozen: props.frozenNodeIds?.has(nodeFloatingToolbarAnchor.nodeId) ?? false,
       onOpenCode:
-        typeof inspectNode === 'function'
-          ? (nodeId) => {
-              closeNodeFloatingToolbar();
-              inspectNode(nodeId, 'code');
-            }
-          : undefined,
+        canOpenNodeCode === false
+          ? undefined
+          : typeof openNodeCode === 'function'
+            ? (nodeId) => {
+                closeNodeFloatingToolbar();
+                openNodeCode(nodeId);
+              }
+            : typeof inspectNode === 'function'
+              ? (nodeId) => {
+                  closeNodeFloatingToolbar();
+                  inspectNode(nodeId, 'code');
+                }
+              : undefined,
       onToggleFreeze: props.onToggleFrozenNode,
       onOpenMore:
         contextMenuTrigger == null

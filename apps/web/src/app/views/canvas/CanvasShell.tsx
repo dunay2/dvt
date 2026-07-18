@@ -1,7 +1,7 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-import { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasContextMenuLayer } from './CanvasContextMenuLayer';
@@ -14,8 +14,8 @@ import { DbtProjectImportDialog } from '../../components/dbtProjectImport/DbtPro
 import { useCanvasSourceImportDialogState } from './useCanvasSourceImportDialogState';
 import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type { CanvasShellContextualWorkbench, CanvasShellProps } from './canvasShell.types';
-
-const CodeWorkbench = lazy(() => import('../CodeView'));
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { SqlContextWorkbench } from './SqlContextWorkbench';
 
 export default function CanvasShell({
   layout,
@@ -29,6 +29,7 @@ export default function CanvasShell({
   canvasContextScreenToFlowPosition,
   onDbtProjectImported,
 }: CanvasShellProps): JSX.Element {
+  const copy = resolveCanvasViewCopy();
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
@@ -56,22 +57,17 @@ export default function CanvasShell({
 
     return {
       id: 'project-code',
-      title: 'Project code',
-      description: 'Workspace files in the active project scope.',
+      title: copy.sqlContextWorkbenchProjectTitle,
+      description: copy.sqlContextWorkbenchProjectDescription,
       onClose: () => setContextualWorkbenchId(null),
-      panel: (
-        <Suspense
-          fallback={
-            <div className="flex h-full items-center justify-center text-sm text-(--text-muted)">
-              Loading project code...
-            </div>
-          }
-        >
-          <CodeWorkbench publishRouteBootstrap={false} />
-        </Suspense>
-      ),
+      panel: <SqlContextWorkbench loadingMessage={copy.sqlContextWorkbenchLoadingMessage} />,
     };
-  }, [contextualWorkbenchId]);
+  }, [
+    contextualWorkbenchId,
+    copy.sqlContextWorkbenchLoadingMessage,
+    copy.sqlContextWorkbenchProjectDescription,
+    copy.sqlContextWorkbenchProjectTitle,
+  ]);
   const shellLayout = useMemo(
     () =>
       internalContextualWorkbench == null

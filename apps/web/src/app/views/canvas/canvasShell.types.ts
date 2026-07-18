@@ -57,7 +57,7 @@ export type CanvasShellLayout = {
 };
 
 export type CanvasShellContextualWorkbench = Readonly<{
-  id: 'project-code';
+  id: 'node-code' | 'project-code';
   title: string;
   description?: string;
   panel: React.ReactNode;
