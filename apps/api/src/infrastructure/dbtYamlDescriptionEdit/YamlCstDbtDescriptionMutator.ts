@@ -53,13 +53,24 @@ export class YamlCstDbtDescriptionMutator implements IDbtYamlDescriptionMutator 
       };
     }
 
+    if (
+      resource.map.flow === true &&
+      (descriptionPair === undefined || input.nextDescription === null)
+    ) {
+      throw new DbtYamlDescriptionDocumentInvalidError(
+        `Flow-style DBT resources do not support structural description edits: ${input.resource.uniqueId}`
+      );
+    }
+
+    const content = patchDescription({
+      content: input.content,
+      resource,
+      descriptionPair,
+      nextDescription: input.nextDescription,
+    });
+    assertPatchedDescription(content, input.resource, input.nextDescription);
     return {
-      content: patchDescription({
-        content: input.content,
-        resource,
-        descriptionPair,
-        nextDescription: input.nextDescription,
-      }),
+      content,
       previousDescription,
       nextDescription: input.nextDescription,
     };
@@ -190,6 +201,9 @@ function insertDescription(
 }
 
 function formatScalar(value: string, previousToken?: string): string {
+  if (/\r|\n/u.test(value)) {
+    return JSON.stringify(value);
+  }
   if (previousToken?.startsWith("'")) {
     return `'${value.replaceAll("'", "''")}'`;
   }
@@ -197,6 +211,33 @@ function formatScalar(value: string, previousToken?: string): string {
     return JSON.stringify(value);
   }
   return stringify(value).trimEnd();
+}
+
+function assertPatchedDescription(
+  content: string,
+  resource: DbtYamlDescriptionResourceIdentity,
+  expectedDescription: string | null
+): void {
+  const document = parseDocument(content, {
+    keepSourceTokens: true,
+    strict: true,
+    uniqueKeys: true,
+  });
+  if (document.errors.length > 0) {
+    throw new DbtYamlDescriptionDocumentInvalidError(
+      document.errors[0]?.message ?? 'Patched YAML is invalid.'
+    );
+  }
+  const patchedResource = locateResource(document, resource);
+  const actualDescription = readDescription(
+    findPair(patchedResource.map, 'description'),
+    resource.uniqueId
+  );
+  if (actualDescription !== expectedDescription) {
+    throw new DbtYamlDescriptionDocumentInvalidError(
+      `Patched description does not match the requested value: ${resource.uniqueId}`
+    );
+  }
 }
 
 function resolvePairLineRange(

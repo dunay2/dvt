@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { parseDocument } from 'yaml';
 
 import {
+  DbtYamlDescriptionDocumentInvalidError,
   DbtYamlDescriptionResourceAmbiguousError,
   DbtYamlDescriptionResourceNotFoundError,
 } from '../../../src/application/ports/dbtYamlDescriptionEdit.js';
@@ -123,6 +125,51 @@ describe('YamlCstDbtDescriptionMutator', () => {
 
     expect(result.previousDescription).toBe('Temporary description');
     expect(result.content).toBe(content.replace('    description: "Temporary description"\n', ''));
+  });
+
+  it('encodes multiline descriptions as valid YAML without changing unrelated bytes', () => {
+    const content = [
+      'version: 2',
+      'models:',
+      '  - name: orders',
+      '    description: Old description',
+      '    tags: [finance, daily] # preserve',
+      '',
+    ].join('\n');
+
+    const result = mutator.mutate({
+      content,
+      resource: {
+        uniqueId: 'model.shop.orders',
+        resourceType: 'model',
+        name: 'orders',
+      },
+      nextDescription: 'Canonical orders.\nIncludes settled and pending records.',
+    });
+
+    const parsed = parseDocument(result.content, { strict: true, uniqueKeys: true });
+    expect(parsed.errors).toEqual([]);
+    expect(parsed.getIn(['models', 0, 'description'])).toBe(
+      'Canonical orders.\nIncludes settled and pending records.'
+    );
+    expect(result.content).toContain('    tags: [finance, daily] # preserve');
+  });
+
+  it('fails closed instead of structurally editing a flow-style resource map', () => {
+    const content = 'version: 2\nmodels: [{ name: orders, tags: [finance] }]\n';
+
+    expect(() =>
+      mutator.mutate({
+        content,
+        resource: {
+          uniqueId: 'model.shop.orders',
+          resourceType: 'model',
+          name: 'orders',
+        },
+        nextDescription: 'Canonical orders',
+      })
+    ).toThrow(DbtYamlDescriptionDocumentInvalidError);
+    expect(parseDocument(content).errors).toEqual([]);
   });
 
   it('rejects missing and duplicate resource identities', () => {
