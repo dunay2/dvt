@@ -11,8 +11,13 @@ const COPY = {
   synchronized: { label: 'Synchronized', message: 'Working tree matches the editor.' },
   modified: { label: 'Modified', message: 'Changes are waiting to synchronize.' },
   syncing: { label: 'Syncing', message: 'Updating the working tree.' },
+  reconciling: { label: 'Analyzing', message: 'Refreshing authoritative analysis.' },
   conflict: { label: 'Conflict', message: 'Reload the newer working-tree revision.' },
   failed: { label: 'Update failed', message: 'The working tree could not be updated.' },
+  reconciliation_failed: {
+    label: 'Analysis failed',
+    message: 'The authoritative analysis could not be refreshed.',
+  },
   read_only: { label: 'Read only', message: 'This file cannot be changed.' },
   retryLabel: 'Retry',
   reloadLabel: 'Reload file',
@@ -57,6 +62,7 @@ describe('CodeWorkingTreeStatus', () => {
     ['synchronized', 'Synchronized', 'Working tree matches the editor.'],
     ['modified', 'Modified', 'Changes are waiting to synchronize.'],
     ['syncing', 'Syncing', 'Updating the working tree.'],
+    ['reconciling', 'Analyzing', 'Refreshing authoritative analysis.'],
     ['read_only', 'Read only', 'This file cannot be changed.'],
   ] as const)('renders %s posture without a Save action', (phase, label, message) => {
     render(phase);
@@ -70,6 +76,16 @@ describe('CodeWorkingTreeStatus', () => {
   it('offers retry only for a failed working-tree update', () => {
     const onRetry = vi.fn();
     render('failed', { onRetry });
+
+    const button = container?.querySelector<HTMLButtonElement>('button');
+    expect(button?.textContent).toBe('Retry');
+    act(() => button?.click());
+    expect(onRetry).toHaveBeenCalledOnce();
+  });
+
+  it('offers retry when authoritative analysis fails after persistence', () => {
+    const onRetry = vi.fn();
+    render('reconciliation_failed', { onRetry });
 
     const button = container?.querySelector<HTMLButtonElement>('button');
     expect(button?.textContent).toBe('Retry');

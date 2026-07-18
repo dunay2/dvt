@@ -5,9 +5,11 @@ import { routeWorkbenchHeaderBandClassName } from '../../components/workbench/Ro
 
 type CodeWorkingTreeStatusPhase =
   'synchronized' | 'modified' | 'syncing' | 'conflict' | 'failed' | 'read_only';
+type ExtendedCodeWorkingTreeStatusPhase =
+  CodeWorkingTreeStatusPhase | 'reconciling' | 'reconciliation_failed';
 
 type CodeWorkingTreeStatusCopy = Readonly<
-  Record<CodeWorkingTreeStatusPhase, Readonly<{ label: string; message: string }>> & {
+  Record<ExtendedCodeWorkingTreeStatusPhase, Readonly<{ label: string; message: string }>> & {
     retryLabel: string;
     reloadLabel: string;
   }
@@ -17,8 +19,10 @@ const STATUS_TONE = {
   synchronized: 'ok',
   modified: 'warning',
   syncing: 'degraded',
+  reconciling: 'degraded',
   conflict: 'error',
   failed: 'error',
+  reconciliation_failed: 'error',
   read_only: 'degraded',
 } as const;
 
@@ -28,7 +32,7 @@ export function CodeWorkingTreeStatus({
   onRetry,
   onReload,
 }: Readonly<{
-  phase: CodeWorkingTreeStatusPhase;
+  phase: ExtendedCodeWorkingTreeStatusPhase;
   copy: CodeWorkingTreeStatusCopy;
   onRetry: () => void;
   onReload: () => void;
@@ -42,7 +46,7 @@ export function CodeWorkingTreeStatus({
     >
       <StatusIndicator state={STATUS_TONE[phase]} label={statusCopy.label} />
       <span className="min-w-0 flex-1 text-xs text-[var(--text-muted)]">{statusCopy.message}</span>
-      {phase === 'failed' ? (
+      {phase === 'failed' || phase === 'reconciliation_failed' ? (
         <Button type="button" variant="outline" size="sm" onClick={onRetry}>
           {copy.retryLabel}
         </Button>

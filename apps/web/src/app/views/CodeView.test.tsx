@@ -1,6 +1,6 @@
 /** Owned concern: prove the Code workbench renders workspace files through semantic slots. */
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
-import { act } from 'react';
+import { act, createRef, type RefObject } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createRoot, type Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -12,7 +12,7 @@ import type {
 } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { WorkspaceFileLoadError } from '../services/workspace/workspaceErrors';
-import CodeView from './CodeView';
+import CodeView, { type CodeViewHandle } from './CodeView';
 import { resolveCodeViewCopy } from './code/codeViewCopy';
 
 vi.mock('../components/monaco/MonacoCodeEditor', () => ({
@@ -127,7 +127,8 @@ describe('CodeView', () => {
 
   async function renderCodeView(
     workspaceFileContentCommand?: IWorkspaceFileContentCommandPort,
-    publishRouteBootstrap = true
+    publishRouteBootstrap = true,
+    codeViewRef?: RefObject<CodeViewHandle>
   ): Promise<void> {
     await act(async () => {
       root?.render(
@@ -141,7 +142,7 @@ describe('CodeView', () => {
             }}
           >
             {' '}
-            <CodeView publishRouteBootstrap={publishRouteBootstrap} />{' '}
+            <CodeView ref={codeViewRef} publishRouteBootstrap={publishRouteBootstrap} />{' '}
           </AppServicesProvider>{' '}
         </QueryClientProvider>
       );
@@ -270,6 +271,29 @@ describe('CodeView', () => {
           .querySelector('[data-testid="monaco-code-editor"]')
           ?.getAttribute('data-path') === 'models/staging/stg_customers.sql'
     );
+  });
+
+  it('exposes a close-time flush without waiting for the debounce interval', async () => {
+    const saveFileContent = vi.fn(async (): Promise<WorkspaceFileSaveReceipt> => ({
+      kind: 'saved',
+      disposition: 'updated',
+      path: 'models/staging/stg_orders.sql',
+      contentSha256: 'b'.repeat(64),
+      lastModified: '2026-07-12T00:00:01.000Z',
+    }));
+    const codeViewRef = createRef<CodeViewHandle>();
+    setupContainer();
+    await renderCodeView({ saveFileContent }, true, codeViewRef);
+    await waitForInitialRender();
+    await editAndVerifyEditor(verifyInitialState());
+
+    let flushed = false;
+    await act(async () => {
+      flushed = (await codeViewRef.current?.flush()) ?? false;
+    });
+
+    expect(flushed).toBe(true);
+    expect(saveFileContent).toHaveBeenCalledTimes(1);
   });
 
   it('uses embedded geometry without the history rail inside Canvas', async () => {

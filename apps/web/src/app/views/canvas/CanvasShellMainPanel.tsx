@@ -218,7 +218,7 @@ function CanvasShellMainSurface({
       title={layout.contextualWorkbench.title}
       closeLabel={layout.contextualWorkbench.closeLabel}
       description={layout.contextualWorkbench.description}
-      onClose={layout.contextualWorkbench.onClose}
+      onClose={() => void layout.contextualWorkbench?.requestClose()}
     >
       {layout.contextualWorkbench.panel}
     </CanvasShellContextualWorkbenchSplit>
@@ -286,11 +286,13 @@ export function CanvasShellMainPanel({
           onReloadLatestDraft={chromeCommands.onReloadLatestDraft}
         />
       ) : null}
-      <CanvasShellNodeWorkbenchOverlay
-        layout={layout}
-        panels={panels}
-        chromeCommands={chromeCommands}
-      />
+      {layout.contextualWorkbench == null ? (
+        <CanvasShellNodeWorkbenchOverlay
+          layout={layout}
+          panels={panels}
+          chromeCommands={chromeCommands}
+        />
+      ) : null}
     </CanvasShellMainPanelFrame>
   );
 }

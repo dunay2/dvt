@@ -1,7 +1,9 @@
 /** Owned concern: adapt a DBT project-file code target to the Canvas shell workbench contract. */
+import type { RefObject } from 'react';
+
 import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasShellContextualWorkbench } from './canvasShell.types';
-import { SqlContextWorkbench } from './SqlContextWorkbench';
+import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import type { SqlContextWorkbenchTarget } from './sqlContextWorkbenchModel';
 
 type DbtProjectFileCodeWorkbenchCopy = Pick<
@@ -14,12 +16,14 @@ type DbtProjectFileCodeWorkbenchCopy = Pick<
 
 export function buildDbtProjectFileCodeWorkbench({
   copy,
+  workbenchRef,
   onClose,
   onProjectChanged,
   projectRoot,
   target,
 }: Readonly<{
   copy: DbtProjectFileCodeWorkbenchCopy;
+  workbenchRef: RefObject<SqlContextWorkbenchHandle>;
   onClose: () => void;
   onProjectChanged: () => Promise<void>;
   projectRoot: string;
@@ -37,9 +41,15 @@ export function buildDbtProjectFileCodeWorkbench({
         ? copy.sqlContextWorkbenchNodeTitle
         : copy.sqlContextWorkbenchProjectTitle,
     description: target.kind === 'node' ? target.initialPath : projectRoot,
-    onClose,
+    requestClose: async () => {
+      const flushed = (await workbenchRef.current?.flush()) ?? true;
+      if (flushed) {
+        onClose();
+      }
+    },
     panel: (
       <SqlContextWorkbench
+        ref={workbenchRef}
         loadingMessage={copy.sqlContextWorkbenchLoadingMessage}
         fileScope={{
           kind: 'dbt-project-files',

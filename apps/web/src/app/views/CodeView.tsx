@@ -1,6 +1,6 @@
 /** Owned concern: render workspace file queries as the Code workbench local Monaco buffer. */
 import { FileCode2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
@@ -49,17 +49,26 @@ export type CodeViewFileScope = Readonly<{
   initialPath?: string;
 }>;
 
-export default function CodeView({
-  publishRouteBootstrap = true,
-  routeBootstrapId = CANVAS_ROUTE_ID,
-  fileScope,
-  onFileSynchronized,
-}: Readonly<{
+export type CodeViewHandle = Readonly<{
+  flush: () => Promise<boolean>;
+}>;
+
+export type CodeViewProps = Readonly<{
   publishRouteBootstrap?: boolean;
   routeBootstrapId?: string;
   fileScope?: CodeViewFileScope;
   onFileSynchronized?: (receipt: WorkspaceFileSaveReceipt) => Promise<void>;
-}> = {}) {
+}>;
+
+const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
+  {
+    publishRouteBootstrap = true,
+    routeBootstrapId = CANVAS_ROUTE_ID,
+    fileScope,
+    onFileSynchronized,
+  }: CodeViewProps = {},
+  ref
+) {
   const copy = resolveCodeViewCopy();
   const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
   const fileTreeQuery = useWorkspaceFileTreeQuery();
@@ -117,6 +126,7 @@ export default function CodeView({
     commandPort: workspaceFileContentCommand,
     onFileSynchronized,
   });
+  useImperativeHandle(ref, () => ({ flush: workingTreeSync.flush }), [workingTreeSync.flush]);
   const workingTreeStatusCopy = {
     synchronized: {
       label: copy.workingTreeSynchronizedLabel,
@@ -130,6 +140,10 @@ export default function CodeView({
       label: copy.workingTreeSyncingLabel,
       message: copy.workingTreeSyncingMessage,
     },
+    reconciling: {
+      label: copy.workingTreeReconcilingLabel,
+      message: copy.workingTreeReconcilingMessage,
+    },
     conflict: {
       label: copy.workingTreeConflictLabel,
       message: copy.workingTreeConflictMessage,
@@ -137,6 +151,10 @@ export default function CodeView({
     failed: {
       label: copy.workingTreeFailedLabel,
       message: copy.workingTreeFailedMessage,
+    },
+    reconciliation_failed: {
+      label: copy.workingTreeReconciliationFailedLabel,
+      message: copy.workingTreeReconciliationFailedMessage,
     },
     read_only: {
       label: copy.workingTreeReadOnlyLabel,
@@ -243,7 +261,7 @@ export default function CodeView({
             <CodeWorkingTreeStatus
               phase={workingTreeSync.phase}
               copy={workingTreeStatusCopy}
-              onRetry={workingTreeSync.retry}
+              onRetry={() => void workingTreeSync.retry()}
               onReload={() => {
                 void fileContentQuery.refetch().then((result) => {
                   if (result.data) {
@@ -258,4 +276,6 @@ export default function CodeView({
       }}
     />
   );
-}
+});
+
+export default CodeView;

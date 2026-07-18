@@ -114,7 +114,7 @@ describe('CanvasShell graph base surface', () => {
           title: 'Project code',
           closeLabel: 'Cerrar',
           panel: <div data-testid="code-workbench-panel" />,
-          onClose: vi.fn(),
+          requestClose: vi.fn(async () => undefined),
         },
       },
       chromeState: {
@@ -134,7 +134,7 @@ describe('CanvasShell graph base surface', () => {
           title: 'Project code',
           closeLabel: 'Cerrar',
           panel: <div data-testid="code-workbench-panel" />,
-          onClose: vi.fn(),
+          requestClose: vi.fn(async () => undefined),
         },
       },
     });

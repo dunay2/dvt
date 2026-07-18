@@ -1,7 +1,14 @@
 /** Owned concern: model serialized workspace working-tree synchronization states. */
 import type { FileContent, WorkspaceFileSaveReceipt } from '../../ports/workspace';
 
-type CodeWorkingTreeSyncPhase = 'synchronized' | 'modified' | 'syncing' | 'conflict' | 'failed';
+export type CodeWorkingTreeSyncPhase =
+  | 'synchronized'
+  | 'modified'
+  | 'syncing'
+  | 'reconciling'
+  | 'conflict'
+  | 'failed'
+  | 'reconciliation_failed';
 
 type CodeWorkingTreeSyncState = Readonly<{
   filePath: string;
@@ -14,6 +21,7 @@ type CodeWorkingTreeSyncState = Readonly<{
     content: string;
     expectedRevision: string;
   }> | null;
+  pendingReconciliation: WorkspaceFileSaveReceipt | null;
 }>;
 
 type CodeWorkingTreeSyncEvent =
@@ -21,10 +29,14 @@ type CodeWorkingTreeSyncEvent =
   | { readonly type: 'edited'; readonly value: string }
   | { readonly type: 'sync_started'; readonly requestId: number }
   | {
-      readonly type: 'sync_succeeded';
+      readonly type: 'content_persisted';
       readonly requestId: number;
       readonly receipt: WorkspaceFileSaveReceipt;
+      readonly requiresReconciliation: boolean;
     }
+  | { readonly type: 'reconciliation_started' }
+  | { readonly type: 'reconciliation_succeeded' }
+  | { readonly type: 'reconciliation_failed' }
   | { readonly type: 'sync_conflicted'; readonly requestId: number }
   | { readonly type: 'sync_failed'; readonly requestId: number }
   | { readonly type: 'retry_requested' };
@@ -37,6 +49,7 @@ export function createCodeWorkingTreeSyncState(file: FileContent): CodeWorkingTr
     persistedRevision: file.contentSha256,
     phase: 'synchronized',
     inFlight: null,
+    pendingReconciliation: null,
   };
 }
 
@@ -62,7 +75,7 @@ export function reduceCodeWorkingTreeSync(
           expectedRevision: state.persistedRevision,
         },
       };
-    case 'sync_succeeded':
+    case 'content_persisted':
       if (state.inFlight?.requestId !== event.requestId) {
         return state;
       }
@@ -70,9 +83,30 @@ export function reduceCodeWorkingTreeSync(
         ...state,
         persistedContent: state.inFlight.content,
         persistedRevision: event.receipt.contentSha256,
-        phase: state.value === state.inFlight.content ? 'synchronized' : 'modified',
+        phase: event.requiresReconciliation
+          ? 'reconciling'
+          : state.value === state.inFlight.content
+            ? 'synchronized'
+            : 'modified',
         inFlight: null,
+        pendingReconciliation: event.requiresReconciliation ? event.receipt : null,
       };
+    case 'reconciliation_started':
+      return state.phase === 'reconciliation_failed' && state.pendingReconciliation != null
+        ? { ...state, phase: 'reconciling' }
+        : state;
+    case 'reconciliation_succeeded':
+      return state.phase === 'reconciling' && state.pendingReconciliation != null
+        ? {
+            ...state,
+            phase: state.value === state.persistedContent ? 'synchronized' : 'modified',
+            pendingReconciliation: null,
+          }
+        : state;
+    case 'reconciliation_failed':
+      return state.phase === 'reconciling' && state.pendingReconciliation != null
+        ? { ...state, phase: 'reconciliation_failed' }
+        : state;
     case 'sync_conflicted':
       return state.inFlight?.requestId === event.requestId
         ? { ...state, phase: 'conflict', inFlight: null }
@@ -96,6 +130,9 @@ function reduceEditedValue(
   value: string
 ): CodeWorkingTreeSyncState {
   if (state.phase === 'conflict') {
+    return { ...state, value };
+  }
+  if (state.phase === 'reconciling' || state.phase === 'reconciliation_failed') {
     return { ...state, value };
   }
   if (state.inFlight) {

@@ -1,7 +1,7 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasContextMenuLayer } from './CanvasContextMenuLayer';
@@ -15,7 +15,7 @@ import { useCanvasSourceImportDialogState } from './useCanvasSourceImportDialogS
 import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type { CanvasShellContextualWorkbench, CanvasShellProps } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
-import { SqlContextWorkbench } from './SqlContextWorkbench';
+import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 
 export default function CanvasShell({
   layout,
@@ -34,6 +34,7 @@ export default function CanvasShell({
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
   const [contextualWorkbenchId, setContextualWorkbenchId] = useState<'project-code' | null>(null);
+  const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
   const openProjectCodeWorkbench = useCallback(() => setContextualWorkbenchId('project-code'), []);
   const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
   const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
@@ -60,8 +61,18 @@ export default function CanvasShell({
       title: copy.sqlContextWorkbenchProjectTitle,
       closeLabel: copy.nodeWorkbenchCloseLabel,
       description: copy.sqlContextWorkbenchProjectDescription,
-      onClose: () => setContextualWorkbenchId(null),
-      panel: <SqlContextWorkbench loadingMessage={copy.sqlContextWorkbenchLoadingMessage} />,
+      requestClose: async () => {
+        const flushed = (await codeWorkbenchRef.current?.flush()) ?? true;
+        if (flushed) {
+          setContextualWorkbenchId(null);
+        }
+      },
+      panel: (
+        <SqlContextWorkbench
+          ref={codeWorkbenchRef}
+          loadingMessage={copy.sqlContextWorkbenchLoadingMessage}
+        />
+      ),
     };
   }, [
     contextualWorkbenchId,

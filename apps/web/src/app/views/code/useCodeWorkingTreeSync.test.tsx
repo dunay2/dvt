@@ -139,11 +139,54 @@ describe('useCodeWorkingTreeSync', () => {
 
     expect(onFileSynchronized).toHaveBeenCalledWith(saved);
     expect(saveFileContent).toHaveBeenCalledTimes(1);
-    expect(controller.phase).toBe('syncing');
+    expect(controller.phase).toBe('reconciling');
 
     await act(async () => reconciliation.resolve());
     expect(controller.phase).toBe('synchronized');
     expect(saveFileContent).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the workbench open when post-save reconciliation fails', async () => {
+    const saved = receipt('b'.repeat(64));
+    const onFileSynchronized = vi.fn(async () => {
+      throw new Error('DBT analysis failed');
+    });
+    const saveFileContent = vi.fn(async () => saved);
+    await render({ saveFileContent }, onFileSynchronized);
+
+    act(() => controller.updateValue('select 2'));
+    let flushed = true;
+    await act(async () => {
+      flushed = await controller.flush();
+    });
+
+    expect(flushed).toBe(false);
+    expect(controller.phase).toBe('reconciliation_failed');
+    expect(saveFileContent).toHaveBeenCalledTimes(1);
+    expect(onFileSynchronized).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries failed reconciliation without rewriting persisted content', async () => {
+    const saved = receipt('b'.repeat(64));
+    const onFileSynchronized = vi
+      .fn<(receipt: WorkspaceFileSaveReceipt) => Promise<void>>()
+      .mockRejectedValueOnce(new Error('DBT analysis failed'))
+      .mockResolvedValueOnce(undefined);
+    const saveFileContent = vi.fn(async () => saved);
+    await render({ saveFileContent }, onFileSynchronized);
+
+    act(() => controller.updateValue('select 2'));
+    await act(async () => {
+      await controller.flush();
+    });
+
+    await act(async () => {
+      await controller.retry();
+    });
+
+    expect(controller.phase).toBe('synchronized');
+    expect(saveFileContent).toHaveBeenCalledTimes(1);
+    expect(onFileSynchronized).toHaveBeenCalledTimes(2);
   });
 
   it('serializes a later edit after the in-flight write completes', async () => {

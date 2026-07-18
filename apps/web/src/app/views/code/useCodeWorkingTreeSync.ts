@@ -112,10 +112,19 @@ export function useCodeWorkingTreeSync({
         return;
       }
 
-      try {
-        await onFileSynchronized?.(receipt);
-      } finally {
-        transition({ type: 'sync_succeeded', requestId, receipt });
+      transition({
+        type: 'content_persisted',
+        requestId,
+        receipt,
+        requiresReconciliation: onFileSynchronized != null,
+      });
+      if (onFileSynchronized != null) {
+        try {
+          await onFileSynchronized(receipt);
+          transition({ type: 'reconciliation_succeeded' });
+        } catch {
+          transition({ type: 'reconciliation_failed' });
+        }
       }
     })().finally(() => {
       if (activeSyncRef.current === operation) {
@@ -151,10 +160,14 @@ export function useCodeWorkingTreeSync({
       if (!current || current.phase === 'synchronized') {
         return true;
       }
-      if (current.phase === 'conflict' || current.phase === 'failed') {
+      if (
+        current.phase === 'conflict' ||
+        current.phase === 'failed' ||
+        current.phase === 'reconciliation_failed'
+      ) {
         return false;
       }
-      if (current.phase === 'syncing') {
+      if (current.phase === 'syncing' || current.phase === 'reconciling') {
         await activeSyncRef.current;
       } else {
         await synchronizeOnce();
@@ -163,8 +176,32 @@ export function useCodeWorkingTreeSync({
   }, [synchronizeOnce]);
 
   const retry = useCallback(() => {
+    const current = stateRef.current;
+    if (
+      current?.phase === 'reconciliation_failed' &&
+      current.pendingReconciliation != null &&
+      onFileSynchronized != null
+    ) {
+      transition({ type: 'reconciliation_started' });
+      const operation = (async () => {
+        try {
+          await onFileSynchronized(current.pendingReconciliation!);
+          transition({ type: 'reconciliation_succeeded' });
+        } catch {
+          transition({ type: 'reconciliation_failed' });
+        }
+      })().finally(() => {
+        if (activeSyncRef.current === operation) {
+          activeSyncRef.current = null;
+        }
+      });
+      activeSyncRef.current = operation;
+      return operation;
+    }
+
     transition({ type: 'retry_requested' });
-  }, [transition]);
+    return Promise.resolve();
+  }, [onFileSynchronized, transition]);
 
   const loadAuthoritative = useCallback(
     (nextFile: FileContent) => {

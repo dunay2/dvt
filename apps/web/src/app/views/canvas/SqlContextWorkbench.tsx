@@ -1,7 +1,7 @@
 /** Owned concern: bind an optional selected project file to the canonical Code workbench. */
-import { lazy, Suspense } from 'react';
+import { forwardRef, lazy, Suspense } from 'react';
 
-import type { CodeViewFileScope } from '../CodeView';
+import type { CodeViewFileScope, CodeViewHandle } from '../CodeView';
 import type { WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import { sqlContextWorkbenchVisualTokens as tokens } from './sqlContextWorkbenchVisualTokens';
 
@@ -13,18 +13,22 @@ export type SqlContextWorkbenchProps = Readonly<{
   onFileSynchronized?: (receipt: WorkspaceFileSaveReceipt) => Promise<void>;
 }>;
 
-export function SqlContextWorkbench({
-  fileScope,
-  loadingMessage,
-  onFileSynchronized,
-}: SqlContextWorkbenchProps): JSX.Element {
-  return (
-    <Suspense fallback={<div className={tokens.loading}>{loadingMessage}</div>}>
-      <CodeView
-        publishRouteBootstrap={false}
-        fileScope={fileScope}
-        onFileSynchronized={onFileSynchronized}
-      />
-    </Suspense>
-  );
-}
+export type SqlContextWorkbenchHandle = CodeViewHandle;
+
+export const SqlContextWorkbench = forwardRef<SqlContextWorkbenchHandle, SqlContextWorkbenchProps>(
+  function SqlContextWorkbench(
+    { fileScope, loadingMessage, onFileSynchronized }: SqlContextWorkbenchProps,
+    ref
+  ): JSX.Element {
+    return (
+      <Suspense fallback={<div className={tokens.loading}>{loadingMessage}</div>}>
+        <CodeView
+          ref={ref}
+          publishRouteBootstrap={false}
+          fileScope={fileScope}
+          onFileSynchronized={onFileSynchronized}
+        />
+      </Suspense>
+    );
+  }
+);

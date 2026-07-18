@@ -247,8 +247,8 @@ export function useDbtProjectFileCanvasController(
     await refreshProjectGraph();
   }, [refreshProjectGraph]);
   const refreshProjectGraphAfterCodeMutation = useCallback(async (): Promise<void> => {
-    await refetchProjectGraph();
-  }, [refetchProjectGraph]);
+    await refreshProjectGraph();
+  }, [refreshProjectGraph]);
   const reloadNodeDescription = useCallback(
     async (nodeId: string): Promise<string | null> => {
       const refreshedProjection = await refreshProjectGraph();

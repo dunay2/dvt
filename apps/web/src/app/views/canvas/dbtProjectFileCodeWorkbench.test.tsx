@@ -1,8 +1,8 @@
-import { isValidElement, type ReactElement } from 'react';
+import { isValidElement, type ReactElement, type RefObject } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
-import type { SqlContextWorkbenchProps } from './SqlContextWorkbench';
+import type { SqlContextWorkbenchHandle, SqlContextWorkbenchProps } from './SqlContextWorkbench';
 
 const copy = {
   nodeWorkbenchCloseLabel: 'Close',
@@ -16,6 +16,7 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
     const onProjectChanged = vi.fn(async () => undefined);
     const workbench = buildDbtProjectFileCodeWorkbench({
       copy,
+      workbenchRef: { current: null },
       onClose: vi.fn(),
       onProjectChanged,
       projectRoot: 'analytics',
@@ -44,6 +45,7 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
     const onProjectChanged = vi.fn(async () => undefined);
     const workbench = buildDbtProjectFileCodeWorkbench({
       copy,
+      workbenchRef: { current: null },
       onClose: vi.fn(),
       onProjectChanged,
       projectRoot: 'analytics',
@@ -60,5 +62,28 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
       projectRoot: 'analytics',
     });
     expect(panel.props.onFileSynchronized).toBe(onProjectChanged);
+  });
+
+  it('closes only after the Code buffer and project analysis are synchronized', async () => {
+    const flush = vi.fn().mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    const workbenchRef = {
+      current: { flush },
+    } as RefObject<SqlContextWorkbenchHandle>;
+    const onClose = vi.fn();
+    const workbench = buildDbtProjectFileCodeWorkbench({
+      copy,
+      workbenchRef,
+      onClose,
+      onProjectChanged: vi.fn(async () => undefined),
+      projectRoot: 'analytics',
+      target: { kind: 'project' },
+    });
+
+    await workbench?.requestClose();
+    expect(onClose).not.toHaveBeenCalled();
+
+    await workbench?.requestClose();
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(flush).toHaveBeenCalledTimes(2);
   });
 });

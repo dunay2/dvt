@@ -1,5 +1,5 @@
 /** Owned concern: present the read-only file-authoritative dbt Canvas surface. */
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import type { DbtProjectImportResult } from '@dvt/contracts';
 
 import { cn } from '../../components/ui/utils';
@@ -10,6 +10,7 @@ import CanvasShell from './CanvasShell';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { CanvasErrorStateView, CanvasLoadingStateView } from './CanvasStateViews';
 import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
+import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
 import type { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
 
@@ -120,6 +121,7 @@ export function DbtProjectFileCanvasView({
   screenToFlowPosition: NonNullable<CanvasShellProps['canvasContextScreenToFlowPosition']>;
   onDbtProjectImported: (result: DbtProjectImportResult) => void;
 }>): JSX.Element {
+  const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
   const copy = resolveCanvasViewCopy();
   const projectRoot = controller.authorityBinding.authority.projectRoot;
   const projectTitle = resolveProjectTitle(projectRoot);
@@ -138,6 +140,7 @@ export function DbtProjectFileCanvasView({
   });
   const contextualWorkbench = buildDbtProjectFileCodeWorkbench({
     copy,
+    workbenchRef: codeWorkbenchRef,
     onClose: controller.closeCodeWorkbench,
     onProjectChanged: controller.refreshProjectGraphAfterCodeMutation,
     projectRoot,
