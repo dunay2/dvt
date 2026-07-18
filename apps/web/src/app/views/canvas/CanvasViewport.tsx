@@ -128,17 +128,34 @@ function CanvasViewportWithPresenter({
 
   const nodesWithOperationalDetails = useMemo(
     () =>
-      props.nodesWithImpact.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          onOpenOperationalDetails: (
-            detail: GraphNodeOperationalDetail,
-            anchorElement: HTMLElement
-          ) => openNodeHealthPopover(node.id, detail, anchorElement),
-        },
-      })),
-    [openNodeHealthPopover, props.nodesWithImpact]
+      props.nodesWithImpact.map((node) => {
+        const nodeData = node.data as Record<string, unknown>;
+        const inspectNode =
+          typeof nodeData.onInspectNode === 'function'
+            ? (nodeData.onInspectNode as (...args: unknown[]) => void)
+            : null;
+
+        return {
+          ...node,
+          data: {
+            ...node.data,
+            ...(inspectNode == null
+              ? {}
+              : {
+                  onInspectNode: (...args: unknown[]) => {
+                    closeNodeFloatingToolbar();
+                    closeNodeHealthPopover();
+                    inspectNode(...args);
+                  },
+                }),
+            onOpenOperationalDetails: (
+              detail: GraphNodeOperationalDetail,
+              anchorElement: HTMLElement
+            ) => openNodeHealthPopover(node.id, detail, anchorElement),
+          },
+        };
+      }),
+    [closeNodeFloatingToolbar, closeNodeHealthPopover, openNodeHealthPopover, props.nodesWithImpact]
   );
 
   const nodeFloatingToolbarModel = useMemo(() => {

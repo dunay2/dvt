@@ -55,6 +55,7 @@ export function CanvasNodeFloatingToolbarView({
                   aria-label={action.label}
                   aria-disabled={action.available ? undefined : 'true'}
                   aria-pressed={action.id === 'freeze' ? action.pressed : undefined}
+                  data-toolbar-action={action.id}
                   data-tone={action.tone}
                   data-action-state={resolveCanvasNodeFloatingToolbarActionState(action)}
                   className={resolveCanvasNodeFloatingToolbarActionClassName(action)}

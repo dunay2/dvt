@@ -50,6 +50,7 @@ describe('CanvasNodeFloatingToolbarView', () => {
     expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-y')).toBe('160px');
 
     expect(button('Open node code')).not.toBeNull();
+    expect(button('Open node code')?.getAttribute('data-toolbar-action')).toBe('code');
     expect(button('Open node code')?.getAttribute('data-action-state')).toBe('available');
     expect(button('Freeze node')).toBeNull();
     expect(button('More node actions')).not.toBeNull();

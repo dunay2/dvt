@@ -337,6 +337,39 @@ describe('CanvasViewport node floating toolbar', () => {
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
   });
 
+  it('closes the toolbar before the node interaction opens its workbench', async () => {
+    const onInspectNode = vi.fn();
+
+    await renderViewport({
+      nodesWithImpact: [
+        {
+          id: 'model_orders',
+          position: { x: 160, y: 90 },
+          data: { name: 'Orders model', onInspectNode },
+          type: 'dbtNode',
+        },
+      ] as CanvasViewportProps['nodesWithImpact'],
+    });
+
+    await clickNode('model_orders', 420, 240);
+    expect(
+      document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')
+    ).not.toBeNull();
+
+    const projectedNode = (
+      xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact']
+    ).find(({ id }) => id === 'model_orders');
+    const openWorkbench = projectedNode?.data.onInspectNode as
+      ((nodeId: string, preferredTabId?: string) => void) | undefined;
+
+    await act(async () => {
+      openWorkbench?.('model_orders');
+    });
+
+    expect(onInspectNode).toHaveBeenCalledWith('model_orders');
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+  });
+
   async function clickNode(
     nodeId: string,
     eventInput:

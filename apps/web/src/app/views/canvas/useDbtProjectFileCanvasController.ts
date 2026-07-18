@@ -307,7 +307,10 @@ export function useDbtProjectFileCanvasController(
           selectedForExecution: selectedNodeIds.includes(node.id),
           onInspectNode: openNodeWorkbench,
           canOpenNodeCode: node.data.path != null,
-          onOpenNodeCode: node.data.path == null ? undefined : openNodeWorkbench,
+          onOpenNodeCode:
+            node.data.path == null
+              ? undefined
+              : (nodeId: string) => openNodeWorkbench(nodeId, 'code'),
           onToggleNodeSelection:
             execution.canSelectExecution &&
             canOfferDbtExecutionSelectionToggle({
