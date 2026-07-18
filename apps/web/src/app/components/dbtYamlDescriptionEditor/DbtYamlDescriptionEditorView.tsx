@@ -1,10 +1,12 @@
 /** Owned concern: render the passive dbt YAML description transaction surface. */
+import type { DbtYamlDescriptionAppliedReceipt } from '@dvt/contracts';
 import { AlertTriangle, CheckCircle2, LoaderCircle, RotateCcw } from 'lucide-react';
 import { useId } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import type { DbtYamlDescriptionEditorCopy } from './dbtYamlDescriptionEditorCopy';
 import {
   hasDbtYamlDescriptionChanges,
@@ -25,6 +27,91 @@ export type DbtYamlDescriptionEditorViewProps = Readonly<{
   onReloadLatest: () => void;
   onContinueEditing: () => void;
 }>;
+
+function abbreviateReference(value: string): string {
+  return value.slice(0, 12);
+}
+
+function ReceiptReference({
+  label,
+  value,
+}: Readonly<{ label: string; value: string }>): JSX.Element {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          tabIndex={0}
+          data-full-value={value}
+          aria-label={`${label}: ${value}`}
+          className={tokens.receiptValue}
+        >
+          {abbreviateReference(value)}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top">{value}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function resolveAnalysisStatusLabel(
+  freshness: DbtYamlDescriptionAppliedReceipt['analysis']['freshness'],
+  copy: DbtYamlDescriptionEditorCopy
+): string {
+  switch (freshness) {
+    case 'fresh':
+      return copy.analysisFreshLabel;
+    case 'stale-last-valid':
+      return copy.analysisStaleLabel;
+    case 'invalid':
+      return copy.analysisInvalidLabel;
+    case 'unavailable':
+      return copy.analysisUnavailableLabel;
+  }
+}
+
+function AppliedReceiptView({
+  copy,
+  receipt,
+}: Readonly<{
+  copy: DbtYamlDescriptionEditorCopy;
+  receipt: DbtYamlDescriptionAppliedReceipt;
+}>): JSX.Element {
+  return (
+    <section data-slot="dbt-yaml-description-receipt" className={tokens.receipt}>
+      <h4 className={tokens.receiptTitle}>{copy.receiptLabel}</h4>
+      <TooltipProvider delayDuration={250}>
+        <dl className={tokens.receiptGrid}>
+          <dt className={tokens.receiptLabel}>{copy.receiptIdLabel}</dt>
+          <dd>
+            <ReceiptReference label={copy.receiptIdLabel} value={receipt.receiptId} />
+          </dd>
+          <dt className={tokens.receiptLabel}>{copy.fileRevisionLabel}</dt>
+          <dd>
+            <ReceiptReference label={copy.fileRevisionLabel} value={receipt.appliedContentSha256} />
+          </dd>
+          <dt className={tokens.receiptLabel}>{copy.analysisRevisionLabel}</dt>
+          <dd>
+            <ReceiptReference
+              label={copy.analysisRevisionLabel}
+              value={receipt.analysis.analysisSha256}
+            />
+          </dd>
+          <dt className={tokens.receiptLabel}>{copy.projectRevisionLabel}</dt>
+          <dd>
+            <ReceiptReference
+              label={copy.projectRevisionLabel}
+              value={receipt.analysis.projectContentSetSha256}
+            />
+          </dd>
+          <dt className={tokens.receiptLabel}>{copy.analysisStatusLabel}</dt>
+          <dd className={tokens.receiptStatus}>
+            {resolveAnalysisStatusLabel(receipt.analysis.freshness, copy)}
+          </dd>
+        </dl>
+      </TooltipProvider>
+    </section>
+  );
+}
 
 export function DbtYamlDescriptionEditorView({
   path,
@@ -112,6 +199,10 @@ export function DbtYamlDescriptionEditorView({
           <AlertDescription>{copy.appliedMessage}</AlertDescription>
         </Alert>
       ) : null}
+
+      {state.appliedReceipt == null ? null : (
+        <AppliedReceiptView copy={copy} receipt={state.appliedReceipt} />
+      )}
 
       {state.phase === 'reverted' ? (
         <Alert className={tokens.successAlert}>

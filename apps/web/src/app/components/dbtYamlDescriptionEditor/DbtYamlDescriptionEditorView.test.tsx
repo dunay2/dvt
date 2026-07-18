@@ -116,4 +116,66 @@ describe('DbtYamlDescriptionEditorView', () => {
     );
     expect(container.querySelector('[data-slot="dbt-yaml-description-apply"]')).not.toBeNull();
   });
+
+  it('renders the immutable apply receipt with abbreviated inspectable revisions', async () => {
+    const receiptId = '4'.repeat(64);
+    const appliedContentSha256 = '5'.repeat(64);
+    const analysisSha256 = '6'.repeat(64);
+    const projectContentSetSha256 = '7'.repeat(64);
+
+    await act(async () => {
+      root.render(
+        <DbtYamlDescriptionEditorView
+          path="models/marts/schema.yml"
+          copy={COPY}
+          state={{
+            ...createDbtYamlDescriptionEditorState('Changed description.'),
+            phase: 'applied',
+            appliedReceipt: {
+              schemaVersion: 'dbt-yaml-description-edit-applied-receipt.v1',
+              receiptId,
+              canvasId: 'analytics',
+              resource: {
+                uniqueId: 'model.analytics.orders',
+                resourceType: 'model',
+                name: 'orders',
+              },
+              path: 'models/marts/schema.yml',
+              previousDescription: 'Existing description.',
+              nextDescription: 'Changed description.',
+              expectedContentSha256: '1'.repeat(64),
+              appliedContentSha256,
+              proposalDigest: '3'.repeat(64),
+              idempotencyKey: 'apply-description-once',
+              requestHash: '8'.repeat(64),
+              deduplicated: false,
+              analysis: {
+                freshness: 'fresh',
+                analysisSha256,
+                projectContentSetSha256,
+              },
+            },
+          }}
+          onDraftChange={vi.fn()}
+          onReview={vi.fn()}
+          onDiscardReview={vi.fn()}
+          onApply={vi.fn()}
+          onRevert={vi.fn()}
+          onReloadLatest={vi.fn()}
+          onContinueEditing={vi.fn()}
+        />
+      );
+    });
+
+    const receipt = container.querySelector('[data-slot="dbt-yaml-description-receipt"]');
+    expect(receipt).not.toBeNull();
+    expect(receipt?.textContent).toContain('444444444444');
+    expect(receipt?.textContent).toContain('555555555555');
+    expect(receipt?.textContent).toContain('666666666666');
+    expect(receipt?.textContent).toContain('777777777777');
+    expect(
+      receipt?.querySelector(`[data-full-value="${receiptId}"]`)?.getAttribute('aria-label')
+    ).toContain(receiptId);
+    expect(container.querySelector('[data-slot="dbt-yaml-description-revert"]')).not.toBeNull();
+  });
 });

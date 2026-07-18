@@ -24,6 +24,16 @@ export type DbtYamlDescriptionEditorCopy = Readonly<{
   diffLabel: string;
   appliedTitle: string;
   appliedMessage: string;
+  receiptLabel: string;
+  receiptIdLabel: string;
+  fileRevisionLabel: string;
+  analysisRevisionLabel: string;
+  projectRevisionLabel: string;
+  analysisStatusLabel: string;
+  analysisFreshLabel: string;
+  analysisStaleLabel: string;
+  analysisInvalidLabel: string;
+  analysisUnavailableLabel: string;
   revertedTitle: string;
   revertedMessage: string;
   noChangesMessage: string;
@@ -73,6 +83,31 @@ const COPY_BY_KEY: Record<keyof DbtYamlDescriptionEditorCopy, LocalizableString>
   appliedMessage: {
     key: 'dbtDescription.appliedMessage',
     fallback: 'The file changed conditionally and the dbt project was analyzed again.',
+  },
+  receiptLabel: { key: 'dbtDescription.receiptLabel', fallback: 'Applied receipt' },
+  receiptIdLabel: { key: 'dbtDescription.receiptIdLabel', fallback: 'Receipt' },
+  fileRevisionLabel: { key: 'dbtDescription.fileRevisionLabel', fallback: 'File revision' },
+  analysisRevisionLabel: {
+    key: 'dbtDescription.analysisRevisionLabel',
+    fallback: 'Analysis revision',
+  },
+  projectRevisionLabel: {
+    key: 'dbtDescription.projectRevisionLabel',
+    fallback: 'Project revision',
+  },
+  analysisStatusLabel: {
+    key: 'dbtDescription.analysisStatusLabel',
+    fallback: 'Analysis status',
+  },
+  analysisFreshLabel: { key: 'dbtDescription.analysisFreshLabel', fallback: 'Fresh' },
+  analysisStaleLabel: {
+    key: 'dbtDescription.analysisStaleLabel',
+    fallback: 'Last valid revision',
+  },
+  analysisInvalidLabel: { key: 'dbtDescription.analysisInvalidLabel', fallback: 'Invalid' },
+  analysisUnavailableLabel: {
+    key: 'dbtDescription.analysisUnavailableLabel',
+    fallback: 'Unavailable',
   },
   revertedTitle: { key: 'dbtDescription.revertedTitle', fallback: 'Change reverted' },
   revertedMessage: {
@@ -152,6 +187,16 @@ const SPANISH_COPY: DbtYamlDescriptionEditorCopy = {
   diffLabel: 'Diff YAML propuesto',
   appliedTitle: 'Descripcion actualizada',
   appliedMessage: 'El archivo cambio de forma condicional y el proyecto dbt se analizo de nuevo.',
+  receiptLabel: 'Recibo aplicado',
+  receiptIdLabel: 'Recibo',
+  fileRevisionLabel: 'Revision del archivo',
+  analysisRevisionLabel: 'Revision del analisis',
+  projectRevisionLabel: 'Revision del proyecto',
+  analysisStatusLabel: 'Estado del analisis',
+  analysisFreshLabel: 'Actualizado',
+  analysisStaleLabel: 'Ultima revision valida',
+  analysisInvalidLabel: 'No valido',
+  analysisUnavailableLabel: 'No disponible',
   revertedTitle: 'Cambio revertido',
   revertedMessage: 'Se restauro la descripcion anterior sin sobrescribir una revision posterior.',
   noChangesMessage: 'Edita la descripcion para preparar una revision.',

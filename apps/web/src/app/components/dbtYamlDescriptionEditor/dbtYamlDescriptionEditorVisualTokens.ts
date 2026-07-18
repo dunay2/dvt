@@ -14,5 +14,12 @@ export const dbtYamlDescriptionEditorVisualTokens = Object.freeze({
   alert: 'border-(--border-default) bg-(--surface-elevated)',
   successAlert: 'border-(--status-success) bg-(--surface-elevated)',
   warningAlert: 'border-(--status-warning) bg-(--surface-elevated)',
+  receipt: 'space-y-2 rounded-sm border border-(--border-default) bg-(--surface-elevated) p-3',
+  receiptTitle: 'text-[11px] font-semibold uppercase text-(--text-default)',
+  receiptGrid: 'grid grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] gap-x-3 gap-y-1.5',
+  receiptLabel: 'text-[11px] text-(--text-muted)',
+  receiptValue:
+    'min-w-0 truncate font-mono text-[11px] text-(--text-default) underline decoration-dotted underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-(--focus-ring)',
+  receiptStatus: 'text-[11px] font-medium text-(--status-success)',
   spinner: 'animate-spin',
 } as const);
