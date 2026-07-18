@@ -1,7 +1,10 @@
 /** Owned concern: decide create-canvas document CAS eligibility and draft save input semantics. */
 import { createCanvasDraftIdempotencyKey } from './canvasDraftIdempotencyKey';
 import type { CanvasCreateCanvasDocumentCommandDto } from './canvasDraftLifecycle.types';
-import { buildDraftWithCreatedProjectCanvas } from './canvasProjectCanvasLifecycle';
+import {
+  buildDraftWithCreatedProjectCanvas,
+  buildInitialProjectCanvasDraft,
+} from './canvasProjectCanvasLifecycle';
 
 export type CanvasCreateCanvasDocumentCommandEligibility =
   | {
@@ -89,16 +92,7 @@ export function buildBlankCanvasDocumentDraftInput({
   return {
     expectedRevision,
     idempotencyKey: createCanvasDraftIdempotencyKey(),
-    draft: {
-      canvas: {
-        kind: command.kind,
-        title: command.title,
-      },
-      nodeIds: [],
-      nodePositions: {},
-      nodes: [],
-      edges: [],
-    },
+    draft: buildInitialProjectCanvasDraft(command),
   };
 }
 

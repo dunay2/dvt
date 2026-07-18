@@ -23,13 +23,28 @@ describe('canvasCreateCanvasDocumentCommand save outcomes', () => {
       idempotencyKey: expect.any(String),
       draft: {
         canvas: {
+          id: 'transformation-canvas',
           kind: 'transformation',
           title: 'Transformation canvas',
         },
+        activeCanvasId: 'transformation-canvas',
         nodeIds: [],
         nodePositions: {},
         nodes: [],
         edges: [],
+        canvases: [
+          {
+            canvas: {
+              id: 'transformation-canvas',
+              kind: 'transformation',
+              title: 'Transformation canvas',
+            },
+            nodeIds: [],
+            nodePositions: {},
+            nodes: [],
+            edges: [],
+          },
+        ],
       },
     });
     expect(draftQueryCache.replaceRemoteDraftState).toHaveBeenCalledTimes(1);

@@ -84,6 +84,32 @@ function workspaceToDraft(
   };
 }
 
+function createEmptyProjectCanvasWorkspace(
+  command: CanvasCreateCanvasDocumentCommand,
+  existingIds: ReadonlySet<string>
+): WorkspaceGraphAuthoringCanvasWorkspace {
+  const canvas: ProjectCanvasDocument = {
+    id: createProjectCanvasId({ canvas: command, existingIds }),
+    kind: command.kind,
+    title: command.title,
+  };
+
+  return {
+    canvas,
+    nodeIds: [],
+    nodePositions: {},
+    nodes: [],
+    edges: [],
+  };
+}
+
+export function buildInitialProjectCanvasDraft(
+  command: CanvasCreateCanvasDocumentCommand
+): WorkspaceGraphAuthoringDraft {
+  const workspace = createEmptyProjectCanvasWorkspace(command, new Set());
+  return workspaceToDraft(workspace, [workspace]);
+}
+
 export function normalizeProjectCanvasDraft(
   draft: WorkspaceGraphAuthoringDraft
 ): WorkspaceGraphAuthoringDraft {
@@ -168,18 +194,7 @@ export function buildDraftWithCreatedProjectCanvas(args: {
 }): WorkspaceGraphAuthoringDraft {
   const normalizedDraft = normalizeProjectCanvasDraft(args.currentDraft);
   const existingIds = new Set(normalizedDraft.canvases?.map((workspace) => workspace.canvas.id));
-  const canvas: ProjectCanvasDocument = {
-    id: createProjectCanvasId({ canvas: args.command, existingIds }),
-    kind: args.command.kind,
-    title: args.command.title,
-  };
-  const nextWorkspace: WorkspaceGraphAuthoringCanvasWorkspace = {
-    canvas,
-    nodeIds: [],
-    nodePositions: {},
-    nodes: [],
-    edges: [],
-  };
+  const nextWorkspace = createEmptyProjectCanvasWorkspace(args.command, existingIds);
 
   return workspaceToDraft(nextWorkspace, [...(normalizedDraft.canvases ?? []), nextWorkspace]);
 }
