@@ -146,6 +146,25 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     expect(harness.getController().draft.description).toBe('');
   });
 
+  it('accepts canonical no-SQL authority after an empty SQL draft is applied', async () => {
+    await harness.renderNode(MODEL_NODE);
+
+    await act(async () => {
+      harness.getController().onDraftChange((currentDraft) => ({
+        ...currentDraft,
+        dbt: currentDraft.dbt ? { ...currentDraft.dbt, modelSql: '' } : undefined,
+      }));
+    });
+    await harness.renderNode({
+      ...MODEL_NODE,
+      metadata: {
+        config: {},
+      },
+    });
+
+    expect(harness.getController().draft.dbt?.modelSql).toBeNull();
+  });
+
   it('resets a dirty draft to the latest authority on explicit cancel', async () => {
     await harness.renderNode(MODEL_NODE);
 

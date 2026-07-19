@@ -101,10 +101,13 @@ describe('buildCanvasNodePresentationTruth', () => {
     });
   });
 
-  it('prefers explicit inline SQL while retaining the workspace path', () => {
+  it('prefers canonical config SQL over stale top-level SQL while retaining the path', () => {
     const model = buildNode({
       path: 'models/orders.sql',
-      metadata: { sql: 'select * from raw_orders' },
+      metadata: {
+        sql: 'select * from stale_orders',
+        config: { sql: 'select * from raw_orders' },
+      },
     });
 
     expect(

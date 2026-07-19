@@ -42,7 +42,32 @@ export function areCanvasInspectorNodeDraftsEqual(
   left: CanvasInspectorNodeDraft,
   right: CanvasInspectorNodeDraft
 ): boolean {
-  return JSON.stringify(left) === JSON.stringify(right);
+  const comparableLeft = left.dbt
+    ? {
+        ...left,
+        dbt: {
+          ...left.dbt,
+          modelSql:
+            left.dbt.modelSql != null && left.dbt.modelSql.trim().length > 0
+              ? left.dbt.modelSql
+              : null,
+        },
+      }
+    : left;
+  const comparableRight = right.dbt
+    ? {
+        ...right,
+        dbt: {
+          ...right.dbt,
+          modelSql:
+            right.dbt.modelSql != null && right.dbt.modelSql.trim().length > 0
+              ? right.dbt.modelSql
+              : null,
+        },
+      }
+    : right;
+
+  return JSON.stringify(comparableLeft) === JSON.stringify(comparableRight);
 }
 
 export function validateCanvasInspectorNodeDraft(

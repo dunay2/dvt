@@ -107,11 +107,12 @@ export function applyDbtNodeAuthoringMetadata(
   const tableName = normalizeIdentifier(metadata.tableName, 'table');
   const modelSql = metadata.modelSql;
   const hasAuthoredModelSql = modelSql != null && modelSql.trim().length > 0;
+  const { sql: _legacyTopLevelSql, ...metadataWithoutLegacyTopLevelSql } = node.metadata ?? {};
 
   return {
     ...node,
     metadata: {
-      ...node.metadata,
+      ...metadataWithoutLegacyTopLevelSql,
       config: {
         ...configWithoutSql,
         schema: schemaName,

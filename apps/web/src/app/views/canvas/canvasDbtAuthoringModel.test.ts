@@ -108,7 +108,14 @@ describe('canvas dbt authoring model', () => {
   });
 
   it('roundtrips authored model SQL through the canonical config metadata field', () => {
-    const model = buildDbtModelNode();
+    const baseModel = buildDbtModelNode();
+    const model = {
+      ...baseModel,
+      metadata: {
+        ...baseModel.metadata,
+        sql: 'select stale_order_id from legacy.orders',
+      },
+    };
     const updated = applyDbtNodeAuthoringMetadata(model, {
       ...createDbtNodeAuthoringMetadata(model),
       modelSql: 'select order_id, amount\nfrom raw.orders',
@@ -120,6 +127,7 @@ describe('canvas dbt authoring model', () => {
     expect(createDbtNodeAuthoringMetadata(updated).modelSql).toBe(
       'select order_id, amount\nfrom raw.orders'
     );
+    expect(updated.metadata).not.toHaveProperty('sql');
   });
 
   it('preserves authored SQL whitespace while distinguishing absent SQL from an empty edit', () => {

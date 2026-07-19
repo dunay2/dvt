@@ -127,7 +127,7 @@ function buildCodeTruth(
   const config = isRecord(metadata.config) ? metadata.config : {};
   const path = node.path ?? readString(metadata.path);
   const inlineCode =
-    readString(metadata.compiledSql) ?? readString(metadata.sql) ?? readString(config.sql);
+    readString(metadata.compiledSql) ?? readString(config.sql) ?? readString(metadata.sql);
 
   if (inlineCode != null) {
     return {

@@ -87,7 +87,10 @@ function reduceDraftControllerState(
         return createDraftControllerState(action.nodeId, action.draft);
       }
 
-      if (!areCanvasInspectorNodeDraftsEqual(state.draft, state.authoritativeDraft)) {
+      if (
+        !areCanvasInspectorNodeDraftsEqual(state.draft, state.authoritativeDraft) &&
+        !areCanvasInspectorNodeDraftsEqual(state.draft, action.draft)
+      ) {
         return {
           ...state,
           authoritativeDraft: action.draft,
