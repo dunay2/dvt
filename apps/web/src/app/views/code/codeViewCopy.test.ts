@@ -8,15 +8,19 @@ describe('resolveCodeViewCopy', () => {
       title: 'Code',
       explorerTitle: 'Explorer',
       editorLoadingMessage: 'Loading Monaco editor...',
+      workingTreePersistedInvalidLabel: 'Invalid project',
+      workingTreePersistedVerificationUnavailableLabel: 'Verification unavailable',
       routeEmptyTitle: 'No workspace files available',
     });
   });
 
   it('resolves Spanish copy only when the active locale is Spanish', () => {
     expect(resolveCodeViewCopy('es-ES')).toMatchObject({
-      title: 'Codigo',
+      title: 'Código',
       explorerTitle: 'Explorador',
       editorLoadingMessage: 'Cargando editor Monaco...',
+      workingTreePersistedInvalidLabel: 'Proyecto no válido',
+      workingTreePersistedVerificationUnavailableLabel: 'Verificación no disponible',
       routeEmptyTitle: 'No hay archivos del workspace disponibles',
     });
   });

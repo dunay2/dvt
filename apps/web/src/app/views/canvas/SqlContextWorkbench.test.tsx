@@ -10,16 +10,16 @@ import { SqlContextWorkbench } from './SqlContextWorkbench';
 vi.mock('../CodeView', () => ({
   default: ({
     fileScope,
-    onFileSynchronized,
+    reconcilePersistedFile,
   }: {
     fileScope?: { projectRoot: string; initialPath?: string };
-    onFileSynchronized?: () => Promise<void>;
+    reconcilePersistedFile?: () => Promise<unknown>;
   }) => (
     <div
       data-slot="mock-code-view"
       data-project-root={fileScope?.projectRoot}
       data-initial-path={fileScope?.initialPath}
-      data-has-sync-consumer={String(onFileSynchronized != null)}
+      data-has-sync-consumer={String(reconcilePersistedFile != null)}
     />
   ),
 }));
@@ -43,7 +43,11 @@ describe('SqlContextWorkbench', () => {
   });
 
   it('opens the selected node SQL path inside the existing project-scoped Code workbench', async () => {
-    const onFileSynchronized = vi.fn(async () => undefined);
+    const reconcilePersistedFile = vi.fn(async () => ({
+      kind: 'fresh' as const,
+      analysisSha256: 'a'.repeat(64),
+      projectContentSetSha256: 'b'.repeat(64),
+    }));
     await act(async () => {
       root.render(
         <SqlContextWorkbench
@@ -53,7 +57,7 @@ describe('SqlContextWorkbench', () => {
             initialPath: 'analytics/models/marts/orders.sql',
           }}
           loadingMessage="Loading code"
-          onFileSynchronized={onFileSynchronized}
+          reconcilePersistedFile={reconcilePersistedFile}
         />
       );
     });

@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest';
 import type { FileContent, WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import {
   createCodeWorkingTreeSyncState,
+  isCodeWorkingTreeNavigationBlockedPhase,
   reduceCodeWorkingTreeSync,
 } from './codeWorkingTreeSyncModel';
 
@@ -130,5 +131,139 @@ describe('CodeWorkingTreeSync model', () => {
     });
 
     expect(loaded).toEqual(createCodeWorkingTreeSyncState(nextFile));
+  });
+
+  it.each([
+    ['stale-last-valid', 'persisted_stale'],
+    ['invalid', 'persisted_invalid'],
+    ['unavailable', 'persisted_unavailable'],
+  ] as const)(
+    'keeps a persisted file visibly unresolved when analysis is %s',
+    (freshness, expectedPhase) => {
+      const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
+        type: 'edited',
+        value: 'select invalid_sql',
+      });
+      const syncing = reduceCodeWorkingTreeSync(modified, {
+        type: 'sync_started',
+        requestId: 7,
+      });
+      const reconciling = reduceCodeWorkingTreeSync(syncing, {
+        type: 'content_persisted',
+        requestId: 7,
+        receipt: savedReceipt(),
+        requiresReconciliation: true,
+      });
+
+      const unresolved = reduceCodeWorkingTreeSync(reconciling, {
+        type: 'reconciliation_completed',
+        outcome: { kind: 'degraded', freshness },
+      });
+
+      expect(unresolved.phase).toBe(expectedPhase);
+      expect(unresolved.pendingReconciliation).toEqual(savedReceipt());
+    }
+  );
+
+  it('restores degraded analysis posture when a corrective edit is reverted before persistence', () => {
+    const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
+      type: 'edited',
+      value: 'select invalid_sql',
+    });
+    const syncing = reduceCodeWorkingTreeSync(modified, {
+      type: 'sync_started',
+      requestId: 8,
+    });
+    const reconciling = reduceCodeWorkingTreeSync(syncing, {
+      type: 'content_persisted',
+      requestId: 8,
+      receipt: savedReceipt(),
+      requiresReconciliation: true,
+    });
+    const invalid = reduceCodeWorkingTreeSync(reconciling, {
+      type: 'reconciliation_completed',
+      outcome: { kind: 'degraded', freshness: 'invalid' },
+    });
+
+    const correcting = reduceCodeWorkingTreeSync(invalid, {
+      type: 'edited',
+      value: 'select 2',
+    });
+    const reverted = reduceCodeWorkingTreeSync(correcting, {
+      type: 'edited',
+      value: 'select invalid_sql',
+    });
+
+    expect(correcting.phase).toBe('modified');
+    expect(reverted.phase).toBe('persisted_invalid');
+  });
+
+  it('keeps a superseded persisted revision unresolved until authoritative reload', () => {
+    const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
+      type: 'edited',
+      value: 'select 2',
+    });
+    const syncing = reduceCodeWorkingTreeSync(modified, {
+      type: 'sync_started',
+      requestId: 9,
+    });
+    const reconciling = reduceCodeWorkingTreeSync(syncing, {
+      type: 'content_persisted',
+      requestId: 9,
+      receipt: savedReceipt(),
+      requiresReconciliation: true,
+    });
+
+    const superseded = reduceCodeWorkingTreeSync(reconciling, {
+      type: 'reconciliation_completed',
+      outcome: { kind: 'superseded', currentContentSha256: 'e'.repeat(64) },
+    });
+
+    expect(superseded.phase).toBe('persisted_superseded');
+    expect(superseded.pendingReconciliation).toEqual(savedReceipt());
+  });
+
+  it('distinguishes a failed final authority read from failed project analysis', () => {
+    const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
+      type: 'edited',
+      value: 'select 2',
+    });
+    const syncing = reduceCodeWorkingTreeSync(modified, {
+      type: 'sync_started',
+      requestId: 10,
+    });
+    const reconciling = reduceCodeWorkingTreeSync(syncing, {
+      type: 'content_persisted',
+      requestId: 10,
+      receipt: savedReceipt(),
+      requiresReconciliation: true,
+    });
+
+    const unavailable = reduceCodeWorkingTreeSync(reconciling, {
+      type: 'reconciliation_completed',
+      outcome: { kind: 'verification-unavailable' },
+    });
+
+    expect(unavailable.phase).toBe('persisted_verification_unavailable');
+  });
+
+  it.each(['modified', 'syncing', 'conflict', 'failed'] as const)(
+    'blocks navigation while persistence is %s',
+    (phase) => {
+      expect(isCodeWorkingTreeNavigationBlockedPhase(phase)).toBe(true);
+    }
+  );
+
+  it.each([
+    'synchronized',
+    'reconciling',
+    'reconciliation_failed',
+    'persisted_stale',
+    'persisted_invalid',
+    'persisted_unavailable',
+    'persisted_verification_unavailable',
+    'persisted_superseded',
+  ] as const)('does not block navigation after bytes are persisted in %s', (phase) => {
+    expect(isCodeWorkingTreeNavigationBlockedPhase(phase)).toBe(false);
   });
 });

@@ -13,12 +13,16 @@ const copy = {
 
 describe('buildDbtProjectFileCodeWorkbench', () => {
   it('targets the exact SQL file owned by the selected DBT node', () => {
-    const onProjectChanged = vi.fn(async () => undefined);
+    const reconcilePersistedFile = vi.fn(async () => ({
+      kind: 'fresh' as const,
+      analysisSha256: 'a'.repeat(64),
+      projectContentSetSha256: 'b'.repeat(64),
+    }));
     const workbench = buildDbtProjectFileCodeWorkbench({
       copy,
       workbenchRef: { current: null },
       onClose: vi.fn(),
-      onProjectChanged,
+      reconcilePersistedFile,
       projectRoot: 'analytics',
       target: {
         kind: 'node',
@@ -38,16 +42,20 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
       projectRoot: 'analytics',
       initialPath: 'analytics/models/marts/orders.sql',
     });
-    expect(panel.props.onFileSynchronized).toBe(onProjectChanged);
+    expect(panel.props.reconcilePersistedFile).toBe(reconcilePersistedFile);
   });
 
   it('opens the project scope without fabricating a selected file', () => {
-    const onProjectChanged = vi.fn(async () => undefined);
+    const reconcilePersistedFile = vi.fn(async () => ({
+      kind: 'fresh' as const,
+      analysisSha256: 'a'.repeat(64),
+      projectContentSetSha256: 'b'.repeat(64),
+    }));
     const workbench = buildDbtProjectFileCodeWorkbench({
       copy,
       workbenchRef: { current: null },
       onClose: vi.fn(),
-      onProjectChanged,
+      reconcilePersistedFile,
       projectRoot: 'analytics',
       target: { kind: 'project' },
     });
@@ -61,7 +69,7 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
       kind: 'dbt-project-files',
       projectRoot: 'analytics',
     });
-    expect(panel.props.onFileSynchronized).toBe(onProjectChanged);
+    expect(panel.props.reconcilePersistedFile).toBe(reconcilePersistedFile);
   });
 
   it('closes only after the Code buffer and project analysis are synchronized', async () => {
@@ -74,7 +82,11 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
       copy,
       workbenchRef,
       onClose,
-      onProjectChanged: vi.fn(async () => undefined),
+      reconcilePersistedFile: vi.fn(async () => ({
+        kind: 'fresh' as const,
+        analysisSha256: 'a'.repeat(64),
+        projectContentSetSha256: 'b'.repeat(64),
+      })),
       projectRoot: 'analytics',
       target: { kind: 'project' },
     });

@@ -26,4 +26,37 @@ describe('refreshCanvasExecutionSelectionAuthority', () => {
     expect(failure).toBeInstanceOf(Error);
     expect((failure as Error).message).toBe('');
   });
+
+  it.each(['stale-last-valid', 'invalid', 'unavailable'] as const)(
+    'rejects a successful query whose %s DBT projection is not usable authority',
+    async (freshness) => {
+      const refresh = vi.fn().mockResolvedValue({
+        isError: false,
+        error: null,
+        data: { freshness },
+      });
+
+      await expect(
+        refreshCanvasExecutionSelectionAuthority<{ freshness: string }>(
+          refresh,
+          (projection) => projection?.freshness === 'fresh'
+        )
+      ).rejects.toThrow('');
+    }
+  );
+
+  it('accepts fresh DBT authority after a successful query', async () => {
+    const refresh = vi.fn().mockResolvedValue({
+      isError: false,
+      error: null,
+      data: { freshness: 'fresh' as const },
+    });
+
+    await expect(
+      refreshCanvasExecutionSelectionAuthority<{ freshness: string }>(
+        refresh,
+        (projection) => projection?.freshness === 'fresh'
+      )
+    ).resolves.toBeUndefined();
+  });
 });

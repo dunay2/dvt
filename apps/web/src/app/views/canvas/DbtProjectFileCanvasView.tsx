@@ -142,7 +142,7 @@ export function DbtProjectFileCanvasView({
     copy,
     workbenchRef: codeWorkbenchRef,
     onClose: controller.closeCodeWorkbench,
-    onProjectChanged: controller.refreshProjectGraphAfterCodeMutation,
+    reconcilePersistedFile: controller.reconcileCodeFilePersistence,
     projectRoot,
     target: controller.codeWorkbenchTarget,
   });

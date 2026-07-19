@@ -195,7 +195,10 @@ export function waitForLiveWorkspaceFileContent(
     }
 
     if (attempt >= 30) {
-      throw new Error(`Timed out waiting for live workspace content at ${path}.`);
+      throw new Error(
+        `Timed out waiting for live workspace content at ${path}. ` +
+          `Expected ${JSON.stringify(expectedContent)} but observed ${JSON.stringify(content)}.`
+      );
     }
 
     return cy

@@ -1,7 +1,8 @@
 /** Owned concern: adapt query refresh results to the rejecting recovery authority port. */
-type CanvasAuthorityRefreshResult = Readonly<{
+type CanvasAuthorityRefreshResult<TAuthority> = Readonly<{
   isError: boolean;
   error: unknown;
+  data?: TAuthority;
 }>;
 
 function buildRefreshFailure(error: unknown): Error {
@@ -10,9 +11,11 @@ function buildRefreshFailure(error: unknown): Error {
   return new Error();
 }
 
-export async function refreshCanvasExecutionSelectionAuthority(
-  refresh: () => Promise<CanvasAuthorityRefreshResult>
+export async function refreshCanvasExecutionSelectionAuthority<TAuthority = unknown>(
+  refresh: () => Promise<CanvasAuthorityRefreshResult<TAuthority>>,
+  isUsableAuthority: (authority: TAuthority | undefined) => boolean = () => true
 ): Promise<void> {
   const result = await refresh();
   if (result.isError) throw buildRefreshFailure(result.error);
+  if (!isUsableAuthority(result.data)) throw buildRefreshFailure(null);
 }

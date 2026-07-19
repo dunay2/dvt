@@ -8,7 +8,40 @@ export type CodeWorkingTreeSyncPhase =
   | 'reconciling'
   | 'conflict'
   | 'failed'
-  | 'reconciliation_failed';
+  | 'reconciliation_failed'
+  | 'persisted_stale'
+  | 'persisted_invalid'
+  | 'persisted_unavailable'
+  | 'persisted_verification_unavailable'
+  | 'persisted_superseded';
+
+export type CodeWorkingTreeReconciliationOutcome =
+  | Readonly<{
+      kind: 'fresh';
+      analysisSha256: string;
+      projectContentSetSha256: string;
+    }>
+  | Readonly<{
+      kind: 'degraded';
+      freshness: 'stale-last-valid' | 'invalid' | 'unavailable';
+    }>
+  | Readonly<{
+      kind: 'superseded';
+      currentContentSha256: string;
+    }>
+  | Readonly<{
+      kind: 'verification-unavailable';
+    }>;
+
+type PersistedReconciliationPhase = Extract<
+  CodeWorkingTreeSyncPhase,
+  | 'reconciliation_failed'
+  | 'persisted_stale'
+  | 'persisted_invalid'
+  | 'persisted_unavailable'
+  | 'persisted_verification_unavailable'
+  | 'persisted_superseded'
+>;
 
 type CodeWorkingTreeSyncState = Readonly<{
   filePath: string;
@@ -22,6 +55,7 @@ type CodeWorkingTreeSyncState = Readonly<{
     expectedRevision: string;
   }> | null;
   pendingReconciliation: WorkspaceFileSaveReceipt | null;
+  persistedReconciliationPhase: PersistedReconciliationPhase | null;
 }>;
 
 type CodeWorkingTreeSyncEvent =
@@ -35,7 +69,10 @@ type CodeWorkingTreeSyncEvent =
       readonly requiresReconciliation: boolean;
     }
   | { readonly type: 'reconciliation_started' }
-  | { readonly type: 'reconciliation_succeeded' }
+  | {
+      readonly type: 'reconciliation_completed';
+      readonly outcome: CodeWorkingTreeReconciliationOutcome;
+    }
   | { readonly type: 'reconciliation_failed' }
   | { readonly type: 'sync_conflicted'; readonly requestId: number }
   | { readonly type: 'sync_failed'; readonly requestId: number }
@@ -50,6 +87,7 @@ export function createCodeWorkingTreeSyncState(file: FileContent): CodeWorkingTr
     phase: 'synchronized',
     inFlight: null,
     pendingReconciliation: null,
+    persistedReconciliationPhase: null,
   };
 }
 
@@ -90,22 +128,39 @@ export function reduceCodeWorkingTreeSync(
             : 'modified',
         inFlight: null,
         pendingReconciliation: event.requiresReconciliation ? event.receipt : null,
+        persistedReconciliationPhase: null,
       };
     case 'reconciliation_started':
-      return state.phase === 'reconciliation_failed' && state.pendingReconciliation != null
+      return isCodeWorkingTreeReconciliationRetryablePhase(state.phase) &&
+        state.pendingReconciliation != null
         ? { ...state, phase: 'reconciling' }
         : state;
-    case 'reconciliation_succeeded':
+    case 'reconciliation_completed': {
+      if (state.phase !== 'reconciling' || state.pendingReconciliation == null) {
+        return state;
+      }
+      if (event.outcome.kind === 'fresh') {
+        return {
+          ...state,
+          phase: state.value === state.persistedContent ? 'synchronized' : 'modified',
+          pendingReconciliation: null,
+          persistedReconciliationPhase: null,
+        };
+      }
+      const persistedReconciliationPhase = mapReconciliationOutcomePhase(event.outcome);
+      return {
+        ...state,
+        phase: state.value === state.persistedContent ? persistedReconciliationPhase : 'modified',
+        persistedReconciliationPhase,
+      };
+    }
+    case 'reconciliation_failed':
       return state.phase === 'reconciling' && state.pendingReconciliation != null
         ? {
             ...state,
-            phase: state.value === state.persistedContent ? 'synchronized' : 'modified',
-            pendingReconciliation: null,
+            phase: state.value === state.persistedContent ? 'reconciliation_failed' : 'modified',
+            persistedReconciliationPhase: 'reconciliation_failed',
           }
-        : state;
-    case 'reconciliation_failed':
-      return state.phase === 'reconciling' && state.pendingReconciliation != null
-        ? { ...state, phase: 'reconciliation_failed' }
         : state;
     case 'sync_conflicted':
       return state.inFlight?.requestId === event.requestId
@@ -132,7 +187,7 @@ function reduceEditedValue(
   if (state.phase === 'conflict') {
     return { ...state, value };
   }
-  if (state.phase === 'reconciling' || state.phase === 'reconciliation_failed') {
+  if (state.phase === 'reconciling') {
     return { ...state, value };
   }
   if (state.inFlight) {
@@ -141,6 +196,58 @@ function reduceEditedValue(
   return {
     ...state,
     value,
-    phase: value === state.persistedContent ? 'synchronized' : 'modified',
+    phase:
+      value === state.persistedContent
+        ? (state.persistedReconciliationPhase ?? 'synchronized')
+        : 'modified',
   };
+}
+
+export function isCodeWorkingTreeReconciliationUnresolvedPhase(
+  phase: CodeWorkingTreeSyncPhase
+): phase is PersistedReconciliationPhase {
+  return (
+    phase === 'reconciliation_failed' ||
+    phase === 'persisted_stale' ||
+    phase === 'persisted_invalid' ||
+    phase === 'persisted_unavailable' ||
+    phase === 'persisted_verification_unavailable' ||
+    phase === 'persisted_superseded'
+  );
+}
+
+export function isCodeWorkingTreeReconciliationRetryablePhase(
+  phase: CodeWorkingTreeSyncPhase
+): phase is Exclude<PersistedReconciliationPhase, 'persisted_superseded'> {
+  return isCodeWorkingTreeReconciliationUnresolvedPhase(phase) && phase !== 'persisted_superseded';
+}
+
+function mapDegradedReconciliationPhase(
+  freshness: Extract<CodeWorkingTreeReconciliationOutcome, { kind: 'degraded' }>['freshness']
+): PersistedReconciliationPhase {
+  switch (freshness) {
+    case 'stale-last-valid':
+      return 'persisted_stale';
+    case 'invalid':
+      return 'persisted_invalid';
+    case 'unavailable':
+      return 'persisted_unavailable';
+  }
+}
+
+function mapReconciliationOutcomePhase(
+  outcome: Exclude<CodeWorkingTreeReconciliationOutcome, { kind: 'fresh' }>
+): PersistedReconciliationPhase {
+  switch (outcome.kind) {
+    case 'degraded':
+      return mapDegradedReconciliationPhase(outcome.freshness);
+    case 'superseded':
+      return 'persisted_superseded';
+    case 'verification-unavailable':
+      return 'persisted_verification_unavailable';
+  }
+}
+
+export function isCodeWorkingTreeNavigationBlockedPhase(phase: CodeWorkingTreeSyncPhase): boolean {
+  return phase === 'modified' || phase === 'syncing' || phase === 'conflict' || phase === 'failed';
 }

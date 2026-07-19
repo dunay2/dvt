@@ -5,6 +5,8 @@ import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasShellContextualWorkbench } from './canvasShell.types';
 import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import type { SqlContextWorkbenchTarget } from './sqlContextWorkbenchModel';
+import type { CodeWorkingTreeReconciliationOutcome } from '../code/codeWorkingTreeSyncModel';
+import type { WorkspaceFileSaveReceipt } from '../../ports/workspace';
 
 type DbtProjectFileCodeWorkbenchCopy = Pick<
   CanvasViewCopy,
@@ -18,14 +20,16 @@ export function buildDbtProjectFileCodeWorkbench({
   copy,
   workbenchRef,
   onClose,
-  onProjectChanged,
+  reconcilePersistedFile,
   projectRoot,
   target,
 }: Readonly<{
   copy: DbtProjectFileCodeWorkbenchCopy;
   workbenchRef: RefObject<SqlContextWorkbenchHandle>;
   onClose: () => void;
-  onProjectChanged: () => Promise<void>;
+  reconcilePersistedFile: (
+    receipt: WorkspaceFileSaveReceipt
+  ) => Promise<CodeWorkingTreeReconciliationOutcome>;
   projectRoot: string;
   target: SqlContextWorkbenchTarget | null;
 }>): CanvasShellContextualWorkbench | undefined {
@@ -56,7 +60,7 @@ export function buildDbtProjectFileCodeWorkbench({
           projectRoot,
           ...(target.kind === 'node' ? { initialPath: target.initialPath } : {}),
         }}
-        onFileSynchronized={onProjectChanged}
+        reconcilePersistedFile={reconcilePersistedFile}
       />
     ),
   };

@@ -113,7 +113,7 @@ export function OperationalDrawerSelectionRecoveryView({
       )}
       {model.failure == null ? null : (
         <OperationalDrawerRecoveryFailure>
-          {model.failure.detail ?? messages.selectionRecoveryRefreshFailureMessage}
+          {messages.selectionRecoveryRefreshFailureMessage}
         </OperationalDrawerRecoveryFailure>
       )}
     </OperationalDrawerRecoverySurface>

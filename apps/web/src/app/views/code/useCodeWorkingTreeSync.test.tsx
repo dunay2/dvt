@@ -12,6 +12,7 @@ import type {
 } from '../../ports/workspace';
 import { WorkspaceFileRevisionConflictError } from '../../services/workspace/workspaceErrors';
 import { useCodeWorkingTreeSync } from './useCodeWorkingTreeSync';
+import type { CodeWorkingTreeReconciliationOutcome } from './codeWorkingTreeSyncModel';
 
 type CodeWorkingTreeSyncController = ReturnType<typeof useCodeWorkingTreeSync>;
 
@@ -51,18 +52,20 @@ function deferred<T>(): {
 function SyncHarness({
   commandPort,
   onController,
-  onFileSynchronized,
+  reconcilePersistedFile,
 }: Readonly<{
   commandPort: IWorkspaceFileContentCommandPort;
   onController: (controller: CodeWorkingTreeSyncController) => void;
-  onFileSynchronized?: (receipt: WorkspaceFileSaveReceipt) => Promise<void>;
+  reconcilePersistedFile?: (
+    receipt: WorkspaceFileSaveReceipt
+  ) => Promise<CodeWorkingTreeReconciliationOutcome>;
 }>): null {
   onController(
     useCodeWorkingTreeSync({
       file: FILE,
       commandPort,
       debounceMs: 50,
-      onFileSynchronized,
+      reconcilePersistedFile,
     })
   );
   return null;
@@ -91,7 +94,9 @@ describe('useCodeWorkingTreeSync', () => {
 
   async function render(
     commandPort: IWorkspaceFileContentCommandPort,
-    onFileSynchronized?: (receipt: WorkspaceFileSaveReceipt) => Promise<void>
+    reconcilePersistedFile?: (
+      receipt: WorkspaceFileSaveReceipt
+    ) => Promise<CodeWorkingTreeReconciliationOutcome>
   ): Promise<void> {
     await act(async () => {
       root.render(
@@ -100,7 +105,7 @@ describe('useCodeWorkingTreeSync', () => {
           onController={(nextController) => {
             controller = nextController;
           }}
-          onFileSynchronized={onFileSynchronized}
+          reconcilePersistedFile={reconcilePersistedFile}
         />
       );
     });
@@ -127,32 +132,40 @@ describe('useCodeWorkingTreeSync', () => {
 
   it('waits for the contextual post-save consumer before reporting synchronization', async () => {
     const saved = receipt('b'.repeat(64));
-    const reconciliation = deferred<void>();
-    const onFileSynchronized = vi.fn(() => reconciliation.promise);
+    const reconciliation = deferred<CodeWorkingTreeReconciliationOutcome>();
+    const reconcilePersistedFile = vi.fn(() => reconciliation.promise);
     const saveFileContent = vi.fn(async () => saved);
-    await render({ saveFileContent }, onFileSynchronized);
+    await render({ saveFileContent }, reconcilePersistedFile);
 
     act(() => controller.updateValue('select 2'));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(50);
     });
 
-    expect(onFileSynchronized).toHaveBeenCalledWith(saved);
+    expect(reconcilePersistedFile).toHaveBeenCalledWith(saved);
     expect(saveFileContent).toHaveBeenCalledTimes(1);
     expect(controller.phase).toBe('reconciling');
 
-    await act(async () => reconciliation.resolve());
+    await act(async () =>
+      reconciliation.resolve({
+        kind: 'fresh',
+        analysisSha256: 'c'.repeat(64),
+        projectContentSetSha256: 'd'.repeat(64),
+      })
+    );
     expect(controller.phase).toBe('synchronized');
     expect(saveFileContent).toHaveBeenCalledTimes(1);
   });
 
-  it('keeps the workbench open when post-save reconciliation fails', async () => {
+  it('allows navigation after bytes persist even when post-save reconciliation fails', async () => {
     const saved = receipt('b'.repeat(64));
-    const onFileSynchronized = vi.fn(async () => {
-      throw new Error('DBT analysis failed');
-    });
+    const reconcilePersistedFile = vi.fn(
+      async (): Promise<CodeWorkingTreeReconciliationOutcome> => {
+        throw new Error('DBT analysis failed');
+      }
+    );
     const saveFileContent = vi.fn(async () => saved);
-    await render({ saveFileContent }, onFileSynchronized);
+    await render({ saveFileContent }, reconcilePersistedFile);
 
     act(() => controller.updateValue('select 2'));
     let flushed = true;
@@ -160,20 +173,24 @@ describe('useCodeWorkingTreeSync', () => {
       flushed = await controller.flush();
     });
 
-    expect(flushed).toBe(false);
+    expect(flushed).toBe(true);
     expect(controller.phase).toBe('reconciliation_failed');
     expect(saveFileContent).toHaveBeenCalledTimes(1);
-    expect(onFileSynchronized).toHaveBeenCalledTimes(1);
+    expect(reconcilePersistedFile).toHaveBeenCalledTimes(1);
   });
 
   it('retries failed reconciliation without rewriting persisted content', async () => {
     const saved = receipt('b'.repeat(64));
-    const onFileSynchronized = vi
-      .fn<(receipt: WorkspaceFileSaveReceipt) => Promise<void>>()
+    const reconcilePersistedFile = vi
+      .fn<(receipt: WorkspaceFileSaveReceipt) => Promise<CodeWorkingTreeReconciliationOutcome>>()
       .mockRejectedValueOnce(new Error('DBT analysis failed'))
-      .mockResolvedValueOnce(undefined);
+      .mockResolvedValueOnce({
+        kind: 'fresh',
+        analysisSha256: 'c'.repeat(64),
+        projectContentSetSha256: 'd'.repeat(64),
+      });
     const saveFileContent = vi.fn(async () => saved);
-    await render({ saveFileContent }, onFileSynchronized);
+    await render({ saveFileContent }, reconcilePersistedFile);
 
     act(() => controller.updateValue('select 2'));
     await act(async () => {
@@ -186,7 +203,7 @@ describe('useCodeWorkingTreeSync', () => {
 
     expect(controller.phase).toBe('synchronized');
     expect(saveFileContent).toHaveBeenCalledTimes(1);
-    expect(onFileSynchronized).toHaveBeenCalledTimes(2);
+    expect(reconcilePersistedFile).toHaveBeenCalledTimes(2);
   });
 
   it('serializes a later edit after the in-flight write completes', async () => {
@@ -250,6 +267,88 @@ describe('useCodeWorkingTreeSync', () => {
 
     expect(result).toBe(true);
     expect(saveFileContent).toHaveBeenCalledTimes(1);
+    expect(controller.phase).toBe('synchronized');
+  });
+
+  it('does not report synchronized when persistence yields invalid project analysis', async () => {
+    const saved = receipt('b'.repeat(64));
+    const reconcilePersistedFile = vi.fn(
+      async (): Promise<CodeWorkingTreeReconciliationOutcome> => ({
+        kind: 'degraded',
+        freshness: 'invalid',
+      })
+    );
+    const saveFileContent = vi.fn(async () => saved);
+    await render({ saveFileContent }, reconcilePersistedFile);
+
+    act(() => controller.updateValue('select invalid_sql'));
+    let flushed = true;
+    await act(async () => {
+      flushed = await controller.flush();
+    });
+
+    expect(flushed).toBe(true);
+    expect(controller.phase).toBe('persisted_invalid');
+    expect(saveFileContent).toHaveBeenCalledTimes(1);
+    expect(reconcilePersistedFile).toHaveBeenCalledWith(saved);
+  });
+
+  it('keeps a superseded receipt unresolved and does not retry project analysis blindly', async () => {
+    const saved = receipt('b'.repeat(64));
+    const reconcilePersistedFile = vi.fn(
+      async (): Promise<CodeWorkingTreeReconciliationOutcome> => ({
+        kind: 'superseded',
+        currentContentSha256: 'c'.repeat(64),
+      })
+    );
+    const saveFileContent = vi.fn(async () => saved);
+    await render({ saveFileContent }, reconcilePersistedFile);
+
+    act(() => controller.updateValue('select 2'));
+    let flushed = true;
+    await act(async () => {
+      flushed = await controller.flush();
+    });
+    await act(async () => controller.retry());
+
+    expect(flushed).toBe(true);
+    expect(controller.phase).toBe('persisted_superseded');
+    expect(saveFileContent).toHaveBeenCalledOnce();
+    expect(reconcilePersistedFile).toHaveBeenCalledOnce();
+  });
+
+  it('settles a failed persistence retry only after the retry command completes', async () => {
+    const retrySave = deferred<WorkspaceFileSaveReceipt>();
+    const saveFileContent = vi
+      .fn<IWorkspaceFileContentCommandPort['saveFileContent']>()
+      .mockRejectedValueOnce(new Error('write unavailable'))
+      .mockReturnValueOnce(retrySave.promise);
+    await render({ saveFileContent });
+
+    act(() => controller.updateValue('select 2'));
+    await act(async () => {
+      await controller.flush();
+    });
+    expect(controller.phase).toBe('failed');
+
+    let retrySettled = false;
+    let retryPromise!: Promise<void>;
+    act(() => {
+      retryPromise = controller.retry().then(() => {
+        retrySettled = true;
+      });
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(saveFileContent).toHaveBeenCalledTimes(2);
+    expect(retrySettled).toBe(false);
+
+    await act(async () => {
+      retrySave.resolve(receipt('b'.repeat(64)));
+      await retryPromise;
+    });
+    expect(retrySettled).toBe(true);
     expect(controller.phase).toBe('synchronized');
   });
 });
