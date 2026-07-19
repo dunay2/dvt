@@ -208,7 +208,11 @@ function reduceEditedValue(
     return { ...state, value };
   }
   if (state.phase === 'reconciling') {
-    return { ...state, value };
+    return {
+      ...state,
+      value,
+      phase: value === state.persistedContent ? 'reconciling' : 'modified',
+    };
   }
   if (state.inFlight) {
     return { ...state, value, phase: 'syncing' };

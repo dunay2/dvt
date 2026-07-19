@@ -184,6 +184,51 @@ describe('useCodeWorkingTreeSync', () => {
     expect(controller.phase).toBe('synchronized');
   });
 
+  it('persists an edit made while the previous receipt is still reconciling', async () => {
+    const firstReconciliation = deferred<CodeWorkingTreeReconciliationOutcome>();
+    const reconcilePersistedFile = vi
+      .fn<(receipt: WorkspaceFileSaveReceipt) => Promise<CodeWorkingTreeReconciliationOutcome>>()
+      .mockReturnValueOnce(firstReconciliation.promise)
+      .mockResolvedValueOnce({
+        kind: 'fresh',
+        analysisSha256: 'd'.repeat(64),
+        projectContentSetSha256: 'e'.repeat(64),
+      });
+    const saveFileContent = vi
+      .fn<IWorkspaceFileContentCommandPort['saveFileContent']>()
+      .mockResolvedValueOnce(receipt('b'.repeat(64)))
+      .mockResolvedValueOnce(receipt('c'.repeat(64)));
+    await render({ saveFileContent }, reconcilePersistedFile);
+
+    act(() => controller.updateValue('select 2'));
+    await act(async () => {
+      await controller.flush();
+    });
+    expect(controller.phase).toBe('reconciling');
+
+    act(() => controller.updateValue('select 3'));
+    expect(controller.phase).toBe('modified');
+
+    await act(async () => {
+      await controller.flush();
+    });
+
+    expect(saveFileContent).toHaveBeenNthCalledWith(2, {
+      path: FILE.path,
+      content: 'select 3',
+      expectedRevision: { kind: 'content_sha256', value: 'b'.repeat(64) },
+    });
+
+    await act(async () => {
+      firstReconciliation.resolve({
+        kind: 'fresh',
+        analysisSha256: 'f'.repeat(64),
+        projectContentSetSha256: '1'.repeat(64),
+      });
+      await Promise.resolve();
+    });
+  });
+
   it('allows navigation after bytes persist even when post-save reconciliation fails', async () => {
     const saved = receipt('b'.repeat(64));
     const reconcilePersistedFile = vi.fn(
