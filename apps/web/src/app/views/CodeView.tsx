@@ -94,6 +94,10 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     () => fileScope?.initialPath
   );
   const fileSelectionRequestIdRef = useRef(0);
+  const pendingFileSelectionRef = useRef<Readonly<{
+    requestId: number;
+    path: string | undefined;
+  }> | null>(null);
   const workspaceFileTree = fileTreeQuery.data ?? [];
   const scopedWorkspaceFileTree = useMemo(
     () =>
@@ -155,19 +159,36 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     reconcilePersistedFile:
       reconcilePersistedFile == null ? undefined : reconcilePersistedFileAuthority,
   });
+  const persistPendingFileSelection = useCallback(async (): Promise<void> => {
+    const pendingSelection = pendingFileSelectionRef.current;
+    if (!pendingSelection) {
+      return;
+    }
+    const persisted = await workingTreeSync.flush();
+    if (persisted && pendingFileSelectionRef.current?.requestId === pendingSelection.requestId) {
+      pendingFileSelectionRef.current = null;
+      setSelectedPath(pendingSelection.path);
+    }
+  }, [workingTreeSync.flush]);
   const requestFileSelection = useCallback(
     async (nextPath: string | undefined): Promise<void> => {
       if (nextPath === selectedPath || nextPath === resolvedPath) {
+        fileSelectionRequestIdRef.current += 1;
+        pendingFileSelectionRef.current = null;
         return;
       }
-      const requestId = ++fileSelectionRequestIdRef.current;
-      const persisted = await workingTreeSync.flush();
-      if (persisted && requestId === fileSelectionRequestIdRef.current) {
-        setSelectedPath(nextPath);
-      }
+      pendingFileSelectionRef.current = {
+        requestId: ++fileSelectionRequestIdRef.current,
+        path: nextPath,
+      };
+      await persistPendingFileSelection();
     },
-    [resolvedPath, selectedPath, workingTreeSync.flush]
+    [persistPendingFileSelection, resolvedPath, selectedPath]
   );
+  const retryWorkingTreeSync = useCallback(async (): Promise<void> => {
+    await workingTreeSync.retry();
+    await persistPendingFileSelection();
+  }, [persistPendingFileSelection, workingTreeSync.retry]);
   const latestRequestFileSelectionRef = useRef(requestFileSelection);
   useEffect(() => {
     latestRequestFileSelectionRef.current = requestFileSelection;
@@ -333,7 +354,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
               <CodeWorkingTreeStatus
                 phase={workingTreeSync.phase}
                 copy={workingTreeStatusCopy}
-                onRetry={() => void workingTreeSync.retry()}
+                onRetry={() => void retryWorkingTreeSync()}
                 onReload={() => {
                   void fileContentQuery.refetch().then((result) => {
                     if (result.data) {
