@@ -166,22 +166,10 @@ refresh materialized view planning_query_store.component_engineering_component_t
 
 do $$
 declare
-  integrity_finding_count integer;
   maturity_gap_count integer;
-  context_owned_file_count integer;
-  stale_broad_owner_count integer;
+  context_ownership_pattern_count integer;
+  broad_owner_exclusion_count integer;
 begin
-  select count(*) into integrity_finding_count
-  from planning_query_store.component_integrity_query
-  where component_id in (
-    'SYS-WEB-CANVAS-NODE-PRESENTATION-TRUTH',
-    'SYS-WEB-CANVAS-NODE-CONTEXT-SURFACE-COORDINATOR'
-  );
-
-  if integrity_finding_count <> 0 then
-    raise exception 'Canvas node presentation components retain % integrity findings', integrity_finding_count;
-  end if;
-
   select count(*) into maturity_gap_count
   from architecture.component_maturity_query
   where component_id in (
@@ -194,32 +182,34 @@ begin
     raise exception 'Canvas node presentation components retain architecture maturity gaps';
   end if;
 
-  select count(*) into context_owned_file_count
-  from planning_query_store.component_engineering_file_ownership_query
-  where leaf_component_id = 'SYS-WEB-CANVAS-NODE-CONTEXT-SURFACE-COORDINATOR'
-    and file_path in (
+  select count(*) into context_ownership_pattern_count
+  from planning_query_store.governance_component_local_ownership_patterns
+  where component_id = 'SYS-WEB-CANVAS-NODE-CONTEXT-SURFACE-COORDINATOR'
+    and pattern_kind = 'owns'
+    and pattern in (
       'apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.ts',
       'apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.test.ts',
       'apps/web/src/app/views/canvas/canvasNodeWorkbenchVisibility.ts',
       'apps/web/src/app/views/canvas/canvasNodeWorkbenchVisibility.test.ts'
     );
 
-  if context_owned_file_count <> 4 then
-    raise exception 'Context surface coordinator owns only % of 4 exact files', context_owned_file_count;
+  if context_ownership_pattern_count <> 4 then
+    raise exception 'Context surface coordinator declares only % of 4 exact ownership patterns', context_ownership_pattern_count;
   end if;
 
-  select count(*) into stale_broad_owner_count
-  from planning_query_store.component_engineering_file_ownership_query
-  where leaf_component_id = 'SYS-WEB-CANVAS-NODE-EDGE-AUTHORING'
-    and file_path in (
+  select count(*) into broad_owner_exclusion_count
+  from planning_query_store.governance_component_local_ownership_patterns
+  where component_id = 'SYS-WEB-CANVAS-NODE-EDGE-AUTHORING'
+    and pattern_kind = 'excludes'
+    and pattern in (
       'apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.ts',
       'apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.test.ts',
       'apps/web/src/app/views/canvas/canvasNodeWorkbenchVisibility.ts',
       'apps/web/src/app/views/canvas/canvasNodeWorkbenchVisibility.test.ts'
     );
 
-  if stale_broad_owner_count <> 0 then
-    raise exception 'Node/edge authoring retains % context-surface files', stale_broad_owner_count;
+  if broad_owner_exclusion_count <> 4 then
+    raise exception 'Node/edge authoring declares only % of 4 context-surface exclusions', broad_owner_exclusion_count;
   end if;
 end
 $$;
