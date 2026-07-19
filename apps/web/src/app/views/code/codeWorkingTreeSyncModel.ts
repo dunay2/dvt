@@ -71,9 +71,10 @@ type CodeWorkingTreeSyncEvent =
   | { readonly type: 'reconciliation_started' }
   | {
       readonly type: 'reconciliation_completed';
+      readonly receipt: WorkspaceFileSaveReceipt;
       readonly outcome: CodeWorkingTreeReconciliationOutcome;
     }
-  | { readonly type: 'reconciliation_failed' }
+  | { readonly type: 'reconciliation_failed'; readonly receipt: WorkspaceFileSaveReceipt }
   | { readonly type: 'sync_conflicted'; readonly requestId: number }
   | { readonly type: 'sync_failed'; readonly requestId: number }
   | { readonly type: 'retry_requested' };
@@ -121,11 +122,12 @@ export function reduceCodeWorkingTreeSync(
         ...state,
         persistedContent: state.inFlight.content,
         persistedRevision: event.receipt.contentSha256,
-        phase: event.requiresReconciliation
-          ? 'reconciling'
-          : state.value === state.inFlight.content
-            ? 'synchronized'
-            : 'modified',
+        phase:
+          state.value !== state.inFlight.content
+            ? 'modified'
+            : event.requiresReconciliation
+              ? 'reconciling'
+              : 'synchronized',
         inFlight: null,
         pendingReconciliation: event.requiresReconciliation ? event.receipt : null,
         persistedReconciliationPhase: null,
@@ -136,7 +138,11 @@ export function reduceCodeWorkingTreeSync(
         ? { ...state, phase: 'reconciling' }
         : state;
     case 'reconciliation_completed': {
-      if (state.phase !== 'reconciling' || state.pendingReconciliation == null) {
+      if (
+        state.phase !== 'reconciling' ||
+        state.pendingReconciliation == null ||
+        !isSameSaveReceipt(state.pendingReconciliation, event.receipt)
+      ) {
         return state;
       }
       if (event.outcome.kind === 'fresh') {
@@ -155,7 +161,9 @@ export function reduceCodeWorkingTreeSync(
       };
     }
     case 'reconciliation_failed':
-      return state.phase === 'reconciling' && state.pendingReconciliation != null
+      return state.phase === 'reconciling' &&
+        state.pendingReconciliation != null &&
+        isSameSaveReceipt(state.pendingReconciliation, event.receipt)
         ? {
             ...state,
             phase: state.value === state.persistedContent ? 'reconciliation_failed' : 'modified',
@@ -180,6 +188,19 @@ export function reduceCodeWorkingTreeSync(
   }
 }
 
+function isSameSaveReceipt(
+  left: WorkspaceFileSaveReceipt,
+  right: WorkspaceFileSaveReceipt
+): boolean {
+  return (
+    left.kind === right.kind &&
+    left.disposition === right.disposition &&
+    left.path === right.path &&
+    left.contentSha256 === right.contentSha256 &&
+    left.lastModified === right.lastModified
+  );
+}
+
 function reduceEditedValue(
   state: CodeWorkingTreeSyncState,
   value: string
@@ -188,7 +209,11 @@ function reduceEditedValue(
     return { ...state, value };
   }
   if (state.phase === 'reconciling') {
-    return { ...state, value };
+    return {
+      ...state,
+      value,
+      phase: value === state.persistedContent ? 'reconciling' : 'modified',
+    };
   }
   if (state.inFlight) {
     return { ...state, value, phase: 'syncing' };

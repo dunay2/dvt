@@ -11,6 +11,7 @@ import {
   readLiveGraphDraft,
   readLiveRunEvents,
   readLiveRunSnapshot,
+  readLiveWorkspaceFile,
   seedLiveSelectedClosureDraft,
   visitWithLiveWorkspaceSession,
   waitForLiveWorkspaceFileContent,

@@ -157,6 +157,136 @@ describe('useCodeWorkingTreeSync', () => {
     expect(saveFileContent).toHaveBeenCalledTimes(1);
   });
 
+  it('resolves flush after byte persistence while semantic reconciliation remains pending', async () => {
+    const saved = receipt('b'.repeat(64));
+    const reconciliation = deferred<CodeWorkingTreeReconciliationOutcome>();
+    const reconcilePersistedFile = vi.fn(() => reconciliation.promise);
+    const saveFileContent = vi.fn(async () => saved);
+    await render({ saveFileContent }, reconcilePersistedFile);
+
+    act(() => controller.updateValue('select 2'));
+    let flushResult: boolean | undefined;
+    await act(async () => {
+      flushResult = await controller.flush();
+    });
+
+    expect(flushResult).toBe(true);
+    expect(controller.phase).toBe('reconciling');
+
+    await act(async () => {
+      reconciliation.resolve({
+        kind: 'fresh',
+        analysisSha256: 'c'.repeat(64),
+        projectContentSetSha256: 'd'.repeat(64),
+      });
+      await Promise.resolve();
+    });
+    expect(controller.phase).toBe('synchronized');
+  });
+
+  it('persists an edit made while the previous receipt is still reconciling', async () => {
+    const firstReconciliation = deferred<CodeWorkingTreeReconciliationOutcome>();
+    const reconcilePersistedFile = vi
+      .fn<(receipt: WorkspaceFileSaveReceipt) => Promise<CodeWorkingTreeReconciliationOutcome>>()
+      .mockReturnValueOnce(firstReconciliation.promise)
+      .mockResolvedValueOnce({
+        kind: 'fresh',
+        analysisSha256: 'd'.repeat(64),
+        projectContentSetSha256: 'e'.repeat(64),
+      });
+    const saveFileContent = vi
+      .fn<IWorkspaceFileContentCommandPort['saveFileContent']>()
+      .mockResolvedValueOnce(receipt('b'.repeat(64)))
+      .mockResolvedValueOnce(receipt('c'.repeat(64)));
+    await render({ saveFileContent }, reconcilePersistedFile);
+
+    act(() => controller.updateValue('select 2'));
+    await act(async () => {
+      await controller.flush();
+    });
+    expect(controller.phase).toBe('reconciling');
+
+    act(() => controller.updateValue('select 3'));
+    expect(controller.phase).toBe('modified');
+
+    await act(async () => {
+      await controller.flush();
+    });
+
+    expect(saveFileContent).toHaveBeenNthCalledWith(2, {
+      path: FILE.path,
+      content: 'select 3',
+      expectedRevision: { kind: 'content_sha256', value: 'b'.repeat(64) },
+    });
+
+    await act(async () => {
+      firstReconciliation.resolve({
+        kind: 'fresh',
+        analysisSha256: 'f'.repeat(64),
+        projectContentSetSha256: '1'.repeat(64),
+      });
+      await Promise.resolve();
+    });
+  });
+
+  it('persists an edit made while the previous DBT save command is still in flight', async () => {
+    const firstSave = deferred<WorkspaceFileSaveReceipt>();
+    const secondSave = deferred<WorkspaceFileSaveReceipt>();
+    const firstReconciliation = deferred<CodeWorkingTreeReconciliationOutcome>();
+    const saveFileContent = vi
+      .fn<IWorkspaceFileContentCommandPort['saveFileContent']>()
+      .mockReturnValueOnce(firstSave.promise)
+      .mockReturnValueOnce(secondSave.promise);
+    const reconcilePersistedFile = vi
+      .fn<(receipt: WorkspaceFileSaveReceipt) => Promise<CodeWorkingTreeReconciliationOutcome>>()
+      .mockReturnValueOnce(firstReconciliation.promise)
+      .mockResolvedValueOnce({
+        kind: 'fresh',
+        analysisSha256: 'd'.repeat(64),
+        projectContentSetSha256: 'e'.repeat(64),
+      });
+    await render({ saveFileContent }, reconcilePersistedFile);
+
+    act(() => controller.updateValue('select 2'));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50);
+    });
+    act(() => controller.updateValue('select 3'));
+
+    let flushSettled = false;
+    let flushResult = false;
+    let flushPromise!: Promise<void>;
+    act(() => {
+      flushPromise = controller.flush().then((result) => {
+        flushResult = result;
+        flushSettled = true;
+      });
+    });
+    await act(async () => Promise.resolve());
+    expect(flushSettled).toBe(false);
+
+    await act(async () => {
+      firstSave.resolve(receipt('b'.repeat(64)));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(saveFileContent).toHaveBeenNthCalledWith(2, {
+      path: FILE.path,
+      content: 'select 3',
+      expectedRevision: { kind: 'content_sha256', value: 'b'.repeat(64) },
+    });
+    expect(flushSettled).toBe(false);
+
+    await act(async () => {
+      secondSave.resolve(receipt('c'.repeat(64)));
+      await flushPromise;
+    });
+
+    expect(flushResult).toBe(true);
+    expect(saveFileContent).toHaveBeenCalledTimes(2);
+  });
+
   it('allows navigation after bytes persist even when post-save reconciliation fails', async () => {
     const saved = receipt('b'.repeat(64));
     const reconcilePersistedFile = vi.fn(

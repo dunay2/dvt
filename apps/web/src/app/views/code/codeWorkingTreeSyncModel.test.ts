@@ -71,6 +71,59 @@ describe('CodeWorkingTreeSync model', () => {
     expect(completed.inFlight).toBeNull();
   });
 
+  it('keeps a later edit modified when the in-flight value requires reconciliation', () => {
+    const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
+      type: 'edited',
+      value: 'select 2',
+    });
+    const syncing = reduceCodeWorkingTreeSync(modified, {
+      type: 'sync_started',
+      requestId: 12,
+    });
+    const editedAgain = reduceCodeWorkingTreeSync(syncing, {
+      type: 'edited',
+      value: 'select 3',
+    });
+
+    const completed = reduceCodeWorkingTreeSync(editedAgain, {
+      type: 'content_persisted',
+      requestId: 12,
+      receipt: savedReceipt(),
+      requiresReconciliation: true,
+    });
+
+    expect(completed.phase).toBe('modified');
+    expect(completed.value).toBe('select 3');
+    expect(completed.persistedContent).toBe('select 2');
+    expect(completed.pendingReconciliation).toEqual(savedReceipt());
+  });
+
+  it('marks an edit made during reconciliation as requiring another persistence command', () => {
+    const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
+      type: 'edited',
+      value: 'select 2',
+    });
+    const syncing = reduceCodeWorkingTreeSync(modified, {
+      type: 'sync_started',
+      requestId: 2,
+    });
+    const reconciling = reduceCodeWorkingTreeSync(syncing, {
+      type: 'content_persisted',
+      requestId: 2,
+      receipt: savedReceipt(),
+      requiresReconciliation: true,
+    });
+
+    const editedAgain = reduceCodeWorkingTreeSync(reconciling, {
+      type: 'edited',
+      value: 'select 3',
+    });
+
+    expect(editedAgain.phase).toBe('modified');
+    expect(editedAgain.persistedContent).toBe('select 2');
+    expect(editedAgain.pendingReconciliation).toEqual(savedReceipt());
+  });
+
   it('keeps the editor value and stops automatic writes after a revision conflict', () => {
     const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
       type: 'edited',
@@ -157,6 +210,7 @@ describe('CodeWorkingTreeSync model', () => {
 
       const unresolved = reduceCodeWorkingTreeSync(reconciling, {
         type: 'reconciliation_completed',
+        receipt: savedReceipt(),
         outcome: { kind: 'degraded', freshness },
       });
 
@@ -182,6 +236,7 @@ describe('CodeWorkingTreeSync model', () => {
     });
     const invalid = reduceCodeWorkingTreeSync(reconciling, {
       type: 'reconciliation_completed',
+      receipt: savedReceipt(),
       outcome: { kind: 'degraded', freshness: 'invalid' },
     });
 
@@ -216,11 +271,43 @@ describe('CodeWorkingTreeSync model', () => {
 
     const superseded = reduceCodeWorkingTreeSync(reconciling, {
       type: 'reconciliation_completed',
+      receipt: savedReceipt(),
       outcome: { kind: 'superseded', currentContentSha256: 'e'.repeat(64) },
     });
 
     expect(superseded.phase).toBe('persisted_superseded');
     expect(superseded.pendingReconciliation).toEqual(savedReceipt());
+  });
+
+  it('ignores a reconciliation result for an older save receipt', () => {
+    const olderReceipt = savedReceipt('b'.repeat(64));
+    const newerReceipt = savedReceipt('c'.repeat(64));
+    const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
+      type: 'edited',
+      value: 'select 2',
+    });
+    const syncing = reduceCodeWorkingTreeSync(modified, {
+      type: 'sync_started',
+      requestId: 11,
+    });
+    const reconciling = reduceCodeWorkingTreeSync(syncing, {
+      type: 'content_persisted',
+      requestId: 11,
+      receipt: newerReceipt,
+      requiresReconciliation: true,
+    });
+
+    const unchanged = reduceCodeWorkingTreeSync(reconciling, {
+      type: 'reconciliation_completed',
+      receipt: olderReceipt,
+      outcome: {
+        kind: 'fresh',
+        analysisSha256: 'd'.repeat(64),
+        projectContentSetSha256: 'e'.repeat(64),
+      },
+    });
+
+    expect(unchanged).toBe(reconciling);
   });
 
   it('distinguishes a failed final authority read from failed project analysis', () => {
@@ -241,6 +328,7 @@ describe('CodeWorkingTreeSync model', () => {
 
     const unavailable = reduceCodeWorkingTreeSync(reconciling, {
       type: 'reconciliation_completed',
+      receipt: savedReceipt(),
       outcome: { kind: 'verification-unavailable' },
     });
 

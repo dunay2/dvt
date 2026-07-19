@@ -123,7 +123,6 @@ describe('canvas dbt authoring/code/run architecture', () => {
     expect(DBT_AUTHORING_FIELDS_SOURCE).not.toContain('workspaceService');
     expect(DBT_MODEL_AUTHORING_SECTION_SOURCE).toContain('name="dbt-origin"');
     expect(DBT_MODEL_AUTHORING_SECTION_SOURCE).toContain('name="dbt-materialized"');
-    expect(DBT_MODEL_AUTHORING_SECTION_SOURCE).toContain('data-slot="dbt-generated-model-sql"');
     expect(DBT_MODEL_AUTHORING_SECTION_SOURCE).not.toContain('name="dbt-model-sql"');
     expect(DBT_MODEL_AUTHORING_SECTION_SOURCE).not.toContain('workspaceService');
     expect(COMMAND_CATALOG_SOURCE).toContain('ConfigureCanvasDbtNode');

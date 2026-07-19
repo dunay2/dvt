@@ -556,6 +556,59 @@ describe('CodeView', () => {
     ).toBe('models/staging/stg_orders.sql');
   });
 
+  it('applies the requested contextual target after persistence retry succeeds', async () => {
+    const commandPort = {
+      saveFileContent: vi
+        .fn<IWorkspaceFileContentCommandPort['saveFileContent']>()
+        .mockRejectedValueOnce(new Error('write unavailable'))
+        .mockResolvedValueOnce({
+          kind: 'saved',
+          disposition: 'updated',
+          path: 'models/staging/stg_orders.sql',
+          contentSha256: 'b'.repeat(64),
+          lastModified: '2026-07-19T00:00:00.000Z',
+        }),
+    };
+    const initialScope: CodeViewFileScope = {
+      kind: 'dbt-project-files',
+      projectRoot: '.',
+      initialPath: 'models/staging/stg_orders.sql',
+    };
+    setupContainer();
+    await renderCodeView(commandPort, false, undefined, { fileScope: initialScope });
+    await waitForInitialRender(false);
+    const editor = getContainer().querySelector<HTMLTextAreaElement>(
+      '[data-testid="monaco-code-editor"]'
+    );
+    await editAndVerifyEditor(editor);
+
+    await renderCodeView(commandPort, false, undefined, {
+      fileScope: {
+        ...initialScope,
+        initialPath: 'models/staging/stg_customers.sql',
+      },
+    });
+    await waitFor(
+      () =>
+        getContainer()
+          .querySelector('[data-slot="code-working-tree-status"]')
+          ?.getAttribute('data-phase') === 'failed'
+    );
+
+    const retryButton = getContainer().querySelector<HTMLButtonElement>(
+      '[data-slot="code-working-tree-status"] button'
+    );
+    await act(async () => retryButton?.click());
+
+    await waitFor(
+      () =>
+        getContainer()
+          .querySelector('[data-testid="monaco-code-editor"]')
+          ?.getAttribute('data-path') === 'models/staging/stg_customers.sql'
+    );
+    expect(commandPort.saveFileContent).toHaveBeenCalledTimes(2);
+  });
+
   it('exposes a close-time flush without waiting for the debounce interval', async () => {
     const saveFileContent = vi.fn(async (): Promise<WorkspaceFileSaveReceipt> => ({
       kind: 'saved',
