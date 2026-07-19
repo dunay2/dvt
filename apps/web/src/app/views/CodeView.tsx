@@ -168,11 +168,15 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     },
     [resolvedPath, selectedPath, workingTreeSync.flush]
   );
+  const latestRequestFileSelectionRef = useRef(requestFileSelection);
+  useEffect(() => {
+    latestRequestFileSelectionRef.current = requestFileSelection;
+  }, [requestFileSelection]);
   useEffect(() => {
     if (fileScope?.initialPath != null) {
-      void requestFileSelection(fileScope.initialPath);
+      void latestRequestFileSelectionRef.current(fileScope.initialPath);
     }
-  }, [fileScope?.initialPath, requestFileSelection]);
+  }, [fileScope?.initialPath]);
   useImperativeHandle(ref, () => ({ flush: workingTreeSync.flush }), [workingTreeSync.flush]);
   const workingTreeStatusCopy = {
     synchronized: {

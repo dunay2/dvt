@@ -376,6 +376,38 @@ describe('CodeView', () => {
     );
   });
 
+  it('keeps a manual project-file selection until the contextual target changes', async () => {
+    setupContainer();
+    await renderCodeView(undefined, false, undefined, {
+      fileScope: {
+        kind: 'dbt-project-files',
+        projectRoot: '.',
+        initialPath: 'models/staging/stg_orders.sql',
+      },
+    });
+    await waitForInitialRender(false);
+
+    const nextFileButton = getContainer().querySelector<HTMLButtonElement>(
+      '[data-slot="code-workspace-file-entry"][data-workspace-path="models/staging/stg_customers.sql"]'
+    );
+    expect(nextFileButton).not.toBeNull();
+    await act(async () => nextFileButton?.click());
+    await waitFor(
+      () =>
+        getContainer()
+          .querySelector('[data-testid="monaco-code-editor"]')
+          ?.getAttribute('data-path') === 'models/staging/stg_customers.sql'
+    );
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    expect(
+      getContainer().querySelector('[data-testid="monaco-code-editor"]')?.getAttribute('data-path')
+    ).toBe('models/staging/stg_customers.sql');
+  });
+
   it('flushes the active buffer before a contextual target changes its initial path', async () => {
     let resolveSave!: (receipt: WorkspaceFileSaveReceipt) => void;
     const commandPort = {
