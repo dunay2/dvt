@@ -8,6 +8,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CodeWorkingTreeNavigationGuard } from './CodeWorkingTreeNavigationGuard';
 
+const NativeRequest = globalThis.Request;
+
+class MemoryRouterRequest extends NativeRequest {
+  constructor(input: RequestInfo | URL, init?: RequestInit) {
+    // React Router creates a jsdom AbortSignal that Node's Request rejects as cross-realm.
+    super(input, init == null ? undefined : { ...init, signal: undefined });
+  }
+}
+
 function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
   let resolve!: (value: T) => void;
   const promise = new Promise<T>((resolvePromise) => {
@@ -33,6 +42,7 @@ describe('CodeWorkingTreeNavigationGuard', () => {
   let root: Root;
 
   beforeEach(() => {
+    globalThis.Request = MemoryRouterRequest;
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
@@ -44,6 +54,7 @@ describe('CodeWorkingTreeNavigationGuard', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    globalThis.Request = NativeRequest;
   });
 
   it('prevents hard-browser exit only while bytes are unpersisted', async () => {

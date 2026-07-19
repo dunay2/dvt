@@ -115,6 +115,7 @@ describe('useCanvasController canvas document contract', () => {
       harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft
     ).toHaveBeenCalled();
     expect(harness.getLatestResult()?.canvasDocument).toEqual({
+      id: 'transformation-canvas',
       kind: 'transformation',
       title: 'Transformation canvas',
     });
