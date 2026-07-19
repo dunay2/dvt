@@ -408,6 +408,65 @@ describe('CodeView', () => {
     ).toBe('models/staging/stg_customers.sql');
   });
 
+  it('resets a node file selection when the contextual target becomes the project', async () => {
+    const workspaceFilesQuery = buildWorkspaceFilesQueryPort({
+      listFiles: async () => [
+        { path: 'dbt_project.yml', name: 'dbt_project.yml', kind: 'file' },
+        {
+          path: 'models',
+          name: 'models',
+          kind: 'directory',
+          children: [
+            {
+              path: 'models/staging/stg_orders.sql',
+              name: 'stg_orders.sql',
+              kind: 'file',
+            },
+            {
+              path: 'models/staging/stg_customers.sql',
+              name: 'stg_customers.sql',
+              kind: 'file',
+            },
+          ],
+        },
+      ],
+    });
+    const nodeScope: CodeViewFileScope = {
+      kind: 'dbt-project-files',
+      projectRoot: '.',
+      initialPath: 'models/staging/stg_orders.sql',
+    };
+    setupContainer();
+    await renderCodeView(undefined, false, undefined, {
+      fileScope: nodeScope,
+      workspaceFilesQuery,
+    });
+    await waitForInitialRender(false);
+
+    const nextFileButton = getContainer().querySelector<HTMLButtonElement>(
+      '[data-slot="code-workspace-file-entry"][data-workspace-path="models/staging/stg_customers.sql"]'
+    );
+    await act(async () => nextFileButton?.click());
+    await waitFor(
+      () =>
+        getContainer()
+          .querySelector('[data-testid="monaco-code-editor"]')
+          ?.getAttribute('data-path') === 'models/staging/stg_customers.sql'
+    );
+
+    await renderCodeView(undefined, false, undefined, {
+      fileScope: { kind: 'dbt-project-files', projectRoot: '.' },
+      workspaceFilesQuery,
+    });
+
+    await waitFor(
+      () =>
+        getContainer()
+          .querySelector('[data-testid="monaco-code-editor"]')
+          ?.getAttribute('data-path') === 'dbt_project.yml'
+    );
+  });
+
   it('flushes the active buffer before a contextual target changes its initial path', async () => {
     let resolveSave!: (receipt: WorkspaceFileSaveReceipt) => void;
     const commandPort = {

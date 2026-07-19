@@ -156,7 +156,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
       reconcilePersistedFile == null ? undefined : reconcilePersistedFileAuthority,
   });
   const requestFileSelection = useCallback(
-    async (nextPath: string): Promise<void> => {
+    async (nextPath: string | undefined): Promise<void> => {
       if (nextPath === selectedPath || nextPath === resolvedPath) {
         return;
       }
@@ -173,9 +173,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     latestRequestFileSelectionRef.current = requestFileSelection;
   }, [requestFileSelection]);
   useEffect(() => {
-    if (fileScope?.initialPath != null) {
-      void latestRequestFileSelectionRef.current(fileScope.initialPath);
-    }
+    void latestRequestFileSelectionRef.current(fileScope?.initialPath);
   }, [fileScope?.initialPath]);
   useImperativeHandle(ref, () => ({ flush: workingTreeSync.flush }), [workingTreeSync.flush]);
   const workingTreeStatusCopy = {
