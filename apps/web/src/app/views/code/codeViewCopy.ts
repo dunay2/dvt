@@ -23,6 +23,16 @@ export type CodeViewCopy = Readonly<{
   workingTreeFailedMessage: string;
   workingTreeReconciliationFailedLabel: string;
   workingTreeReconciliationFailedMessage: string;
+  workingTreePersistedStaleLabel: string;
+  workingTreePersistedStaleMessage: string;
+  workingTreePersistedInvalidLabel: string;
+  workingTreePersistedInvalidMessage: string;
+  workingTreePersistedUnavailableLabel: string;
+  workingTreePersistedUnavailableMessage: string;
+  workingTreePersistedVerificationUnavailableLabel: string;
+  workingTreePersistedVerificationUnavailableMessage: string;
+  workingTreePersistedSupersededLabel: string;
+  workingTreePersistedSupersededMessage: string;
   workingTreeReadOnlyLabel: string;
   workingTreeReadOnlyMessage: string;
   workingTreeRetryLabel: string;
@@ -106,6 +116,46 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
   workingTreeReconciliationFailedMessage: {
     key: 'code.workingTreeReconciliationFailedMessage',
     fallback: 'The file is saved, but the authoritative project analysis could not be refreshed.',
+  },
+  workingTreePersistedStaleLabel: {
+    key: 'code.workingTreePersistedStaleLabel',
+    fallback: 'Stale analysis',
+  },
+  workingTreePersistedStaleMessage: {
+    key: 'code.workingTreePersistedStaleMessage',
+    fallback: 'The file is saved; the Canvas still shows the last valid project graph.',
+  },
+  workingTreePersistedInvalidLabel: {
+    key: 'code.workingTreePersistedInvalidLabel',
+    fallback: 'Invalid project',
+  },
+  workingTreePersistedInvalidMessage: {
+    key: 'code.workingTreePersistedInvalidMessage',
+    fallback: 'The file is saved; fix the project diagnostics before preview.',
+  },
+  workingTreePersistedUnavailableLabel: {
+    key: 'code.workingTreePersistedUnavailableLabel',
+    fallback: 'Analysis unavailable',
+  },
+  workingTreePersistedUnavailableMessage: {
+    key: 'code.workingTreePersistedUnavailableMessage',
+    fallback: 'The file is saved; authoritative project analysis is unavailable.',
+  },
+  workingTreePersistedVerificationUnavailableLabel: {
+    key: 'code.workingTreePersistedVerificationUnavailableLabel',
+    fallback: 'Verification unavailable',
+  },
+  workingTreePersistedVerificationUnavailableMessage: {
+    key: 'code.workingTreePersistedVerificationUnavailableMessage',
+    fallback: 'The file is saved, but its final authoritative revision could not be verified.',
+  },
+  workingTreePersistedSupersededLabel: {
+    key: 'code.workingTreePersistedSupersededLabel',
+    fallback: 'Newer revision available',
+  },
+  workingTreePersistedSupersededMessage: {
+    key: 'code.workingTreePersistedSupersededMessage',
+    fallback: 'A newer authoritative revision replaced the saved file. Reload before editing.',
   },
   workingTreeReadOnlyLabel: { key: 'code.workingTreeReadOnlyLabel', fallback: 'Read only' },
   workingTreeReadOnlyMessage: {
@@ -193,34 +243,49 @@ const COPY_BY_KEY: Record<keyof CodeViewCopy, LocalizableString> = {
 };
 
 const SPANISH_COPY: CodeViewCopy = {
-  title: 'Codigo',
-  subtitle: 'Explora archivos del workspace y edita el arbol de trabajo en Monaco.',
+  title: 'Código',
+  subtitle: 'Explora archivos del workspace y edita el árbol de trabajo en Monaco.',
   explorerTitle: 'Explorador',
   editorLoadingMessage: 'Cargando editor Monaco...',
   editorAriaLabelPrefix: 'Editando',
   workingTreeSynchronizedLabel: 'Sincronizado',
-  workingTreeSynchronizedMessage: 'El arbol de trabajo coincide con el editor.',
+  workingTreeSynchronizedMessage: 'El árbol de trabajo coincide con el editor.',
   workingTreeModifiedLabel: 'Modificado',
-  workingTreeModifiedMessage: 'Los cambios esperan sincronizacion.',
+  workingTreeModifiedMessage: 'Los cambios esperan sincronización.',
   workingTreeSyncingLabel: 'Sincronizando',
-  workingTreeSyncingMessage: 'Actualizando el arbol de trabajo.',
+  workingTreeSyncingMessage: 'Actualizando el árbol de trabajo.',
   workingTreeReconcilingLabel: 'Analizando',
   workingTreeReconcilingMessage:
-    'El archivo esta guardado; actualizando el analisis autoritativo del proyecto.',
+    'El archivo está guardado; actualizando el análisis autoritativo del proyecto.',
   workingTreeConflictLabel: 'Conflicto',
-  workingTreeConflictMessage: 'Recarga la revision mas reciente antes de continuar.',
-  workingTreeFailedLabel: 'Actualizacion fallida',
-  workingTreeFailedMessage: 'No se pudo actualizar el arbol de trabajo.',
-  workingTreeReconciliationFailedLabel: 'Analisis fallido',
+  workingTreeConflictMessage: 'Recarga la revisión más reciente antes de continuar.',
+  workingTreeFailedLabel: 'Actualización fallida',
+  workingTreeFailedMessage: 'No se pudo actualizar el árbol de trabajo.',
+  workingTreeReconciliationFailedLabel: 'Análisis fallido',
   workingTreeReconciliationFailedMessage:
-    'El archivo esta guardado, pero no se pudo actualizar el analisis autoritativo del proyecto.',
+    'El archivo está guardado, pero no se pudo actualizar el análisis autoritativo del proyecto.',
+  workingTreePersistedStaleLabel: 'Análisis obsoleto',
+  workingTreePersistedStaleMessage:
+    'El archivo está guardado; el Canvas todavía muestra el último grafo válido del proyecto.',
+  workingTreePersistedInvalidLabel: 'Proyecto no válido',
+  workingTreePersistedInvalidMessage:
+    'El archivo está guardado; corrige los diagnósticos del proyecto antes del preview.',
+  workingTreePersistedUnavailableLabel: 'Análisis no disponible',
+  workingTreePersistedUnavailableMessage:
+    'El archivo está guardado; el análisis autoritativo del proyecto no está disponible.',
+  workingTreePersistedVerificationUnavailableLabel: 'Verificación no disponible',
+  workingTreePersistedVerificationUnavailableMessage:
+    'El archivo está guardado, pero no se pudo verificar su revisión autoritativa final.',
+  workingTreePersistedSupersededLabel: 'Hay una revisión más reciente',
+  workingTreePersistedSupersededMessage:
+    'Una revisión autoritativa más reciente sustituyó el archivo guardado. Recárgalo antes de editar.',
   workingTreeReadOnlyLabel: 'Solo lectura',
   workingTreeReadOnlyMessage: 'Este archivo no se puede modificar.',
   workingTreeRetryLabel: 'Reintentar',
   workingTreeReloadLabel: 'Recargar archivo',
   routeLoadingMessage: 'Cargando archivos del workspace...',
   routeEmptyTitle: 'No hay archivos del workspace disponibles',
-  routeEmptyMessage: 'Este workspace todavia no expone archivos para explorar.',
+  routeEmptyMessage: 'Este workspace todavía no expone archivos para explorar.',
   routeErrorTitle: 'Archivos del workspace no disponibles',
   routeErrorMessage: 'No se pudo cargar el explorador de archivos ahora.',
   previewLoadingMessage: 'Cargando vista previa del archivo...',
@@ -229,17 +294,17 @@ const SPANISH_COPY: CodeViewCopy = {
   previewErrorTitle: 'Vista previa de archivo no disponible',
   previewErrorMessage: 'No se pudo cargar el archivo seleccionado ahora.',
   previewMissingTitle: 'Archivo seleccionado no disponible',
-  previewMissingMessagePrefix: 'El archivo seleccionado ya no esta disponible en este workspace:',
+  previewMissingMessagePrefix: 'El archivo seleccionado ya no está disponible en este workspace:',
   historyTitle: 'Historial de archivo',
   historyNoFile: 'Selecciona un archivo para inspeccionar su historial.',
   historyLoadingMessage: 'Cargando historial del archivo...',
   historyEmptyMessage: 'No se encontraron commits para este archivo.',
   historyErrorMessage: 'No se pudo cargar el historial del archivo ahora.',
   historyOpenDiffLabel: 'Abrir en Diff',
-  bootstrapLoadingFilesDetail: 'Cargando archivos del workspace para la ruta de codigo',
-  bootstrapNoWorkspaceFilesDetail: 'La ruta de codigo esta lista sin archivos del workspace',
+  bootstrapLoadingFilesDetail: 'Cargando archivos del workspace para la ruta de código',
+  bootstrapNoWorkspaceFilesDetail: 'La ruta de código está lista sin archivos del workspace',
   bootstrapLoadingPreviewDetail: 'Cargando la vista previa inicial del archivo',
-  bootstrapReadyDetail: 'La ruta de codigo esta lista',
+  bootstrapReadyDetail: 'La ruta de código está lista',
 };
 
 const LOCALIZED_COPY_BY_LANGUAGE: Record<CodeViewLanguage, CodeViewCopy | null> = {

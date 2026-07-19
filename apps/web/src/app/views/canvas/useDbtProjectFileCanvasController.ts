@@ -6,7 +6,7 @@ import DbtNodeComponent, { type DbtNodeData } from '../../components/canvas/DbtN
 import type { DbtProjectFilesAuthorityBinding } from '../../ports/dbtProjectGraph';
 import { getRegisteredPluginIds } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { ImportSourcesResult } from '../../ports/workspace';
+import type { ImportSourcesResult, WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import { createCanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { useDbtProjectGraphQuery } from '../../queries/dbtProjectQueries';
 import {
@@ -31,6 +31,7 @@ import {
 import { refreshCanvasExecutionSelectionAuthority } from './canvasExecutionSelectionRecoveryAuthorityAdapter';
 import type { SqlContextWorkbenchTarget } from './sqlContextWorkbenchModel';
 import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelectionRecovery';
+import { projectDbtCodeReconciliationOutcome } from './dbtProjectCodeReconciliation';
 
 const EMPTY_NODE_POSITIONS: Record<string, { x: number; y: number }> = {};
 const EMPTY_FROZEN_NODE_IDS: readonly string[] = [];
@@ -236,19 +237,25 @@ export function useDbtProjectFileCanvasController(
     [canonicalEdges, canonicalNodes, execution.executionStrategy, visibleNodeIds]
   );
   const refetchProjectGraph = query.refetch;
-  const refreshProjectGraph = useCallback(async () => {
+  const refreshProjectGraphSource = useCallback(async () => {
     const result = await refetchProjectGraph();
     if (!result.isSuccess || result.data == null) {
       throw result.error ?? new Error('The refreshed dbt project graph is unavailable.');
     }
-    return projectDbtProjectGraphToCanonicalCanvas(result.data);
+    return result.data;
   }, [refetchProjectGraph]);
+  const refreshProjectGraph = useCallback(async () => {
+    return projectDbtProjectGraphToCanonicalCanvas(await refreshProjectGraphSource());
+  }, [refreshProjectGraphSource]);
   const refreshProjectGraphAfterMutation = useCallback(async (): Promise<void> => {
     await refreshProjectGraph();
   }, [refreshProjectGraph]);
-  const refreshProjectGraphAfterCodeMutation = useCallback(async (): Promise<void> => {
-    await refreshProjectGraph();
-  }, [refreshProjectGraph]);
+  const reconcileCodeFilePersistence = useCallback(
+    async (_receipt: WorkspaceFileSaveReceipt) => {
+      return projectDbtCodeReconciliationOutcome(await refreshProjectGraphSource());
+    },
+    [refreshProjectGraphSource]
+  );
   const reloadNodeDescription = useCallback(
     async (nodeId: string): Promise<string | null> => {
       const refreshedProjection = await refreshProjectGraph();
@@ -261,7 +268,11 @@ export function useDbtProjectFileCanvasController(
     [refreshProjectGraph]
   );
   const refreshExecutionSelectionAnalysis = useCallback(
-    () => refreshCanvasExecutionSelectionAuthority(refetchProjectGraph),
+    () =>
+      refreshCanvasExecutionSelectionAuthority(
+        refetchProjectGraph,
+        (projection) => projection?.freshness === 'fresh'
+      ),
     [refetchProjectGraph]
   );
   const executionSelectionRecovery = useCanvasExecutionSelectionRecovery({
@@ -403,7 +414,7 @@ export function useDbtProjectFileCanvasController(
     openProjectCode: () => setCodeWorkbenchTarget({ kind: 'project' }),
     closeCodeWorkbench: () => setCodeWorkbenchTarget(null),
     refreshProjectGraphAfterMutation,
-    refreshProjectGraphAfterCodeMutation,
+    reconcileCodeFilePersistence,
     reloadNodeDescription,
     canonicalNodes,
     canonicalEdges,

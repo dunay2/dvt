@@ -1,6 +1,14 @@
 /** Owned concern: render workspace file queries as the Code workbench local Monaco buffer. */
 import { FileCode2 } from 'lucide-react';
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
@@ -28,6 +36,7 @@ import {
 import { resolveCodeViewCopy } from './code/codeViewCopy';
 import { CodeFileHistoryPanel } from './code/CodeFileHistoryPanel';
 import { CodeWorkingTreeStatus } from './code/CodeWorkingTreeStatus';
+import { CodeWorkingTreeNavigationGuard } from './code/CodeWorkingTreeNavigationGuard';
 import {
   hasCodeWorkspaceFilePath,
   hasCodeWorkspaceFiles,
@@ -40,6 +49,8 @@ import { resolveCodeWorkbenchErrorPresentation } from './code/codeWorkbenchError
 import FileTreePanel from './code/FileTreePanel';
 import { useCodeWorkingTreeSync } from './code/useCodeWorkingTreeSync';
 import type { WorkspaceFileSaveReceipt } from '../ports/workspace';
+import { type CodeWorkingTreeReconciliationOutcome } from './code/codeWorkingTreeSyncModel';
+import { reconcileWorkspaceFileAuthority } from './code/workspaceFileReconciliationAuthority';
 
 const CODE_GRAPH_FILE_SCOPE_VIEW_ID = 'canvas-code-file-scope';
 
@@ -57,7 +68,9 @@ export type CodeViewProps = Readonly<{
   publishRouteBootstrap?: boolean;
   routeBootstrapId?: string;
   fileScope?: CodeViewFileScope;
-  onFileSynchronized?: (receipt: WorkspaceFileSaveReceipt) => Promise<void>;
+  reconcilePersistedFile?: (
+    receipt: WorkspaceFileSaveReceipt
+  ) => Promise<CodeWorkingTreeReconciliationOutcome>;
 }>;
 
 const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
@@ -65,7 +78,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     publishRouteBootstrap = true,
     routeBootstrapId = CANVAS_ROUTE_ID,
     fileScope,
-    onFileSynchronized,
+    reconcilePersistedFile,
   }: CodeViewProps = {},
   ref
 ) {
@@ -77,7 +90,10 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     undefined,
     { enabled: fileScope === undefined }
   );
-  const [selectedPath, setSelectedPath] = useState<string | undefined>(undefined);
+  const [selectedPath, setSelectedPath] = useState<string | undefined>(
+    () => fileScope?.initialPath
+  );
+  const fileSelectionRequestIdRef = useRef(0);
   const workspaceFileTree = fileTreeQuery.data ?? [];
   const scopedWorkspaceFileTree = useMemo(
     () =>
@@ -89,9 +105,6 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
           }),
     [fileScope, graphSnapshotQuery.data, workspaceFileTree]
   );
-  useEffect(() => {
-    setSelectedPath(fileScope?.initialPath);
-  }, [fileScope?.initialPath]);
   const resolvedPath = useMemo(
     () =>
       hasCodeWorkspaceFilePath(scopedWorkspaceFileTree, selectedPath)
@@ -105,6 +118,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     [fileScope, scopedWorkspaceFileTree, selectedPath]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
+  const refetchFileContent = fileContentQuery.refetch;
   const fileHistoryQuery = useWorkspaceFileHistoryQuery(resolvedPath);
   const fileTreeErrorPresentation = fileTreeQuery.isError
     ? resolveCodeWorkbenchErrorPresentation({
@@ -121,11 +135,46 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
         selectedPath: resolvedPath,
       })
     : null;
+  const reconcilePersistedFileAuthority = useCallback(
+    async (receipt: WorkspaceFileSaveReceipt): Promise<CodeWorkingTreeReconciliationOutcome> => {
+      if (reconcilePersistedFile == null) {
+        throw new Error('Project reconciliation is unavailable.');
+      }
+      const projectOutcome = await reconcilePersistedFile(receipt);
+      const authoritativeFileResult = await refetchFileContent();
+      if (!authoritativeFileResult.isSuccess || authoritativeFileResult.data == null) {
+        return { kind: 'verification-unavailable' };
+      }
+      return reconcileWorkspaceFileAuthority(receipt, authoritativeFileResult.data, projectOutcome);
+    },
+    [reconcilePersistedFile, refetchFileContent]
+  );
   const workingTreeSync = useCodeWorkingTreeSync({
     file: fileContentQuery.data,
     commandPort: workspaceFileContentCommand,
-    onFileSynchronized,
+    reconcilePersistedFile:
+      reconcilePersistedFile == null ? undefined : reconcilePersistedFileAuthority,
   });
+  const requestFileSelection = useCallback(
+    async (nextPath: string | undefined): Promise<void> => {
+      if (nextPath === selectedPath || nextPath === resolvedPath) {
+        return;
+      }
+      const requestId = ++fileSelectionRequestIdRef.current;
+      const persisted = await workingTreeSync.flush();
+      if (persisted && requestId === fileSelectionRequestIdRef.current) {
+        setSelectedPath(nextPath);
+      }
+    },
+    [resolvedPath, selectedPath, workingTreeSync.flush]
+  );
+  const latestRequestFileSelectionRef = useRef(requestFileSelection);
+  useEffect(() => {
+    latestRequestFileSelectionRef.current = requestFileSelection;
+  }, [requestFileSelection]);
+  useEffect(() => {
+    void latestRequestFileSelectionRef.current(fileScope?.initialPath);
+  }, [fileScope?.initialPath]);
   useImperativeHandle(ref, () => ({ flush: workingTreeSync.flush }), [workingTreeSync.flush]);
   const workingTreeStatusCopy = {
     synchronized: {
@@ -155,6 +204,26 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     reconciliation_failed: {
       label: copy.workingTreeReconciliationFailedLabel,
       message: copy.workingTreeReconciliationFailedMessage,
+    },
+    persisted_stale: {
+      label: copy.workingTreePersistedStaleLabel,
+      message: copy.workingTreePersistedStaleMessage,
+    },
+    persisted_invalid: {
+      label: copy.workingTreePersistedInvalidLabel,
+      message: copy.workingTreePersistedInvalidMessage,
+    },
+    persisted_unavailable: {
+      label: copy.workingTreePersistedUnavailableLabel,
+      message: copy.workingTreePersistedUnavailableMessage,
+    },
+    persisted_verification_unavailable: {
+      label: copy.workingTreePersistedVerificationUnavailableLabel,
+      message: copy.workingTreePersistedVerificationUnavailableMessage,
+    },
+    persisted_superseded: {
+      label: copy.workingTreePersistedSupersededLabel,
+      message: copy.workingTreePersistedSupersededMessage,
     },
     read_only: {
       label: copy.workingTreeReadOnlyLabel,
@@ -216,65 +285,69 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
   );
 
   return (
-    <RouteWorkbenchFrame
-      scroll={false}
-      bodyClassName="flex min-h-0 flex-1"
-      presentationMode={publishRouteBootstrap ? 'route' : 'embedded'}
-      header={
-        <div className={routeWorkbenchHeaderBandClassName}>
-          <ViewHeader
-            className="border-0 bg-transparent px-0 py-0"
-            title={copy.title}
-            icon={<FileCode2 className="size-6 text-(--status-info)" />}
-            subtitle={copy.subtitle}
-          />
-        </div>
-      }
-      slots={{
-        leftPanel: (
-          <FileTreePanel
-            title={copy.explorerTitle}
-            tree={scopedWorkspaceFileTree}
-            selectedPath={resolvedPath}
-            onSelect={(entry) => {
-              if (entry.kind === 'file' && entry.path !== resolvedPath) {
-                void workingTreeSync.flush().then((flushed) => {
-                  if (flushed) {
-                    setSelectedPath(entry.path);
-                  }
-                });
-              }
-            }}
-          />
-        ),
-        rightPanel: publishRouteBootstrap ? (
-          <CodeFileHistoryPanel
-            copy={copy}
-            selectedPath={resolvedPath}
-            entries={fileHistoryQuery.data ?? []}
-            isLoading={fileHistoryQuery.isPending}
-            error={fileHistoryQuery.error instanceof Error ? fileHistoryQuery.error : null}
-          />
-        ) : undefined,
-        primarySurface: (
-          <div className="min-w-0 flex h-full flex-1 flex-col">
-            <CodeWorkingTreeStatus
-              phase={workingTreeSync.phase}
-              copy={workingTreeStatusCopy}
-              onRetry={() => void workingTreeSync.retry()}
-              onReload={() => {
-                void fileContentQuery.refetch().then((result) => {
-                  if (result.data) {
-                    workingTreeSync.loadAuthoritative(result.data);
-                  }
-                });
+    <>
+      <CodeWorkingTreeNavigationGuard
+        blocked={workingTreeSync.navigationBlocked}
+        flush={workingTreeSync.flush}
+      />
+      <RouteWorkbenchFrame
+        scroll={false}
+        bodyClassName="flex min-h-0 flex-1"
+        presentationMode={publishRouteBootstrap ? 'route' : 'embedded'}
+        header={
+          publishRouteBootstrap ? (
+            <div className={routeWorkbenchHeaderBandClassName}>
+              <ViewHeader
+                className="border-0 bg-transparent px-0 py-0"
+                title={copy.title}
+                icon={<FileCode2 className="size-6 text-(--status-info)" />}
+                subtitle={copy.subtitle}
+              />
+            </div>
+          ) : undefined
+        }
+        slots={{
+          leftPanel: (
+            <FileTreePanel
+              title={copy.explorerTitle}
+              tree={scopedWorkspaceFileTree}
+              selectedPath={resolvedPath}
+              onSelect={(entry) => {
+                if (entry.kind === 'file' && entry.path !== resolvedPath) {
+                  void requestFileSelection(entry.path);
+                }
               }}
             />
-            <div className="min-h-0 flex-1 p-4">{previewPane}</div>
-          </div>
-        ),
-      }}
-    />
+          ),
+          rightPanel: publishRouteBootstrap ? (
+            <CodeFileHistoryPanel
+              copy={copy}
+              selectedPath={resolvedPath}
+              entries={fileHistoryQuery.data ?? []}
+              isLoading={fileHistoryQuery.isPending}
+              error={fileHistoryQuery.error instanceof Error ? fileHistoryQuery.error : null}
+            />
+          ) : undefined,
+          primarySurface: (
+            <div className="min-w-0 flex h-full flex-1 flex-col">
+              <CodeWorkingTreeStatus
+                phase={workingTreeSync.phase}
+                copy={workingTreeStatusCopy}
+                onRetry={() => void workingTreeSync.retry()}
+                onReload={() => {
+                  void fileContentQuery.refetch().then((result) => {
+                    if (result.data) {
+                      workingTreeSync.loadAuthoritative(result.data);
+                    }
+                  });
+                }}
+              />
+              <div className="min-h-0 flex-1 p-4">{previewPane}</div>
+            </div>
+          ),
+        }}
+      />
+    </>
   );
 });
 

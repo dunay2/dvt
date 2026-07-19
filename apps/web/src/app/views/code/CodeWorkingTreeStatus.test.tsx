@@ -18,6 +18,26 @@ const COPY = {
     label: 'Analysis failed',
     message: 'The authoritative analysis could not be refreshed.',
   },
+  persisted_stale: {
+    label: 'Stale analysis',
+    message: 'The file is saved; the Canvas still shows the last valid graph.',
+  },
+  persisted_invalid: {
+    label: 'Invalid project',
+    message: 'The file is saved; fix the project diagnostics before preview.',
+  },
+  persisted_unavailable: {
+    label: 'Analysis unavailable',
+    message: 'The file is saved; authoritative project analysis is unavailable.',
+  },
+  persisted_verification_unavailable: {
+    label: 'Verification unavailable',
+    message: 'The saved file revision could not be verified.',
+  },
+  persisted_superseded: {
+    label: 'Newer revision available',
+    message: 'A newer authoritative revision replaced the saved file.',
+  },
   read_only: { label: 'Read only', message: 'This file cannot be changed.' },
   retryLabel: 'Retry',
   reloadLabel: 'Reload file',
@@ -70,6 +90,9 @@ describe('CodeWorkingTreeStatus', () => {
     expect(container?.textContent).toContain(label);
     expect(container?.textContent).toContain(message);
     expect(container?.querySelector('[data-slot="code-working-tree-status"]')).not.toBeNull();
+    expect(
+      container?.querySelector('[data-slot="code-working-tree-status"]')?.getAttribute('data-phase')
+    ).toBe(phase);
     expect(container?.textContent).not.toContain('Save');
   });
 
@@ -93,6 +116,22 @@ describe('CodeWorkingTreeStatus', () => {
     expect(onRetry).toHaveBeenCalledOnce();
   });
 
+  it.each([
+    ['persisted_stale', 'Stale analysis'],
+    ['persisted_invalid', 'Invalid project'],
+    ['persisted_unavailable', 'Analysis unavailable'],
+    ['persisted_verification_unavailable', 'Verification unavailable'],
+  ] as const)('renders %s as unresolved persisted analysis with retry', (phase, label) => {
+    const onRetry = vi.fn();
+    render(phase, { onRetry });
+
+    expect(container?.textContent).toContain(label);
+    const button = container?.querySelector<HTMLButtonElement>('button');
+    expect(button?.textContent).toBe('Retry');
+    act(() => button?.click());
+    expect(onRetry).toHaveBeenCalledOnce();
+  });
+
   it('offers authoritative reload for a revision conflict', () => {
     const onReload = vi.fn();
     render('conflict', { onReload });
@@ -101,5 +140,37 @@ describe('CodeWorkingTreeStatus', () => {
     expect(button?.textContent).toBe('Reload file');
     act(() => button?.click());
     expect(onReload).toHaveBeenCalledOnce();
+  });
+
+  it('offers authoritative reload instead of retry when another revision supersedes the save', () => {
+    const onReload = vi.fn();
+    const onRetry = vi.fn();
+    render('persisted_superseded', { onReload, onRetry });
+
+    expect(container?.textContent).toContain('Newer revision available');
+    const button = container?.querySelector<HTMLButtonElement>('button');
+    expect(button?.textContent).toBe('Reload file');
+    act(() => button?.click());
+    expect(onReload).toHaveBeenCalledOnce();
+    expect(onRetry).not.toHaveBeenCalled();
+  });
+
+  it('announces routine posture politely and blocking failures assertively', () => {
+    render('modified');
+    expect(container?.querySelector('[role="status"]')?.getAttribute('aria-live')).toBe('polite');
+
+    act(() => root?.unmount());
+    root = createRoot(container!);
+    act(() => {
+      root?.render(
+        <CodeWorkingTreeStatus
+          phase="persisted_invalid"
+          copy={COPY}
+          onRetry={vi.fn()}
+          onReload={vi.fn()}
+        />
+      );
+    });
+    expect(container?.querySelector('[role="alert"]')?.getAttribute('aria-live')).toBe('assertive');
   });
 });

@@ -32,6 +32,8 @@ const REVERT_PROOF_DESCRIPTION = 'Curated orders with governed ownership';
 const RUN_DESCRIPTION = 'Curated orders approved for downstream reporting';
 const UPDATED_MODEL_SQL = `select 1::integer as order_id
 -- edited through the node Code workbench`;
+const INVALID_MODEL_SQL = `select * from {{ ref('orders') }
+-- intentionally invalid until the user corrects it`;
 
 const SCHEMA_CONTENT = `version: 2
 # This comment and the unrelated resource must survive focused edits.
@@ -234,6 +236,23 @@ function closeContextualWorkbench(): void {
   cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
 }
 
+function replaceOpenCodeContent(content: string): void {
+  cy.get('[data-testid="monaco-code-editor"]').find('.view-lines').click({ force: true });
+  cy.focused()
+    .should(($editor) => {
+      expect($editor.is('textarea, [contenteditable="true"]')).to.equal(true);
+    })
+    .type('{ctrl+a}{backspace}', { force: true, delay: 0 });
+  cy.window().then((window) => {
+    const clipboardData = new window.DataTransfer();
+    clipboardData.setData('text/plain', content);
+    cy.focused().trigger('paste', {
+      clipboardData,
+      force: true,
+    });
+  });
+}
+
 describe('dbt YAML description edit live vertical', () => {
   before(function () {
     if (!hasLiveProtectedRuntimeEnv()) {
@@ -310,17 +329,15 @@ describe('dbt YAML description edit live vertical', () => {
       .should((renderedCode) => {
         expect(renderedCode.replaceAll('\u00a0', ' ')).to.contain('select 1::integer as order_id');
       });
-    cy.get('[data-testid="monaco-code-editor"]').find('.view-lines').click({ force: true });
-    cy.focused()
-      .should(($editor) => {
-        expect($editor.is('textarea, [contenteditable="true"]')).to.equal(true);
-      })
-      .type('{ctrl+a}', { force: true, delay: 0 })
-      .type(UPDATED_MODEL_SQL, {
-        force: true,
-        delay: 0,
-        parseSpecialCharSequences: false,
-      });
+    replaceOpenCodeContent(INVALID_MODEL_SQL);
+    waitForLiveWorkspaceFileContent(MODEL_SQL_PATH, INVALID_MODEL_SQL);
+    cy.get('[data-slot="code-working-tree-status"]', { timeout: 60_000 }).should(
+      'have.attr',
+      'data-phase',
+      'persisted_invalid'
+    );
+
+    replaceOpenCodeContent(UPDATED_MODEL_SQL);
     cy.get('[data-testid="monaco-code-editor"]')
       .find('.view-lines')
       .invoke('text')
@@ -330,9 +347,11 @@ describe('dbt YAML description edit live vertical', () => {
         );
       });
     waitForLiveWorkspaceFileContent(MODEL_SQL_PATH, UPDATED_MODEL_SQL);
-    cy.get('[data-slot="code-working-tree-status"]', { timeout: 30_000 }).should(($status) => {
-      expect($status.text()).to.match(/Synchronized|Sincronizado/);
-    });
+    cy.get('[data-slot="code-working-tree-status"]', { timeout: 60_000 }).should(
+      'have.attr',
+      'data-phase',
+      'synchronized'
+    );
     closeContextualWorkbench();
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
@@ -397,6 +416,26 @@ describe('dbt YAML description edit live vertical', () => {
     cy.get('[data-slot="dbt-yaml-description-input"]').should('have.value', RUN_DESCRIPTION);
     cy.get('[data-slot="canvas-node-workbench-code-section"]').should('not.exist');
     expectAuthoritativeDescription(RUN_DESCRIPTION);
+    closeModelWorkbench();
+    cy.get(`.react-flow__node[data-id="${MODEL_UNIQUE_ID}"]`).click();
+    cy.get('[data-slot="canvas-node-floating-toolbar"]', { timeout: 20_000 })
+      .find('button[data-toolbar-action="code"]')
+      .should('be.enabled')
+      .click();
+    cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
+    cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
+      .find('.view-lines')
+      .invoke('text')
+      .should((renderedCode) => {
+        expect(renderedCode.replaceAll('\u00a0', ' ')).to.contain(
+          'edited through the node Code workbench'
+        );
+      });
+    readLiveWorkspaceFile(MODEL_SQL_PATH).then((response) => {
+      expect(response.status).to.equal(200);
+      expect((response.body as { content: string }).content).to.equal(UPDATED_MODEL_SQL);
+    });
+    closeContextualWorkbench();
 
     cy.wrap(null).should(() => {
       const successfulPosts = (path: string): ObservedRequest[] =>

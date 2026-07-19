@@ -9,7 +9,11 @@ import type {
 import { WorkspaceFileRevisionConflictError } from '../../services/workspace/workspaceErrors';
 import {
   createCodeWorkingTreeSyncState,
+  isCodeWorkingTreeNavigationBlockedPhase,
+  isCodeWorkingTreeReconciliationRetryablePhase,
+  isCodeWorkingTreeReconciliationUnresolvedPhase,
   reduceCodeWorkingTreeSync,
+  type CodeWorkingTreeReconciliationOutcome,
 } from './codeWorkingTreeSyncModel';
 
 const DEFAULT_DEBOUNCE_MS = 400;
@@ -21,14 +25,16 @@ type UseCodeWorkingTreeSyncInput = Readonly<{
   file: FileContent | undefined;
   commandPort: IWorkspaceFileContentCommandPort;
   debounceMs?: number;
-  onFileSynchronized?: (receipt: WorkspaceFileSaveReceipt) => Promise<void>;
+  reconcilePersistedFile?: (
+    receipt: WorkspaceFileSaveReceipt
+  ) => Promise<CodeWorkingTreeReconciliationOutcome>;
 }>;
 
 export function useCodeWorkingTreeSync({
   file,
   commandPort,
   debounceMs = DEFAULT_DEBOUNCE_MS,
-  onFileSynchronized,
+  reconcilePersistedFile,
 }: UseCodeWorkingTreeSyncInput) {
   const [state, setState] = useState<CodeWorkingTreeSyncState | null>(() =>
     file ? createCodeWorkingTreeSyncState(file) : null
@@ -36,10 +42,13 @@ export function useCodeWorkingTreeSync({
   const stateRef = useRef(state);
   const requestIdRef = useRef(0);
   const activeSyncRef = useRef<Promise<void> | null>(null);
+  const mountedRef = useRef(true);
 
   const replaceState = useCallback((nextState: CodeWorkingTreeSyncState | null) => {
     stateRef.current = nextState;
-    setState(nextState);
+    if (mountedRef.current) {
+      setState(nextState);
+    }
   }, []);
 
   const transition = useCallback(
@@ -116,12 +125,12 @@ export function useCodeWorkingTreeSync({
         type: 'content_persisted',
         requestId,
         receipt,
-        requiresReconciliation: onFileSynchronized != null,
+        requiresReconciliation: reconcilePersistedFile != null,
       });
-      if (onFileSynchronized != null) {
+      if (reconcilePersistedFile != null) {
         try {
-          await onFileSynchronized(receipt);
-          transition({ type: 'reconciliation_succeeded' });
+          const outcome = await reconcilePersistedFile(receipt);
+          transition({ type: 'reconciliation_completed', outcome });
         } catch {
           transition({ type: 'reconciliation_failed' });
         }
@@ -134,7 +143,14 @@ export function useCodeWorkingTreeSync({
 
     activeSyncRef.current = operation;
     await operation;
-  }, [commandPort, onFileSynchronized, transition]);
+  }, [commandPort, reconcilePersistedFile, transition]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (state?.phase !== 'modified') {
@@ -160,12 +176,11 @@ export function useCodeWorkingTreeSync({
       if (!current || current.phase === 'synchronized') {
         return true;
       }
-      if (
-        current.phase === 'conflict' ||
-        current.phase === 'failed' ||
-        current.phase === 'reconciliation_failed'
-      ) {
+      if (current.phase === 'conflict' || current.phase === 'failed') {
         return false;
+      }
+      if (isCodeWorkingTreeReconciliationUnresolvedPhase(current.phase)) {
+        return true;
       }
       if (current.phase === 'syncing' || current.phase === 'reconciling') {
         await activeSyncRef.current;
@@ -175,18 +190,19 @@ export function useCodeWorkingTreeSync({
     }
   }, [synchronizeOnce]);
 
-  const retry = useCallback(() => {
+  const retry = useCallback(async (): Promise<void> => {
     const current = stateRef.current;
     if (
-      current?.phase === 'reconciliation_failed' &&
+      current != null &&
+      isCodeWorkingTreeReconciliationRetryablePhase(current.phase) &&
       current.pendingReconciliation != null &&
-      onFileSynchronized != null
+      reconcilePersistedFile != null
     ) {
       transition({ type: 'reconciliation_started' });
       const operation = (async () => {
         try {
-          await onFileSynchronized(current.pendingReconciliation!);
-          transition({ type: 'reconciliation_succeeded' });
+          const outcome = await reconcilePersistedFile(current.pendingReconciliation!);
+          transition({ type: 'reconciliation_completed', outcome });
         } catch {
           transition({ type: 'reconciliation_failed' });
         }
@@ -196,12 +212,15 @@ export function useCodeWorkingTreeSync({
         }
       });
       activeSyncRef.current = operation;
-      return operation;
+      await operation;
+      return;
     }
 
-    transition({ type: 'retry_requested' });
-    return Promise.resolve();
-  }, [onFileSynchronized, transition]);
+    const retried = transition({ type: 'retry_requested' });
+    if (retried?.phase === 'modified') {
+      await synchronizeOnce();
+    }
+  }, [reconcilePersistedFile, synchronizeOnce, transition]);
 
   const loadAuthoritative = useCallback(
     (nextFile: FileContent) => {
@@ -213,6 +232,7 @@ export function useCodeWorkingTreeSync({
   return {
     value: state?.value ?? '',
     phase: state?.phase ?? ('read_only' as const),
+    navigationBlocked: state == null ? false : isCodeWorkingTreeNavigationBlockedPhase(state.phase),
     updateValue,
     flush,
     retry,

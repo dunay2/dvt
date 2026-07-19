@@ -90,7 +90,7 @@ describe('OperationalDrawerSelectionRecoveryView', () => {
     expect(commands.refreshAnalysis).toHaveBeenCalledTimes(1);
   });
 
-  it('uses localized fallback copy when authority failure has no technical detail', async () => {
+  it('uses localized copy without exposing authority failure technical detail', async () => {
     await act(async () => {
       root.render(
         <OperationalDrawerSelectionRecoveryView
@@ -114,7 +114,7 @@ describe('OperationalDrawerSelectionRecoveryView', () => {
               rail: 'RecoverCanvasExecutionSelection',
               strategy: 'refresh_analysis',
               code: 'authority_refresh_failed',
-              detail: null,
+              detail: 'POST /workspace/dbt-project/graph failed with internal adapter details',
             },
           }}
           commands={{
@@ -128,5 +128,7 @@ describe('OperationalDrawerSelectionRecoveryView', () => {
     });
 
     expect(container.textContent).toContain('No se pudo actualizar el análisis autoritativo.');
+    expect(container.textContent).not.toContain('POST /workspace/dbt-project/graph');
+    expect(container.textContent).not.toContain('internal adapter details');
   });
 });
