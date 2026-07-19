@@ -71,6 +71,33 @@ describe('CodeWorkingTreeSync model', () => {
     expect(completed.inFlight).toBeNull();
   });
 
+  it('keeps a later edit modified when the in-flight value requires reconciliation', () => {
+    const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
+      type: 'edited',
+      value: 'select 2',
+    });
+    const syncing = reduceCodeWorkingTreeSync(modified, {
+      type: 'sync_started',
+      requestId: 12,
+    });
+    const editedAgain = reduceCodeWorkingTreeSync(syncing, {
+      type: 'edited',
+      value: 'select 3',
+    });
+
+    const completed = reduceCodeWorkingTreeSync(editedAgain, {
+      type: 'content_persisted',
+      requestId: 12,
+      receipt: savedReceipt(),
+      requiresReconciliation: true,
+    });
+
+    expect(completed.phase).toBe('modified');
+    expect(completed.value).toBe('select 3');
+    expect(completed.persistedContent).toBe('select 2');
+    expect(completed.pendingReconciliation).toEqual(savedReceipt());
+  });
+
   it('marks an edit made during reconciliation as requiring another persistence command', () => {
     const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
       type: 'edited',

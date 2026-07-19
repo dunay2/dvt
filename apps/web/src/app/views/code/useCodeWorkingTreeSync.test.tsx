@@ -229,6 +229,64 @@ describe('useCodeWorkingTreeSync', () => {
     });
   });
 
+  it('persists an edit made while the previous DBT save command is still in flight', async () => {
+    const firstSave = deferred<WorkspaceFileSaveReceipt>();
+    const secondSave = deferred<WorkspaceFileSaveReceipt>();
+    const firstReconciliation = deferred<CodeWorkingTreeReconciliationOutcome>();
+    const saveFileContent = vi
+      .fn<IWorkspaceFileContentCommandPort['saveFileContent']>()
+      .mockReturnValueOnce(firstSave.promise)
+      .mockReturnValueOnce(secondSave.promise);
+    const reconcilePersistedFile = vi
+      .fn<(receipt: WorkspaceFileSaveReceipt) => Promise<CodeWorkingTreeReconciliationOutcome>>()
+      .mockReturnValueOnce(firstReconciliation.promise)
+      .mockResolvedValueOnce({
+        kind: 'fresh',
+        analysisSha256: 'd'.repeat(64),
+        projectContentSetSha256: 'e'.repeat(64),
+      });
+    await render({ saveFileContent }, reconcilePersistedFile);
+
+    act(() => controller.updateValue('select 2'));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(50);
+    });
+    act(() => controller.updateValue('select 3'));
+
+    let flushSettled = false;
+    let flushResult = false;
+    let flushPromise!: Promise<void>;
+    act(() => {
+      flushPromise = controller.flush().then((result) => {
+        flushResult = result;
+        flushSettled = true;
+      });
+    });
+    await act(async () => Promise.resolve());
+    expect(flushSettled).toBe(false);
+
+    await act(async () => {
+      firstSave.resolve(receipt('b'.repeat(64)));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(saveFileContent).toHaveBeenNthCalledWith(2, {
+      path: FILE.path,
+      content: 'select 3',
+      expectedRevision: { kind: 'content_sha256', value: 'b'.repeat(64) },
+    });
+    expect(flushSettled).toBe(false);
+
+    await act(async () => {
+      secondSave.resolve(receipt('c'.repeat(64)));
+      await flushPromise;
+    });
+
+    expect(flushResult).toBe(true);
+    expect(saveFileContent).toHaveBeenCalledTimes(2);
+  });
+
   it('allows navigation after bytes persist even when post-save reconciliation fails', async () => {
     const saved = receipt('b'.repeat(64));
     const reconcilePersistedFile = vi.fn(

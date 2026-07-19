@@ -122,11 +122,12 @@ export function reduceCodeWorkingTreeSync(
         ...state,
         persistedContent: state.inFlight.content,
         persistedRevision: event.receipt.contentSha256,
-        phase: event.requiresReconciliation
-          ? 'reconciling'
-          : state.value === state.inFlight.content
-            ? 'synchronized'
-            : 'modified',
+        phase:
+          state.value !== state.inFlight.content
+            ? 'modified'
+            : event.requiresReconciliation
+              ? 'reconciling'
+              : 'synchronized',
         inFlight: null,
         pendingReconciliation: event.requiresReconciliation ? event.receipt : null,
         persistedReconciliationPhase: null,
