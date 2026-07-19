@@ -712,13 +712,21 @@ describe('nodePropertiesReadModel', () => {
   });
 
   it.each([
-    ['compiled SQL', { compiledSql: 'select compiled', sql: 'select metadata' }, 'select compiled'],
     [
-      'metadata SQL',
-      { sql: 'select metadata', config: { sql: 'select config' } },
-      'select metadata',
+      'compiled SQL',
+      {
+        compiledSql: 'select compiled',
+        sql: 'select metadata',
+        config: { sql: 'select config' },
+      },
+      'select compiled',
     ],
-    ['config SQL', { config: { sql: 'select config' } }, 'select config'],
+    [
+      'config SQL over stale metadata SQL',
+      { sql: 'select metadata', config: { sql: 'select config' } },
+      'select config',
+    ],
+    ['metadata SQL fallback', { sql: 'select metadata' }, 'select metadata'],
   ])('uses deterministic SQL precedence for %s', (_name, metadata, expectedCode) => {
     const model = buildNodePropertiesReadModel({
       node: buildSourceNode({ metadata }),
