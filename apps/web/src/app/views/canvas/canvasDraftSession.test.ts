@@ -412,6 +412,46 @@ describe('canvasDraftSession', () => {
     expect(session.savingWorkingSet).toBeUndefined();
   });
 
+  it('preserves a newer local node edit when an older save resolves with the same graph scope', () => {
+    const submittedNode: CanonicalNode = {
+      id: 'node_2',
+      name: 'Orders model',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: ['authoring'],
+      metadata: { config: { sql: 'select 1' } },
+    };
+    const newerLocalNode: CanonicalNode = {
+      ...submittedNode,
+      metadata: { config: { sql: 'select 2' } },
+    };
+    const savingSession = canvasDraftSession.machine.markSaving(
+      canvasDraftSession.workingSet.upsertNode(
+        canvasDraftSession.machine.bootstrap({
+          remoteDraft: buildRemoteDraftRecord({ revision: 'rev-before-save' }),
+          canonicalNodeIds: ['node_1', 'node_2'],
+          canonicalEdges: [{ sourceId: 'node_1', targetId: 'node_2' }],
+        }),
+        submittedNode
+      )
+    );
+    const editedWhileSavingSession = canvasDraftSession.workingSet.upsertNode(
+      savingSession,
+      newerLocalNode
+    );
+
+    const session = canvasDraftSession.machine.applySaveSuccess(
+      editedWhileSavingSession,
+      buildRemoteDraftRecord({ revision: 'rev-saved' })
+    );
+
+    expect(session.syncState).toBe('editing');
+    expect(session.draftRevision).toBe('rev-saved');
+    expect(session.localNodeCatalog).toEqual({ node_2: newerLocalNode });
+  });
+
   it('preserves dirty local authoring when a remote source-import revision reloads', () => {
     const sourceImportDraft = buildAuthoringDraft({
       canvas: {

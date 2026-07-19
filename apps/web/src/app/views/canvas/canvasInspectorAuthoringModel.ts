@@ -45,38 +45,6 @@ export function areCanvasInspectorNodeDraftsEqual(
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
-export function areCanvasInspectorNodeDraftsCanonicallyEqual(
-  left: CanvasInspectorNodeDraft,
-  right: CanvasInspectorNodeDraft
-): boolean {
-  const canonicalLeft = left.dbt
-    ? {
-        ...left,
-        dbt: {
-          ...left.dbt,
-          modelSql:
-            left.dbt.modelSql != null && left.dbt.modelSql.trim().length > 0
-              ? left.dbt.modelSql
-              : null,
-        },
-      }
-    : left;
-  const canonicalRight = right.dbt
-    ? {
-        ...right,
-        dbt: {
-          ...right.dbt,
-          modelSql:
-            right.dbt.modelSql != null && right.dbt.modelSql.trim().length > 0
-              ? right.dbt.modelSql
-              : null,
-        },
-      }
-    : right;
-
-  return areCanvasInspectorNodeDraftsEqual(canonicalLeft, canonicalRight);
-}
-
 export function validateCanvasInspectorNodeDraft(
   draft: CanvasInspectorNodeDraft
 ): CanvasInspectorNodeDraftErrors {
@@ -163,4 +131,11 @@ export function applyCanvasInspectorNodeDraft(
   }
 
   return baseNode;
+}
+
+export function canonicalizeCanvasInspectorNodeDraft(
+  node: CanonicalNode,
+  draft: CanvasInspectorNodeDraft
+): CanvasInspectorNodeDraft {
+  return createCanvasInspectorNodeDraft(applyCanvasInspectorNodeDraft(node, draft));
 }

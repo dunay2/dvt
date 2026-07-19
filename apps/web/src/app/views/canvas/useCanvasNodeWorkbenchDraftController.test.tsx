@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import { applyCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import {
   useCanvasNodeWorkbenchDraftController,
   type CanvasNodeWorkbenchDraftController,
@@ -164,6 +165,49 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
     });
 
     expect(harness.getController().draft.dbt?.modelSql).toBeNull();
+  });
+
+  it('accepts every normalization performed by the submitted authoring command', async () => {
+    await harness.renderNode(MODEL_NODE);
+
+    await act(async () => {
+      harness.getController().onDraftChange((currentDraft) => ({
+        ...currentDraft,
+        name: '  Orders Mart  ',
+        description: '  Governed model  ',
+        tags: [' mart ', 'daily', 'mart'],
+        dbt: currentDraft.dbt
+          ? {
+              ...currentDraft.dbt,
+              packageName: '  finance  ',
+              sourceName: ' Raw Orders ',
+              schemaName: '  curated  ',
+              tableName: ' Order Lines ',
+              selectedSourceId: '  source.orders  ',
+              modelSql: '',
+            }
+          : undefined,
+      }));
+    });
+    const submittedDraft = harness.getController().draft;
+    await act(async () => {
+      harness.getController().onDraftSubmitted();
+    });
+    await harness.renderNode(applyCanvasInspectorNodeDraft(MODEL_NODE, submittedDraft));
+
+    expect(harness.getController().draft).toMatchObject({
+      name: 'Orders Mart',
+      description: 'Governed model',
+      tags: ['mart', 'daily'],
+      dbt: {
+        packageName: 'finance',
+        sourceName: 'raw_orders',
+        schemaName: 'curated',
+        tableName: 'order_lines',
+        selectedSourceId: 'source.orders',
+        modelSql: null,
+      },
+    });
   });
 
   it('resets a dirty draft to the latest authority on explicit cancel', async () => {

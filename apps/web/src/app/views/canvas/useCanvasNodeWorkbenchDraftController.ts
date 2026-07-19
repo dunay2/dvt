@@ -11,8 +11,8 @@ import {
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import {
-  areCanvasInspectorNodeDraftsCanonicallyEqual,
   areCanvasInspectorNodeDraftsEqual,
+  canonicalizeCanvasInspectorNodeDraft,
   createCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
 
@@ -47,7 +47,7 @@ type DraftControllerAction =
       type: 'tags-text-changed';
       update: SetStateAction<string>;
     }>
-  | Readonly<{ type: 'draft-submitted' }>
+  | Readonly<{ type: 'draft-submitted'; node: CanonicalNode }>
   | Readonly<{ type: 'reset-requested' }>;
 
 function tagsTextFromDraft(draft: CanvasInspectorNodeDraft): string {
@@ -94,7 +94,7 @@ function reduceDraftControllerState(
 
       if (
         state.submittedDraft != null &&
-        areCanvasInspectorNodeDraftsCanonicallyEqual(state.submittedDraft, action.draft)
+        areCanvasInspectorNodeDraftsEqual(state.submittedDraft, action.draft)
       ) {
         return createDraftControllerState(action.nodeId, action.draft);
       }
@@ -129,7 +129,7 @@ function reduceDraftControllerState(
     case 'draft-submitted':
       return {
         ...state,
-        submittedDraft: state.draft,
+        submittedDraft: canonicalizeCanvasInspectorNodeDraft(action.node, state.draft),
       };
     case 'reset-requested':
       return createDraftControllerState(state.nodeId, state.authoritativeDraft);
@@ -161,7 +161,7 @@ export function useCanvasNodeWorkbenchDraftController(
     (update) => dispatch({ type: 'tags-text-changed', update }),
     []
   );
-  const onDraftSubmitted = useCallback(() => dispatch({ type: 'draft-submitted' }), []);
+  const onDraftSubmitted = useCallback(() => dispatch({ type: 'draft-submitted', node }), [node]);
   const onResetDraft = useCallback(() => dispatch({ type: 'reset-requested' }), []);
 
   return useMemo(

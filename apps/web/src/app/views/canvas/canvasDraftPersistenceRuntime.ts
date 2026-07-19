@@ -115,6 +115,7 @@ export function restoreEditingAfterSaveFailure(
           syncState: 'editing',
           savingWorkingSet: undefined,
           savingBaseRevision: undefined,
+          savingLocalNodeCatalog: undefined,
         }
       : currentSession
   );

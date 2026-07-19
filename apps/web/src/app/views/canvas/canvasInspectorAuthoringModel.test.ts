@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   applyCanvasInspectorNodeDraft,
-  areCanvasInspectorNodeDraftsCanonicallyEqual,
   areCanvasInspectorNodeDraftsEqual,
+  canonicalizeCanvasInspectorNodeDraft,
   createCanvasInspectorNodeDraft,
   hasCanvasInspectorNodeDraftChanges,
   validateCanvasInspectorNodeDraft,
@@ -145,30 +145,49 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual({});
   });
 
-  it('distinguishes an explicit empty SQL edit until its canonical authority is confirmed', () => {
+  it('projects a submitted draft through the same canonical rules as the authoring command', () => {
     const explicitEmptyDraft = {
-      name: 'Orders Model',
-      description: '',
-      tags: [],
+      name: '  Orders Model  ',
+      description: '  Governed model  ',
+      tags: [' mart ', 'daily', 'mart'],
       dbt: {
-        packageName: 'analytics',
-        sourceName: 'raw',
-        schemaName: 'raw',
-        tableName: 'orders',
+        packageName: '  finance  ',
+        sourceName: ' Raw Orders ',
+        schemaName: '  curated  ',
+        tableName: ' Order Lines ',
         materialized: 'view',
-        selectedSourceId: 'source-orders',
+        selectedSourceId: '  source.orders  ',
         modelSql: '',
       },
     };
-    const canonicalDraft = {
-      ...explicitEmptyDraft,
-      dbt: { ...explicitEmptyDraft.dbt, modelSql: null },
+    const modelNode: CanonicalNode = {
+      id: 'model.orders',
+      name: 'Orders Model',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
     };
 
-    expect(areCanvasInspectorNodeDraftsEqual(explicitEmptyDraft, canonicalDraft)).toBe(false);
-    expect(areCanvasInspectorNodeDraftsCanonicallyEqual(explicitEmptyDraft, canonicalDraft)).toBe(
-      true
-    );
+    expect(
+      areCanvasInspectorNodeDraftsEqual(explicitEmptyDraft, {
+        ...explicitEmptyDraft,
+      })
+    ).toBe(true);
+    expect(canonicalizeCanvasInspectorNodeDraft(modelNode, explicitEmptyDraft)).toMatchObject({
+      name: 'Orders Model',
+      description: 'Governed model',
+      tags: ['mart', 'daily'],
+      dbt: {
+        packageName: 'finance',
+        sourceName: 'raw_orders',
+        schemaName: 'curated',
+        tableName: 'order_lines',
+        selectedSourceId: 'source.orders',
+        modelSql: null,
+      },
+    });
   });
 
   it('creates DVT source authoring metadata from existing node config', () => {
