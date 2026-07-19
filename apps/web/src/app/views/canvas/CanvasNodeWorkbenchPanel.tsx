@@ -1,13 +1,5 @@
 /** Owned concern: render the Canvas-owned contextual node workbench panel. */
-import {
-  Fragment,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type HTMLAttributes,
-  type ReactNode,
-} from 'react';
+import { Fragment, useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
 
 import { getInspectorPanels } from '../../plugins/registry';
 import {
@@ -30,7 +22,6 @@ import {
 } from '../../components/inspector/nodePropertiesReadModel';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { CanvasInspectorAuthoringSection } from './CanvasInspectorAuthoringSection';
-import { createCanvasInspectorNodeDraft } from './canvasInspectorAuthoringModel';
 import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthoring.types';
 import {
   resolveCanvasNodeWorkbenchContributions,
@@ -41,6 +32,7 @@ import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { useCanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 
 export type CanvasNodeWorkbenchPanelProps = Readonly<{
   node: CanonicalNode;
@@ -219,10 +211,7 @@ export function CanvasNodeWorkbenchPanel({
   const copy = resolveCanvasViewCopy();
   const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
   const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
-  const [authoringDraft, setAuthoringDraft] = useState(() => createCanvasInspectorNodeDraft(node));
-  const [authoringTagsText, setAuthoringTagsText] = useState(() =>
-    createCanvasInspectorNodeDraft(node).tags.join(', ')
-  );
+  const draftController = useCanvasNodeWorkbenchDraftController(node);
   const presentationTruth = useMemo(
     () => projectCanvasNodePresentationTruth({ node, nodes, edges }),
     [edges, node, nodes]
@@ -252,11 +241,6 @@ export function CanvasNodeWorkbenchPanel({
   const dotClass = inspectorStatusDotClasses[node.status] ?? inspectorStatusDotClasses.idle;
   const preferredTabKey =
     preferredTabId == null ? null : `${node.id}:${preferredTabId}:${preferredTabRequestId}`;
-  const resetAuthoringDraft = useCallback(() => {
-    const nextDraft = createCanvasInspectorNodeDraft(node);
-    setAuthoringDraft(nextDraft);
-    setAuthoringTagsText(nextDraft.tags.join(', '));
-  }, [node.description, node.id, node.metadata, node.name, node.tags]);
   const renderAuthoringSection = (
     section: 'general' | 'columns' | 'code' | 'sink'
   ): JSX.Element => (
@@ -267,13 +251,7 @@ export function CanvasNodeWorkbenchPanel({
         edges={edges}
         authoring={authoring}
         section={section}
-        draftController={{
-          draft: authoringDraft,
-          tagsText: authoringTagsText,
-          onDraftChange: setAuthoringDraft,
-          onTagsTextChange: setAuthoringTagsText,
-          onResetDraft: resetAuthoringDraft,
-        }}
+        draftController={draftController}
       />
     </div>
   );
@@ -315,10 +293,6 @@ export function CanvasNodeWorkbenchPanel({
       setActiveTab(resolvedActiveTab);
     }
   }, [activeTab, resolvedActiveTab]);
-
-  useEffect(() => {
-    resetAuthoringDraft();
-  }, [resetAuthoringDraft]);
 
   return (
     <div data-slot="canvas-node-workbench-panel" className="flex h-full min-h-0 flex-col">

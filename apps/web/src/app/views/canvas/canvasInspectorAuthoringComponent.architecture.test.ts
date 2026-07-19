@@ -103,7 +103,8 @@ describe('canvas inspector authoring component architecture', () => {
     expect(SECTION_SOURCE).toContain(
       'Owned concern: orchestrate the route-owned Inspector authoring surface for governed node details.'
     );
-    expect(SECTION_SOURCE).toContain('createCanvasInspectorNodeDraft');
+    expect(SECTION_SOURCE).toContain('draftController');
+    expect(SECTION_SOURCE).not.toContain('createCanvasInspectorNodeDraft');
     expect(SECTION_SOURCE).toContain('DbtAuthoringFields');
     expect(SECTION_SOURCE).toContain('DvtAuthoringFields');
     expect(SECTION_SOURCE).not.toContain('useCanvasController');

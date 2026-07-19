@@ -1,5 +1,5 @@
 /** Owned concern: orchestrate the route-owned Inspector authoring surface for governed node details. */
-import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -9,7 +9,6 @@ import { inspectorVisualClasses } from '../../components/inspector/inspectorVisu
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import {
-  createCanvasInspectorNodeDraft,
   hasCanvasInspectorNodeDraftChanges,
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
@@ -17,6 +16,7 @@ import type { CanvasInspectorAuthoringContract } from './canvasInspectorAuthorin
 import { canvasViewCopy } from './copy';
 import { DbtAuthoringFields } from './DbtAuthoringFields';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
+import type { CanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 
 type CanvasInspectorAuthoringSectionProps = Readonly<{
   node: CanonicalNode;
@@ -24,13 +24,7 @@ type CanvasInspectorAuthoringSectionProps = Readonly<{
   edges: readonly CanonicalEdge[];
   authoring: CanvasInspectorAuthoringContract;
   section?: 'all' | 'general' | 'columns' | 'code' | 'sink';
-  draftController?: Readonly<{
-    draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
-    tagsText: string;
-    onDraftChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
-    onTagsTextChange: Dispatch<SetStateAction<string>>;
-    onResetDraft: () => void;
-  }>;
+  draftController: CanvasNodeWorkbenchDraftController;
 }>;
 
 export function CanvasInspectorAuthoringSection({
@@ -41,24 +35,10 @@ export function CanvasInspectorAuthoringSection({
   section = 'all',
   draftController,
 }: CanvasInspectorAuthoringSectionProps) {
-  const [localDraft, setLocalDraft] = useState(() => createCanvasInspectorNodeDraft(node));
-  const [localTagsText, setLocalTagsText] = useState(() =>
-    createCanvasInspectorNodeDraft(node).tags.join(', ')
-  );
-  const draft = draftController?.draft ?? localDraft;
-  const tagsText = draftController?.tagsText ?? localTagsText;
-  const setDraft = draftController?.onDraftChange ?? setLocalDraft;
-  const setTagsText = draftController?.onTagsTextChange ?? setLocalTagsText;
-
-  useEffect(() => {
-    if (draftController != null) {
-      return;
-    }
-
-    const nextDraft = createCanvasInspectorNodeDraft(node);
-    setLocalDraft(nextDraft);
-    setLocalTagsText(nextDraft.tags.join(', '));
-  }, [draftController, node.description, node.id, node.metadata, node.name, node.tags]);
+  const draft = draftController.draft;
+  const tagsText = draftController.tagsText;
+  const setDraft = draftController.onDraftChange;
+  const setTagsText = draftController.onTagsTextChange;
 
   const errors = useMemo(() => validateCanvasInspectorNodeDraft(draft), [draft]);
   const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
@@ -133,21 +113,7 @@ export function CanvasInspectorAuthoringSection({
                 value={tagsText}
                 disabled={!authoring.canEditNode}
                 placeholder={canvasViewCopy.inspectorNodeTagsPlaceholder}
-                onChange={(event) => {
-                  const nextTagsText = event.target.value;
-                  setTagsText(nextTagsText);
-                  setDraft((currentDraft) => ({
-                    ...currentDraft,
-                    tags: Array.from(
-                      new Set(
-                        nextTagsText
-                          .split(',')
-                          .map((tag) => tag.trim())
-                          .filter((tag) => tag.length > 0)
-                      )
-                    ),
-                  }));
-                }}
+                onChange={(event) => setTagsText(event.target.value)}
               />
             </div>
           </>
@@ -207,21 +173,7 @@ export function CanvasInspectorAuthoringSection({
 
         {authoring.canEditNode && isDirty ? (
           <div className="flex items-center justify-end gap-2">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                if (draftController != null) {
-                  draftController.onResetDraft();
-                  return;
-                }
-
-                const nextDraft = createCanvasInspectorNodeDraft(node);
-                setLocalDraft(nextDraft);
-                setLocalTagsText(nextDraft.tags.join(', '));
-              }}
-            >
+            <Button type="button" variant="ghost" size="sm" onClick={draftController.onResetDraft}>
               {canvasViewCopy.inspectorCancelLabel}
             </Button>
             <Button
