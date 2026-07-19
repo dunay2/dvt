@@ -302,14 +302,17 @@ declare
   code_rail_count integer;
   yaml_rail_count integer;
 begin
+  -- Migrations run before repository manifests are imported on a fresh CI
+  -- database. Assert this migration's local contribution here; the feature
+  -- mechanization gate validates the combined 39-symbol, four-rail feature.
   select count(*) into code_symbol_count
   from (
     select distinct symbol.value ->> 'path' as path, symbol.value ->> 'name' as name
-    from planning_query_store.command_query_rail_manifest_query rail
+    from planning_query_store.feature_mechanization_local_rails rail
     cross join lateral jsonb_array_elements(
       coalesce(rail.raw_manifest -> 'symbols', '[]'::jsonb)
     ) symbol(value)
-    where rail.raw_manifest ->> 'featureId' = 'E-DBT-CODE-WORKING-TREE-SYNC-20260712'
+    where rail.feature_id = 'E-DBT-CODE-WORKING-TREE-SYNC-20260712'
   ) symbols;
 
   select count(*) into yaml_symbol_count
@@ -322,24 +325,24 @@ begin
     where rail.feature_id = 'E-DBT-PROJECT-ROUNDTRIP-P5-YAML-DESCRIPTION-1'
   ) symbols;
 
-  select count(distinct (rail_type, normalized_rail_name)) into code_rail_count
-  from planning_query_store.command_query_rail_manifest_query
-  where raw_manifest ->> 'featureId' = 'E-DBT-CODE-WORKING-TREE-SYNC-20260712';
+  select count(*) into code_rail_count
+  from planning_query_store.feature_mechanization_local_rails
+  where feature_id = 'E-DBT-CODE-WORKING-TREE-SYNC-20260712';
 
   select count(*) into yaml_rail_count
   from planning_query_store.feature_mechanization_local_rails
   where feature_id = 'E-DBT-PROJECT-ROUNDTRIP-P5-YAML-DESCRIPTION-1';
 
-  if code_symbol_count <> 39 then
-    raise exception 'Code working-tree feature must declare 39 unique symbols, found %',
+  if code_symbol_count <> 18 then
+    raise exception 'Code working-tree local rail must declare 18 unique symbols, found %',
       code_symbol_count;
   end if;
   if yaml_symbol_count <> 210 then
     raise exception 'DBT YAML description feature must declare 210 unique symbols, found %',
       yaml_symbol_count;
   end if;
-  if code_rail_count <> 4 then
-    raise exception 'Code working-tree feature rail catalog changed unexpectedly: %',
+  if code_rail_count <> 1 then
+    raise exception 'Code working-tree local rail catalog changed unexpectedly: %',
       code_rail_count;
   end if;
   if yaml_rail_count <> 3 then

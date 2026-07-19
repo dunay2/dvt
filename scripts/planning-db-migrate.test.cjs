@@ -349,6 +349,27 @@ test('tracked migrations preserve applied identities and use unique strict ordin
   assert.match(policyMigration.sql, /Renaming those applied files would replay their SQL/);
 });
 
+test('DBT code reconciliation migration validates its local symbol contribution before import', () => {
+  const migration = readMigrationFiles().find(
+    ({ fileName }) => fileName === '766_dbt_code_reconciliation_feature_symbols.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(
+    migration.sql,
+    /select count\(\*\) into code_symbol_count[\s\S]*from planning_query_store\.feature_mechanization_local_rails rail[\s\S]*where rail\.feature_id = 'E-DBT-CODE-WORKING-TREE-SYNC-20260712'/u
+  );
+  assert.match(migration.sql, /if code_symbol_count <> 18 then/u);
+  assert.match(
+    migration.sql,
+    /select count\(\*\) into code_rail_count[\s\S]*from planning_query_store\.feature_mechanization_local_rails[\s\S]*if code_rail_count <> 1 then/u
+  );
+  assert.doesNotMatch(
+    migration.sql,
+    /select count\(\*\) into code_symbol_count[\s\S]*from planning_query_store\.command_query_rail_manifest_query rail/u
+  );
+});
+
 test('migration ordinal policy fails before issuing database queries', async () => {
   const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-planning-migrations-'));
   const queryCalls = [];
