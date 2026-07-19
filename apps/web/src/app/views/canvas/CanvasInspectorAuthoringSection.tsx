@@ -185,6 +185,7 @@ export function CanvasInspectorAuthoringSection({
                   return;
                 }
                 authoring.onApplyNodeDraft(draft);
+                draftController.onDraftSubmitted();
               }}
             >
               {canvasViewCopy.inspectorApplyLabel}

@@ -21,6 +21,7 @@ describe('Canvas node workbench draft controller architecture', () => {
       'Owned concern: reconcile one authoritative selected node with one transient workbench draft.'
     );
     expect(CONTROLLER_SOURCE).toContain('authority-received');
+    expect(CONTROLLER_SOURCE).toContain('draft-submitted');
     expect(CONTROLLER_SOURCE).toContain('reset-requested');
     expect(CONTROLLER_SOURCE).not.toContain('onApplyNodeDraft');
     expect(CONTROLLER_SOURCE).not.toContain('canvasDraftSession');
@@ -36,6 +37,8 @@ describe('Canvas node workbench draft controller architecture', () => {
     expect(AUTHORING_SECTION_SOURCE).toContain(
       'import type { CanvasNodeWorkbenchDraftController }'
     );
+    expect(AUTHORING_SECTION_SOURCE).toContain('authoring.onApplyNodeDraft(draft)');
+    expect(AUTHORING_SECTION_SOURCE).toContain('draftController.onDraftSubmitted()');
     expect(AUTHORING_SECTION_SOURCE).not.toContain('useState(');
     expect(AUTHORING_SECTION_SOURCE).not.toContain('createCanvasInspectorNodeDraft');
   });

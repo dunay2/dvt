@@ -42,7 +42,14 @@ export function areCanvasInspectorNodeDraftsEqual(
   left: CanvasInspectorNodeDraft,
   right: CanvasInspectorNodeDraft
 ): boolean {
-  const comparableLeft = left.dbt
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+export function areCanvasInspectorNodeDraftsCanonicallyEqual(
+  left: CanvasInspectorNodeDraft,
+  right: CanvasInspectorNodeDraft
+): boolean {
+  const canonicalLeft = left.dbt
     ? {
         ...left,
         dbt: {
@@ -54,7 +61,7 @@ export function areCanvasInspectorNodeDraftsEqual(
         },
       }
     : left;
-  const comparableRight = right.dbt
+  const canonicalRight = right.dbt
     ? {
         ...right,
         dbt: {
@@ -67,7 +74,7 @@ export function areCanvasInspectorNodeDraftsEqual(
       }
     : right;
 
-  return JSON.stringify(comparableLeft) === JSON.stringify(comparableRight);
+  return areCanvasInspectorNodeDraftsEqual(canonicalLeft, canonicalRight);
 }
 
 export function validateCanvasInspectorNodeDraft(

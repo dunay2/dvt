@@ -11,6 +11,7 @@ import {
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
 import {
+  areCanvasInspectorNodeDraftsCanonicallyEqual,
   areCanvasInspectorNodeDraftsEqual,
   createCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
@@ -20,6 +21,7 @@ export type CanvasNodeWorkbenchDraftController = Readonly<{
   tagsText: string;
   onDraftChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
   onTagsTextChange: Dispatch<SetStateAction<string>>;
+  onDraftSubmitted: () => void;
   onResetDraft: () => void;
 }>;
 
@@ -27,6 +29,7 @@ type DraftControllerState = Readonly<{
   nodeId: string;
   authoritativeDraft: CanvasInspectorNodeDraft;
   draft: CanvasInspectorNodeDraft;
+  submittedDraft: CanvasInspectorNodeDraft | null;
   tagsText: string;
 }>;
 
@@ -44,6 +47,7 @@ type DraftControllerAction =
       type: 'tags-text-changed';
       update: SetStateAction<string>;
     }>
+  | Readonly<{ type: 'draft-submitted' }>
   | Readonly<{ type: 'reset-requested' }>;
 
 function tagsTextFromDraft(draft: CanvasInspectorNodeDraft): string {
@@ -69,6 +73,7 @@ function createDraftControllerState(
     nodeId,
     authoritativeDraft,
     draft: authoritativeDraft,
+    submittedDraft: null,
     tagsText: tagsTextFromDraft(authoritativeDraft),
   };
 }
@@ -88,9 +93,13 @@ function reduceDraftControllerState(
       }
 
       if (
-        !areCanvasInspectorNodeDraftsEqual(state.draft, state.authoritativeDraft) &&
-        !areCanvasInspectorNodeDraftsEqual(state.draft, action.draft)
+        state.submittedDraft != null &&
+        areCanvasInspectorNodeDraftsCanonicallyEqual(state.submittedDraft, action.draft)
       ) {
+        return createDraftControllerState(action.nodeId, action.draft);
+      }
+
+      if (!areCanvasInspectorNodeDraftsEqual(state.draft, state.authoritativeDraft)) {
         return {
           ...state,
           authoritativeDraft: action.draft,
@@ -103,6 +112,7 @@ function reduceDraftControllerState(
       return {
         ...state,
         draft: resolveStateUpdate(state.draft, action.update),
+        submittedDraft: null,
       };
     case 'tags-text-changed': {
       const tagsText = resolveStateUpdate(state.tagsText, action.update);
@@ -112,9 +122,15 @@ function reduceDraftControllerState(
           ...state.draft,
           tags: tagsFromText(tagsText),
         },
+        submittedDraft: null,
         tagsText,
       };
     }
+    case 'draft-submitted':
+      return {
+        ...state,
+        submittedDraft: state.draft,
+      };
     case 'reset-requested':
       return createDraftControllerState(state.nodeId, state.authoritativeDraft);
   }
@@ -145,6 +161,7 @@ export function useCanvasNodeWorkbenchDraftController(
     (update) => dispatch({ type: 'tags-text-changed', update }),
     []
   );
+  const onDraftSubmitted = useCallback(() => dispatch({ type: 'draft-submitted' }), []);
   const onResetDraft = useCallback(() => dispatch({ type: 'reset-requested' }), []);
 
   return useMemo(
@@ -153,8 +170,9 @@ export function useCanvasNodeWorkbenchDraftController(
       tagsText: state.tagsText,
       onDraftChange,
       onTagsTextChange,
+      onDraftSubmitted,
       onResetDraft,
     }),
-    [onDraftChange, onResetDraft, onTagsTextChange, state.draft, state.tagsText]
+    [onDraftChange, onDraftSubmitted, onResetDraft, onTagsTextChange, state.draft, state.tagsText]
   );
 }

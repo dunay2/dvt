@@ -154,6 +154,7 @@ describe('useCanvasNodeWorkbenchDraftController', () => {
         ...currentDraft,
         dbt: currentDraft.dbt ? { ...currentDraft.dbt, modelSql: '' } : undefined,
       }));
+      harness.getController().onDraftSubmitted();
     });
     await harness.renderNode({
       ...MODEL_NODE,
