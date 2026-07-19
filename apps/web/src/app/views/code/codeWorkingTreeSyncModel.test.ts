@@ -157,6 +157,7 @@ describe('CodeWorkingTreeSync model', () => {
 
       const unresolved = reduceCodeWorkingTreeSync(reconciling, {
         type: 'reconciliation_completed',
+        receipt: savedReceipt(),
         outcome: { kind: 'degraded', freshness },
       });
 
@@ -182,6 +183,7 @@ describe('CodeWorkingTreeSync model', () => {
     });
     const invalid = reduceCodeWorkingTreeSync(reconciling, {
       type: 'reconciliation_completed',
+      receipt: savedReceipt(),
       outcome: { kind: 'degraded', freshness: 'invalid' },
     });
 
@@ -216,11 +218,43 @@ describe('CodeWorkingTreeSync model', () => {
 
     const superseded = reduceCodeWorkingTreeSync(reconciling, {
       type: 'reconciliation_completed',
+      receipt: savedReceipt(),
       outcome: { kind: 'superseded', currentContentSha256: 'e'.repeat(64) },
     });
 
     expect(superseded.phase).toBe('persisted_superseded');
     expect(superseded.pendingReconciliation).toEqual(savedReceipt());
+  });
+
+  it('ignores a reconciliation result for an older save receipt', () => {
+    const olderReceipt = savedReceipt('b'.repeat(64));
+    const newerReceipt = savedReceipt('c'.repeat(64));
+    const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
+      type: 'edited',
+      value: 'select 2',
+    });
+    const syncing = reduceCodeWorkingTreeSync(modified, {
+      type: 'sync_started',
+      requestId: 11,
+    });
+    const reconciling = reduceCodeWorkingTreeSync(syncing, {
+      type: 'content_persisted',
+      requestId: 11,
+      receipt: newerReceipt,
+      requiresReconciliation: true,
+    });
+
+    const unchanged = reduceCodeWorkingTreeSync(reconciling, {
+      type: 'reconciliation_completed',
+      receipt: olderReceipt,
+      outcome: {
+        kind: 'fresh',
+        analysisSha256: 'd'.repeat(64),
+        projectContentSetSha256: 'e'.repeat(64),
+      },
+    });
+
+    expect(unchanged).toBe(reconciling);
   });
 
   it('distinguishes a failed final authority read from failed project analysis', () => {
@@ -241,6 +275,7 @@ describe('CodeWorkingTreeSync model', () => {
 
     const unavailable = reduceCodeWorkingTreeSync(reconciling, {
       type: 'reconciliation_completed',
+      receipt: savedReceipt(),
       outcome: { kind: 'verification-unavailable' },
     });
 

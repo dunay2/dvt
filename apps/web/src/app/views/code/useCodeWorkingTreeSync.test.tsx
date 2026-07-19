@@ -157,6 +157,33 @@ describe('useCodeWorkingTreeSync', () => {
     expect(saveFileContent).toHaveBeenCalledTimes(1);
   });
 
+  it('resolves flush after byte persistence while semantic reconciliation remains pending', async () => {
+    const saved = receipt('b'.repeat(64));
+    const reconciliation = deferred<CodeWorkingTreeReconciliationOutcome>();
+    const reconcilePersistedFile = vi.fn(() => reconciliation.promise);
+    const saveFileContent = vi.fn(async () => saved);
+    await render({ saveFileContent }, reconcilePersistedFile);
+
+    act(() => controller.updateValue('select 2'));
+    let flushResult: boolean | undefined;
+    await act(async () => {
+      flushResult = await controller.flush();
+    });
+
+    expect(flushResult).toBe(true);
+    expect(controller.phase).toBe('reconciling');
+
+    await act(async () => {
+      reconciliation.resolve({
+        kind: 'fresh',
+        analysisSha256: 'c'.repeat(64),
+        projectContentSetSha256: 'd'.repeat(64),
+      });
+      await Promise.resolve();
+    });
+    expect(controller.phase).toBe('synchronized');
+  });
+
   it('allows navigation after bytes persist even when post-save reconciliation fails', async () => {
     const saved = receipt('b'.repeat(64));
     const reconcilePersistedFile = vi.fn(

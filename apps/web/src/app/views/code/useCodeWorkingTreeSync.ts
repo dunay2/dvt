@@ -41,7 +41,8 @@ export function useCodeWorkingTreeSync({
   );
   const stateRef = useRef(state);
   const requestIdRef = useRef(0);
-  const activeSyncRef = useRef<Promise<void> | null>(null);
+  const activePersistenceRef = useRef<Promise<void> | null>(null);
+  const activeReconciliationsRef = useRef(new Map<string, Promise<void>>());
   const mountedRef = useRef(true);
 
   const replaceState = useCallback((nextState: CodeWorkingTreeSyncState | null) => {
@@ -80,9 +81,43 @@ export function useCodeWorkingTreeSync({
     }
   }, [file, replaceState]);
 
+  const reconcileReceipt = useCallback(
+    (receipt: WorkspaceFileSaveReceipt): Promise<void> => {
+      if (reconcilePersistedFile == null) {
+        return Promise.resolve();
+      }
+
+      const receiptKey = createSaveReceiptKey(receipt);
+      const activeReconciliation = activeReconciliationsRef.current.get(receiptKey);
+      if (activeReconciliation) {
+        return activeReconciliation;
+      }
+
+      const operation = Promise.resolve()
+        .then(() => reconcilePersistedFile(receipt))
+        .then(
+          (outcome) => {
+            transition({ type: 'reconciliation_completed', receipt, outcome });
+          },
+          () => {
+            transition({ type: 'reconciliation_failed', receipt });
+          }
+        )
+        .finally(() => {
+          if (activeReconciliationsRef.current.get(receiptKey) === operation) {
+            activeReconciliationsRef.current.delete(receiptKey);
+          }
+        });
+
+      activeReconciliationsRef.current.set(receiptKey, operation);
+      return operation;
+    },
+    [reconcilePersistedFile, transition]
+  );
+
   const synchronizeOnce = useCallback(async (): Promise<void> => {
-    if (activeSyncRef.current) {
-      await activeSyncRef.current;
+    if (activePersistenceRef.current) {
+      await activePersistenceRef.current;
       if (stateRef.current?.phase === 'modified') {
         await synchronizeOnce();
       }
@@ -128,22 +163,17 @@ export function useCodeWorkingTreeSync({
         requiresReconciliation: reconcilePersistedFile != null,
       });
       if (reconcilePersistedFile != null) {
-        try {
-          const outcome = await reconcilePersistedFile(receipt);
-          transition({ type: 'reconciliation_completed', outcome });
-        } catch {
-          transition({ type: 'reconciliation_failed' });
-        }
+        void reconcileReceipt(receipt);
       }
     })().finally(() => {
-      if (activeSyncRef.current === operation) {
-        activeSyncRef.current = null;
+      if (activePersistenceRef.current === operation) {
+        activePersistenceRef.current = null;
       }
     });
 
-    activeSyncRef.current = operation;
+    activePersistenceRef.current = operation;
     await operation;
-  }, [commandPort, reconcilePersistedFile, transition]);
+  }, [commandPort, reconcilePersistedFile, reconcileReceipt, transition]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -182,8 +212,11 @@ export function useCodeWorkingTreeSync({
       if (isCodeWorkingTreeReconciliationUnresolvedPhase(current.phase)) {
         return true;
       }
-      if (current.phase === 'syncing' || current.phase === 'reconciling') {
-        await activeSyncRef.current;
+      if (current.phase === 'reconciling') {
+        return true;
+      }
+      if (current.phase === 'syncing') {
+        await activePersistenceRef.current;
       } else {
         await synchronizeOnce();
       }
@@ -199,20 +232,7 @@ export function useCodeWorkingTreeSync({
       reconcilePersistedFile != null
     ) {
       transition({ type: 'reconciliation_started' });
-      const operation = (async () => {
-        try {
-          const outcome = await reconcilePersistedFile(current.pendingReconciliation!);
-          transition({ type: 'reconciliation_completed', outcome });
-        } catch {
-          transition({ type: 'reconciliation_failed' });
-        }
-      })().finally(() => {
-        if (activeSyncRef.current === operation) {
-          activeSyncRef.current = null;
-        }
-      });
-      activeSyncRef.current = operation;
-      await operation;
+      await reconcileReceipt(current.pendingReconciliation);
       return;
     }
 
@@ -220,7 +240,7 @@ export function useCodeWorkingTreeSync({
     if (retried?.phase === 'modified') {
       await synchronizeOnce();
     }
-  }, [reconcilePersistedFile, synchronizeOnce, transition]);
+  }, [reconcilePersistedFile, reconcileReceipt, synchronizeOnce, transition]);
 
   const loadAuthoritative = useCallback(
     (nextFile: FileContent) => {
@@ -238,4 +258,14 @@ export function useCodeWorkingTreeSync({
     retry,
     loadAuthoritative,
   };
+}
+
+function createSaveReceiptKey(receipt: WorkspaceFileSaveReceipt): string {
+  return [
+    receipt.kind,
+    receipt.disposition,
+    receipt.path,
+    receipt.contentSha256,
+    receipt.lastModified,
+  ].join('\u0000');
 }
