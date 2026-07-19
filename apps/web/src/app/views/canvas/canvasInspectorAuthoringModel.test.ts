@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   applyCanvasInspectorNodeDraft,
+  areCanvasInspectorNodeDraftsCanonicallyEqual,
+  areCanvasInspectorNodeDraftsEqual,
   createCanvasInspectorNodeDraft,
   hasCanvasInspectorNodeDraftChanges,
   validateCanvasInspectorNodeDraft,
@@ -141,6 +143,32 @@ describe('canvasInspectorAuthoringModel', () => {
         },
       })
     ).toEqual({});
+  });
+
+  it('distinguishes an explicit empty SQL edit until its canonical authority is confirmed', () => {
+    const explicitEmptyDraft = {
+      name: 'Orders Model',
+      description: '',
+      tags: [],
+      dbt: {
+        packageName: 'analytics',
+        sourceName: 'raw',
+        schemaName: 'raw',
+        tableName: 'orders',
+        materialized: 'view',
+        selectedSourceId: 'source-orders',
+        modelSql: '',
+      },
+    };
+    const canonicalDraft = {
+      ...explicitEmptyDraft,
+      dbt: { ...explicitEmptyDraft.dbt, modelSql: null },
+    };
+
+    expect(areCanvasInspectorNodeDraftsEqual(explicitEmptyDraft, canonicalDraft)).toBe(false);
+    expect(areCanvasInspectorNodeDraftsCanonicallyEqual(explicitEmptyDraft, canonicalDraft)).toBe(
+      true
+    );
   });
 
   it('creates DVT source authoring metadata from existing node config', () => {
