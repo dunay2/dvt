@@ -25,7 +25,7 @@ export function DbtModelCodeAuthoringSection({
   onChange: Dispatch<SetStateAction<CanvasInspectorNodeDraft>>;
 }>): JSX.Element {
   const artifact = projection.modelArtifact;
-  const editorValue = draft.modelSql || artifact?.body || '';
+  const editorValue = draft.modelSql ?? artifact?.body ?? '';
   const provenanceDetail =
     artifact == null
       ? canvasViewCopy.inspectorDbtModelSqlUnavailableMessage
@@ -55,16 +55,17 @@ export function DbtModelCodeAuthoringSection({
           disabled={disabled}
           className={inspectorVisualClasses.inspectorCodeEditor}
           spellCheck={false}
-          onChange={(event) =>
+          onChange={(event) => {
+            const modelSql = event.currentTarget.value;
             onChange((currentDraft) =>
               currentDraft.dbt == null
                 ? currentDraft
                 : {
                     ...currentDraft,
-                    dbt: { ...currentDraft.dbt, modelSql: event.target.value },
+                    dbt: { ...currentDraft.dbt, modelSql },
                   }
-            )
-          }
+            );
+          }}
         />
       </div>
     </div>

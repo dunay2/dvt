@@ -124,7 +124,7 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual(['finance', 'critical']);
   });
 
-  it('keeps dbt model SQL ownership outside the route-owned generic inspector draft', () => {
+  it('accepts the plugin-owned DBT model SQL field through the shared inspector draft', () => {
     expect(
       validateCanvasInspectorNodeDraft({
         name: 'Orders Model',
@@ -137,6 +137,7 @@ describe('canvasInspectorAuthoringModel', () => {
           tableName: 'orders',
           materialized: 'view',
           selectedSourceId: 'source-orders',
+          modelSql: null,
         },
       })
     ).toEqual({});

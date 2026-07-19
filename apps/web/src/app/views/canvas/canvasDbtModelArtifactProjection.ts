@@ -181,8 +181,9 @@ export function projectDbtModelArtifact(
     return origin;
   }
 
-  const authoredBody = metadata.modelSql.trim();
-  const body = authoredBody || buildGeneratedBody(origin.sql);
+  const authoredBody = metadata.modelSql;
+  const hasAuthoredBody = authoredBody != null && authoredBody.trim().length > 0;
+  const body = hasAuthoredBody ? authoredBody : buildGeneratedBody(origin.sql);
   const name = normalizeDbtArtifactIdentifier(args.modelNode.name, args.modelNode.id);
 
   return {
@@ -193,7 +194,7 @@ export function projectDbtModelArtifact(
       path: `models/${name}.sql`,
       language: 'sql',
       materialized: metadata.materialized,
-      provenance: authoredBody.length > 0 ? 'authored' : 'generated',
+      provenance: hasAuthoredBody ? 'authored' : 'generated',
       body,
       content: buildArtifactContent(metadata.materialized, body),
       origin: {

@@ -46,6 +46,8 @@ describe('CanvasNodeFloatingToolbarView', () => {
     expect(toolbar).not.toBeNull();
     expect(toolbar?.parentElement).toBe(document.body);
     expect(toolbar?.getAttribute('data-token-scope')).toBe('canvas-node-floating-toolbar');
+    expect(toolbar?.getAttribute('data-node-id')).toBe('model_orders');
+    expect(toolbar?.getAttribute('data-node-name')).toBe('Orders model');
     expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-x')).toBe('320px');
     expect((toolbar as HTMLElement).style.getPropertyValue('--node-toolbar-y')).toBe('160px');
 

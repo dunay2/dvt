@@ -33,6 +33,8 @@ export function CanvasNodeFloatingToolbarView({
     <div
       data-slot="canvas-node-floating-toolbar"
       data-token-scope="canvas-node-floating-toolbar"
+      data-node-id={model.nodeId}
+      data-node-name={model.nodeName}
       aria-label={model.accessibleLabel}
       className={canvasNodeFloatingToolbarClasses.surface}
       style={

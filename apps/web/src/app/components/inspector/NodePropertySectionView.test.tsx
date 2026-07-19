@@ -160,4 +160,24 @@ describe('NodePropertySectionView', () => {
     expect(before.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(body.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
+
+  it('does not render a passive empty state when contextual content owns the section body', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    act(() => {
+      root?.render(
+        <NodePropertySectionView
+          section={{ id: 'code', label: 'Code', rows: [], tableRows: [] }}
+          slots={{ code: 'node-section-code', sectionPrefix: 'node-section' }}
+          surface="workbench"
+          afterBody={<textarea aria-label="Model SQL" />}
+        />
+      );
+    });
+
+    expect(container.textContent).not.toContain('No properties are recorded for this section.');
+    expect(container.querySelector('textarea[aria-label="Model SQL"]')).not.toBeNull();
+  });
 });

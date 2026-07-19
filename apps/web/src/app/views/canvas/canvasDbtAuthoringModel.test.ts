@@ -67,7 +67,7 @@ describe('canvas dbt authoring model', () => {
       tableName: 'orders',
       materialized: 'view',
       selectedSourceId: '',
-      modelSql: '',
+      modelSql: null,
     });
   });
 
@@ -114,12 +114,30 @@ describe('canvas dbt authoring model', () => {
       modelSql: 'select order_id, amount\nfrom raw.orders',
     });
 
-    expect(updated.metadata.config).toMatchObject({
+    expect(updated.metadata?.config).toMatchObject({
       sql: 'select order_id, amount\nfrom raw.orders',
     });
     expect(createDbtNodeAuthoringMetadata(updated).modelSql).toBe(
       'select order_id, amount\nfrom raw.orders'
     );
+  });
+
+  it('preserves authored SQL whitespace while distinguishing absent SQL from an empty edit', () => {
+    const authoredSql = '  select order_id\nfrom raw.orders\n';
+    const updated = applyDbtNodeAuthoringMetadata(buildDbtModelNode(), {
+      ...createDbtNodeAuthoringMetadata(buildDbtModelNode()),
+      modelSql: authoredSql,
+    });
+
+    expect(updated.metadata?.config).toMatchObject({ sql: authoredSql });
+    expect(createDbtNodeAuthoringMetadata(updated).modelSql).toBe(authoredSql);
+
+    const reset = applyDbtNodeAuthoringMetadata(updated, {
+      ...createDbtNodeAuthoringMetadata(updated),
+      modelSql: '',
+    });
+    expect(reset.metadata?.config).not.toHaveProperty('sql');
+    expect(createDbtNodeAuthoringMetadata(reset).modelSql).toBeNull();
   });
 
   it('resolves the selected model origin from the visible dbt graph relation', () => {

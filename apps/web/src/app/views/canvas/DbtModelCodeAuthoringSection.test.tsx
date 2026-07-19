@@ -107,4 +107,16 @@ describe('DbtModelCodeAuthoringSection', () => {
       container.querySelector('[data-slot="dbt-model-code-provenance"]')?.textContent
     ).toContain('Authored');
   });
+
+  it('keeps an explicitly cleared editor empty instead of restoring generated SQL', () => {
+    act(() => root.render(<Harness />));
+
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]');
+    act(() => {
+      fireEvent.input(editor!, { target: { value: '' } });
+    });
+
+    expect(editor?.value).toBe('');
+    expect(container.querySelector('[data-slot="model-sql-draft"]')?.textContent).toBe('');
+  });
 });

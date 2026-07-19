@@ -71,7 +71,7 @@ export const canvasViewToolbarCopyByKey = {
   },
   canvasNodeToolbarCodeDescription: {
     key: 'canvas.nodeToolbar.codeDescription',
-    fallback: 'Open the selected node file in the contextual code workbench.',
+    fallback: 'Open the selected node code in its contextual workbench.',
   },
   canvasNodeToolbarFreezeLabel: {
     key: 'canvas.nodeToolbar.freezeLabel',
