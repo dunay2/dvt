@@ -2,11 +2,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import type { CanvasAuthoringDraftRecord } from './canvasDraftReadModel';
 
 export type CanvasDraftSyncState =
-  | 'bootstrapping'
-  | 'editing'
-  | 'saving'
-  | 'conflict'
-  | 'missing_remote';
+  'bootstrapping' | 'editing' | 'saving' | 'conflict' | 'missing_remote';
 
 export type CanvasDraftEdge = { sourceId: string; targetId: string };
 
@@ -27,6 +23,7 @@ export type CanvasDraftSession = {
   draftRevision: string | null;
   savingWorkingSet?: CanvasDraftWorkingSet;
   savingBaseRevision?: string | null;
+  savingLocalNodeCatalog?: Record<string, CanonicalNode>;
   localNodeCatalog?: Record<string, CanonicalNode>;
 };
 

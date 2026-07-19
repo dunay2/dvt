@@ -1,0 +1,207 @@
+/** Owned concern: project one provenance-preserving DBT model artifact from canonical graph state. */
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import {
+  createDbtNodeAuthoringMetadata,
+  type DbtNodeAuthoringMetadata,
+} from './canvasDbtAuthoringModel';
+import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
+
+export type DbtModelArtifactSource = Readonly<{
+  sourceName: string;
+  schemaName: string;
+  tableName: string;
+}>;
+
+export type DbtModelArtifactProjection = Readonly<{
+  modelNodeId: string;
+  name: string;
+  path: string;
+  language: 'sql';
+  materialized: string;
+  provenance: 'authored' | 'generated';
+  body: string;
+  content: string;
+  origin: Readonly<{
+    nodeId: string;
+    sql: string;
+  }>;
+  source?: DbtModelArtifactSource;
+}>;
+
+export type DbtModelArtifactProjectionResult =
+  | Readonly<{
+      ok: true;
+      artifact: DbtModelArtifactProjection;
+    }>
+  | Readonly<{
+      ok: false;
+      reason: 'not_dbt_model' | 'origin_required' | 'origin_metadata_unavailable';
+      message: string;
+    }>;
+
+type ProjectDbtModelArtifactArgs = Readonly<{
+  modelNode: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
+  authoringMetadata?: DbtNodeAuthoringMetadata;
+}>;
+
+type DbtModelOriginProjection = Readonly<{
+  nodeId: string;
+  sql: string;
+  source?: DbtModelArtifactSource;
+}>;
+
+export function normalizeDbtArtifactIdentifier(value: string, fallback: string): string {
+  const normalized = value
+    .trim()
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .replace(/[^A-Za-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .toLowerCase();
+
+  return normalized.length > 0 ? normalized : fallback;
+}
+
+function isDbtSource(node: CanonicalNode): boolean {
+  return node.pluginId === 'dbt' && node.kind === 'dbt:source';
+}
+
+function isWarehouseSource(node: CanonicalNode): boolean {
+  return node.pluginId === 'dvt.warehouse-source' && node.kind === 'dvt:source';
+}
+
+function isDbtModel(node: CanonicalNode): boolean {
+  return node.pluginId === 'dbt' && node.kind === 'dbt:model';
+}
+
+function isCompatibleOrigin(node: CanonicalNode): boolean {
+  return isDbtSource(node) || isWarehouseSource(node) || isDbtModel(node);
+}
+
+function resolveIncomingOrigins(args: ProjectDbtModelArtifactArgs): readonly CanonicalNode[] {
+  const nodeById = new Map(args.nodes.map((node) => [node.id, node]));
+  return args.edges
+    .filter((edge) => edge.targetId === args.modelNode.id)
+    .map((edge) => nodeById.get(edge.sourceId))
+    .filter((node): node is CanonicalNode => node != null && isCompatibleOrigin(node));
+}
+
+function projectSourceOrigin(
+  origin: CanonicalNode
+): DbtModelOriginProjection | DbtModelArtifactProjectionResult {
+  if (isDbtSource(origin)) {
+    const metadata = createDbtNodeAuthoringMetadata(origin);
+    return {
+      nodeId: origin.id,
+      sql: `{{ source('${metadata.sourceName}', '${metadata.tableName}') }}`,
+      source: {
+        sourceName: metadata.sourceName,
+        schemaName: metadata.schemaName,
+        tableName: metadata.tableName,
+      },
+    };
+  }
+
+  const metadata = createDvtNodeAuthoringMetadata(origin);
+  if (metadata?.kind !== 'source') {
+    return {
+      ok: false,
+      reason: 'origin_metadata_unavailable',
+      message: `DBT source origin "${origin.name}" does not expose warehouse source metadata.`,
+    };
+  }
+
+  return {
+    nodeId: origin.id,
+    sql: `{{ source('${metadata.alias}', '${metadata.table}') }}`,
+    source: {
+      sourceName: metadata.alias,
+      schemaName: metadata.schema,
+      tableName: metadata.table,
+    },
+  };
+}
+
+function resolveOriginProjection(
+  args: ProjectDbtModelArtifactArgs,
+  metadata: DbtNodeAuthoringMetadata
+): DbtModelOriginProjection | DbtModelArtifactProjectionResult {
+  const incomingOrigins = resolveIncomingOrigins(args);
+  const selectedOrigin =
+    metadata.selectedSourceId.length > 0
+      ? incomingOrigins.find((origin) => origin.id === metadata.selectedSourceId)
+      : undefined;
+  const origin =
+    selectedOrigin ??
+    incomingOrigins.find(isDbtSource) ??
+    incomingOrigins.find(isWarehouseSource) ??
+    incomingOrigins.find(isDbtModel);
+
+  if (origin == null) {
+    return {
+      ok: false,
+      reason: 'origin_required',
+      message: `DBT model "${args.modelNode.name}" must be connected to a source or model origin.`,
+    };
+  }
+
+  if (isDbtSource(origin) || isWarehouseSource(origin)) {
+    return projectSourceOrigin(origin);
+  }
+
+  return {
+    nodeId: origin.id,
+    sql: `{{ ref('${normalizeDbtArtifactIdentifier(origin.name, origin.id)}') }}`,
+  };
+}
+
+function buildGeneratedBody(originSql: string): string {
+  return ['select *', `from ${originSql}`].join('\n');
+}
+
+function buildArtifactContent(materialized: string, body: string): string {
+  return [`{{ config(materialized='${materialized}') }}`, '', body, ''].join('\n');
+}
+
+export function projectDbtModelArtifact(
+  args: ProjectDbtModelArtifactArgs
+): DbtModelArtifactProjectionResult {
+  if (!isDbtModel(args.modelNode)) {
+    return {
+      ok: false,
+      reason: 'not_dbt_model',
+      message: `Node "${args.modelNode.name}" is not a DBT model.`,
+    };
+  }
+
+  const metadata = args.authoringMetadata ?? createDbtNodeAuthoringMetadata(args.modelNode);
+  const origin = resolveOriginProjection(args, metadata);
+  if ('ok' in origin) {
+    return origin;
+  }
+
+  const authoredBody = metadata.modelSql;
+  const hasAuthoredBody = authoredBody != null && authoredBody.trim().length > 0;
+  const body = hasAuthoredBody ? authoredBody : buildGeneratedBody(origin.sql);
+  const name = normalizeDbtArtifactIdentifier(args.modelNode.name, args.modelNode.id);
+
+  return {
+    ok: true,
+    artifact: {
+      modelNodeId: args.modelNode.id,
+      name,
+      path: `models/${name}.sql`,
+      language: 'sql',
+      materialized: metadata.materialized,
+      provenance: hasAuthoredBody ? 'authored' : 'generated',
+      body,
+      content: buildArtifactContent(metadata.materialized, body),
+      origin: {
+        nodeId: origin.nodeId,
+        sql: origin.sql,
+      },
+      ...(origin.source == null ? {} : { source: origin.source }),
+    },
+  };
+}

@@ -38,6 +38,13 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
   };
 }
 
+export function areCanvasInspectorNodeDraftsEqual(
+  left: CanvasInspectorNodeDraft,
+  right: CanvasInspectorNodeDraft
+): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
 export function validateCanvasInspectorNodeDraft(
   draft: CanvasInspectorNodeDraft
 ): CanvasInspectorNodeDraftErrors {
@@ -124,4 +131,11 @@ export function applyCanvasInspectorNodeDraft(
   }
 
   return baseNode;
+}
+
+export function canonicalizeCanvasInspectorNodeDraft(
+  node: CanonicalNode,
+  draft: CanvasInspectorNodeDraft
+): CanvasInspectorNodeDraft {
+  return createCanvasInspectorNodeDraft(applyCanvasInspectorNodeDraft(node, draft));
 }

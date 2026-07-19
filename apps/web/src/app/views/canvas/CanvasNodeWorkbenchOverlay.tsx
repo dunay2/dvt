@@ -8,6 +8,7 @@ import type {
 } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CanvasNodeWorkbenchPosition } from './canvasNodeWorkbenchPositionModel';
+import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
 import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
 import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition';
@@ -68,13 +69,12 @@ export function CanvasNodeWorkbenchOverlay({
   onHide,
 }: CanvasNodeWorkbenchOverlayProps): JSX.Element | null {
   const surfaceStrategy = layout.surfaceStrategy;
-  const nodeWorkbenchPlacement = surfaceStrategy?.nodeWorkbench.placement;
-  const visible =
-    surfaceStrategy != null &&
-    nodeWorkbenchPlacement === 'contextual-overlay' &&
-    !layout.focusMode &&
-    layout.inspectorPanelVisible &&
-    panels.inspectorNode != null;
+  const visible = isCanvasNodeWorkbenchVisible({
+    focusMode: layout.focusMode,
+    inspectorPanelVisible: layout.inspectorPanelVisible,
+    surfaceStrategy,
+    hasInspectorNode: panels.inspectorNode != null,
+  });
   const copy = resolveCanvasViewCopy();
   const positionController = useCanvasNodeWorkbenchPosition(visible);
 

@@ -1,5 +1,7 @@
 /** Owned concern: share pure graph card projection helpers across plugin strategies. */
 import type { CanonicalNode } from '../../types/canonical';
+import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
+import { isCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
 import { formatSourceObjectMetricByteSize } from '../../services/workspace/sourceObjectMetricEvidencePresentation';
 import type {
   GraphNodeCardAccentTone,
@@ -298,5 +300,40 @@ export function resolveColumnCount(
   metadata: Record<string, unknown>,
   data: Record<string, unknown>
 ): number {
-  return arrayCount(data.columns) ?? arrayCount(metadata.columns) ?? 0;
+  return resolveColumnMetricPresentation(metadata, data).count;
+}
+
+export type GraphNodeColumnMetricPresentation = Readonly<{
+  count: number;
+  label: string;
+  detail?: string;
+}>;
+
+function interpolateCount(template: string, count: number): string {
+  return template.replaceAll('{count}', String(count));
+}
+
+export function resolveColumnMetricPresentation(
+  metadata: Record<string, unknown>,
+  data: Record<string, unknown>
+): GraphNodeColumnMetricPresentation {
+  const truth = isCanvasNodePresentationTruth(data.presentationTruth)
+    ? data.presentationTruth
+    : null;
+  const copy = isCanvasNodePresentationCopy(data.presentationCopy) ? data.presentationCopy : null;
+  const count =
+    truth?.columns.visibleCount ?? arrayCount(data.columns) ?? arrayCount(metadata.columns) ?? 0;
+
+  if (truth == null || copy == null) {
+    return { count, label: copy?.columnsLabel ?? 'Columns' };
+  }
+
+  const detail =
+    truth.columns.visibleProvenance === 'declared'
+      ? interpolateCount(copy.declaredColumnsDetailTemplate, count)
+      : truth.columns.visibleProvenance === 'inherited'
+        ? interpolateCount(copy.inheritedColumnsDetailTemplate, count)
+        : copy.noColumnsDetail;
+
+  return { count, label: copy.columnsLabel, detail };
 }

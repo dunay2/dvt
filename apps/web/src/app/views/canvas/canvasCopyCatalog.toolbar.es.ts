@@ -19,7 +19,7 @@ export const canvasViewToolbarCopyEs = {
   canvasNodeToolbarLabelTemplate: 'Acciones del nodo: {nodeName}',
   canvasNodeToolbarCodeLabel: 'Abrir codigo del nodo',
   canvasNodeToolbarCodeDescription:
-    'Abre el fichero del nodo seleccionado en el workbench de codigo contextual.',
+    'Abre el codigo del nodo seleccionado en su banco de trabajo contextual.',
   canvasNodeToolbarFreezeLabel: 'Congelar nodo',
   canvasNodeToolbarFreezeDescription: 'Mantiene este nodo fijo en su posicion actual del canvas.',
   canvasNodeToolbarUnfreezeLabel: 'Descongelar nodo',

@@ -7,6 +7,7 @@ import {
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
 import { canvasViewCopy } from './copy';
+import { DbtModelCodeAuthoringSection } from './DbtModelCodeAuthoringSection';
 import { DbtModelAuthoringSection } from './DbtModelAuthoringSection';
 import { DbtSourceAuthoringSection } from './DbtSourceAuthoringSection';
 import { buildDbtAuthoringModelProjection } from './dbtAuthoringFieldsModel';
@@ -18,6 +19,7 @@ type DbtAuthoringFieldsProps = Readonly<{
   disabled: boolean;
   draft: ReturnType<typeof createCanvasInspectorNodeDraft>;
   errors: ReturnType<typeof validateCanvasInspectorNodeDraft>;
+  section?: 'general' | 'code';
   onChange: Dispatch<SetStateAction<ReturnType<typeof createCanvasInspectorNodeDraft>>>;
 }>;
 
@@ -28,6 +30,7 @@ export function DbtAuthoringFields({
   disabled,
   draft,
   errors,
+  section = 'general',
   onChange,
 }: DbtAuthoringFieldsProps): JSX.Element | null {
   if (!draft.dbt) {
@@ -35,6 +38,10 @@ export function DbtAuthoringFields({
   }
 
   if (node.kind === 'dbt:source') {
+    if (section === 'code') {
+      return null;
+    }
+
     return (
       <DbtSourceAuthoringSection
         node={node}
@@ -54,14 +61,22 @@ export function DbtAuthoringFields({
     node,
     nodes,
     edges,
-    selectedOriginId: draft.dbt.selectedSourceId,
+    authoringMetadata: draft.dbt,
     kindLabels: {
       'dbt:source': canvasViewCopy.inspectorDbtOriginKindSourceLabel,
       'dbt:model': canvasViewCopy.inspectorDbtOriginKindModelLabel,
     },
   });
 
-  return (
+  return section === 'code' ? (
+    <DbtModelCodeAuthoringSection
+      node={node}
+      disabled={disabled}
+      draft={draft.dbt}
+      projection={projection}
+      onChange={onChange}
+    />
+  ) : (
     <DbtModelAuthoringSection
       node={node}
       disabled={disabled}

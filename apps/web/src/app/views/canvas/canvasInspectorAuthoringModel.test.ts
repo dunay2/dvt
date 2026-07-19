@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 
 import {
   applyCanvasInspectorNodeDraft,
+  areCanvasInspectorNodeDraftsEqual,
+  canonicalizeCanvasInspectorNodeDraft,
   createCanvasInspectorNodeDraft,
   hasCanvasInspectorNodeDraftChanges,
   validateCanvasInspectorNodeDraft,
@@ -124,7 +126,7 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual(['finance', 'critical']);
   });
 
-  it('keeps dbt model SQL ownership outside the route-owned generic inspector draft', () => {
+  it('accepts the plugin-owned DBT model SQL field through the shared inspector draft', () => {
     expect(
       validateCanvasInspectorNodeDraft({
         name: 'Orders Model',
@@ -137,9 +139,55 @@ describe('canvasInspectorAuthoringModel', () => {
           tableName: 'orders',
           materialized: 'view',
           selectedSourceId: 'source-orders',
+          modelSql: null,
         },
       })
     ).toEqual({});
+  });
+
+  it('projects a submitted draft through the same canonical rules as the authoring command', () => {
+    const explicitEmptyDraft = {
+      name: '  Orders Model  ',
+      description: '  Governed model  ',
+      tags: [' mart ', 'daily', 'mart'],
+      dbt: {
+        packageName: '  finance  ',
+        sourceName: ' Raw Orders ',
+        schemaName: '  curated  ',
+        tableName: ' Order Lines ',
+        materialized: 'view',
+        selectedSourceId: '  source.orders  ',
+        modelSql: '',
+      },
+    };
+    const modelNode: CanonicalNode = {
+      id: 'model.orders',
+      name: 'Orders Model',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    };
+
+    expect(
+      areCanvasInspectorNodeDraftsEqual(explicitEmptyDraft, {
+        ...explicitEmptyDraft,
+      })
+    ).toBe(true);
+    expect(canonicalizeCanvasInspectorNodeDraft(modelNode, explicitEmptyDraft)).toMatchObject({
+      name: 'Orders Model',
+      description: 'Governed model',
+      tags: ['mart', 'daily'],
+      dbt: {
+        packageName: 'finance',
+        sourceName: 'raw_orders',
+        schemaName: 'curated',
+        tableName: 'order_lines',
+        selectedSourceId: 'source.orders',
+        modelSql: null,
+      },
+    });
   });
 
   it('creates DVT source authoring metadata from existing node config', () => {

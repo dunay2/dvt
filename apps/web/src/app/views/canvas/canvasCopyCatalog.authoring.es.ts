@@ -44,6 +44,19 @@ export const canvasViewAuthoringCopyEs = {
   nodeRemovedSuffix: '',
   inspectorEditablePropertiesTitle: 'Propiedades editables',
   inspectorEditablePropertiesDescription: 'Nombre, tags y descripcion guardados con este canvas.',
+  nodePresentationColumnsLabel: 'Columnas',
+  nodePresentationDeclaredColumnsDetailTemplate: '{count} columnas declaradas por este nodo.',
+  nodePresentationInheritedColumnsDetailTemplate:
+    '{count} columnas heredadas de las entradas conectadas; ninguna declarada por este nodo.',
+  nodePresentationNoColumnsDetail:
+    'No hay columnas declaradas ni heredadas disponibles para este nodo.',
+  nodePresentationCodeLabel: 'Código',
+  nodePresentationWorkspaceCodeDetailTemplate:
+    'El código está en el archivo {path} del workspace. Abre Código para inspeccionarlo o editarlo.',
+  nodePresentationGeneratedCodeDetailTemplate:
+    'Artefacto DBT generado en {path}. Edita Código para convertirlo en código escrito.',
+  nodePresentationCodeUnavailableMessage:
+    'No hay código inline ni archivo del workspace registrado para este nodo.',
   nodeWorkbenchCloseLabel: 'Cerrar',
   nodeWorkbenchMoveLabel: 'Mover banco de trabajo del nodo',
   nodeWorkbenchMoreLabel: 'Más',
@@ -67,10 +80,13 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDbtTableLabel: 'Tabla',
   inspectorDbtMaterializedLabel: 'Materializacion',
   inspectorDbtOriginLabel: 'Entrada',
-  inspectorDbtGeneratedSqlLabel: 'SQL generada',
+  inspectorDbtModelSqlLabel: 'SQL del modelo',
+  inspectorDbtModelSqlGeneratedDetailTemplate:
+    'Artefacto DBT generado: {path}. Editalo para asumir su autoria.',
+  inspectorDbtModelSqlAuthoredDetailTemplate: 'SQL DBT escrita: {path}.',
   inspectorDbtNoConnectedOriginsMessage: 'No hay origenes dbt conectados.',
-  inspectorDbtGeneratedSqlUnavailableMessage:
-    'Conecta este modelo a un source o modelo dbt para previsualizar la SQL generada por el plugin dbt.',
+  inspectorDbtModelSqlUnavailableMessage:
+    'Conecta este modelo a un source o modelo DBT antes de generar un artefacto ejecutable.',
   inspectorDbtOriginKindSourceLabel: 'source',
   inspectorDbtOriginKindModelLabel: 'modelo',
   inspectorDbtMaterializedViewLabel: 'vista',

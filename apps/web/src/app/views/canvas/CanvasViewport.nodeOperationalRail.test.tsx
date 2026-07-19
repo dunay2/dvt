@@ -85,8 +85,7 @@ describe('CanvasViewport node operational rail', () => {
     expect(container.textContent).toContain('18.2 GB');
 
     const onPaneClick = xyflowState.lastReactFlowProps?.onPaneClick as
-      | ((event: React.MouseEvent<Element>) => void)
-      | undefined;
+      ((event: React.MouseEvent<Element>) => void) | undefined;
     await act(async () => {
       onPaneClick?.({ clientX: 20, clientY: 30 } as unknown as React.MouseEvent<Element>);
     });
@@ -191,7 +190,7 @@ describe('CanvasViewport node operational rail', () => {
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
   });
 
-  it('keeps the popover for its selected owner and closes it when selection changes nodes', async () => {
+  it('keeps an explicitly opened popover independent from execution-selection synchronization', async () => {
     await renderViewport({
       nodesWithImpact: [
         {
@@ -240,7 +239,7 @@ describe('CanvasViewport node operational rail', () => {
       onSelectionChange?.({ nodes: nodes.filter((node) => node.id === 'model_orders'), edges: [] });
     });
 
-    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
   });
 
   async function openOperationalDetails(nodeId: string): Promise<HTMLButtonElement> {

@@ -148,9 +148,7 @@ describe('DbtAuthoringFields', () => {
       'select[name="dbt-materialized"]'
     ) as HTMLSelectElement;
 
-    expect(container.querySelector('[data-slot="dbt-generated-model-sql"]')?.textContent).toContain(
-      "{{ source('raw', 'orders') }}"
-    );
+    expect(container.querySelector('[data-slot="dbt-generated-model-sql"]')).toBeNull();
     expect(originSelect.value).toBe(sourceA.id);
     expect(materializedSelect.value).toBe('view');
 
@@ -159,9 +157,6 @@ describe('DbtAuthoringFields', () => {
       fireEvent.change(materializedSelect, { target: { value: 'table' } });
     });
 
-    expect(container.querySelector('[data-slot="dbt-generated-model-sql"]')?.textContent).toContain(
-      "{{ source('staging', 'orders') }}"
-    );
     expect(draftJson()).toContain('"selectedSourceId":"source-b"');
     expect(draftJson()).toContain('"materialized":"table"');
   });

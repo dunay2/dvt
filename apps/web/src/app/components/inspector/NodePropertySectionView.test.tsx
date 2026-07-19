@@ -56,6 +56,7 @@ describe('NodePropertySectionView', () => {
     ({ container, root } = renderSection({
       id: 'columns',
       label: 'Columns',
+      description: '2 columns inherited from the connected source.',
       rows: [],
       tableRows: [
         {
@@ -70,6 +71,9 @@ describe('NodePropertySectionView', () => {
     expect(container.textContent).toContain('order_id');
     expect(container.textContent).toContain('integer');
     expect(container.textContent).toContain('not null');
+    expect(
+      container.querySelector('[data-slot="node-section-columns-description"]')?.textContent
+    ).toBe('2 columns inherited from the connected source.');
   });
 
   it('renders scalar rows and code blocks without involving the tabs coordinator', () => {
@@ -155,5 +159,25 @@ describe('NodePropertySectionView', () => {
 
     expect(before.compareDocumentPosition(body) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(body.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('does not render a passive empty state when contextual content owns the section body', () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+
+    act(() => {
+      root?.render(
+        <NodePropertySectionView
+          section={{ id: 'code', label: 'Code', rows: [], tableRows: [] }}
+          slots={{ code: 'node-section-code', sectionPrefix: 'node-section' }}
+          surface="workbench"
+          afterBody={<textarea aria-label="Model SQL" />}
+        />
+      );
+    });
+
+    expect(container.textContent).not.toContain('No properties are recorded for this section.');
+    expect(container.querySelector('textarea[aria-label="Model SQL"]')).not.toBeNull();
   });
 });

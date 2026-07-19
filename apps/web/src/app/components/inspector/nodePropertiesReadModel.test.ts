@@ -7,6 +7,17 @@ import {
   type NodePropertySection,
 } from './nodePropertiesReadModel';
 
+const presentationCopy = {
+  columnsLabel: 'Columns',
+  declaredColumnsDetailTemplate: '{count} declared columns.',
+  inheritedColumnsDetailTemplate: '{count} inherited columns.',
+  noColumnsDetail: 'No columns.',
+  codeLabel: 'Code',
+  workspaceCodeDetailTemplate: 'Code lives at {path}.',
+  generatedCodeDetailTemplate: 'Generated code at {path}.',
+  codeUnavailableMessage: 'No code.',
+} as const;
+
 const expectedSectionIds = [
   'general',
   'columns',
@@ -653,6 +664,7 @@ describe('nodePropertiesReadModel', () => {
       role: 'transform',
       status: 'idle',
       tags: [],
+      path: 'models/orders.sql',
       metadata: {
         config: {
           selectedColumns: ['source-orders.customer'],
@@ -670,6 +682,7 @@ describe('nodePropertiesReadModel', () => {
       node: modelNode,
       nodes: [source, modelNode],
       edges: [edge],
+      presentationCopy,
     });
 
     expectTableCells(sectionById(model, 'columns'), 'source-orders.order_id', {
@@ -688,16 +701,32 @@ describe('nodePropertiesReadModel', () => {
       reference: 'source-orders.customer',
       selection: 'selected',
     });
+    expect(sectionById(model, 'columns').description).toBe('2 inherited columns.');
+    const codeSection = sectionById(model, 'code');
+    expect(codeSection).toMatchObject({
+      label: 'Code',
+      description: 'Code lives at models/orders.sql.',
+    });
+    expect(codeSection.emptyState).toBeUndefined();
+    expect(codeSection.code).toBeUndefined();
   });
 
   it.each([
-    ['compiled SQL', { compiledSql: 'select compiled', sql: 'select metadata' }, 'select compiled'],
     [
-      'metadata SQL',
-      { sql: 'select metadata', config: { sql: 'select config' } },
-      'select metadata',
+      'compiled SQL',
+      {
+        compiledSql: 'select compiled',
+        sql: 'select metadata',
+        config: { sql: 'select config' },
+      },
+      'select compiled',
     ],
-    ['config SQL', { config: { sql: 'select config' } }, 'select config'],
+    [
+      'config SQL over stale metadata SQL',
+      { sql: 'select metadata', config: { sql: 'select config' } },
+      'select config',
+    ],
+    ['metadata SQL fallback', { sql: 'select metadata' }, 'select metadata'],
   ])('uses deterministic SQL precedence for %s', (_name, metadata, expectedCode) => {
     const model = buildNodePropertiesReadModel({
       node: buildSourceNode({ metadata }),
@@ -706,5 +735,37 @@ describe('nodePropertiesReadModel', () => {
     });
 
     expect(sectionById(model, 'code').code).toBe(expectedCode);
+  });
+
+  it('renders supplied generated code without claiming workspace-file authority', () => {
+    const node = buildSourceNode({ path: undefined, metadata: {} });
+    const model = buildNodePropertiesReadModel({
+      node,
+      nodes: [node],
+      edges: [],
+      presentationCopy,
+      presentationTruth: {
+        columns: {
+          declared: [],
+          inherited: [],
+          visible: [],
+          declaredCount: 0,
+          inheritedCount: 0,
+          visibleCount: 0,
+          visibleProvenance: 'none',
+        },
+        code: {
+          kind: 'generated',
+          content: 'select * from raw_orders',
+          path: 'models/orders.sql',
+          language: 'sql',
+        },
+      },
+    });
+
+    expect(sectionById(model, 'code')).toMatchObject({
+      code: 'select * from raw_orders',
+      description: 'Generated code at models/orders.sql.',
+    });
   });
 });

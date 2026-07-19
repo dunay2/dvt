@@ -68,13 +68,28 @@ describe('canvasCreateCanvasDocumentCommand replacement modes', () => {
       idempotencyKey: expect.any(String),
       draft: {
         canvas: {
+          id: 'dbt-canvas',
           kind: 'dbt',
           title: 'DBT canvas',
         },
+        activeCanvasId: 'dbt-canvas',
         nodeIds: [],
         nodePositions: {},
         nodes: [],
         edges: [],
+        canvases: [
+          {
+            canvas: {
+              id: 'dbt-canvas',
+              kind: 'dbt',
+              title: 'DBT canvas',
+            },
+            nodeIds: [],
+            nodePositions: {},
+            nodes: [],
+            edges: [],
+          },
+        ],
       },
     });
     expect(draftQueryCache.replaceRemoteDraftState).toHaveBeenCalledTimes(1);

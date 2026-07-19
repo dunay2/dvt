@@ -100,10 +100,10 @@ export function importLivePostgresSource(
     .and('contain.text', '3 columns');
   cy.contains('button', 'Attach sources to canvas').should('be.enabled').click();
 
+  cy.contains('[role="dialog"]', 'Sources imported', { timeout: 60_000 }).should('be.visible');
+
   if (expectedAuthority.kind === 'dbt-project-files') {
-    cy.contains('[role="dialog"]', 'Source files updated', { timeout: 60_000 }).should(
-      'be.visible'
-    );
+    cy.contains('[role="dialog"]', 'Source files updated').should('be.visible');
     cy.contains('[role="dialog"]', `[file] ${expectedAuthority.expectedYamlPath}`).should(
       'be.visible'
     );
@@ -111,9 +111,7 @@ export function importLivePostgresSource(
       'be.visible'
     );
   } else {
-    cy.contains('[role="dialog"]', 'Sources attached successfully', {
-      timeout: 60_000,
-    }).should('be.visible');
+    cy.contains('[role="dialog"]', 'governed draft authority refreshes').should('be.visible');
   }
   cy.contains('[role="dialog"] button', 'Done').click();
 }

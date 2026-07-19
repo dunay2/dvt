@@ -10,7 +10,6 @@ import { buildGraphNodeOperationalSummary } from '../graph/graphNodeOperationalS
 import { buildGraphNodeVolumeMetricProjection } from '../graph/graphNodeSourceMetricProjection';
 import { buildGraphNodeTitlePresentation } from '../graph/graphNodeTitlePresentation';
 import {
-  arrayCount,
   metadataOf,
   numericValue,
   pushMetric,
@@ -18,6 +17,7 @@ import {
   resolveNodeCardAccentTone,
   resolveNodeCardStatus,
   resolveColumnCount,
+  resolveColumnMetricPresentation,
   resolveGraphNodeRelationPath,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
@@ -76,7 +76,8 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metadata,
     data,
   });
-  const columnCount = arrayCount(data.columns) ?? arrayCount(metadata.columns);
+  const columnPresentation = resolveColumnMetricPresentation(metadata, data);
+  const columnCount = columnPresentation.count;
   const titlePresentation = buildGraphNodeTitlePresentation({
     nodeName: node.name,
     pluginId: node.pluginId,
@@ -89,7 +90,9 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     durationMs: numericValue(data.durationMs) ?? resolveCanonicalDurationMs(node, metadata, data),
   };
 
-  pushMetric(metrics, 'columns', 'Columns', resolveColumnCount(metadata, data));
+  pushMetric(metrics, 'columns', columnPresentation.label, resolveColumnCount(metadata, data), {
+    ...(columnPresentation.detail == null ? {} : { detail: columnPresentation.detail }),
+  });
   pushRuntimeMetrics(metrics, metadata, runtimeData);
   pushCanonicalCostMetric(metrics, node, metadata, data);
 

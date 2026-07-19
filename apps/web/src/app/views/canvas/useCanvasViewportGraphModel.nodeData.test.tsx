@@ -186,6 +186,62 @@ describe('useCanvasViewportGraphModel node data', () => {
     }
   });
 
+  it('projects inherited transform columns as the same semantic truth consumed by the card', async () => {
+    const source = {
+      ...buildCanonicalNode('source-node', 'dbt:source', 'input'),
+      metadata: {
+        columns: [
+          { name: 'order_id', type: 'integer' },
+          { name: 'amount', type: 'numeric' },
+        ],
+      },
+    };
+    const model = {
+      ...buildCanonicalNode('model-node', 'dbt:model', 'transform'),
+      path: 'models/orders.sql',
+    };
+    const mounted = await renderViewportGraphModel(
+      buildViewportGraphModelArgs({
+        visibleNodeIds: [source.id, model.id],
+        visibleEdges: [{ sourceId: source.id, targetId: model.id }],
+        draftSemanticGraph: {
+          canonicalNodes: [source, model],
+          canonicalEdges: [
+            {
+              id: 'source-node->model-node',
+              sourceId: source.id,
+              targetId: model.id,
+              relation: 'lineage',
+            },
+          ],
+        },
+      })
+    );
+
+    try {
+      const modelData = mounted.readState()?.nodes.find((node) => node.id === model.id)?.data as
+        DbtNodeData | undefined;
+
+      expect(modelData?.presentationTruth?.columns).toMatchObject({
+        declaredCount: 0,
+        inheritedCount: 2,
+        visibleCount: 2,
+        visibleProvenance: 'inherited',
+      });
+      expect(modelData?.columns).toEqual([
+        { name: 'order_id', type: 'integer' },
+        { name: 'amount', type: 'numeric' },
+      ]);
+      expect(modelData?.presentationTruth?.code).toEqual({
+        kind: 'workspace-file',
+        path: 'models/orders.sql',
+        language: 'sql',
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('refreshes projected node tags when canonical tags change', async () => {
     const mounted = await renderViewportGraphModel(
       buildViewportGraphModelArgs({

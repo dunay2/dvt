@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
-import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
+import {
+  mapCanonicalNodeToCanvasNode,
+  mapDroppedCanonicalNodeToCanvasNode,
+} from './canvasNodeMapper';
 
 function buildCanonicalNode(): CanonicalNode {
   return {
@@ -43,5 +46,31 @@ describe('canvasNodeMapper', () => {
 
     expect(mappedNode.data.pluginId).toBe('dvt.warehouse-source');
     expect(mappedNode.data.pluginKind).toBe('dvt:source');
+  });
+
+  it('projects presentation truth when a canonical node enters through drag and drop', () => {
+    const mappedNode = mapDroppedCanonicalNodeToCanvasNode(
+      {
+        ...buildCanonicalNode(),
+        metadata: {
+          columns: [
+            { name: 'order_id', type: 'integer' },
+            { name: 'amount', type: 'numeric' },
+          ],
+        },
+      },
+      { x: 120, y: 80 },
+      false,
+      'es-ES'
+    );
+
+    expect(mappedNode.data.presentationTruth?.columns).toMatchObject({
+      visibleCount: 2,
+      visibleProvenance: 'declared',
+    });
+    expect(mappedNode.data.columns).toEqual([
+      { name: 'order_id', type: 'integer' },
+      { name: 'amount', type: 'numeric' },
+    ]);
   });
 });

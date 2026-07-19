@@ -22,6 +22,8 @@ import {
 import { cn } from '../ui/utils';
 import { CanvasNodeShell } from './CanvasNodeShell';
 import type { CanvasNodePortCompatibilityView, CanvasNodePortTone } from './CanvasNodePortHandle';
+import type { CanvasNodePresentationCopy } from './canvasNodePresentationCopy.contract';
+import type { CanvasNodePresentationTruth } from './canvasNodePresentationTruth.contract';
 import {
   buildCanvasNodeContextMenuModel,
   type CanvasNodeContextMenuActionId,
@@ -53,6 +55,8 @@ export interface DbtNodeData extends Record<string, unknown> {
   path?: string;
   description?: string;
   metadata?: Record<string, unknown>;
+  presentationTruth?: CanvasNodePresentationTruth;
+  presentationCopy?: CanvasNodePresentationCopy;
   activeRunId?: string | null;
   runStatusByNodeId?: ReadonlyMap<string, string>;
   canvasKind?: string;

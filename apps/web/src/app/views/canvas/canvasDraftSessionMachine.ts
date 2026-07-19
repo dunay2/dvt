@@ -33,6 +33,7 @@ function transition(
     draftRevision: record?.revision ?? null,
     savingWorkingSet: undefined,
     savingBaseRevision: undefined,
+    savingLocalNodeCatalog: undefined,
     localNodeCatalog,
   };
 }
@@ -74,7 +75,26 @@ function markSaving(session: CanvasDraftSession): CanvasDraftSession {
     syncState: 'saving',
     savingWorkingSet: session.workingSet,
     savingBaseRevision: session.draftRevision,
+    savingLocalNodeCatalog:
+      session.localNodeCatalog == null ? undefined : { ...session.localNodeCatalog },
   };
+}
+
+function localNodeCatalogsEqual(
+  left: Record<string, CanonicalNode> | undefined,
+  right: Record<string, CanonicalNode> | undefined
+): boolean {
+  if (left === right) {
+    return true;
+  }
+
+  const leftNodeIds = Object.keys(left ?? {});
+  const rightNodeIds = Object.keys(right ?? {});
+
+  return (
+    leftNodeIds.length === rightNodeIds.length &&
+    leftNodeIds.every((nodeId) => left?.[nodeId] === right?.[nodeId])
+  );
 }
 
 function normalizeLocalNodeCatalog(
@@ -116,13 +136,15 @@ function applySaveSuccess(
       syncState: 'editing',
       savingWorkingSet: undefined,
       savingBaseRevision: undefined,
+      savingLocalNodeCatalog: undefined,
     };
   }
 
   const persistedWorkingSet = canvasDraftSessionWorkingSet.buildFromDraft(record.draft);
   const hasEditsWhileSaving =
     session.savingWorkingSet != null &&
-    !canvasDraftSessionWorkingSet.equals(session.savingWorkingSet, session.workingSet);
+    (!canvasDraftSessionWorkingSet.equals(session.savingWorkingSet, session.workingSet) ||
+      !localNodeCatalogsEqual(session.savingLocalNodeCatalog, session.localNodeCatalog));
 
   return transitionWithRecord(
     session,
@@ -190,6 +212,7 @@ function adoptExternalRevision(
     draftRevision,
     savingWorkingSet: undefined,
     savingBaseRevision: undefined,
+    savingLocalNodeCatalog: undefined,
     syncState:
       session.syncState === 'conflict' || session.syncState === 'saving'
         ? 'editing'

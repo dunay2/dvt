@@ -10,8 +10,10 @@ import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import type { CanvasNodePortCompatibilityByDirection } from './canvasConnectionCompatibilityPresenter';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CanvasViewCopy } from './canvasCopy.types';
+import type { CanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth.contract';
+import { buildCanvasNodePresentationTruth } from '../../components/canvas/canvasNodePresentationTruth';
+import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 
-type ColumnMeta = Array<{ name: string; type: string }>;
 type CanvasNodePosition = { x: number; y: number };
 type MapCanonicalNodeToCanvasNodeArgs = {
   canonicalNode: CanonicalNode;
@@ -22,11 +24,8 @@ type MapCanonicalNodeToCanvasNodeArgs = {
   portCompatibility?: CanvasNodePortCompatibilityByDirection;
   frozen?: boolean;
   locale?: string;
+  presentationTruth?: CanvasNodePresentationTruth;
 };
-
-function resolveColumns(value: unknown): ColumnMeta | undefined {
-  return Array.isArray(value) ? (value as ColumnMeta) : undefined;
-}
 
 function formatCompatibleNodeNames(compatibleNodeNames: readonly string[]): string {
   return compatibleNodeNames.join(', ');
@@ -77,10 +76,17 @@ export function mapCanonicalNodeToCanvasNode({
   portCompatibility,
   frozen = false,
   locale,
+  presentationTruth,
 }: MapCanonicalNodeToCanvasNodeArgs): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
   const copy = resolveCanvasViewCopy(locale);
-  const columns = resolveColumns(canonicalNode.metadata?.columns);
+  const resolvedPresentationTruth =
+    presentationTruth ??
+    buildCanvasNodePresentationTruth({ node: canonicalNode, nodes: [canonicalNode], edges: [] });
+  const columns = resolvedPresentationTruth.columns.visible.map(({ name, type }) => ({
+    name,
+    type,
+  }));
 
   return {
     id: canonicalNode.id,
@@ -102,6 +108,8 @@ export function mapCanonicalNodeToCanvasNode({
       overlayDecoration: overlayDecoration ?? null,
       tags: canonicalNode.tags,
       metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
+      presentationTruth: resolvedPresentationTruth,
+      presentationCopy: buildCanvasNodePresentationCopy(copy),
       columns,
       showColumns: showColumns || (columns?.length ?? 0) > 0,
       portLabels: {
@@ -157,7 +165,12 @@ export function mapDroppedCanonicalNodeToCanvasNode(
 ): Node<DbtNodeData> {
   const kindRegistration = resolveNodeKindRegistration(canonicalNode.kind);
   const copy = resolveCanvasViewCopy(locale);
-  const columns = resolveColumns(canonicalNode.metadata?.columns);
+  const presentationTruth = buildCanvasNodePresentationTruth({
+    node: canonicalNode,
+    nodes: [canonicalNode],
+    edges: [],
+  });
+  const columns = presentationTruth.columns.visible.map(({ name, type }) => ({ name, type }));
   const typeLabelFromMetadata =
     typeof canonicalNode.metadata?.typeLabel === 'string'
       ? canonicalNode.metadata.typeLabel
@@ -181,6 +194,8 @@ export function mapDroppedCanonicalNodeToCanvasNode(
       lastCost: canonicalNode.lastCost,
       tags: canonicalNode.tags,
       metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
+      presentationTruth,
+      presentationCopy: buildCanvasNodePresentationCopy(copy),
       columns,
       showColumns: showColumns || (columns?.length ?? 0) > 0,
       portLabels: {

@@ -12,6 +12,8 @@ export const inspectorVisualClasses = {
   inspectorCodeBlock:
     'whitespace-pre-wrap rounded border border-slate-700 bg-slate-900 p-3 font-mono text-xs text-slate-50',
   inspectorCodeText: 'whitespace-pre-wrap font-mono text-xs text-slate-50',
+  inspectorCodeEditor: 'min-h-64 resize-y font-mono text-xs leading-5',
+  inspectorArtifactDetail: 'text-xs leading-5 text-(--text-muted)',
   contextPanelLeftShell: 'flex h-full flex-col border-r border-slate-700 bg-slate-900',
   contextPanelRightShell:
     'flex h-full flex-col border-l border-slate-700 bg-slate-900 text-slate-50',
@@ -25,6 +27,7 @@ export const inspectorVisualClasses = {
     'h-8 justify-start gap-2 border-slate-600 bg-slate-950/40 px-3 text-xs font-medium text-slate-100 hover:bg-slate-800 hover:text-white',
   contextPanelSection: 'border-b border-slate-700 px-4 py-3',
   contextPanelSectionTitle: 'text-xs font-semibold uppercase text-slate-300',
+  contextPanelSectionDescription: 'text-xs leading-5 text-(--text-muted)',
   contextPanelAccordionItem: 'border-b border-slate-700',
   contextPanelAccordionTrigger: 'px-2 py-2 text-sm hover:bg-slate-950',
   contextPanelActiveRow: 'bg-slate-800 text-slate-50 ring-1 ring-blue-500',

@@ -187,6 +187,59 @@ function connectCanvasNodes(sourceName: string, targetName: string): void {
   });
 }
 
+function waitForLiveDraftModelSqlSaved(
+  session: ReturnType<typeof resolveLiveFirstAuthoringWorkspaceSession>,
+  expectedSql: string,
+  remainingAttempts = 30
+): Cypress.Chainable<void> {
+  return readLiveGraphDraft(session).then((draftResponse) => {
+    expect(draftResponse.status).to.equal(200);
+    const nodes = (
+      draftResponse.body as {
+        record: {
+          draft: {
+            nodes: Array<{
+              name: string;
+              metadata?: { config?: { sql?: string } };
+            }>;
+          };
+        };
+      }
+    ).record.draft.nodes;
+    const modelSql = nodes.find((node) => node.name === 'Model 1')?.metadata?.config?.sql;
+
+    if (modelSql === expectedSql) {
+      return;
+    }
+
+    if (remainingAttempts <= 0) {
+      throw new Error(
+        `Timed out waiting for authored DBT SQL to persist. Last value: ${JSON.stringify(modelSql)}`
+      );
+    }
+
+    return cy
+      .wait(500)
+      .then(() => waitForLiveDraftModelSqlSaved(session, expectedSql, remainingAttempts - 1));
+  });
+}
+
+function openNodeWorkbenchSection(sectionId: string): void {
+  cy.get('body').then(($body) => {
+    const directTab = $body.find(`[data-slot="canvas-node-workbench-tab-${sectionId}"]:visible`);
+
+    if (directTab.length > 0) {
+      cy.wrap(directTab.first()).click();
+      return;
+    }
+
+    cy.get('[data-slot="canvas-node-workbench-more-trigger"]').should('be.visible').click();
+    cy.get(`[data-slot="canvas-node-workbench-more-item-${sectionId}"]`)
+      .should('be.visible')
+      .click();
+  });
+}
+
 describe('Canvas source import live clean proof', () => {
   beforeEach(function () {
     if (skipWhenFirstAuthoringLiveEnvIsMissing(this)) {
@@ -294,6 +347,82 @@ describe('Canvas source import live clean proof', () => {
     waitForLiveDraftEdgeSaved(session);
     cy.get('.react-flow__edge', { timeout: 20_000 }).should('have.length.greaterThan', 0);
 
+    getVisibleCanvasNodeByCardTitle('Model 1')
+      .find('[data-slot="graph-node-card"]')
+      .should('contain.text', 'Columns')
+      .and('contain.text', '3');
+
+    getVisibleCanvasNodeByCardTitle('Model 1')
+      .find('[data-slot="graph-node-card"]')
+      .click('center');
+    cy.get('[data-slot="canvas-node-floating-toolbar"]')
+      .should('be.visible')
+      .and('have.attr', 'data-node-name', 'Model 1')
+      .and('contain.html', 'svg')
+      .and('have.text', '');
+    cy.get('[data-slot="canvas-node-floating-toolbar"] button[data-toolbar-action="code"]')
+      .should('have.attr', 'aria-label', 'Open node code')
+      .trigger('pointermove', { pointerType: 'mouse' });
+    cy.get('[data-slot="tooltip-content"]:visible', { timeout: 5_000 })
+      .should('have.length', 1)
+      .and('contain.text', 'Open the selected node code in its contextual workbench.');
+    cy.get('[data-slot="canvas-node-floating-toolbar"] button[data-toolbar-action="freeze"]')
+      .should('have.attr', 'aria-pressed', 'false')
+      .click()
+      .should('have.attr', 'aria-pressed', 'true')
+      .and('have.attr', 'data-tone', 'active')
+      .click()
+      .should('have.attr', 'aria-pressed', 'false');
+    cy.get('[data-slot="graph-node-health-popover"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+
+    getVisibleCanvasNodeByCardTitle('Postgres')
+      .find('button[data-slot="graph-node-operational-rail"]')
+      .click();
+    cy.get('[data-slot="graph-node-health-popover"]').should('be.visible');
+    cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    cy.focused().trigger('keydown', { key: 'Escape' });
+    cy.get('[data-slot="graph-node-health-popover"]').should('not.exist');
+
+    getVisibleCanvasNodeByCardTitle('Model 1')
+      .find('[data-slot="graph-node-card-title"]')
+      .dblclick();
+    cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
+    cy.get('[data-slot="graph-node-health-popover"]').should('not.exist');
+
+    openNodeWorkbenchSection('columns');
+    cy.get('[data-slot="canvas-node-workbench-columns-description"]')
+      .should('contain.text', '3')
+      .and('contain.text', 'inherited');
+    cy.get('[data-slot="canvas-node-workbench-columns-section"]')
+      .should('contain.text', 'order_id')
+      .and('contain.text', 'customer')
+      .and('contain.text', 'amount');
+
+    openNodeWorkbenchSection('code');
+    const authoredModelSql = `select order_id, customer\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
+    cy.get('[data-slot="canvas-node-workbench-code-section"]')
+      .should('not.contain.text', 'No SQL or generated code is recorded for this node.')
+      .within(() => {
+        cy.get('[data-slot="dbt-model-code-provenance"]')
+          .should('contain.text', 'models/model_1.sql')
+          .and('contain.text', 'Generated');
+        cy.get('textarea[name="dbt-model-sql"]')
+          .should('be.visible')
+          .and('contain.value', `{{ source('${expectedSourceName}', 'source_1') }}`)
+          .focus()
+          .type('{selectall}{backspace}')
+          .should('have.value', '')
+          .type(authoredModelSql, { parseSpecialCharSequences: false });
+        cy.get('[data-slot="dbt-model-code-provenance"]').should('contain.text', 'Authored');
+        cy.contains('button', 'Apply').should('be.enabled').click();
+      });
+    waitForLiveDraftModelSqlSaved(session, authoredModelSql);
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+
     clickPreviewExecutionPlanFromOperationalDrawer();
     cy.contains('Execution Preview', { timeout: 30_000 }).should('be.visible');
     cy.contains('Execution Preview identity').should('be.visible');
@@ -304,7 +433,31 @@ describe('Canvas source import live clean proof', () => {
       const content = (modelSqlResponse.body as { content: string }).content;
 
       expect(content).to.contain("{{ config(materialized='view') }}");
-      expect(content).to.contain(`{{ source('${expectedSourceName}', 'source_1') }}`);
+      expect(content).to.contain(authoredModelSql);
     });
+
+    cy.get('[data-testid="plan-preview-modal"]')
+      .should('be.visible')
+      .within(() => {
+        cy.contains('button', 'Close').click();
+      });
+    cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
+    cy.get('body').should('not.have.css', 'pointer-events', 'none');
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
+      .scrollIntoView()
+      .should(($command) => {
+        expect($command).to.be.visible;
+        expect($command).not.to.have.attr('data-disabled');
+      })
+      .click();
+    cy.contains('Project code', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="code-workspace-file-entry"][data-workspace-path="models/model_1.sql"]')
+      .should('be.visible')
+      .click();
+    cy.get('textarea[aria-label*="model_1.sql"], [role="textbox"][aria-label*="model_1.sql"]', {
+      timeout: 20_000,
+    }).should('exist');
   });
 });

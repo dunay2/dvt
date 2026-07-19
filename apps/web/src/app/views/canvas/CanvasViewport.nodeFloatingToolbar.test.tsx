@@ -370,6 +370,30 @@ describe('CanvasViewport node floating toolbar', () => {
     expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
   });
 
+  it('keeps transient node surfaces closed while an external node workbench is active', async () => {
+    const node = {
+      id: 'model_orders',
+      position: { x: 160, y: 90 },
+      data: { name: 'Orders model', onInspectNode: vi.fn() },
+      type: 'dbtNode',
+    } as CanvasViewportProps['nodesWithImpact'][number];
+
+    await renderViewport({ nodesWithImpact: [node], externalNodeSurfaceActive: false });
+    await clickNode('model_orders', 420, 240);
+    expect(
+      document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')
+    ).not.toBeNull();
+
+    await renderViewport({ nodesWithImpact: [node], externalNodeSurfaceActive: true });
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+
+    await clickNode('model_orders', 420, 240);
+    await openOperationalDetails('model_orders');
+
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
+  });
+
   async function clickNode(
     nodeId: string,
     eventInput:

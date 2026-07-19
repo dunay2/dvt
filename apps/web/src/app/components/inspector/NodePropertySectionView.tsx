@@ -26,8 +26,9 @@ function sectionSlot(
 function renderSectionBody(
   section: NodePropertySection,
   slots: Readonly<{ code: string }>,
-  surface: NodePropertySectionViewProps['surface']
-): JSX.Element {
+  surface: NodePropertySectionViewProps['surface'],
+  hasContextualContent: boolean
+): JSX.Element | null {
   if (section.code != null) {
     return (
       <pre
@@ -145,6 +146,10 @@ function renderSectionBody(
     );
   }
 
+  if (hasContextualContent) {
+    return null;
+  }
+
   return (
     <p className={inspectorVisualClasses.inspectorBody}>
       {section.emptyState ?? 'No properties are recorded for this section.'}
@@ -185,8 +190,16 @@ export function NodePropertySectionView({
         <h3 className={inspectorVisualClasses.contextPanelSectionTitle}>{section.label}</h3>
         {showCountBadge ? renderSectionCountBadge(section) : null}
       </div>
+      {section.description == null ? null : (
+        <p
+          data-slot={`${slots.sectionPrefix}-${section.id}-description`}
+          className={inspectorVisualClasses.contextPanelSectionDescription}
+        >
+          {section.description}
+        </p>
+      )}
       {renderContributionSlot('before-body', beforeBody)}
-      {renderSectionBody(section, slots, surface)}
+      {renderSectionBody(section, slots, surface, beforeBody != null || afterBody != null)}
       {renderContributionSlot('after-body', afterBody)}
     </section>
   );

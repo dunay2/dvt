@@ -430,6 +430,76 @@ describe('CanvasNodeWorkbenchPanel', () => {
     expect(codeSection?.querySelector('input[name="dvt-transform-column"]')).toBeNull();
   });
 
+  it('renders one DBT model editor in Code without duplicating passive generated SQL', () => {
+    renderNodePanel(root, MODEL_NODE, 'code');
+
+    const codeSection = container.querySelector('[data-slot="canvas-node-workbench-code-section"]');
+    const sqlEditor = codeSection?.querySelector<HTMLTextAreaElement>(
+      'textarea[name="dbt-model-sql"]'
+    );
+
+    expect(codeSection).not.toBeNull();
+    expect(sqlEditor?.value).toContain('select *');
+    expect(sqlEditor?.value).toContain('{{ source(');
+    expect(codeSection?.querySelector('pre')).toBeNull();
+    expect(codeSection?.querySelectorAll('textarea[name="dbt-model-sql"]')).toHaveLength(1);
+    expect(codeSection?.textContent).not.toContain('No properties are recorded for this section.');
+  });
+
+  it('preserves an empty DBT SQL draft across equivalent graph-node projections', () => {
+    renderNodePanel(root, MODEL_NODE, 'code');
+
+    const sqlEditor = container.querySelector<HTMLTextAreaElement>(
+      'textarea[name="dbt-model-sql"]'
+    );
+    expect(sqlEditor?.value).toContain('select *');
+
+    act(() => {
+      fireEvent.change(sqlEditor!, { target: { value: '' } });
+    });
+
+    expect(sqlEditor?.value).toBe('');
+
+    renderNodePanel(
+      root,
+      {
+        ...MODEL_NODE,
+        metadata: { ...MODEL_NODE.metadata },
+      },
+      'code',
+      {
+        canEditNode: true,
+        onApplyNodeDraft: vi.fn(),
+      },
+      2
+    );
+
+    expect(
+      container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]')?.value
+    ).toBe('');
+
+    renderNodePanel(
+      root,
+      {
+        ...MODEL_NODE,
+        metadata: {
+          ...MODEL_NODE.metadata,
+          config: { materialized: 'table' },
+        },
+      },
+      'code',
+      {
+        canEditNode: true,
+        onApplyNodeDraft: vi.fn(),
+      },
+      3
+    );
+
+    expect(
+      container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]')?.value
+    ).toBe('');
+  });
+
   it('renders DVT sink target editing in a dedicated Sink tab without duplicating it in General', () => {
     renderNodePanel(
       root,

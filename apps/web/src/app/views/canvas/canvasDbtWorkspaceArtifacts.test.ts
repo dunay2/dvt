@@ -151,6 +151,31 @@ describe('canvas dbt workspace artifacts', () => {
     expect(result.artifacts[1]?.content).toContain("from {{ source('raw', 'orders') }}");
   });
 
+  it('uses authored model SQL as the executable workspace artifact body', () => {
+    const authoredModel: CanonicalNode = {
+      ...modelNode,
+      metadata: {
+        ...modelNode.metadata,
+        config: {
+          sql: "select order_id, amount\nfrom {{ source('raw', 'orders') }}",
+        },
+      },
+    };
+
+    const result = buildDbtWorkspaceArtifacts({
+      nodes: [sourceNode, authoredModel],
+      edges: [sourceEdge],
+      scopedNodeIds: ['source-orders', 'model-orders'],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.artifacts[1]?.content).toBe(
+      "{{ config(materialized='table') }}\n\nselect order_id, amount\nfrom {{ source('raw', 'orders') }}\n"
+    );
+  });
+
   it('serializes free-form model descriptions as valid YAML scalars', () => {
     const describedModelNode: CanonicalNode = {
       ...modelNode,

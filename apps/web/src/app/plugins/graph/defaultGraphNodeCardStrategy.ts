@@ -13,6 +13,7 @@ import {
   resolveNodeCardAccentTone,
   resolveNodeCardStatus,
   resolveColumnCount,
+  resolveColumnMetricPresentation,
   stringValue,
 } from './graphNodeCardStrategyUtils';
 import { buildGraphNodeTitlePresentation } from './graphNodeTitlePresentation';
@@ -30,6 +31,7 @@ function buildDefaultCard(
     metadata,
     data,
   });
+  const columnPresentation = resolveColumnMetricPresentation(metadata, data);
 
   pushMetric(
     metrics,
@@ -43,7 +45,9 @@ function buildDefaultCard(
     'Cost',
     node.lastCost == null ? null : `$${node.lastCost.toFixed(2)}`
   );
-  pushMetric(metrics, 'columns', 'Columns', resolveColumnCount(metadata, data));
+  pushMetric(metrics, 'columns', columnPresentation.label, resolveColumnCount(metadata, data), {
+    ...(columnPresentation.detail == null ? {} : { detail: columnPresentation.detail }),
+  });
 
   return {
     title: titlePresentation.title,

@@ -7,6 +7,7 @@ import type { CanonicalNode } from '../../types/canonical';
 import { buildCanvasConnectionCompatibilityByNodeId } from './canvasConnectionCompatibilityPresenter';
 import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { resolveCanvasAuthoringVisibleEdgeId } from './canvasAuthoringGraphProjection';
+import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 
 type UseCanvasViewportGraphModelArgs = {
   visibleNodeIds: string[];
@@ -33,6 +34,7 @@ function resolveVisibleCanonicalNodes(
 
 function projectViewportNodes(args: {
   visibleNodeIds: readonly string[];
+  visibleEdges: readonly VisibleViewportEdge[];
   canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
   columnLevelLineageEnabled: boolean;
   persistedNodePositions: PersistedNodePositions;
@@ -42,6 +44,7 @@ function projectViewportNodes(args: {
 }): Node[] {
   const {
     visibleNodeIds,
+    visibleEdges,
     canonicalNodesById,
     columnLevelLineageEnabled,
     persistedNodePositions,
@@ -50,23 +53,28 @@ function projectViewportNodes(args: {
     fallbackNodesById,
   } = args;
 
-  return resolveVisibleCanonicalNodes(visibleNodeIds, canonicalNodesById).map(
-    (canonicalNode, index) => {
-      const fallbackNode = fallbackNodesById?.get(canonicalNode.id);
-      const liveGesturePosition =
-        fallbackNode?.dragging === undefined ? undefined : fallbackNode.position;
+  const visibleCanonicalNodes = resolveVisibleCanonicalNodes(visibleNodeIds, canonicalNodesById);
 
-      return mapCanonicalNodeToCanvasNode({
-        canonicalNode,
-        index,
-        showColumns: columnLevelLineageEnabled,
-        portCompatibility: portCompatibilityByNodeId.get(canonicalNode.id),
-        frozen: frozenNodeIds.has(canonicalNode.id),
-        persistedPosition:
-          liveGesturePosition ?? persistedNodePositions[canonicalNode.id] ?? fallbackNode?.position,
-      });
-    }
-  );
+  return visibleCanonicalNodes.map((canonicalNode, index) => {
+    const fallbackNode = fallbackNodesById?.get(canonicalNode.id);
+    const liveGesturePosition =
+      fallbackNode?.dragging === undefined ? undefined : fallbackNode.position;
+
+    return mapCanonicalNodeToCanvasNode({
+      canonicalNode,
+      index,
+      showColumns: columnLevelLineageEnabled,
+      portCompatibility: portCompatibilityByNodeId.get(canonicalNode.id),
+      frozen: frozenNodeIds.has(canonicalNode.id),
+      presentationTruth: projectCanvasNodePresentationTruth({
+        node: canonicalNode,
+        nodes: visibleCanonicalNodes,
+        edges: visibleEdges,
+      }),
+      persistedPosition:
+        liveGesturePosition ?? persistedNodePositions[canonicalNode.id] ?? fallbackNode?.position,
+    });
+  });
 }
 
 function projectViewportEdges(args: {
@@ -158,6 +166,16 @@ function viewportNodeDataEqual(left: Node['data'], right: Node['data']): boolean
       portCompatibilityEqual = false;
     }
   }
+  let presentationTruthEqual = left.presentationTruth === right.presentationTruth;
+  if (!presentationTruthEqual) {
+    try {
+      presentationTruthEqual =
+        JSON.stringify(left.presentationTruth ?? null) ===
+        JSON.stringify(right.presentationTruth ?? null);
+    } catch {
+      presentationTruthEqual = false;
+    }
+  }
 
   return (
     left.showColumns === right.showColumns &&
@@ -167,6 +185,7 @@ function viewportNodeDataEqual(left: Node['data'], right: Node['data']): boolean
     left.status === right.status &&
     tagsEqual &&
     portCompatibilityEqual &&
+    presentationTruthEqual &&
     metadataEqual
   );
 }
@@ -195,6 +214,7 @@ export function useCanvasViewportGraphModel({
     () =>
       projectViewportNodes({
         visibleNodeIds,
+        visibleEdges,
         canonicalNodesById,
         columnLevelLineageEnabled,
         persistedNodePositions,
@@ -207,6 +227,7 @@ export function useCanvasViewportGraphModel({
       persistedNodePositions,
       frozenNodeIds,
       portCompatibilityByNodeId,
+      visibleEdges,
       visibleNodeIds,
     ]
   );
@@ -228,6 +249,7 @@ export function useCanvasViewportGraphModel({
     setNodes((currentNodes) => {
       const nextNodes = projectViewportNodes({
         visibleNodeIds,
+        visibleEdges,
         canonicalNodesById,
         columnLevelLineageEnabled,
         persistedNodePositions,
@@ -245,6 +267,7 @@ export function useCanvasViewportGraphModel({
     frozenNodeIds,
     portCompatibilityByNodeId,
     setNodes,
+    visibleEdges,
     visibleNodeIds,
   ]);
 
