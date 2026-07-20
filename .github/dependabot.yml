@@ -63,3 +63,7 @@ updates:
       - 'automated'
     commit-message:
       prefix: 'chore(ci)'
+    groups:
+      codeql:
+        patterns:
+          - 'github/codeql-action/*'
