@@ -10,8 +10,8 @@ function requireRepository(repository) {
   }
 }
 
-function requireHeadSha(headSha) {
-  if (!COMMIT_SHA.test(headSha ?? '')) {
+function requirePublicationSha(publicationSha) {
+  if (!COMMIT_SHA.test(publicationSha ?? '')) {
     throw new TypeError('Release candidate check publication requires a 40-character commit SHA.');
   }
 }
@@ -22,14 +22,14 @@ function requireCheckRunId(checkRunId) {
   }
 }
 
-function requirePublicationIdentity(result, { checkRunId, headSha }) {
+function requirePublicationIdentity(result, { checkRunId, publicationSha }) {
   requireCheckRunId(result?.id);
   if (checkRunId !== undefined && result.id !== checkRunId) {
     throw new Error('GitHub returned a different release candidate check-run identity.');
   }
-  if (result.name !== RELEASE_CANDIDATE_CHECK_NAME || result.headSha !== headSha) {
+  if (result.name !== RELEASE_CANDIDATE_CHECK_NAME || result.publicationSha !== publicationSha) {
     throw new Error(
-      'Release candidate check publication is not attached to the authoritative pull request head.'
+      'Release candidate check publication is not attached to the authoritative pull request revision.'
     );
   }
   return result;
@@ -37,7 +37,7 @@ function requirePublicationIdentity(result, { checkRunId, headSha }) {
 
 export async function beginReleaseCandidateIntegrityCheck(command, { createCheckRun }) {
   requireRepository(command.repository);
-  requireHeadSha(command.headSha);
+  requirePublicationSha(command.publicationSha);
   if (!URL.canParse(command.detailsUrl ?? '') || !command.externalId) {
     throw new TypeError(
       'Release candidate check publication requires a details URL and external run identity.'
@@ -50,21 +50,21 @@ export async function beginReleaseCandidateIntegrityCheck(command, { createCheck
   const result = await createCheckRun({
     repository: command.repository,
     name: RELEASE_CANDIDATE_CHECK_NAME,
-    headSha: command.headSha,
+    publicationSha: command.publicationSha,
     status: 'in_progress',
     detailsUrl: command.detailsUrl,
     externalId: command.externalId,
     output: {
       title: 'Release candidate integrity is running',
-      summary: 'Trusted base code is assessing the pull request head commit.',
+      summary: 'Trusted base code is assessing the authoritative pull request revision.',
     },
   });
-  return requirePublicationIdentity(result, { headSha: command.headSha });
+  return requirePublicationIdentity(result, { publicationSha: command.publicationSha });
 }
 
 export async function completeReleaseCandidateIntegrityCheck(command, { completeCheckRun }) {
   requireRepository(command.repository);
-  requireHeadSha(command.headSha);
+  requirePublicationSha(command.publicationSha);
   requireCheckRunId(command.checkRunId);
   if (!ALLOWED_CONCLUSIONS.has(command.conclusion)) {
     throw new TypeError('Release candidate check conclusion must be success or failure.');
@@ -77,7 +77,7 @@ export async function completeReleaseCandidateIntegrityCheck(command, { complete
   const result = await completeCheckRun({
     repository: command.repository,
     name: RELEASE_CANDIDATE_CHECK_NAME,
-    headSha: command.headSha,
+    publicationSha: command.publicationSha,
     checkRunId: command.checkRunId,
     status: 'completed',
     conclusion: command.conclusion,
@@ -90,6 +90,6 @@ export async function completeReleaseCandidateIntegrityCheck(command, { complete
   });
   return requirePublicationIdentity(result, {
     checkRunId: command.checkRunId,
-    headSha: command.headSha,
+    publicationSha: command.publicationSha,
   });
 }

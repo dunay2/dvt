@@ -494,10 +494,37 @@ test('release generation and candidate admission have one trusted owner each', (
   ]);
   assert.deepEqual(integrity.permissions, { contents: 'read' });
   assert.deepEqual(Object.keys(integrity.jobs), [
+    'classify_release_candidate_authority',
     'begin_release_candidate_integrity',
     'assess_release_candidate_integrity',
     'complete_release_candidate_integrity',
   ]);
+  assert.deepEqual(integrity.jobs.classify_release_candidate_authority.permissions, {
+    contents: 'read',
+  });
+  assert.equal(
+    integrity.jobs.begin_release_candidate_integrity.needs,
+    'classify_release_candidate_authority'
+  );
+  assert.deepEqual(integrity.jobs.assess_release_candidate_integrity.needs, [
+    'classify_release_candidate_authority',
+    'begin_release_candidate_integrity',
+  ]);
+  assert.deepEqual(integrity.jobs.complete_release_candidate_integrity.needs, [
+    'classify_release_candidate_authority',
+    'begin_release_candidate_integrity',
+    'assess_release_candidate_integrity',
+  ]);
+  const beginPublication = integrity.jobs.begin_release_candidate_integrity.steps.find(
+    (step) => step.id === 'publish'
+  );
+  const completionPublication = integrity.jobs.complete_release_candidate_integrity.steps.find(
+    (step) => String(step.name).startsWith('Publish final check outcome')
+  );
+  const classifiedPublicationSha =
+    '${{ fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).publicationSha }}';
+  assert.equal(beginPublication.env.PUBLICATION_SHA, classifiedPublicationSha);
+  assert.equal(completionPublication.env.PUBLICATION_SHA, classifiedPublicationSha);
   assert.deepEqual(integrity.jobs.begin_release_candidate_integrity.permissions, {
     contents: 'read',
     checks: 'write',
@@ -523,18 +550,25 @@ test('release generation and candidate admission have one trusted owner each', (
   );
   assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.base.sha');
   assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.head.sha');
+  assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.merge_commit_sha');
   assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.head.repo.full_name');
-  assertWorkflowContains(integrityWorkflow, 'release-please--branches--');
   assertWorkflowContains(integrityWorkflow, 'persist-credentials: false');
   assertWorkflowContains(
     integrityWorkflow,
     'actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6'
   );
   assertWorkflowContains(integrityWorkflow, 'releaseCandidateIntegrityCli.mjs');
+  assertWorkflowContains(integrityWorkflow, 'releaseCandidateAuthorityCli.mjs');
   assertWorkflowContains(integrityWorkflow, 'releaseMergePolicyCli.mjs inspect');
   assertWorkflowContains(integrityWorkflow, 'releaseCandidateCheckGithubAdapter.mjs begin');
   assertWorkflowContains(integrityWorkflow, 'releaseCandidateCheckGithubAdapter.mjs complete');
   assertWorkflowContains(integrityWorkflow, 'needs.assess_release_candidate_integrity.result');
+  assertWorkflowContains(
+    integrityWorkflow,
+    'fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).publicationSha'
+  );
+  assert.doesNotMatch(integrityWorkflow, /name:\s*Classify pull request authority/u);
+  assert.doesNotMatch(integrityWorkflow, /if \[\[ "\$HEAD_REF"/u);
   assert.doesNotMatch(integrityWorkflow, /pnpm\s+--dir\s+candidate/u);
 
   assert.equal(prQuality.permissions['pull-requests'], 'read');

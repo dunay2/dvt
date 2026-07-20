@@ -7,14 +7,14 @@ import {
   completeReleaseCandidateIntegrityCheck,
 } from './releaseCandidateCheckPublication.mjs';
 
-const headSha = 'a'.repeat(40);
+const publicationSha = 'a'.repeat(40);
 
-test('begin publishes one canonical in-progress check on the authoritative head', async () => {
+test('begin publishes one canonical in-progress check on the authoritative revision', async () => {
   const commands = [];
   const result = await beginReleaseCandidateIntegrityCheck(
     {
       repository: 'dunay2/dvt',
-      headSha,
+      publicationSha,
       detailsUrl: 'https://github.com/dunay2/dvt/actions/runs/42',
       externalId: '42:1',
     },
@@ -24,7 +24,7 @@ test('begin publishes one canonical in-progress check on the authoritative head'
         return {
           id: 73,
           name: command.name,
-          headSha: command.headSha,
+          publicationSha: command.publicationSha,
           status: command.status,
         };
       },
@@ -36,13 +36,13 @@ test('begin publishes one canonical in-progress check on the authoritative head'
     {
       repository: 'dunay2/dvt',
       name: RELEASE_CANDIDATE_CHECK_NAME,
-      headSha,
+      publicationSha,
       status: 'in_progress',
       detailsUrl: 'https://github.com/dunay2/dvt/actions/runs/42',
       externalId: '42:1',
       output: {
         title: 'Release candidate integrity is running',
-        summary: 'Trusted base code is assessing the pull request head commit.',
+        summary: 'Trusted base code is assessing the authoritative pull request revision.',
       },
     },
   ]);
@@ -54,7 +54,7 @@ test('begin rejects a check response attached to another commit', async () => {
       beginReleaseCandidateIntegrityCheck(
         {
           repository: 'dunay2/dvt',
-          headSha,
+          publicationSha,
           detailsUrl: 'https://github.com/dunay2/dvt/actions/runs/42',
           externalId: '42:1',
         },
@@ -62,12 +62,12 @@ test('begin rejects a check response attached to another commit', async () => {
           createCheckRun: async () => ({
             id: 73,
             name: RELEASE_CANDIDATE_CHECK_NAME,
-            headSha: 'b'.repeat(40),
+            publicationSha: 'b'.repeat(40),
             status: 'in_progress',
           }),
         }
       ),
-    /authoritative pull request head/u
+    /authoritative pull request revision/u
   );
 });
 
@@ -76,7 +76,7 @@ test('complete publishes the assessment outcome only after verifying check ident
   const result = await completeReleaseCandidateIntegrityCheck(
     {
       repository: 'dunay2/dvt',
-      headSha,
+      publicationSha,
       checkRunId: 73,
       conclusion: 'failure',
     },
@@ -86,7 +86,7 @@ test('complete publishes the assessment outcome only after verifying check ident
         return {
           id: command.checkRunId,
           name: command.name,
-          headSha: command.headSha,
+          publicationSha: command.publicationSha,
           status: command.status,
           conclusion: command.conclusion,
         };
@@ -99,7 +99,7 @@ test('complete publishes the assessment outcome only after verifying check ident
     {
       repository: 'dunay2/dvt',
       name: RELEASE_CANDIDATE_CHECK_NAME,
-      headSha,
+      publicationSha,
       checkRunId: 73,
       status: 'completed',
       conclusion: 'failure',
@@ -117,7 +117,7 @@ test('publication commands fail closed on invalid identity or conclusion', async
       beginReleaseCandidateIntegrityCheck(
         {
           repository: 'dunay2/dvt',
-          headSha: 'main',
+          publicationSha: 'main',
           detailsUrl: 'https://github.com/dunay2/dvt/actions/runs/42',
           externalId: '42:1',
         },
@@ -130,7 +130,7 @@ test('publication commands fail closed on invalid identity or conclusion', async
       completeReleaseCandidateIntegrityCheck(
         {
           repository: 'dunay2/dvt',
-          headSha,
+          publicationSha,
           checkRunId: 73,
           conclusion: 'neutral',
         },

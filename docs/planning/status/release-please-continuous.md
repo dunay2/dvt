@@ -26,10 +26,12 @@ Repository Actions workflow permissions were also updated on 2026-03-08 so GitHu
 - The workflow no longer passes the deprecated `package-name` input to `googleapis/release-please-action@v4`.
 - Release Please owns changelog, tag, and release-PR generation only.
 - `.github/workflows/release-candidate-integrity.yml` is the sole coordinator
-  of the required `Release candidate integrity` context. Trusted publisher jobs
-  open and complete that check on the exact PR head SHA, while a separate
-  read-only job inspects immutable candidate Git objects without installing or
-  executing candidate code.
+  of the required `Release candidate integrity` context. A read-only trusted
+  query classifies authority before publisher jobs receive `checks:write`.
+  Release candidates use the exact same-repository PR head SHA; fork product
+  PRs use GitHub's base-repository test merge SHA. A separate read-only job
+  inspects immutable candidate Git objects without installing or executing
+  candidate code.
 - The default-branch ruleset requires both the ordinary product quality
   aggregator and the exact release-candidate check with strict branch freshness.
 

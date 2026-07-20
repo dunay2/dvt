@@ -7,7 +7,7 @@ import {
   runReleaseCandidateCheckCli,
 } from './releaseCandidateCheckGithubAdapter.mjs';
 
-const headSha = 'a'.repeat(40);
+const publicationSha = 'a'.repeat(40);
 
 test('CLI arguments distinguish beginning and completing the check lifecycle', () => {
   assert.deepEqual(
@@ -15,8 +15,8 @@ test('CLI arguments distinguish beginning and completing the check lifecycle', (
       'begin',
       '--repository',
       'dunay2/dvt',
-      '--head',
-      headSha,
+      '--target',
+      publicationSha,
       '--details-url',
       'https://github.com/dunay2/dvt/actions/runs/42',
       '--external-id',
@@ -25,7 +25,7 @@ test('CLI arguments distinguish beginning and completing the check lifecycle', (
     {
       command: 'begin',
       repository: 'dunay2/dvt',
-      headSha,
+      publicationSha,
       detailsUrl: 'https://github.com/dunay2/dvt/actions/runs/42',
       externalId: '42:1',
     }
@@ -36,8 +36,8 @@ test('CLI arguments distinguish beginning and completing the check lifecycle', (
       'complete',
       '--repository',
       'dunay2/dvt',
-      '--head',
-      headSha,
+      '--target',
+      publicationSha,
       '--check-run-id',
       '73',
       '--conclusion',
@@ -46,7 +46,7 @@ test('CLI arguments distinguish beginning and completing the check lifecycle', (
     {
       command: 'complete',
       repository: 'dunay2/dvt',
-      headSha,
+      publicationSha,
       checkRunId: 73,
       conclusion: 'success',
     }
@@ -54,7 +54,7 @@ test('CLI arguments distinguish beginning and completing the check lifecycle', (
 
   assert.throws(
     () => parseReleaseCandidateCheckArguments(['begin', '--repository', 'dunay2/dvt']),
-    /requires --repository, --head, --details-url, and --external-id/u
+    /requires --repository, --target, --details-url, and --external-id/u
   );
 });
 
@@ -75,14 +75,14 @@ test('GitHub adapter creates the check on head_sha and verifies identity before 
       return Response.json({
         id: 73,
         name: 'Release candidate integrity',
-        head_sha: headSha,
+        head_sha: publicationSha,
         status: 'in_progress',
       });
     }
     return Response.json({
       id: 73,
       name: body.name,
-      head_sha: headSha,
+      head_sha: publicationSha,
       status: body.status,
       conclusion: body.conclusion,
     });
@@ -92,7 +92,7 @@ test('GitHub adapter creates the check on head_sha and verifies identity before 
   const created = await port.createCheckRun({
     repository: 'dunay2/dvt',
     name: 'Release candidate integrity',
-    headSha,
+    publicationSha,
     status: 'in_progress',
     detailsUrl: 'https://github.com/dunay2/dvt/actions/runs/42',
     externalId: '42:1',
@@ -101,17 +101,17 @@ test('GitHub adapter creates the check on head_sha and verifies identity before 
   const completed = await port.completeCheckRun({
     repository: 'dunay2/dvt',
     name: 'Release candidate integrity',
-    headSha,
+    publicationSha,
     checkRunId: created.id,
     status: 'completed',
     conclusion: 'success',
     output: { title: 'Passed', summary: 'Passed.' },
   });
 
-  assert.equal(created.headSha, headSha);
+  assert.equal(created.publicationSha, publicationSha);
   assert.equal(completed.conclusion, 'success');
   assert.equal(requests[0].url, 'https://api.github.com/repos/dunay2/dvt/check-runs');
-  assert.equal(JSON.parse(requests[0].options.body).head_sha, headSha);
+  assert.equal(JSON.parse(requests[0].options.body).head_sha, publicationSha);
   assert.equal(requests[1].options.method, 'GET');
   assert.equal(requests[2].options.method, 'PATCH');
 });
@@ -133,13 +133,13 @@ test('GitHub adapter refuses to complete a mismatched check run', async () => {
       port.completeCheckRun({
         repository: 'dunay2/dvt',
         name: 'Release candidate integrity',
-        headSha,
+        publicationSha,
         checkRunId: 73,
         status: 'completed',
         conclusion: 'failure',
         output: { title: 'Failed', summary: 'Failed.' },
       }),
-    /does not belong to the authoritative pull request head/u
+    /does not belong to the authoritative pull request revision/u
   );
 });
 
@@ -150,8 +150,8 @@ test('CLI emits only the check-run identity consumed by the workflow', async () 
       'begin',
       '--repository',
       'dunay2/dvt',
-      '--head',
-      headSha,
+      '--target',
+      publicationSha,
       '--details-url',
       'https://github.com/dunay2/dvt/actions/runs/42',
       '--external-id',
@@ -162,7 +162,7 @@ test('CLI emits only the check-run identity consumed by the workflow', async () 
         createCheckRun: async (command) => ({
           id: 73,
           name: command.name,
-          headSha: command.headSha,
+          publicationSha: command.publicationSha,
           status: command.status,
         }),
       },

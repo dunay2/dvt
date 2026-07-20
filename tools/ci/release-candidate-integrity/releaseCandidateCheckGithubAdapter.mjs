@@ -7,7 +7,7 @@ import {
 
 const SUPPORTED_FLAGS = new Set([
   'repository',
-  'head',
+  'target',
   'details-url',
   'external-id',
   'check-run-id',
@@ -41,40 +41,40 @@ export function parseReleaseCandidateCheckArguments(argv) {
   }
   const values = readArguments(rest);
   const repository = values.get('repository');
-  const headSha = values.get('head');
+  const publicationSha = values.get('target');
   if (command === 'begin') {
     const detailsUrl = values.get('details-url');
     const externalId = values.get('external-id');
-    if (!repository || !headSha || !detailsUrl || !externalId) {
+    if (!repository || !publicationSha || !detailsUrl || !externalId) {
       throw new TypeError(
-        'Beginning the release candidate check requires --repository, --head, --details-url, and --external-id.'
+        'Beginning the release candidate check requires --repository, --target, --details-url, and --external-id.'
       );
     }
     if (values.has('check-run-id') || values.has('conclusion')) {
       throw new TypeError('Beginning the release candidate check received completion arguments.');
     }
-    return { command, repository, headSha, detailsUrl, externalId };
+    return { command, repository, publicationSha, detailsUrl, externalId };
   }
 
   const rawCheckRunId = values.get('check-run-id');
   const conclusion = values.get('conclusion');
-  if (!repository || !headSha || !rawCheckRunId || !conclusion) {
+  if (!repository || !publicationSha || !rawCheckRunId || !conclusion) {
     throw new TypeError(
-      'Completing the release candidate check requires --repository, --head, --check-run-id, and --conclusion.'
+      'Completing the release candidate check requires --repository, --target, --check-run-id, and --conclusion.'
     );
   }
   if (values.has('details-url') || values.has('external-id')) {
     throw new TypeError('Completing the release candidate check received begin arguments.');
   }
   const checkRunId = Number(rawCheckRunId);
-  return { command, repository, headSha, checkRunId, conclusion };
+  return { command, repository, publicationSha, checkRunId, conclusion };
 }
 
 function projectCheckRun(payload) {
   return {
     id: payload.id,
     name: payload.name,
-    headSha: payload.head_sha,
+    publicationSha: payload.head_sha,
     status: payload.status,
     conclusion: payload.conclusion ?? undefined,
   };
@@ -110,7 +110,7 @@ export function createGitHubCheckRunPort({
       projectCheckRun(
         await request('POST', `repos/${command.repository}/check-runs`, {
           name: command.name,
-          head_sha: command.headSha,
+          head_sha: command.publicationSha,
           status: command.status,
           details_url: command.detailsUrl,
           external_id: command.externalId,
@@ -121,8 +121,10 @@ export function createGitHubCheckRunPort({
       const current = projectCheckRun(
         await request('GET', `repos/${command.repository}/check-runs/${command.checkRunId}`)
       );
-      if (current.name !== command.name || current.headSha !== command.headSha) {
-        throw new Error('GitHub check run does not belong to the authoritative pull request head.');
+      if (current.name !== command.name || current.publicationSha !== command.publicationSha) {
+        throw new Error(
+          'GitHub check run does not belong to the authoritative pull request revision.'
+        );
       }
       return projectCheckRun(
         await request('PATCH', `repos/${command.repository}/check-runs/${command.checkRunId}`, {

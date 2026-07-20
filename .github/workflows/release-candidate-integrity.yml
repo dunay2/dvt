@@ -12,8 +12,50 @@ permissions:
   contents: read
 
 jobs:
+  classify_release_candidate_authority:
+    name: Classify release candidate authority
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      classification-json: ${{ steps.classify.outputs.json }}
+    steps:
+      - name: Checkout trusted base
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup trusted Node runtime
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 22.x
+
+      - name: Classify trusted pull-request metadata
+        id: classify
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REPOSITORY: ${{ github.repository }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        shell: bash
+        run: |
+          classification="$(node tools/ci/release-candidate-integrity/releaseCandidateAuthorityCli.mjs \
+            --base-ref "$BASE_REF" --head-ref "$HEAD_REF" \
+            --base-repository "$BASE_REPOSITORY" --head-repository "$HEAD_REPOSITORY" \
+            --head-sha "$HEAD_SHA" --merge-sha "$MERGE_SHA")"
+          delimiter="release-authority-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "json<<${delimiter}" >> "$GITHUB_OUTPUT"
+          echo "$classification" >> "$GITHUB_OUTPUT"
+          echo "${delimiter}" >> "$GITHUB_OUTPUT"
+
   begin_release_candidate_integrity:
     name: Begin release candidate integrity check
+    needs: classify_release_candidate_authority
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -34,51 +76,53 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: Publish in-progress check on pull-request head
+      - name: Publish in-progress check on authoritative revision
         id: publish
         env:
           GH_TOKEN: ${{ github.token }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUBLICATION_SHA:
+            ${{
+            fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).publicationSha
+            }}
           DETAILS_URL:
             ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           EXTERNAL_ID: ${{ github.run_id }}:${{ github.run_attempt }}
         shell: bash
         run: |
           check_run_id="$(node tools/ci/release-candidate-integrity/releaseCandidateCheckGithubAdapter.mjs begin \
-            --repository "$GITHUB_REPOSITORY" --head "$HEAD_SHA" \
+            --repository "$GITHUB_REPOSITORY" --target "$PUBLICATION_SHA" \
             --details-url "$DETAILS_URL" --external-id "$EXTERNAL_ID")"
           echo "check-run-id=${check_run_id}" >> "$GITHUB_OUTPUT"
 
   assess_release_candidate_integrity:
     name: Assess release candidate integrity
-    needs: begin_release_candidate_integrity
+    needs:
+      - classify_release_candidate_authority
+      - begin_release_candidate_integrity
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
     steps:
-      - name: Classify pull request authority
-        id: authority
-        shell: bash
+      - name: Reject invalid release-candidate authority
+        if:
+          ${{
+          fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).assessmentDisposition
+          == 'rejected' }}
         env:
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-          HEAD_REF: ${{ github.event.pull_request.head.ref }}
-          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
-          REPOSITORY: ${{ github.repository }}
+          REJECTION_CODE:
+            ${{
+            fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).rejectionCode
+            }}
         run: |
-          if [[ "$HEAD_REF" != release-please--branches--* ]]; then
-            echo "release-candidate=false" >> "$GITHUB_OUTPUT"
-            echo "Product pull request: exact release-candidate assessment is not applicable."
-            exit 0
-          fi
-          if [[ "$BASE_REF" != "main" || "$HEAD_REPOSITORY" != "$REPOSITORY" ]]; then
-            echo "Release candidate authority requires a same-repository PR targeting main." >&2
-            exit 1
-          fi
-          echo "release-candidate=true" >> "$GITHUB_OUTPUT"
+          echo "Release candidate authority rejected: ${REJECTION_CODE}" >&2
+          exit 1
 
       - name: Checkout trusted base
-        if: steps.authority.outputs.release-candidate == 'true'
+        if:
+          ${{
+          fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).assessmentDisposition
+          == 'required' }}
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.event.pull_request.base.sha }}
@@ -86,13 +130,19 @@ jobs:
           persist-credentials: false
 
       - name: Setup trusted validation runtime
-        if: steps.authority.outputs.release-candidate == 'true'
+        if:
+          ${{
+          fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).assessmentDisposition
+          == 'required' }}
         uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 22.x
 
       - name: Checkout untrusted candidate without credentials
-        if: steps.authority.outputs.release-candidate == 'true'
+        if:
+          ${{
+          fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).assessmentDisposition
+          == 'required' }}
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           ref: ${{ github.event.pull_request.head.sha }}
@@ -101,7 +151,10 @@ jobs:
           path: candidate
 
       - name: Inspect repository merge policy from trusted code
-        if: steps.authority.outputs.release-candidate == 'true'
+        if:
+          ${{
+          fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).assessmentDisposition
+          == 'required' }}
         id: policy
         env:
           GH_TOKEN: ${{ github.token }}
@@ -113,7 +166,10 @@ jobs:
           echo "${delimiter}" >> "$GITHUB_OUTPUT"
 
       - name: Assess exact candidate with trusted code
-        if: steps.authority.outputs.release-candidate == 'true'
+        if:
+          ${{
+          fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).assessmentDisposition
+          == 'required' }}
         working-directory: candidate
         env:
           RELEASE_REPOSITORY_POLICY_JSON: ${{ steps.policy.outputs.json }}
@@ -128,6 +184,7 @@ jobs:
     name: Complete release candidate integrity check
     if: ${{ always() }}
     needs:
+      - classify_release_candidate_authority
       - begin_release_candidate_integrity
       - assess_release_candidate_integrity
     runs-on: ubuntu-latest
@@ -148,19 +205,28 @@ jobs:
         with:
           node-version: 22.x
 
-      - name: Publish final check outcome on pull-request head
+      - name: Publish final check outcome on authoritative revision
+        if:
+          ${{ needs.classify_release_candidate_authority.result == 'success' &&
+          needs.begin_release_candidate_integrity.result == 'success' }}
         env:
           GH_TOKEN: ${{ github.token }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PUBLICATION_SHA:
+            ${{
+            fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).publicationSha
+            }}
           CHECK_RUN_ID: ${{ needs.begin_release_candidate_integrity.outputs.check-run-id }}
           CHECK_CONCLUSION:
             ${{ needs.assess_release_candidate_integrity.result == 'success' && 'success' ||
             'failure' }}
         run: |
           node tools/ci/release-candidate-integrity/releaseCandidateCheckGithubAdapter.mjs complete \
-            --repository "$GITHUB_REPOSITORY" --head "$HEAD_SHA" \
+            --repository "$GITHUB_REPOSITORY" --target "$PUBLICATION_SHA" \
             --check-run-id "$CHECK_RUN_ID" --conclusion "$CHECK_CONCLUSION"
 
       - name: Enforce trusted assessment outcome
-        if: ${{ needs.assess_release_candidate_integrity.result != 'success' }}
+        if:
+          ${{ needs.classify_release_candidate_authority.result != 'success' ||
+          needs.begin_release_candidate_integrity.result != 'success' ||
+          needs.assess_release_candidate_integrity.result != 'success' }}
         run: exit 1
