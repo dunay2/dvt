@@ -2,21 +2,34 @@ name: Release
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [main]
+
+concurrency:
+  group: release-please-main
+  cancel-in-progress: false
+
+permissions: {}
 
 jobs:
-  release-please:
-    name: Release Please
+  release_please:
+    name: Generate release candidate
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
+    permissions: {}
     steps:
+      - name: Require release governance credential
+        env:
+          RELEASE_GOVERNANCE_TOKEN: ${{ secrets.RELEASE_GOVERNANCE_TOKEN }}
+        shell: bash
+        run: |
+          test -n "$RELEASE_GOVERNANCE_TOKEN" || {
+            echo "RELEASE_GOVERNANCE_TOKEN is required for release automation." >&2
+            exit 1
+          }
+
       - name: Run release-please
-        id: release
         uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
         with:
+          token: ${{ secrets.RELEASE_GOVERNANCE_TOKEN }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+          target-branch: main

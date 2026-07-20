@@ -2,18 +2,20 @@
 title: Release Please Continuous Mode Status
 status: Active
 owner: docs
-last_reviewed: 2026-03-08
+last_reviewed: 2026-07-19
 planning_type: status
 ---
 
 # Release Please Continuous Mode Status
 
-Date: 2026-03-08  
+Date: 2026-07-19
 Status: Enabled for repository releases on `push` to `main`
 
 ## Context
 
-`release-please` is now configured in `.github/workflows/release.yml` to run automatically on `push` to `main`, while keeping `workflow_dispatch` available for manual execution.
+`release-please` is configured in `.github/workflows/release.yml` to run only on
+`push` to `main`. The privileged generator has no branch-selectable manual
+dispatch surface.
 
 Repository Actions workflow permissions were also updated on 2026-03-08 so GitHub Actions can create and update the release PR automatically.
 
@@ -22,13 +24,27 @@ Repository Actions workflow permissions were also updated on 2026-03-08 so GitHu
 - Continuous release PR / tag automation is enabled for the repository.
 - Automatic npm publication is explicitly disabled for now.
 - The workflow no longer passes the deprecated `package-name` input to `googleapis/release-please-action@v4`.
-- `release.yml` intentionally remains action-only: it does not check out the
-  repository, install Node, install pnpm, or run repository scripts because the
-  current release step delegates changelog, tag, and release-PR generation to
-  `googleapis/release-please-action`.
-- If the release workflow later needs repository-local tooling, generated
-  artifacts, package builds, or publish commands, it must add `actions/checkout`
-  and the shared `.github/actions/setup-node-pnpm` action in the same slice.
+- Release Please owns changelog, tag, and release-PR generation only.
+- Release candidate creation uses the mandatory `RELEASE_GOVERNANCE_TOKEN`
+  repository secret. There is no fallback to `GITHUB_TOKEN`: an absent trusted
+  credential blocks generation before Release Please can mutate repository
+  state. This ensures generated or updated release PRs trigger their required
+  workflows without manual approval.
+- `.github/workflows/release-candidate-integrity.yml` is the sole coordinator
+  of the required `Release candidate integrity` context. A read-only trusted
+  query classifies authority before publisher jobs receive `checks:write`.
+  Release candidates use the exact same-repository PR head SHA; fork product
+  PRs use GitHub's base-repository test merge SHA. A separate read-only job
+  inspects immutable candidate Git objects without installing or executing
+  candidate code.
+- The default-branch ruleset requires both the ordinary product quality
+  aggregator and the exact release-candidate check with strict branch freshness.
+- Candidate admission inspects merge policy with the same trusted governance
+  identity. A GitHub ruleset response that omits `bypass_actors` is incomplete
+  evidence and fails closed instead of being projected as an empty bypass list.
+- The inspection result remains an evidence envelope (`valid`, `violations`,
+  `policy`). Candidate assessment receives only the nested canonical `policy`,
+  so transport evidence cannot be mistaken for the domain policy object.
 
 Current workflow shape:
 
@@ -36,7 +52,6 @@ Current workflow shape:
 on:
   push:
     branches: [main]
-  workflow_dispatch:
 ```
 
 ## Why npm publication stays disabled
@@ -49,9 +64,15 @@ on:
 
 - `release.yml` runs on `push` to `main`.
 - A release PR is created or updated automatically after merges to `main`.
+- Release generation fails before mutation when `RELEASE_GOVERNANCE_TOKEN` is
+  absent, and the resulting release PR triggers all required workflow contexts.
+- Product PRs are squash-merged so each PR contributes one release identity.
+- GitHub-generated changelog notes and the candidate integrity query reject
+  duplicate logical entries and stale or incoherent release trees.
 - npm publication remains disabled until the publishable artifact strategy is formalized.
-- `tools/ci/workflow-pattern-parity.test.mjs` guards the current action-only
-  release workflow posture so setup drift is explicit instead of accidental.
+- `tools/ci/workflow-pattern-parity.test.mjs` parses the workflow structure and
+  guards the separation between privileged generation, trusted candidate
+  assessment, and ordinary product CI.
 
 ## Next Decision Required
 
@@ -64,5 +85,8 @@ Choose one explicit release model before re-enabling publication:
 
 ## Residual Risks
 
-- Release PR noise if commits stop following Conventional Commits consistently.
+- Release PR generation still depends on Conventional Commit PR titles.
+- The trusted release governance credential is an operational dependency. It
+  must retain pull-request/content write authority and enough repository-policy
+  visibility to observe `bypass_actors`; rotation must preserve both semantics.
 - Version bumps at the root package may still be semantically correct for repo releases but should not be confused with a validated npm package release.

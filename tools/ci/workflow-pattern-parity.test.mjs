@@ -5,6 +5,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+import yaml from 'js-yaml';
+
 import {
   ADAPTER_POSTGRES_RELEVANT_PATTERNS,
   PR_QUALITY_SCOPE_PATTERNS,
@@ -393,7 +395,7 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
     'governance scope must activate both DB preparation and governance import'
   );
   assertWorkflowContains(prQualityGate, 'GIT_BASE:');
-  assertWorkflowContains(prQualityGate, "format('origin/{0}', github.base_ref)");
+  assertWorkflowContains(prQualityGate, 'github.event.pull_request.base.sha');
   assertWorkflowContains(prQualityGate, 'GIT_HEAD: ${{ github.sha }}');
 });
 
@@ -439,9 +441,13 @@ test('scope diff consumers use shallow checkout instead of full PR history', () 
     '+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}'
   );
 
-  for (const workflow of [ciWorkflow, contractsWorkflow, prQualityGate, testWorkflow]) {
+  for (const workflow of [ciWorkflow, contractsWorkflow, testWorkflow]) {
     assertWorkflowContains(workflow, 'uses: ./.github/actions/fetch-scope-base');
   }
+
+  assert.doesNotMatch(prQualityGate, /uses: \.\/\.github\/actions\/fetch-scope-base/u);
+  assertWorkflowContains(prQualityGate, 'fetch-depth: 2');
+  assertWorkflowContains(prQualityGate, 'github.event.pull_request.base.sha');
 
   assertWorkflowContains(workflowBundle, 'fetch-depth: 1');
   assert.doesNotMatch(workflowBundle, /fetch-depth:\s*0/u);
@@ -459,13 +465,152 @@ test('PR quality gate is the single remote owner for ADR-0000 traceability', () 
   assert.equal(countWorkflowCommand(ciWorkflow, 'pnpm traceability:adr0'), 0);
 });
 
-test('release workflow stays action-only until it needs repository tooling', () => {
+test('release generation and candidate admission have one trusted owner each', () => {
   const releaseWorkflow = readFileSync('.github/workflows/release.yml', 'utf8');
+  const prQualityWorkflow = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const integrityWorkflow = readFileSync(
+    '.github/workflows/release-candidate-integrity.yml',
+    'utf8'
+  );
+  const release = yaml.load(releaseWorkflow);
+  const prQuality = yaml.load(prQualityWorkflow);
+  const integrity = yaml.load(integrityWorkflow);
 
-  assertWorkflowContains(releaseWorkflow, 'googleapis/release-please-action@');
-  assert.doesNotMatch(releaseWorkflow, /actions\/checkout/u);
-  assert.doesNotMatch(releaseWorkflow, /\.\/\.github\/actions\/setup-node-pnpm/u);
-  assert.doesNotMatch(releaseWorkflow, /\bpnpm\s+/u);
+  assertWorkflowContains(
+    releaseWorkflow,
+    'googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0'
+  );
+  assertWorkflowContains(releaseWorkflow, 'target-branch: main');
+  assertWorkflowContains(releaseWorkflow, 'cancel-in-progress: false');
+  const releasePleaseStep = release.jobs.release_please.steps.find((step) =>
+    String(step.name).includes('release-please')
+  );
+  const releaseCredentialPreflight = release.jobs.release_please.steps.find(
+    (step) => step.name === 'Require release governance credential'
+  );
+  assert.equal(releasePleaseStep.with.token, '${{ secrets.RELEASE_GOVERNANCE_TOKEN }}');
+  assert.equal(
+    releaseCredentialPreflight.env.RELEASE_GOVERNANCE_TOKEN,
+    '${{ secrets.RELEASE_GOVERNANCE_TOKEN }}'
+  );
+  assert.match(releaseCredentialPreflight.run, /test -n "\$RELEASE_GOVERNANCE_TOKEN"/u);
+  assert.doesNotMatch(
+    releaseWorkflow,
+    /token:\s*\$\{\{\s*(?:github\.token|secrets\.GITHUB_TOKEN)/u
+  );
+  assert.equal(release.on.workflow_dispatch, undefined);
+  assert.equal(Object.keys(release.jobs).length, 1);
+  assert.doesNotMatch(releaseWorkflow, /actions\/checkout|checks:\s*write|candidate_validation/u);
+
+  assert.deepEqual(integrity.on.pull_request_target.types, [
+    'opened',
+    'synchronize',
+    'reopened',
+    'ready_for_review',
+  ]);
+  assert.deepEqual(integrity.permissions, { contents: 'read' });
+  assert.deepEqual(Object.keys(integrity.jobs), [
+    'classify_release_candidate_authority',
+    'begin_release_candidate_integrity',
+    'assess_release_candidate_integrity',
+    'complete_release_candidate_integrity',
+  ]);
+  assert.deepEqual(integrity.jobs.classify_release_candidate_authority.permissions, {
+    contents: 'read',
+  });
+  assert.equal(
+    integrity.jobs.begin_release_candidate_integrity.needs,
+    'classify_release_candidate_authority'
+  );
+  assert.deepEqual(integrity.jobs.assess_release_candidate_integrity.needs, [
+    'classify_release_candidate_authority',
+    'begin_release_candidate_integrity',
+  ]);
+  assert.deepEqual(integrity.jobs.complete_release_candidate_integrity.needs, [
+    'classify_release_candidate_authority',
+    'begin_release_candidate_integrity',
+    'assess_release_candidate_integrity',
+  ]);
+  const beginPublication = integrity.jobs.begin_release_candidate_integrity.steps.find(
+    (step) => step.id === 'publish'
+  );
+  const completionPublication = integrity.jobs.complete_release_candidate_integrity.steps.find(
+    (step) => String(step.name).startsWith('Publish final check outcome')
+  );
+  const classifiedPublicationSha =
+    '${{ fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).publicationSha }}';
+  assert.equal(beginPublication.env.PUBLICATION_SHA, classifiedPublicationSha);
+  assert.equal(completionPublication.env.PUBLICATION_SHA, classifiedPublicationSha);
+  assert.deepEqual(integrity.jobs.begin_release_candidate_integrity.permissions, {
+    contents: 'read',
+    checks: 'write',
+  });
+  assert.deepEqual(integrity.jobs.assess_release_candidate_integrity.permissions, {
+    contents: 'read',
+  });
+  const policyInspection = integrity.jobs.assess_release_candidate_integrity.steps.find(
+    (step) => step.id === 'policy'
+  );
+  assert.equal(policyInspection.env.GH_TOKEN, '${{ secrets.RELEASE_GOVERNANCE_TOKEN }}');
+  const candidateAssessment = integrity.jobs.assess_release_candidate_integrity.steps.find(
+    (step) => step.name === 'Assess exact candidate with trusted code'
+  );
+  assert.equal(
+    candidateAssessment.env.RELEASE_REPOSITORY_POLICY_JSON,
+    '${{ toJSON(fromJSON(steps.policy.outputs.json).policy) }}'
+  );
+  assert.deepEqual(integrity.jobs.complete_release_candidate_integrity.permissions, {
+    contents: 'read',
+    checks: 'write',
+  });
+  assert.notEqual(
+    integrity.jobs.begin_release_candidate_integrity.name,
+    'Release candidate integrity'
+  );
+  assert.notEqual(
+    integrity.jobs.assess_release_candidate_integrity.name,
+    'Release candidate integrity'
+  );
+  assert.notEqual(
+    integrity.jobs.complete_release_candidate_integrity.name,
+    'Release candidate integrity'
+  );
+  assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.base.sha');
+  assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.head.sha');
+  assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.merge_commit_sha');
+  assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.head.repo.full_name');
+  assertWorkflowContains(integrityWorkflow, 'persist-credentials: false');
+  assertWorkflowContains(
+    integrityWorkflow,
+    'actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6'
+  );
+  assertWorkflowContains(integrityWorkflow, 'releaseCandidateIntegrityCli.mjs');
+  assertWorkflowContains(integrityWorkflow, 'releaseCandidateAuthorityCli.mjs');
+  assertWorkflowContains(integrityWorkflow, 'releaseMergePolicyCli.mjs inspect');
+  assertWorkflowContains(integrityWorkflow, 'releaseCandidateCheckGithubAdapter.mjs begin');
+  assertWorkflowContains(integrityWorkflow, 'releaseCandidateCheckGithubAdapter.mjs complete');
+  assertWorkflowContains(integrityWorkflow, 'needs.assess_release_candidate_integrity.result');
+  assertWorkflowContains(
+    integrityWorkflow,
+    'fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).publicationSha'
+  );
+  assert.doesNotMatch(integrityWorkflow, /name:\s*Classify pull request authority/u);
+  assert.doesNotMatch(integrityWorkflow, /if \[\[ "\$HEAD_REF"/u);
+  assert.doesNotMatch(integrityWorkflow, /pnpm\s+--dir\s+candidate/u);
+
+  assert.equal(prQuality.permissions['pull-requests'], 'read');
+  assert.equal(prQuality.jobs['release-candidate-integrity'], undefined);
+  assert.equal(
+    prQuality.jobs['all-checks-passed'].needs.includes('release-candidate-integrity'),
+    false
+  );
+  for (const job of Object.values(prQuality.jobs)) {
+    for (const step of job.steps ?? []) {
+      if (String(step.uses ?? '').startsWith('actions/checkout@')) {
+        assert.equal(step.with?.['persist-credentials'], false);
+      }
+    }
+  }
 });
 
 test('security and nightly workflows stay wired to pinned actions and failure notification', () => {

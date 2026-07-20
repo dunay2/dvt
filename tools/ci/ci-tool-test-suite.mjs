@@ -16,7 +16,9 @@ export const EXECUTABLE_CI_TOOL_TESTS = Object.freeze([
   'tools/ci/docs-changed-governance-policy.test.mjs',
   'tools/ci/docs-frontmatter-bom.test.mjs',
   'tools/ci/docs-manifest-contract.test.mjs',
+  'tools/ci/github-collaboration-governance.test.mjs',
   'tools/ci/planning-truth-sync.test.mjs',
+  'tools/ci/workflow-pattern-parity.test.mjs',
 ]);
 
 const NODE_BUILTIN_SPECIFIERS = new Set([

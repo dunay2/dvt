@@ -35,7 +35,7 @@ concurrency:
 permissions:
   contents: read
   checks: read
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   pr-checks:
@@ -58,12 +58,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
-          fetch-depth: 1
-
-      - name: Fetch pull-request base ref
-        uses: ./.github/actions/fetch-scope-base
-        with:
-          base-ref: ${{ github.base_ref }}
+          fetch-depth: 2
+          persist-credentials: false
 
       - name: Validate workflow scope policy JSON
         run: node tools/ci/validate-policy.js tools/ci/policy/workflow-scope.json
@@ -72,7 +68,7 @@ jobs:
         id: scope
         run: node tools/ci/emit-scope.mjs --mode workflow
         env:
-          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
       - name: Validate adapter-postgres policy JSON
@@ -93,7 +89,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: node tools/ci/arc-check.mjs > arc.json
         env:
-          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
       - name: ARC docs / evidence validate
@@ -103,7 +99,7 @@ jobs:
           DOCS_ONLY_SCOPE:
             ${{ steps.scope.outputs.any_code != 'true' && steps.scope.outputs.docs_changed == 'true'
             }}
-          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
       - name: Validate docs sync outputs (ADR/index coherence)
@@ -122,7 +118,7 @@ jobs:
         uses: ./.github/actions/prepare-planning-db
         env:
           GIT_BASE:
-            ${{ github.event_name == 'pull_request' && format('origin/{0}', github.base_ref) ||
+            ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha ||
             'origin/main' }}
           GIT_HEAD: ${{ github.sha }}
         with:
@@ -252,7 +248,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: pnpm docs:governance:changed-files:check
         env:
-          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
       - name: Validate feature mechanization manifests
@@ -313,13 +309,6 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
 
-      - name: Label PR based on files changed
-        if: github.event_name == 'pull_request'
-        uses: actions/labeler@b8dd2d9be0f68b860e7dae5dae7d772984eacd6d # v6
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          configuration-path: .github/labeler.yml
-
       - name: Check if description is present
         if: github.event_name == 'pull_request'
         run: node tools/ci/check-pr-description.mjs
@@ -331,7 +320,7 @@ jobs:
         if: github.event_name == 'pull_request'
         run: node tools/ci/emit-scope.mjs --mode pr-quality
         env:
-          GIT_BASE: origin/${{ github.base_ref }}
+          GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
       - name: Set temporal_changed for workflow_dispatch
@@ -365,6 +354,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -415,6 +405,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
@@ -449,6 +440,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 1
+          persist-credentials: false
 
       - name: Setup pnpm, cache and dependencies
         uses: ./.github/actions/setup-node-pnpm
