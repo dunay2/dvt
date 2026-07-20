@@ -5,6 +5,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 
+import yaml from 'js-yaml';
+
 import {
   ADAPTER_POSTGRES_RELEVANT_PATTERNS,
   PR_QUALITY_SCOPE_PATTERNS,
@@ -459,13 +461,59 @@ test('PR quality gate is the single remote owner for ADR-0000 traceability', () 
   assert.equal(countWorkflowCommand(ciWorkflow, 'pnpm traceability:adr0'), 0);
 });
 
-test('release workflow stays action-only until it needs repository tooling', () => {
+test('release generation and candidate admission have one trusted owner each', () => {
   const releaseWorkflow = readFileSync('.github/workflows/release.yml', 'utf8');
+  const prQualityWorkflow = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const integrityWorkflow = readFileSync(
+    '.github/workflows/release-candidate-integrity.yml',
+    'utf8'
+  );
+  const release = yaml.load(releaseWorkflow);
+  const prQuality = yaml.load(prQualityWorkflow);
+  const integrity = yaml.load(integrityWorkflow);
 
-  assertWorkflowContains(releaseWorkflow, 'googleapis/release-please-action@');
-  assert.doesNotMatch(releaseWorkflow, /actions\/checkout/u);
-  assert.doesNotMatch(releaseWorkflow, /\.\/\.github\/actions\/setup-node-pnpm/u);
-  assert.doesNotMatch(releaseWorkflow, /\bpnpm\s+/u);
+  assertWorkflowContains(
+    releaseWorkflow,
+    'googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0'
+  );
+  assertWorkflowContains(releaseWorkflow, 'target-branch: main');
+  assertWorkflowContains(releaseWorkflow, 'cancel-in-progress: false');
+  assert.equal(release.on.workflow_dispatch, undefined);
+  assert.equal(Object.keys(release.jobs).length, 1);
+  assert.doesNotMatch(releaseWorkflow, /actions\/checkout|checks:\s*write|candidate_validation/u);
+
+  assert.deepEqual(integrity.on.pull_request_target.types, [
+    'opened',
+    'synchronize',
+    'reopened',
+    'ready_for_review',
+  ]);
+  assert.deepEqual(integrity.permissions, { contents: 'read' });
+  assert.equal(Object.keys(integrity.jobs).length, 1);
+  assert.equal(integrity.jobs.release_candidate_integrity.name, 'Release candidate integrity');
+  assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.base.sha');
+  assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.head.sha');
+  assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.head.repo.full_name');
+  assertWorkflowContains(integrityWorkflow, 'release-please--branches--');
+  assertWorkflowContains(integrityWorkflow, 'persist-credentials: false');
+  assertWorkflowContains(integrityWorkflow, './.github/actions/setup-node-pnpm');
+  assertWorkflowContains(integrityWorkflow, 'releaseCandidateIntegrityCli.mjs');
+  assertWorkflowContains(integrityWorkflow, 'releaseMergePolicyCli.mjs inspect');
+  assert.doesNotMatch(integrityWorkflow, /pnpm\s+--dir\s+candidate|checks:\s*write/u);
+
+  assert.equal(prQuality.permissions['pull-requests'], 'read');
+  assert.equal(prQuality.jobs['release-candidate-integrity'], undefined);
+  assert.equal(
+    prQuality.jobs['all-checks-passed'].needs.includes('release-candidate-integrity'),
+    false
+  );
+  for (const job of Object.values(prQuality.jobs)) {
+    for (const step of job.steps ?? []) {
+      if (String(step.uses ?? '').startsWith('actions/checkout@')) {
+        assert.equal(step.with?.['persist-credentials'], false);
+      }
+    }
+  }
 });
 
 test('security and nightly workflows stay wired to pinned actions and failure notification', () => {

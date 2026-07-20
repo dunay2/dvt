@@ -1,0 +1,85 @@
+name: Release Candidate Integrity
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: release-candidate-integrity-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  release_candidate_integrity:
+    name: Release candidate integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Classify pull request authority
+        id: authority
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          if [[ "$HEAD_REF" != release-please--branches--* ]]; then
+            echo "release-candidate=false" >> "$GITHUB_OUTPUT"
+            echo "Product pull request: exact release-candidate assessment is not applicable."
+            exit 0
+          fi
+          if [[ "$BASE_REF" != "main" || "$HEAD_REPOSITORY" != "$REPOSITORY" ]]; then
+            echo "Release candidate authority requires a same-repository PR targeting main." >&2
+            exit 1
+          fi
+          echo "release-candidate=true" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout trusted base
+        if: steps.authority.outputs.release-candidate == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup trusted validation runtime
+        if: steps.authority.outputs.release-candidate == 'true'
+        uses: ./.github/actions/setup-node-pnpm
+        with:
+          node-version: 22.x
+
+      - name: Checkout untrusted candidate without credentials
+        if: steps.authority.outputs.release-candidate == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+          path: candidate
+
+      - name: Inspect repository merge policy from trusted code
+        if: steps.authority.outputs.release-candidate == 'true'
+        id: policy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          delimiter="release-policy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "json<<${delimiter}" >> "$GITHUB_OUTPUT"
+          node tools/ci/release-candidate-integrity/releaseMergePolicyCli.mjs inspect \
+            --repo "$GITHUB_REPOSITORY" --ruleset "protect main" >> "$GITHUB_OUTPUT"
+          echo "${delimiter}" >> "$GITHUB_OUTPUT"
+
+      - name: Assess exact candidate with trusted code
+        if: steps.authority.outputs.release-candidate == 'true'
+        working-directory: candidate
+        env:
+          RELEASE_REPOSITORY_POLICY_JSON: ${{ steps.policy.outputs.json }}
+          RELEASE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          RELEASE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          node "$GITHUB_WORKSPACE/tools/ci/release-candidate-integrity/releaseCandidateIntegrityCli.mjs" \
+            --base "$RELEASE_BASE_SHA" --head "$RELEASE_HEAD_SHA" \
+            --repository "$GITHUB_REPOSITORY"
