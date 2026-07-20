@@ -482,6 +482,22 @@ test('release generation and candidate admission have one trusted owner each', (
   );
   assertWorkflowContains(releaseWorkflow, 'target-branch: main');
   assertWorkflowContains(releaseWorkflow, 'cancel-in-progress: false');
+  const releasePleaseStep = release.jobs.release_please.steps.find((step) =>
+    String(step.name).includes('release-please')
+  );
+  const releaseCredentialPreflight = release.jobs.release_please.steps.find(
+    (step) => step.name === 'Require release governance credential'
+  );
+  assert.equal(releasePleaseStep.with.token, '${{ secrets.RELEASE_GOVERNANCE_TOKEN }}');
+  assert.equal(
+    releaseCredentialPreflight.env.RELEASE_GOVERNANCE_TOKEN,
+    '${{ secrets.RELEASE_GOVERNANCE_TOKEN }}'
+  );
+  assert.match(releaseCredentialPreflight.run, /test -n "\$RELEASE_GOVERNANCE_TOKEN"/u);
+  assert.doesNotMatch(
+    releaseWorkflow,
+    /token:\s*\$\{\{\s*(?:github\.token|secrets\.GITHUB_TOKEN)/u
+  );
   assert.equal(release.on.workflow_dispatch, undefined);
   assert.equal(Object.keys(release.jobs).length, 1);
   assert.doesNotMatch(releaseWorkflow, /actions\/checkout|checks:\s*write|candidate_validation/u);
@@ -532,6 +548,10 @@ test('release generation and candidate admission have one trusted owner each', (
   assert.deepEqual(integrity.jobs.assess_release_candidate_integrity.permissions, {
     contents: 'read',
   });
+  const policyInspection = integrity.jobs.assess_release_candidate_integrity.steps.find(
+    (step) => step.id === 'policy'
+  );
+  assert.equal(policyInspection.env.GH_TOKEN, '${{ secrets.RELEASE_GOVERNANCE_TOKEN }}');
   assert.deepEqual(integrity.jobs.complete_release_candidate_integrity.permissions, {
     contents: 'read',
     checks: 'write',

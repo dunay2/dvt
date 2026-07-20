@@ -25,6 +25,11 @@ Repository Actions workflow permissions were also updated on 2026-03-08 so GitHu
 - Automatic npm publication is explicitly disabled for now.
 - The workflow no longer passes the deprecated `package-name` input to `googleapis/release-please-action@v4`.
 - Release Please owns changelog, tag, and release-PR generation only.
+- Release candidate creation uses the mandatory `RELEASE_GOVERNANCE_TOKEN`
+  repository secret. There is no fallback to `GITHUB_TOKEN`: an absent trusted
+  credential blocks generation before Release Please can mutate repository
+  state. This ensures generated or updated release PRs trigger their required
+  workflows without manual approval.
 - `.github/workflows/release-candidate-integrity.yml` is the sole coordinator
   of the required `Release candidate integrity` context. A read-only trusted
   query classifies authority before publisher jobs receive `checks:write`.
@@ -34,6 +39,9 @@ Repository Actions workflow permissions were also updated on 2026-03-08 so GitHu
   candidate code.
 - The default-branch ruleset requires both the ordinary product quality
   aggregator and the exact release-candidate check with strict branch freshness.
+- Candidate admission inspects merge policy with the same trusted governance
+  identity. A GitHub ruleset response that omits `bypass_actors` is incomplete
+  evidence and fails closed instead of being projected as an empty bypass list.
 
 Current workflow shape:
 
@@ -53,6 +61,8 @@ on:
 
 - `release.yml` runs on `push` to `main`.
 - A release PR is created or updated automatically after merges to `main`.
+- Release generation fails before mutation when `RELEASE_GOVERNANCE_TOKEN` is
+  absent, and the resulting release PR triggers all required workflow contexts.
 - Product PRs are squash-merged so each PR contributes one release identity.
 - GitHub-generated changelog notes and the candidate integrity query reject
   duplicate logical entries and stale or incoherent release trees.
@@ -73,4 +83,7 @@ Choose one explicit release model before re-enabling publication:
 ## Residual Risks
 
 - Release PR generation still depends on Conventional Commit PR titles.
+- The trusted release governance credential is an operational dependency. It
+  must retain pull-request/content write authority and enough repository-policy
+  visibility to observe `bypass_actors`; rotation must preserve both semantics.
 - Version bumps at the root package may still be semantically correct for repo releases but should not be confused with a validated npm package release.

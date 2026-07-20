@@ -20,7 +20,7 @@ assertion.
 | --------------------------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pnpm test:ci-tools`                                | root `package.json` | Runs the CI-tool contract suite over `tools/ci/*.test.mjs` and `tools/ci/test/*.test.mjs`.                                                                                                |
 | `.github/workflows/ci.yml` `CI tool contracts`      | CI - Code Quality   | Required CI-tool contract lane for pull requests, pushes to `main`, and manual workflow runs.                                                                                             |
-| `.github/workflows/release.yml`                     | Release governance  | Runs Release Please through the repository-owned manifest/config so development releases stay on the pre-1.0 line.                                                                        |
+| `.github/workflows/release.yml`                     | Release governance  | Runs Release Please with the mandatory trusted governance credential and repository-owned manifest/config so generated release PRs trigger required checks.                               |
 | `.github/workflows/release-candidate-integrity.yml` | Release governance  | Classifies trusted PR metadata before mutation, then coordinates the single `Release candidate integrity` check from `pull_request_target`; candidate assessment has read-only authority. |
 | `.github/workflows/pr-labeler.yml`                  | PR metadata policy  | Applies file-derived labels from trusted base configuration without checking out or executing candidate code.                                                                             |
 | `release-please-config.json`                        | Release governance  | Owns Release Please title/version behavior instead of relying on action defaults.                                                                                                         |
@@ -39,7 +39,9 @@ Command/query rail:
 | ---------------------------------------- | ------- | ----------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ValidateCiDeliveryGovernanceCanon`      | query   | Repository delivery governance      | `CiDeliveryGovernanceCanon` read model        | `pnpm test:ci-tools` and `CI tool contracts` workflow lane            | Fails when the plan claims an absorbed gate is still open, or when component docs lose public API, invariants, transitions, consumers, diagrams, or user stories.                  |
 | `ConfigureReleasePleasePreMajorState`    | command | Repository release governance       | `ReleasePleasePreMajorState` policy object    | `.github/workflows/release.yml` and Release Please action             | Fails when Release Please falls back to default `1.0.0` behavior or opens a PR title that violates the semantic PR title gate.                                                     |
+| `GenerateReleaseCandidate`               | command | Repository release governance       | `ReleaseCandidateIntegrityGate`               | `PORT-CI-GENERATE-RELEASE-CANDIDATE` and Release Please action        | Fails before mutation when `RELEASE_GOVERNANCE_TOKEN` is absent; `GITHUB_TOKEN` fallback and generated PRs without required workflow runs are forbidden.                           |
 | `ConfigureReleasePullRequestMergePolicy` | command | Repository release governance       | `ReleasePullRequestMergePolicy` policy object | GitHub repository settings and main ruleset                           | Fails when plain merge or rebase is allowed, squash is unavailable, or squash bodies preserve internal branch commit messages.                                                     |
+| `InspectReleasePullRequestMergePolicy`   | query   | Repository release governance       | `ReleaseMergePolicyAdapter`                   | `PORT-CI-INSPECT-RELEASE-PULL-REQUEST-MERGE-POLICY` and GitHub API    | Fails when policy identity cannot observe bypass actors or GitHub omits `bypass_actors`; unknown visibility is never equivalent to an empty bypass set.                            |
 | `AssessReleaseCandidateIntegrity`        | query   | Repository release governance       | `ReleaseCandidateIntegrity` read model        | `pnpm release:candidate:check` and the trusted candidate workflow     | Fails on stale base/head identity, multiple candidate commits, version mismatch, post-1.0 versions, unexpected files, duplicate logical notes, or merge-policy drift.              |
 | `ClassifyReleaseCandidateAuthority`      | query   | Repository release governance       | `ReleaseCandidateAuthoritySpecification`      | Trusted metadata CLI before every check-publication job               | Fails on missing identity, fork release candidates, release candidates outside `main`, or a fork product PR without a base-repository test merge SHA.                              |
 | `PublishReleaseCandidateIntegrityCheck`  | command | Repository release governance       | `ReleaseCandidateCheckPublicationService`     | `PORT-CI-RELEASE-CANDIDATE-CHECK-PUBLISH` and GitHub Checks adapter   | Fails closed when the check is not opened and completed on the exact PR head SHA, candidate assessment receives write authority, or the final assessment failure is not published. |
@@ -100,6 +102,11 @@ Command/query rail:
 18. A release-candidate branch MUST target `main` from the same repository. Its
     required check remains attached to the exact candidate head SHA; fork or
     non-main release candidates fail closed.
+19. Release Please MUST use `RELEASE_GOVERNANCE_TOKEN`; an absent credential
+    blocks before mutation and MUST NOT fall back to `GITHUB_TOKEN`.
+20. Repository merge-policy evidence MUST include an explicit `bypass_actors`
+    field. Omitted protected data is unknown authority, not an empty set, and
+    MUST fail closed.
 
 ## Transitions
 
@@ -117,7 +124,7 @@ flowchart LR
   ProductPR[Product PR] -->|squash only| Main[main: one conventional identity]
   ProductPR -->|changed files only| TrustedLabeler[Trusted base labeler]
   TrustedLabeler --> Labels[PR metadata]
-  Main --> ReleasePlease[Release Please + GitHub changelog notes]
+  Main --> ReleasePlease[Release Please + trusted governance credential]
   ReleasePlease --> Candidate[Release candidate PR]
   Candidate --> TrustedWorkflow[Trusted pull_request_target coordinator]
   TrustedWorkflow --> Authority[Classify trusted PR authority]
@@ -153,7 +160,7 @@ sequenceDiagram
   participant Publisher as CheckPublicationService
 
   Main->>RP: push with one squashed identity per PR
-  RP->>GitHub: create or update release candidate
+  RP->>GitHub: create or update release candidate with trusted credential
   GitHub-->>Workflow: exact base/head/merge SHA and repository identity
   Workflow->>Workflow: classify authority with read-only trusted code
   Workflow->>Publisher: begin(authoritative publication SHA)

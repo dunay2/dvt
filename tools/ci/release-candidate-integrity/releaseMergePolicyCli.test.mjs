@@ -64,6 +64,16 @@ test('policy projection maps GitHub API fields to the domain vocabulary', () => 
   });
 });
 
+test('policy projection fails closed when GitHub hides bypass actors', () => {
+  const rulesetWithoutBypassVisibility = structuredClone(ruleset);
+  delete rulesetWithoutBypassVisibility.bypass_actors;
+
+  assert.throws(
+    () => projectReleaseMergePolicy(repository, rulesetWithoutBypassVisibility),
+    /does not expose bypass actors/u
+  );
+});
+
 test('policy update preserves unrelated rules and requires the candidate check', () => {
   const update = buildReleaseMergePolicyUpdate(repository, ruleset);
   const pullRequestRule = update.ruleset.rules.find((rule) => rule.type === 'pull_request');

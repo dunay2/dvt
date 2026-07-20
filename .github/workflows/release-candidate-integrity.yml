@@ -157,8 +157,12 @@ jobs:
           == 'required' }}
         id: policy
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_GOVERNANCE_TOKEN }}
         run: |
+          test -n "$GH_TOKEN" || {
+            echo "RELEASE_GOVERNANCE_TOKEN is required for complete policy visibility." >&2
+            exit 1
+          }
           delimiter="release-policy-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "json<<${delimiter}" >> "$GITHUB_OUTPUT"
           node tools/ci/release-candidate-integrity/releaseMergePolicyCli.mjs inspect \

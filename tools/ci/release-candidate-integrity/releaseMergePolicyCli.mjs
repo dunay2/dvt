@@ -33,6 +33,11 @@ function policyFingerprint(repository, ruleset) {
 }
 
 export function projectReleaseMergePolicy(repository, ruleset) {
+  if (!Object.hasOwn(ruleset, 'bypass_actors') || !Array.isArray(ruleset.bypass_actors)) {
+    throw new Error(
+      'Repository ruleset does not expose bypass actors; release policy visibility is incomplete.'
+    );
+  }
   const pullRequestRule = ruleset.rules?.find((rule) => rule.type === 'pull_request');
   const requiredChecksRule = ruleset.rules?.find((rule) => rule.type === 'required_status_checks');
   return {
@@ -47,7 +52,7 @@ export function projectReleaseMergePolicy(repository, ruleset) {
     mainRuleset: {
       target: ruleset.target,
       enforcement: ruleset.enforcement,
-      bypassActors: structuredClone(ruleset.bypass_actors ?? []),
+      bypassActors: structuredClone(ruleset.bypass_actors),
       conditions: {
         refName: structuredClone(ruleset.conditions?.ref_name ?? { include: [], exclude: [] }),
       },
