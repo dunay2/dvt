@@ -96,6 +96,10 @@ jobs:
 
   assess_release_candidate_integrity:
     name: Assess release candidate integrity
+    if:
+      ${{
+      fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).assessmentDisposition
+      != 'not_applicable' }}
     needs:
       - classify_release_candidate_authority
       - begin_release_candidate_integrity
@@ -221,16 +225,25 @@ jobs:
             }}
           CHECK_RUN_ID: ${{ needs.begin_release_candidate_integrity.outputs.check-run-id }}
           CHECK_CONCLUSION:
-            ${{ needs.assess_release_candidate_integrity.result == 'success' && 'success' ||
-            'failure' }}
+            ${{
+            (fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).assessmentDisposition
+            == 'not_applicable' || needs.assess_release_candidate_integrity.result == 'success') &&
+            'success' || 'failure' }}
         run: |
           node tools/ci/release-candidate-integrity/releaseCandidateCheckGithubAdapter.mjs complete \
             --repository "$GITHUB_REPOSITORY" --target "$PUBLICATION_SHA" \
             --check-run-id "$CHECK_RUN_ID" --conclusion "$CHECK_CONCLUSION"
 
-      - name: Enforce trusted assessment outcome
+      - name: Enforce trusted authority and publication outcome
         if:
           ${{ needs.classify_release_candidate_authority.result != 'success' ||
-          needs.begin_release_candidate_integrity.result != 'success' ||
-          needs.assess_release_candidate_integrity.result != 'success' }}
+          needs.begin_release_candidate_integrity.result != 'success' }}
+        run: exit 1
+
+      - name: Enforce required trusted assessment outcome
+        if:
+          ${{ needs.classify_release_candidate_authority.result == 'success' &&
+          needs.begin_release_candidate_integrity.result == 'success' &&
+          fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).assessmentDisposition
+          != 'not_applicable' && needs.assess_release_candidate_integrity.result != 'success' }}
         run: exit 1

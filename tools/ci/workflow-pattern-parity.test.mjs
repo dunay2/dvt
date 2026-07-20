@@ -526,6 +526,10 @@ test('release generation and candidate admission have one trusted owner each', (
     'classify_release_candidate_authority',
     'begin_release_candidate_integrity',
   ]);
+  assert.equal(
+    String(integrity.jobs.assess_release_candidate_integrity.if).replace(/\s+/gu, ' '),
+    "${{ fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).assessmentDisposition != 'not_applicable' }}"
+  );
   assert.deepEqual(integrity.jobs.complete_release_candidate_integrity.needs, [
     'classify_release_candidate_authority',
     'begin_release_candidate_integrity',
@@ -537,10 +541,22 @@ test('release generation and candidate admission have one trusted owner each', (
   const completionPublication = integrity.jobs.complete_release_candidate_integrity.steps.find(
     (step) => String(step.name).startsWith('Publish final check outcome')
   );
+  const assessmentEnforcement = integrity.jobs.complete_release_candidate_integrity.steps.find(
+    (step) => step.name === 'Enforce required trusted assessment outcome'
+  );
   const classifiedPublicationSha =
     '${{ fromJSON(needs.classify_release_candidate_authority.outputs.classification-json).publicationSha }}';
   assert.equal(beginPublication.env.PUBLICATION_SHA, classifiedPublicationSha);
   assert.equal(completionPublication.env.PUBLICATION_SHA, classifiedPublicationSha);
+  assert.match(
+    String(completionPublication.env.CHECK_CONCLUSION),
+    /assessmentDisposition == 'not_applicable'/u
+  );
+  assert.match(
+    String(completionPublication.env.CHECK_CONCLUSION),
+    /needs\.assess_release_candidate_integrity\.result == 'success'/u
+  );
+  assert.match(String(assessmentEnforcement.if), /assessmentDisposition != 'not_applicable'/u);
   assert.deepEqual(integrity.jobs.begin_release_candidate_integrity.permissions, {
     contents: 'read',
     checks: 'write',
