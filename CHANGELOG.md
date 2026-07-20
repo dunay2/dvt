@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 (2026-07-20)
+
+## What's Changed
+* feat(web): Add explicit DBT execution selection recovery by @dunay2 in https://github.com/dunay2/dvt/pull/1983
+* feat(web): Complete DBT YAML description roundtrip by @dunay2 in https://github.com/dunay2/dvt/pull/1988
+* fix(web): Complete canvas node authoring truth by @dunay2 in https://github.com/dunay2/dvt/pull/1991
+* fix(web): Preserve DBT code reconciliation truth by @dunay2 in https://github.com/dunay2/dvt/pull/1993
+* fix(web): Harden DBT code persistence reconciliation by @dunay2 in https://github.com/dunay2/dvt/pull/1996
+* ci(ci): Enforce trusted release candidate integrity by @dunay2 in https://github.com/dunay2/dvt/pull/2002
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.4.0...v0.5.0
+
 ## [0.4.0](https://github.com/dunay2/dvt/compare/v0.3.0...v0.4.0) (2026-07-17)
 
 
