@@ -15219,3 +15219,14 @@ test('tracked migrations establish workspace file content rail authority after b
   assert.match(authorityMigration.sql, /is_duplicate/);
   assert.doesNotMatch(authorityMigration.sql, /truncate\s+/i);
 });
+
+test('tracked release candidate design uses canonical architecture lifecycle states', () => {
+  const migrations = readMigrationFiles();
+  const migration = migrations.find(
+    (candidate) => candidate.fileName === '773_release_candidate_integrity_gate.sql'
+  );
+
+  assert.ok(migration);
+  assert.match(migration.sql, /'proposed'/);
+  assert.doesNotMatch(migration.sql, /'planned'/);
+});

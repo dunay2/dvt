@@ -16,7 +16,7 @@ values (
   'Coordinate exact-tree candidate assessment through explicit Git, GitHub policy, and workflow adapters without generating releases.',
   'node',
   'high',
-  'planned',
+  'proposed',
   0,
   'SYS-CI-GOVERNANCE-TOOLS-CI'
 )
@@ -44,7 +44,7 @@ values (
   'Coordinate release candidate admission without owning release generation, Git object access, GitHub policy mutation, or check publication details.',
   'The release candidate admission lifecycle changes.',
   'ReleaseCandidateIntegrityGate',
-  'planned'
+  'proposed'
 )
 on conflict (responsibility_id) do update set
   responsibility = excluded.responsibility,
