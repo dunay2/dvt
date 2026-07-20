@@ -107,6 +107,10 @@ Command/query rail:
 20. Repository merge-policy evidence MUST include an explicit `bypass_actors`
     field. Omitted protected data is unknown authority, not an empty set, and
     MUST fail closed.
+21. `InspectReleasePullRequestMergePolicy` returns an evidence envelope. The
+    workflow composition boundary MUST project only its nested `policy` into
+    `AssessReleaseCandidateIntegrity`; passing the envelope as domain policy is
+    forbidden.
 
 ## Transitions
 

@@ -552,6 +552,13 @@ test('release generation and candidate admission have one trusted owner each', (
     (step) => step.id === 'policy'
   );
   assert.equal(policyInspection.env.GH_TOKEN, '${{ secrets.RELEASE_GOVERNANCE_TOKEN }}');
+  const candidateAssessment = integrity.jobs.assess_release_candidate_integrity.steps.find(
+    (step) => step.name === 'Assess exact candidate with trusted code'
+  );
+  assert.equal(
+    candidateAssessment.env.RELEASE_REPOSITORY_POLICY_JSON,
+    '${{ toJSON(fromJSON(steps.policy.outputs.json).policy) }}'
+  );
   assert.deepEqual(integrity.jobs.complete_release_candidate_integrity.permissions, {
     contents: 'read',
     checks: 'write',

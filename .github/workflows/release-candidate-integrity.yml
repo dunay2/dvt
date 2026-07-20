@@ -176,7 +176,7 @@ jobs:
           == 'required' }}
         working-directory: candidate
         env:
-          RELEASE_REPOSITORY_POLICY_JSON: ${{ steps.policy.outputs.json }}
+          RELEASE_REPOSITORY_POLICY_JSON: ${{ toJSON(fromJSON(steps.policy.outputs.json).policy) }}
           RELEASE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
           RELEASE_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |

@@ -42,6 +42,9 @@ Repository Actions workflow permissions were also updated on 2026-03-08 so GitHu
 - Candidate admission inspects merge policy with the same trusted governance
   identity. A GitHub ruleset response that omits `bypass_actors` is incomplete
   evidence and fails closed instead of being projected as an empty bypass list.
+- The inspection result remains an evidence envelope (`valid`, `violations`,
+  `policy`). Candidate assessment receives only the nested canonical `policy`,
+  so transport evidence cannot be mistaken for the domain policy object.
 
 Current workflow shape:
 
