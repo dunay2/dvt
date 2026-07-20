@@ -395,7 +395,7 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
     'governance scope must activate both DB preparation and governance import'
   );
   assertWorkflowContains(prQualityGate, 'GIT_BASE:');
-  assertWorkflowContains(prQualityGate, "format('origin/{0}', github.base_ref)");
+  assertWorkflowContains(prQualityGate, 'github.event.pull_request.base.sha');
   assertWorkflowContains(prQualityGate, 'GIT_HEAD: ${{ github.sha }}');
 });
 
@@ -441,9 +441,13 @@ test('scope diff consumers use shallow checkout instead of full PR history', () 
     '+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}'
   );
 
-  for (const workflow of [ciWorkflow, contractsWorkflow, prQualityGate, testWorkflow]) {
+  for (const workflow of [ciWorkflow, contractsWorkflow, testWorkflow]) {
     assertWorkflowContains(workflow, 'uses: ./.github/actions/fetch-scope-base');
   }
+
+  assert.doesNotMatch(prQualityGate, /uses: \.\/\.github\/actions\/fetch-scope-base/u);
+  assertWorkflowContains(prQualityGate, 'fetch-depth: 2');
+  assertWorkflowContains(prQualityGate, 'github.event.pull_request.base.sha');
 
   assertWorkflowContains(workflowBundle, 'fetch-depth: 1');
   assert.doesNotMatch(workflowBundle, /fetch-depth:\s*0/u);
