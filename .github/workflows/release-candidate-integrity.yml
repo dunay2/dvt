@@ -12,10 +12,50 @@ permissions:
   contents: read
 
 jobs:
-  release_candidate_integrity:
-    name: Release candidate integrity
+  begin_release_candidate_integrity:
+    name: Begin release candidate integrity check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      checks: write
+    outputs:
+      check-run-id: ${{ steps.publish.outputs.check-run-id }}
+    steps:
+      - name: Checkout trusted base
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup trusted Node runtime
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 22.x
+
+      - name: Publish in-progress check on pull-request head
+        id: publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DETAILS_URL:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EXTERNAL_ID: ${{ github.run_id }}:${{ github.run_attempt }}
+        shell: bash
+        run: |
+          check_run_id="$(node tools/ci/release-candidate-integrity/releaseCandidateCheckGithubAdapter.mjs begin \
+            --repository "$GITHUB_REPOSITORY" --head "$HEAD_SHA" \
+            --details-url "$DETAILS_URL" --external-id "$EXTERNAL_ID")"
+          echo "check-run-id=${check_run_id}" >> "$GITHUB_OUTPUT"
+
+  assess_release_candidate_integrity:
+    name: Assess release candidate integrity
+    needs: begin_release_candidate_integrity
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
     steps:
       - name: Classify pull request authority
         id: authority
@@ -47,7 +87,7 @@ jobs:
 
       - name: Setup trusted validation runtime
         if: steps.authority.outputs.release-candidate == 'true'
-        uses: ./.github/actions/setup-node-pnpm
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
         with:
           node-version: 22.x
 
@@ -83,3 +123,44 @@ jobs:
           node "$GITHUB_WORKSPACE/tools/ci/release-candidate-integrity/releaseCandidateIntegrityCli.mjs" \
             --base "$RELEASE_BASE_SHA" --head "$RELEASE_HEAD_SHA" \
             --repository "$GITHUB_REPOSITORY"
+
+  complete_release_candidate_integrity:
+    name: Complete release candidate integrity check
+    if: ${{ always() }}
+    needs:
+      - begin_release_candidate_integrity
+      - assess_release_candidate_integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - name: Checkout trusted base
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup trusted Node runtime
+        uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6
+        with:
+          node-version: 22.x
+
+      - name: Publish final check outcome on pull-request head
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          CHECK_RUN_ID: ${{ needs.begin_release_candidate_integrity.outputs.check-run-id }}
+          CHECK_CONCLUSION:
+            ${{ needs.assess_release_candidate_integrity.result == 'success' && 'success' ||
+            'failure' }}
+        run: |
+          node tools/ci/release-candidate-integrity/releaseCandidateCheckGithubAdapter.mjs complete \
+            --repository "$GITHUB_REPOSITORY" --head "$HEAD_SHA" \
+            --check-run-id "$CHECK_RUN_ID" --conclusion "$CHECK_CONCLUSION"
+
+      - name: Enforce trusted assessment outcome
+        if: ${{ needs.assess_release_candidate_integrity.result != 'success' }}
+        run: exit 1

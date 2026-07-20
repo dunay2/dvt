@@ -16,34 +16,34 @@ assertion.
 
 ## Public API
 
-| Surface                                             | Owner               | Contract                                                                                                                                                       |
-| --------------------------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm test:ci-tools`                                | root `package.json` | Runs the CI-tool contract suite over `tools/ci/*.test.mjs` and `tools/ci/test/*.test.mjs`.                                                                     |
-| `.github/workflows/ci.yml` `CI tool contracts`      | CI - Code Quality   | Required CI-tool contract lane for pull requests, pushes to `main`, and manual workflow runs.                                                                  |
-| `.github/workflows/release.yml`                     | Release governance  | Runs Release Please through the repository-owned manifest/config so development releases stay on the pre-1.0 line.                                             |
-| `.github/workflows/release-candidate-integrity.yml` | Release governance  | Owns the single trusted `Release candidate integrity` status context from `pull_request_target`; candidate code receives no credentials and is never executed. |
-| `.github/workflows/pr-labeler.yml`                  | PR metadata policy  | Applies file-derived labels from trusted base configuration without checking out or executing candidate code.                                                  |
-| `release-please-config.json`                        | Release governance  | Owns Release Please title/version behavior instead of relying on action defaults.                                                                              |
-| `.release-please-manifest.json`                     | Release governance  | Owns the current release base version used by Release Please manifest mode.                                                                                    |
-| `CHANGELOG.md`                                      | Release governance  | Generated Release Please artifact; it is not hand-authored documentation and is ignored by changed-markdown lint.                                              |
-| `tools/ci/release-candidate-integrity/`             | Release governance  | Pure candidate read model plus CLI adapter for exact-tree and merge-policy assessment.                                                                         |
-| `.markdownlintignore`                               | Markdown governance | Records generated Markdown artifacts that changed-file markdownlint must not lint as hand-authored prose.                                                      |
-| `scripts/lint-markdown-changed.cjs`                 | Markdown governance | Computes the changed Markdown read model after applying repository ignore policy before invoking markdownlint.                                                 |
-| `tools/ci/workflow-pattern-parity.test.mjs`         | CI governance tests | Semantic guard that proves the workflow still invokes `pnpm test:ci-tools` and shared scope policy emitters.                                                   |
-| `tools/ci/ci-delivery-governance-canon.test.mjs`    | CI governance tests | Canonical absorption guard for the local component guide, user stories, and mandatory proposal state.                                                          |
-| `docs/guides/testing-and-ci-capabilities.md`        | CI documentation    | Operator-facing command map for reproducing local and remote delivery gates.                                                                                   |
+| Surface                                             | Owner               | Contract                                                                                                                                                                                             |
+| --------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm test:ci-tools`                                | root `package.json` | Runs the CI-tool contract suite over `tools/ci/*.test.mjs` and `tools/ci/test/*.test.mjs`.                                                                                                           |
+| `.github/workflows/ci.yml` `CI tool contracts`      | CI - Code Quality   | Required CI-tool contract lane for pull requests, pushes to `main`, and manual workflow runs.                                                                                                        |
+| `.github/workflows/release.yml`                     | Release governance  | Runs Release Please through the repository-owned manifest/config so development releases stay on the pre-1.0 line.                                                                                   |
+| `.github/workflows/release-candidate-integrity.yml` | Release governance  | Coordinates the single trusted `Release candidate integrity` check from `pull_request_target`; the check is explicitly attached to the PR head SHA and candidate assessment has read-only authority. |
+| `.github/workflows/pr-labeler.yml`                  | PR metadata policy  | Applies file-derived labels from trusted base configuration without checking out or executing candidate code.                                                                                        |
+| `release-please-config.json`                        | Release governance  | Owns Release Please title/version behavior instead of relying on action defaults.                                                                                                                    |
+| `.release-please-manifest.json`                     | Release governance  | Owns the current release base version used by Release Please manifest mode.                                                                                                                          |
+| `CHANGELOG.md`                                      | Release governance  | Generated Release Please artifact; it is not hand-authored documentation and is ignored by changed-markdown lint.                                                                                    |
+| `tools/ci/release-candidate-integrity/`             | Release governance  | Pure candidate read model, check-publication service, and Git/GitHub adapters for exact-tree assessment, merge policy, and Checks API lifecycle.                                                     |
+| `.markdownlintignore`                               | Markdown governance | Records generated Markdown artifacts that changed-file markdownlint must not lint as hand-authored prose.                                                                                            |
+| `scripts/lint-markdown-changed.cjs`                 | Markdown governance | Computes the changed Markdown read model after applying repository ignore policy before invoking markdownlint.                                                                                       |
+| `tools/ci/workflow-pattern-parity.test.mjs`         | CI governance tests | Semantic guard that proves the workflow still invokes `pnpm test:ci-tools` and shared scope policy emitters.                                                                                         |
+| `tools/ci/ci-delivery-governance-canon.test.mjs`    | CI governance tests | Canonical absorption guard for the local component guide, user stories, and mandatory proposal state.                                                                                                |
+| `docs/guides/testing-and-ci-capabilities.md`        | CI documentation    | Operator-facing command map for reproducing local and remote delivery gates.                                                                                                                         |
 
 Command/query rail:
 
-| Rail                                     | Type    | Bounded context                     | DDD owner                                     | Port / adapter                                                        | Negative guard                                                                                                                                                                    |
-| ---------------------------------------- | ------- | ----------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ValidateCiDeliveryGovernanceCanon`      | query   | Repository delivery governance      | `CiDeliveryGovernanceCanon` read model        | `pnpm test:ci-tools` and `CI tool contracts` workflow lane            | Fails when the plan claims an absorbed gate is still open, or when component docs lose public API, invariants, transitions, consumers, diagrams, or user stories.                 |
-| `ConfigureReleasePleasePreMajorState`    | command | Repository release governance       | `ReleasePleasePreMajorState` policy object    | `.github/workflows/release.yml` and Release Please action             | Fails when Release Please falls back to default `1.0.0` behavior or opens a PR title that violates the semantic PR title gate.                                                    |
-| `ConfigureReleasePullRequestMergePolicy` | command | Repository release governance       | `ReleasePullRequestMergePolicy` policy object | GitHub repository settings and main ruleset                           | Fails when plain merge or rebase is allowed, squash is unavailable, or squash bodies preserve internal branch commit messages.                                                    |
-| `AssessReleaseCandidateIntegrity`        | query   | Repository release governance       | `ReleaseCandidateIntegrity` read model        | `pnpm release:candidate:check` and the trusted candidate workflow     | Fails on stale base/head identity, multiple candidate commits, version mismatch, post-1.0 versions, unexpected files, duplicate logical notes, or merge-policy drift.             |
-| `PublishReleaseCandidateIntegrityCheck`  | command | Repository release governance       | `ReleaseCandidateIntegrityGate` service       | `.github/workflows/release-candidate-integrity.yml` job status        | Fails closed when a release branch is not same-repository, does not target `main`, or its exact immutable candidate assessment fails; no second producer may publish the context. |
-| `ApplyPullRequestFileLabels`             | command | Repository collaboration governance | `PullRequestFileLabelPolicy` policy object    | `PORT-CI-APPLY-PR-FILE-LABELS` and `.github/workflows/pr-labeler.yml` | Fails when candidate code receives write authority, candidate configuration controls labels, or the trusted adapter checks out or executes candidate code.                        |
-| `LintChangedMarkdownFiles`               | query   | Repository Markdown governance      | `ChangedMarkdownFileSet` read model           | `scripts/lint-markdown-changed.cjs` and `verify:prepush`              | Fails when generated Markdown artifacts are passed explicitly to markdownlint despite repository ignore policy.                                                                   |
+| Rail                                     | Type    | Bounded context                     | DDD owner                                     | Port / adapter                                                        | Negative guard                                                                                                                                                                     |
+| ---------------------------------------- | ------- | ----------------------------------- | --------------------------------------------- | --------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ValidateCiDeliveryGovernanceCanon`      | query   | Repository delivery governance      | `CiDeliveryGovernanceCanon` read model        | `pnpm test:ci-tools` and `CI tool contracts` workflow lane            | Fails when the plan claims an absorbed gate is still open, or when component docs lose public API, invariants, transitions, consumers, diagrams, or user stories.                  |
+| `ConfigureReleasePleasePreMajorState`    | command | Repository release governance       | `ReleasePleasePreMajorState` policy object    | `.github/workflows/release.yml` and Release Please action             | Fails when Release Please falls back to default `1.0.0` behavior or opens a PR title that violates the semantic PR title gate.                                                     |
+| `ConfigureReleasePullRequestMergePolicy` | command | Repository release governance       | `ReleasePullRequestMergePolicy` policy object | GitHub repository settings and main ruleset                           | Fails when plain merge or rebase is allowed, squash is unavailable, or squash bodies preserve internal branch commit messages.                                                     |
+| `AssessReleaseCandidateIntegrity`        | query   | Repository release governance       | `ReleaseCandidateIntegrity` read model        | `pnpm release:candidate:check` and the trusted candidate workflow     | Fails on stale base/head identity, multiple candidate commits, version mismatch, post-1.0 versions, unexpected files, duplicate logical notes, or merge-policy drift.              |
+| `PublishReleaseCandidateIntegrityCheck`  | command | Repository release governance       | `ReleaseCandidateCheckPublicationService`     | `PORT-CI-RELEASE-CANDIDATE-CHECK-PUBLISH` and GitHub Checks adapter   | Fails closed when the check is not opened and completed on the exact PR head SHA, candidate assessment receives write authority, or the final assessment failure is not published. |
+| `ApplyPullRequestFileLabels`             | command | Repository collaboration governance | `PullRequestFileLabelPolicy` policy object    | `PORT-CI-APPLY-PR-FILE-LABELS` and `.github/workflows/pr-labeler.yml` | Fails when candidate code receives write authority, candidate configuration controls labels, or the trusted adapter checks out or executes candidate code.                         |
+| `LintChangedMarkdownFiles`               | query   | Repository Markdown governance      | `ChangedMarkdownFileSet` read model           | `scripts/lint-markdown-changed.cjs` and `verify:prepush`              | Fails when generated Markdown artifacts are passed explicitly to markdownlint despite repository ignore policy.                                                                    |
 
 ## Invariants
 
@@ -72,10 +72,11 @@ Command/query rail:
    and changelog. Unsupported extra-file strategies fail closed.
 10. Package, manifest, and latest changelog versions MUST match and remain below
     `1.0.0` while the product is in pre-release development.
-11. `Release candidate integrity` has exactly one producer: the trusted
-    `pull_request_target` workflow loaded from the PR base. Candidate code is
-    checked out without credentials and is inspected as Git data; it is never
-    installed or executed in that workflow.
+11. `Release candidate integrity` has exactly one producer: the check
+    publication service invoked by the trusted `pull_request_target` workflow
+    loaded from the PR base. Candidate code is checked out without credentials
+    in a separate read-only assessment job and is inspected as Git data; it is
+    never installed or executed in that workflow.
 12. `All Checks Required for Merge` and `Release candidate integrity` MUST both
     be strict required checks from GitHub Actions on the active ruleset for the
     default branch. Product CI cannot be bypassed by an integrity-only success.
@@ -109,9 +110,10 @@ flowchart LR
   TrustedLabeler --> Labels[PR metadata]
   Main --> ReleasePlease[Release Please + GitHub changelog notes]
   ReleasePlease --> Candidate[Release candidate PR]
-  Candidate --> TrustedWorkflow[Trusted pull_request_target workflow]
-  TrustedWorkflow --> Integrity[ReleaseCandidateIntegrity query]
-  Integrity -->|valid exact tree| Check[Single required job status on candidate SHA]
+  Candidate --> TrustedWorkflow[Trusted pull_request_target coordinator]
+  TrustedWorkflow --> BeginCheck[Open check on candidate SHA]
+  BeginCheck --> Integrity[Read-only ReleaseCandidateIntegrity query]
+  Integrity -->|valid exact tree| Check[Complete required check on candidate SHA]
   Integrity -->|any violation| Block[Fail closed]
 ```
 
@@ -138,14 +140,18 @@ sequenceDiagram
   participant GitHub
   participant Workflow as Trusted base workflow
   participant Gate as ReleaseCandidateIntegrity
+  participant Publisher as CheckPublicationService
 
   Main->>RP: push with one squashed identity per PR
   RP->>GitHub: create or update release candidate
   GitHub-->>Workflow: exact base SHA, head SHA, repository identity
+  Workflow->>Publisher: begin(head SHA)
+  Publisher->>GitHub: create in-progress required check
   Workflow->>Gate: immutable Git objects and projected merge policy
   Gate->>Gate: assess tree, versions, files and logical notes
   Gate-->>Workflow: deterministic pass/fail result
-  Workflow->>GitHub: complete the sole required job status
+  Workflow->>Publisher: complete(head SHA, pass/fail)
+  Publisher->>GitHub: verify identity and complete the sole required check
 ```
 
 ## Consumers
@@ -175,6 +181,8 @@ Improved patterns:
   workflow YAML or call the network.
 - Isolated write authority behind a trusted adapter so candidate validation and
   pull-request mutation no longer share one execution context.
+- Split check publication into an application service and a GitHub Checks
+  adapter; workflow jobs coordinate the lifecycle without owning API semantics.
 
 Anti-patterns removed or bounded:
 

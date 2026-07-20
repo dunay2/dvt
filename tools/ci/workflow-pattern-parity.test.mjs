@@ -493,17 +493,49 @@ test('release generation and candidate admission have one trusted owner each', (
     'ready_for_review',
   ]);
   assert.deepEqual(integrity.permissions, { contents: 'read' });
-  assert.equal(Object.keys(integrity.jobs).length, 1);
-  assert.equal(integrity.jobs.release_candidate_integrity.name, 'Release candidate integrity');
+  assert.deepEqual(Object.keys(integrity.jobs), [
+    'begin_release_candidate_integrity',
+    'assess_release_candidate_integrity',
+    'complete_release_candidate_integrity',
+  ]);
+  assert.deepEqual(integrity.jobs.begin_release_candidate_integrity.permissions, {
+    contents: 'read',
+    checks: 'write',
+  });
+  assert.deepEqual(integrity.jobs.assess_release_candidate_integrity.permissions, {
+    contents: 'read',
+  });
+  assert.deepEqual(integrity.jobs.complete_release_candidate_integrity.permissions, {
+    contents: 'read',
+    checks: 'write',
+  });
+  assert.notEqual(
+    integrity.jobs.begin_release_candidate_integrity.name,
+    'Release candidate integrity'
+  );
+  assert.notEqual(
+    integrity.jobs.assess_release_candidate_integrity.name,
+    'Release candidate integrity'
+  );
+  assert.notEqual(
+    integrity.jobs.complete_release_candidate_integrity.name,
+    'Release candidate integrity'
+  );
   assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.base.sha');
   assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.head.sha');
   assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.head.repo.full_name');
   assertWorkflowContains(integrityWorkflow, 'release-please--branches--');
   assertWorkflowContains(integrityWorkflow, 'persist-credentials: false');
-  assertWorkflowContains(integrityWorkflow, './.github/actions/setup-node-pnpm');
+  assertWorkflowContains(
+    integrityWorkflow,
+    'actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6'
+  );
   assertWorkflowContains(integrityWorkflow, 'releaseCandidateIntegrityCli.mjs');
   assertWorkflowContains(integrityWorkflow, 'releaseMergePolicyCli.mjs inspect');
-  assert.doesNotMatch(integrityWorkflow, /pnpm\s+--dir\s+candidate|checks:\s*write/u);
+  assertWorkflowContains(integrityWorkflow, 'releaseCandidateCheckGithubAdapter.mjs begin');
+  assertWorkflowContains(integrityWorkflow, 'releaseCandidateCheckGithubAdapter.mjs complete');
+  assertWorkflowContains(integrityWorkflow, 'needs.assess_release_candidate_integrity.result');
+  assert.doesNotMatch(integrityWorkflow, /pnpm\s+--dir\s+candidate/u);
 
   assert.equal(prQuality.permissions['pull-requests'], 'read');
   assert.equal(prQuality.jobs['release-candidate-integrity'], undefined);

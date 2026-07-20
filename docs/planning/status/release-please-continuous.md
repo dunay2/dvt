@@ -25,10 +25,11 @@ Repository Actions workflow permissions were also updated on 2026-03-08 so GitHu
 - Automatic npm publication is explicitly disabled for now.
 - The workflow no longer passes the deprecated `package-name` input to `googleapis/release-please-action@v4`.
 - Release Please owns changelog, tag, and release-PR generation only.
-- `.github/workflows/release-candidate-integrity.yml` is the sole producer of
-  the required `Release candidate integrity` context. It runs from the trusted
-  PR base, reads immutable candidate Git objects without credentials, and does
-  not install or execute candidate code.
+- `.github/workflows/release-candidate-integrity.yml` is the sole coordinator
+  of the required `Release candidate integrity` context. Trusted publisher jobs
+  open and complete that check on the exact PR head SHA, while a separate
+  read-only job inspects immutable candidate Git objects without installing or
+  executing candidate code.
 - The default-branch ruleset requires both the ordinary product quality
   aggregator and the exact release-candidate check with strict branch freshness.
 
