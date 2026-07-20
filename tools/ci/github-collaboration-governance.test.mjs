@@ -10,7 +10,8 @@ function readText(path) {
 
 test('GitHub collaboration governance keeps ownership, dependency, and PR policy surfaces wired', () => {
   const codeowners = readText('.github/CODEOWNERS');
-  const dependabot = readText('.github/dependabot.yml');
+  const dependabotSource = readText('.github/dependabot.yml');
+  const dependabot = yaml.load(dependabotSource);
   const pullRequestTemplate = readText('.github/pull_request_template.md');
   const prBody = readText('.github/PR_BODY.md').trim();
   const prInstructions = readText('.github/PR_INSTRUCTIONS.md');
@@ -27,8 +28,20 @@ test('GitHub collaboration governance keeps ownership, dependency, and PR policy
     assert.match(codeowners, new RegExp(escapeRegExp(requiredPattern)));
   }
 
-  assert.match(dependabot, /package-ecosystem:\s*'github-actions'/u);
-  assert.match(dependabot, /directory:\s*'\/'/u);
+  assert.match(dependabotSource, /package-ecosystem:\s*'github-actions'/u);
+  assert.match(dependabotSource, /directory:\s*'\/'/u);
+
+  const npmUpdates = dependabot.updates.find((update) => update['package-ecosystem'] === 'npm');
+  const actionUpdates = dependabot.updates.find(
+    (update) => update['package-ecosystem'] === 'github-actions'
+  );
+  assert.deepEqual(npmUpdates['commit-message'], {
+    prefix: 'chore',
+    include: 'scope',
+  });
+  assert.deepEqual(actionUpdates['commit-message'], {
+    prefix: 'chore(ci)',
+  });
 
   assert.match(pullRequestTemplate, /Declared ARC Level/u);
   assert.match(pullRequestTemplate, /docs\/evidence\/ED-YYYYMMDD-<slug>\.md/u);
