@@ -15,22 +15,35 @@ export function clickButtonNatively(label: string): void {
 export function getVisibleCanvasNode(nodeName: string): Cypress.Chainable<JQuery<HTMLElement>> {
   return cy
     .get('.react-flow__node', { timeout: 20_000 })
-    .filter((_, element) => {
-      const text = element.textContent ?? '';
-      const rect = element.getBoundingClientRect();
-      const style = getComputedStyle(element);
-
-      return (
-        text.includes(nodeName) &&
-        rect.width > 0 &&
-        rect.height > 0 &&
-        style.visibility !== 'hidden' &&
-        style.display !== 'none' &&
-        style.opacity !== '0'
-      );
+    .should(($nodes) => {
+      expect(
+        filterVisibleCanvasNodes($nodes, nodeName).length,
+        `visible node ${nodeName}`
+      ).to.be.greaterThan(0);
     })
-    .should('have.length.greaterThan', 0)
-    .first();
+    .then(($nodes) => cy.wrap(filterVisibleCanvasNodes($nodes, nodeName).first()));
+}
+
+function filterVisibleCanvasNodes(
+  $nodes: JQuery<HTMLElement>,
+  nodeName: string
+): JQuery<HTMLElement> {
+  const normalizedNodeName = nodeName.toLocaleLowerCase();
+
+  return $nodes.filter((_, element) => {
+    const text = (element.textContent ?? '').toLocaleLowerCase();
+    const rect = element.getBoundingClientRect();
+    const style = getComputedStyle(element);
+
+    return (
+      text.includes(normalizedNodeName) &&
+      rect.width > 0 &&
+      rect.height > 0 &&
+      style.visibility !== 'hidden' &&
+      style.display !== 'none' &&
+      style.opacity !== '0'
+    );
+  });
 }
 
 export function openCanvasContextMenuAt(x = 96, y = 220): void {

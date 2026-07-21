@@ -1,5 +1,5 @@
 import type { TenantId as ContractTenantId } from '@dvt/contracts';
-import type { IRunStateStoreRead, RunMetadata, RunStatus } from '@dvt/engine';
+import type { IRunStateStoreRead, IWorkflowEngine, RunMetadata } from '@dvt/engine';
 
 import type {
   AuthorizedQueryExecutionContext,
@@ -9,8 +9,16 @@ import type {
   RunListItemDto,
 } from '../ports/runtime.js';
 
+import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
+import { projectRunOperationalTruth } from './runOperationalTruth.js';
+
+const RUN_STATUS_READ_CONCURRENCY = 8;
+
 export class ListRunsUseCase implements IListRunsUseCase {
-  public constructor(private readonly stateStore: IRunStateStoreRead) {}
+  public constructor(
+    private readonly stateStore: IRunStateStoreRead,
+    private readonly engine: Pick<IWorkflowEngine, 'getRunStatus'>
+  ) {}
 
   public async execute(
     query: ListRunsQuery,
@@ -33,29 +41,34 @@ export class ListRunsUseCase implements IListRunsUseCase {
       return true;
     });
 
-    const snapshots = await Promise.all(
-      filtered.map((item) => this.stateStore.getSnapshot(item.tenantId, item.runId))
-    );
+    const statuses = await this.readCanonicalStatuses(filtered);
 
     return {
-      items: filtered.map((item, index) => this.toListItem(item, snapshots[index]?.status)),
+      items: filtered.map((item, index) => this.toListItem(item, statuses[index]!)),
       nextCursor: this.buildNextCursor(filtered, query.limit),
     };
   }
 
-  private toListItem(item: RunMetadata, status: RunStatus | undefined): RunListItemDto {
-    return {
-      tenantId: item.tenantId,
-      projectId: item.projectId,
-      environmentId: item.environmentId,
-      runId: item.runId,
-      planId: item.planId,
-      planVersion: item.planVersion,
-      logicalAttemptId: item.logicalAttemptId,
-      provider: item.providerRef.provider,
-      ...(item.createdAt !== undefined ? { createdAt: item.createdAt } : {}),
-      ...(status !== undefined ? { status } : {}),
-    };
+  private toListItem(
+    item: RunMetadata,
+    status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
+  ): RunListItemDto {
+    return projectRunOperationalTruth({ metadata: item, status });
+  }
+
+  private async readCanonicalStatuses(items: ReadonlyArray<RunMetadata>) {
+    const statuses: Array<Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>> = [];
+
+    for (let offset = 0; offset < items.length; offset += RUN_STATUS_READ_CONCURRENCY) {
+      const batch = items.slice(offset, offset + RUN_STATUS_READ_CONCURRENCY);
+      statuses.push(
+        ...(await Promise.all(
+          batch.map((item) => this.engine.getRunStatus(runMetadataToEngineRunRef(item)))
+        ))
+      );
+    }
+
+    return statuses;
   }
 
   private buildNextCursor(items: ReadonlyArray<RunMetadata>, limit: number): string | null {

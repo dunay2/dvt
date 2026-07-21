@@ -3,14 +3,7 @@ import type { PlanRef } from './engine';
 // DBT Artifact Types
 
 export type DbtNodeType =
-  | 'SOURCE'
-  | 'MODEL'
-  | 'SEED'
-  | 'SNAPSHOT'
-  | 'TEST'
-  | 'EXPOSURE'
-  | 'METRIC'
-  | 'MACRO';
+  'SOURCE' | 'MODEL' | 'SEED' | 'SNAPSHOT' | 'TEST' | 'EXPOSURE' | 'METRIC' | 'MACRO';
 
 export type NodeStatus = 'idle' | 'running' | 'success' | 'failed' | 'skipped' | 'warn';
 
@@ -106,12 +99,7 @@ export interface RunEvent {
   id: string;
   timestamp: string;
   type:
-    | 'StepStarted'
-    | 'StepCompleted'
-    | 'StepFailed'
-    | 'NodeStarted'
-    | 'NodeCompleted'
-    | 'NodeFailed';
+    'StepStarted' | 'StepCompleted' | 'StepFailed' | 'NodeStarted' | 'NodeCompleted' | 'NodeFailed';
   stepId?: string;
   nodeId?: string;
   message: string;
@@ -121,10 +109,10 @@ export interface RunEvent {
 export interface Run {
   runId: string;
   planId: string;
-  status: 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+  status: 'unknown' | 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
   environment: string;
-  gitSha: string;
-  startTime: string;
+  gitSha?: string;
+  startTime?: string;
   endTime?: string;
   duration?: number;
   events: RunEvent[];

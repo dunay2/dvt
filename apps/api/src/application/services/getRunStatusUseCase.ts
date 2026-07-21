@@ -23,6 +23,7 @@ import type {
 } from '../ports/runtime.js';
 
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
+import { projectRunOperationalTruth, sanitizeCanonicalRunStatus } from './runOperationalTruth.js';
 import { deriveRunReadEvidenceModel } from './runReadEvidenceModel.js';
 
 type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
@@ -43,7 +44,6 @@ type PlanRecordMetadata = Pick<RunMetadata, 'tenantId' | 'projectId' | 'environm
 
 interface RunStatusResponseInput {
   readonly metadata: RunMetadata;
-  readonly context: AuthorizedQueryExecutionContext;
   readonly snapshot: CanonicalRunSnapshot;
   readonly snapshotStaleness: SnapshotStalenessResolution;
   readonly enriched: boolean;
@@ -82,8 +82,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ]);
       return this.buildStatusResponse({
         metadata,
-        context,
-        snapshot: this.sanitizeCanonicalStatus(enrichment.canonical),
+        snapshot: sanitizeCanonicalRunStatus(enrichment.canonical),
         snapshotStaleness,
         enriched: true,
         providerView: enrichment.providerView,
@@ -97,15 +96,14 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
 
     return this.buildStatusResponse({
       metadata,
-      context,
-      snapshot: this.sanitizeCanonicalStatus(statusResult),
+      snapshot: sanitizeCanonicalRunStatus(statusResult),
       snapshotStaleness,
       enriched: query.enriched,
     });
   }
 
   private async buildStatusResponse(input: RunStatusResponseInput): Promise<GetRunStatusResult> {
-    const { context, metadata, snapshot, snapshotStaleness } = input;
+    const { metadata, snapshot, snapshotStaleness } = input;
     const runReadRef = toRunReadRef(metadata);
     this.recordSnapshotStalenessTelemetry(snapshotStaleness, runReadRef);
     const workflowSnapshot = await this.readWorkflowSnapshot(runReadRef);
@@ -125,29 +123,18 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       runtimeAdapter: metadata.providerRef.provider,
       ...(planRecord === undefined ? {} : { planRecord }),
     });
+    const operationalTruth = projectRunOperationalTruth({
+      metadata,
+      status: snapshot,
+      evidence: evidenceModel,
+    });
 
     return {
-      runId: snapshot.runId,
-      tenantId: context.scope.tenantId.value,
-      status: snapshot.status,
+      ...operationalTruth,
       enriched: input.enriched,
       snapshotStaleness: snapshotStaleness.value,
       ...(input.providerView === undefined ? {} : { providerView: input.providerView }),
-      ...(snapshot.substatus === undefined ? {} : { substatus: snapshot.substatus }),
-      ...(snapshot.message === undefined ? {} : { message: snapshot.message }),
-      ...(snapshot.startedAt === undefined ? {} : { startedAt: snapshot.startedAt }),
-      ...(snapshot.completedAt === undefined ? {} : { completedAt: snapshot.completedAt }),
-      ...(snapshot.execution === undefined ? {} : { execution: snapshot.execution }),
       ...(evidenceModel.executor === undefined ? {} : { executor: evidenceModel.executor }),
-      ...(evidenceModel.currentStepId === undefined
-        ? {}
-        : { currentStepId: evidenceModel.currentStepId }),
-      ...(evidenceModel.failedStepId === undefined
-        ? {}
-        : { failedStepId: evidenceModel.failedStepId }),
-      ...(evidenceModel.errorReason === undefined
-        ? {}
-        : { errorReason: evidenceModel.errorReason }),
       ...(evidenceModel.provenance === undefined ? {} : { provenance: evidenceModel.provenance }),
       ...(evidenceModel.materialization === undefined
         ? {}
@@ -213,21 +200,6 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     }
 
     return false;
-  }
-
-  private sanitizeCanonicalStatus(
-    snapshot: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
-  ): Awaited<ReturnType<IWorkflowEngine['getRunStatus']>> {
-    if (snapshot.status === 'COMPLETED' || snapshot.execution?.materialization === undefined) {
-      return snapshot;
-    }
-
-    const { execution: _previousExecution, ...rest } = snapshot;
-    const { materialization: _materialization, ...execution } = snapshot.execution;
-    return {
-      ...rest,
-      ...(Object.keys(execution).length === 0 ? {} : { execution }),
-    };
   }
 
   private async resolveSnapshotStaleness(runRef: RunReadRef): Promise<SnapshotStalenessResolution> {

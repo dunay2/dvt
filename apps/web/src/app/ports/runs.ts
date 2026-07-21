@@ -23,7 +23,7 @@ export type RunStartReceipt = {
   duplicateOf?: string;
 };
 
-export type UiRunStatus = 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
+export type UiRunStatus = 'unknown' | 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 export type RunExecutor = 'postgres' | 'dbt';
 
 export type MaterializationEvidence = {
@@ -107,18 +107,28 @@ export type RunDiagnostics = {
  * duplicating field declarations.
  */
 export type RunCommonSnapshotFields = {
+  tenantId?: string;
+  projectId?: string;
   runId: string;
   planId?: string;
+  planVersion?: string;
+  logicalAttemptId?: number;
+  provider?: string;
   status: UiRunStatus;
   environment?: string;
   gitSha?: string;
-  startedAt: string;
+  createdAt?: string;
+  startedAt?: string;
   completedAt?: string;
+  durationMs?: number;
   substatus?: string;
   message?: string;
   hash?: string;
   snapshotStaleness?: 'FRESH' | 'STALE' | 'UNKNOWN';
   execution?: RunExecutionEvidence;
+  currentStepId?: string;
+  failedStepId?: string;
+  errorReason?: string;
 };
 
 /** Summary projection: exactly the common snapshot fields. */
@@ -127,9 +137,6 @@ export type RunSummaryItem = RunCommonSnapshotFields;
 /** Full snapshot DTO with run-detail-specific fields. */
 export type RunSnapshot = RunCommonSnapshotFields & {
   executor?: RunExecutor;
-  currentStepId?: string;
-  failedStepId?: string;
-  errorReason?: string;
   materialization?: MaterializationEvidence;
   provenance?: RunProvenanceChain;
   planSummary?: RunPlanExecutionSummary;

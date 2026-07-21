@@ -1,6 +1,7 @@
 /** Owned concern: read warehouse source-import catalog metadata from workspace-owned files. */
 import {
   SourceObjectListSchema,
+  WarehouseConnectionSchema,
   type SourceObject,
   type WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
@@ -50,7 +51,7 @@ export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnection
     scope: WorkspaceGraphDraftScope
   ): Promise<readonly WarehouseConnection[]> {
     const entries = await resolveWorkspaceWarehouseCatalog(this.options.repository, scope);
-    return entries.map(({ sourceObjects: _sourceObjects, ...connection }) => connection);
+    return entries.map(toPublicWarehouseConnection);
   }
 
   public async listSourceObjects(
@@ -116,13 +117,17 @@ export class WorkspaceWarehouseConnectionCatalog implements IWarehouseConnection
       );
     }
 
-    const {
-      sourceObjects: _sourceObjects,
-      credentialRef: _credentialRef,
-      ...connection
-    } = nextEntry;
-    return connection;
+    return toPublicWarehouseConnection(nextEntry);
   }
+}
+
+function toPublicWarehouseConnection(entry: WarehouseConnectionCatalogEntry): WarehouseConnection {
+  return WarehouseConnectionSchema.parse({
+    id: entry.id,
+    name: entry.name,
+    type: entry.type,
+    database: entry.database,
+  });
 }
 
 export async function resolveWorkspaceWarehouseCatalog(

@@ -37,6 +37,7 @@ export default function SourceImportWizard({
   return (
     <SourceImportWizardFrame
       open={open}
+      activeContentId={isResultStep ? 'result' : controller.activeSection}
       isResultStep={isResultStep}
       isProcessing={state.isProcessing}
       canImport={controller.canImport}

@@ -63,6 +63,7 @@ export function SourceImportWizardFooter({
 
 type SourceImportWizardFrameProps = Readonly<{
   open: boolean;
+  activeContentId: string;
   isResultStep: boolean;
   isProcessing: boolean;
   canImport: boolean;
@@ -75,6 +76,7 @@ type SourceImportWizardFrameProps = Readonly<{
 
 export function SourceImportWizardFrame({
   open,
+  activeContentId,
   isResultStep,
   isProcessing,
   canImport,
@@ -101,7 +103,7 @@ export function SourceImportWizardFrame({
 
         {isResultStep ? null : <div className="shrink-0">{sections}</div>}
 
-        <ScrollArea className="-mx-6 min-h-0 flex-1 px-6">
+        <ScrollArea key={activeContentId} className="-mx-6 min-h-0 flex-1 px-6">
           <div className="pb-4">{children}</div>
         </ScrollArea>
 

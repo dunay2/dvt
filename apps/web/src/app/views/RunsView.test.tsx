@@ -264,8 +264,10 @@ describe('RunsView', () => {
           runsService: buildRunsService({
             getRunSnapshot: async () => ({
               runId: 'run_console_observed',
+              planId: 'plan-console-observed',
               status: 'failed',
               executor: 'postgres',
+              environment: 'env-1',
               startedAt: '2026-04-07T00:00:00.000Z',
               completedAt: '2026-04-07T00:00:10.000Z',
             }),
@@ -315,8 +317,10 @@ describe('RunsView', () => {
               if (requestedRunId === 'run_previous') {
                 return {
                   runId: 'run_previous',
+                  planId: 'plan-previous',
                   status: 'running',
                   executor: 'postgres',
+                  environment: 'env-1',
                   startedAt: '2026-04-07T00:00:00.000Z',
                 };
               }

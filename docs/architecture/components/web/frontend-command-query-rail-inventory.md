@@ -274,6 +274,9 @@ commands or queries are still needed for a mature end-to-end workflow.
 - Owner: warehouse connection catalog read model.
 - Frontend surface: `IWarehouseSourceImportPort.listWarehouseConnections`.
 - Backend surface: `GET /workspace/warehouse/connections`.
+- Security invariant: the public read model contains connection identity and
+  provider metadata only. Credential references and discovered source-object
+  payloads remain server-side and never cross this query boundary.
 
 ### `ListWarehouseConnectionSourceObjects`
 

@@ -10,6 +10,7 @@ import {
   buildDraftReadOkResponse,
   buildDraftSaveSavedResponse,
 } from '../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
+import { normalizeProjectCanvasDraft } from '../../src/app/views/canvas/canvasProjectCanvasLifecycle';
 
 import { stubE2eApi } from './e2eApiStub';
 import { E2E_WORKSPACE_SESSION } from './workspaceSession';
@@ -407,7 +408,7 @@ export function buildCanvasDraftSaveRequest(
     schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
     expectedRevision: args.expectedRevision ?? WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
     idempotencyKey: args.idempotencyKey ?? 'canvas-draft-authoring-seed',
-    draft: buildCanvasAuthoringDraft(args),
+    draft: normalizeProjectCanvasDraft(buildCanvasAuthoringDraft(args)),
   };
 }
 

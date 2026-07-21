@@ -23,6 +23,17 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:view'
   authorizedAt: new Date('2026-03-19T00:00:00Z'),
 };
 
+const expectedOperationalIdentity = {
+  tenantId: 'tenant-a',
+  projectId: 'proj-1',
+  environmentId: 'env-1',
+  runId: 'run-1',
+  planId: 'plan-1',
+  planVersion: '1.0',
+  logicalAttemptId: 1,
+  provider: 'temporal',
+} as const;
+
 function createStateStore(): {
   getRunMetadataByRunId: ReturnType<typeof vi.fn>;
   getSnapshot: ReturnType<typeof vi.fn>;
@@ -97,8 +108,7 @@ describe('GetRunStatusUseCase', () => {
     await expect(
       useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
     ).resolves.toEqual({
-      runId: 'provider-run-1',
-      tenantId: 'tenant-a',
+      ...expectedOperationalIdentity,
       status: 'RUNNING',
       enriched: false,
       snapshotStaleness: 'FRESH',
@@ -409,8 +419,7 @@ describe('GetRunStatusUseCase', () => {
     await expect(
       useCase.execute({ runId: 'run-1', enriched: true }, queryContext as never)
     ).resolves.toEqual({
-      runId: 'provider-run-1',
-      tenantId: 'tenant-a',
+      ...expectedOperationalIdentity,
       status: 'RUNNING',
       enriched: true,
       snapshotStaleness: 'FRESH',
@@ -496,7 +505,7 @@ describe('GetRunStatusUseCase', () => {
     );
 
     expect(result).toMatchObject({
-      runId: 'provider-run-1',
+      ...expectedOperationalIdentity,
       status: 'FAILED',
       snapshotStaleness: 'FRESH',
       execution: {
@@ -551,7 +560,7 @@ describe('GetRunStatusUseCase', () => {
     await expect(
       useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
     ).resolves.toMatchObject({
-      runId: 'provider-run-1',
+      ...expectedOperationalIdentity,
       status: 'COMPLETED',
       snapshotStaleness: 'FRESH',
       execution: {
@@ -981,7 +990,7 @@ describe('GetRunStatusUseCase', () => {
     await expect(
       useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
     ).resolves.toMatchObject({
-      runId: 'provider-run-1',
+      ...expectedOperationalIdentity,
       status: 'RUNNING',
       currentStepId: 'step-transform',
       provenance: {
@@ -1468,7 +1477,7 @@ describe('GetRunStatusUseCase', () => {
     await expect(
       useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
     ).resolves.toMatchObject({
-      runId: 'provider-run-1',
+      ...expectedOperationalIdentity,
       status: 'COMPLETED',
     });
 
@@ -1559,7 +1568,7 @@ describe('GetRunStatusUseCase', () => {
     await expect(
       useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
     ).resolves.toMatchObject({
-      runId: 'provider-run-1',
+      ...expectedOperationalIdentity,
       status: 'RUNNING',
       snapshotStaleness: 'FRESH',
     });

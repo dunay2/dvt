@@ -16,7 +16,7 @@ export function ResultStep({ result }: ResultStepProps) {
       : copy.result.dbtProjectFilesWarning;
 
   return (
-    <div className="space-y-4 text-center">
+    <div className="space-y-4 text-center" data-slot="source-import-result">
       <div className="flex justify-center">
         <div className="flex size-16 items-center justify-center rounded-full bg-green-500/20">
           <CheckCircle2 className="size-8 text-green-500" />
@@ -30,12 +30,19 @@ export function ResultStep({ result }: ResultStepProps) {
       <Card className="border-slate-600 p-4 text-left">
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-300">Groups created:</span>
-            <span className="font-medium text-green-400">{result.sourcesCreated}</span>
+            <span className="text-slate-300">{copy.result.groupsCreatedLabel}</span>
+            <span className="font-medium text-green-400" data-slot="source-import-groups-created">
+              {result.sourcesCreated}
+            </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-300">Objects registered:</span>
-            <span className="font-medium text-green-400">{result.objectsImported}</span>
+            <span className="text-slate-300">{copy.result.objectsRegisteredLabel}</span>
+            <span
+              className="font-medium text-green-400"
+              data-slot="source-import-objects-registered"
+            >
+              {result.objectsImported}
+            </span>
           </div>
         </div>
       </Card>
