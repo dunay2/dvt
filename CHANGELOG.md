@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.2 (2026-07-21)
+
+## What's Changed
+* chore(ci): Bump actions/checkout from 7.0.0 to 7.0.1 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/2021
+* chore(deps-dev): Bump the linting group across 1 directory with 3 updates by @dependabot[bot] in https://github.com/dunay2/dvt/pull/2015
+* chore(ci): Bump actions/setup-python from 6.3.0 to 7.0.0 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/2004
+* chore(ci): Update setup-node consumers atomically by @dunay2 in https://github.com/dunay2/dvt/pull/2024
+* fix(web): Stabilize Canvas viewport presentation tests by @dunay2 in https://github.com/dunay2/dvt/pull/2026
+* fix(web): Align Canvas viewport architecture guard by @dunay2 in https://github.com/dunay2/dvt/pull/2027
+* chore(deps): Bump @radix-ui/react-menubar from 1.1.16 to 1.1.21 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/2010
+* chore(deps): Bump @radix-ui/react-navigation-menu from 1.2.5 to 1.2.19 by @dependabot[bot] in https://github.com/dunay2/dvt/pull/2011
+* chore(deps): Bump the temporal group across 1 directory with 5 updates by @dependabot[bot] in https://github.com/dunay2/dvt/pull/2008
+* fix(web): Preserve pending reconciliation receipt truth by @dunay2 in https://github.com/dunay2/dvt/pull/2030
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.5.1...v0.5.2
+
 ## 0.5.1 (2026-07-21)
 
 ## What's Changed
