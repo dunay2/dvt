@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1 (2026-07-21)
+
+## What's Changed
+* fix(ci): Allow product pull requests through release integrity by @dunay2 in https://github.com/dunay2/dvt/pull/2016
+* fix(ci): Generate valid Dependabot pull request titles by @dunay2 in https://github.com/dunay2/dvt/pull/2019
+* chore(ci): Update CodeQL actions atomically by @dunay2 in https://github.com/dunay2/dvt/pull/2022
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.5.0...v0.5.1
+
 ## 0.5.0 (2026-07-20)
 
 ## What's Changed
