@@ -118,57 +118,46 @@ export function reduceCodeWorkingTreeSync(
       if (state.inFlight?.requestId !== event.requestId) {
         return state;
       }
-      return {
+      return projectCodeWorkingTreeSyncPhase({
         ...state,
         persistedContent: state.inFlight.content,
         persistedRevision: event.receipt.contentSha256,
-        phase:
-          state.value !== state.inFlight.content
-            ? 'modified'
-            : event.requiresReconciliation
-              ? 'reconciling'
-              : 'synchronized',
         inFlight: null,
         pendingReconciliation: event.requiresReconciliation ? event.receipt : null,
         persistedReconciliationPhase: null,
-      };
+      });
     case 'reconciliation_started':
       return isCodeWorkingTreeReconciliationRetryablePhase(state.phase) &&
         state.pendingReconciliation != null
-        ? { ...state, phase: 'reconciling' }
+        ? { ...state, phase: 'reconciling', persistedReconciliationPhase: null }
         : state;
     case 'reconciliation_completed': {
       if (
-        state.phase !== 'reconciling' ||
         state.pendingReconciliation == null ||
         !isSameSaveReceipt(state.pendingReconciliation, event.receipt)
       ) {
         return state;
       }
       if (event.outcome.kind === 'fresh') {
-        return {
+        return projectReconciliationTransition({
           ...state,
-          phase: state.value === state.persistedContent ? 'synchronized' : 'modified',
           pendingReconciliation: null,
           persistedReconciliationPhase: null,
-        };
+        });
       }
       const persistedReconciliationPhase = mapReconciliationOutcomePhase(event.outcome);
-      return {
+      return projectReconciliationTransition({
         ...state,
-        phase: state.value === state.persistedContent ? persistedReconciliationPhase : 'modified',
         persistedReconciliationPhase,
-      };
+      });
     }
     case 'reconciliation_failed':
-      return state.phase === 'reconciling' &&
-        state.pendingReconciliation != null &&
+      return state.pendingReconciliation != null &&
         isSameSaveReceipt(state.pendingReconciliation, event.receipt)
-        ? {
+        ? projectReconciliationTransition({
             ...state,
-            phase: state.value === state.persistedContent ? 'reconciliation_failed' : 'modified',
             persistedReconciliationPhase: 'reconciliation_failed',
-          }
+          })
         : state;
     case 'sync_conflicted':
       return state.inFlight?.requestId === event.requestId
@@ -180,10 +169,7 @@ export function reduceCodeWorkingTreeSync(
         : state;
     case 'retry_requested':
       return state.phase === 'failed'
-        ? {
-            ...state,
-            phase: state.value === state.persistedContent ? 'synchronized' : 'modified',
-          }
+        ? projectCodeWorkingTreeSyncPhase({ ...state, phase: 'synchronized' })
         : state;
   }
 }
@@ -208,24 +194,33 @@ function reduceEditedValue(
   if (state.phase === 'conflict') {
     return { ...state, value };
   }
-  if (state.phase === 'reconciling') {
-    return {
-      ...state,
-      value,
-      phase: value === state.persistedContent ? 'reconciling' : 'modified',
-    };
+  return projectCodeWorkingTreeSyncPhase({ ...state, value });
+}
+
+function projectCodeWorkingTreeSyncPhase(
+  state: CodeWorkingTreeSyncState
+): CodeWorkingTreeSyncState {
+  if (state.inFlight != null) {
+    return { ...state, phase: 'syncing' };
   }
-  if (state.inFlight) {
-    return { ...state, value, phase: 'syncing' };
+  if (state.value !== state.persistedContent) {
+    return { ...state, phase: 'modified' };
   }
-  return {
-    ...state,
-    value,
-    phase:
-      value === state.persistedContent
-        ? (state.persistedReconciliationPhase ?? 'synchronized')
-        : 'modified',
-  };
+  if (state.pendingReconciliation != null) {
+    return { ...state, phase: state.persistedReconciliationPhase ?? 'reconciling' };
+  }
+  return { ...state, phase: state.persistedReconciliationPhase ?? 'synchronized' };
+}
+
+function projectReconciliationTransition(
+  state: CodeWorkingTreeSyncState
+): CodeWorkingTreeSyncState {
+  const persistenceTerminalPhase =
+    state.phase === 'conflict' || state.phase === 'failed' ? state.phase : null;
+  const projected = projectCodeWorkingTreeSyncPhase(state);
+  return persistenceTerminalPhase == null
+    ? projected
+    : { ...projected, phase: persistenceTerminalPhase };
 }
 
 export function isCodeWorkingTreeReconciliationUnresolvedPhase(

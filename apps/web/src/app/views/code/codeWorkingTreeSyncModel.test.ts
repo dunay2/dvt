@@ -27,6 +27,23 @@ function savedReceipt(contentSha256 = 'b'.repeat(64)): WorkspaceFileSaveReceipt 
   };
 }
 
+function createReconcilingState(): ReturnType<typeof createCodeWorkingTreeSyncState> {
+  const modified = reduceCodeWorkingTreeSync(createCodeWorkingTreeSyncState(FILE), {
+    type: 'edited',
+    value: 'select 2',
+  });
+  const syncing = reduceCodeWorkingTreeSync(modified, {
+    type: 'sync_started',
+    requestId: 21,
+  });
+  return reduceCodeWorkingTreeSync(syncing, {
+    type: 'content_persisted',
+    requestId: 21,
+    receipt: savedReceipt(),
+    requiresReconciliation: true,
+  });
+}
+
 describe('CodeWorkingTreeSync model', () => {
   it('starts synchronized and marks changed editor content as modified', () => {
     const initial = createCodeWorkingTreeSyncState(FILE);
@@ -122,6 +139,145 @@ describe('CodeWorkingTreeSync model', () => {
     expect(editedAgain.phase).toBe('modified');
     expect(editedAgain.persistedContent).toBe('select 2');
     expect(editedAgain.pendingReconciliation).toEqual(savedReceipt());
+  });
+
+  it('keeps the matching receipt pending when an edit reverts before reconciliation completes', () => {
+    const editedAgain = reduceCodeWorkingTreeSync(createReconcilingState(), {
+      type: 'edited',
+      value: 'select 3',
+    });
+    const reverted = reduceCodeWorkingTreeSync(editedAgain, {
+      type: 'edited',
+      value: 'select 2',
+    });
+
+    expect(reverted.phase).toBe('reconciling');
+
+    const invalid = reduceCodeWorkingTreeSync(reverted, {
+      type: 'reconciliation_completed',
+      receipt: savedReceipt(),
+      outcome: { kind: 'degraded', freshness: 'invalid' },
+    });
+
+    expect(invalid.phase).toBe('persisted_invalid');
+    expect(invalid.pendingReconciliation).toEqual(savedReceipt());
+  });
+
+  it('accepts fresh reconciliation for the pending receipt while a later edit remains modified', () => {
+    const editedAgain = reduceCodeWorkingTreeSync(createReconcilingState(), {
+      type: 'edited',
+      value: 'select 3',
+    });
+    const completed = reduceCodeWorkingTreeSync(editedAgain, {
+      type: 'reconciliation_completed',
+      receipt: savedReceipt(),
+      outcome: {
+        kind: 'fresh',
+        analysisSha256: 'c'.repeat(64),
+        projectContentSetSha256: 'd'.repeat(64),
+      },
+    });
+
+    expect(completed.phase).toBe('modified');
+    expect(completed.pendingReconciliation).toBeNull();
+    expect(reduceCodeWorkingTreeSync(completed, { type: 'edited', value: 'select 2' }).phase).toBe(
+      'synchronized'
+    );
+  });
+
+  it('accepts the pending receipt outcome without hiding a newer persistence command', () => {
+    const editedAgain = reduceCodeWorkingTreeSync(createReconcilingState(), {
+      type: 'edited',
+      value: 'select 3',
+    });
+    const syncingAgain = reduceCodeWorkingTreeSync(editedAgain, {
+      type: 'sync_started',
+      requestId: 22,
+    });
+    const completed = reduceCodeWorkingTreeSync(syncingAgain, {
+      type: 'reconciliation_completed',
+      receipt: savedReceipt(),
+      outcome: {
+        kind: 'fresh',
+        analysisSha256: 'c'.repeat(64),
+        projectContentSetSha256: 'd'.repeat(64),
+      },
+    });
+
+    expect(completed.phase).toBe('syncing');
+    expect(completed.pendingReconciliation).toBeNull();
+    expect(completed.inFlight?.requestId).toBe(22);
+  });
+
+  it.each(['sync_conflicted', 'sync_failed'] as const)(
+    'does not let an older receipt outcome erase a newer %s terminal state',
+    (terminalEvent) => {
+      const editedAgain = reduceCodeWorkingTreeSync(createReconcilingState(), {
+        type: 'edited',
+        value: 'select 3',
+      });
+      const syncingAgain = reduceCodeWorkingTreeSync(editedAgain, {
+        type: 'sync_started',
+        requestId: 22,
+      });
+      const terminal = reduceCodeWorkingTreeSync(syncingAgain, {
+        type: terminalEvent,
+        requestId: 22,
+      });
+      const completed = reduceCodeWorkingTreeSync(terminal, {
+        type: 'reconciliation_completed',
+        receipt: savedReceipt(),
+        outcome: {
+          kind: 'fresh',
+          analysisSha256: 'c'.repeat(64),
+          projectContentSetSha256: 'd'.repeat(64),
+        },
+      });
+
+      expect(completed.phase).toBe(terminalEvent === 'sync_conflicted' ? 'conflict' : 'failed');
+      expect(completed.pendingReconciliation).toBeNull();
+    }
+  );
+
+  it('returns to the pending receipt when a failed later edit was reverted before retry', () => {
+    const editedAgain = reduceCodeWorkingTreeSync(createReconcilingState(), {
+      type: 'edited',
+      value: 'select 3',
+    });
+    const syncingAgain = reduceCodeWorkingTreeSync(editedAgain, {
+      type: 'sync_started',
+      requestId: 22,
+    });
+    const reverted = reduceCodeWorkingTreeSync(syncingAgain, {
+      type: 'edited',
+      value: 'select 2',
+    });
+    const failed = reduceCodeWorkingTreeSync(reverted, {
+      type: 'sync_failed',
+      requestId: 22,
+    });
+
+    const retried = reduceCodeWorkingTreeSync(failed, { type: 'retry_requested' });
+
+    expect(retried.phase).toBe('reconciling');
+    expect(retried.pendingReconciliation).toEqual(savedReceipt());
+  });
+
+  it('records failed reconciliation for the pending receipt while a later edit remains modified', () => {
+    const editedAgain = reduceCodeWorkingTreeSync(createReconcilingState(), {
+      type: 'edited',
+      value: 'select 3',
+    });
+    const failed = reduceCodeWorkingTreeSync(editedAgain, {
+      type: 'reconciliation_failed',
+      receipt: savedReceipt(),
+    });
+
+    expect(failed.phase).toBe('modified');
+    expect(failed.persistedReconciliationPhase).toBe('reconciliation_failed');
+    expect(reduceCodeWorkingTreeSync(failed, { type: 'edited', value: 'select 2' }).phase).toBe(
+      'reconciliation_failed'
+    );
   });
 
   it('keeps the editor value and stops automatic writes after a revision conflict', () => {

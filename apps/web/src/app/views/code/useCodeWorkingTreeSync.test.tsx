@@ -157,6 +157,33 @@ describe('useCodeWorkingTreeSync', () => {
     expect(saveFileContent).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the pending receipt visible when editor content reverts before analysis settles', async () => {
+    const saved = receipt('b'.repeat(64));
+    const reconciliation = deferred<CodeWorkingTreeReconciliationOutcome>();
+    const reconcilePersistedFile = vi.fn(() => reconciliation.promise);
+    const saveFileContent = vi.fn(async () => saved);
+    await render({ saveFileContent }, reconcilePersistedFile);
+
+    act(() => controller.updateValue('select 2'));
+    await act(async () => {
+      await controller.flush();
+    });
+
+    act(() => controller.updateValue('select 3'));
+    expect(controller.phase).toBe('modified');
+
+    act(() => controller.updateValue('select 2'));
+    expect(controller.phase).toBe('reconciling');
+
+    await act(async () => {
+      reconciliation.resolve({ kind: 'degraded', freshness: 'invalid' });
+      await Promise.resolve();
+    });
+
+    expect(controller.phase).toBe('persisted_invalid');
+    expect(saveFileContent).toHaveBeenCalledOnce();
+  });
+
   it('resolves flush after byte persistence while semantic reconciliation remains pending', async () => {
     const saved = receipt('b'.repeat(64));
     const reconciliation = deferred<CodeWorkingTreeReconciliationOutcome>();
