@@ -59,6 +59,25 @@ describe('RunStates workspace basics', () => {
     );
   });
 
+  it('renders missing lifecycle evidence as unavailable instead of inventing timestamps', async () => {
+    await harness.render(
+      <RunWorkspaceState
+        workspace={buildWorkspace({
+          snapshot: {
+            runId: 'run_pending',
+            planId: 'plan_pending',
+            status: 'pending',
+            environment: 'dev',
+          },
+        })}
+      />
+    );
+
+    const snapshotFields = harness.container.textContent ?? '';
+    expect(snapshotFields).toContain('StartedNot available in this run snapshot');
+    expect(snapshotFields).toContain('DurationNot available in this run snapshot');
+  });
+
   it('renders return navigation and persisted execution preview scope for completed runs', async () => {
     await harness.render(
       <RunWorkspaceState

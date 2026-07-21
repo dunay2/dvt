@@ -141,9 +141,15 @@ describe('runsService runtime contract', () => {
       runId: 'run_abc',
       planId: 'plan_abc',
       status: 'RUNNING',
+      projectId: 'project-1',
       environmentId: 'dev',
+      planVersion: '2.0.0',
+      logicalAttemptId: 2,
+      provider: 'temporal',
+      createdAt: '2026-04-03T23:59:58.000Z',
       gitSha: 'abc',
       startedAt: '2026-04-04T00:00:00.000Z',
+      durationMs: 5000,
       substatus: 'WAITING_APPROVAL',
       message: 'Approval required',
       snapshotStaleness: 'FRESH',
@@ -156,11 +162,17 @@ describe('runsService runtime contract', () => {
     expect(snapshot).toEqual({
       runId: 'run_abc',
       planId: 'plan_abc',
+      planVersion: '2.0.0',
       status: 'running',
+      projectId: 'project-1',
       environment: 'dev',
+      logicalAttemptId: 2,
+      provider: 'temporal',
+      createdAt: '2026-04-03T23:59:58.000Z',
       gitSha: 'abc',
       startedAt: '2026-04-04T00:00:00.000Z',
       completedAt: undefined,
+      durationMs: 5000,
       substatus: 'WAITING_APPROVAL',
       message: 'Approval required',
       snapshotStaleness: 'FRESH',
@@ -224,13 +236,42 @@ describe('runsService runtime contract', () => {
         status: 'running',
         environment: 'dev',
         gitSha: 'abc',
-        startedAt: '2026-04-04T00:00:00.000Z',
+        createdAt: '2026-04-04T00:00:00.000Z',
+        startedAt: undefined,
         completedAt: undefined,
+        durationMs: undefined,
         substatus: 'WAITING_APPROVAL',
         message: 'Approval required',
         snapshotStaleness: undefined,
         execution: undefined,
       },
+    ]);
+  });
+
+  it('does not fabricate lifecycle time or status from the browser clock', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.getJson).mockResolvedValue({
+      items: [
+        {
+          runId: 'run_without_snapshot_time',
+          planId: 'plan_1',
+          environmentId: 'dev',
+          createdAt: '2026-04-04T00:00:00.000Z',
+        },
+      ],
+      nextCursor: null,
+    });
+
+    const service = createRunsService(apiClient);
+
+    await expect(service.listRunSummaries()).resolves.toEqual([
+      expect.objectContaining({
+        runId: 'run_without_snapshot_time',
+        status: 'unknown',
+        createdAt: '2026-04-04T00:00:00.000Z',
+        startedAt: undefined,
+        durationMs: undefined,
+      }),
     ]);
   });
 

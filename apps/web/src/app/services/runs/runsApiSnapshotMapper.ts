@@ -5,6 +5,8 @@
 import type { RunSnapshot, RunSummaryItem } from '../../ports/runs';
 
 import {
+  asFiniteInteger,
+  asFiniteNumber,
   asString,
   mapContractStatusToUi,
   parseContractRunStatus,
@@ -33,20 +35,31 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
   const failedStepId = asString(candidate.failedStepId);
   const errorReason = asString(candidate.errorReason);
   const materialization = parseMaterializationEvidence(candidate.materialization);
+  const durationMs = asFiniteNumber(candidate.durationMs);
+  const logicalAttemptId = asFiniteInteger(candidate.logicalAttemptId);
+  const tenantId = asString(candidate.tenantId);
+  const projectId = asString(candidate.projectId);
+  const planVersion = asString(candidate.planVersion);
+  const provider = asString(candidate.provider);
+  const createdAt = asString(candidate.createdAt);
+  const startedAt = asString(candidate.startedAt);
 
   return {
+    ...(tenantId ? { tenantId } : {}),
+    ...(projectId ? { projectId } : {}),
     runId,
     planId: asString(candidate.planId),
+    ...(planVersion ? { planVersion } : {}),
+    ...(logicalAttemptId === undefined ? {} : { logicalAttemptId }),
+    ...(provider ? { provider } : {}),
     status: mapContractStatusToUi(parseContractRunStatus(candidate.status)),
     ...(executor ? { executor } : {}),
     environment: asString(candidate.environmentId) ?? asString(candidate.environment),
     gitSha: asString(candidate.gitSha),
-    startedAt:
-      asString(candidate.startedAt) ??
-      asString(candidate.createdAt) ??
-      asString(candidate.startTime) ??
-      new Date().toISOString(),
+    ...(createdAt ? { createdAt } : {}),
+    startedAt,
     completedAt: asString(candidate.completedAt) ?? asString(candidate.endTime),
+    durationMs: durationMs !== undefined && durationMs >= 0 ? durationMs : undefined,
     substatus: asString(candidate.substatus),
     message: asString(candidate.message),
     hash: asString(candidate.hash),
@@ -64,17 +77,29 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
 
 export function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
   return {
+    ...(snapshot.tenantId ? { tenantId: snapshot.tenantId } : {}),
+    ...(snapshot.projectId ? { projectId: snapshot.projectId } : {}),
     runId: snapshot.runId,
     planId: snapshot.planId,
+    ...(snapshot.planVersion ? { planVersion: snapshot.planVersion } : {}),
+    ...(snapshot.logicalAttemptId === undefined
+      ? {}
+      : { logicalAttemptId: snapshot.logicalAttemptId }),
+    ...(snapshot.provider ? { provider: snapshot.provider } : {}),
     status: snapshot.status,
     environment: snapshot.environment,
     gitSha: snapshot.gitSha,
+    ...(snapshot.createdAt ? { createdAt: snapshot.createdAt } : {}),
     startedAt: snapshot.startedAt,
     completedAt: snapshot.completedAt,
+    durationMs: snapshot.durationMs,
     substatus: snapshot.substatus,
     message: snapshot.message,
     hash: snapshot.hash,
     snapshotStaleness: snapshot.snapshotStaleness,
     execution: snapshot.execution,
+    ...(snapshot.currentStepId ? { currentStepId: snapshot.currentStepId } : {}),
+    ...(snapshot.failedStepId ? { failedStepId: snapshot.failedStepId } : {}),
+    ...(snapshot.errorReason ? { errorReason: snapshot.errorReason } : {}),
   };
 }

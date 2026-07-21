@@ -12,6 +12,7 @@ const RUN_STATUS_FILTERS = [
   'completed',
   'failed',
   'cancelled',
+  'unknown',
 ] as const;
 const RUN_SORT_COLUMNS = [
   'runId',
@@ -48,7 +49,7 @@ export type RunOperationalRow = {
   readonly substatus: string | null;
   readonly environment: string | null;
   readonly gitSha: string | null;
-  readonly startedAt: string;
+  readonly startedAt: string | null;
   readonly completedAt: string | null;
   readonly startedAtLabel: string;
   readonly completedAtLabel: string;
@@ -67,15 +68,6 @@ function formatDateTime(value: string | null): string {
   }
 
   return new Date(value).toLocaleString();
-}
-
-function durationBetween(startedAt: string, completedAt?: string): number | null {
-  if (!completedAt) {
-    return null;
-  }
-
-  const durationMs = new Date(completedAt).getTime() - new Date(startedAt).getTime();
-  return Number.isFinite(durationMs) && durationMs >= 0 ? durationMs : null;
 }
 
 function formatDuration(durationMs: number | null): string {
@@ -107,6 +99,15 @@ function compareNullableNumber(left: number | null, right: number | null): numbe
   return left - right;
 }
 
+function parseDateTime(value: string | null): number | null {
+  if (value === null) {
+    return null;
+  }
+
+  const epoch = Date.parse(value);
+  return Number.isFinite(epoch) ? epoch : null;
+}
+
 function matchesStatus(row: RunOperationalRow, status: RunOperationalStatusFilter): boolean {
   return status === 'all' || row.status === status;
 }
@@ -136,8 +137,12 @@ function isSortDirection(value: string | null): value is RunOperationalSortDirec
 
 export function buildRunOperationalRows(runs: readonly RunSummaryItem[]): RunOperationalRow[] {
   return runs.map((run) => {
+    const startedAt = run.startedAt ?? null;
     const completedAt = run.completedAt ?? null;
-    const durationMs = durationBetween(run.startedAt, completedAt ?? undefined);
+    const durationMs =
+      run.durationMs !== undefined && Number.isFinite(run.durationMs) && run.durationMs >= 0
+        ? run.durationMs
+        : null;
 
     return {
       runId: run.runId,
@@ -146,9 +151,9 @@ export function buildRunOperationalRows(runs: readonly RunSummaryItem[]): RunOpe
       substatus: run.substatus ?? null,
       environment: isKnownRunField(run.environment) ? run.environment : null,
       gitSha: isKnownRunField(run.gitSha) ? run.gitSha : null,
-      startedAt: run.startedAt,
+      startedAt,
       completedAt,
-      startedAtLabel: formatDateTime(run.startedAt),
+      startedAtLabel: formatDateTime(startedAt),
       completedAtLabel: formatDateTime(completedAt),
       durationMs,
       durationLabel: formatDuration(durationMs),
@@ -182,7 +187,10 @@ export function sortRunOperationalRows(
         result = compareText(left.status, right.status);
         break;
       case 'startedAt':
-        result = new Date(left.startedAt).getTime() - new Date(right.startedAt).getTime();
+        result = compareNullableNumber(
+          parseDateTime(left.startedAt),
+          parseDateTime(right.startedAt)
+        );
         break;
       case 'duration':
         result = compareNullableNumber(left.durationMs, right.durationMs);

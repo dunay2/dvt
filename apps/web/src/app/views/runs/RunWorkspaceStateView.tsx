@@ -399,7 +399,11 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
             <div>
               <span className="text-slate-400">{copy.startedLabel}</span>
-              <div>{new Date(snapshot.startedAt).toLocaleString()}</div>
+              <div>
+                {snapshot.startedAt
+                  ? new Date(snapshot.startedAt).toLocaleString()
+                  : copy.scopeUnavailable}
+              </div>
             </div>
             {snapshot.completedAt ? (
               <div>
@@ -419,6 +423,14 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
                 <div>{executor}</div>
               </div>
             ) : null}
+            <div>
+              <span className="text-slate-400">{copy.durationLabel}</span>
+              <div>
+                {snapshot.durationMs === undefined
+                  ? copy.scopeUnavailable
+                  : `${(snapshot.durationMs / 1000).toFixed(1)} s`}
+              </div>
+            </div>
             {isKnownRunField(snapshot.gitSha) ? (
               <div>
                 <span className="text-slate-400">{copy.gitShaLabel}</span>

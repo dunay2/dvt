@@ -156,6 +156,7 @@ export function RunOperationalTable({
           <option value="completed">completed</option>
           <option value="failed">failed</option>
           <option value="cancelled">cancelled</option>
+          <option value="unknown">unknown</option>
         </select>
       </div>
 

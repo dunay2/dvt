@@ -26,25 +26,21 @@ type RunsWorkbenchSurfaceProps = Readonly<{
   resolveRouteBootstrapId: (runId: string | undefined) => string;
 }>;
 
-function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run {
+function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run | null {
   const { snapshot } = workspace;
-  const completedAtMs =
-    typeof snapshot.completedAt === 'string' ? Date.parse(snapshot.completedAt) : undefined;
-  const startedAtMs = Date.parse(snapshot.startedAt);
-  const durationSeconds =
-    completedAtMs != null && Number.isFinite(startedAtMs) && Number.isFinite(completedAtMs)
-      ? Math.max(0, (completedAtMs - startedAtMs) / 1000)
-      : undefined;
+  if (!snapshot.planId || !snapshot.environment) {
+    return null;
+  }
 
   const focusedRun: Run = {
     runId: snapshot.runId,
-    planId: snapshot.planId ?? 'unknown-plan',
+    planId: snapshot.planId,
     status: snapshot.status,
-    environment: snapshot.environment ?? 'unknown',
-    gitSha: snapshot.gitSha ?? 'unknown',
+    environment: snapshot.environment,
+    gitSha: snapshot.gitSha,
     startTime: snapshot.startedAt,
     endTime: snapshot.completedAt,
-    duration: durationSeconds,
+    duration: snapshot.durationMs === undefined ? undefined : snapshot.durationMs / 1000,
     events: [],
     steps: [],
   };
@@ -78,10 +74,14 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
       return;
     }
 
-    if (runId && observedRunId && observedRunId !== runId) {
+    if (
+      runId &&
+      observedRunId &&
+      (observedRunId !== runId || (workspace !== null && focusedRunModel === null))
+    ) {
       setCurrentRun(null);
     }
-  }, [focusedRunModel, observedRunId, runId, setCurrentRun]);
+  }, [focusedRunModel, observedRunId, runId, setCurrentRun, workspace]);
 
   const state = buildRunsWorkbenchState({
     runId,

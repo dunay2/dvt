@@ -28,6 +28,7 @@ describe('runOperationalTableModel', () => {
       status: 'completed',
       startedAt: '2026-05-18T10:00:00.000Z',
       completedAt: '2026-05-18T10:00:05.250Z',
+      durationMs: 5250,
     });
 
     const rows = buildRunOperationalRows([source]);
@@ -43,6 +44,35 @@ describe('runOperationalTableModel', () => {
       }),
     ]);
     expect(source.completedAt).toBe('2026-05-18T10:00:05.250Z');
+  });
+
+  it('renders absent lifecycle time honestly and preserves API duration authority', () => {
+    const [pending, completed] = buildRunOperationalRows([
+      buildRun({
+        runId: 'run_pending',
+        status: 'pending',
+        createdAt: '2026-05-18T09:59:00.000Z',
+        startedAt: undefined,
+      }),
+      buildRun({
+        runId: 'run_completed',
+        status: 'completed',
+        startedAt: '2026-05-18T10:00:00.000Z',
+        completedAt: '2026-05-18T10:00:05.000Z',
+        durationMs: 4700,
+      }),
+    ]);
+
+    expect(pending).toMatchObject({
+      startedAt: null,
+      startedAtLabel: '-',
+      durationMs: null,
+      durationLabel: '-',
+    });
+    expect(completed).toMatchObject({
+      durationMs: 4700,
+      durationLabel: '4.7 s',
+    });
   });
 
   it('filters by status and case-insensitive operational text', () => {
@@ -74,12 +104,14 @@ describe('runOperationalTableModel', () => {
         status: 'failed',
         startedAt: '2026-05-18T12:00:00.000Z',
         completedAt: '2026-05-18T12:01:00.000Z',
+        durationMs: 60_000,
       }),
       buildRun({
         runId: 'run_mid',
         status: 'completed',
         startedAt: '2026-05-18T10:00:00.000Z',
         completedAt: '2026-05-18T10:00:10.000Z',
+        durationMs: 10_000,
       }),
     ]);
 

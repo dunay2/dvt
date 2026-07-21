@@ -49,7 +49,7 @@ function mapMockEventType(eventType: DbtRunEvent['type']): RunEvent['eventType']
 
 function mapDbtRunToSnapshot(run: Run): RunSnapshot {
   const materialization =
-    run.status === 'completed' && run.endTime
+    run.status === 'completed' && run.startTime && run.endTime && run.environment
       ? {
           executor: 'postgres' as const,
           environmentId: run.environment,
@@ -88,6 +88,7 @@ function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
     gitSha: snapshot.gitSha,
     startedAt: snapshot.startedAt,
     completedAt: snapshot.completedAt,
+    durationMs: snapshot.durationMs,
   };
 }
 

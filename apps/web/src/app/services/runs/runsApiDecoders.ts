@@ -30,7 +30,7 @@ export function asFiniteInteger(value: unknown): number | undefined {
   return value;
 }
 
-function asFiniteNumber(value: unknown): number | undefined {
+export function asFiniteNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
 }
 
@@ -79,7 +79,7 @@ export function mapContractStatusToUi(status: ContractRunStatus | undefined): Ui
     case 'CANCELLED':
       return 'cancelled';
     default:
-      return 'pending';
+      return 'unknown';
   }
 }
 
