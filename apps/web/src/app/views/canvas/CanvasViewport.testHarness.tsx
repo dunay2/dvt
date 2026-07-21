@@ -4,88 +4,23 @@ import { vi } from 'vitest';
 
 import CanvasViewport from './CanvasViewport';
 import { DEFAULT_CANVAS_PALETTE_ID, type CanvasPaletteId } from './canvasPalette';
-
-const mockResolveNodeKindRegistration = vi.hoisted(() => vi.fn());
-const xyflowState = vi.hoisted(() => ({
-  miniMapNodeColor: null as null | ((node: { data?: unknown }) => string),
-  miniMapMaskColor: null as null | string,
-  miniMapMaskStrokeColor: null as null | string,
-  miniMapClassName: null as null | string,
-  lastReactFlowProps: null as null | Record<string, unknown>,
-  setViewport: vi.fn(),
-  fitView: vi.fn(),
-  screenToFlowPosition: vi.fn(),
-}));
-
-type MockReactFlowProps = Readonly<{
-  children: React.ReactNode;
-}> &
-  Record<string, unknown>;
-
-type MockMiniMapProps = Readonly<{
-  nodeColor: (node: { data?: unknown }) => string;
-  pannable?: boolean;
-  zoomable?: boolean;
-  maskColor?: string;
-  maskStrokeColor?: string;
-  className?: string;
-}>;
-
-vi.mock('../../plugins/nodeTypeRegistry', () => ({
-  resolveNodeKindRegistration: mockResolveNodeKindRegistration,
-}));
-
-vi.mock('@xyflow/react', () => {
-  function MockReactFlow({ children, ...props }: MockReactFlowProps): JSX.Element {
-    xyflowState.lastReactFlowProps = props;
-    return <div data-testid="react-flow">{children}</div>;
-  }
-
-  function MockControls(): JSX.Element {
-    return <div data-testid="controls" />;
-  }
-
-  function MockMiniMap({
-    nodeColor,
-    pannable = false,
-    zoomable = false,
-    maskColor,
-    maskStrokeColor,
-    className,
-  }: MockMiniMapProps): JSX.Element {
-    xyflowState.miniMapNodeColor = nodeColor;
-    xyflowState.miniMapMaskColor = maskColor ?? null;
-    xyflowState.miniMapMaskStrokeColor = maskStrokeColor ?? null;
-    xyflowState.miniMapClassName = className ?? null;
-    return (
-      <div
-        data-testid="minimap"
-        data-pannable={String(pannable)}
-        data-zoomable={String(zoomable)}
-      />
-    );
-  }
-
-  return {
-    ReactFlow: MockReactFlow,
-    Controls: MockControls,
-    MiniMap: MockMiniMap,
-    useReactFlow: () => ({
-      setViewport: xyflowState.setViewport,
-      fitView: xyflowState.fitView,
-      screenToFlowPosition: xyflowState.screenToFlowPosition,
-    }),
-  };
-});
+import {
+  getCanvasViewportRegistryMock as getRegistryMock,
+  resetCanvasViewportNodeTypeRegistryTestAdapter,
+} from './canvasViewportNodeTypeRegistryTestAdapter';
+import {
+  getCanvasViewportXyflowState as getXyflowState,
+  resetCanvasViewportXyflowTestAdapter,
+} from './canvasViewportXyflowTestAdapter';
 
 export type CanvasViewportProps = React.ComponentProps<typeof CanvasViewport>;
 
-export function getCanvasViewportRegistryMock(): typeof mockResolveNodeKindRegistration {
-  return mockResolveNodeKindRegistration;
+export function getCanvasViewportRegistryMock(): ReturnType<typeof getRegistryMock> {
+  return getRegistryMock();
 }
 
-export function getCanvasViewportXyflowState(): typeof xyflowState {
-  return xyflowState;
+export function getCanvasViewportXyflowState(): ReturnType<typeof getXyflowState> {
+  return getXyflowState();
 }
 
 export function buildCanvasViewportProps(
@@ -124,23 +59,8 @@ export function buildCanvasViewportProps(
 }
 
 export function resetCanvasViewportHarnessState(): void {
-  xyflowState.miniMapNodeColor = null;
-  xyflowState.miniMapMaskColor = null;
-  xyflowState.miniMapMaskStrokeColor = null;
-  xyflowState.miniMapClassName = null;
-  xyflowState.lastReactFlowProps = null;
-  xyflowState.setViewport.mockReset();
-  xyflowState.fitView.mockReset();
-  xyflowState.screenToFlowPosition.mockReset();
-  xyflowState.setViewport.mockResolvedValue(undefined);
-  xyflowState.fitView.mockResolvedValue(undefined);
-  xyflowState.screenToFlowPosition.mockImplementation(({ x, y }: { x: number; y: number }) => ({
-    x: x + 100,
-    y: y - 40,
-  }));
-  mockResolveNodeKindRegistration.mockImplementation((kind: string) => ({
-    minimapColor: kind === 'dbt:model' ? '#22c55e' : '#6b7280',
-  }));
+  resetCanvasViewportXyflowTestAdapter();
+  resetCanvasViewportNodeTypeRegistryTestAdapter();
 }
 
 export function createCanvasViewportHarness(): {

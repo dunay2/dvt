@@ -3,6 +3,12 @@
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('@xyflow/react', () => import('./canvasViewportXyflowTestAdapter'));
+vi.mock(
+  '../../plugins/nodeTypeRegistry',
+  () => import('./canvasViewportNodeTypeRegistryTestAdapter')
+);
+
 import {
   createCanvasViewportHarness,
   getCanvasViewportXyflowState,
@@ -120,8 +126,7 @@ describe('CanvasViewport edge context menu', () => {
     expect(getMenuText()).toContain('Eliminar conexión');
 
     const paneClick = xyflowState.lastReactFlowProps?.onPaneClick as
-      | ((event: React.MouseEvent<Element>) => void)
-      | undefined;
+      ((event: React.MouseEvent<Element>) => void) | undefined;
 
     await act(async () => {
       paneClick?.({ button: 0 } as React.MouseEvent<Element>);

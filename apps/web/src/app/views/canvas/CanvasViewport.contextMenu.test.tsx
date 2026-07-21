@@ -3,6 +3,12 @@
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('@xyflow/react', () => import('./canvasViewportXyflowTestAdapter'));
+vi.mock(
+  '../../plugins/nodeTypeRegistry',
+  () => import('./canvasViewportNodeTypeRegistryTestAdapter')
+);
+
 import { buildTestNodeKind } from './canvasKindRegistration.testSupport';
 import {
   createCanvasViewportHarness,
@@ -31,8 +37,7 @@ describe('CanvasViewport context menus', () => {
 
   async function openPaneContextMenu(): Promise<void> {
     const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
-      | ((event: React.MouseEvent<Element>) => void)
-      | undefined;
+      ((event: React.MouseEvent<Element>) => void) | undefined;
 
     await act(async () => {
       paneContextMenu?.({
@@ -55,8 +60,7 @@ describe('CanvasViewport context menus', () => {
     });
 
     const paneContextMenu = xyflowState.lastReactFlowProps?.onPaneContextMenu as
-      | ((event: React.MouseEvent<Element>) => void)
-      | undefined;
+      ((event: React.MouseEvent<Element>) => void) | undefined;
     const preventDefault = vi.fn();
 
     await act(async () => {
@@ -193,8 +197,7 @@ describe('CanvasViewport context menus', () => {
     });
 
     const paneClick = xyflowState.lastReactFlowProps?.onPaneClick as
-      | ((event: React.MouseEvent<Element>) => void)
-      | undefined;
+      ((event: React.MouseEvent<Element>) => void) | undefined;
     await act(async () => {
       paneClick?.({
         button: 0,
