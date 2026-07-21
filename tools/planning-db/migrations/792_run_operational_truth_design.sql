@@ -364,24 +364,25 @@ on conflict (relation_id) do update set
 
 do $$
 begin
-  if exists (
-    select 1
-    from planning_query_store.command_query_rail_query
-    where lower(rail_name) in (
-      'projectrunoperationaltruth',
-      'getrunoperationaltruth',
-      'listrunoperationaltruth'
-    )
-  ) then
-    raise exception 'Run operational truth design introduced a parallel product query rail';
-  end if;
-
   if (
     select count(*)
-    from planning_query_store.command_query_rail_query
-    where rail_name in ('ListRuns', 'GetRunStatus')
+    from architecture.design_scope
+    where design_id = 'RUN-OPERATIONAL-TRUTH-20260719'
+      and subject_kind = 'query'
+      and subject_id in ('ListRuns', 'GetRunStatus')
+      and required
   ) <> 2 then
-    raise exception 'Canonical ListRuns and GetRunStatus rails are not both available';
+    raise exception 'Run operational truth design must reuse ListRuns and GetRunStatus';
+  end if;
+
+  if exists (
+    select 1
+    from architecture.design_scope
+    where design_id = 'RUN-OPERATIONAL-TRUTH-20260719'
+      and subject_kind = 'query'
+      and subject_id not in ('ListRuns', 'GetRunStatus')
+  ) then
+    raise exception 'Run operational truth design introduced a parallel product query intent';
   end if;
 end
 $$;

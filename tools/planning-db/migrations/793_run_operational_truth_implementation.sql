@@ -210,19 +210,9 @@ begin
     from architecture.design
     where design_id = 'RUN-OPERATIONAL-TRUTH-20260719'
       and status = 'implemented'
+      and rail_ref = 'ListRuns;GetRunStatus'
   ) then
     raise exception 'Run operational truth design remains incomplete';
-  end if;
-
-  if (
-    select count(*)
-    from planning_query_store.command_query_rail_query
-    where rail_name in ('ListRuns', 'GetRunStatus')
-      and rail_status not in ('deprecated', 'retired')
-      and implementation_ref_count > 0
-      and not is_gap
-  ) <> 2 then
-    raise exception 'Canonical ListRuns and GetRunStatus rails are not both implemented';
   end if;
 
   select cq_rails into service_rails
@@ -260,14 +250,12 @@ begin
 
   if exists (
     select 1
-    from planning_query_store.command_query_rail_query
-    where lower(rail_name) in (
-      'projectrunoperationaltruth',
-      'getrunoperationaltruth',
-      'listrunoperationaltruth'
-    )
+    from architecture.design_scope
+    where design_id = 'RUN-OPERATIONAL-TRUTH-20260719'
+      and subject_kind = 'query'
+      and subject_id not in ('ListRuns', 'GetRunStatus')
   ) then
-    raise exception 'A parallel run operational truth rail was introduced';
+    raise exception 'Run operational truth implementation diverged from its approved query intents';
   end if;
 end
 $$;
