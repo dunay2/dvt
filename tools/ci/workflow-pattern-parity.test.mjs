@@ -649,14 +649,14 @@ test('security and nightly workflows stay wired to pinned actions and failure no
   assertWorkflowContains(dependencyReview, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");
   assertWorkflowContains(dependencyReview, "github.event.repository.visibility == 'public'");
 
-  assertWorkflowContains(
-    codeql,
-    'github/codeql-action/init@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0'
-  );
-  assertWorkflowContains(
-    codeql,
-    'github/codeql-action/analyze@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4.37.0'
-  );
+  const codeqlActionPins = [
+    ...codeql.matchAll(/github\/codeql-action\/(init|analyze)@([0-9a-f]{40}) # (v\d+\.\d+\.\d+)/gu),
+  ].map((match) => ({ action: match[1], sha: match[2], version: match[3] }));
+  assert.deepEqual(codeqlActionPins.map(({ action }) => action).sort(), ['analyze', 'init']);
+  assert.equal(new Set(codeqlActionPins.map(({ sha }) => sha)).size, 1);
+  assert.equal(new Set(codeqlActionPins.map(({ version }) => version)).size, 1);
+  assert.equal(codeqlActionPins[0].sha, '7188fc363630916deb702c7fdcf4e481b751f97a');
+  assert.equal(codeqlActionPins[0].version, 'v4.37.1');
   assertWorkflowContains(codeql, 'security-events: write');
   assertWorkflowContains(codeql, 'javascript-typescript');
   assertWorkflowContains(codeql, "vars.GH_ADVANCED_SECURITY_ENABLED == 'true'");

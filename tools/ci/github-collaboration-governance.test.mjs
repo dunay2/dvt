@@ -42,6 +42,7 @@ test('GitHub collaboration governance keeps ownership, dependency, and PR policy
   assert.deepEqual(actionUpdates['commit-message'], {
     prefix: 'chore(ci)',
   });
+  assert.deepEqual(actionUpdates.groups.codeql.patterns, ['github/codeql-action/*']);
 
   assert.match(pullRequestTemplate, /Declared ARC Level/u);
   assert.match(pullRequestTemplate, /docs\/evidence\/ED-YYYYMMDD-<slug>\.md/u);
