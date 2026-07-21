@@ -3,6 +3,12 @@
 import React, { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('@xyflow/react', () => import('./canvasViewportXyflowTestAdapter'));
+vi.mock(
+  '../../plugins/nodeTypeRegistry',
+  () => import('./canvasViewportNodeTypeRegistryTestAdapter')
+);
+
 import {
   createCanvasViewportHarness,
   getCanvasViewportXyflowState,
