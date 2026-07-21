@@ -18,6 +18,25 @@ const CANVAS_VIEWPORT_LIFECYCLE_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasViewportLifecycle.ts'
 );
+const CANVAS_VIEWPORT_TEST_HARNESS_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'CanvasViewport.testHarness.tsx'
+);
+const CANVAS_VIEWPORT_XYFLOW_TEST_ADAPTER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasViewportXyflowTestAdapter.tsx'
+);
+const CANVAS_VIEWPORT_NODE_REGISTRY_TEST_ADAPTER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'canvasViewportNodeTypeRegistryTestAdapter.ts'
+);
+const CANVAS_VIEWPORT_BEHAVIOR_SPECS = [
+  'CanvasViewport.test.tsx',
+  'CanvasViewport.contextMenu.test.tsx',
+  'CanvasViewport.edgeContextMenu.test.tsx',
+  'CanvasViewport.nodeFloatingToolbar.test.tsx',
+  'CanvasViewport.nodeOperationalRail.test.tsx',
+] as const;
 
 describe('CanvasViewport architecture', () => {
   it('keeps the route-facing viewport as an orchestrator, not the React Flow template', () => {
@@ -50,5 +69,50 @@ describe('CanvasViewport architecture', () => {
     );
     expect(CANVAS_VIEWPORT_LIFECYCLE_SOURCE).toContain('reactFlow.setViewport');
     expect(CANVAS_VIEWPORT_LIFECYCLE_SOURCE).toContain('.fitView({');
+  });
+
+  it('keeps test doubles in explicit adapters registered before the subject harness', () => {
+    expect(CANVAS_VIEWPORT_TEST_HARNESS_SOURCE).toContain(
+      "from './canvasViewportXyflowTestAdapter'"
+    );
+    expect(CANVAS_VIEWPORT_TEST_HARNESS_SOURCE).toContain(
+      "from './canvasViewportNodeTypeRegistryTestAdapter'"
+    );
+    expect(CANVAS_VIEWPORT_TEST_HARNESS_SOURCE).not.toContain('vi.mock(');
+
+    for (const exportedBoundary of [
+      'export function ReactFlow',
+      'export function Controls',
+      'export function MiniMap',
+      'export function useReactFlow',
+      'export function resetCanvasViewportXyflowTestAdapter',
+    ]) {
+      expect(CANVAS_VIEWPORT_XYFLOW_TEST_ADAPTER_SOURCE).toContain(exportedBoundary);
+    }
+    expect(CANVAS_VIEWPORT_NODE_REGISTRY_TEST_ADAPTER_SOURCE).toContain(
+      'export const resolveNodeKindRegistration'
+    );
+    expect(CANVAS_VIEWPORT_NODE_REGISTRY_TEST_ADAPTER_SOURCE).toContain(
+      'export function resetCanvasViewportNodeTypeRegistryTestAdapter'
+    );
+
+    for (const specPath of CANVAS_VIEWPORT_BEHAVIOR_SPECS) {
+      const specSource = readArchitectureSiblingSource(import.meta.dirname, specPath);
+      const xyflowRegistration = specSource.search(/vi\.mock\(\s*'@xyflow\/react'/u);
+      const registryRegistration = specSource.search(
+        /vi\.mock\(\s*'\.\.\/\.\.\/plugins\/nodeTypeRegistry'/u
+      );
+      const harnessImport = specSource.indexOf("from './CanvasViewport.testHarness'");
+
+      expect(xyflowRegistration, `${specPath} xyflow registration`).toBeGreaterThan(-1);
+      expect(registryRegistration, `${specPath} registry registration`).toBeGreaterThan(-1);
+      expect(harnessImport, `${specPath} harness import`).toBeGreaterThan(-1);
+      expect(xyflowRegistration, `${specPath} xyflow registration order`).toBeLessThan(
+        harnessImport
+      );
+      expect(registryRegistration, `${specPath} registry registration order`).toBeLessThan(
+        harnessImport
+      );
+    }
   });
 });

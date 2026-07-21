@@ -168,14 +168,6 @@ describe('canvas route posture priority architecture', () => {
     expect(implementationPlan).toContain('## Self-Review Iterations');
   });
 
-  it('keeps Canvas viewport mocks in named test-local components for static analysis', () => {
-    const viewportTestHarnessSource = readAppSource('CanvasViewport.testHarness.tsx');
-
-    expect(viewportTestHarnessSource).toContain('type MockMiniMapProps = Readonly<{');
-    expect(viewportTestHarnessSource).toContain('function MockMiniMap(');
-    expect(viewportTestHarnessSource).not.toContain('MiniMap: ({');
-  });
-
   it('keeps the active web graph slice free of retired-route shims', () => {
     const activeSources = [
       readRepoFile('apps/web/src/app/services/plans/plansService.ts'),
