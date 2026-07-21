@@ -28,6 +28,7 @@ values (
     'apps/api/src/application/services/runOperationalTruth.ts#RunOperationalTruthEvidence',
     'apps/api/src/application/services/runOperationalTruth.ts#deriveDurationMs',
     'apps/api/src/application/services/runOperationalTruth.ts#projectRunOperationalTruth',
+    'apps/api/src/application/services/runOperationalTruth.ts#sanitizeCanonicalRunStatus',
     'apps/web/src/app/ports/runs.ts#UiRunStatus',
     'apps/web/src/app/queries/runsQueries.ts#RUNS_LIST_STATUS_REFRESH_INTERVAL_MS',
     'apps/web/src/app/queries/runsQueries.ts#RUN_DETAIL_STATUS_REFRESH_INTERVAL_MS',
@@ -264,6 +265,16 @@ values (
         'dddOwner', 'SYS-API-APPLICATION-RUN-OPERATIONAL-READ-MODEL',
         'cqRails', jsonb_build_array('ListRuns', 'GetRunStatus'),
         'fowlerSignals', jsonb_build_array('mapper', 'pure_function', 'single_source_of_truth'),
+        'architectureGuard', 'apps/api/test/application/services/runOperationalTruth.test.ts',
+        'cypressCoverage', 'apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts',
+        'unitTests', jsonb_build_array('apps/api/test/application/services/runOperationalTruth.test.ts')
+      ),
+      jsonb_build_object(
+        'name', 'sanitizeCanonicalRunStatus',
+        'path', 'apps/api/src/application/services/runOperationalTruth.ts',
+        'dddOwner', 'SYS-API-APPLICATION-RUN-OPERATIONAL-READ-MODEL',
+        'cqRails', jsonb_build_array('ListRuns', 'GetRunStatus'),
+        'fowlerSignals', jsonb_build_array('specification', 'pure_function', 'invariant'),
         'architectureGuard', 'apps/api/test/application/services/runOperationalTruth.test.ts',
         'cypressCoverage', 'apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts',
         'unitTests', jsonb_build_array('apps/api/test/application/services/runOperationalTruth.test.ts')
@@ -508,6 +519,7 @@ declare
     'RunOperationalTruthEvidence',
     'deriveDurationMs',
     'projectRunOperationalTruth',
+    'sanitizeCanonicalRunStatus',
     'UiRunStatus',
     'RUNS_LIST_STATUS_REFRESH_INTERVAL_MS',
     'RUN_DETAIL_STATUS_REFRESH_INTERVAL_MS',
