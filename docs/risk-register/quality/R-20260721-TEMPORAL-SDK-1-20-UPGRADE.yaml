@@ -1,0 +1,25 @@
+---
+id: R-20260721-TEMPORAL-SDK-1-20-UPGRADE
+title: Temporal SDK minor upgrade could change worker or replay behavior
+status: Open
+date: 2026-07-21
+owners:
+  - packages/@dvt/adapter-temporal
+  - apps/temporal-worker
+severity: High
+probability: Low
+context: >
+  PR #2008 upgrades the aligned Temporal TypeScript SDK packages from 1.18.1 to 1.20.3 across the
+  adapter and worker while preserving the existing DVT workflow and activity contracts.
+risk: >
+  An upstream worker, bundler, protocol, or replay change could compile successfully yet alter
+  workflow execution, time-skipping tests, transformation dispatch, or Postgres-backed integration
+  behavior.
+mitigations:
+  - Keep all Temporal packages on one exact SDK version across adapter and worker manifests.
+  - Run adapter and worker type, build, and unit suites against the resolved dependency graph.
+  - Run time-skipping, transformation-runtime, and Postgres-capability integration suites before
+    merge.
+  - Keep dependency review and deterministic workflow checks as required merge gates.
+review_after: 2026-08-21
+---
