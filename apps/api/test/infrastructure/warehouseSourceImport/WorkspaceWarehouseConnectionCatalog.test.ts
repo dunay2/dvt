@@ -226,6 +226,14 @@ describe('WorkspaceWarehouseConnectionCatalog', () => {
       repository.readSavedFile(SCOPE_A, WORKSPACE_WAREHOUSE_CONNECTION_CATALOG_PATH) ?? '';
     expect(persisted).toContain('"credentialRef": "env:DVT_FINANCE_WAREHOUSE_URL"');
     expect(persisted).not.toContain('password');
+    await expect(catalog.listConnections(SCOPE_A)).resolves.toEqual([
+      {
+        id: 'finance-warehouse',
+        name: 'Finance warehouse',
+        type: 'postgres',
+        database: 'finance',
+      },
+    ]);
     await expect(catalog.listSourceObjects(SCOPE_A, 'finance-warehouse')).resolves.toEqual([
       sourceObject,
     ]);
