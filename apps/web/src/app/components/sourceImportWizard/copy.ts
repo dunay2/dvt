@@ -156,6 +156,8 @@ export const sourceImportWizardCopy = {
     title: 'Sources imported',
     description:
       'The selected source objects were written through the active Canvas authoring authority.',
+    groupsCreatedLabel: 'Groups created:',
+    objectsRegisteredLabel: 'Objects registered:',
     filesTitle: 'Source files updated',
     graphDraftWarning:
       'Canvas queued the imported source ids and will focus them when the governed draft authority refreshes.',

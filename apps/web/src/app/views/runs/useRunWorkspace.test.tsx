@@ -10,7 +10,9 @@ import type { IRunsPort, RunSummaryItem, RunSnapshot } from '../../ports/runs';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import {
   getRunStatusRefreshInterval,
-  RUNS_STATUS_REFRESH_INTERVAL_MS,
+  isActiveRunStatus,
+  RUN_DETAIL_STATUS_REFRESH_INTERVAL_MS,
+  RUNS_LIST_STATUS_REFRESH_INTERVAL_MS,
 } from '../../queries/runsQueries';
 import { AppServicesProvider } from '../../services/AppServicesContext';
 import { makeRunContext } from '../../testing/contractTestUtils';
@@ -208,9 +210,14 @@ describe('useRunWorkspace', () => {
   });
 
   it('refreshes active run status and stops refreshing terminal status', () => {
-    expect(getRunStatusRefreshInterval('pending')).toBe(RUNS_STATUS_REFRESH_INTERVAL_MS);
-    expect(getRunStatusRefreshInterval('running')).toBe(RUNS_STATUS_REFRESH_INTERVAL_MS);
+    expect(RUN_DETAIL_STATUS_REFRESH_INTERVAL_MS).toBeLessThan(
+      RUNS_LIST_STATUS_REFRESH_INTERVAL_MS
+    );
+    expect(getRunStatusRefreshInterval('pending')).toBe(RUN_DETAIL_STATUS_REFRESH_INTERVAL_MS);
+    expect(getRunStatusRefreshInterval('running')).toBe(RUN_DETAIL_STATUS_REFRESH_INTERVAL_MS);
+    expect(isActiveRunStatus('running')).toBe(true);
     expect(getRunStatusRefreshInterval('completed')).toBe(false);
+    expect(isActiveRunStatus('completed')).toBe(false);
     expect(getRunStatusRefreshInterval('failed')).toBe(false);
     expect(getRunStatusRefreshInterval('cancelled')).toBe(false);
   });

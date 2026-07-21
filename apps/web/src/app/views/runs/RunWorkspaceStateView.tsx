@@ -394,7 +394,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           ) : null}
         </Card>
 
-        <Card className="border-slate-700 bg-slate-900 p-5">
+        <Card data-slot="run-snapshot-fields-card" className="border-slate-700 bg-slate-900 p-5">
           <h3 className="mb-3 text-sm font-semibold">{copy.snapshotFieldsTitle}</h3>
           <div className="grid gap-3 text-sm text-slate-300 md:grid-cols-2">
             <div>

@@ -7,7 +7,8 @@ import type {
 } from '../services/runs/runWorkspaceFacade';
 import { queryKeys } from './queryKeys';
 
-export const RUNS_STATUS_REFRESH_INTERVAL_MS = 5_000;
+export const RUN_DETAIL_STATUS_REFRESH_INTERVAL_MS = 1_000;
+export const RUNS_LIST_STATUS_REFRESH_INTERVAL_MS = 5_000;
 
 type QueryStateReader<TData> = {
   state: {
@@ -15,13 +16,17 @@ type QueryStateReader<TData> = {
   };
 };
 
+export function isActiveRunStatus(status: UiRunStatus | undefined): boolean {
+  return status === 'pending' || status === 'running';
+}
+
 export function getRunStatusRefreshInterval(status: UiRunStatus | undefined): number | false {
-  return status === 'pending' || status === 'running' ? RUNS_STATUS_REFRESH_INTERVAL_MS : false;
+  return isActiveRunStatus(status) ? RUN_DETAIL_STATUS_REFRESH_INTERVAL_MS : false;
 }
 
 function getRunSummariesRefreshInterval(query: QueryStateReader<RunSummaryItem[]>): number | false {
-  return query.state.data?.some((run) => getRunStatusRefreshInterval(run.status) !== false)
-    ? RUNS_STATUS_REFRESH_INTERVAL_MS
+  return query.state.data?.some((run) => isActiveRunStatus(run.status))
+    ? RUNS_LIST_STATUS_REFRESH_INTERVAL_MS
     : false;
 }
 

@@ -213,6 +213,10 @@ describe('SourceImportWizard', () => {
       })
     );
     expect(document.body.textContent).toContain('Sources imported');
+    expect(document.querySelector('[data-slot="source-import-result"]')).not.toBeNull();
+    expect(
+      document.querySelector('[data-slot="source-import-objects-registered"]')?.textContent
+    ).toBe('1');
     expect(document.body.textContent).toContain('Groups created:');
     expect(document.body.textContent).toContain('models/sources/erp.yml');
     expect(document.body.textContent).toContain(

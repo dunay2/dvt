@@ -22,20 +22,22 @@ flowchart LR
   Api --> ListRuns["ListRunsUseCase"]
   Api --> GetRun["GetRunStatusUseCase"]
   Api --> GetEvents["GetRunEventsUseCase"]
-  ListRuns --> StateRead["IRunStateStoreRead.listRuns + getSnapshot"]
+  ListRuns --> MetadataList["IRunStateStoreRead.listRuns"]
+  ListRuns --> Engine
   GetRun --> Engine["IWorkflowEngine.getRunStatus"]
   GetRun --> Enrich["IRunEnrichmentService.getRunEnrichment when query.enriched = true"]
   GetRun --> Metadata["IRunStateStoreRead.getRunMetadataByRunId"]
   GetEvents --> EventStore["IRunStateStoreRead.listEvents"]
-  Engine --> StateRead
+  Engine --> StateRead["Canonical event-log status projection"]
   Enrich --> Provider["IProviderAdapter.getProviderStatusView (live provider view)"]
   Api --> Web
 ```
 
 ## Source Of Truth Rules
 
-- run-list summaries are read from state-store metadata plus snapshot status;
-- run detail starts from run metadata and engine-backed snapshot status;
+- run-list summaries combine state-store metadata with engine-backed canonical
+  event-log status through one shared operational projection;
+- run detail starts from the same run metadata and canonical status projection;
 - provider live status can enrich operator detail, but it must not override the
   canonical event-log-backed status returned by `getRunStatus`;
 - timeline events come from event-store reads, not from the summary list path;
@@ -62,18 +64,31 @@ flowchart LR
   [getRunEventsRoute.ts](../../../../../apps/api/src/entrypoints/http/getRunEventsRoute.ts)
 - API read services:
   [listRunsUseCase.ts](../../../../../apps/api/src/application/services/listRunsUseCase.ts),
-  [getRunStatusUseCase.ts](../../../../../apps/api/src/application/services/getRunStatusUseCase.ts)
+  [getRunStatusUseCase.ts](../../../../../apps/api/src/application/services/getRunStatusUseCase.ts),
+  [runOperationalTruth.ts](../../../../../apps/api/src/application/services/runOperationalTruth.ts)
 - engine read surface:
   [WorkflowEngine.ts](../../../../../packages/@dvt/engine/src/core/WorkflowEngine.ts),
   [RunEnrichmentService.ts](../../../../../packages/@dvt/engine/src/services/RunEnrichmentService.ts)
 
 ## Current Posture
 
-The read subsystem is real and production-shaped, but it still mixes two read
-patterns:
+The read subsystem is real and production-shaped. It exposes two complementary
+read patterns without allowing them to disagree on shared operational fields:
 
-- snapshot-backed summary and detail reads;
+- metadata plus canonical event-log-backed summary and detail reads;
 - event-timeline reads for operator diagnostics.
+
+`RunOperationalTruthDto` is the shared list/detail projection. Persisted
+metadata owns platform identity and creation time. Canonical status owns
+lifecycle status, start/completion times, execution evidence, and duration.
+Missing lifecycle evidence stays absent through the HTTP and browser adapters;
+neither `createdAt` nor a local clock is substituted for `startedAt`.
+
+Active run detail and run-list queries use separate refresh budgets. Detail is
+the operator's focused surface and refreshes quickly enough to converge after a
+terminal event; the list retains a lower-frequency budget so one active run
+does not turn a broad status projection into a high-rate fan-out query. Both
+budgets stop once their observed runs are terminal.
 
 The current API shape keeps canonical status and optional enrichment inside one
 use case:

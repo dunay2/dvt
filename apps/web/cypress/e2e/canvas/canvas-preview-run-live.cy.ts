@@ -185,6 +185,13 @@ describe('Canvas preview-run live protected runtime', () => {
 
     cy.contains(/^Run /, { timeout: 20_000 }).should('exist');
     cy.contains('Runtime snapshot', { timeout: 30_000 }).should('be.visible');
+    cy.get('[data-slot="run-snapshot-fields-card"]', { timeout: 30_000 })
+      .scrollIntoView()
+      .should('be.visible')
+      .and('contain.text', 'Started')
+      .and('contain.text', 'Completed')
+      .and('contain.text', 'Duration')
+      .and('not.contain.text', 'Not available in this run snapshot');
     closeRunOperationsIfOpen();
     cy.get('[data-slot="run-materialization-card"]', { timeout: 30_000 })
       .scrollIntoView()
@@ -257,10 +264,8 @@ describe('Canvas preview-run live protected runtime', () => {
     clickButtonNatively('Attach sources to canvas');
 
     getOpenSourceImportDialog().within(() => {
-      cy.contains('Your selected tables have been attached to the workspace graph.', {
-        timeout: 30_000,
-      }).should('be.visible');
-      cy.contains('Tables registered:').parent().should('contain.text', '1');
+      cy.get('[data-slot="source-import-result"]', { timeout: 30_000 }).should('be.visible');
+      cy.get('[data-slot="source-import-objects-registered"]').should('have.text', '1');
     });
     cy.contains('Stale version').should('not.exist');
 
