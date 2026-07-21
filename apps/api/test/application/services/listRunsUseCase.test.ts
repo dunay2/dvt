@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedExecutionContext } from '../../../src/application/ports/auth.js';
 import { ListRunsUseCase } from '../../../src/application/services/listRunsUseCase.js';
@@ -28,7 +28,7 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:list'
 };
 
 describe('ListRunsUseCase', () => {
-  it('filters metadata by authorized scope and attaches snapshot status', async () => {
+  it('filters by authorized scope and projects the same canonical operational truth as detail', async () => {
     const stateStore = {
       async listRuns() {
         return [
@@ -67,12 +67,24 @@ describe('ListRunsUseCase', () => {
           },
         ];
       },
-      async getSnapshot(_tenantId: string, runId: string) {
-        return runId === 'run-1' ? { status: 'FAILED' as const } : null;
-      },
+    };
+    const engine = {
+      getRunStatus: vi.fn(async () => ({
+        runId: 'provider-run-1',
+        status: 'FAILED' as const,
+        startedAt: '2026-03-19T00:00:05Z',
+        completedAt: '2026-03-19T00:00:20Z',
+        execution: {
+          failure: {
+            stepId: 'step-load',
+            reason: 'SINK_WRITE_FAILED',
+            failedAt: '2026-03-19T00:00:19Z',
+          },
+        },
+      })),
     };
 
-    const useCase = new ListRunsUseCase(stateStore as never);
+    const useCase = new ListRunsUseCase(stateStore as never, engine as never);
 
     await expect(useCase.execute({ limit: 25 }, queryContext as never)).resolves.toEqual({
       items: [
@@ -87,9 +99,61 @@ describe('ListRunsUseCase', () => {
           provider: 'temporal',
           createdAt: '2026-03-19T00:00:00Z',
           status: 'FAILED',
+          startedAt: '2026-03-19T00:00:05Z',
+          completedAt: '2026-03-19T00:00:20Z',
+          durationMs: 15000,
+          execution: {
+            failure: {
+              stepId: 'step-load',
+              reason: 'SINK_WRITE_FAILED',
+              failedAt: '2026-03-19T00:00:19Z',
+            },
+          },
+          failedStepId: 'step-load',
+          errorReason: 'SINK_WRITE_FAILED',
         },
       ],
       nextCursor: null,
     });
+    expect(engine.getRunStatus).toHaveBeenCalledOnce();
+  });
+
+  it('bounds canonical status reads while preserving list order', async () => {
+    const metadata = Array.from({ length: 18 }, (_, index) => ({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: `run-${index}`,
+      planId: `plan-${index}`,
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: `wf-${index}`,
+        runId: `provider-run-${index}`,
+      },
+    }));
+    let activeReads = 0;
+    let maximumActiveReads = 0;
+    const engine = {
+      async getRunStatus(runRef: { runId: string }) {
+        activeReads += 1;
+        maximumActiveReads = Math.max(maximumActiveReads, activeReads);
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        activeReads -= 1;
+        return { runId: runRef.runId, status: 'PENDING' as const };
+      },
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue(metadata) } as never,
+      engine as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(maximumActiveReads).toBeLessThanOrEqual(8);
+    expect(result.items.map((item) => item.runId)).toEqual(metadata.map((item) => item.runId));
   });
 });

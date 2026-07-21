@@ -90,18 +90,33 @@ export interface RunDiagnostics {
   readonly pointers: ReadonlyArray<RunDiagnosticPointer>;
 }
 
-export type GetRunStatusResult = Pick<
-  CanonicalRunStatus,
-  'runId' | 'status' | 'substatus' | 'message' | 'startedAt' | 'completedAt' | 'execution'
-> & {
+export interface RunOperationalTruthDto {
   readonly tenantId: string;
+  readonly projectId: string;
+  readonly environmentId: string;
+  readonly runId: string;
+  readonly planId: string;
+  readonly planVersion: string;
+  readonly logicalAttemptId: number;
+  readonly provider: Provider;
+  readonly createdAt?: string;
+  readonly status: CanonicalRunStatus['status'];
+  readonly substatus?: CanonicalRunStatus['substatus'];
+  readonly message?: string;
+  readonly startedAt?: CanonicalRunStatus['startedAt'];
+  readonly completedAt?: CanonicalRunStatus['completedAt'];
+  readonly durationMs?: number;
+  readonly execution?: CanonicalRunStatus['execution'];
+  readonly currentStepId?: string;
+  readonly failedStepId?: string;
+  readonly errorReason?: string;
+}
+
+export type GetRunStatusResult = RunOperationalTruthDto & {
   readonly enriched: boolean;
   readonly providerView?: ProviderRunStatusView;
   readonly snapshotStaleness: RunSnapshotStaleness;
   readonly executor?: TransformationExecutor;
-  readonly currentStepId?: string;
-  readonly failedStepId?: string;
-  readonly errorReason?: string;
   readonly materialization?: MaterializationEvidence;
   readonly provenance?: RunProvenanceChain;
   readonly planSummary?: TransformationSqlFirstPlanSummary;
@@ -119,18 +134,7 @@ export interface ListRunsQuery {
   readonly limit: number;
 }
 
-export interface RunListItemDto {
-  readonly tenantId: string;
-  readonly projectId: string;
-  readonly environmentId: string;
-  readonly runId: string;
-  readonly planId: string;
-  readonly planVersion: string;
-  readonly logicalAttemptId: number;
-  readonly provider: Provider;
-  readonly createdAt?: string;
-  readonly status?: CanonicalRunStatus['status'];
-}
+export type RunListItemDto = RunOperationalTruthDto;
 
 export interface ListRunsResult {
   readonly items: ReadonlyArray<RunListItemDto>;

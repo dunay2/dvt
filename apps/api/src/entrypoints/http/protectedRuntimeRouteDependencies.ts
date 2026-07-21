@@ -83,7 +83,7 @@ export function buildProtectedRuntimeRouteDependencies(
     importPlanUseCase: new ImportPlanUseCase({
       planResolver: protectedModule.executablePlanResolver,
     }),
-    listRunsUseCase: new ListRunsUseCase(protectedModule.stateStore.read),
+    listRunsUseCase: new ListRunsUseCase(protectedModule.stateStore.read, protectedModule.engine),
     previewPlanUseCase,
     recoverRunUseCase: new RecoverRunUseCase(
       protectedModule.engine,
