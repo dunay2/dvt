@@ -2,7 +2,8 @@
  * @ownedConcern Guard GitHub workflow wiring against drift from shared CI scope policies.
  */
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import test from 'node:test';
 
 import yaml from 'js-yaml';
@@ -44,6 +45,16 @@ function assertWorkflowContains(workflow, snippet) {
 
 function countWorkflowCommand(workflow, command) {
   return workflow.split(command).length - 1;
+}
+
+function listYamlFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = join(directory, entry.name);
+    if (entry.isDirectory()) {
+      return listYamlFiles(entryPath);
+    }
+    return /\.ya?ml$/u.test(entry.name) ? [entryPath] : [];
+  });
 }
 
 function namedWorkflowStep(workflow, name) {
@@ -596,10 +607,7 @@ test('release generation and candidate admission have one trusted owner each', (
   assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.merge_commit_sha');
   assertWorkflowContains(integrityWorkflow, 'github.event.pull_request.head.repo.full_name');
   assertWorkflowContains(integrityWorkflow, 'persist-credentials: false');
-  assertWorkflowContains(
-    integrityWorkflow,
-    'actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6'
-  );
+  assertWorkflowContains(integrityWorkflow, 'actions/setup-node@');
   assertWorkflowContains(integrityWorkflow, 'releaseCandidateIntegrityCli.mjs');
   assertWorkflowContains(integrityWorkflow, 'releaseCandidateAuthorityCli.mjs');
   assertWorkflowContains(integrityWorkflow, 'releaseMergePolicyCli.mjs inspect');
@@ -627,6 +635,28 @@ test('release generation and candidate admission have one trusted owner each', (
       }
     }
   }
+});
+
+test('setup-node consumers stay on one pinned action version', () => {
+  const githubYamlSources = listYamlFiles('.github').map((filePath) =>
+    readFileSync(filePath, 'utf8')
+  );
+  const setupNodeReferenceCount = githubYamlSources.reduce(
+    (count, source) => count + [...source.matchAll(/actions\/setup-node@/gu)].length,
+    0
+  );
+  const setupNodePins = githubYamlSources
+    .flatMap((source) => [
+      ...source.matchAll(/actions\/setup-node@([0-9a-f]{40}) # (v\d+(?:\.\d+\.\d+)?)/gu),
+    ])
+    .map((match) => ({ sha: match[1], version: match[2] }));
+
+  assert.ok(setupNodeReferenceCount > 0);
+  assert.equal(setupNodePins.length, setupNodeReferenceCount);
+  assert.equal(new Set(setupNodePins.map(({ sha }) => sha)).size, 1);
+  assert.equal(new Set(setupNodePins.map(({ version }) => version)).size, 1);
+  assert.equal(setupNodePins[0].sha, '820762786026740c76f36085b0efc47a31fe5020');
+  assert.equal(setupNodePins[0].version, 'v7.0.0');
 });
 
 test('security and nightly workflows stay wired to pinned actions and failure notification', () => {
