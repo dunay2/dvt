@@ -111,4 +111,30 @@ describe('projectRunOperationalTruth', () => {
       errorReason: 'Warehouse connection closed',
     });
   });
+
+  it('removes materialization evidence unless the canonical run is completed', () => {
+    const truth = projectRunOperationalTruth({
+      metadata,
+      status: {
+        runId: 'run-provider',
+        status: 'FAILED',
+        execution: {
+          activeStepId: asStepId('step-load'),
+          materialization: {
+            executor: 'postgres',
+            environmentId: asNonBlankString('environment-a'),
+            sinkTable: asNonBlankString('analytics.orders'),
+            rowsWritten: 42,
+            startedAt: asIsoUtcString('2026-07-19T10:00:29.000Z'),
+            completedAt: asIsoUtcString('2026-07-19T10:00:34.000Z'),
+            durationMs: 5_000,
+          },
+        },
+      },
+    });
+
+    expect(truth.execution).toEqual({
+      activeStepId: 'step-load',
+    });
+  });
 });

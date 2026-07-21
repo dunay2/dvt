@@ -23,7 +23,7 @@ import type {
 } from '../ports/runtime.js';
 
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
-import { projectRunOperationalTruth } from './runOperationalTruth.js';
+import { projectRunOperationalTruth, sanitizeCanonicalRunStatus } from './runOperationalTruth.js';
 import { deriveRunReadEvidenceModel } from './runReadEvidenceModel.js';
 
 type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
@@ -82,7 +82,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       ]);
       return this.buildStatusResponse({
         metadata,
-        snapshot: this.sanitizeCanonicalStatus(enrichment.canonical),
+        snapshot: sanitizeCanonicalRunStatus(enrichment.canonical),
         snapshotStaleness,
         enriched: true,
         providerView: enrichment.providerView,
@@ -96,7 +96,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
 
     return this.buildStatusResponse({
       metadata,
-      snapshot: this.sanitizeCanonicalStatus(statusResult),
+      snapshot: sanitizeCanonicalRunStatus(statusResult),
       snapshotStaleness,
       enriched: query.enriched,
     });
@@ -200,21 +200,6 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     }
 
     return false;
-  }
-
-  private sanitizeCanonicalStatus(
-    snapshot: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
-  ): Awaited<ReturnType<IWorkflowEngine['getRunStatus']>> {
-    if (snapshot.status === 'COMPLETED' || snapshot.execution?.materialization === undefined) {
-      return snapshot;
-    }
-
-    const { execution: _previousExecution, ...rest } = snapshot;
-    const { materialization: _materialization, ...execution } = snapshot.execution;
-    return {
-      ...rest,
-      ...(Object.keys(execution).length === 0 ? {} : { execution }),
-    };
   }
 
   private async resolveSnapshotStaleness(runRef: RunReadRef): Promise<SnapshotStalenessResolution> {

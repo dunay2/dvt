@@ -17,7 +17,8 @@ export interface ProjectRunOperationalTruthInput {
 export function projectRunOperationalTruth(
   input: ProjectRunOperationalTruthInput
 ): RunOperationalTruthDto {
-  const { metadata, status } = input;
+  const { metadata } = input;
+  const status = sanitizeCanonicalRunStatus(input.status);
   const failure = status.execution?.failure;
   const durationMs = deriveDurationMs(status.startedAt, status.completedAt);
   const currentStepId = status.execution?.activeStepId ?? input.evidence?.currentStepId;
@@ -44,6 +45,20 @@ export function projectRunOperationalTruth(
     ...(currentStepId === undefined ? {} : { currentStepId }),
     ...(failedStepId === undefined ? {} : { failedStepId }),
     ...(errorReason === undefined ? {} : { errorReason }),
+  };
+}
+
+export function sanitizeCanonicalRunStatus(status: CanonicalRunStatus): CanonicalRunStatus {
+  if (status.status === 'COMPLETED' || status.execution?.materialization === undefined) {
+    return status;
+  }
+
+  const { execution: _previousExecution, ...statusWithoutExecution } = status;
+  const { materialization: _materialization, ...execution } = status.execution;
+
+  return {
+    ...statusWithoutExecution,
+    ...(Object.keys(execution).length === 0 ? {} : { execution }),
   };
 }
 

@@ -80,6 +80,15 @@ describe('ListRunsUseCase', () => {
             reason: 'SINK_WRITE_FAILED',
             failedAt: '2026-03-19T00:00:19Z',
           },
+          materialization: {
+            executor: 'postgres',
+            environmentId: 'env-1',
+            sinkTable: 'analytics.orders',
+            rowsWritten: 42,
+            startedAt: '2026-03-19T00:00:10Z',
+            completedAt: '2026-03-19T00:00:18Z',
+            durationMs: 8000,
+          },
         },
       })),
     };
