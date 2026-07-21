@@ -306,8 +306,7 @@
       "@vitest/spy": "3.2.4",
       "semver": "7.7.4",
       "@vitest/utils": "3.2.4",
-      "minimatch@10.2.4": "10.1.2",
-      "protobufjs": "7.6.4"
+      "minimatch@10.2.4": "10.1.2"
     }
   },
   "dependencies": {

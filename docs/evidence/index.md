@@ -162,6 +162,7 @@ Evidence documents that justify or validate relevant changes.
 - [Temporal SDK 1.16.1 Patch Upgrade](ed-20260430-temporal-sdk-1-16-1-patch-upgrade.md)
 - [Temporal SDK 1.17.2 Upgrade](ED-20260603-temporal-sdk-1-17-2-upgrade.md)
 - [Temporal Step Plugin Semantics Hardening](ed-20260429-temporal-step-plugin-semantics.md)
+- [Temporal TypeScript SDK 1.20 Upgrade](ED-20260721-temporal-sdk-1-20-upgrade.md)
 - [Temporal worker DBT Docker canary](ed-20260514-temporal-worker-dbt-canary.md)
 - [WE-HX Parent Hardcut Closeout Evidence](ed-20260522-we-hx-parent-hardcut-closeout.md)
 - [WE-HX-0 Hardcut Canonical WorkflowEngine Map](ed-20260514-we-hx-0-hardcut-canonical-map.md)

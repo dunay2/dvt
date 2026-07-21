@@ -1,7 +1,7 @@
 ---
 id: R-20260630-TEMPORAL-PROTOBUF-OVERRIDE
 title: Temporal protobuf override can drift from upstream SDK resolution
-status: Open
+status: Closed
 date: 2026-06-30
 owners:
   - packages/@dvt/adapter-temporal
@@ -13,15 +13,9 @@ context: >
   package pins protobufjs@7.5.8, which GitHub Dependency Review flags for GHSA-wcpc-wj8m-hjx6. The
   repository override forces protobufjs@7.6.4 until upstream Temporal metadata no longer requires
   the vulnerable version.
-risk: >
-  A package-manager override can diverge from upstream SDK dependency metadata and could mask a
-  future Temporal package update if it is left in place after upstream resolves the pinned
-  vulnerable dependency.
-mitigations:
-  - Keep adapter-temporal build and unit-test validation in the PR evidence.
-  - Keep temporal-worker build validation in the PR evidence.
-  - Keep GitHub Dependency Review as the merge gate for vulnerable dependency drift.
-  - Revisit and remove the override when Temporal publishes a version that no longer pins
-    protobufjs@7.5.8.
-review_after: 2026-07-14
+resolution: >
+  Closed by the Temporal TypeScript SDK 1.20.3 upgrade. Its @temporalio/proto package resolves
+  protobufjs@7.6.4 directly, so the repository override was removed and the resulting graph was
+  validated through the Temporal adapter, worker, time-skipping, transformation, and Postgres
+  integration suites.
 ---
