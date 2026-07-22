@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.3 (2026-07-21)
+
+## What's Changed
+* fix(api): Unify run operational truth by @dunay2 in https://github.com/dunay2/dvt/pull/2035
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.5.2...v0.5.3
+
 ## 0.5.2 (2026-07-21)
 
 ## What's Changed
