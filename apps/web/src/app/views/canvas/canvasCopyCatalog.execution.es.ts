@@ -5,6 +5,8 @@ export const canvasViewExecutionCopyEs = {
   planSqlArtifactRequiredMessage:
     'La provenance del preview debe resolver el artefacto SQL antes de crear un Execution Preview persistido.',
   planUnableToCreateMessage: 'No se ha podido crear el Execution Preview',
+  planGraphModelSqlDivergenceMessageTemplate:
+    'Código de proyecto contiene una edición más reciente en {path}. El Preview se ha detenido sin sobrescribirla. Continúa desde un proyecto DBT con autoridad de archivos o restaura la revisión generada por el Canvas.',
   previewProvenanceTransformPathRequiredMessage:
     'Execution Preview necesita contenido SQL. Selecciona un fichero SQL del workspace para el SQL transform o usa un transform creado en el canvas para que DVT lo cree.',
   previewProvenanceWorkspaceNotConfiguredMessage:

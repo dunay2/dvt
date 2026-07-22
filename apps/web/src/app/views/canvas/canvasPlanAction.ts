@@ -16,13 +16,17 @@ import type { PlanViewModel } from '../../types/plans';
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import { buildDbtProjectFilePreviewProvenance } from './dbtProjectFileExecutionStrategy';
-import { readExpectedWorkspaceFileRevision } from './canvasGitProvenance';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { collectPreviewSelection } from './canvasRunSelection';
-import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
+import {
+  canvasViewCopy,
+  formatCanvasCopyTemplate,
+  formatTransformationGraphValidationSummary,
+} from './copy';
 import { buildPreviewGraphSource } from './previewGraphSource';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
+import { publishGraphDbtWorkspaceArtifacts } from './dbtGraphWorkspaceArtifactPublisher';
 
 type CanvasPlanActionFailure = {
   ok: false;
@@ -136,7 +140,7 @@ export async function executeCanvasPlanAction({
       }
       const scopedNodeIds = plannerProjection.scopedNodeIds;
 
-      const writtenArtifacts = [];
+      const writtenArtifactPaths: string[] = [];
       if (executionStrategy.kind === 'planner_generic_preview') {
         const artifactProjection = buildDbtWorkspaceArtifacts({
           nodes: canonicalNodes,
@@ -147,17 +151,21 @@ export async function executeCanvasPlanAction({
           return { ok: false, message: artifactProjection.message };
         }
 
-        for (const artifact of artifactProjection.artifacts) {
-          await workspaceFileContentCommand.saveFileContent({
-            path: artifact.path,
-            content: artifact.content,
-            expectedRevision: await readExpectedWorkspaceFileRevision(
-              workspaceFilesQuery,
-              artifact.path
+        const publication = await publishGraphDbtWorkspaceArtifacts({
+          artifacts: artifactProjection.artifacts,
+          workspaceFilesQuery,
+          workspaceFileContentCommand,
+        });
+        if (!publication.ok) {
+          return {
+            ok: false,
+            message: formatCanvasCopyTemplate(
+              canvasViewCopy.planGraphModelSqlDivergenceMessageTemplate,
+              { path: publication.conflictPath }
             ),
-          });
+          };
         }
-        writtenArtifacts.push(...artifactProjection.artifacts);
+        writtenArtifactPaths.push(...publication.writtenArtifactPaths);
       }
 
       const previewedPlan = await plansService.previewPlan({
@@ -181,7 +189,7 @@ export async function executeCanvasPlanAction({
         ok: true,
         draftSignature: plannerProjection.draftSignature,
         plan,
-        writtenArtifactPaths: writtenArtifacts.map((artifact) => artifact.path),
+        writtenArtifactPaths,
       };
     } catch (error) {
       return {

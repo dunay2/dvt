@@ -82,13 +82,15 @@ describe('Code Monaco editable access architecture', () => {
     expect(dbtContributions).not.toContain("id: 'dbt.code'");
     expect(dbtContributions).not.toContain("scope: 'workspace'");
 
-    expect(codeView).toContain('MonacoCodeEditor');
+    expect(codeView).toContain('CodeWorkspaceFileSurface');
+    expect(codeView).toContain('resolveCodeWorkspaceFileEditPosture');
     expect(codeView).toContain('publishRouteBootstrap = true');
     expect(codeView).toContain('resolveCodeViewCopy');
     expect(codeView).toContain('useCodeWorkingTreeSync');
     expect(codeView).toContain('CodeWorkingTreeStatus');
     expect(codeView).not.toContain('useState<Record<string, string>>');
     expect(codeView).not.toContain('useCodeEditableBuffer');
+    expect(codeView).not.toContain('MonacoCodeEditor');
     expect(codeView).not.toContain('MonacoCodeViewer');
     expect(codeView).not.toContain('function flattenFiles');
     expect(codeView).not.toContain('function firstFilePath');

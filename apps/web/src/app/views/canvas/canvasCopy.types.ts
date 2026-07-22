@@ -154,6 +154,7 @@ export type CanvasViewCopy = {
   readonly planPermissionDeniedMessage: string;
   readonly planSqlArtifactRequiredMessage: string;
   readonly planUnableToCreateMessage: string;
+  readonly planGraphModelSqlDivergenceMessageTemplate: string;
   readonly previewProvenanceTransformPathRequiredMessage: string;
   readonly previewProvenanceWorkspaceNotConfiguredMessage: string;
   readonly previewProvenanceExplicitGitRevisionRequiredMessage: string;

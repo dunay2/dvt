@@ -17,6 +17,11 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.plan.unableToCreateMessage',
     fallback: 'Unable to create Execution Preview',
   },
+  planGraphModelSqlDivergenceMessageTemplate: {
+    key: 'canvas.plan.graphModelSqlDivergenceMessageTemplate',
+    fallback:
+      'Project Code contains a newer edit for {path}. Preview stopped without overwriting it. Continue from a file-authoritative DBT project or restore the Canvas-generated revision.',
+  },
   previewProvenanceTransformPathRequiredMessage: {
     key: 'canvas.preview.transformPathRequiredMessage',
     fallback:

@@ -27,6 +27,10 @@ const DBT_ARTIFACT_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDbtWorkspaceArtifacts.ts'
 );
+const DBT_ARTIFACT_PUBLISHER_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'dbtGraphWorkspaceArtifactPublisher.ts'
+);
 const DBT_GRAPH_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'canvasDbtPlannerGraphSource.ts'
@@ -106,7 +110,10 @@ describe('canvas dbt authoring/code/run architecture', () => {
     expect(resolvePlanActionImportPaths()).not.toContain(canonicalPath(DBT_GRAPH_SOURCE_PATH));
     expect(PLAN_ACTION_SOURCE).toContain("from './previewGraphSource'");
     expect(DBT_EXECUTION_PROJECTION_SOURCE).toContain("from './canvasDbtPlannerGraphSource'");
-    expect(PLAN_ACTION_SOURCE).toContain('workspaceFileContentCommand.saveFileContent');
+    expect(PLAN_ACTION_SOURCE).toContain("from './dbtGraphWorkspaceArtifactPublisher'");
+    expect(PLAN_ACTION_SOURCE).toContain('publishGraphDbtWorkspaceArtifacts');
+    expect(PLAN_ACTION_SOURCE).not.toContain('workspaceFileContentCommand.saveFileContent');
+    expect(DBT_ARTIFACT_PUBLISHER_SOURCE).toContain('workspaceFileContentCommand.saveFileContent');
     expect(PLAN_ACTION_SOURCE).toContain('previewProfile: executionStrategy.previewProfile');
     expect(DBT_ARTIFACT_SOURCE).toContain('buildDbtWorkspaceArtifacts');
     expect(DBT_ARTIFACT_SOURCE).toContain('dbt_project.yml');
