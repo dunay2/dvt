@@ -48,6 +48,7 @@ describe('DBT graph workspace artifact publisher', () => {
     expect(saveFileContent).not.toHaveBeenCalled();
   });
 
+  // Red phase: the current per-file loop mutates the first artifact before a later write fails.
   it('leaves every artifact unchanged when a later revision-guarded write fails', async () => {
     const originalYaml = 'name: existing_analytics\n';
     const originalSql = FIRST_SQL;
