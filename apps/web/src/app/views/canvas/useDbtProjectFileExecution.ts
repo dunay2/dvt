@@ -3,6 +3,7 @@ import type { DbtProjectGraphProjection } from '@dvt/contracts';
 import { useMemo } from 'react';
 
 import {
+  useGraphDbtWorkspaceArtifactPublicationCommandPort,
   usePlansService,
   useRunsService,
   useSessionContext,
@@ -43,6 +44,8 @@ export function useDbtProjectFileExecution(args: {
   const shellFeedback = useShellFeedback();
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
+  const graphDbtWorkspaceArtifactPublicationCommand =
+    useGraphDbtWorkspaceArtifactPublicationCommandPort();
   const navigation = useCanvasNavigationActions();
   const previewProvenanceConfig = useMemo(() => resolveWorkspaceBootstrapConfig(), []);
   const executionStrategy = useMemo(
@@ -57,6 +60,7 @@ export function useDbtProjectFileExecution(args: {
     runsService,
     workspaceFilesQuery,
     workspaceFileContentCommand,
+    graphDbtWorkspaceArtifactPublicationCommand,
     executionStrategy,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
