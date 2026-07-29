@@ -139,6 +139,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ED-20260714-dbt-project-import-phase3-runtime.md)
 - [Summary](ED-20260715-dbt-project-roundtrip-phase4-run.md)
 - [Summary](ED-20260717-dbt-yaml-description-roundtrip.md)
+- [Summary](ED-20260729-graph-dbt-atomic-publication.md)
 - [Summary](ed-20260423-access-decision-vocabulary-hardening.md)
 - [Summary](ed-20260423-rc-c2-turbo-ci-governance.md)
 - [Summary](ed-20260423-runtime-boundary-hardening.md)
