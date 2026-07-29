@@ -2,6 +2,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 
 import type { IPlansPort } from '../../ports/plans';
+import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
@@ -33,6 +34,7 @@ export type UseCanvasExecutionActionsParams = {
   runsService: IRunsPort;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   executionStrategy: CanvasExecutionStrategy | null;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
