@@ -48,6 +48,52 @@ describe('DBT graph workspace artifact publisher', () => {
     expect(saveFileContent).not.toHaveBeenCalled();
   });
 
+  // Red phase: the current per-file loop mutates the first artifact before a later write fails.
+  it('leaves every artifact unchanged when a later revision-guarded write fails', async () => {
+    const originalYaml = 'name: existing_analytics\n';
+    const originalSql = FIRST_SQL;
+    const persisted = new Map<string, string>([
+      ['dbt_project.yml', originalYaml],
+      ['models/orders.sql', originalSql],
+    ]);
+    const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>(async (path) => {
+      const content = persisted.get(path);
+      if (content == null) {
+        throw new WorkspaceFileLoadError('not_found', path);
+      }
+      return file(path, content, path.endsWith('.sql') ? 'a'.repeat(64) : 'd'.repeat(64));
+    });
+    const saveFileContent = vi.fn<IWorkspaceFileContentCommandPort['saveFileContent']>(
+      async (input) => {
+        if (input.path === 'models/orders.sql') {
+          throw new Error('simulated second-artifact revision conflict');
+        }
+        persisted.set(input.path, input.content);
+        return {
+          kind: 'saved',
+          disposition: 'updated',
+          path: input.path,
+          contentSha256: 'f'.repeat(64),
+          lastModified: '2026-07-22T00:00:01.000Z',
+        };
+      }
+    );
+
+    await expect(
+      publishGraphDbtWorkspaceArtifacts({
+        artifacts: [
+          { path: 'dbt_project.yml', language: 'yaml', content: 'name: analytics\n' },
+          { path: 'models/orders.sql', language: 'sql', content: NEXT_SQL },
+        ],
+        workspaceFilesQuery: { listFiles: vi.fn(), getFileContent },
+        workspaceFileContentCommand: { saveFileContent },
+      })
+    ).rejects.toThrow('simulated second-artifact revision conflict');
+
+    expect(persisted.get('dbt_project.yml')).toBe(originalYaml);
+    expect(persisted.get('models/orders.sql')).toBe(originalSql);
+  });
+
   it('uses preflight revisions and skips byte-identical artifacts', async () => {
     const saveFileContent = vi.fn<IWorkspaceFileContentCommandPort['saveFileContent']>(
       async (input) => ({
