@@ -1,11 +1,13 @@
 /**
- * Owned concern: preflight and publish graph-derived DBT workspace artifacts
- * without allowing a later read to redefine the expected revision.
+ * Owned concern: preflight and publish the complete graph-derived DBT artifact
+ * set through one protected atomic application command.
  */
+import { sha256HexUtf8 } from '@dvt/contracts';
+
+import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type {
   ExpectedWorkspaceFileRevision,
   FileContent,
-  IWorkspaceFileContentCommandPort,
   IWorkspaceFilesQueryPort,
 } from '../../ports/workspace';
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
@@ -88,10 +90,24 @@ function assertUniqueArtifactPaths(artifacts: readonly DbtWorkspaceArtifact[]): 
   }
 }
 
+function publicationIdempotencyKey(artifacts: readonly PreparedArtifact[]): string {
+  return `graph-dbt:${sha256HexUtf8(
+    JSON.stringify(
+      artifacts.map(({ artifact, expectedRevision, writeRequired }) => ({
+        path: artifact.path,
+        content: artifact.content,
+        language: artifact.language,
+        expectedRevision,
+        writeRequired,
+      }))
+    )
+  )}`;
+}
+
 export async function publishGraphDbtWorkspaceArtifacts(args: {
   artifacts: readonly DbtWorkspaceArtifact[];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
-  workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  publicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
 }): Promise<GraphDbtWorkspaceArtifactPublicationResult> {
   assertUniqueArtifactPaths(args.artifacts);
 
@@ -108,19 +124,33 @@ export async function publishGraphDbtWorkspaceArtifacts(args: {
     return { ok: false, conflictPath: conflict.path };
   }
 
-  const writtenArtifactPaths: string[] = [];
-  for (const result of preflight) {
-    if (result.kind !== 'prepared' || !result.value.writeRequired) {
-      continue;
+  const preparedArtifacts = preflight.map((result) => {
+    if (result.kind !== 'prepared') {
+      throw new Error('DBT artifact publication preflight did not produce a complete proposal.');
     }
-    const { artifact, expectedRevision } = result.value;
-    await args.workspaceFileContentCommand.saveFileContent({
-      path: artifact.path,
-      content: artifact.content,
-      expectedRevision,
-    });
-    writtenArtifactPaths.push(artifact.path);
+    return result.value;
+  });
+  if (!preparedArtifacts.some((artifact) => artifact.writeRequired)) {
+    return { ok: true, writtenArtifactPaths: [] };
   }
 
-  return { ok: true, writtenArtifactPaths };
+  const publication = await args.publicationCommand.publish({
+    artifacts: preparedArtifacts.map(({ artifact, expectedRevision, writeRequired }) => ({
+      path: artifact.path,
+      content: artifact.content,
+      language: artifact.language,
+      expectedRevision,
+      writeRequired,
+    })),
+    idempotencyKey: publicationIdempotencyKey(preparedArtifacts),
+  });
+
+  if (publication.kind === 'conflict') {
+    return { ok: false, conflictPath: publication.conflicts[0]!.path };
+  }
+
+  return {
+    ok: true,
+    writtenArtifactPaths: publication.writes.map((write) => write.path),
+  };
 }
