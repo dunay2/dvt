@@ -3,6 +3,7 @@
  * without creating authoritative runtime execution identity.
  */
 import type { IPlansPort } from '../../ports/plans';
+import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type {
@@ -95,6 +96,7 @@ export async function executeCanvasPlanAction({
   workspaceNodeIds,
   workspaceFilesQuery,
   workspaceFileContentCommand,
+  graphDbtWorkspaceArtifactPublicationCommand,
 }: {
   canPlan: boolean;
   canonicalEdges: readonly CanonicalEdge[];
@@ -111,6 +113,7 @@ export async function executeCanvasPlanAction({
   workspaceNodeIds: readonly string[];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
 }): Promise<CanvasPlanActionResult> {
   if (!canPlan) {
     return { ok: false, message: canvasViewCopy.planPermissionDeniedMessage };
@@ -154,7 +157,7 @@ export async function executeCanvasPlanAction({
         const publication = await publishGraphDbtWorkspaceArtifacts({
           artifacts: artifactProjection.artifacts,
           workspaceFilesQuery,
-          workspaceFileContentCommand,
+          publicationCommand: graphDbtWorkspaceArtifactPublicationCommand,
         });
         if (!publication.ok) {
           return {
