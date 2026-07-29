@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IPlansPort } from '../../ports/plans';
+import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type {
   IWorkspaceFileContentCommandPort,
@@ -57,6 +58,7 @@ describe('Canvas graph-draft DBT SQL authority', () => {
         lastModified: '2026-07-22T00:00:01.000Z',
       })
     );
+    const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>();
     const persistedPlan: PlanViewModel = {
       planId: 'plan-graph-draft',
       planVersion: '1.0.0',
@@ -112,6 +114,7 @@ describe('Canvas graph-draft DBT SQL authority', () => {
       workspaceNodeIds: [sourceNode.id, modelNode.id],
       workspaceFilesQuery,
       workspaceFileContentCommand: { saveFileContent },
+      graphDbtWorkspaceArtifactPublicationCommand: { publish },
     });
 
     expect(result).toMatchObject({ ok: false });
@@ -119,6 +122,7 @@ describe('Canvas graph-draft DBT SQL authority', () => {
       expect(result.message).toContain('models/orders.sql');
     }
     expect(saveFileContent).not.toHaveBeenCalled();
+    expect(publish).not.toHaveBeenCalled();
     expect(previewPlan).not.toHaveBeenCalled();
   });
 });
