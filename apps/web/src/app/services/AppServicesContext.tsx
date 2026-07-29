@@ -3,6 +3,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 import type { CapabilitiesPort } from '../ports/capabilities';
 import type { ICostAttributionSummaryPort } from '../ports/cost';
+import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../ports/graphDbtWorkspaceArtifactPublication';
 import type { IPlansPort } from '../ports/plans';
 import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
@@ -58,6 +59,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.workspaceAdminRead,
       overrides?.warehouseSourceImport,
       overrides?.workspaceFileContentCommand,
+      overrides?.graphDbtWorkspaceArtifactPublicationCommand,
       overrides?.workspaceGraphDraftAuthoringPort,
       overrides?.dbtProjectGraphQueryPort,
       overrides?.dbtProjectImportPort,
@@ -114,6 +116,10 @@ export function useWarehouseSourceImportPort(): IWarehouseSourceImportPort {
 
 export function useWorkspaceFileContentCommandPort(): IWorkspaceFileContentCommandPort {
   return useRequiredAppServicesContext().workspaceFileContentCommand;
+}
+
+export function useGraphDbtWorkspaceArtifactPublicationCommandPort(): IGraphDbtWorkspaceArtifactPublicationCommandPort {
+  return useRequiredAppServicesContext().graphDbtWorkspaceArtifactPublicationCommand;
 }
 
 export function useWorkspaceGraphDraftAuthoringPort(): IWorkspaceGraphDraftAuthoringPort {
