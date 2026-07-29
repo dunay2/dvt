@@ -8,6 +8,7 @@ import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspace
 import { resolveWorkspacePortCapabilities } from '../../services/workspace/workspacePorts';
 import {
   useAppDataSourceMode,
+  useGraphDbtWorkspaceArtifactPublicationCommandPort,
   usePlansService,
   useRunsService,
   useSessionContext,
@@ -39,6 +40,8 @@ export function useCanvasControllerEnvironment() {
   );
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
+  const graphDbtWorkspaceArtifactPublicationCommand =
+    useGraphDbtWorkspaceArtifactPublicationCommandPort();
   const workspaceGraphDraftAuthoringPort = useWorkspaceGraphDraftAuthoringPort();
   const plansService = usePlansService();
   const runsService = useRunsService();
@@ -55,6 +58,7 @@ export function useCanvasControllerEnvironment() {
     workspacePortCapabilities,
     workspaceFilesQuery,
     workspaceFileContentCommand,
+    graphDbtWorkspaceArtifactPublicationCommand,
     workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,
