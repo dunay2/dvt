@@ -1,6 +1,7 @@
 /** Owned concern: assemble web application ports at the composition root. */
 import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { ICostAttributionSummaryPort } from '../../ports/cost';
+import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -34,6 +35,7 @@ import { createApiWorkspaceGraphDraftAuthoringPort } from '../workspace/workspac
 import { createApiDbtProjectGraphQueryPort } from '../dbtProject/dbtProjectGraph.api';
 import { createApiDbtProjectImportPort } from '../dbtProject/dbtProjectImport.api';
 import { createApiDbtYamlDescriptionEditPort } from '../dbtProject/dbtYamlDescriptionEdit.api';
+import { createApiGraphDbtWorkspaceArtifactPublicationCommandPort } from '../dbtProject/graphDbtWorkspaceArtifactPublication.api';
 import { createApiWorkspacePluginCatalogQueryPort } from '../workspace/workspacePluginCatalog.api';
 import { createWorkspacePorts } from '../workspace/workspacePorts';
 
@@ -48,6 +50,7 @@ export interface AppServices {
   readonly workspaceAdminRead: IWorkspaceAdminReadPort;
   readonly warehouseSourceImport: IWarehouseSourceImportPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  readonly graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
   readonly dbtProjectGraphQueryPort: IDbtProjectGraphQueryPort;
   readonly dbtProjectImportPort: IDbtProjectImportPort;
@@ -71,6 +74,7 @@ export interface AppServicesOverrides {
   readonly workspaceAdminRead?: IWorkspaceAdminReadPort;
   readonly warehouseSourceImport?: IWarehouseSourceImportPort;
   readonly workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
+  readonly graphDbtWorkspaceArtifactPublicationCommand?: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   readonly workspaceGraphDraftAuthoringPort?: IWorkspaceGraphDraftAuthoringPort;
   readonly dbtProjectGraphQueryPort?: IDbtProjectGraphQueryPort;
   readonly dbtProjectImportPort?: IDbtProjectImportPort;
@@ -105,6 +109,9 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     overrides.warehouseSourceImport ?? workspacePorts.warehouseSourceImport;
   const workspaceFileContentCommand =
     overrides.workspaceFileContentCommand ?? workspacePorts.workspaceFileContentCommand;
+  const graphDbtWorkspaceArtifactPublicationCommand =
+    overrides.graphDbtWorkspaceArtifactPublicationCommand ??
+    createApiGraphDbtWorkspaceArtifactPublicationCommandPort(apiClient);
   const workspaceGraphDraftAuthoringPort =
     overrides.workspaceGraphDraftAuthoringPort ??
     createApiWorkspaceGraphDraftAuthoringPort(apiClient);
@@ -126,6 +133,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     workspaceAdminRead,
     warehouseSourceImport,
     workspaceFileContentCommand,
+    graphDbtWorkspaceArtifactPublicationCommand,
     workspaceGraphDraftAuthoringPort,
     dbtProjectGraphQueryPort,
     dbtProjectImportPort,
