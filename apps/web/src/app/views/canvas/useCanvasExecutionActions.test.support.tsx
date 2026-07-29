@@ -448,16 +448,16 @@ export function createGraphDbtWorkspaceArtifactPublicationCommandMock(): IGraphD
     publish: vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
       async (request) => ({
         schemaVersion: 'graph-dbt-workspace-artifact-publication.v1' as const,
-      kind: 'applied' as const,
-      idempotencyKey: request.idempotencyKey,
-      requestHash: sha256HexUtf8(JSON.stringify(request)),
-      deduplicated: false,
-      writes: request.artifacts
-        .filter((artifact) => artifact.writeRequired)
-        .map((artifact) => ({
-          path: artifact.path,
-          contentSha256: sha256HexUtf8(artifact.content),
-        })),
+        kind: 'applied' as const,
+        idempotencyKey: request.idempotencyKey,
+        requestHash: sha256HexUtf8(JSON.stringify(request)),
+        deduplicated: false,
+        writes: request.artifacts
+          .filter((artifact) => artifact.writeRequired)
+          .map((artifact) => ({
+            path: artifact.path,
+            contentSha256: sha256HexUtf8(artifact.content),
+          })),
       })
     ),
   };
