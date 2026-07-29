@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import { createTestQueryClient } from '../../../testing/reactQueryHarness';
 import type { IPlansPort } from '../../ports/plans';
+import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
@@ -48,6 +49,7 @@ type ExecutionActionsHookCommonProps = Readonly<{
   shellFeedback: ShellFeedbackPort;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   previewProvenanceConfig: PreviewProvenanceConfig;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
@@ -85,6 +87,7 @@ export type RenderExecutionActionsHarnessArgs = {
   shellFeedback?: ShellFeedbackPort;
   workspaceFilesQuery?: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand?: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   previewProvenanceConfig?: Partial<PreviewProvenanceConfig>;
   canonicalNodes?: CanonicalNode[];
   canonicalEdges?: CanonicalEdge[];
@@ -114,6 +117,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'shellFeedback'
   | 'workspaceFilesQuery'
   | 'workspaceFileContentCommand'
+  | 'graphDbtWorkspaceArtifactPublicationCommand'
   | 'previewProvenanceConfig'
   | 'flushDraftForExecution'
   | 'canPlan'
@@ -130,6 +134,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   shellFeedback: ShellFeedbackPort;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   previewProvenanceConfig: Partial<PreviewProvenanceConfig>;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
@@ -230,6 +235,8 @@ function resolveCommonHookProps(
     shellFeedback: args.shellFeedback,
     workspaceFilesQuery: args.workspaceFilesQuery,
     workspaceFileContentCommand: args.workspaceFileContentCommand,
+    graphDbtWorkspaceArtifactPublicationCommand:
+      args.graphDbtWorkspaceArtifactPublicationCommand,
     previewProvenanceConfig: args.previewProvenanceConfig as PreviewProvenanceConfig,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
@@ -275,6 +282,9 @@ function resolveHarnessArgs(
     sessionContext: args.sessionContext ?? createSessionContext(),
     shellFeedback: args.shellFeedback ?? createShellFeedbackMock(),
     ...resolveWorkspaceFilePortMocks(args),
+    graphDbtWorkspaceArtifactPublicationCommand:
+      args.graphDbtWorkspaceArtifactPublicationCommand ??
+      createGraphDbtWorkspaceArtifactPublicationCommandMock(),
     previewProvenanceConfig: args.previewProvenanceConfig ?? DEFAULT_PREVIEW_PROVENANCE_CONFIG,
     canonicalNodes: args.canonicalNodes ?? buildCanonicalNodes(),
     canonicalEdges: args.canonicalEdges ?? buildCanonicalEdges(),
@@ -430,6 +440,24 @@ export function createWorkspaceFilePortMocks(
         };
       }),
     },
+  };
+}
+
+export function createGraphDbtWorkspaceArtifactPublicationCommandMock(): IGraphDbtWorkspaceArtifactPublicationCommandPort {
+  return {
+    publish: vi.fn(async (request) => ({
+      schemaVersion: 'graph-dbt-workspace-artifact-publication.v1' as const,
+      kind: 'applied' as const,
+      idempotencyKey: request.idempotencyKey,
+      requestHash: sha256HexUtf8(JSON.stringify(request)),
+      deduplicated: false,
+      writes: request.artifacts
+        .filter((artifact) => artifact.writeRequired)
+        .map((artifact) => ({
+          path: artifact.path,
+          contentSha256: sha256HexUtf8(artifact.content),
+        })),
+    })),
   };
 }
 
