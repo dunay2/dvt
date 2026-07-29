@@ -123,6 +123,28 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.publishGraphDbtWorkspaceArtifacts,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.command,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.graphDbtWorkspaceArtifactPublicationRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingWorkspaceFileSaveAuthority,
+        PROTECTED_RUNTIME_TEST_REF.graphDbtWorkspaceArtifactPublicationRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidGraphDbtWorkspaceArtifactPublication,
+        PROTECTED_RUNTIME_TEST_REF.graphDbtWorkspaceArtifactPublicationRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.idempotencyConflict,
+        PROTECTED_RUNTIME_TEST_REF.graphDbtWorkspaceArtifactPublicationRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     ...PROTECTED_RUNTIME_WORKSPACE_RAIL.proposeDbtYamlDescriptionEdit,
     kind: PROTECTED_RUNTIME_RAIL_KIND.query,
     coverage: [
