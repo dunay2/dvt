@@ -23,7 +23,7 @@ function file(path: string, content: string, revision: string): FileContent {
 
 function applied(
   request: Parameters<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>[0]
-) {
+): Awaited<ReturnType<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>> {
   return {
     schemaVersion: 'graph-dbt-workspace-artifact-publication.v1' as const,
     kind: 'applied' as const,
