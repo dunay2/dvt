@@ -75,6 +75,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Future recover-run feature could leak back into the generic signal boundary](R-20260408-RECOVER-RUN-BOUNDARY-DRIFT.yaml)
 - [Future state-store adapters may miss snapshot rebuild mutual exclusion](R-20260513-AR-A6-SNAPSHOT-REBUILD-CONCURRENCY-CONTRACT.yaml)
 - [Graph source cardinality drift between JSON schema and runtime parser](R-20260404-MWA2-GRAPH-SOURCE-CARDINALITY-DRIFT.yaml)
+- [Graph-authored dbt artifacts can diverge during publication](R-20260729-GRAPH-DBT-ATOMIC-PUBLICATION.yaml)
 - [Historical compile-boundary language could leak back into active contracts and route seams](R-20260419-PLAN-COMPILE-LANGUAGE-DRIFT.yaml)
 - [In-memory engine state-store invariant drift on snapshot and outbox paths](R-20260404-INMEMORY-STATE-STORE-INVARIANTS.yaml)
 - [Incremental snapshot checkpoint drift can mask replay assumptions](R-20260416-AR-D1-INCREMENTAL-SNAPSHOT-PROJECTION.yaml)
