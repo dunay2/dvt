@@ -560,6 +560,7 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   shellFeedback: ResolvedExecutionActionsHarnessArgs['shellFeedback'];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   setBottomDrawerHeight: ResolvedExecutionActionsHarnessArgs['setBottomDrawerHeight'];
   toggleBottomDrawer: ResolvedExecutionActionsHarnessArgs['toggleBottomDrawer'];
   queryClient: QueryClient;
@@ -625,6 +626,8 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     shellFeedback: currentArgs.shellFeedback,
     workspaceFilesQuery: currentArgs.workspaceFilesQuery,
     workspaceFileContentCommand: currentArgs.workspaceFileContentCommand,
+    graphDbtWorkspaceArtifactPublicationCommand:
+      currentArgs.graphDbtWorkspaceArtifactPublicationCommand,
     setBottomDrawerHeight: currentArgs.setBottomDrawerHeight,
     toggleBottomDrawer: currentArgs.toggleBottomDrawer,
     queryClient,
