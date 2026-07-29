@@ -3,8 +3,6 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type {
   IWorkspaceFileBatchMutationPort,
-  WorkspaceFileBatchMutation,
-  WorkspaceStorageScope,
 } from '../../../../src/application/ports/workspaceFiles.js';
 import { PublishGraphDbtWorkspaceArtifactsCommand } from '../../../../src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.js';
 
@@ -43,12 +41,7 @@ const REQUEST: PublishGraphDbtWorkspaceArtifactsRequest = {
 
 describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
   it('sends every expected revision and every required write through one batch apply', async () => {
-    const apply = vi.fn<
-      (
-        scope: WorkspaceStorageScope,
-        mutation: WorkspaceFileBatchMutation
-      ) => ReturnType<IWorkspaceFileBatchMutationPort['apply']>
-    >(async (_scope, mutation) => ({
+    const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>(async (_scope, mutation) => ({
       kind: 'applied',
       idempotencyKey: mutation.idempotencyKey,
       requestHash: 'e'.repeat(64),
