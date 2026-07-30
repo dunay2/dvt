@@ -33,10 +33,8 @@ export const GraphDbtWorkspaceArtifactPublicationItemSchema = z
   })
   .strict()
   .superRefine((artifact, context) => {
-    const isYamlPath =
-      artifact.path === 'dbt_project.yml' || artifact.path === 'models/schema.yml';
-    const isSqlPath =
-      /^models\/(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+\.sql$/u.test(artifact.path);
+    const isYamlPath = artifact.path === 'dbt_project.yml' || artifact.path === 'models/schema.yml';
+    const isSqlPath = /^models\/(?:[A-Za-z0-9_.-]+\/)*[A-Za-z0-9_.-]+\.sql$/u.test(artifact.path);
     if (
       (artifact.language === 'yaml' && !isYamlPath) ||
       (artifact.language === 'sql' && !isSqlPath)

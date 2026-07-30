@@ -134,9 +134,7 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
     const invalidateQueries = vi.spyOn(harness.queryClient, 'invalidateQueries');
     await harness.clickPlan();
 
-    expect(
-      harness.graphDbtWorkspaceArtifactPublicationCommand.publish
-    ).toHaveBeenCalledWith(
+    expect(harness.graphDbtWorkspaceArtifactPublicationCommand.publish).toHaveBeenCalledWith(
       expect.objectContaining({
         artifacts: expect.arrayContaining([
           expect.objectContaining({

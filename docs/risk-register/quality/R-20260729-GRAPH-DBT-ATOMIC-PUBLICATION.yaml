@@ -32,7 +32,7 @@ mitigations:
     behavior with automated tests.'
 residual_risk: >
   Exact binding between a compiled or executed plan and a later workspace revision is outside this
-  MVP. The publication boundary protects the files produced by one accepted client snapshot but
-  does not introduce a second store, saga, or durable plan-run transaction.
+  MVP. The publication boundary protects the files produced by one accepted client snapshot but does
+  not introduce a second store, saga, or durable plan-run transaction.
 review_after: 2026-08-29
 ---

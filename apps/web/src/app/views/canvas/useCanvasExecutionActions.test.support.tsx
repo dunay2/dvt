@@ -252,8 +252,7 @@ function resolveCommonHookProps(
     shellFeedback: args.shellFeedback,
     workspaceFilesQuery: args.workspaceFilesQuery,
     workspaceFileContentCommand: args.workspaceFileContentCommand,
-    graphDbtWorkspaceArtifactPublicationCommand:
-      args.graphDbtWorkspaceArtifactPublicationCommand,
+    graphDbtWorkspaceArtifactPublicationCommand: args.graphDbtWorkspaceArtifactPublicationCommand,
     previewProvenanceConfig: args.previewProvenanceConfig as PreviewProvenanceConfig,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
