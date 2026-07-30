@@ -4,9 +4,67 @@ const node = {
   os: require('node:os'),
   path: require('node:path'),
   test: require('node:test'),
+  yaml: require('js-yaml'),
 };
 
 const { PlanningDbExportRunner, exportedArtifactPaths } = require('./planning-db-export.cjs');
+
+function createLaneExportFixture(repoRoot, taskOverrides = {}) {
+  const runner = new PlanningDbExportRunner({
+    fs: node.fs,
+    os: node.os,
+    path: node.path,
+    repoRoot,
+    schemaName: 'planning_query_store',
+    yaml: node.yaml,
+  });
+  const client = {
+    async query(sql) {
+      if (sql.includes('from planning_query_store.planning_lanes')) {
+        return {
+          rows: [
+            {
+              laneId: 'A',
+              rawLane: {
+                lane_id: 'A',
+                title: 'Lane A',
+                tasks: [{ task_id: 'A-1' }],
+              },
+            },
+          ],
+        };
+      }
+
+      if (sql.includes('from planning_query_store.planning_effective_tasks')) {
+        return {
+          rows: [
+            {
+              laneId: 'A',
+              taskId: 'A-1',
+              rawTask: {
+                task_id: 'A-1',
+                status: 'queued',
+                objective: 'Prove durable export.',
+              },
+              status: 'in_progress',
+              progressPct: 25,
+              evidenceRefs: [],
+              statusReason: 'DB state changed.',
+              ...taskOverrides,
+            },
+          ],
+        };
+      }
+
+      return { rows: [] };
+    },
+  };
+
+  runner.runWorkboardGenerator = () => {};
+  runner.recordPlanningArtifacts = async () => {};
+
+  return { client, runner };
+}
 
 node.test('planning DB export reconstructs lane documents from normalized DB task rows', () => {
   const runner = new PlanningDbExportRunner();
@@ -104,6 +162,80 @@ node.test('planning DB export reads effective task rows from the query store', a
   node.assert.match(capturedSql.join('\n'), /from planning_query_store\.planning_effective_tasks/);
 });
 
+node.test(
+  'planning DB export materializes effective lane state under the output root',
+  async () => {
+    const outputRoot = node.fs.mkdtempSync(node.path.join(node.os.tmpdir(), 'planning-db-export-'));
+    const { client, runner } = createLaneExportFixture('F:/repo', {
+      evidenceRefs: ['https://github.com/dunay2/dvt/issues/2104'],
+      statusReason: 'Canonical export proof is active.',
+      claimedBy: 'codex',
+    });
+
+    try {
+      await runner.exportPlanningDerivedSurfaces({
+        client,
+        databaseUrl: 'postgres://example/planning',
+        outputRoot,
+      });
+
+      const lanePath = node.path.join(outputRoot, 'docs', 'planning', 'state', 'agent-lane-a.yaml');
+      const lane = node.yaml.load(node.fs.readFileSync(lanePath, 'utf8'));
+
+      node.assert.equal(lane.tasks[0].status, 'in_progress');
+      node.assert.equal(lane.tasks[0].progress_pct, 25);
+      node.assert.deepEqual(lane.tasks[0].evidence_refs, [
+        'https://github.com/dunay2/dvt/issues/2104',
+      ]);
+      node.assert.equal(lane.tasks[0].claimed_by, undefined);
+    } finally {
+      node.fs.rmSync(outputRoot, { recursive: true, force: true });
+    }
+  }
+);
+
+node.test('planning DB export check rejects drift in canonical lane state', async () => {
+  const repoRoot = node.fs.mkdtempSync(node.path.join(node.os.tmpdir(), 'planning-db-repo-'));
+  const { client, runner } = createLaneExportFixture(repoRoot);
+
+  try {
+    for (const artifactPath of exportedArtifactPaths) {
+      const artifact = node.path.join(repoRoot, artifactPath);
+      node.fs.mkdirSync(node.path.dirname(artifact), { recursive: true });
+      node.fs.writeFileSync(artifact, 'stable generated view\n', 'utf8');
+    }
+
+    const lanePath = node.path.join(repoRoot, 'docs', 'planning', 'state', 'agent-lane-a.yaml');
+    node.fs.mkdirSync(node.path.dirname(lanePath), { recursive: true });
+    node.fs.writeFileSync(
+      lanePath,
+      node.yaml.dump({
+        lane_id: 'A',
+        title: 'Lane A',
+        tasks: [
+          {
+            task_id: 'A-1',
+            status: 'queued',
+            objective: 'Prove durable export.',
+          },
+        ],
+      }),
+      'utf8'
+    );
+
+    await node.assert.rejects(
+      runner.exportPlanningDerivedSurfaces({
+        check: true,
+        client,
+        databaseUrl: 'postgres://example/planning',
+      }),
+      /agent-lane-a\.yaml/
+    );
+  } finally {
+    node.fs.rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
 node.test('planning DB export renders generated views from the canonical DB source', () => {
   const calls = [];
   const runner = new PlanningDbExportRunner({
@@ -179,6 +311,62 @@ node.test('planning DB export compares only the canonical generated planning vie
     });
     node.assert.equal(driftReport.ok, false);
     node.assert.deepEqual(driftReport.changed, [exportedArtifactPaths[0]]);
+  } finally {
+    node.fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+node.test('planning DB export compares lane YAML semantically instead of by formatting', () => {
+  const runner = new PlanningDbExportRunner();
+  const root = node.fs.mkdtempSync(node.path.join(node.os.tmpdir(), 'planning-db-export-'));
+  const expectedRoot = node.path.join(root, 'expected');
+  const actualRoot = node.path.join(root, 'actual');
+  const lanePath = 'docs/planning/state/agent-lane-a.yaml';
+
+  try {
+    const expectedPath = node.path.join(expectedRoot, lanePath);
+    const actualPath = node.path.join(actualRoot, lanePath);
+    node.fs.mkdirSync(node.path.dirname(expectedPath), { recursive: true });
+    node.fs.mkdirSync(node.path.dirname(actualPath), { recursive: true });
+    node.fs.writeFileSync(
+      expectedPath,
+      [
+        'lane_id: A',
+        'title: Lane A',
+        'tasks:',
+        '  - task_id: A-1',
+        '    status: queued',
+        '    objective: >-',
+        '      Preserve semantic state.',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    node.fs.writeFileSync(
+      actualPath,
+      [
+        'tasks:',
+        '  - objective: Preserve semantic state.',
+        '    status: queued',
+        '    task_id: A-1',
+        'title: Lane A',
+        'lane_id: A',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const report = runner.compareGeneratedArtifacts({
+      expectedRoot,
+      actualRoot,
+      artifactPaths: [lanePath],
+    });
+
+    node.assert.deepEqual(report, {
+      ok: true,
+      missing: [],
+      changed: [],
+    });
   } finally {
     node.fs.rmSync(root, { recursive: true, force: true });
   }

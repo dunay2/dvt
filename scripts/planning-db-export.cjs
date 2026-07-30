@@ -23,6 +23,7 @@ const exportedArtifactPaths = [
   'docs/planning/state/execution-workboard.md',
   'docs/planning/state/open-task-route.md',
 ];
+const planningLaneFilePattern = /^agent-lane-[a-z]\.yaml$/iu;
 
 class PlanningDbExportRunner {
   constructor(deps = dependencies) {
@@ -232,8 +233,32 @@ class PlanningDbExportRunner {
     }
   }
 
-  ensureExistingArtifacts(root) {
-    const missing = exportedArtifactPaths.filter(
+  planningLaneArtifactPaths(lanes) {
+    return lanes.map((lane) => {
+      const laneId = String(lane.lane_id || '').trim();
+      if (!laneId) {
+        throw new Error('Cannot resolve an artifact path for a lane without lane_id.');
+      }
+
+      return `docs/planning/state/agent-lane-${laneId.toLowerCase()}.yaml`;
+    });
+  }
+
+  listExistingPlanningLaneArtifactPaths(root) {
+    const sourceStateDir = this.deps.path.join(root, 'docs', 'planning', 'state');
+    if (!this.deps.fs.existsSync(sourceStateDir)) {
+      return [];
+    }
+
+    return this.deps.fs
+      .readdirSync(sourceStateDir)
+      .filter((fileName) => planningLaneFilePattern.test(fileName))
+      .sort()
+      .map((fileName) => `docs/planning/state/${fileName}`);
+  }
+
+  ensureExistingArtifacts(root, artifactPaths = exportedArtifactPaths) {
+    const missing = artifactPaths.filter(
       (artifactPath) => !this.deps.fs.existsSync(this.deps.path.join(root, artifactPath))
     );
 
@@ -244,10 +269,10 @@ class PlanningDbExportRunner {
     }
   }
 
-  copyExistingArtifacts(targetRoot) {
-    this.ensureExistingArtifacts(this.deps.repoRoot);
+  copyExistingArtifacts(targetRoot, artifactPaths = exportedArtifactPaths) {
+    this.ensureExistingArtifacts(this.deps.repoRoot, artifactPaths);
 
-    for (const artifactPath of exportedArtifactPaths) {
+    for (const artifactPath of artifactPaths) {
       const sourcePath = this.deps.path.join(this.deps.repoRoot, artifactPath);
       const targetPath = this.deps.path.join(targetRoot, artifactPath);
       this.deps.fs.mkdirSync(this.deps.path.dirname(targetPath), { recursive: true });
@@ -327,11 +352,35 @@ class PlanningDbExportRunner {
     return this.deps.fs.readFileSync(absolutePath, 'utf8');
   }
 
-  compareGeneratedArtifacts({ expectedRoot, actualRoot }) {
+  canonicalizeStructuredValue(value) {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.canonicalizeStructuredValue(item));
+    }
+
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(
+        Object.keys(value)
+          .sort()
+          .map((key) => [key, this.canonicalizeStructuredValue(value[key])])
+      );
+    }
+
+    return value;
+  }
+
+  normalizeArtifactForComparison(artifactPath, content) {
+    if (planningLaneFilePattern.test(this.deps.path.basename(artifactPath))) {
+      return JSON.stringify(this.canonicalizeStructuredValue(this.deps.yaml.load(content)));
+    }
+
+    return content;
+  }
+
+  compareGeneratedArtifacts({ expectedRoot, actualRoot, artifactPaths = exportedArtifactPaths }) {
     const missing = [];
     const changed = [];
 
-    for (const artifactPath of exportedArtifactPaths) {
+    for (const artifactPath of artifactPaths) {
       const expected = this.readArtifact(expectedRoot, artifactPath);
       const actual = this.readArtifact(actualRoot, artifactPath);
 
@@ -340,7 +389,10 @@ class PlanningDbExportRunner {
         continue;
       }
 
-      if (expected !== actual) {
+      if (
+        this.normalizeArtifactForComparison(artifactPath, expected) !==
+        this.normalizeArtifactForComparison(artifactPath, actual)
+      ) {
         changed.push(artifactPath);
       }
     }
@@ -400,6 +452,14 @@ class PlanningDbExportRunner {
         this.deps.fs.mkdirSync(outputRoot, { recursive: true });
       }
 
+      this.writeLaneYamlFiles(lanes, this.deps.path.join(outputRoot, 'docs', 'planning', 'state'));
+      const canonicalArtifactPaths = [
+        ...new Set([
+          ...exportedArtifactPaths,
+          ...this.planningLaneArtifactPaths(lanes),
+          ...this.listExistingPlanningLaneArtifactPaths(this.deps.repoRoot),
+        ]),
+      ].sort();
       this.runWorkboardGenerator({
         outputRoot,
         databaseUrl: this.databaseUrl(options.databaseUrl),
@@ -409,6 +469,7 @@ class PlanningDbExportRunner {
         ? this.compareGeneratedArtifacts({
             expectedRoot: this.deps.repoRoot,
             actualRoot: outputRoot,
+            artifactPaths: canonicalArtifactPaths,
           })
         : { ok: true, missing: [], changed: [] };
 
@@ -422,6 +483,7 @@ class PlanningDbExportRunner {
         lanes: lanes.length,
         tasks: rows.tasks.length,
         outputRoot,
+        canonicalArtifactPaths,
         report,
       };
     } finally {
