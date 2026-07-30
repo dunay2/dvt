@@ -584,7 +584,7 @@
       ],
       "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
       "sourcePath": "scripts/planning-github-status-projection.cjs",
-      "sourceContentSha256": "23967ce225c3ffcde89902e88133ff3b9ffeee117b5522b0fbf2260c20d439d8",
+      "sourceContentSha256": "814b828c6274adac88bc8151d8aebe6bd42ea574fb840ce451368ecda4ebb20d",
       "rawRail": {
         "name": "ReconcileGitHubPlanningProjection",
         "type": "command",
@@ -742,16 +742,13 @@
         "redGreenCycles": [
           {
             "id": "reconcilegithubplanningprojection-record",
-            "redTest": "Runner treated an unknown mode as reconciliation instead of rejecting before authority access",
-            "greenTest": "Command tests prove approved writes only and reject unknown modes before reading or mutating either authority",
+            "redTest": "GitHub issue reads stopped after an arbitrary limit and omitted linked or planning-labeled issues",
+            "greenTest": "Adapter tests and a live check prove paginated issue projection without missing linked issues",
             "patchSurfaces": [
-              "scripts/planning-db/github-planning-projection-policy.cjs",
-              "scripts/planning-db/github-planning-projection-policy.test.cjs",
               "scripts/planning-github-status-projection.cjs",
-              "scripts/planning-github-status-projection.test.cjs",
-              "package.json"
+              "scripts/planning-github-status-projection.test.cjs"
             ],
-            "expectedFailure": "Missing expected rejection; invalid mode reached the command path"
+            "expectedFailure": "The gateway omitted issues beyond the configured gh issue list limit"
           }
         ],
         "componentGuides": [
@@ -789,7 +786,7 @@
           ".github/workflows/adapter-postgres-integration-nightly.yml"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-07-30T21:58:09.878Z"
     },
@@ -2369,6 +2366,89 @@
         ]
       },
       "createdAt": "2026-07-30T22:39:54.539Z"
+    },
+    {
+      "operationId": "24c1e7b7-5fe9-413f-ab7e-95f813b6dc6d",
+      "idempotencyKey": "codex-reconcile-github-issues-paginated-20260730",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#command#reconcilegithubplanningprojection",
+      "sourcePath": "scripts/planning-github-status-projection.cjs",
+      "sourceContentSha256": "814b828c6274adac88bc8151d8aebe6bd42ea574fb840ce451368ecda4ebb20d",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "GitHub issue reads stopped after an arbitrary limit and omitted linked or planning-labeled issues",
+        "dddOwner": "Planning Governance",
+        "railName": "ReconcileGitHubPlanningProjection",
+        "railType": "command",
+        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
+        "greenTest": "Adapter tests and a live check prove paginated issue projection without missing linked issues",
+        "sourceRef": "scripts/planning-github-status-projection.cjs",
+        "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a maintainer, I can reconcile explicitly linked GitHub issues from verified Planning DB lifecycle state"
+        ],
+        "cypressFlows": [
+          "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query"
+        ],
+        "domainObjects": ["GitHubPlanningReconciliationCommand"],
+        "fowlerSignals": [
+          "Command Object owns the only authorized close and reopen mutations"
+        ],
+        "patchSurfaces": [
+          "scripts/planning-github-status-projection.cjs",
+          "scripts/planning-github-status-projection.test.cjs"
+        ],
+        "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The gateway omitted issues beyond the configured gh issue list limit",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "The command aborts before mutation when any issue maps to multiple effective tasks",
+          "Only close and reopen are allowed; issue creation and planning lifecycle writes remain outside this rail"
+        ],
+        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
+        "implementationRefs": [
+          "scripts/planning-db/github-planning-projection-policy.cjs#GitHubPlanningReconciliationCommand",
+          "scripts/planning-db/github-planning-projection-policy.cjs#reconciliationComment",
+          "scripts/planning-db/github-planning-projection-policy.cjs#ReconcileGitHubPlanningProjection",
+          "scripts/planning-github-status-projection.cjs#defaultRepository",
+          "scripts/planning-github-status-projection.cjs#validateMode",
+          "scripts/planning-github-status-projection.cjs#parseCliArguments",
+          "scripts/planning-github-status-projection.cjs#PlanningDbEffectiveTaskReader",
+          "scripts/planning-github-status-projection.cjs#runGitHubCli",
+          "scripts/planning-github-status-projection.cjs#GitHubCliIssueGateway",
+          "scripts/planning-github-status-projection.cjs#runGitHubPlanningProjection",
+          "scripts/planning-github-status-projection.cjs#main"
+        ],
+        "normalizedRailName": "reconcilegithubplanningprojection",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "814b828c6274adac88bc8151d8aebe6bd42ea574fb840ce451368ecda4ebb20d",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db/github-planning-projection-policy.cjs",
+          "scripts/planning-db/github-planning-projection-policy.test.cjs",
+          "scripts/planning-github-status-projection.cjs",
+          "scripts/planning-github-status-projection.test.cjs",
+          "package.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations",
+          ".github/workflows/adapter-postgres-integration-nightly.yml"
+        ]
+      },
+      "createdAt": "2026-07-30T23:01:15.896Z"
     }
   ]
 }

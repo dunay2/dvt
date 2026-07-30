@@ -49,22 +49,29 @@ test('Planning DB reader maps effective task rows without changing task authorit
   assert.match(queries[0], /planning_query_store\.planning_effective_tasks/);
 });
 
-test('GitHub gateway scopes reads and writes to the configured repository', async () => {
+test('GitHub gateway paginates issue reads and scopes writes to the configured repository', async () => {
   const calls = [];
   const gateway = new GitHubCliIssueGateway({
     repository: 'owner/repo',
     runGh(args) {
       calls.push(args);
-      if (args[0] === 'issue' && args[1] === 'list') {
-        return JSON.stringify([
-          {
+      if (args[0] === 'api') {
+        return [
+          JSON.stringify({
             number: 7,
-            state: 'OPEN',
+            state: 'open',
             title: 'Task',
             url: 'https://github.com/owner/repo/issues/7',
-            labels: [{ name: 'task' }],
-          },
-        ]);
+            labels: ['task'],
+          }),
+          JSON.stringify({
+            number: 1007,
+            state: 'closed',
+            title: 'Older task',
+            url: 'https://github.com/owner/repo/issues/1007',
+            labels: ['story'],
+          }),
+        ].join('\n');
       }
       return '';
     },
@@ -78,22 +85,30 @@ test('GitHub gateway scopes reads and writes to the configured repository', asyn
       url: 'https://github.com/owner/repo/issues/7',
       labels: ['task'],
     },
+    {
+      number: 1007,
+      state: 'CLOSED',
+      title: 'Older task',
+      url: 'https://github.com/owner/repo/issues/1007',
+      labels: ['story'],
+    },
   ]);
   await gateway.closeIssue(7, 'closed from Planning DB');
   await gateway.reopenIssue(8, 'reopened from Planning DB');
 
   assert.deepEqual(calls, [
     [
-      'issue',
-      'list',
-      '--repo',
-      'owner/repo',
-      '--state',
-      'all',
-      '--limit',
-      '1000',
-      '--json',
-      'number,state,title,url,labels',
+      'api',
+      '--method',
+      'GET',
+      '--paginate',
+      'repos/owner/repo/issues',
+      '-f',
+      'state=all',
+      '-f',
+      'per_page=100',
+      '--jq',
+      '.[] | select(.pull_request == null) | {number, state, title, url: .html_url, labels: [.labels[].name]}',
     ],
     [
       'issue',

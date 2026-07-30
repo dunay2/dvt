@@ -76,24 +76,30 @@ class GitHubCliIssueGateway {
 
   async listIssues() {
     const output = await this.runGh([
-      'issue',
-      'list',
-      '--repo',
-      this.repository,
-      '--state',
-      'all',
-      '--limit',
-      '1000',
-      '--json',
-      'number,state,title,url,labels',
+      'api',
+      '--method',
+      'GET',
+      '--paginate',
+      `repos/${this.repository}/issues`,
+      '-f',
+      'state=all',
+      '-f',
+      'per_page=100',
+      '--jq',
+      '.[] | select(.pull_request == null) | {number, state, title, url: .html_url, labels: [.labels[].name]}',
     ]);
-    const issues = JSON.parse(output);
+    const issues = output
+      .split(/\r?\n/u)
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+
     return issues.map((issue) => ({
       number: issue.number,
-      state: issue.state,
+      state: String(issue.state || '').toUpperCase(),
       title: issue.title,
       url: issue.url,
-      labels: (issue.labels || []).map((label) => label.name),
+      labels: (issue.labels || []).map(String),
     }));
   }
 
