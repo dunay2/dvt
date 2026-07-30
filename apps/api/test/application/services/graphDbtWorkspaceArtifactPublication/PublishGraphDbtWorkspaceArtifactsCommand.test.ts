@@ -1,4 +1,4 @@
-import type { PublishGraphDbtWorkspaceArtifactsRequest } from '@dvt/contracts';
+import { sha256HexUtf8, type PublishGraphDbtWorkspaceArtifactsRequest } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IWorkspaceFileBatchMutationPort } from '../../../../src/application/ports/workspaceFiles.js';
@@ -9,6 +9,8 @@ const SCOPE = {
   projectId: 'project-graph-dbt',
   environmentId: 'environment-graph-dbt',
 } as const;
+
+const SQL_PAYLOAD = 'select 2\n';
 
 const REQUEST: PublishGraphDbtWorkspaceArtifactsRequest = {
   artifacts: [
@@ -21,7 +23,7 @@ const REQUEST: PublishGraphDbtWorkspaceArtifactsRequest = {
     },
     {
       path: 'models/orders.sql',
-      content: `-- dvt:graph-draft-content-sha256=${'b'.repeat(64)}\nselect 2\n`,
+      content: `-- dvt:graph-draft-content-sha256=${sha256HexUtf8(SQL_PAYLOAD)}\n${SQL_PAYLOAD}`,
       language: 'sql',
       expectedRevision: { kind: 'content_sha256', value: 'c'.repeat(64) },
       writeRequired: true,

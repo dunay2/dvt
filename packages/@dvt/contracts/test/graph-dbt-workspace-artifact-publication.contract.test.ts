@@ -3,10 +3,12 @@ import { describe, expect, it } from 'vitest';
 import {
   GraphDbtWorkspaceArtifactPublicationResultSchema,
   PublishGraphDbtWorkspaceArtifactsRequestSchema,
+  sha256HexUtf8,
   type PublishGraphDbtWorkspaceArtifactsRequest,
 } from '../src/index.js';
 
-const MANAGED_SQL = `-- dvt:graph-draft-content-sha256=${'a'.repeat(64)}\nselect 1\n`;
+const SQL_PAYLOAD = 'select 1\n';
+const MANAGED_SQL = `-- dvt:graph-draft-content-sha256=${sha256HexUtf8(SQL_PAYLOAD)}\n${SQL_PAYLOAD}`;
 
 function request(): PublishGraphDbtWorkspaceArtifactsRequest {
   return {
@@ -54,6 +56,18 @@ describe('graph DBT workspace artifact publication contract', () => {
         ],
       })
     ).toThrow();
+  });
+
+  it('rejects graph-managed SQL when the marker digest does not match its payload', () => {
+    const malformed = request();
+    malformed.artifacts[1] = {
+      ...malformed.artifacts[1]!,
+      content: `-- dvt:graph-draft-content-sha256=${'a'.repeat(64)}\n${SQL_PAYLOAD}`,
+    };
+
+    expect(() => PublishGraphDbtWorkspaceArtifactsRequestSchema.parse(malformed)).toThrow(
+      /integrity marker must match/i
+    );
   });
 
   it('accepts immutable applied and conflict results', () => {

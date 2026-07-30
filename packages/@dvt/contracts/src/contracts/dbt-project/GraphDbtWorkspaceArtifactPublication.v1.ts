@@ -9,6 +9,8 @@
  */
 import { z } from 'zod';
 
+import { sha256HexUtf8 } from '../../utils/sha256HexUtf8.js';
+
 const NonBlankStringSchema = z.string().trim().min(1);
 const Sha256HexStringSchema = z.string().regex(/^[a-f0-9]{64}$/u);
 const GraphDbtArtifactPathSchema = NonBlankStringSchema.max(4_096);
@@ -45,15 +47,23 @@ export const GraphDbtWorkspaceArtifactPublicationItemSchema = z
         path: ['path'],
       });
     }
-    if (
-      artifact.language === 'sql' &&
-      !/^-- dvt:graph-draft-content-sha256=[a-f0-9]{64}\r?\n/u.test(artifact.content)
-    ) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Graph-derived dbt model SQL must carry the managed integrity marker.',
-        path: ['content'],
-      });
+    if (artifact.language === 'sql') {
+      const markerMatch = /^-- dvt:graph-draft-content-sha256=([a-f0-9]{64})\r?\n([\s\S]*)$/u.exec(
+        artifact.content
+      );
+      if (!markerMatch) {
+        context.addIssue({
+          code: 'custom',
+          message: 'Graph-derived dbt model SQL must carry the managed integrity marker.',
+          path: ['content'],
+        });
+      } else if (sha256HexUtf8(markerMatch[2]!) !== markerMatch[1]) {
+        context.addIssue({
+          code: 'custom',
+          message: 'Graph-derived dbt model SQL integrity marker must match its payload.',
+          path: ['content'],
+        });
+      }
     }
   });
 

@@ -14,16 +14,16 @@ code_refs:
   - apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts
   - apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts
   - apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts
-  - apps/web/src/app/services/dbtProject/dbtGraphWorkspaceArtifactPublisher.ts
+  - apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts
   - apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts exec vitest run test/graph-dbt-workspace-artifact-publication.contract.test.ts
     - pnpm --filter dvt-api exec vitest run test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts
-    - pnpm --filter dvt-web exec vitest run src/app/services/dbtProject/__tests__/dbtGraphWorkspaceArtifactPublisher.test.ts
-    - pnpm --filter dvt-web exec vitest run src/app/services/dbtProject/__tests__/graphDbtWorkspaceArtifactPublication.api.test.ts
+    - pnpm --filter @dvt/web exec vitest run src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts
+    - pnpm --filter @dvt/web exec vitest run src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts
     - pnpm --filter dvt-api test
-    - pnpm --filter dvt-web test
+    - pnpm --filter @dvt/web test
     - pnpm verify:prepush
 ---
 

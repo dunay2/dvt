@@ -1,6 +1,7 @@
-import type {
-  GraphDbtWorkspaceArtifactPublicationResult,
-  PublishGraphDbtWorkspaceArtifactsRequest,
+import {
+  sha256HexUtf8,
+  type GraphDbtWorkspaceArtifactPublicationResult,
+  type PublishGraphDbtWorkspaceArtifactsRequest,
 } from '@dvt/contracts';
 import Fastify from 'fastify';
 import { describe, expect, it, vi } from 'vitest';
@@ -15,6 +16,8 @@ const SCOPE = {
   environmentId: 'env-a',
 } as const;
 
+const SQL_PAYLOAD = 'select 1\n';
+
 const REQUEST: PublishGraphDbtWorkspaceArtifactsRequest = {
   artifacts: [
     {
@@ -26,7 +29,7 @@ const REQUEST: PublishGraphDbtWorkspaceArtifactsRequest = {
     },
     {
       path: 'models/orders.sql',
-      content: `-- dvt:graph-draft-content-sha256=${'a'.repeat(64)}\nselect 1\n`,
+      content: `-- dvt:graph-draft-content-sha256=${sha256HexUtf8(SQL_PAYLOAD)}\n${SQL_PAYLOAD}`,
       language: 'sql',
       expectedRevision: { kind: 'content_sha256', value: 'b'.repeat(64) },
       writeRequired: true,
