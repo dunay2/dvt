@@ -48,7 +48,7 @@ const edge: CanonicalEdge = {
 };
 
 describe('Canvas graph-draft DBT SQL authority', () => {
-  it('blocks every artifact write when Project Code contains divergent model SQL', async () => {
+  it('requires explicit replacement before publishing divergent pre-marker model SQL', async () => {
     const saveFileContent = vi.fn<IWorkspaceFileContentCommandPort['saveFileContent']>(
       async (input) => ({
         kind: 'saved',
@@ -58,7 +58,21 @@ describe('Canvas graph-draft DBT SQL authority', () => {
         lastModified: '2026-07-22T00:00:01.000Z',
       })
     );
-    const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>();
+    const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
+      async (request) => ({
+        schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+        kind: 'applied',
+        idempotencyKey: request.idempotencyKey,
+        requestHash: 'd'.repeat(64),
+        deduplicated: false,
+        writes: request.artifacts
+          .filter((artifact) => artifact.writeRequired)
+          .map((artifact) => ({
+            path: artifact.path,
+            contentSha256: 'e'.repeat(64),
+          })),
+      })
+    );
     const persistedPlan: PlanViewModel = {
       planId: 'plan-graph-draft',
       planVersion: '1.0.0',
@@ -117,12 +131,44 @@ describe('Canvas graph-draft DBT SQL authority', () => {
       graphDbtWorkspaceArtifactPublicationCommand: { publish },
     });
 
-    expect(result).toMatchObject({ ok: false });
-    if (!result.ok) {
-      expect(result.message).toContain('models/orders.sql');
-    }
+    expect(result).toMatchObject({
+      ok: false,
+      kind: 'graph_sql_replacement_confirmation_required',
+      replacementRequests: [{ path: 'models/orders.sql' }],
+    });
     expect(saveFileContent).not.toHaveBeenCalled();
     expect(publish).not.toHaveBeenCalled();
     expect(previewPlan).not.toHaveBeenCalled();
+
+    if (result.ok || result.kind !== 'graph_sql_replacement_confirmation_required') {
+      throw new Error('Expected graph SQL replacement confirmation.');
+    }
+
+    const confirmed = await executeCanvasPlanAction({
+      canPlan: true,
+      canonicalEdges: [edge],
+      canonicalNodes: [sourceNode, modelNode],
+      executionStrategy: strategy,
+      plansService: { previewPlan, importPlan: vi.fn() },
+      previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
+      selectionIntent: { mode: 'explicit', nodeIds: [modelNode.id] },
+      sessionContext,
+      transformationValidation: validateTransformationGraph({
+        nodes: [sourceNode, modelNode],
+        edges: [edge],
+        selectedNodeIds: [modelNode.id],
+        workspaceNodeIds: [sourceNode.id, modelNode.id],
+      }),
+      workspaceNodeIds: [sourceNode.id, modelNode.id],
+      workspaceFilesQuery,
+      workspaceFileContentCommand: { saveFileContent },
+      graphDbtWorkspaceArtifactPublicationCommand: { publish },
+      graphSqlReplacementAuthorizations: result.replacementRequests,
+    });
+
+    expect(confirmed).toMatchObject({ ok: true });
+    expect(saveFileContent).not.toHaveBeenCalled();
+    expect(publish).toHaveBeenCalledTimes(1);
+    expect(previewPlan).toHaveBeenCalledTimes(1);
   });
 });

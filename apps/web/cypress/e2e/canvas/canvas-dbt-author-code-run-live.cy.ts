@@ -2,7 +2,7 @@
  * Owned concern: prove the dbt authoring, generated Code, and Start Run path
  * against the live protected runtime without API stubs.
  */
-import { canvasViewCopy, formatCanvasCopyTemplate } from '../../../src/app/views/canvas/copy';
+import { canvasViewCopy } from '../../../src/app/views/canvas/copy';
 import { resolveCodeViewCopy } from '../../../src/app/views/code/codeViewCopy';
 import {
   clickButtonNatively,
@@ -198,11 +198,11 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     waitForPersistedDbtModelConfig();
 
     clickPreviewExecutionPlanFromOperationalDrawer();
-    cy.contains('Execution Preview', { timeout: 30_000 }).should('be.visible');
+    cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 }).should('be.visible');
     cy.contains('Execution Preview identity').should('be.visible');
     cy.contains('Persistence evidence').scrollIntoView().should('be.visible');
     cy.get('body').type('{esc}', { force: true });
-    cy.contains('Execution Preview').should('not.exist');
+    cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
 
     readLiveWorkspaceFile('models/payments_model.sql').then((fileResponse) => {
       expect(fileResponse.status).to.equal(200);
@@ -260,12 +260,9 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
 
     replaceLiveWorkspaceFile(workingTreePath, EXTERNAL_MODEL_SQL);
     clickPreviewExecutionPlanFromOperationalDrawer();
-    cy.contains(
-      formatCanvasCopyTemplate(canvasViewCopy.planGraphModelSqlDivergenceMessageTemplate, {
-        path: workingTreePath,
-      }),
-      { timeout: 30_000 }
-    ).should('be.visible');
+    cy.contains(canvasViewCopy.graphSqlReplacementTitle, { timeout: 30_000 }).should('be.visible');
+    cy.contains(workingTreePath).should('be.visible');
+    cy.contains('button', canvasViewCopy.graphSqlReplacementCancelLabel).click();
     readLiveWorkspaceFile(workingTreePath).then((response) => {
       expect(response.status).to.equal(200);
       expect(String((response.body as { content?: unknown }).content ?? '')).to.equal(
@@ -273,6 +270,18 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
       );
     });
 
-    cy.then(() => replaceLiveWorkspaceFile(workingTreePath, generatedWorkingTreeContent));
+    clickPreviewExecutionPlanFromOperationalDrawer();
+    cy.contains(canvasViewCopy.graphSqlReplacementTitle, { timeout: 30_000 }).should('be.visible');
+    cy.contains('button', canvasViewCopy.graphSqlReplacementConfirmLabel).click();
+    cy.get('[data-slot="graph-sql-replacement-confirmation"]', { timeout: 30_000 }).should(
+      'not.exist'
+    );
+    cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 }).should('be.visible');
+    readLiveWorkspaceFile(workingTreePath).then((response) => {
+      expect(response.status).to.equal(200);
+      expect(String((response.body as { content?: unknown }).content ?? '')).to.equal(
+        generatedWorkingTreeContent
+      );
+    });
   });
 });

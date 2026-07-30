@@ -13,14 +13,31 @@ type CurrentWorkspaceSqlFile = Readonly<{
 }>;
 
 type PublishableGraphModelSqlDecision = Readonly<{
-  kind: 'create' | 'unchanged' | 'replace_managed' | 'adopt_legacy_equivalent';
+  kind:
+    | 'create'
+    | 'unchanged'
+    | 'replace_managed'
+    | 'adopt_legacy_equivalent'
+    | 'replace_legacy_authorized';
   content: string;
   expectedRevision: ExpectedWorkspaceFileRevision;
 }>;
 
-type ConflictingGraphModelSqlDecision = Readonly<{
-  kind: 'conflict';
+export type GraphModelSqlReplacementAuthorization = Readonly<{
+  observedContentSha256: string;
+  proposedContentSha256: string;
 }>;
+
+type ConflictingGraphModelSqlDecision =
+  | Readonly<{
+      kind: 'conflict';
+      reason: 'invalid_managed';
+    }>
+  | Readonly<{
+      kind: 'conflict';
+      reason: 'unmarked';
+      replacementAuthorization: GraphModelSqlReplacementAuthorization;
+    }>;
 
 export type GraphModelSqlPublicationDecision =
   PublishableGraphModelSqlDecision | ConflictingGraphModelSqlDecision;
@@ -54,6 +71,7 @@ export function createGraphManagedDbtModelSql(payload: string): string {
 export function classifyGraphModelSqlPublication(args: {
   proposedContent: string;
   currentFile: CurrentWorkspaceSqlFile | undefined;
+  replacementAuthorization?: GraphModelSqlReplacementAuthorization;
 }): GraphModelSqlPublicationDecision {
   const proposed = parseValidGraphManagedSql(args.proposedContent);
   if (!proposed) {
@@ -86,6 +104,7 @@ export function classifyGraphModelSqlPublication(args: {
         }
       : {
           kind: 'conflict',
+          reason: 'invalid_managed',
         };
   }
 
@@ -97,7 +116,26 @@ export function classifyGraphModelSqlPublication(args: {
     };
   }
 
+  const replacementAuthorization = {
+    observedContentSha256: args.currentFile.contentSha256,
+    proposedContentSha256: sha256HexUtf8(args.proposedContent),
+  } as const;
+  if (
+    args.replacementAuthorization?.observedContentSha256 ===
+      replacementAuthorization.observedContentSha256 &&
+    args.replacementAuthorization.proposedContentSha256 ===
+      replacementAuthorization.proposedContentSha256
+  ) {
+    return {
+      kind: 'replace_legacy_authorized',
+      content: args.proposedContent,
+      expectedRevision,
+    };
+  }
+
   return {
     kind: 'conflict',
+    reason: 'unmarked',
+    replacementAuthorization,
   };
 }

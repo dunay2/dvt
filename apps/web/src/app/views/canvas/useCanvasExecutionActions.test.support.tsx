@@ -177,6 +177,12 @@ function ExecutionActionsHookView({
       </div>
       <div data-testid="plan-status-summary">{hook.planStatusSummary}</div>
       <div data-testid="current-plan-sha">{currentPlan?.planRef?.sha256 ?? 'none'}</div>
+      <div data-testid="graph-sql-replacement-open">
+        {String(hook.graphSqlReplacementConfirmation.open)}
+      </div>
+      <div data-testid="graph-sql-replacement-paths">
+        {hook.graphSqlReplacementConfirmation.paths.join(',') || 'none'}
+      </div>
       <button
         type="button"
         onClick={() => {
@@ -192,6 +198,17 @@ function ExecutionActionsHookView({
         }}
       >
         start-run
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void hook.confirmGraphSqlReplacement();
+        }}
+      >
+        confirm-graph-sql-replacement
+      </button>
+      <button type="button" onClick={hook.cancelGraphSqlReplacement}>
+        cancel-graph-sql-replacement
       </button>
     </div>
   );
@@ -554,6 +571,8 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   rerender: (nextArgs: Partial<RenderExecutionActionsHarnessArgs>) => Promise<void>;
   clickPlan: () => Promise<void>;
   clickStartRun: () => Promise<void>;
+  clickConfirmGraphSqlReplacement: () => Promise<void>;
+  clickCancelGraphSqlReplacement: () => Promise<void>;
   text: (testId: string) => string | null;
   cleanup: () => void;
   container: HTMLDivElement;
@@ -613,6 +632,16 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     clickStartRun: async () => {
       await act(async () => {
         queryButton(1)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    },
+    clickConfirmGraphSqlReplacement: async () => {
+      await act(async () => {
+        queryButton(2)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    },
+    clickCancelGraphSqlReplacement: async () => {
+      await act(async () => {
+        queryButton(3)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       });
     },
     text: (testId) => container.querySelector(`[data-testid="${testId}"]`)?.textContent ?? null,

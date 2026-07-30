@@ -12,7 +12,13 @@ import type {
 } from '../../ports/workspace';
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
 import type { DbtWorkspaceArtifact } from './canvasDbtWorkspaceArtifacts';
-import { classifyGraphModelSqlPublication } from './dbtGraphModelSqlPublicationPolicy';
+import {
+  classifyGraphModelSqlPublication,
+  type GraphModelSqlReplacementAuthorization,
+} from './dbtGraphModelSqlPublicationPolicy';
+
+export type GraphSqlReplacementAuthorization = GraphModelSqlReplacementAuthorization &
+  Readonly<{ path: string }>;
 
 type PreparedArtifact = Readonly<{
   artifact: DbtWorkspaceArtifact;
@@ -22,11 +28,25 @@ type PreparedArtifact = Readonly<{
 
 type ArtifactPreflight =
   | Readonly<{ kind: 'prepared'; value: PreparedArtifact }>
-  | Readonly<{ kind: 'conflict'; path: string }>;
+  | Readonly<{
+      kind: 'conflict';
+      path: string;
+      reason: 'invalid_managed' | 'unmarked';
+      replacementAuthorization?: GraphSqlReplacementAuthorization;
+    }>;
 
 export type GraphDbtWorkspaceArtifactPublicationResult =
   | Readonly<{ ok: true; writtenArtifactPaths: readonly string[] }>
-  | Readonly<{ ok: false; conflictPath: string }>;
+  | Readonly<{
+      ok: false;
+      kind: 'replacement_confirmation_required';
+      requests: readonly GraphSqlReplacementAuthorization[];
+    }>
+  | Readonly<{
+      ok: false;
+      kind: 'non_replaceable_conflict';
+      conflictPath: string;
+    }>;
 
 async function readOptionalWorkspaceFile(
   workspaceFilesQuery: IWorkspaceFilesQueryPort,
@@ -49,6 +69,7 @@ function observedRevision(file: FileContent | undefined): ExpectedWorkspaceFileR
 async function preflightArtifact(args: {
   artifact: DbtWorkspaceArtifact;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
+  replacementAuthorization?: GraphSqlReplacementAuthorization;
 }): Promise<ArtifactPreflight> {
   const currentFile = await readOptionalWorkspaceFile(args.workspaceFilesQuery, args.artifact.path);
 
@@ -56,9 +77,22 @@ async function preflightArtifact(args: {
     const decision = classifyGraphModelSqlPublication({
       proposedContent: args.artifact.content,
       currentFile,
+      replacementAuthorization: args.replacementAuthorization,
     });
     if (decision.kind === 'conflict') {
-      return { kind: 'conflict', path: args.artifact.path };
+      return {
+        kind: 'conflict',
+        path: args.artifact.path,
+        reason: decision.reason,
+        ...(decision.reason === 'unmarked'
+          ? {
+              replacementAuthorization: {
+                path: args.artifact.path,
+                ...decision.replacementAuthorization,
+              },
+            }
+          : {}),
+      };
     }
     return {
       kind: 'prepared',
@@ -108,20 +142,50 @@ export async function publishGraphDbtWorkspaceArtifacts(args: {
   artifacts: readonly DbtWorkspaceArtifact[];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   publicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
+  replacementAuthorizations?: readonly GraphSqlReplacementAuthorization[];
 }): Promise<GraphDbtWorkspaceArtifactPublicationResult> {
   assertUniqueArtifactPaths(args.artifacts);
+  const replacementAuthorizationByPath = new Map(
+    (args.replacementAuthorizations ?? []).map((authorization) => [
+      authorization.path,
+      authorization,
+    ])
+  );
 
   const preflight = await Promise.all(
     args.artifacts.map(async (artifact) =>
-      preflightArtifact({ artifact, workspaceFilesQuery: args.workspaceFilesQuery })
+      preflightArtifact({
+        artifact,
+        workspaceFilesQuery: args.workspaceFilesQuery,
+        replacementAuthorization: replacementAuthorizationByPath.get(artifact.path),
+      })
     )
   );
-  const conflict = preflight.find(
+  const conflicts = preflight.filter(
     (result): result is Extract<ArtifactPreflight, { kind: 'conflict' }> =>
       result.kind === 'conflict'
   );
-  if (conflict) {
-    return { ok: false, conflictPath: conflict.path };
+  const nonReplaceableConflict = conflicts.find(
+    (conflict) => conflict.reason === 'invalid_managed'
+  );
+  if (nonReplaceableConflict) {
+    return {
+      ok: false,
+      kind: 'non_replaceable_conflict',
+      conflictPath: nonReplaceableConflict.path,
+    };
+  }
+  if (conflicts.length > 0) {
+    return {
+      ok: false,
+      kind: 'replacement_confirmation_required',
+      requests: conflicts
+        .map((conflict) => conflict.replacementAuthorization)
+        .filter(
+          (authorization): authorization is GraphSqlReplacementAuthorization =>
+            authorization != null
+        ),
+    };
   }
 
   const preparedArtifacts = preflight.map((result) => {
@@ -146,7 +210,11 @@ export async function publishGraphDbtWorkspaceArtifacts(args: {
   });
 
   if (publication.kind === 'conflict') {
-    return { ok: false, conflictPath: publication.conflicts[0]!.path };
+    return {
+      ok: false,
+      kind: 'non_replaceable_conflict',
+      conflictPath: publication.conflicts[0]!.path,
+    };
   }
 
   return {

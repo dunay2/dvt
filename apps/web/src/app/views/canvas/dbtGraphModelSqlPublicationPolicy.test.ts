@@ -63,12 +63,53 @@ describe('DBT graph model SQL publication policy', () => {
         proposedContent: managed,
         currentFile: currentFile('select customer_secret from external_edit'),
       })
-    ).toMatchObject({ kind: 'conflict' });
+    ).toMatchObject({ kind: 'conflict', reason: 'unmarked' });
     expect(
       classifyGraphModelSqlPublication({
         proposedContent: managed,
         currentFile: currentFile(tampered),
       })
-    ).toMatchObject({ kind: 'conflict' });
+    ).toMatchObject({ kind: 'conflict', reason: 'invalid_managed' });
+  });
+
+  it('replaces divergent pre-marker SQL only with an exact one-use authorization', () => {
+    const proposedContent = createGraphManagedDbtModelSql(NEXT_GRAPH_SQL);
+    const current = currentFile(FIRST_GRAPH_SQL);
+    const pending = classifyGraphModelSqlPublication({ proposedContent, currentFile: current });
+
+    expect(pending).toMatchObject({
+      kind: 'conflict',
+      reason: 'unmarked',
+      replacementAuthorization: {
+        observedContentSha256: current.contentSha256,
+      },
+    });
+    if (pending.kind !== 'conflict' || pending.reason !== 'unmarked') {
+      throw new Error('Expected an unmarked SQL replacement request.');
+    }
+
+    expect(
+      classifyGraphModelSqlPublication({
+        proposedContent,
+        currentFile: current,
+        replacementAuthorization: pending.replacementAuthorization,
+      })
+    ).toMatchObject({ kind: 'replace_legacy_authorized' });
+
+    expect(
+      classifyGraphModelSqlPublication({
+        proposedContent: createGraphManagedDbtModelSql(`${NEXT_GRAPH_SQL}-- changed\n`),
+        currentFile: current,
+        replacementAuthorization: pending.replacementAuthorization,
+      })
+    ).toMatchObject({ kind: 'conflict', reason: 'unmarked' });
+
+    expect(
+      classifyGraphModelSqlPublication({
+        proposedContent,
+        currentFile: currentFile(FIRST_GRAPH_SQL, 'b'.repeat(64)),
+        replacementAuthorization: pending.replacementAuthorization,
+      })
+    ).toMatchObject({ kind: 'conflict', reason: 'unmarked' });
   });
 });

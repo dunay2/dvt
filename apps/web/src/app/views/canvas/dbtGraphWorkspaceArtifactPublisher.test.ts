@@ -40,7 +40,7 @@ function applied(
 }
 
 describe('DBT graph workspace artifact publisher', () => {
-  it('preflights every artifact and sends no command when a later model SQL file diverges', async () => {
+  it('preflights every artifact and requests confirmation for divergent pre-marker SQL', async () => {
     const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>();
     const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>(async (path) => {
       if (path === 'models/second.sql') {
@@ -60,8 +60,85 @@ describe('DBT graph workspace artifact publisher', () => {
       publicationCommand: { publish },
     });
 
-    expect(result).toEqual({ ok: false, conflictPath: 'models/second.sql' });
+    expect(result).toMatchObject({
+      ok: false,
+      kind: 'replacement_confirmation_required',
+      requests: [{ path: 'models/second.sql' }],
+    });
     expect(getFileContent).toHaveBeenCalledTimes(4);
+    expect(publish).not.toHaveBeenCalled();
+  });
+
+  it('publishes pre-marker SQL atomically only after exact confirmation', async () => {
+    let currentSql = 'select 1 as legacy_graph_sql\n';
+    const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
+      async (request) => applied(request)
+    );
+    const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>(async (path) =>
+      file(
+        path,
+        currentSql,
+        currentSql === 'select 1 as legacy_graph_sql\n' ? 'a'.repeat(64) : 'b'.repeat(64)
+      )
+    );
+    const args = {
+      artifacts: [{ path: 'models/orders.sql', language: 'sql' as const, content: NEXT_SQL }],
+      workspaceFilesQuery: { listFiles: vi.fn(), getFileContent },
+      publicationCommand: { publish },
+    };
+
+    const pending = await publishGraphDbtWorkspaceArtifacts(args);
+    expect(pending).toMatchObject({ ok: false, kind: 'replacement_confirmation_required' });
+    if (pending.ok || pending.kind !== 'replacement_confirmation_required') {
+      throw new Error('Expected graph SQL replacement confirmation.');
+    }
+
+    currentSql = 'select 2 as concurrent_external_edit\n';
+    const stale = await publishGraphDbtWorkspaceArtifacts({
+      ...args,
+      replacementAuthorizations: pending.requests,
+    });
+    expect(stale).toMatchObject({ ok: false, kind: 'replacement_confirmation_required' });
+    expect(publish).not.toHaveBeenCalled();
+
+    currentSql = 'select 1 as legacy_graph_sql\n';
+    const published = await publishGraphDbtWorkspaceArtifacts({
+      ...args,
+      replacementAuthorizations: pending.requests,
+    });
+    expect(published).toEqual({ ok: true, writtenArtifactPaths: ['models/orders.sql'] });
+    expect(publish).toHaveBeenCalledWith({
+      artifacts: [
+        {
+          path: 'models/orders.sql',
+          language: 'sql',
+          content: NEXT_SQL,
+          expectedRevision: { kind: 'content_sha256', value: 'a'.repeat(64) },
+          writeRequired: true,
+        },
+      ],
+      idempotencyKey: expect.stringMatching(/^graph-dbt:[a-f0-9]{64}$/u),
+    });
+  });
+
+  it('never offers replacement for a malformed managed marker', async () => {
+    const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>();
+    const malformed = `${FIRST_SQL.slice(0, 55)}${'0'.repeat(64)}\nselect tampered\n`;
+
+    const result = await publishGraphDbtWorkspaceArtifacts({
+      artifacts: [{ path: 'models/orders.sql', language: 'sql', content: NEXT_SQL }],
+      workspaceFilesQuery: {
+        listFiles: vi.fn(),
+        getFileContent: vi.fn(async (path) => file(path, malformed, 'c'.repeat(64))),
+      },
+      publicationCommand: { publish },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      kind: 'non_replaceable_conflict',
+      conflictPath: 'models/orders.sql',
+    });
     expect(publish).not.toHaveBeenCalled();
   });
 

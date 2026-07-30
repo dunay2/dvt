@@ -112,7 +112,7 @@ export function useCanvasExecutionActions({
     setLastPlannedDraftSignature,
   });
 
-  const handlePreviewExecutionPlan = useCanvasPlanActionHandler({
+  const planAction = useCanvasPlanActionHandler({
     canPlan,
     canonicalEdges,
     canonicalNodes,
@@ -157,7 +157,10 @@ export function useCanvasExecutionActions({
     isCurrentPlanStale,
     planRunReadiness,
     planStatusSummary,
-    handlePreviewExecutionPlan,
+    handlePreviewExecutionPlan: planAction.handlePreviewExecutionPlan,
     handleStartRun,
+    graphSqlReplacementConfirmation: planAction.graphSqlReplacementConfirmation,
+    confirmGraphSqlReplacement: planAction.confirmGraphSqlReplacement,
+    cancelGraphSqlReplacement: planAction.cancelGraphSqlReplacement,
   };
 }

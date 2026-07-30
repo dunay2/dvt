@@ -155,6 +155,11 @@ export type CanvasViewCopy = {
   readonly planSqlArtifactRequiredMessage: string;
   readonly planUnableToCreateMessage: string;
   readonly planGraphModelSqlDivergenceMessageTemplate: string;
+  readonly graphSqlReplacementTitle: string;
+  readonly graphSqlReplacementDescription: string;
+  readonly graphSqlReplacementPathListLabel: string;
+  readonly graphSqlReplacementCancelLabel: string;
+  readonly graphSqlReplacementConfirmLabel: string;
   readonly previewProvenanceTransformPathRequiredMessage: string;
   readonly previewProvenanceWorkspaceNotConfiguredMessage: string;
   readonly previewProvenanceExplicitGitRevisionRequiredMessage: string;

@@ -27,11 +27,22 @@ import {
 import { buildPreviewGraphSource } from './previewGraphSource';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
-import { publishGraphDbtWorkspaceArtifacts } from './dbtGraphWorkspaceArtifactPublisher';
+import {
+  publishGraphDbtWorkspaceArtifacts,
+  type GraphSqlReplacementAuthorization,
+} from './dbtGraphWorkspaceArtifactPublisher';
 
 type CanvasPlanActionFailure = {
   ok: false;
+  kind?: 'failure';
   message: string;
+};
+
+type CanvasPlanActionGraphSqlReplacementConfirmation = {
+  ok: false;
+  kind: 'graph_sql_replacement_confirmation_required';
+  message: string;
+  replacementRequests: readonly GraphSqlReplacementAuthorization[];
 };
 
 type CanvasPlanActionSuccess = {
@@ -41,7 +52,10 @@ type CanvasPlanActionSuccess = {
   writtenArtifactPaths: readonly string[];
 };
 
-export type CanvasPlanActionResult = CanvasPlanActionFailure | CanvasPlanActionSuccess;
+export type CanvasPlanActionResult =
+  | CanvasPlanActionFailure
+  | CanvasPlanActionGraphSqlReplacementConfirmation
+  | CanvasPlanActionSuccess;
 
 function attachDbtSelectionIntent(
   plan: PlanViewModel,
@@ -97,6 +111,7 @@ export async function executeCanvasPlanAction({
   workspaceFilesQuery,
   workspaceFileContentCommand,
   graphDbtWorkspaceArtifactPublicationCommand,
+  graphSqlReplacementAuthorizations,
 }: {
   canPlan: boolean;
   canonicalEdges: readonly CanonicalEdge[];
@@ -114,6 +129,7 @@ export async function executeCanvasPlanAction({
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
   graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
+  graphSqlReplacementAuthorizations?: readonly GraphSqlReplacementAuthorization[];
 }): Promise<CanvasPlanActionResult> {
   if (!canPlan) {
     return { ok: false, message: canvasViewCopy.planPermissionDeniedMessage };
@@ -158,8 +174,17 @@ export async function executeCanvasPlanAction({
           artifacts: artifactProjection.artifacts,
           workspaceFilesQuery,
           publicationCommand: graphDbtWorkspaceArtifactPublicationCommand,
+          replacementAuthorizations: graphSqlReplacementAuthorizations,
         });
         if (!publication.ok) {
+          if (publication.kind === 'replacement_confirmation_required') {
+            return {
+              ok: false,
+              kind: 'graph_sql_replacement_confirmation_required',
+              message: canvasViewCopy.graphSqlReplacementDescription,
+              replacementRequests: publication.requests,
+            };
+          }
           return {
             ok: false,
             message: formatCanvasCopyTemplate(

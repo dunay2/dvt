@@ -7,6 +7,12 @@ export const canvasViewExecutionCopyEs = {
   planUnableToCreateMessage: 'No se ha podido crear el Execution Preview',
   planGraphModelSqlDivergenceMessageTemplate:
     'Código de proyecto contiene una edición más reciente en {path}. El Preview se ha detenido sin sobrescribirla. Continúa desde un proyecto DBT con autoridad de archivos o restaura la revisión generada por el Canvas.',
+  graphSqlReplacementTitle: 'Confirmar la autoridad SQL del Canvas',
+  graphSqlReplacementDescription:
+    'Estos ficheros de modelo son anteriores a la metadata de autoridad del grafo. DVT no puede demostrar si proceden de un Preview anterior del Canvas o de una edición externa. Continúa solo para reemplazarlos por el SQL actual del modelo en el Canvas.',
+  graphSqlReplacementPathListLabel: 'Ficheros que se reemplazarán',
+  graphSqlReplacementCancelLabel: 'Conservar los ficheros actuales',
+  graphSqlReplacementConfirmLabel: 'Usar el SQL del Canvas',
   previewProvenanceTransformPathRequiredMessage:
     'Execution Preview necesita contenido SQL. Selecciona un fichero SQL del workspace para el SQL transform o usa un transform creado en el canvas para que DVT lo cree.',
   previewProvenanceWorkspaceNotConfiguredMessage:

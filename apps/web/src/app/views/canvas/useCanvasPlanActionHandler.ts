@@ -1,6 +1,6 @@
 /** Owned concern: bind Canvas plan command handling to minimal execution ports. */
 import { useQueryClient } from '@tanstack/react-query';
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { queryKeys } from '../../queries/queryKeys';
 import { canvasViewCopy } from './copy';
@@ -12,6 +12,7 @@ import type {
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import type { CanvasExecutionState } from './canvasExecutionState';
 import { validateTransformationGraph } from './transformationGraphValidation';
+import type { GraphSqlReplacementAuthorization } from './dbtGraphWorkspaceArtifactPublisher';
 
 type UseCanvasPlanActionHandlerArgs = Pick<
   UseCanvasExecutionActionsParams,
@@ -55,96 +56,153 @@ export function useCanvasPlanActionHandler({
   setCurrentPlan,
   setLastPlannedDraftSignature,
   setPlanModalOpen,
-}: UseCanvasPlanActionHandlerArgs): () => Promise<void> {
+}: UseCanvasPlanActionHandlerArgs): Readonly<{
+  handlePreviewExecutionPlan: () => Promise<void>;
+  graphSqlReplacementConfirmation: {
+    open: boolean;
+    paths: readonly string[];
+    busy: boolean;
+  };
+  confirmGraphSqlReplacement: () => Promise<void>;
+  cancelGraphSqlReplacement: () => void;
+}> {
   const queryClient = useQueryClient();
+  const [replacementRequests, setReplacementRequests] = useState<
+    readonly GraphSqlReplacementAuthorization[]
+  >([]);
+  const [replacementBusy, setReplacementBusy] = useState(false);
 
-  return useCallback(async () => {
-    if (!canPlan) {
-      shellFeedback.error(canvasViewCopy.planPermissionDeniedMessage);
-      return;
-    }
+  const runPreview = useCallback(
+    async (graphSqlReplacementAuthorizations?: readonly GraphSqlReplacementAuthorization[]) => {
+      if (!canPlan) {
+        shellFeedback.error(canvasViewCopy.planPermissionDeniedMessage);
+        return;
+      }
 
-    if (executionStrategy == null || executionStrategy.kind === 'not_executable') {
-      shellFeedback.error(canvasViewCopy.canvasExecutionUnavailableMessage);
-      return;
-    }
+      if (executionStrategy == null || executionStrategy.kind === 'not_executable') {
+        shellFeedback.error(canvasViewCopy.canvasExecutionUnavailableMessage);
+        return;
+      }
 
-    const flushedDraftGraph =
-      flushDraftForExecution != null ? await flushDraftForExecution() : null;
-    if (flushedDraftGraph?.ok === false) {
-      shellFeedback.error(flushedDraftGraph.message);
-      return;
-    }
-    const planCanonicalEdges = flushedDraftGraph?.canonicalEdges ?? canonicalEdges;
-    const planCanonicalNodes = flushedDraftGraph?.canonicalNodes ?? canonicalNodes;
-    const planWorkspaceNodeIds = flushedDraftGraph?.workspaceNodeIds ?? workspaceNodeIds;
-    const planTransformationValidation =
-      flushedDraftGraph?.ok === true
-        ? validateTransformationGraph({
-            nodes: planCanonicalNodes,
-            edges: planCanonicalEdges,
-            selectedNodeIds: selectionIntent.nodeIds,
-            workspaceNodeIds: planWorkspaceNodeIds,
-          })
-        : transformationValidation;
+      const flushedDraftGraph =
+        flushDraftForExecution != null ? await flushDraftForExecution() : null;
+      if (flushedDraftGraph?.ok === false) {
+        shellFeedback.error(flushedDraftGraph.message);
+        return;
+      }
+      const planCanonicalEdges = flushedDraftGraph?.canonicalEdges ?? canonicalEdges;
+      const planCanonicalNodes = flushedDraftGraph?.canonicalNodes ?? canonicalNodes;
+      const planWorkspaceNodeIds = flushedDraftGraph?.workspaceNodeIds ?? workspaceNodeIds;
+      const planTransformationValidation =
+        flushedDraftGraph?.ok === true
+          ? validateTransformationGraph({
+              nodes: planCanonicalNodes,
+              edges: planCanonicalEdges,
+              selectedNodeIds: selectionIntent.nodeIds,
+              workspaceNodeIds: planWorkspaceNodeIds,
+            })
+          : transformationValidation;
 
-    const result = await executeCanvasPlanAction({
+      const result = await executeCanvasPlanAction({
+        canPlan,
+        canonicalEdges: planCanonicalEdges,
+        canonicalNodes: planCanonicalNodes,
+        executionStrategy,
+        plansService,
+        previewProvenanceConfig,
+        selectionIntent,
+        sessionContext,
+        transformationValidation: planTransformationValidation,
+        workspaceNodeIds: planWorkspaceNodeIds,
+        workspaceFilesQuery,
+        workspaceFileContentCommand,
+        graphDbtWorkspaceArtifactPublicationCommand,
+        graphSqlReplacementAuthorizations,
+      });
+
+      if (!result.ok) {
+        if (result.kind === 'graph_sql_replacement_confirmation_required') {
+          setReplacementRequests(result.replacementRequests);
+          return;
+        }
+        setReplacementRequests([]);
+        shellFeedback.error(result.message);
+        return;
+      }
+
+      setReplacementRequests([]);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.fileTree() });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.artifacts() });
+      if (previewProvenanceConfig.graphArtifactPath) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.fileContent(previewProvenanceConfig.graphArtifactPath),
+        });
+      }
+      for (const artifactPath of result.writtenArtifactPaths) {
+        void queryClient.invalidateQueries({
+          queryKey: queryKeys.workspace.fileContent(artifactPath),
+        });
+      }
+
+      setCurrentPlan(result.plan);
+      setLastPlannedDraftSignature(result.draftSignature);
+      setPlanModalOpen(true);
+      shellFeedback.success(canvasViewCopy.planCreatedMessage);
+    },
+    [
       canPlan,
-      canonicalEdges: planCanonicalEdges,
-      canonicalNodes: planCanonicalNodes,
+      canonicalEdges,
+      canonicalNodes,
       executionStrategy,
       plansService,
       previewProvenanceConfig,
       selectionIntent,
       sessionContext,
-      transformationValidation: planTransformationValidation,
-      workspaceNodeIds: planWorkspaceNodeIds,
+      transformationValidation,
+      workspaceNodeIds,
       workspaceFilesQuery,
       workspaceFileContentCommand,
       graphDbtWorkspaceArtifactPublicationCommand,
-    });
+      queryClient,
+      shellFeedback,
+      flushDraftForExecution,
+      setCurrentPlan,
+      setLastPlannedDraftSignature,
+      setPlanModalOpen,
+    ]
+  );
 
-    if (!result.ok) {
-      shellFeedback.error(result.message);
+  const handlePreviewExecutionPlan = useCallback(async () => {
+    await runPreview();
+  }, [runPreview]);
+
+  const confirmGraphSqlReplacement = useCallback(async () => {
+    if (replacementRequests.length === 0 || replacementBusy) {
       return;
     }
 
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.fileTree() });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.artifacts() });
-    if (previewProvenanceConfig.graphArtifactPath) {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.workspace.fileContent(previewProvenanceConfig.graphArtifactPath),
-      });
+    setReplacementBusy(true);
+    try {
+      await runPreview(replacementRequests);
+    } finally {
+      setReplacementBusy(false);
     }
-    for (const artifactPath of result.writtenArtifactPaths) {
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.workspace.fileContent(artifactPath),
-      });
-    }
+  }, [replacementBusy, replacementRequests, runPreview]);
 
-    setCurrentPlan(result.plan);
-    setLastPlannedDraftSignature(result.draftSignature);
-    setPlanModalOpen(true);
-    shellFeedback.success(canvasViewCopy.planCreatedMessage);
-  }, [
-    canPlan,
-    canonicalEdges,
-    canonicalNodes,
-    executionStrategy,
-    plansService,
-    previewProvenanceConfig,
-    selectionIntent,
-    sessionContext,
-    transformationValidation,
-    workspaceNodeIds,
-    workspaceFilesQuery,
-    workspaceFileContentCommand,
-    graphDbtWorkspaceArtifactPublicationCommand,
-    queryClient,
-    shellFeedback,
-    flushDraftForExecution,
-    setCurrentPlan,
-    setLastPlannedDraftSignature,
-    setPlanModalOpen,
-  ]);
+  const cancelGraphSqlReplacement = useCallback(() => {
+    if (!replacementBusy) {
+      setReplacementRequests([]);
+    }
+  }, [replacementBusy]);
+
+  return {
+    handlePreviewExecutionPlan,
+    graphSqlReplacementConfirmation: {
+      open: replacementRequests.length > 0,
+      paths: replacementRequests.map((request) => request.path),
+      busy: replacementBusy,
+    },
+    confirmGraphSqlReplacement,
+    cancelGraphSqlReplacement,
+  };
 }

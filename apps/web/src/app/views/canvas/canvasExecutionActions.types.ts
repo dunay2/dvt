@@ -17,6 +17,12 @@ import type { PlanViewModel } from '../../types/plans';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
+export type GraphSqlReplacementConfirmationState = Readonly<{
+  open: boolean;
+  paths: readonly string[];
+  busy: boolean;
+}>;
+
 export type CanvasExecutionDraftGraph =
   | {
       ok: true;
@@ -68,6 +74,9 @@ export type UseCanvasExecutionActionsResult = {
   planStatusSummary: string;
   handlePreviewExecutionPlan: () => Promise<void>;
   handleStartRun: () => Promise<void>;
+  graphSqlReplacementConfirmation: GraphSqlReplacementConfirmationState;
+  confirmGraphSqlReplacement: () => Promise<void>;
+  cancelGraphSqlReplacement: () => void;
 };
 
 export type SetLastPlannedDraftSignature = Dispatch<SetStateAction<string | null>>;
