@@ -40,7 +40,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "4ef57dd41ee0cb46bd424f78512e0b0a3622cd2e1718439a28b2bf1ae5bd2c5f",
+      "sourceContentSha256": "6e28267647ec9f50170452780cc8a9224c61a856747fd9346ad006a17116cdd1",
       "rawRail": {
         "name": "ExportPlanningDbCanonicalLaneState",
         "type": "command",
