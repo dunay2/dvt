@@ -1,12 +1,14 @@
+import { describe, expect, it } from 'vitest';
+
 import {
   GraphDbtWorkspaceArtifactPublicationResultSchema,
   PublishGraphDbtWorkspaceArtifactsRequestSchema,
+  type PublishGraphDbtWorkspaceArtifactsRequest,
 } from '../src/index.js';
-import { describe, expect, it } from 'vitest';
 
 const MANAGED_SQL = `-- dvt:graph-draft-content-sha256=${'a'.repeat(64)}\nselect 1\n`;
 
-function request() {
+function request(): PublishGraphDbtWorkspaceArtifactsRequest {
   return {
     artifacts: [
       {
