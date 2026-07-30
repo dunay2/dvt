@@ -14,8 +14,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   compatibilityDisabled: 'compatibility disabled',
   disabledRoute: 'disabled route',
   invalidGraphSource: 'invalid graph source',
-  invalidGraphDbtWorkspaceArtifactPublication:
-    'invalid graph dbt workspace artifact publication',
+  invalidGraphDbtWorkspaceArtifactPublication: 'invalid graph dbt workspace artifact publication',
   invalidDbtProjectRoot: 'invalid dbt project root',
   invalidDbtProjectImport: 'invalid dbt project import request',
   invalidDbtYamlDescriptionReceipt: 'invalid dbt YAML description receipt',

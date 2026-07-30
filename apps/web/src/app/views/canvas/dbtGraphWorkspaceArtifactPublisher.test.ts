@@ -158,11 +158,9 @@ describe('DBT graph workspace artifact publisher', () => {
       }
       return file(path, content, sha256HexUtf8(content));
     });
-    const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
-      async () => {
-        throw new Error('simulated second-artifact publication failure');
-      }
-    );
+    const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(async () => {
+      throw new Error('simulated second-artifact publication failure');
+    });
 
     await expect(
       publishGraphDbtWorkspaceArtifacts({

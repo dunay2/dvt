@@ -120,9 +120,7 @@ describe('graphDbtWorkspaceArtifactPublicationRoutes', () => {
     const { app } = buildApp({
       execute: vi
         .fn()
-        .mockRejectedValue(
-          new WorkspaceFileBatchIdempotencyConflictError(REQUEST.idempotencyKey)
-        ),
+        .mockRejectedValue(new WorkspaceFileBatchIdempotencyConflictError(REQUEST.idempotencyKey)),
     });
 
     const response = await app.inject({
@@ -155,11 +153,13 @@ function buildApp(
 } {
   const app = Fastify({ logger: false });
   const execute = input.execute ?? vi.fn().mockResolvedValue(APPLIED);
-  const authenticateBearerToken = vi.fn().mockResolvedValue(
-    input.authenticated === false
-      ? { ok: false, code: 'missing_token' }
-      : { ok: true, principal: principal() }
-  );
+  const authenticateBearerToken = vi
+    .fn()
+    .mockResolvedValue(
+      input.authenticated === false
+        ? { ok: false, code: 'missing_token' }
+        : { ok: true, principal: principal() }
+    );
   const authorize = vi.fn().mockImplementation((_principal, requestedScope) =>
     input.authorized === false
       ? { ok: false, reason: 'ACTION_NOT_GRANTED' }

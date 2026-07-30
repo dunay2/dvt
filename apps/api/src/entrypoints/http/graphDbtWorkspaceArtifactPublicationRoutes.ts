@@ -42,10 +42,7 @@ export function registerGraphDbtWorkspaceArtifactPublicationRoutes(
 
       const parsedScope = parseDbtProjectFileScope(request.query);
       if (!parsedScope.ok) {
-        httpErrorTranslation.respond(
-          reply,
-          httpErrorTranslation.parse.issue(parsedScope.issue)
-        );
+        httpErrorTranslation.respond(reply, httpErrorTranslation.parse.issue(parsedScope.issue));
         return;
       }
       const authorized = await authorizeDbtProjectFileRequest(
@@ -88,10 +85,9 @@ function respondInvalidRequest(reply: FastifyReply): void {
   httpErrorTranslation.respond(
     reply,
     httpErrorTranslation.parse.issue(
-      badRequestIssue(
-        HTTP_ERROR_REASON.invalidGraphDbtWorkspaceArtifactPublicationRequest,
-        { target: 'body' }
-      )
+      badRequestIssue(HTTP_ERROR_REASON.invalidGraphDbtWorkspaceArtifactPublicationRequest, {
+        target: 'body',
+      })
     )
   );
 }

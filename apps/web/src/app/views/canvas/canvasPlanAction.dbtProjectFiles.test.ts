@@ -128,7 +128,8 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       }),
       workspaceNodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
       workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
-      graphDbtWorkspaceArtifactPublicationCommand: {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
+      graphDbtWorkspaceArtifactPublicationCommand:
+        {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
       workspaceFileContentCommand: {
         saveFileContent,
       } as unknown as IWorkspaceFileContentCommandPort,
@@ -227,7 +228,8 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       }),
       workspaceNodeIds: [sourceNode.id, modelNode.id],
       workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
-      graphDbtWorkspaceArtifactPublicationCommand: {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
+      graphDbtWorkspaceArtifactPublicationCommand:
+        {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
       workspaceFileContentCommand: {} as IWorkspaceFileContentCommandPort,
     });
 
@@ -290,7 +292,8 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
       }),
       workspaceNodeIds: [sourceNode.id, modelNode.id],
       workspaceFilesQuery: {} as IWorkspaceFilesQueryPort,
-      graphDbtWorkspaceArtifactPublicationCommand: {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
+      graphDbtWorkspaceArtifactPublicationCommand:
+        {} as IGraphDbtWorkspaceArtifactPublicationCommandPort,
       workspaceFileContentCommand: {} as IWorkspaceFileContentCommandPort,
     });
 

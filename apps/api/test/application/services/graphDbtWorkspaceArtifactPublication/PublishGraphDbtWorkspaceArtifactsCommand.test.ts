@@ -1,9 +1,7 @@
 import type { PublishGraphDbtWorkspaceArtifactsRequest } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import type {
-  IWorkspaceFileBatchMutationPort,
-} from '../../../../src/application/ports/workspaceFiles.js';
+import type { IWorkspaceFileBatchMutationPort } from '../../../../src/application/ports/workspaceFiles.js';
 import { PublishGraphDbtWorkspaceArtifactsCommand } from '../../../../src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.js';
 
 const SCOPE = {
@@ -57,10 +55,7 @@ describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
     await expect(command.execute({ scope: SCOPE, ...REQUEST })).resolves.toMatchObject({
       kind: 'applied',
       deduplicated: true,
-      writes: [
-        { path: 'models/orders.sql' },
-        { path: 'models/schema.yml' },
-      ],
+      writes: [{ path: 'models/orders.sql' }, { path: 'models/schema.yml' }],
     });
     expect(apply).toHaveBeenCalledTimes(1);
     expect(apply).toHaveBeenCalledWith(SCOPE, {

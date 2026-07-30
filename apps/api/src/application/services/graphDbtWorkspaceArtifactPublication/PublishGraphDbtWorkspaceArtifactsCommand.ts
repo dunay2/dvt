@@ -4,12 +4,8 @@ import { GraphDbtWorkspaceArtifactPublicationResultSchema } from '@dvt/contracts
 import type { IPublishGraphDbtWorkspaceArtifactsCommand } from '../../ports/graphDbtWorkspaceArtifactPublication.js';
 import type { IWorkspaceFileBatchMutationPort } from '../../ports/workspaceFiles.js';
 
-export class PublishGraphDbtWorkspaceArtifactsCommand
-  implements IPublishGraphDbtWorkspaceArtifactsCommand
-{
-  public constructor(
-    private readonly batchMutation: IWorkspaceFileBatchMutationPort
-  ) {}
+export class PublishGraphDbtWorkspaceArtifactsCommand implements IPublishGraphDbtWorkspaceArtifactsCommand {
+  public constructor(private readonly batchMutation: IWorkspaceFileBatchMutationPort) {}
 
   public async execute(
     input: Parameters<IPublishGraphDbtWorkspaceArtifactsCommand['execute']>[0]
