@@ -1,8 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const {
   normalizeDbtRoundtripCapabilityRow,
@@ -201,6 +203,56 @@ test('verifyGitCommitAncestry fails closed when shallow history cannot be hydrat
     verifyGitCommitAncestry(currentRow().reviewed_commit_sha, { runGit }),
     /Unable to hydrate shallow Git history from origin: remote unavailable/
   );
+});
+
+test('verifyGitCommitAncestry uses isolated full-history evidence for a credential-free shallow checkout', async () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'dbt-roundtrip-git-evidence-'));
+  const sourceRoot = path.join(tempRoot, 'source');
+  const evidenceRoot = path.join(tempRoot, 'evidence');
+  const shallowRoot = path.join(tempRoot, 'shallow');
+  const git = (cwd, args) =>
+    childProcess.spawnSync('git', args, {
+      cwd,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+  try {
+    fs.mkdirSync(sourceRoot);
+    assert.equal(git(sourceRoot, ['init']).status, 0);
+    assert.equal(git(sourceRoot, ['config', 'user.email', 'ci@dvt.local']).status, 0);
+    assert.equal(git(sourceRoot, ['config', 'user.name', 'DVT CI']).status, 0);
+
+    fs.writeFileSync(path.join(sourceRoot, 'evidence.txt'), 'reviewed\n', 'utf8');
+    assert.equal(git(sourceRoot, ['add', 'evidence.txt']).status, 0);
+    assert.equal(git(sourceRoot, ['commit', '-m', 'reviewed']).status, 0);
+    const reviewedCommitSha = git(sourceRoot, ['rev-parse', 'HEAD']).stdout.trim();
+
+    fs.appendFileSync(path.join(sourceRoot, 'evidence.txt'), 'current\n', 'utf8');
+    assert.equal(git(sourceRoot, ['add', 'evidence.txt']).status, 0);
+    assert.equal(git(sourceRoot, ['commit', '-m', 'current']).status, 0);
+
+    assert.equal(git(tempRoot, ['clone', sourceRoot, evidenceRoot]).status, 0);
+    assert.equal(
+      git(tempRoot, ['clone', '--depth=1', pathToFileURL(sourceRoot).href, shallowRoot]).status,
+      0
+    );
+    assert.equal(git(shallowRoot, ['rev-parse', '--is-shallow-repository']).stdout.trim(), 'true');
+    assert.notEqual(
+      git(shallowRoot, ['cat-file', '-e', `${reviewedCommitSha}^{commit}`]).status,
+      0
+    );
+    assert.equal(git(shallowRoot, ['remote', 'remove', 'origin']).status, 0);
+
+    const result = await verifyGitCommitAncestry(reviewedCommitSha, {
+      repoRoot: shallowRoot,
+      gitEvidenceRepoRoot: evidenceRoot,
+    });
+
+    assert.deepEqual(result, { exists: true, isAncestor: true });
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
 });
 
 test('renderDbtRoundtripCapabilityStatus is deterministic and links reviewed evidence', () => {

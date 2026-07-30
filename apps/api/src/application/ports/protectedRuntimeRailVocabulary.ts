@@ -14,6 +14,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   compatibilityDisabled: 'compatibility disabled',
   disabledRoute: 'disabled route',
   invalidGraphSource: 'invalid graph source',
+  invalidGraphDbtWorkspaceArtifactPublication: 'invalid graph dbt workspace artifact publication',
   invalidDbtProjectRoot: 'invalid dbt project root',
   invalidDbtProjectImport: 'invalid dbt project import request',
   invalidDbtYamlDescriptionReceipt: 'invalid dbt YAML description receipt',
@@ -89,6 +90,8 @@ export const PROTECTED_RUNTIME_TEST_REF = {
     'apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts',
   workspaceDraftRoutes: 'apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts',
   dbtProjectGraphRoutes: 'apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts',
+  graphDbtWorkspaceArtifactPublicationRoutes:
+    'apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts',
   dbtProjectAnalyzer: 'apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts',
   dbtProjectImportRoutes: 'apps/api/test/entrypoints/http/dbtProjectImportRoutes.test.ts',
   dbtProjectImportUseCases: 'apps/api/test/application/dbtProjectImportUseCases.test.ts',
@@ -206,6 +209,16 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     adapterSurface: 'GET /workspace/dbt/graph',
     scopeAndAuthorization:
       'workspace:graph-draft:view plus workspace:files:view, tenant/project/environment scope',
+  },
+  publishGraphDbtWorkspaceArtifacts: {
+    name: 'PublishGraphDbtWorkspaceArtifacts',
+    boundedContext: 'dbt graph workspace publication',
+    dddObject: 'GraphDbtWorkspaceArtifactPublication',
+    applicationPort:
+      'IPublishGraphDbtWorkspaceArtifactsCommand via IWorkspaceFileBatchMutationPort',
+    adapterSurface: 'POST /workspace/dbt/graph-artifacts/publications',
+    scopeAndAuthorization:
+      'workspace:files:save, tenant/project/environment scope and idempotency key',
   },
   proposeDbtYamlDescriptionEdit: {
     name: 'ProposeDbtYamlDescriptionEdit',

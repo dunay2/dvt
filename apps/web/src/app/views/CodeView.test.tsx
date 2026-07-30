@@ -37,6 +37,22 @@ vi.mock('../components/monaco/MonacoCodeEditor', () => ({
   ),
 }));
 
+vi.mock('../components/monaco/MonacoCodeViewer', () => ({
+  MonacoCodeViewer: ({
+    value,
+    path,
+    language,
+  }: {
+    value: string;
+    path?: string;
+    language: string;
+  }) => (
+    <pre data-language={language} data-path={path} data-testid="monaco-code-viewer">
+      {value}
+    </pre>
+  ),
+}));
+
 function buildWorkspaceFilesQueryPort(
   overrides: Partial<IWorkspaceFilesQueryPort> = {}
 ): IWorkspaceFilesQueryPort {
@@ -75,6 +91,11 @@ function buildWorkspaceFilesQueryPort(
 
 describe('CodeView', () => {
   const copy = resolveCodeViewCopy('en-US');
+  const defaultEditableFileScope: CodeViewFileScope = {
+    kind: 'dbt-project-files',
+    projectRoot: '.',
+    initialPath: 'models/staging/stg_orders.sql',
+  };
   let container: HTMLDivElement | null = null;
   let root: Root | null = null;
 
@@ -168,7 +189,11 @@ describe('CodeView', () => {
     }
     await waitFor(() => container?.textContent?.includes('stg_orders.sql') === true);
     await waitFor(() => container?.textContent?.includes(copy.explorerTitle) === true);
-    await waitFor(() => container?.querySelector('[data-testid="monaco-code-editor"]') != null);
+    await waitFor(
+      () =>
+        container?.querySelector('[data-testid="monaco-code-editor"]') != null ||
+        container?.querySelector('[data-testid="monaco-code-viewer"]') != null
+    );
   }
 
   function verifyInitialState(): HTMLTextAreaElement | null {
@@ -222,7 +247,9 @@ describe('CodeView', () => {
       lastModified: '2026-07-12T00:00:01.000Z',
     }));
     setupContainer();
-    await renderCodeView({ saveFileContent });
+    await renderCodeView({ saveFileContent }, true, undefined, {
+      fileScope: defaultEditableFileScope,
+    });
     await waitForInitialRender();
     const editor = verifyInitialState();
 
@@ -272,6 +299,7 @@ describe('CodeView', () => {
     await renderCodeView({ saveFileContent: vi.fn(async () => receipt) }, true, undefined, {
       workspaceFilesQuery: buildWorkspaceFilesQueryPort({ getFileContent }),
       reconcilePersistedFile,
+      fileScope: defaultEditableFileScope,
     });
     await waitForInitialRender();
 
@@ -317,6 +345,7 @@ describe('CodeView', () => {
         analysisSha256: 'c'.repeat(64),
         projectContentSetSha256: 'd'.repeat(64),
       })),
+      fileScope: defaultEditableFileScope,
     });
     await waitForInitialRender();
 
@@ -345,7 +374,9 @@ describe('CodeView', () => {
         })
     );
     setupContainer();
-    await renderCodeView({ saveFileContent });
+    await renderCodeView({ saveFileContent }, true, undefined, {
+      fileScope: defaultEditableFileScope,
+    });
     await waitForInitialRender();
     const editor = verifyInitialState();
     await editAndVerifyEditor(editor);
@@ -619,7 +650,9 @@ describe('CodeView', () => {
     }));
     const codeViewRef = createRef<CodeViewHandle>();
     setupContainer();
-    await renderCodeView({ saveFileContent }, true, codeViewRef);
+    await renderCodeView({ saveFileContent }, true, codeViewRef, {
+      fileScope: defaultEditableFileScope,
+    });
     await waitForInitialRender();
     await editAndVerifyEditor(verifyInitialState());
 
@@ -828,7 +861,7 @@ describe('CodeView', () => {
     });
 
     await waitFor(() => container?.textContent?.includes('payments_model.sql') === true);
-    await waitFor(() => container?.querySelector('[data-testid="monaco-code-editor"]') != null);
+    await waitFor(() => container?.querySelector('[data-testid="monaco-code-viewer"]') != null);
 
     const currentContainer = getContainer();
     expect(currentContainer.textContent).toContain('dbt_project.yml');
@@ -836,11 +869,12 @@ describe('CodeView', () => {
     expect(currentContainer.textContent).toContain('schema.yml');
     expect(currentContainer.textContent).not.toContain('orders_model.sql');
 
-    const editor = currentContainer.querySelector<HTMLTextAreaElement>(
-      '[data-testid="monaco-code-editor"]'
+    const viewer = currentContainer.querySelector<HTMLElement>(
+      '[data-testid="monaco-code-viewer"]'
     );
-    expect(editor?.getAttribute('data-path')).toBe('models/payments_model.sql');
-    expect(editor?.value).toContain("{{ source('finance_warehouse', 'payments_final') }}");
+    expect(viewer?.getAttribute('data-path')).toBe('models/payments_model.sql');
+    expect(viewer?.textContent).toContain("{{ source('finance_warehouse', 'payments_final') }}");
+    expect(currentContainer.textContent).toContain(copy.workingTreeGraphOwnedReadOnlyLabel);
   });
 
   it('renders a governed route empty state when no workspace files are available', async () => {

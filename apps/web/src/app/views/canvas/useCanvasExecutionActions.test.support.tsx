@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import { createTestQueryClient } from '../../../testing/reactQueryHarness';
 import type { IPlansPort } from '../../ports/plans';
+import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
@@ -48,6 +49,7 @@ type ExecutionActionsHookCommonProps = Readonly<{
   shellFeedback: ShellFeedbackPort;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   previewProvenanceConfig: PreviewProvenanceConfig;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
@@ -85,6 +87,7 @@ export type RenderExecutionActionsHarnessArgs = {
   shellFeedback?: ShellFeedbackPort;
   workspaceFilesQuery?: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand?: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand?: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   previewProvenanceConfig?: Partial<PreviewProvenanceConfig>;
   canonicalNodes?: CanonicalNode[];
   canonicalEdges?: CanonicalEdge[];
@@ -114,6 +117,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'shellFeedback'
   | 'workspaceFilesQuery'
   | 'workspaceFileContentCommand'
+  | 'graphDbtWorkspaceArtifactPublicationCommand'
   | 'previewProvenanceConfig'
   | 'flushDraftForExecution'
   | 'canPlan'
@@ -130,6 +134,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   shellFeedback: ShellFeedbackPort;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   previewProvenanceConfig: Partial<PreviewProvenanceConfig>;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
@@ -172,6 +177,12 @@ function ExecutionActionsHookView({
       </div>
       <div data-testid="plan-status-summary">{hook.planStatusSummary}</div>
       <div data-testid="current-plan-sha">{currentPlan?.planRef?.sha256 ?? 'none'}</div>
+      <div data-testid="graph-sql-replacement-open">
+        {String(hook.graphSqlReplacementConfirmation.open)}
+      </div>
+      <div data-testid="graph-sql-replacement-paths">
+        {hook.graphSqlReplacementConfirmation.paths.join(',') || 'none'}
+      </div>
       <button
         type="button"
         onClick={() => {
@@ -187,6 +198,17 @@ function ExecutionActionsHookView({
         }}
       >
         start-run
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void hook.confirmGraphSqlReplacement();
+        }}
+      >
+        confirm-graph-sql-replacement
+      </button>
+      <button type="button" onClick={hook.cancelGraphSqlReplacement}>
+        cancel-graph-sql-replacement
       </button>
     </div>
   );
@@ -230,6 +252,7 @@ function resolveCommonHookProps(
     shellFeedback: args.shellFeedback,
     workspaceFilesQuery: args.workspaceFilesQuery,
     workspaceFileContentCommand: args.workspaceFileContentCommand,
+    graphDbtWorkspaceArtifactPublicationCommand: args.graphDbtWorkspaceArtifactPublicationCommand,
     previewProvenanceConfig: args.previewProvenanceConfig as PreviewProvenanceConfig,
     canonicalNodes: args.canonicalNodes,
     canonicalEdges: args.canonicalEdges,
@@ -275,6 +298,9 @@ function resolveHarnessArgs(
     sessionContext: args.sessionContext ?? createSessionContext(),
     shellFeedback: args.shellFeedback ?? createShellFeedbackMock(),
     ...resolveWorkspaceFilePortMocks(args),
+    graphDbtWorkspaceArtifactPublicationCommand:
+      args.graphDbtWorkspaceArtifactPublicationCommand ??
+      createGraphDbtWorkspaceArtifactPublicationCommandMock(),
     previewProvenanceConfig: args.previewProvenanceConfig ?? DEFAULT_PREVIEW_PROVENANCE_CONFIG,
     canonicalNodes: args.canonicalNodes ?? buildCanonicalNodes(),
     canonicalEdges: args.canonicalEdges ?? buildCanonicalEdges(),
@@ -433,6 +459,26 @@ export function createWorkspaceFilePortMocks(
   };
 }
 
+export function createGraphDbtWorkspaceArtifactPublicationCommandMock(): IGraphDbtWorkspaceArtifactPublicationCommandPort {
+  return {
+    publish: vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
+      async (request) => ({
+        schemaVersion: 'graph-dbt-workspace-artifact-publication.v1' as const,
+        kind: 'applied' as const,
+        idempotencyKey: request.idempotencyKey,
+        requestHash: sha256HexUtf8(JSON.stringify(request)),
+        deduplicated: false,
+        writes: request.artifacts
+          .filter((artifact) => artifact.writeRequired)
+          .map((artifact) => ({
+            path: artifact.path,
+            contentSha256: sha256HexUtf8(artifact.content),
+          })),
+      })
+    ),
+  };
+}
+
 export function createPlansServiceMock(plan: PlanViewModel = mockExecutionPlan): IPlansPort {
   return {
     previewPlan: vi.fn(async () => plan),
@@ -524,6 +570,8 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   rerender: (nextArgs: Partial<RenderExecutionActionsHarnessArgs>) => Promise<void>;
   clickPlan: () => Promise<void>;
   clickStartRun: () => Promise<void>;
+  clickConfirmGraphSqlReplacement: () => Promise<void>;
+  clickCancelGraphSqlReplacement: () => Promise<void>;
   text: (testId: string) => string | null;
   cleanup: () => void;
   container: HTMLDivElement;
@@ -532,6 +580,7 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   shellFeedback: ResolvedExecutionActionsHarnessArgs['shellFeedback'];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   setBottomDrawerHeight: ResolvedExecutionActionsHarnessArgs['setBottomDrawerHeight'];
   toggleBottomDrawer: ResolvedExecutionActionsHarnessArgs['toggleBottomDrawer'];
   queryClient: QueryClient;
@@ -584,6 +633,16 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
         queryButton(1)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       });
     },
+    clickConfirmGraphSqlReplacement: async () => {
+      await act(async () => {
+        queryButton(2)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    },
+    clickCancelGraphSqlReplacement: async () => {
+      await act(async () => {
+        queryButton(3)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      });
+    },
     text: (testId) => container.querySelector(`[data-testid="${testId}"]`)?.textContent ?? null,
     cleanup: () => {
       act(() => {
@@ -597,6 +656,8 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     shellFeedback: currentArgs.shellFeedback,
     workspaceFilesQuery: currentArgs.workspaceFilesQuery,
     workspaceFileContentCommand: currentArgs.workspaceFileContentCommand,
+    graphDbtWorkspaceArtifactPublicationCommand:
+      currentArgs.graphDbtWorkspaceArtifactPublicationCommand,
     setBottomDrawerHeight: currentArgs.setBottomDrawerHeight,
     toggleBottomDrawer: currentArgs.toggleBottomDrawer,
     queryClient,

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
+import { createGraphManagedDbtModelSql } from './dbtGraphModelSqlPublicationPolicy';
 
 const sourceNode: CanonicalNode = {
   id: 'source-orders',
@@ -172,7 +173,9 @@ describe('canvas dbt workspace artifacts', () => {
     if (!result.ok) return;
 
     expect(result.artifacts[1]?.content).toBe(
-      "{{ config(materialized='table') }}\n\nselect order_id, amount\nfrom {{ source('raw', 'orders') }}\n"
+      createGraphManagedDbtModelSql(
+        "{{ config(materialized='table') }}\n\nselect order_id, amount\nfrom {{ source('raw', 'orders') }}\n"
+      )
     );
   });
 

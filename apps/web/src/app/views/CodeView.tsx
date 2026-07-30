@@ -12,7 +12,6 @@ import {
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import { ViewHeader } from '../components/domain';
-import { MonacoCodeEditor } from '../components/monaco/MonacoCodeEditor';
 import {
   RouteWorkbenchFrame,
   routeWorkbenchHeaderBandClassName,
@@ -40,6 +39,7 @@ import { CodeWorkingTreeNavigationGuard } from './code/CodeWorkingTreeNavigation
 import {
   hasCodeWorkspaceFilePath,
   hasCodeWorkspaceFiles,
+  deriveCodeGraphFilePaths,
   resolveGraphScopedCodeWorkspaceFileTree,
   resolveInitialCodeFilePath,
   resolveInitialDbtProjectFilePath,
@@ -51,6 +51,8 @@ import { useCodeWorkingTreeSync } from './code/useCodeWorkingTreeSync';
 import type { WorkspaceFileSaveReceipt } from '../ports/workspace';
 import { type CodeWorkingTreeReconciliationOutcome } from './code/codeWorkingTreeSyncModel';
 import { reconcileWorkspaceFileAuthority } from './code/workspaceFileReconciliationAuthority';
+import { resolveCodeWorkspaceFileEditPosture } from './code/codeWorkspaceFileEditPosture';
+import { CodeWorkspaceFileSurface } from './code/CodeWorkspaceFileSurface';
 
 const CODE_GRAPH_FILE_SCOPE_VIEW_ID = 'canvas-code-file-scope';
 
@@ -122,6 +124,15 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     [fileScope, scopedWorkspaceFileTree, selectedPath]
   );
   const fileContentQuery = useWorkspaceFileContentQuery(resolvedPath);
+  const graphOwnedPaths = useMemo(
+    () => deriveCodeGraphFilePaths(graphSnapshotQuery.data),
+    [graphSnapshotQuery.data]
+  );
+  const fileEditPosture = resolveCodeWorkspaceFileEditPosture({
+    authority: fileScope ? 'dbt-project-files' : 'graph-draft',
+    selectedPath: resolvedPath,
+    graphOwnedPaths,
+  });
   const refetchFileContent = fileContentQuery.refetch;
   const fileHistoryQuery = useWorkspaceFileHistoryQuery(resolvedPath);
   const fileTreeErrorPresentation = fileTreeQuery.isError
@@ -247,8 +258,14 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
       message: copy.workingTreePersistedSupersededMessage,
     },
     read_only: {
-      label: copy.workingTreeReadOnlyLabel,
-      message: copy.workingTreeReadOnlyMessage,
+      label:
+        fileEditPosture.kind === 'graph_owned_read_only'
+          ? copy.workingTreeGraphOwnedReadOnlyLabel
+          : copy.workingTreeReadOnlyLabel,
+      message:
+        fileEditPosture.kind === 'graph_owned_read_only'
+          ? copy.workingTreeGraphOwnedReadOnlyMessage
+          : copy.workingTreeReadOnlyMessage,
     },
     retryLabel: copy.workingTreeRetryLabel,
     reloadLabel: copy.workingTreeReloadLabel,
@@ -295,12 +312,12 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
   ) : !fileContentQuery.data ? (
     <CodePreviewEmptyStateView />
   ) : (
-    <MonacoCodeEditor
+    <CodeWorkspaceFileSurface
       ariaLabel={`${copy.editorAriaLabelPrefix} ${fileContentQuery.data.name}`}
-      language={fileContentQuery.data.language}
+      file={fileContentQuery.data}
       loadingLabel={copy.editorLoadingMessage}
       onChange={workingTreeSync.updateValue}
-      path={fileContentQuery.data.path}
+      posture={fileEditPosture}
       value={workingTreeSync.value}
     />
   );
@@ -352,7 +369,11 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
           primarySurface: (
             <div className="min-w-0 flex h-full flex-1 flex-col">
               <CodeWorkingTreeStatus
-                phase={workingTreeSync.phase}
+                phase={
+                  fileEditPosture.kind === 'graph_owned_read_only'
+                    ? 'read_only'
+                    : workingTreeSync.phase
+                }
                 copy={workingTreeStatusCopy}
                 onRetry={() => void retryWorkingTreeSync()}
                 onReload={() => {

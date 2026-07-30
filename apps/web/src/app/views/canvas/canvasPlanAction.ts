@@ -3,6 +3,7 @@
  * without creating authoritative runtime execution identity.
  */
 import type { IPlansPort } from '../../ports/plans';
+import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import type {
@@ -16,17 +17,32 @@ import type { PlanViewModel } from '../../types/plans';
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import { buildDbtProjectFilePreviewProvenance } from './dbtProjectFileExecutionStrategy';
-import { readExpectedWorkspaceFileRevision } from './canvasGitProvenance';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
 import { collectPreviewSelection } from './canvasRunSelection';
-import { canvasViewCopy, formatTransformationGraphValidationSummary } from './copy';
+import {
+  canvasViewCopy,
+  formatCanvasCopyTemplate,
+  formatTransformationGraphValidationSummary,
+} from './copy';
 import { buildPreviewGraphSource } from './previewGraphSource';
 import type { TransformationGraphValidationResult } from './transformationGraphValidation';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
+import {
+  publishGraphDbtWorkspaceArtifacts,
+  type GraphSqlReplacementAuthorization,
+} from './dbtGraphWorkspaceArtifactPublisher';
 
 type CanvasPlanActionFailure = {
   ok: false;
+  kind?: 'failure';
   message: string;
+};
+
+type CanvasPlanActionGraphSqlReplacementConfirmation = {
+  ok: false;
+  kind: 'graph_sql_replacement_confirmation_required';
+  message: string;
+  replacementRequests: readonly GraphSqlReplacementAuthorization[];
 };
 
 type CanvasPlanActionSuccess = {
@@ -36,7 +52,10 @@ type CanvasPlanActionSuccess = {
   writtenArtifactPaths: readonly string[];
 };
 
-export type CanvasPlanActionResult = CanvasPlanActionFailure | CanvasPlanActionSuccess;
+export type CanvasPlanActionResult =
+  | CanvasPlanActionFailure
+  | CanvasPlanActionGraphSqlReplacementConfirmation
+  | CanvasPlanActionSuccess;
 
 function attachDbtSelectionIntent(
   plan: PlanViewModel,
@@ -91,6 +110,8 @@ export async function executeCanvasPlanAction({
   workspaceNodeIds,
   workspaceFilesQuery,
   workspaceFileContentCommand,
+  graphDbtWorkspaceArtifactPublicationCommand,
+  graphSqlReplacementAuthorizations,
 }: {
   canPlan: boolean;
   canonicalEdges: readonly CanonicalEdge[];
@@ -107,6 +128,8 @@ export async function executeCanvasPlanAction({
   workspaceNodeIds: readonly string[];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
+  graphSqlReplacementAuthorizations?: readonly GraphSqlReplacementAuthorization[];
 }): Promise<CanvasPlanActionResult> {
   if (!canPlan) {
     return { ok: false, message: canvasViewCopy.planPermissionDeniedMessage };
@@ -136,7 +159,7 @@ export async function executeCanvasPlanAction({
       }
       const scopedNodeIds = plannerProjection.scopedNodeIds;
 
-      const writtenArtifacts = [];
+      const writtenArtifactPaths: string[] = [];
       if (executionStrategy.kind === 'planner_generic_preview') {
         const artifactProjection = buildDbtWorkspaceArtifacts({
           nodes: canonicalNodes,
@@ -147,17 +170,30 @@ export async function executeCanvasPlanAction({
           return { ok: false, message: artifactProjection.message };
         }
 
-        for (const artifact of artifactProjection.artifacts) {
-          await workspaceFileContentCommand.saveFileContent({
-            path: artifact.path,
-            content: artifact.content,
-            expectedRevision: await readExpectedWorkspaceFileRevision(
-              workspaceFilesQuery,
-              artifact.path
+        const publication = await publishGraphDbtWorkspaceArtifacts({
+          artifacts: artifactProjection.artifacts,
+          workspaceFilesQuery,
+          publicationCommand: graphDbtWorkspaceArtifactPublicationCommand,
+          replacementAuthorizations: graphSqlReplacementAuthorizations,
+        });
+        if (!publication.ok) {
+          if (publication.kind === 'replacement_confirmation_required') {
+            return {
+              ok: false,
+              kind: 'graph_sql_replacement_confirmation_required',
+              message: canvasViewCopy.graphSqlReplacementDescription,
+              replacementRequests: publication.requests,
+            };
+          }
+          return {
+            ok: false,
+            message: formatCanvasCopyTemplate(
+              canvasViewCopy.planGraphModelSqlDivergenceMessageTemplate,
+              { path: publication.conflictPath }
             ),
-          });
+          };
         }
-        writtenArtifacts.push(...artifactProjection.artifacts);
+        writtenArtifactPaths.push(...publication.writtenArtifactPaths);
       }
 
       const previewedPlan = await plansService.previewPlan({
@@ -181,7 +217,7 @@ export async function executeCanvasPlanAction({
         ok: true,
         draftSignature: plannerProjection.draftSignature,
         plan,
-        writtenArtifactPaths: writtenArtifacts.map((artifact) => artifact.path),
+        writtenArtifactPaths,
       };
     } catch (error) {
       return {

@@ -209,16 +209,24 @@ describe('useCanvasExecutionActions dbt draft flush', () => {
     await harness.clickPlan();
 
     expect(flushDraftForExecution).toHaveBeenCalledTimes(1);
-    expect(harness.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
+    expect(harness.graphDbtWorkspaceArtifactPublicationCommand.publish).toHaveBeenCalledWith(
       expect.objectContaining({
-        path: 'models/payments_model.sql',
-        content: expect.stringContaining("{{ source('finance_warehouse', 'payments_final') }}"),
-        expectedRevision: { kind: 'absent' },
+        artifacts: expect.arrayContaining([
+          expect.objectContaining({
+            path: 'models/payments_model.sql',
+            content: expect.stringContaining("{{ source('finance_warehouse', 'payments_final') }}"),
+            expectedRevision: { kind: 'absent' },
+            writeRequired: true,
+          }),
+        ]),
       })
     );
-    expect(harness.workspaceFileContentCommand.saveFileContent).not.toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'models/orders_model.sql' })
-    );
+    const publicationRequest = vi.mocked(
+      harness.graphDbtWorkspaceArtifactPublicationCommand.publish
+    ).mock.calls[0]![0];
+    expect(
+      publicationRequest.artifacts.some((artifact) => artifact.path === 'models/orders_model.sql')
+    ).toBe(false);
     expect(plansService.previewPlan).toHaveBeenCalledWith(
       expect.objectContaining({
         graphSource: expect.objectContaining({

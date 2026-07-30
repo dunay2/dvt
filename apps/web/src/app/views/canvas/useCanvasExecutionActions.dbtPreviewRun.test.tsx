@@ -134,11 +134,16 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
     const invalidateQueries = vi.spyOn(harness.queryClient, 'invalidateQueries');
     await harness.clickPlan();
 
-    expect(harness.workspaceFileContentCommand.saveFileContent).toHaveBeenCalledWith(
+    expect(harness.graphDbtWorkspaceArtifactPublicationCommand.publish).toHaveBeenCalledWith(
       expect.objectContaining({
-        path: 'models/orders_model.sql',
-        content: expect.stringContaining("{{ source('raw', 'orders') }}"),
-        expectedRevision: { kind: 'absent' },
+        artifacts: expect.arrayContaining([
+          expect.objectContaining({
+            path: 'models/orders_model.sql',
+            content: expect.stringContaining("{{ source('raw', 'orders') }}"),
+            expectedRevision: { kind: 'absent' },
+            writeRequired: true,
+          }),
+        ]),
       })
     );
     expect(plansService.previewPlan).toHaveBeenCalledWith(

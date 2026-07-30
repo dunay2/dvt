@@ -1,0 +1,38 @@
+---
+id: R-20260729-GRAPH-DBT-ATOMIC-PUBLICATION
+title: Graph-authored dbt artifacts can diverge during publication
+status: Open
+date: 2026-07-29
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: High
+probability: Low
+context: >
+  Graph-authority execution publishes dbt_project.yml, models/schema.yml, and managed model SQL
+  files from one Canvas plan. These artifacts form one logical dbt workspace revision.
+risk: >
+  A regression that publishes artifacts independently, omits an expected revision, or bypasses
+  idempotency could expose a partially updated dbt project or overwrite an external file edit.
+mitigations:
+  - 'Publish all graph-authored dbt artifacts through the protected
+    PublishGraphDbtWorkspaceArtifacts command and one IWorkspaceFileBatchMutationPort mutation.'
+  - 'Preflight every expected artifact revision before applying any write, including unchanged
+    artifacts whose revisions define the accepted workspace snapshot.'
+  - 'Use the existing atomic local batch gateway to lock the scope, roll back every replaced file
+    after a write failure, and preserve original preconditions.'
+  - 'Bind equivalent retries to one deterministic intent-derived idempotency key and return the
+    stored batch receipt instead of repeating successful writes.'
+  - 'Reject external revision conflicts with zero writes and refresh the dbt projection only after
+    the publication command succeeds.'
+  - 'Keep the graph publication endpoint product-specific; do not expose the generic batch mutation
+    port as a browser-facing file API.'
+  - 'Cover conflict, rollback, success, absent-file revision, request/result contract, and adapter
+    behavior with automated tests.'
+residual_risk: >
+  Exact binding between a compiled or executed plan and a later workspace revision is outside this
+  MVP. The publication boundary protects the files produced by one accepted client snapshot but does
+  not introduce a second store, saga, or durable plan-run transaction.
+review_after: 2026-08-29
+---

@@ -17,6 +17,32 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.plan.unableToCreateMessage',
     fallback: 'Unable to create Execution Preview',
   },
+  planGraphModelSqlDivergenceMessageTemplate: {
+    key: 'canvas.plan.graphModelSqlDivergenceMessageTemplate',
+    fallback:
+      'Project Code contains a newer edit for {path}. Preview stopped without overwriting it. Continue from a file-authoritative DBT project or restore the Canvas-generated revision.',
+  },
+  graphSqlReplacementTitle: {
+    key: 'canvas.plan.graphSqlReplacement.title',
+    fallback: 'Confirm Canvas SQL authority',
+  },
+  graphSqlReplacementDescription: {
+    key: 'canvas.plan.graphSqlReplacement.description',
+    fallback:
+      'These model files predate graph ownership metadata. DVT cannot prove whether they came from an earlier Canvas preview or an external edit. Continue only to replace them with the current Canvas model SQL.',
+  },
+  graphSqlReplacementPathListLabel: {
+    key: 'canvas.plan.graphSqlReplacement.pathListLabel',
+    fallback: 'Files that will be replaced',
+  },
+  graphSqlReplacementCancelLabel: {
+    key: 'canvas.plan.graphSqlReplacement.cancelLabel',
+    fallback: 'Keep existing files',
+  },
+  graphSqlReplacementConfirmLabel: {
+    key: 'canvas.plan.graphSqlReplacement.confirmLabel',
+    fallback: 'Use Canvas SQL',
+  },
   previewProvenanceTransformPathRequiredMessage: {
     key: 'canvas.preview.transformPathRequiredMessage',
     fallback:

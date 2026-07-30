@@ -2,6 +2,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 
 import type { IPlansPort } from '../../ports/plans';
+import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
 import type { ShellFeedbackPort } from '../../ports/shellFeedback';
@@ -15,6 +16,12 @@ import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
+
+export type GraphSqlReplacementConfirmationState = Readonly<{
+  open: boolean;
+  paths: readonly string[];
+  busy: boolean;
+}>;
 
 export type CanvasExecutionDraftGraph =
   | {
@@ -33,6 +40,7 @@ export type UseCanvasExecutionActionsParams = {
   runsService: IRunsPort;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
+  graphDbtWorkspaceArtifactPublicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
   executionStrategy: CanvasExecutionStrategy | null;
   canonicalNodes: CanonicalNode[];
   canonicalEdges: CanonicalEdge[];
@@ -66,6 +74,9 @@ export type UseCanvasExecutionActionsResult = {
   planStatusSummary: string;
   handlePreviewExecutionPlan: () => Promise<void>;
   handleStartRun: () => Promise<void>;
+  graphSqlReplacementConfirmation: GraphSqlReplacementConfirmationState;
+  confirmGraphSqlReplacement: () => Promise<void>;
+  cancelGraphSqlReplacement: () => void;
 };
 
 export type SetLastPlannedDraftSignature = Dispatch<SetStateAction<string | null>>;
