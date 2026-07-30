@@ -40,7 +40,7 @@ const REQUEST: PublishGraphDbtWorkspaceArtifactsRequest = {
 };
 
 describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
-  it('sends every expected revision and every required write through one batch apply', async () => {
+  it('derives writes from proposed content instead of trusting caller write flags', async () => {
     const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>(async (_scope, mutation) => ({
       kind: 'applied',
       idempotencyKey: mutation.idempotencyKey,
@@ -57,7 +57,11 @@ describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
     await expect(command.execute({ scope: SCOPE, ...REQUEST })).resolves.toMatchObject({
       kind: 'applied',
       deduplicated: true,
-      writes: [{ path: 'models/orders.sql' }, { path: 'models/schema.yml' }],
+      writes: [
+        { path: 'dbt_project.yml' },
+        { path: 'models/orders.sql' },
+        { path: 'models/schema.yml' },
+      ],
     });
     expect(apply).toHaveBeenCalledTimes(1);
     expect(apply).toHaveBeenCalledWith(SCOPE, {
@@ -67,6 +71,7 @@ describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
         { path: 'models/schema.yml' },
       ],
       writes: [
+        { path: 'dbt_project.yml', content: REQUEST.artifacts[0]!.content },
         { path: 'models/orders.sql', content: REQUEST.artifacts[1]!.content },
         { path: 'models/schema.yml', content: REQUEST.artifacts[2]!.content },
       ],

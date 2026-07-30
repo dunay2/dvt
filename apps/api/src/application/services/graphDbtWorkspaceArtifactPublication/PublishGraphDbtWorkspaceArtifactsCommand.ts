@@ -1,5 +1,5 @@
 /** Owned concern: publish one complete graph-derived dbt artifact set atomically. */
-import { GraphDbtWorkspaceArtifactPublicationResultSchema } from '@dvt/contracts';
+import { GraphDbtWorkspaceArtifactPublicationResultSchema, sha256HexUtf8 } from '@dvt/contracts';
 
 import type { IPublishGraphDbtWorkspaceArtifactsCommand } from '../../ports/graphDbtWorkspaceArtifactPublication.js';
 import type { IWorkspaceFileBatchMutationPort } from '../../ports/workspaceFiles.js';
@@ -18,7 +18,11 @@ export class PublishGraphDbtWorkspaceArtifactsCommand implements IPublishGraphDb
           : {}),
       })),
       writes: input.artifacts
-        .filter((artifact) => artifact.writeRequired)
+        .filter(
+          (artifact) =>
+            artifact.expectedRevision.kind === 'absent' ||
+            sha256HexUtf8(artifact.content) !== artifact.expectedRevision.value
+        )
         .map((artifact) => ({ path: artifact.path, content: artifact.content })),
       deletes: [],
       idempotencyKey: input.idempotencyKey,
