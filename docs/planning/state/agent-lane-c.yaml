@@ -8,52 +8,37 @@ expected_outcome:
   - runtime failures are explicit
   - claim semantics are safe under concurrency
   - API consumers can reason about freshness
-header_markdown: >
-  Eres Charie, ingeniero de runtime safety y operabilidad. Trabajas para que el sistema falle de
-  forma explicita, diagnosticable y segura.
-
+header_markdown: |
+  Eres Charie, ingeniero de runtime safety y operabilidad. Trabajas para que el sistema falle de forma explicita, diagnosticable y segura.
 
   ## Principios obligatorios
 
-
   - Fail fast con contexto: errores claros y accionables
-
   - Operabilidad MVP primero: bootstrap, diagnose, daily operate
-
   - Admission y auth antes de profundidad funcional
-
   - Freshness visible al caller: sin suposiciones implicitas
-
   - Concurrencia segura: leases, idempotencia, invariantes estables
-
 
   ## Forma de trabajo
 
-
   - Definir contrato operativo minimo por endpoint critico
-
   - Agregar cobertura negativa para paths de error reales
-
   - Validar que estado/health expongan degradacion real
-
 
   ## Restricciones
 
-
   - No esconder degradacion bajo "ok" superficial
-
   - No mezclar concerns de seguridad con concerns de UI
-
   - No introducir retries ambiguos sin ownership definido
 tasks:
   - task_id: MVP-C1
     priority: P0
     status: done
-    objective: >-
+    objective:
       produce the minimum backend operations runbook for the existing MVP control-plane (bootstrap,
       diagnose, daily operate) without adding feature depth.
     dependency: MVP-A1, MVP-B1
-    target: >-
+    target:
       Operator-ready runbook for current runtime routes, auth scope handling, health/readiness
       diagnosis, fallback boundaries, and baseline validation commands
       (`docs/runbooks/backend-mvp-control-plane-runbook-20260329.md`).
@@ -85,11 +70,11 @@ tasks:
   - task_id: S16
     priority: P1
     status: done
-    objective: >-
+    objective:
       enforce governed planVersion validation at start-run admission to reject unsupported or stale
       plan references.
     dependency: none
-    target: >-
+    target:
       Start-run preconditions use the plan admission boundary for registry-backed
       UnsupportedPlanVersionError handling and explicit contract coverage.
     complexity: M
@@ -99,7 +84,7 @@ tasks:
       - packages/@dvt/engine/src/contracts/PlanAdmissionPolicy.ts
       - packages/@dvt/engine/test/gaps/PlanAdmissionPolicy.test.ts
       - apps/api/test/application/services/engineStartRunUseCase.errorMapping.test.ts
-    status_reason: >-
+    status_reason:
       Plan-version and schema-pair admission are consolidated in one runtime policy with typed
       errors and tests, which provides equivalent verified closure for this pass.
     last_verified: '2026-03-31'
@@ -116,7 +101,7 @@ tasks:
       - docs/planning/archive/proposals/rc-d2-claim-timeout-contract-20260323.md
       - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.sharding.test.ts
       - packages/@dvt/adapter-postgres/test/smoke.test.ts
-    status_reason: >-
+    status_reason:
       Configurable claim timeout is implemented and exercised in code; the archived proposal only
       keeps an explicitness follow-up.
     last_verified: '2026-03-31'
@@ -146,11 +131,10 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - >-
-        docs/risk-register/quality/R-20260322-api-health-reconciler-runtime-degradation-visibility.md
+      - docs/risk-register/quality/R-20260322-api-health-reconciler-runtime-degradation-visibility.md
       - apps/api/src/routes/health.ts
       - apps/api/test/app.test.ts
-    status_reason: >-
+    status_reason:
       Health degradation signaling exists in the API route and tests; the risk register captures the
       quality posture around the slice.
     last_verified: '2026-03-31'
@@ -164,11 +148,10 @@ tasks:
     effort_points: 3
     progress_pct: 100
     evidence_refs:
-      - >-
-        docs/planning/archive/proposals/rc-d1a-health-contract-compat-and-watchdog-integration-20260323.md
+      - docs/planning/archive/proposals/rc-d1a-health-contract-compat-and-watchdog-integration-20260323.md
       - apps/api/src/server.ts
       - apps/api/test/server.test.ts
-    status_reason: >-
+    status_reason:
       Watchdog and compatibility coverage are present in code and the archived proposal documents
       the intended closure target.
     last_verified: '2026-03-31'
@@ -177,7 +160,7 @@ tasks:
     status: done
     objective: enforce tenant-aware start/signal/cancel rules.
     dependency: none
-    target: >-
+    target:
       Operation-level authorization boundaries are explicit and validated with negative integration
       coverage plus always-on route-level unit coverage for action-specific denials (`run:cancel` vs
       `run:signal`).
@@ -217,7 +200,7 @@ tasks:
       - docs/runbooks/read-your-writes-freshness-slo-20260330.md
       - docs/risk-register/quality/R-20260330-snapshot-staleness-caller-view.md
       - apps/api/test/application/services/getRunStatusUseCase.test.ts
-    status_reason: >-
+    status_reason:
       The freshness SLO contract is documented with measurable telemetry outcomes and backed by API
       status-path coverage.
     last_verified: '2026-03-31'
@@ -236,19 +219,19 @@ tasks:
       - apps/api/src/entrypoints/http/runCommandFieldParsers.ts
       - apps/api/test/entrypoints/http/runCommandFieldParsers.test.ts
       - apps/api/test/entrypoints/http/runCommandRouteExecutor.test.ts
-    status_reason: >-
+    status_reason:
       CANCEL and PAUSE/RESUME authorization are now explicitly split between cancel and signal
       scopes with parser and route-level deny coverage.
     last_verified: '2026-03-31'
   - task_id: RC-C1
     priority: P1
     status: done
-    objective: >-
+    objective:
       normalize caller-visible HTTP error contracts across apps/api and separate semantic validation
       outcomes from transport serialization, including typed maintenance-boundary not-found handling
       and removal of remaining parser legacy.
     dependency: none
-    target: >-
+    target:
       Canonical HttpErrorEnvelope contract + unified HTTP mapper + parser/route migration + typed
       `rebuildSnapshot` not-found boundary + negative regressions validated by package, arch,
       integration, and prepush baselines.
@@ -260,19 +243,19 @@ tasks:
       - docs/planning/closeouts/20260331-rc-c1-http-error-envelope-normalization-closeout.md
       - docs/evidence/critical/ED-20260331-rc-c1-boundary-legacy-hardening.md
       - docs/risk-register/quality/R-20260331-RC-C1-BOUNDARY-LEGACY-HARDENING.yaml
-    status_reason: >-
+    status_reason:
       The HTTP error boundary is normalized in apps/api and the remaining `rebuildSnapshot`/parser
       legacy is closed with typed errors, docs, and validation evidence.
     last_verified: '2026-03-31'
   - task_id: manifestRef production path
     priority: P1
     status: done
-    objective: >-
+    objective:
       restore manifestRef as the real protected-runtime planner path by composing a concrete
       artifact resolver at the API boundary and mapping predictable resolution failures to the
       existing plan_rejected result.
     dependency: none
-    target: >-
+    target:
       Protected runtime start-run accepts file-backed test/dev manifestRef and production s3://
       manifestRef through a real resolver, with stable 422 rejection mapping for caller-fixable
       artifact failures.
@@ -285,7 +268,7 @@ tasks:
       - docs/risk-register/quality/R-20260331-MANIFESTREF-PRODUCTION-PATH.yaml
       - apps/api/test/integration/plannerEngineContract.test.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts
-    status_reason: >-
+    status_reason:
       The protected runtime now composes a real manifest artifact resolver, planner/API tests cover
       the file and s3 paths, and predictable resolver failures map to plan_rejected with stable
       cause tokens.
@@ -293,12 +276,12 @@ tasks:
   - task_id: AR-C1
     priority: P0
     status: done
-    objective: >-
+    objective:
       add explicit RBAC check to admin routes (/admin/runs/:runId/rebuild-snapshot and any future
       admin endpoints) so that authentication alone is not sufficient — an admin-level role grant is
       required regardless of feature flag state.
     dependency: none
-    target: >-
+    target:
       Admin routes enforce an explicit admin-role RBAC check; any authenticated principal without
       admin grant receives 403; test coverage includes negative path for non-admin principals.
     complexity: S
@@ -310,7 +293,7 @@ tasks:
       - apps/api/src/entrypoints/http/adminRoutes.ts
       - apps/api/test/entrypoints/http/adminRoutes.test.ts
       - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
-    status_reason: >-
+    status_reason:
       Accepted after Lane C review reconciliation. Explicit admin RBAC is enforced through a
       dedicated admin-scope guard on the maintenance route path; non-admin authorization outcomes
       return 403 and route + contract tests cover the negative path. `AR-C1-T4` and `CFG-TS-T1`
@@ -320,20 +303,20 @@ tasks:
     parent_task: AR-C1
     priority: P0
     status: done
-    objective: >-
+    objective:
       reduce duplication in admin route unit coverage by extracting reusable test builders for app
       setup and route injection while preserving the current authorization matrix assertions.
     dependency: none
-    target: >-
-      `adminRoutes.test.ts` uses shared `buildAuthorizedApp`/`injectRebuildSnapshot` helpers and
-      keeps behavior-equivalent assertions for 401/403/400/404/500/success paths.
+    target:
+      '`adminRoutes.test.ts` uses shared `buildAuthorizedApp`/`injectRebuildSnapshot` helpers and
+      keeps behavior-equivalent assertions for 401/403/400/404/500/success paths.'
     complexity: S
     effort_points: 2
     progress_pct: 100
     evidence_refs:
       - docs/planning/closeouts/20260407-ar-c1-t1-admin-route-test-harness-closeout.md
       - apps/api/test/entrypoints/http/adminRoutes.test.ts
-    status_reason: >-
+    status_reason:
       The admin route unit suite now uses a reusable local request harness for setup, injection, and
       teardown while preserving the existing authorization and error-path assertions.
     last_verified: '2026-04-07'
@@ -341,11 +324,11 @@ tasks:
     parent_task: AR-C1
     priority: P0
     status: done
-    objective: >-
+    objective:
       add negative contract coverage for AdminRebuildSnapshotAccess schema so governance detects
       invalid requiredAction/pipeline drift, not only happy-path constants.
     dependency: AR-C1-T1
-    target: >-
+    target:
       Contract tests validate both positive invariants and at least one negative mutation (invalid
       admin action or pipeline order) against `AdminRebuildSnapshotAccess.v1.schema.json`.
     complexity: S
@@ -356,7 +339,7 @@ tasks:
       - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.md
       - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.schema.json
       - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
-    status_reason: >-
+    status_reason:
       The canonical access contract now exists as a governed Markdown/schema pair and the API
       contract suite validates both the positive contract object and negative mutations for invalid
       admin action and pipeline-order drift.
@@ -365,11 +348,11 @@ tasks:
     parent_task: AR-C1
     priority: P1
     status: done
-    objective: >-
+    objective:
       add protected-runtime composition tests proving admin routes stay disabled when OIDC runtime
       prerequisites are missing even if `DVT_ADMIN_ROUTES_ENABLED=true`.
     dependency: AR-C1-T2
-    target: >-
+    target:
       Integration matrix covers OIDC-off + flag-on behavior and confirms no admin route execution
       path is reachable without protected-runtime auth composition.
     complexity: M
@@ -380,7 +363,7 @@ tasks:
       - apps/api/test/app.test.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts
       - docs/contracts/shared/AdminRebuildSnapshotAccess.v1.md
-    status_reason: >-
+    status_reason:
       Composition-level bootstrap tests now prove protected and admin routes remain unmounted when
       `DVT_ADMIN_ROUTES_ENABLED=true` but OIDC prerequisites are absent or partial, closing the
       remaining admin-route activation guardrail.
@@ -389,11 +372,11 @@ tasks:
     parent_task: AR-C1
     priority: P1
     status: done
-    objective: >-
+    objective:
       extract a shared API-test snapshot fixture helper so admin/runtime tests stop embedding local
       WorkflowSnapshot builders.
     dependency: AR-C1-T3
-    target: >-
+    target:
       API tests use one shared snapshot fixture helper and remove duplicated inline snapshot object
       construction in admin route coverage.
     complexity: S
@@ -406,20 +389,20 @@ tasks:
       - apps/api/test/contracts/adminRebuildSnapshotAccessContract.test.ts
       - buzon/20260514-codex-fowler-ar-c1-t4-snapshot-fixture-analysis.md
       - docs/planning/closeouts/20260522-ar-c1-t4-api-snapshot-fixture-closeout.md
-    status_reason: >-
-      Validated as already implemented: canonical admin rebuild workflow snapshot fixture exists,
+    status_reason:
+      'Validated as already implemented: canonical admin rebuild workflow snapshot fixture exists,
       admin route and contract tests use it, semantic architecture guard passes, and API validation
-      gates passed on 2026-05-22.
+      gates passed on 2026-05-22.'
     last_verified: '2026-05-22'
   - task_id: CFG-TS-T1
     parent_task: AR-C1
     priority: P2
     status: done
-    objective: >-
+    objective:
       produce a staged migration plan for TypeScript `baseUrl` deprecation covering inventory,
       compatibility risks, rollout waves, and rollback points before any config change lands.
     dependency: AR-C1-T4
-    target: >-
+    target:
       A reviewed migration proposal exists with workspace-by-workspace impact analysis and explicit
       validation baseline (`typecheck`, tests, `verify:prepush`) for each wave.
     complexity: M
@@ -429,7 +412,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/cfg-ts-t1-baseurl-deprecation-migration-plan-20260522.md
       - docs/planning/closeouts/20260522-cfg-ts-t1-baseurl-deprecation-plan-closeout.md
       - docs/architecture/typescript-package-classification.md
-    status_reason: >-
+    status_reason:
       Canonical baseUrl deprecation migration plan added; active tsconfig inventory has no
       compilerOptions.baseUrl and remaining paths risk is routed into staged
       package-boundary/runtime/web validation work.
@@ -437,12 +420,12 @@ tasks:
   - task_id: AR-C2
     priority: P0
     status: blocked
-    objective: >-
+    objective:
       define and document formal SLA targets for event delivery latency, snapshot freshness, plan
       compilation time, run start latency, and outbox drain rate with measurable thresholds and
       monitoring signals.
     dependency: none
-    target: >-
+    target:
       SLA document defines p50/p99 targets for each metric; monitoring dashboards and alerts are
       configured against those targets; operational runbook references the SLA definitions.
     complexity: S
@@ -466,21 +449,21 @@ tasks:
       - apps/api/src/application/services/PlannerBackedStartRunUseCase.ts
       - apps/outbox-worker/src/ops/OutboxWorkerMonitor.ts
       - apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts
-    status_reason: >-
-      Canonical SLA/manuals and metric emission exist, but AR-C2 is blocked by immutable operational
-      evidence: the collector reports 9 missing dashboard panels, 11 missing alert rules, and 9
-      missing sustained validation windows. Do not mark the parent done until `AR-C2-T2`,
-      `AR-C2-T3`, and `AR-C2-T4` pass their assertion-mode evidence gates.
+    status_reason:
+      'Canonical SLA/manuals and metric emission exist, but AR-C2 is blocked by immutable
+      operational evidence: the collector reports 9 missing dashboard panels, 11 missing alert
+      rules, and 9 missing sustained validation windows. Do not mark the parent done until
+      `AR-C2-T2`, `AR-C2-T3`, and `AR-C2-T4` pass their assertion-mode evidence gates.'
     last_verified: '2026-05-22'
   - task_id: AR-C2-T1
     parent_task: AR-C2
     priority: P0
     status: done
-    objective: >-
+    objective:
       freeze one canonical metric -> panel -> alert -> threshold mapping for AR-C2 signals to remove
       naming drift before dashboard/alert closure.
     dependency: none
-    target: >-
+    target:
       A governed mapping table exists and every canonical AR-C2 signal has a target panel and alert
       owner with unambiguous metric identity.
     complexity: S
@@ -490,7 +473,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md
       - docs/runbooks/api-runtime-sla-canonical-20260404.md
       - docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md
-    status_reason: >-
+    status_reason:
       Canonical signal-to-threshold mapping is now frozen in a single governed source, including
       panel keys and alert policy posture for all AR-C2 signals.
     last_verified: '2026-04-04'
@@ -498,10 +481,9 @@ tasks:
     parent_task: AR-C2
     priority: P0
     status: blocked
-    objective: >-
-      complete dashboard wiring evidence for all mapped AR-C2 signals.
+    objective: complete dashboard wiring evidence for all mapped AR-C2 signals.
     dependency: AR-C2-T1
-    target: >-
+    target:
       Each mapped AR-C2 signal is represented by a dashboard panel with evidence reference and owner
       attribution.
     complexity: S
@@ -512,7 +494,7 @@ tasks:
       - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
       - docs/runbooks/ar-c2-evidence-generated-latest.md
       - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
-    status_reason: >-
+    status_reason:
       Blocked until an immutable dashboard snapshot supplies complete panel metadata for all 9 AR-C2
       mapped signals; assertion mode currently fails closed with `AR-C2_IMMUTABLE_EVIDENCE_MISSING`.
     last_verified: '2026-05-22'
@@ -520,10 +502,9 @@ tasks:
     parent_task: AR-C2
     priority: P0
     status: blocked
-    objective: >-
-      complete alert wiring evidence for AR-C2 SLA thresholds and routing posture.
+    objective: complete alert wiring evidence for AR-C2 SLA thresholds and routing posture.
     dependency: AR-C2-T1
-    target: >-
+    target:
       Every mapped AR-C2 threshold has an active alert rule with documented severity and routing.
     complexity: S
     effort_points: 2
@@ -534,7 +515,7 @@ tasks:
       - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
       - docs/runbooks/ar-c2-evidence-generated-latest.md
       - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
-    status_reason: >-
+    status_reason:
       Blocked until an immutable alert/routing snapshot supplies complete rule metadata for all 11
       AR-C2 threshold keys; assertion mode currently fails closed with
       `AR-C2_IMMUTABLE_EVIDENCE_MISSING`.
@@ -543,10 +524,10 @@ tasks:
     parent_task: AR-C2
     priority: P0
     status: blocked
-    objective: >-
+    objective:
       capture sustained threshold-validation evidence and update AR-C2 lane posture for closure.
     dependency: AR-C2-T2, AR-C2-T3
-    target: >-
+    target:
       Governed evidence artifact records sustained validation outcomes and lane status can move to
       done when closure criteria are met.
     complexity: S
@@ -559,19 +540,19 @@ tasks:
       - docs/runbooks/ar-c2-dashboard-alert-wiring-evidence-20260404.md
       - docs/runbooks/ar-c2-evidence-generated-latest.md
       - docs/planning/closeouts/20260522-ar-c2-operational-evidence-drift-closeout.md
-    status_reason: >-
-      Corrected stale done status: sustained validation cannot close until T2/T3 evidence exists and
-      `AR_C2_METRICS_SNAPSHOT_FILE` supplies passing windows for all 9 mapped signals.
+    status_reason:
+      'Corrected stale done status: sustained validation cannot close until T2/T3 evidence exists
+      and `AR_C2_METRICS_SNAPSHOT_FILE` supplies passing windows for all 9 mapped signals.'
     last_verified: '2026-05-22'
   - task_id: AR-C3
     priority: P1
     status: done
-    objective: >-
+    objective:
       introduce an abstract start-run execution-capacity admission seam in the API boundary so the
       system can stop accepting runs it cannot execute without coupling admission semantics to a
       concrete adapter implementation.
     dependency: none
-    target: >-
+    target:
       API owns an abstract execution-capacity seam for start-run admission; the application use case
       evaluates that seam after duplicate and current backpressure checks; concrete adapter bindings
       remain composition-owned; caller-visible rejection posture is explicit and observable.
@@ -589,23 +570,23 @@ tasks:
       - apps/api/docs/start-run-admission-observability-component.md
       - apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts
       - apps/api/test/application/services/startRunAdmissionTelemetry.architecture.test.ts
-    status_reason: >-
-      `AR-C3-A`, `AR-C3-B`, and `AR-C3-C` are now implemented: `apps/api` owns the abstract
+    status_reason:
+      '`AR-C3-A`, `AR-C3-B`, and `AR-C3-C` are now implemented: `apps/api` owns the abstract
       execution-capacity seam, the fail-closed default binding remains in start-run composition,
       protected-runtime composition binds the `temporal` provider to the standalone worker `readyz`
       probe, operator-facing denial codes are now documented in telemetry and runbook truth, and the
       admission observability cluster now has its own local guide plus a semantic architecture
-      fitness rule instead of remaining implicit inside the seam guide.
+      fitness rule instead of remaining implicit inside the seam guide.'
     last_verified: '2026-05-06'
   - task_id: AR-C3-A
     parent_task: AR-C3
     priority: P1
     status: done
-    objective: >-
+    objective:
       hard-cut the abstract start-run execution-capacity admission boundary in apps/api without
       leaking provider vocabulary or adapter-specific metrics into the application contract.
     dependency: none
-    target: >-
+    target:
       Define the port and admission vocabulary, integrate it into the start-run use case, provide a
       fail-closed default composition binding, and add local docs plus architecture tests for the
       seam.
@@ -621,7 +602,7 @@ tasks:
       - apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts
       - apps/api/test/application/services/startRunExecutionCapacityAdmission.architecture.test.ts
       - apps/api/src/application/services/BackpressureAwareStartRunUseCase.ts
-    status_reason: >-
+    status_reason:
       The abstract seam is present in code, the default posture fails closed through
       `capacity_signal_unavailable`, the fail-closed default remains in
       `buildProtectedStartRunRuntime.ts`, and the local guide plus semantic architecture test now
@@ -632,11 +613,11 @@ tasks:
     parent_task: AR-C3
     priority: P1
     status: done
-    objective: >-
+    objective:
       bind the abstract execution-capacity admission seam to a real adapter-backed signal without
       leaking provider detail into the API application contract.
     dependency: AR-C3-A
-    target: >-
+    target:
       Protected runtime composition wires a concrete implementation behind the abstract port and
       integration coverage proves caller-visible admission behavior under saturation and
       signal-unavailable conditions.
@@ -649,7 +630,7 @@ tasks:
       - apps/api/src/infrastructure/executionCapacity/TemporalWorkerReadyzExecutionCapacityPort.ts
       - apps/api/src/modules/protectedRuntime/buildProtectedExecutionCapacityPort.ts
       - apps/api/test/application/services/BackpressureAwareStartRunUseCase.executionCapacityReadyzBinding.test.ts
-    status_reason: >-
+    status_reason:
       Protected runtime composition now binds the `temporal` target adapter through a concrete
       Temporal-worker `readyz` probe adapter while keeping the abstract application seam intact.
       Parent-level telemetry and runbook follow-through is closed by `AR-C3-C`.
@@ -658,11 +639,11 @@ tasks:
     parent_task: AR-C3
     priority: P1
     status: done
-    objective: >-
+    objective:
       close telemetry, runbook, and evidence posture for execution-capacity-based admission
       rejections.
     dependency: AR-C3-B
-    target: >-
+    target:
       Operators can distinguish execution-capacity rejection from existing outbox or pending-event
       pressure through telemetry, documentation, and evidence-backed closure material.
     complexity: S
@@ -677,7 +658,7 @@ tasks:
       - apps/api/test/application/services/startRunAdmissionDecisions.test.ts
       - apps/api/test/infrastructure/admissionTelemetry/ObservabilityAdmissionTelemetry.test.ts
       - apps/api/test/application/services/startRunAdmissionTelemetry.architecture.test.ts
-    status_reason: >-
+    status_reason:
       Execution-capacity denial is now distinguishable from older system pressure through canonical
       rejection codes, telemetry labels, the admission-control runbook, and a local admission
       observability component guide with a semantic fitness rule. The remaining follow-up is future
@@ -686,11 +667,11 @@ tasks:
   - task_id: AR-C4
     priority: P1
     status: done
-    objective: >-
+    objective:
       add circuit breaker between Temporal activities and IRunStateStore to prevent state store
       unavailability from blocking all step execution with no fallback or degradation signal.
     dependency: none
-    target: >-
+    target:
       Activities use a circuit-breaker-wrapped state store client; when state store is unavailable,
       activities fail fast with a retryable error instead of hanging; circuit state is observable
       via metrics.
@@ -704,7 +685,7 @@ tasks:
       - packages/@dvt/adapter-temporal/test/RunStateCommandPortCircuitBreaker.test.ts
       - apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts
       - apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts
-    status_reason: >-
+    status_reason:
       Temporal activity state-store writes now flow through a circuit-breaker-wrapped command port
       with timeout protection and retryable fast-fail semantics; worker ops surfaces expose breaker
       posture and counters so degradation is explicit.
@@ -712,11 +693,11 @@ tasks:
   - task_id: AR-C5
     priority: P1
     status: done
-    objective: >-
+    objective:
       implement adapter-call circuit breaking for Temporal-facing engine operations so adapter
       outages fail fast instead of exhausting timeout-only protection.
     dependency: WE-HX-5
-    target: >-
+    target:
       Adapter wrapper enforces closed/open/half-open states for start/cancel/signal and enrichment
       calls, emits breaker state metrics, and exposes breaker posture through health-check output.
     complexity: M
@@ -731,20 +712,20 @@ tasks:
       - packages/@dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts
       - packages/@dvt/engine/test/adapters/CircuitBreakingProviderAdapter.test.ts
       - packages/@dvt/engine/test/architecture/adapterCircuitBreaker.architecture.test.ts
-    status_reason: >-
-      Validated as already implemented: AR-C5 decorator, protected registry composition, health
+    status_reason:
+      'Validated as already implemented: AR-C5 decorator, protected registry composition, health
       posture, telemetry, architecture guard, evidence, risk entry, and closeout exist. Focused
-      engine tests and typecheck pass on 2026-05-22.
+      engine tests and typecheck pass on 2026-05-22.'
     last_verified: '2026-05-22'
   - task_id: MW-C1
     priority: P0
     status: done
-    objective: >-
+    objective:
       abstract step execution in Temporal adapter by separating DbtStepActivity from a
       StepActivityDispatcher that routes by StepKind to the correct activity implementation,
       enabling non-dbt step types (PYTHON_SCRIPT, SPARK_JOB, API_CALL).
     dependency: MW-A1
-    target: >-
+    target:
       RunPlanWorkflow dispatches steps via StepActivityDispatcher.execute(step); dispatcher routes
       to DbtStepActivity for DBT_MODEL/DBT_TEST and throws UnsupportedStepKindError for unregistered
       kinds; adding a new kind requires registering an activity, not modifying workflow code.
@@ -755,19 +736,19 @@ tasks:
       - docs/evidence/ED-20260408-mw-c1-step-activity-dispatcher.md
       - packages/@dvt/adapter-temporal/src/activities/stepActivities.ts
       - packages/@dvt/adapter-temporal/test/workflow-compiled-code-ref.test.ts
-    status_reason: >-
-      `StepActivityDispatcher` is now the runtime dispatch seam in `@dvt/adapter-temporal`; dbt and
+    status_reason:
+      '`StepActivityDispatcher` is now the runtime dispatch seam in `@dvt/adapter-temporal`; dbt and
       gateway steps route by `StepKind`, and unregistered kinds fail closed through
-      `UnsupportedStepKindError` instead of editing workflow control flow.
+      `UnsupportedStepKindError` instead of editing workflow control flow.'
     last_verified: '2026-04-10'
   - task_id: RC-C2
     priority: P2
     status: blocked
-    objective: >-
+    objective:
       institutionalize shared preflight (`hygiene.ps1`), log-first CI triage, and structured AI
       efficiency measurement for Lane C before scaling the workflow repo-wide.
     dependency: none
-    target: >-
+    target:
       Shared operator guide + `hygiene.ps1` preflight/triage modes + canonical YAML adoption log are
       live, and final closure is gated on three consecutive Lane C PR cycles meeting the documented
       20% round-reduction rule.
@@ -799,8 +780,8 @@ tasks:
       - docs/risk-register/quality/R-20260418-TURBO-BUILD-ORCHESTRATION-CACHE-DRIFT.yaml
       - docs/planning/status/ai-efficiency-adoption-log.yaml
       - docs/planning/status/ai-efficiency-adoption-status.md
-    status_reason: >-
-      Shared tooling, guide, structured measurement, and a canonical friction review are shipped.
+    status_reason:
+      'Shared tooling, guide, structured measurement, and a canonical friction review are shipped.
       The lane now also carries a governed local warm-build optimization slice that extends `DVT_CI`
       hook short-circuiting to the remaining worker apps and removes forced rebuilds from
       `@dvt/contracts`, plus a follow-on Turbo-backed root build slice that preserves direct
@@ -827,19 +808,19 @@ tasks:
       cycles logged against the new workflow. The 2026-05-22 reconciliation confirmed that recent
       Lane C PRs are visible in GitHub, but the required interaction, tool-call, and avoidable-rerun
       measurements are not captured in the adoption log, so RC-C2 is explicitly blocked on measured
-      adoption evidence instead of remaining an active implementation claim.
+      adoption evidence instead of remaining an active implementation claim.'
     last_verified: '2026-05-22'
   - task_id: CI-AUDIT-ARC-STATE-STORE
     parent_task: RC-C2
     priority: P1
     status: done
-    objective: >-
+    objective:
       decide and implement the ARC policy posture for `packages/@dvt/state-store/**` so state-store
       changes are either intentionally ARC-2 governed or the stale `state-core` trigger is removed.
     dependency: none
-    target: >-
-      `.arc-policy.yaml`, ARC validation tests, and contributor guidance agree on the current
-      state-store package path and required evidence/risk posture.
+    target:
+      '`.arc-policy.yaml`, ARC validation tests, and contributor guidance agree on the current
+      state-store package path and required evidence/risk posture.'
     complexity: S
     effort_points: 2
     progress_pct: 100
@@ -849,20 +830,20 @@ tasks:
       - .arc-policy.yaml
       - tools/ci/arc-check.mjs
       - tools/ci/arc-policy-state-store.test.mjs
-    status_reason: >-
-      `.arc-policy.yaml` now routes the ARC-2 state-store trigger through the canonical
+    status_reason:
+      '`.arc-policy.yaml` now routes the ARC-2 state-store trigger through the canonical
       `packages/@dvt/state-store/**` package path and the CI tool contract test rejects the legacy
-      `packages/@dvt/state/**` glob.
+      `packages/@dvt/state/**` glob.'
     last_verified: '2026-05-10'
   - task_id: CI-AUDIT-ENGINE-COVERAGE
     parent_task: RC-C2
     priority: P2
     status: done
-    objective: >-
+    objective:
       align the Engine Coverage Gate change detector with the actual engine package scope so engine
       Vitest configuration changes cannot bypass coverage threshold enforcement.
     dependency: none
-    target: >-
+    target:
       The coverage gate either sources its relevant path set from the governed CI scope policy or
       explicitly includes `packages/@dvt/engine/vitest.config.ts`, with CI-tool coverage proving the
       path mapping.
@@ -877,22 +858,22 @@ tasks:
       - tools/ci/scope-config.mjs
       - tools/ci/emit-scope.test.mjs
       - tools/ci/workflow-pattern-parity.test.mjs
-    status_reason: >-
-      Closed by the accepted CI Audit Engine Coverage plan: coverage routing now follows the
+    status_reason:
+      'Closed by the accepted CI Audit Engine Coverage plan: coverage routing now follows the
       governed engine workspace policy and CI tool tests prove engine Vitest config changes are
-      coverage-relevant.
+      coverage-relevant.'
     last_verified: '2026-05-22'
   - task_id: CI-AUDIT-CONTRACTS-SCOPE
     parent_task: RC-C2
     priority: P2
     status: done
-    objective: >-
+    objective:
       decide whether `contracts.yml` should keep inline `dorny/paths-filter` scope rules or move to
       the central workflow-scope policy used by newer CI gates.
     dependency: none
-    target: >-
-      `contracts.yml` either consumes the central scope helper or documents the exception, and
-      CI-tool tests lock the chosen contract-scope behavior.
+    target:
+      '`contracts.yml` either consumes the central scope helper or documents the exception, and
+      CI-tool tests lock the chosen contract-scope behavior.'
     complexity: S
     effort_points: 2
     progress_pct: 100
@@ -906,20 +887,20 @@ tasks:
       - tools/ci/emit-scope.test.mjs
       - tools/ci/workflow-pattern-parity.test.mjs
       - docs/guides/testing-and-ci-capabilities.md
-    status_reason: >-
-      Closed by accepted 2026-05-15 closeout and re-verified on 2026-05-22: contracts.yml validates
+    status_reason:
+      'Closed by accepted 2026-05-15 closeout and re-verified on 2026-05-22: contracts.yml validates
       the central workflow-scope policy, emits scope via `emit-scope --mode contracts`, and workflow
-      parity tests prohibit reverting to inline `dorny/paths-filter` rules.
+      parity tests prohibit reverting to inline `dorny/paths-filter` rules.'
     last_verified: '2026-05-22'
   - task_id: CI-AUDIT-ADR0-OWNER
     parent_task: RC-C2
     priority: P2
     status: done
-    objective: >-
+    objective:
       choose one authoritative workflow owner for the ADR-0000 traceability gate so CI enforcement
       stays explicit without duplicated push coverage.
     dependency: none
-    target: >-
+    target:
       The ADR-0000 gate remains enforced for pull requests and pushes, but duplicate workflow
       ownership is removed or documented with a clear reason.
     complexity: S
@@ -931,7 +912,7 @@ tasks:
       - tools/ci/workflow-pattern-parity.test.mjs
       - .github/workflows/pr-quality-gate.yml
       - .github/workflows/ci.yml
-    status_reason: >-
+    status_reason:
       Closed by accepted closeout and executable workflow parity guard; PR Quality Gate is the
       single remote owner for `pnpm traceability:adr0` and CI - Code Quality has zero invocations.
     last_verified: '2026-05-22'
@@ -939,13 +920,13 @@ tasks:
     parent_task: RC-C2
     priority: P3
     status: done
-    objective: >-
+    objective:
       confirm whether the release-please workflow intentionally avoids repository checkout and the
       shared Node/pnpm setup action, or whether release automation needs repo-tooling parity.
     dependency: none
-    target: >-
-      Release workflow ownership is explicit: either release-please remains action-only by design,
-      or the workflow adopts the repository setup path with a focused validation note.
+    target:
+      'Release workflow ownership is explicit: either release-please remains action-only by design,
+      or the workflow adopts the repository setup path with a focused validation note.'
     complexity: S
     effort_points: 1
     progress_pct: 100
@@ -953,14 +934,14 @@ tasks:
       - docs/planning/status/release-please-continuous.md
       - tools/ci/workflow-pattern-parity.test.mjs
       - docs/planning/closeouts/20260515-ci-audit-release-flow-closeout.md
-    status_reason: >-
+    status_reason:
       Release workflow is intentionally action-only while it only delegates to release-please;
       checkout/setup is required only when repository-local tooling is introduced.
     last_verified: '2026-05-15'
   - task_id: RC-E1
     priority: P1
     status: done
-    objective: >-
+    objective:
       harden PlanRefPolicy.isLinkLocalHost against RFC1918, full 127.0.0.0/8, IPv6 ULA, and
       dangerous schemes (data:, javascript:, mailto:).
     dependency: S16
@@ -972,14 +953,14 @@ tasks:
       - packages/@dvt/engine/src/security/hostRiskClassifier.ts
       - packages/@dvt/engine/test/security/planRefPolicy.test.ts
       - packages/@dvt/engine/src/contracts/PlanRef.ts
-    status_reason: >-
+    status_reason:
       The host-risk classifier and security tests provide equivalent verified closure for the
       SSRF/CIDR hardening slice.
     last_verified: '2026-03-31'
   - task_id: RC-E2
     priority: P1
     status: done
-    objective: >-
+    objective:
       move assertTenantAccess before validatePlanRef in validateStartRunPreconditions to prevent
       plan-URI information leakage to unauthorized callers.
     dependency: S16
@@ -991,19 +972,19 @@ tasks:
       - packages/@dvt/engine/src/services/startRun/StartRunValidationPolicy.ts
       - packages/@dvt/engine/test/services/StartRunCoordinator.test.ts
       - apps/api/src/application/services/engineStartRunUseCase.ts
-    status_reason: >-
+    status_reason:
       Tenant access is asserted before plan-ref validation in code and the ordering is exercised by
       tests.
     last_verified: '2026-03-31'
   - task_id: TF-C1
     priority: P0
     status: done
-    objective: >-
+    objective:
       implement the SQL-first `POST /plans/preview` boundary so design-graph input is validated,
       canonical plan bytes are persisted with Git provenance, and callers receive the real `PlanRef`
       required by runtime start.
     dependency: TF-A1, TF-B1
-    target: >-
+    target:
       Protected runtime exposes preview as validate-plus-persist, rejects invalid graph and SQL
       inputs with typed errors, persists immutable plan bytes plus provenance, and returns the real
       `PlanRef` used by `POST /runs/start`.
@@ -1023,27 +1004,27 @@ tasks:
       - apps/api/src/entrypoints/http/planRoutes.ts
       - apps/api/src/entrypoints/http/previewProfilePolicy.ts
       - apps/api/src/entrypoints/http/previewProvenanceParser.ts
-    status_reason: >-
-      Closed. The protected preview boundary now validates explicit `previewProfile` intent,
+    status_reason:
+      'Closed. The protected preview boundary now validates explicit `previewProfile` intent,
       enforces request-boundary graph and provenance rules, persists canonical plan bytes, and
       returns the real runtime-safe `PlanRef`, while the downstream convergence that kept the parent
       open is now landed through the Lane A and B adoption chain: the active Canvas caller emits the
       governed `transformation-sql-first-v1` request plus required Git provenance, the anti-
       corruption layer preserves the persisted-plan contract at the web boundary, and the first
       caller-visible provenance chain is already accepted. The next runtime-mode expansion now moves
-      to `TF-C3`, not back into `TF-C1`.
+      to `TF-C3`, not back into `TF-C1`.'
     last_verified: '2026-04-14'
   - task_id: TF-C1-A
     priority: P0
     status: done
-    objective: >-
+    objective:
       implement the protected preview route, typed validation failures, and authorization behavior
       for SQL-first design-graph requests.
     dependency: TF-A1-A, TF-B1-A
-    target: >-
-      `POST /plans/preview` exists behind the protected API boundary, enforces the draft contract,
+    target:
+      '`POST /plans/preview` exists behind the protected API boundary, enforces the draft contract,
       and returns typed `400`, `401`, `403`, `422`, and `500` outcomes instead of ambiguous route
-      behavior.
+      behavior.'
     complexity: S
     effort_points: 3
     progress_pct: 100
@@ -1054,7 +1035,7 @@ tasks:
       - apps/api/src/entrypoints/http/runtimeRoutes.constants.ts
       - apps/api/src/entrypoints/http/planRoutes.ts
       - apps/api/src/entrypoints/http/previewProfilePolicy.ts
-    status_reason: >-
+    status_reason:
       The protected route, auth flow, and typed error envelope are now exercised against explicit
       `previewProfile` parsing and request-boundary validation. Remaining follow-up belongs to the
       parent TF-C1 convergence chain, not to the route behavior itself.
@@ -1062,11 +1043,11 @@ tasks:
   - task_id: TF-C1-B
     priority: P0
     status: done
-    objective: >-
+    objective:
       persist canonical plan bytes plus provenance and issue the real `PlanRef` consumed by runtime
       start.
     dependency: TF-C1-A, TF-A1-B
-    target: >-
+    target:
       Successful preview writes the immutable plan record, stores Git provenance, and returns the
       runtime-safe `PlanRef` later accepted by `POST /runs/start`.
     complexity: S
@@ -1078,7 +1059,7 @@ tasks:
       - docs/planning/closeouts/20260408-tf-c1-b-preview-profile-contract-closeout.md
       - apps/api/src/entrypoints/http/planRoutes.ts
       - apps/api/src/entrypoints/http/previewProvenanceParser.ts
-    status_reason: >-
+    status_reason:
       Successful preview now persists the canonical plan and returns the real `PlanRef` through the
       explicit preview-profile contract instead of step-kind heuristics. Remaining work is
       downstream caller adoption of the transformation profile and provenance path, not persistence
@@ -1087,12 +1068,12 @@ tasks:
   - task_id: TF-C2
     priority: P0
     status: done
-    objective: >-
+    objective:
       deliver the first execution-first vertical for SQL transformations against PostgreSQL,
       including the local Docker PostgreSQL proof environment and caller-visible materialization
       evidence.
     dependency: TF-C1
-    target: >-
+    target:
       A persisted `PlanRef` can drive one PostgreSQL-backed SQL transformation end to end, local
       acceptance uses Docker PostgreSQL, and runtime read surfaces expose sink evidence and failure
       diagnostics.
@@ -1107,21 +1088,21 @@ tasks:
       - docs/evidence/ED-20260408-tf-c2-b-read-surface-evidence.md
       - docs/evidence/ED-20260413-tf-c2-runtime-vertical-acceptance.md
       - docs/planning/closeouts/20260413-tf-c2-runtime-vertical-acceptance-closeout.md
-    status_reason: >-
-      The first PostgreSQL-backed execution-first runtime vertical is now accepted: persisted
+    status_reason:
+      'The first PostgreSQL-backed execution-first runtime vertical is now accepted: persisted
       `PlanRef` execution, the canonical Docker proof wrapper, and caller-visible runtime evidence
       are all code-grounded and acceptance-backed. Remaining follow-through stays explicit in
       downstream tasks such as `TF-D1` repeatability/reset discipline and `TF-C3` phase-2
-      plugin-backed dbt dispatch, not in the parent runtime vertical itself.
+      plugin-backed dbt dispatch, not in the parent runtime vertical itself.'
     last_verified: '2026-04-13'
   - task_id: TF-C2-A
     priority: P0
     status: done
-    objective: >-
+    objective:
       add the PostgreSQL executor path and the first repeatable Docker PostgreSQL proof baseline for
       SQL-first persisted plans.
     dependency: TF-C1-B
-    target: >-
+    target:
       Runtime can resolve a persisted plan into ordered PostgreSQL execution steps, and a documented
       Docker PostgreSQL environment exists for local proof of success and failure paths.
     complexity: M
@@ -1135,7 +1116,7 @@ tasks:
       - scripts/run-temporal-postgres-proof.cjs
       - packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts
       - packages/@dvt/adapter-temporal/test/integration.postgres.time-skipping.test.ts
-    status_reason: >-
+    status_reason:
       The capability-led PostgreSQL execution seam now exists in `adapter-postgres`, CI runs a
       dedicated Temporal Postgres integration lane, and the local Docker proof environment now has a
       canonical operator-facing wrapper and runbook. Remaining downstream follow-through belongs to
@@ -1145,13 +1126,13 @@ tasks:
   - task_id: TF-C2-B
     priority: P0
     status: done
-    objective: >-
+    objective:
       expose caller-visible materialization evidence and step-attributed failure diagnostics on the
       runtime read surfaces.
     dependency: TF-C2-A, TF-B1-B
-    target: >-
-      `GET /runs/:runId` and `GET /runs/:runId/events` return executor identity, rows written, sink
-      target, failure step attribution, and timestamps needed for operator inspection.
+    target:
+      '`GET /runs/:runId` and `GET /runs/:runId/events` return executor identity, rows written, sink
+      target, failure step attribution, and timestamps needed for operator inspection.'
     complexity: S
     effort_points: 3
     progress_pct: 100
@@ -1164,22 +1145,22 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/transformation-flow-delivery-plan-20260405.md
       - docs/risk-register/quality/R-20260409-TF-C2-B-CANONICAL-CONTRACT-DOC-DRIFT.yaml
       - docs/risk-register/quality/R-20260409-TF-C2-B-FAILED-RUN-MATERIALIZATION-SEMANTICS.yaml
-    status_reason: >-
-      `GET /runs/:runId` and `GET /runs/:runId/events` now expose executor identity, rows written,
+    status_reason:
+      '`GET /runs/:runId` and `GET /runs/:runId/events` now expose executor identity, rows written,
       sink target, failure step attribution, and timestamps on the governed runtime read surfaces.
       The hard-QA follow-up work is closed: snapshot posture remains on one development schema line,
       failed-run materialization semantics are locked to success-only reads, canonical docs and
       diagrams are aligned, and the former `TF-B1-B` provenance dependency is now accepted closure
-      rather than an open blocker.
+      rather than an open blocker.'
     last_verified: '2026-04-13'
   - task_id: AR-C6
     priority: P0
     status: done
-    objective: >-
+    objective:
       normalize Temporal cancellation semantics so provider-native cancel, runtime-owned lifecycle
       facts, and caller-visible status authority follow one governed model.
     dependency: none
-    target: >-
+    target:
       Temporal cancellation no longer relies on signal aliasing, and the component-level ownership
       model for `RunCancelRequested`, `RunCancelled`, and provider status authority is explicit
       across planning and architecture surfaces.
@@ -1192,7 +1173,7 @@ tasks:
       - docs/evidence/critical/ED-20260401-cancel-lifecycle-workflow-owned-ordering.md
       - docs/evidence/ED-20260413-temporal-native-cancel-provider-status-convergence.md
       - docs/planning/closeouts/20260413-ar-c6-provider-status-convergence-closeout.md
-    status_reason: >-
+    status_reason:
       Native Temporal cancellation now preserves runtime-owned canonical cancel ordering and
       converges provider-live terminal status on `CANCELLED` after workflow-local cleanup. The
       provider-native boundary, ownership truth, and provider-status semantics are now aligned
@@ -1202,11 +1183,11 @@ tasks:
     parent_task: AR-C6
     priority: P0
     status: done
-    objective: >-
+    objective:
       capture the cancel-lifecycle ownership lesson and hand it off to the broader engine-runtime
       contract-pack reset without leaving a second active contract direction in planning.
     dependency: none
-    target: >-
+    target:
       A governed proposal records the target ownership model across `WorkflowEngineCoreService`,
       `IProviderAdapter`, runtime workflow, projector/read model, and caller-visible status
       consumption, while the contract-pack reset and active registry cleanup continue only under
@@ -1217,7 +1198,7 @@ tasks:
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-cancel-lifecycle-ownership-truth-sync-plan-20260410.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-c6-temporal-cancel-semantics-plan-20260410.md
-    status_reason: >-
+    status_reason:
       The cancel-lifecycle ownership lesson is captured and accepted as local rationale. Further
       contract-pack normalization is now explicitly absorbed by `AR-A12-A`, so Lane C no longer
       carries a parallel active direction.
@@ -1225,14 +1206,14 @@ tasks:
   - task_id: AR-C7
     priority: P0
     status: done
-    objective: >-
+    objective:
       make start-run execution identity platform-owned so clients cannot provide canonical `runId`
       values at the protected runtime boundary.
     dependency: none
-    target: >-
-      `POST /runs/start` rejects client-provided `runId`, API parsing generates the internal
+    target:
+      '`POST /runs/start` rejects client-provided `runId`, API parsing generates the internal
       `StartRunCommand.runId`, and the web canvas sends only planRef, workspace scope, and selection
-      for run start.
+      for run start.'
     complexity: M
     effort_points: 3
     progress_pct: 100
@@ -1252,24 +1233,24 @@ tasks:
       - apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts
       - apps/web/src/app/services/runs/runsService.test.ts
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.runStart.test.tsx
-    status_reason: >-
-      The 2026-04-23 architecture review P0 tenant/run identity decision is implemented behind
+    status_reason:
+      'The 2026-04-23 architecture review P0 tenant/run identity decision is implemented behind
       ADR-0050: the API owns opaque `run_<UUIDv7>` generation and rejects client-supplied `runId`,
       while the web start-run port no longer carries runtime context identity. The API allocator is
       explicitly not a shadow engine: retry, idempotency, lifecycle, provider workflow, persistence,
       and engine semantics remain outside `startRunIdentity.ts`. The Fowler follow-up analysis,
       allocator-specific local component guide, boundary guides, and semantic architecture tests now
-      guard the boundary.
+      guard the boundary.'
     last_verified: '2026-05-06'
   - task_id: AR-C8
     priority: P0
     status: done
-    objective: >-
+    objective:
       replace the protected-runtime authorization repository-plus-policy split with one DVT-owned
       access-decision seam that keeps `apps/api` as PEP while avoiding a forced remote PDP
       dependency in the first cut.
     dependency: none
-    target: >-
+    target:
       Protected runtime authorization flows through `IAccessDecisionService`; the first backend is
       embedded; `PostgresPrincipalAccessRepository` and `TenantHierarchyAuthorizationPolicy` are no
       longer part of the active runtime wiring; later external PDPs remain backend swaps behind the
@@ -1287,25 +1268,25 @@ tasks:
       - apps/api/test/application/services/authorizeCommandScopeService.test.ts
       - apps/api/test/modules/protectedRuntimeDependencyBuilders.cases.ts
       - docs/architecture/components/api/api-current-to-target-architecture.md
-    status_reason: >-
-      `apps/api` now authorizes through a DVT-owned `IAccessDecisionService` seam with an
+    status_reason:
+      '`apps/api` now authorizes through a DVT-owned `IAccessDecisionService` seam with an
       embedded-first backend. The protected-runtime security builder no longer constructs the old
       repository-plus-policy split, startup migration coverage follows the embedded backend, and the
       active ADR/API docs now treat later external PDP adoption as a backend swap rather than as a
-      route-level redesign.
+      route-level redesign.'
     last_verified: '2026-05-06'
   - task_id: AR-C9
     priority: P0
     status: done
-    objective: >-
+    objective:
       formalize the canonical DVT-owned access action/resource/scope vocabulary behind
       `IAccessDecisionService` so future PDP adapters map one explicit contract instead of
       reconstructing semantics from implicit route shapes.
     dependency: AR-C8
-    target: >-
-      `IAccessDecisionService` owns explicit action/resource/scope vocabulary and route families
+    target:
+      '`IAccessDecisionService` owns explicit action/resource/scope vocabulary and route families
       build explicit access resources; the embedded backend and workspace-draft capability flow use
-      the same contract without exposing vendor semantics to `apps/api`.
+      the same contract without exposing vendor semantics to `apps/api`.'
     complexity: M
     effort_points: 5
     progress_pct: 100
@@ -1316,7 +1297,7 @@ tasks:
       - docs/planning/closeouts/20260423-access-decision-contract-vocabulary-closeout.md
       - apps/api/src/application/ports/accessDecision.ts
       - apps/api/test/application/services/protectedSecurityAccessDecision.architecture.test.ts
-    status_reason: >-
+    status_reason:
       The access-decision contract now owns the canonical action catalog, explicit resource
       discriminants, and scope builders; route/application consumers reuse that language; the
       embedded backend consumes explicit `resource` ownership; and the protected-security component
@@ -1325,12 +1306,12 @@ tasks:
   - task_id: AR-C10
     priority: P0
     status: done
-    objective: >-
+    objective:
       close protected runtime route governance as one command/query rail matrix across start,
       preview, compile, import, workspace draft, run query, signal, cancel, recover, and admin
       repair boundaries.
     dependency: none
-    target: >-
+    target:
       Every protected runtime route maps to one DDD-owned command/query rail with concrete source
       file, application owner, adapter surface, authorization rule, tenant-scope rule, positive
       test, and required negative tests; compatibility behavior is explicitly classified instead of
@@ -1353,7 +1334,7 @@ tasks:
       - apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts
       - apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts
-    status_reason: >-
+    status_reason:
       AR-C10 is closed with an executable protected runtime command/query rail catalog, component
       documentation that links to the catalog instead of duplicating row-level truth, canonical
       preview/compile/import authorization wording, an explicit signal parser constants facade
@@ -1364,11 +1345,11 @@ tasks:
   - task_id: TF-C3
     priority: P1
     status: done
-    objective: >-
+    objective:
       add phase-2 dbt plugin-backed execution behind the same preview-persist-run contract so dbt
       stays out of engine-kernel semantics instead of becoming a second product path.
     dependency: TF-C2
-    target: >-
+    target:
       plugin-backed dbt execution reuses the same `POST /plans/preview` and `POST /runs/start`
       boundary, executor identity is caller-visible, and the roadmap does not fork into a separate
       outer product loop or push dbt semantics into the engine kernel.
@@ -1386,23 +1367,23 @@ tasks:
       - docs/evidence/ed-20260514-temporal-worker-dbt-canary.md
       - docs/planning/closeouts/20260522-tf-c3-e-temporal-worker-dbt-canary-closeout.md
       - docs/planning/closeouts/20260522-tf-c3-plugin-backed-dbt-parent-closeout.md
-    status_reason: >-
-      TF-C3 parent closure is accepted: protected runtime wires the governed
+    status_reason:
+      'TF-C3 parent closure is accepted: protected runtime wires the governed
       `runExecutionContextRef` boundary through shared artifact-backed readers, the standalone
       `apps/temporal-worker` composition root owns `TemporalWorkerHost` lifecycle and ops endpoints,
       the adapter runs DBT through an adapter-owned CLI host without pushing semantics into the
       engine kernel, and TF-C3-E is closed by the accepted DBT-enabled Docker canary and runbook
       evidence. Environment rollout checks remain operational release gates, not missing repo
-      closure.
+      closure.'
     last_verified: '2026-05-22'
   - task_id: TF-C3-A
     priority: P1
     status: done
-    objective: >-
+    objective:
       add the dbt plugin-backed execution mode under the same preview-persist-run contract without
       creating a second product loop or a kernel-owned dbt path.
     dependency: TF-C2-B
-    target: >-
+    target:
       Runtime can dispatch eligible persisted plans to a plugin-backed dbt path while preserving the
       same `PlanRef`, result model, and caller-visible flow used by the PostgreSQL path.
     complexity: S
@@ -1415,25 +1396,25 @@ tasks:
       - docs/planning/closeouts/20260414-tf-c3-run-execution-context-resolver-closeout.md
       - docs/planning/closeouts/20260414-tf-c3-dbt-plugin-runtime-projection-closeout.md
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
-    status_reason: >-
-      Runtime can now dispatch eligible persisted plans through the same outer `PlanRef` flow into a
-      plugin-backed DBT path: shared artifact readers resolve immutable execution inputs,
+    status_reason:
+      'Runtime can now dispatch eligible persisted plans through the same outer `PlanRef` flow into
+      a plugin-backed DBT path: shared artifact readers resolve immutable execution inputs,
       `apps/temporal-worker` composes the production-style worker host, and DBT runs through the
-      adapter-owned CLI host while failing closed when wiring or payloads are invalid.
+      adapter-owned CLI host while failing closed when wiring or payloads are invalid.'
     last_verified: '2026-04-14'
   - task_id: TF-C3-B
     parent_task: TF-C3
     priority: P1
     status: done
-    objective: >-
+    objective:
       converge the artifact-backed execution-context and DBT bundle readers under `@dvt/artifacts`
       so API ingress and the Temporal worker consume one governed artifact boundary instead of
       divergent local implementations.
     dependency: TF-C1
-    target: >-
-      `ArtifactBackedRunExecutionContextReader` and `ArtifactBackedDbtProjectBundleReader` live in
+    target:
+      '`ArtifactBackedRunExecutionContextReader` and `ArtifactBackedDbtProjectBundleReader` live in
       `@dvt/artifacts`, support the governed `file://` or `s3://` rules, and `apps/api` consumes the
-      shared execution-context reader through the existing resolver boundary.
+      shared execution-context reader through the existing resolver boundary.'
     complexity: S
     effort_points: 3
     progress_pct: 100
@@ -1443,7 +1424,7 @@ tasks:
       - packages/@dvt/artifacts/src/runtime/ArtifactBackedRunExecutionContextReader.ts
       - packages/@dvt/artifacts/src/runtime/ArtifactBackedDbtProjectBundleReader.ts
       - apps/api/src/infrastructure/startRun/ArtifactBackedRunExecutionContextResolver.ts
-    status_reason: >-
+    status_reason:
       The shared artifact package now owns both runtime readers, enforces the governed URI posture,
       and `apps/api` has been reduced to a thin rejection-mapping wrapper instead of carrying a
       second artifact-loading implementation.
@@ -1452,13 +1433,13 @@ tasks:
     parent_task: TF-C3
     priority: P1
     status: done
-    objective: >-
+    objective:
       create the canonical standalone Temporal worker composition root so worker lifecycle,
       readiness, and DBT host wiring are owned outside `apps/api`.
     dependency: TF-C3-B
-    target: >-
-      `apps/temporal-worker` exists with validated env loading, worker-host bootstrap, clean
-      shutdown, and operational endpoints for `/healthz`, `/readyz`, and `/metrics`.
+    target:
+      '`apps/temporal-worker` exists with validated env loading, worker-host bootstrap, clean
+      shutdown, and operational endpoints for `/healthz`, `/readyz`, and `/metrics`.'
     complexity: M
     effort_points: 5
     progress_pct: 100
@@ -1469,7 +1450,7 @@ tasks:
       - apps/temporal-worker/src/host/runTemporalWorkerHost.ts
       - apps/temporal-worker/src/runtime/createTemporalWorkerRuntime.ts
       - docs/runbooks/temporal-worker-dbt-plugin-runtime-20260414.md
-    status_reason: >-
+    status_reason:
       The repo now contains a real worker composition root with explicit env parsing, runtime
       lifecycle ownership, operational endpoints, and shutdown semantics; the missing topology is no
       longer hypothetical or test-only.
@@ -1478,14 +1459,14 @@ tasks:
     parent_task: TF-C3
     priority: P1
     status: done
-    objective: >-
+    objective:
       run DBT through an adapter-owned CLI host behind `DbtPluginRunner` so DBT execution stays out
       of engine semantics while using real artifact-backed project bundles.
     dependency: TF-C3-C
-    target: >-
-      `DbtCliPluginRunner` coordinates DBT-local materialization, argument mapping, subprocess
+    target:
+      '`DbtCliPluginRunner` coordinates DBT-local materialization, argument mapping, subprocess
       execution, and failure classification helpers behind `DbtPluginRunner`, returning governed
-      `StepResult` values without changing the engine contract.
+      `StepResult` values without changing the engine contract.'
     complexity: M
     effort_points: 8
     progress_pct: 100
@@ -1497,7 +1478,7 @@ tasks:
       - packages/@dvt/adapter-temporal/src/plugins/dbt/DbtCliPluginRunner.ts
       - packages/@dvt/adapter-temporal/src/activities/activityFactory.ts
       - packages/@dvt/adapter-temporal/test/DbtCliPluginRunner.test.ts
-    status_reason: >-
+    status_reason:
       The adapter owns a concrete DBT CLI host behind a generic Temporal step plugin runner port,
       the worker injects it through the real composition path, and the CLI runner is split by
       DBT-local responsibilities so activity registry defaults cannot retain dep-less DBT handlers.
@@ -1506,11 +1487,11 @@ tasks:
     parent_task: TF-C3
     priority: P1
     status: done
-    objective: >-
+    objective:
       close rollout, runbook, and acceptance truth for the standalone Temporal worker so the repo
       not only contains the host topology but also tells operators how to validate and deploy it.
     dependency: TF-C3-D
-    target: >-
+    target:
       The worker ships a canonical runbook and aligned planning surfaces, and the remaining gap is
       limited to environment rollout or canary evidence rather than missing code topology.
     complexity: S
@@ -1523,21 +1504,21 @@ tasks:
       - docs/planning/closeouts/20260414-tf-c3-production-plugin-host-composition-closeout.md
       - docs/planning/closeouts/20260522-tf-c3-e-temporal-worker-dbt-canary-closeout.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-c3-production-plugin-host-composition-plan-20260414.md
-    status_reason: >-
-      TF-C3-E closure is accepted: the runbook is aligned to the worker code and
+    status_reason:
+      'TF-C3-E closure is accepted: the runbook is aligned to the worker code and
       `ed-20260514-temporal-worker-dbt-canary.md` records the DBT-enabled local Docker canary across
       Postgres, Temporal, plan-store artifacts, run metadata, readiness endpoints, metrics,
       file-backed DBT bundle execution, DBT invocation evidence, and `RunCompleted`. Production
-      environment rollout checks remain per-environment release gates.
+      environment rollout checks remain per-environment release gates.'
     last_verified: '2026-05-22'
   - task_id: TF-C4
     priority: P0
     status: done
-    objective: >-
+    objective:
       implement the protected workspace graph-draft read/write boundary so editable Canvas graphs
       persist through one tenant-scoped API and store path instead of browser-local state.
     dependency: TF-A2, read-your-writes contract
-    target: >-
+    target:
       Protected workspace graph-draft routes validate the shared contract, enforce authorization and
       tenant or workspace scope, enforce compare-and-swap against the authoritative revision, reject
       stale writes with typed conflict outcomes, preserve idempotent retry semantics for the same
@@ -1570,92 +1551,110 @@ tasks:
       - apps/api/test/application/services/workspaceGraphDraftApplicationComponent.architecture.test.ts
       - apps/web/src/app/views/canvas/canvasDraftRepository.ts
       - apps/web/src/app/views/canvas/canvasStartupAndDraftRecovery.architecture.test.ts
-    status_reason: >-
-      Accepted after Lane C review reconciliation. Protected runtime owns `GET
+    status_reason:
+      'Accepted after Lane C review reconciliation. Protected runtime owns `GET
       /workspace/graph/draft` and `PUT /workspace/graph/draft` through one store-backed API path
       with explicit capability outcomes, tenant/project/environment scope enforcement,
       compare-and-swap revision rejection, scoped idempotent retry handling, auditable
       decision/write outcomes, and dedicated traces plus metrics. The former blocker is closed:
       `TF-A2` now freezes `WorkspaceGraphDraft.v1` around `WorkspaceGraphAuthoringDraft`, Canvas
       `TF-E2-A` consumes the protected authoring-draft boundary, and `DesignGraphDraft` remains a
-      derived preview/run artifact rather than persisted editable truth.
+      derived preview/run artifact rather than persisted editable truth.'
     last_verified: '2026-05-06'
+  - status: in_progress
+    target:
+      Regenerated 0.5.0 candidate with one PR-based logical change identity and exact-tree release
+      attestation
+    task_id: C-RELEASE-CANDIDATE-INTEGRITY-1
+    priority: P1
+    objective:
+      Make release candidates fail closed on duplicate logical changelog entries, stale main
+      identity, incomplete required checks, and version, manifest, tag, or artifact provenance
+      mismatch.
+    complexity: M
+    progress_pct: 95
+    effort_points: 5
+    evidence_refs:
+      - v0.5.0
+      - 'PR #2002'
+      - e94db3fdb
+      - GitHub run 29773729589
+    status_reason:
+      Release 0.5.0 is published and the live main ruleset is valid; non-release PR completion
+      semantics are fixed locally and await exact-head remote proof.
+  - status: done
+    target: scripts/generate-dbt-project-roundtrip-capability-status.cjs
+    task_id: CI-DBT-ROUNDTRIP-SHALLOW-EVIDENCE-1
+    priority: P0
+    objective:
+      Allow the governed DBT round-trip capability query to verify reviewed-commit ancestry from
+      protected shallow PR checkouts without exposing repository credentials to candidate code.
+    complexity: S
+    effort_points: 2
+    evidence_refs:
+      - https://github.com/dunay2/dvt/pull/2040
+      - https://github.com/dunay2/dvt/actions/runs/30571558841
+    progress_pct: 100
+    status_reason:
+      'Merged in PR #2040 with credential-free isolated Git evidence checkout and green remote merge
+      gate'
 dependency_notes:
-  - >-
-    `MVP-C1` is now closed because its accepted runbook artifact no longer carries an open
-    dependency on `MVP-A1` or `MVP-B1`.
+  - '`MVP-C1` is now closed because its accepted runbook artifact no longer carries an open
+    dependency on `MVP-A1` or `MVP-B1`.'
   - '`S09` is closed via accepted ADR-0040.'
-  - >-
-    `S16` is verified from runtime code and tests despite older review surfaces that still showed it
-    open.
+  - '`S16` is verified from runtime code and tests despite older review surfaces that still showed
+    it open.'
   - '`RC-D1` and `RC-D1A` are code-grounded by health route and watchdog coverage.'
   - '`read-your-writes contract` is now unblocked by the accepted snapshot staleness caller surface.'
-  - >-
-    `RC-C1` is closed by the canonical HTTP envelope, route/mapper migration, and typed
-    `rebuildSnapshot` not-found maintenance boundary.
+  - '`RC-C1` is closed by the canonical HTTP envelope, route/mapper migration, and typed
+    `rebuildSnapshot` not-found maintenance boundary.'
   - '`RC-E1` and `RC-E2` are verified from code and tests on the start-run validation/security path.'
-  - >-
-    `RC-C2` moved to in-progress with cycle-1 preflight evidence captured; completion still requires
-    two additional consecutive PR cycles under the same protocol.
-  - >-
-    `RC-C2` now also carries governed warm-build and Turbo-backed root-build efficiency slices;
+  - '`RC-C2` moved to in-progress with cycle-1 preflight evidence captured; completion still
+    requires two additional consecutive PR cycles under the same protocol.'
+  - '`RC-C2` now also carries governed warm-build and Turbo-backed root-build efficiency slices;
     those reduce operator friction, but they do not replace the remaining qualifying PR-cycle gate
-    for final closure.
-  - >-
-    `AR-C1` and `AR-C2` are P0 tasks from the 2026-04-02 deep review: admin route RBAC and formal
-    SLA definitions.
-  - >-
-    `AR-C2` moved to in-progress with canonical SLA/manual artifacts delivered; closure still
-    requires dashboard and alert wiring evidence.
-  - >-
-    `AR-C1` is decomposed into `AR-C1-T1..T4` plus `CFG-TS-T1` to isolate test hardening, contract
+    for final closure.'
+  - '`AR-C1` and `AR-C2` are P0 tasks from the 2026-04-02 deep review: admin route RBAC and formal
+    SLA definitions.'
+  - '`AR-C2` moved to in-progress with canonical SLA/manual artifacts delivered; closure still
+    requires dashboard and alert wiring evidence.'
+  - '`AR-C1` is decomposed into `AR-C1-T1..T4` plus `CFG-TS-T1` to isolate test hardening, contract
     negative coverage, runtime composition checks, fixture reuse, and `baseUrl` deprecation planning
-    without circular dependencies.
-  - >-
-    `AR-C1` is accepted as done with explicit admin-scope RBAC wired in code and negative-path
+    without circular dependencies.'
+  - '`AR-C1` is accepted as done with explicit admin-scope RBAC wired in code and negative-path
     route/contract coverage; remaining subtasks track cleanup and TypeScript migration planning, not
-    the admin RBAC closure objective.
-  - >-
-    `AR-C3` and `AR-C4` are P1 tasks: execution-capacity admission hardening and
+    the admin RBAC closure objective.'
+  - '`AR-C3` and `AR-C4` are P1 tasks: execution-capacity admission hardening and
     activity-to-state-store circuit breaker. `AR-C3` is decomposed into `AR-C3-A/B/C` so the API
     boundary can be abstract first and adapter binding can land later without leaking provider
-    detail into the parent task.
-  - >-
-    `AR-C3`, `AR-C3-A`, `AR-C3-B`, `AR-C3-C`, and `AR-C4` are now accepted as done after Lane C
+    detail into the parent task.'
+  - '`AR-C3`, `AR-C3-A`, `AR-C3-B`, `AR-C3-C`, and `AR-C4` are now accepted as done after Lane C
     review reconciliation; future capacity-policy expansion and adapter-call circuit breaking remain
-    separate work, not missing evidence for these closed slices.
-  - >-
-    The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
+    separate work, not missing evidence for these closed slices.'
+  - The 2026-04-02 principal deep architectural review adds `AR-C5` for adapter-call circuit
     breaking and health surfacing at the engine-adapter boundary.
-  - >-
-    `MW-C1`, `TF-C2-A`, `TF-C2-B`, and `AR-C6` now contribute accepted dispatcher, Postgres proof,
+  - '`MW-C1`, `TF-C2-A`, `TF-C2-B`, and `AR-C6` now contribute accepted dispatcher, Postgres proof,
     caller-visible runtime evidence, and converged native-cancel provider semantics. `TF-C2` is now
     accepted as the first PostgreSQL-backed runtime vertical; downstream work has shifted to
     repeatability discipline under `TF-D1`, phase-2 plugin-backed dbt dispatch under `TF-C3`, and
-    broader runtime boundary hardening rather than missing executor or read-surface behavior.
-  - >-
-    `AR-C6` now explicitly splits the provider-native Temporal cancel implementation from the
+    broader runtime boundary hardening rather than missing executor or read-surface behavior.'
+  - '`AR-C6` now explicitly splits the provider-native Temporal cancel implementation from the
     follow-on cancel-lifecycle ownership truth-sync so runtime work does not keep expanding against
-    stale ADR and contract surfaces.
-  - >-
-    `AR-C7` closes the P0 tenant/run identity decision from the 2026-04-23 architecture review by
+    stale ADR and contract surfaces.'
+  - '`AR-C7` closes the P0 tenant/run identity decision from the 2026-04-23 architecture review by
     making start-run `runId` platform-owned at the API boundary and removing UI-authored execution
-    ids from the canvas start path.
-  - >-
-    `TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2
+    ids from the canvas start path.'
+  - '`TF-C1..TF-C3` are now decomposed into route, persistence, executor, evidence, and phase-2
     plugin-backed dbt subtasks so runtime closure can progress in smaller slices without losing the
-    same outer contract.
-  - >-
-    `TF-C4` is now accepted as done: `TF-A2` froze the authoring-draft contract around
+    same outer contract.'
+  - '`TF-C4` is now accepted as done: `TF-A2` froze the authoring-draft contract around
     `WorkspaceGraphAuthoringDraft`, the protected API/store path owns scoped read/write persistence,
-    and Lane E `TF-E2-A` adopted the protected authoring boundary instead of UI-local persistence.
-  - >-
-    `F-27` in Lane E is the internal alpha route consumer for the now-closed Lane C `AR-C10` and
+    and Lane E `TF-E2-A` adopted the protected authoring boundary instead of UI-local persistence.'
+  - '`F-27` in Lane E is the internal alpha route consumer for the now-closed Lane C `AR-C10` and
     `TF-C4` inputs. Lane C does not own route UI completion; remaining alpha work is route fixture,
     risk triage, cadence, recovery vocabulary, startup/context, Canvas proof, and plan/run readiness
-    execution in Lane E.
-  - >-
-    The 2026-05-06 CI build config audit is now a reference intake instead of an open review queue.
+    execution in Lane E.'
+  - The 2026-05-06 CI build config audit is now a reference intake instead of an open review queue.
     Accepted findings are split into `CI-AUDIT-ARC-STATE-STORE`, `CI-AUDIT-ENGINE-COVERAGE`,
     `CI-AUDIT-CONTRACTS-SCOPE`, `CI-AUDIT-ADR0-OWNER`, and `CI-AUDIT-RELEASE-FLOW`. `CI-05` did not
     receive a task because the current workflow-scope policy already treats all `docs/**` changes as
@@ -1668,7 +1667,7 @@ verification_summary:
   total_effort_points: 209
   completed_weighted_points: 189.1
   lane_progress_pct: 90
-  notes: >-
+  notes:
     Weighted progress uses effort_points across the current 58 task entries. The 2026-05-06 Lane C
     review reconciliation moved the review bucket to zero by accepting `AR-C1`, `AR-C3`, `AR-C3-A`,
     `AR-C3-B`, `AR-C3-C`, `AR-C4`, `AR-C7`, `AR-C8`, and `TF-C4` as done from existing evidence.

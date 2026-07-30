@@ -7,7 +7,11 @@ const node = {
   yaml: require('js-yaml'),
 };
 
-const { PlanningDbExportRunner, exportedArtifactPaths } = require('./planning-db-export.cjs');
+const {
+  PlanningDbExportRunner,
+  canonicalStateArtifactPath,
+  exportedArtifactPaths,
+} = require('./planning-db-export.cjs');
 
 function createLaneExportFixture(repoRoot, taskOverrides = {}) {
   const runner = new PlanningDbExportRunner({
@@ -54,6 +58,14 @@ function createLaneExportFixture(repoRoot, taskOverrides = {}) {
             },
           ],
         };
+      }
+
+      if (sql.includes('from planning_query_store.feature_mechanization_local_rails')) {
+        return { rows: [] };
+      }
+
+      if (sql.includes('from planning_query_store.feature_mechanization_local_operations')) {
+        return { rows: [] };
       }
 
       return { rows: [] };
@@ -227,6 +239,105 @@ node.test('planning DB export reads effective task rows from the query store', a
   await runner.readPlanningRows(client);
 
   node.assert.match(capturedSql.join('\n'), /from planning_query_store\.planning_effective_tasks/);
+});
+
+node.test(
+  'planning DB export selects only operated feature rails not backed by migrations',
+  async () => {
+    const runner = new PlanningDbExportRunner();
+    const capturedSql = [];
+    const client = {
+      async query(sql) {
+        capturedSql.push(String(sql));
+        return { rows: [] };
+      },
+    };
+
+    await runner.readCanonicalStateRows(client);
+
+    node.assert.match(
+      capturedSql[0],
+      /from planning_query_store\.feature_mechanization_local_rails/u
+    );
+    node.assert.match(capturedSql[0], /feature_mechanization_local_operations/u);
+    node.assert.match(capturedSql[0], /source_path not like 'tools\/planning-db\/migrations\/%'/u);
+    node.assert.match(
+      capturedSql[1],
+      /from planning_query_store\.feature_mechanization_local_operations/u
+    );
+  }
+);
+
+node.test('planning DB export materializes deterministic DB-authored canonical state', async () => {
+  const outputRoot = node.fs.mkdtempSync(
+    node.path.join(node.os.tmpdir(), 'planning-db-canonical-state-')
+  );
+  const { client, runner } = createLaneExportFixture('F:/repo');
+  const operatedRail = {
+    railId: 'local#PLANNING-DB-RECOVERY#query#checkstate',
+    featureId: 'PLANNING-DB-RECOVERY',
+    mechanizationStatus: 'implemented',
+    railName: 'CheckState',
+    normalizedRailName: 'checkstate',
+    railType: 'query',
+    dddOwner: 'PlanningDbRecovery',
+    railStatus: 'implemented',
+    symbolRefs: ['scripts/planning-db-export.cjs#PlanningDbExportRunner'],
+    implementationRefs: ['scripts/planning-db-export.cjs#PlanningDbExportRunner'],
+    documentationRefs: [],
+    governingSources: ['docs/architecture/command-query-rail-governance.md'],
+    allowedImplementationSurfaces: ['scripts/planning-db-export.cjs'],
+    architectureGuards: ['node --test scripts/planning-db-export.test.cjs'],
+    completionGate: ['pnpm verify:prepush'],
+    sourcePath: 'scripts/planning-db-export.cjs',
+    sourceContentSha256: 'a'.repeat(64),
+    rawRail: { name: 'CheckState', type: 'query' },
+    rawManifest: { featureId: 'PLANNING-DB-RECOVERY' },
+    revision: 2,
+    createdBy: 'codex',
+    createdAt: '2026-07-30T10:00:00.000Z',
+  };
+  const operation = {
+    operationId: 'feature-mechanization:test-operation',
+    idempotencyKey: 'feature-mechanization-test-operation',
+    operationType: 'feature_mechanization_rail_record',
+    actor: 'codex',
+    railId: operatedRail.railId,
+    sourcePath: operatedRail.sourcePath,
+    sourceContentSha256: operatedRail.sourceContentSha256,
+    expectedRevision: 1,
+    previousRevision: 1,
+    resultingRevision: 2,
+    payload: { railName: operatedRail.railName },
+    createdAt: '2026-07-30T11:00:00.000Z',
+  };
+  const originalQuery = client.query;
+  client.query = async (sql) => {
+    if (String(sql).includes('operation.operation_id as "operationId"')) {
+      return { rows: [operation] };
+    }
+    if (String(sql).includes('from planning_query_store.feature_mechanization_local_rails')) {
+      return { rows: [operatedRail] };
+    }
+    return originalQuery(sql);
+  };
+
+  try {
+    await runner.exportPlanningDerivedSurfaces({
+      client,
+      databaseUrl: 'postgres://example/planning',
+      outputRoot,
+    });
+
+    const snapshot = JSON.parse(
+      node.fs.readFileSync(node.path.join(outputRoot, canonicalStateArtifactPath), 'utf8')
+    );
+    node.assert.equal(snapshot.schemaVersion, 1);
+    node.assert.deepEqual(snapshot.featureMechanizationRails, [operatedRail]);
+    node.assert.deepEqual(snapshot.featureMechanizationRailOperations, [operation]);
+  } finally {
+    node.fs.rmSync(outputRoot, { recursive: true, force: true });
+  }
 });
 
 node.test(

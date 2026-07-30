@@ -23,6 +23,7 @@ const exportedArtifactPaths = [
   'docs/planning/state/execution-workboard.md',
   'docs/planning/state/open-task-route.md',
 ];
+const canonicalStateArtifactPath = 'tools/planning-db/state/canonical-state.json';
 const planningLaneFilePattern = /^agent-lane-[a-z]\.yaml$/iu;
 
 class PlanningDbExportRunner {
@@ -240,6 +241,90 @@ class PlanningDbExportRunner {
     };
   }
 
+  async readCanonicalStateRows(client) {
+    const [featureMechanizationRails, featureMechanizationRailOperations] = await Promise.all([
+      client.query(`
+        select
+          rail.rail_id as "railId",
+          rail.feature_id as "featureId",
+          rail.mechanization_status as "mechanizationStatus",
+          rail.rail_name as "railName",
+          rail.normalized_rail_name as "normalizedRailName",
+          rail.rail_type as "railType",
+          rail.ddd_owner as "dddOwner",
+          rail.rail_status as "railStatus",
+          rail.symbol_refs as "symbolRefs",
+          rail.implementation_refs as "implementationRefs",
+          rail.documentation_refs as "documentationRefs",
+          rail.governing_sources as "governingSources",
+          rail.allowed_implementation_surfaces as "allowedImplementationSurfaces",
+          rail.architecture_guards as "architectureGuards",
+          rail.completion_gate as "completionGate",
+          rail.source_path as "sourcePath",
+          rail.source_content_sha256 as "sourceContentSha256",
+          rail.raw_rail as "rawRail",
+          rail.raw_manifest as "rawManifest",
+          rail.revision,
+          rail.created_by as "createdBy",
+          rail.created_at as "createdAt"
+        from ${this.deps.schemaName}.feature_mechanization_local_rails rail
+        where rail.source_path not like 'tools/planning-db/migrations/%'
+          and exists (
+            select 1
+            from ${this.deps.schemaName}.feature_mechanization_local_operations operation
+            where operation.rail_id = rail.rail_id
+          )
+        order by rail.rail_id
+      `),
+      client.query(`
+        select
+          operation.operation_id as "operationId",
+          operation.idempotency_key as "idempotencyKey",
+          operation.operation_type as "operationType",
+          operation.actor,
+          operation.rail_id as "railId",
+          operation.source_path as "sourcePath",
+          operation.source_content_sha256 as "sourceContentSha256",
+          operation.expected_revision as "expectedRevision",
+          operation.previous_revision as "previousRevision",
+          operation.resulting_revision as "resultingRevision",
+          operation.payload,
+          operation.created_at as "createdAt"
+        from ${this.deps.schemaName}.feature_mechanization_local_operations operation
+        where exists (
+          select 1
+          from ${this.deps.schemaName}.feature_mechanization_local_rails rail
+          where rail.rail_id = operation.rail_id
+            and rail.source_path not like 'tools/planning-db/migrations/%'
+        )
+        order by operation.created_at, operation.operation_id
+      `),
+    ]);
+
+    return {
+      featureMechanizationRails: featureMechanizationRails.rows,
+      featureMechanizationRailOperations: featureMechanizationRailOperations.rows,
+    };
+  }
+
+  writeCanonicalState(snapshotRows, outputRoot) {
+    const artifactPath = this.deps.path.join(outputRoot, canonicalStateArtifactPath);
+    this.deps.fs.mkdirSync(this.deps.path.dirname(artifactPath), { recursive: true });
+    this.deps.fs.writeFileSync(
+      artifactPath,
+      `${JSON.stringify(
+        {
+          schemaVersion: 1,
+          featureMechanizationRails: snapshotRows.featureMechanizationRails,
+          featureMechanizationRailOperations: snapshotRows.featureMechanizationRailOperations,
+        },
+        null,
+        2
+      )}\n`,
+      'utf8'
+    );
+  }
+
   writeLaneYamlFiles(lanes, sourceStateDir) {
     this.deps.fs.mkdirSync(sourceStateDir, { recursive: true });
 
@@ -400,6 +485,10 @@ class PlanningDbExportRunner {
       return JSON.stringify(this.canonicalizeStructuredValue(this.deps.yaml.load(content)));
     }
 
+    if (artifactPath === canonicalStateArtifactPath) {
+      return JSON.stringify(this.canonicalizeStructuredValue(JSON.parse(content)));
+    }
+
     return content;
   }
 
@@ -463,7 +552,10 @@ class PlanningDbExportRunner {
     }
 
     try {
-      const rows = await this.readPlanningRows(client);
+      const [rows, canonicalStateRows] = await Promise.all([
+        this.readPlanningRows(client),
+        this.readCanonicalStateRows(client),
+      ]);
       const lanes = this.buildLaneDocuments(rows);
 
       const outputRoot = options.check
@@ -480,8 +572,10 @@ class PlanningDbExportRunner {
       }
 
       this.writeLaneYamlFiles(lanes, this.deps.path.join(outputRoot, 'docs', 'planning', 'state'));
+      this.writeCanonicalState(canonicalStateRows, outputRoot);
       const canonicalArtifactPaths = [
         ...new Set([
+          canonicalStateArtifactPath,
           ...exportedArtifactPaths,
           ...this.planningLaneArtifactPaths(lanes),
           ...this.listExistingPlanningLaneArtifactPaths(this.deps.repoRoot),
@@ -509,6 +603,7 @@ class PlanningDbExportRunner {
       return {
         lanes: lanes.length,
         tasks: rows.tasks.length,
+        canonicalFeatureMechanizationRails: canonicalStateRows.featureMechanizationRails.length,
         outputRoot,
         canonicalArtifactPaths,
         report,
@@ -553,5 +648,6 @@ if (require.main === module) {
 
 module.exports = {
   PlanningDbExportRunner,
+  canonicalStateArtifactPath,
   exportedArtifactPaths,
 };

@@ -36,6 +36,13 @@ const { buildCodeSymbolSnapshot } = require('./planning-db/code-symbol-inventory
 
 const repoRoot = path.resolve(__dirname, '..');
 const laneDirectory = path.join(repoRoot, 'docs', 'planning', 'state');
+const canonicalStatePath = path.join(
+  repoRoot,
+  'tools',
+  'planning-db',
+  'state',
+  'canonical-state.json'
+);
 const governanceFileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
 const governanceComponentIndexPath = governanceGeneratedPath(
   'system-governance-component-index.components.yaml'
@@ -2736,6 +2743,49 @@ async function readLocalFeatureMechanizationRails(client) {
   return result.rows;
 }
 
+function readCanonicalStateSnapshot(snapshotPath = canonicalStatePath) {
+  if (!fs.existsSync(snapshotPath)) {
+    throw new Error(`Missing Planning DB canonical state snapshot: ${snapshotPath}`);
+  }
+
+  const snapshot = JSON.parse(fs.readFileSync(snapshotPath, 'utf8'));
+  if (snapshot?.schemaVersion !== 1) {
+    throw new Error(
+      `Unsupported Planning DB canonical state schema version "${snapshot?.schemaVersion}".`
+    );
+  }
+
+  if (
+    !Array.isArray(snapshot.featureMechanizationRails) ||
+    !Array.isArray(snapshot.featureMechanizationRailOperations)
+  ) {
+    throw new Error(
+      'Planning DB canonical state must contain featureMechanizationRails and featureMechanizationRailOperations arrays.'
+    );
+  }
+
+  return snapshot;
+}
+
+function mergeCanonicalFeatureMechanizationRails(canonicalRails, localRails) {
+  const railsById = new Map();
+
+  for (const rail of canonicalRails) {
+    railsById.set(rail.railId, rail);
+  }
+
+  for (const rail of localRails) {
+    const canonicalRail = railsById.get(rail.railId);
+    if (!canonicalRail || Number(rail.revision) >= Number(canonicalRail.revision)) {
+      railsById.set(rail.railId, rail);
+    }
+  }
+
+  return [...railsById.values()].sort((left, right) =>
+    String(left.railId).localeCompare(String(right.railId))
+  );
+}
+
 async function refreshLocalFeatureMechanizationRailSourceHashes(client) {
   await client.query(`
     update ${schemaName}.feature_mechanization_local_rails rail
@@ -2801,7 +2851,7 @@ async function restoreLocalFeatureMechanizationRails(client, rails) {
       rail.revision,
       rail.createdBy,
       rail.createdAt,
-      rail.updatedAt,
+      rail.updatedAt || rail.createdAt,
     ],
     {
       suffix: `on conflict (rail_id) do update set
@@ -2829,6 +2879,45 @@ async function restoreLocalFeatureMechanizationRails(client, rails) {
   );
 
   await refreshLocalFeatureMechanizationRailSourceHashes(client);
+}
+
+async function restoreLocalFeatureMechanizationOperations(client, operations) {
+  await insertRows(
+    client,
+    'feature_mechanization_local_operations',
+    [
+      'operation_id',
+      'idempotency_key',
+      'operation_type',
+      'actor',
+      'rail_id',
+      'source_path',
+      'source_content_sha256',
+      'expected_revision',
+      'previous_revision',
+      'resulting_revision',
+      { name: 'payload', cast: 'jsonb' },
+      { name: 'created_at', cast: 'timestamptz' },
+    ],
+    operations,
+    (operation) => [
+      operation.operationId,
+      operation.idempotencyKey,
+      operation.operationType,
+      operation.actor,
+      operation.railId,
+      operation.sourcePath,
+      operation.sourceContentSha256,
+      operation.expectedRevision,
+      operation.previousRevision,
+      operation.resultingRevision,
+      toJson(operation.payload),
+      operation.createdAt,
+    ],
+    {
+      suffix: 'on conflict (operation_id) do nothing',
+    }
+  );
 }
 
 async function insertFrontendMechanicalTruthSnapshot(client, snapshot) {
@@ -3714,6 +3803,7 @@ async function importContent(options = {}) {
           .filter((sourcePath) => /^buzon\/.*\.md$/i.test(toPosix(sourcePath))),
       })
     : null;
+  const canonicalStateSnapshot = includeGovernance ? readCanonicalStateSnapshot() : null;
   const docsDispositionPlanningSnapshot =
     includeGovernance && !planningSnapshot ? buildPlanningContentSnapshot() : planningSnapshot;
   let docsDispositionSnapshot;
@@ -3764,7 +3854,17 @@ async function importContent(options = {}) {
         client,
         knowledgeIntakeRepositoryReferenceSnapshot
       );
-      await restoreLocalFeatureMechanizationRails(client, localFeatureMechanizationRails);
+      await restoreLocalFeatureMechanizationRails(
+        client,
+        mergeCanonicalFeatureMechanizationRails(
+          canonicalStateSnapshot.featureMechanizationRails,
+          localFeatureMechanizationRails
+        )
+      );
+      await restoreLocalFeatureMechanizationOperations(
+        client,
+        canonicalStateSnapshot.featureMechanizationRailOperations
+      );
       await reconcileDeprecatedLocalRailSources(client);
       await reconcileSupersededCanvasNodeWorkbenchPanel(client);
       await reconcileSupersededCiPolicyValidationSplitComponents(client);
@@ -4955,6 +5055,7 @@ module.exports = {
   insertCodeSymbolSnapshot,
   insertRows,
   mergePlanningTaskIds,
+  mergeCanonicalFeatureMechanizationRails,
   insertDocsDispositionSnapshot,
   insertCommandQueryRailSnapshot,
   insertFrontendComponentReflectionSnapshot,
@@ -4967,6 +5068,7 @@ module.exports = {
   normalizeText,
   parseArgs,
   readTrackedDocumentPaths,
+  readCanonicalStateSnapshot,
   readLocalFeatureMechanizationRails,
   readLocalPlanningTaskIds,
   readGovernanceSourceState,
@@ -4981,6 +5083,7 @@ module.exports = {
   refreshComponentFileOwnershipMaterializedProjection,
   refreshComponentRuleEvaluationMaterializedProjection,
   refreshLocalFeatureMechanizationRailSourceHashes,
+  restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
   runPlanningImport,
   sha256,

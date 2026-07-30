@@ -1,4 +1,4 @@
-﻿lane_id: A
+lane_id: A
 title: Contracts And State-Store Boundary
 owner: Product / Architecture / Delivery / Docs
 status: Active
@@ -14,52 +14,37 @@ expected_outcome:
   - optional maintenance ownership is explicit
   - migration recovery is defined
   - governance startup routing is explicit
-header_markdown: >
-  You are Anne, architect for contracts and ownership boundaries. You focus on DDD, hexagonal
-  design, and interface consistency.
-
+header_markdown: |
+  You are Anne, architect for contracts and ownership boundaries. You focus on DDD, hexagonal design, and interface consistency.
 
   ## Mandatory Principles
 
-
   - Minimal shared kernel: only cross-domain surfaces belong in contracts
-
   - Contracts-first: do not change runtime behavior without a verifiable contract
-
   - Explicit ownership: every port has a clear owner and boundary
-
   - Disciplined composition root: no convenience rewiring
-
   - Zero drift: docs, types, and tests must describe the same truth
-
 
   ## Working Style
 
-
   - Define the domain boundary and contract
-
   - Adjust root wiring without mixing responsibilities
-
   - Validate with contract tests and negative regression coverage
-
 
   ## Constraints
 
-
   - Do not move domain contracts into `@dvt/contracts` unless they are shared
-
   - Do not add silent compatibility shortcuts
-
   - Do not introduce hidden debt or TODO placeholders
 tasks:
   - task_id: MVP-A1
     priority: P0
     status: done
-    objective: >-
+    objective:
       inventory the current backend MVP contractual surface (routes, invariants, and explicit
       boundaries) without adding new runtime behavior.
     dependency: none
-    target: >-
+    target:
       Frozen MVP contractual inventory aligned with the real `apps/api` runtime surface and closed
       via reviewed proposal plus accepted evidence.
     complexity: M
@@ -70,7 +55,7 @@ tasks:
       - docs/planning/reviews/execution-runtime/20260331-mvp-a1-backend-contractual-inventory-review.md
       - docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
-    status_reason: >-
+    status_reason:
       The backend MVP route surface, activation boundary, authorization matrix, and input/scope
       invariants are now frozen against the real runtime and backed by accepted evidence.
     last_verified: '2026-03-31'
@@ -87,7 +72,7 @@ tasks:
       - packages/@dvt/adapter-postgres/test/PostgresLineageOutboxStore.test.ts
       - packages/@dvt/adapter-postgres/test/smoke.test.ts
       - docs/planning/roadmap/strategic-product-roadmap.md
-    status_reason: >-
+    status_reason:
       Tenant-scoped dead-letter behavior is present in code and tests; this pass found equivalent
       closure evidence even without a dedicated accepted evidence doc.
     last_verified: '2026-03-31'
@@ -104,18 +89,18 @@ tasks:
       - packages/@dvt/contracts/src/engine/IRunStateStore.v1.ts
       - apps/api/src/modules/stateStoreRoles.ts
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
-    status_reason: >-
+    status_reason:
       The state-store split is code-grounded and explicitly called closed in the principal
       architecture review.
     last_verified: '2026-03-31'
   - task_id: S18
     priority: P0
     status: done
-    objective: >-
+    objective:
       make composition-root state-store role bindings explicit instead of reconstructing the
       aggregate by intersection.
     dependency: S02
-    target: >-
+    target:
       Bind read/write roles directly in the root and stop reconstructing the aggregate by
       convenience.
     complexity: M
@@ -129,7 +114,7 @@ tasks:
   - task_id: S19
     priority: P1
     status: done
-    objective: >-
+    objective:
       isolate the maintenance query ownership by moving `listStaleSnapshotRuns` into a dedicated
       query port.
     dependency: S18
@@ -141,18 +126,18 @@ tasks:
       - packages/@dvt/contracts/src/engine/IRunSnapshotStalenessQuery.v1.ts
       - packages/@dvt/adapter-postgres/src/PostgresSnapshotStalenessQuery.ts
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
-    status_reason: >-
+    status_reason:
       Maintenance-query ownership is now isolated behind a dedicated staleness query port and the
       review marks the slice as merged.
     last_verified: '2026-03-31'
   - task_id: S19-F1
     priority: P2
     status: done
-    objective: >-
+    objective:
       remove the correlated stale-snapshot scan pattern in `listStaleSnapshotRunsSql` to avoid
       O(N)-per-row behavior at high run concurrency.
     dependency: S19
-    target: >-
+    target:
       Phase 1 replaces correlated MAX(run_seq) polling with `run_event_heads(run_id, tenant_id,
       latest_run_seq)` maintained in the event-append transaction. Phase 2 (optional) moves
       projector discovery to a push-based snapshot work queue. Lock the rollout with EXPLAIN-backed
@@ -163,7 +148,7 @@ tasks:
     evidence_refs:
       - docs/evidence/critical/ED-20260330-s19f1-phase1-phase2-snapshot-work-queue.md
       - docs/risk-register/quality/R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml
-    status_reason: >-
+    status_reason:
       Phase 1 and 2 were already delivered, and `S19-F1-C` is now closed with real Docker-backed
       PostgreSQL evidence for EXPLAIN target-load coverage and concurrent claim semantics.
     last_verified: '2026-04-11'
@@ -177,7 +162,7 @@ tasks:
     objective:
       replace the correlated stale-snapshot polling query with a run_event_heads-backed path.
     dependency: S19
-    target: >-
+    target:
       The stale snapshot selector uses run_event_heads and avoids correlated MAX(run_seq) scans on
       the hot path.
     evidence_refs:
@@ -193,7 +178,7 @@ tasks:
     progress_pct: 100
     objective: add snapshot_work_queue push-based projector discovery and queue claim wiring.
     dependency: S19-F1-A
-    target: >-
+    target:
       Projector runtime can claim queue-backed snapshot work and use polling only as bounded
       fallback coverage.
     evidence_refs:
@@ -207,29 +192,29 @@ tasks:
     complexity: M
     effort_points: 5
     progress_pct: 100
-    objective: >-
+    objective:
       close the remaining performance proof and claim-semantics risk for the snapshot work queue
       path.
     dependency: S19-F1-B
-    target: >-
+    target:
       EXPLAIN-backed evidence and claim-semantics closure retire the residual risk entry at the
       5000-concurrent-runs target.
     evidence_refs:
       - docs/risk-register/quality/R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
-    status_reason: >-
-      Closure executed and verified on real PostgreSQL via Docker: EXPLAIN-backed target-load test
+    status_reason:
+      'Closure executed and verified on real PostgreSQL via Docker: EXPLAIN-backed target-load test
       and concurrent `claimSnapshotWork` no-duplicate invariant are passing; residual risk entry is
-      now closed.
+      now closed.'
     last_verified: '2026-04-04'
   - task_id: S18-F1
     priority: P2
     status: done
-    objective: >-
+    objective:
       harden the explicit state-store role bundle into a root-owned boundary and prevent convenience
       rewiring drift.
     dependency: S18
-    target: >-
+    target:
       Keep the explicit role bundle but lock its semantics behind a stricter root-owned boundary and
       regression guard.
     complexity: M
@@ -239,9 +224,9 @@ tasks:
       - docs/planning/closeouts/20260513-s18-f1-a-state-store-role-boundary-closeout.md
       - docs/planning/closeouts/20260514-s18-f1-b-state-store-role-regression-guards-closeout.md
       - docs/planning/closeouts/20260515-s18-f1-c-state-store-role-contract-shape-closeout.md
-    status_reason: >-
-      Completed through S18-F1-A/B/C: the state-store role bundle boundary is root-owned,
-      convenience rewiring is guarded, and the export contract shape has negative-path coverage.
+    status_reason:
+      'Completed through S18-F1-A/B/C: the state-store role bundle boundary is root-owned,
+      convenience rewiring is guarded, and the export contract shape has negative-path coverage.'
     last_verified: '2026-05-22'
   - task_id: S18-F1-A
     parent_task: S18-F1
@@ -256,7 +241,7 @@ tasks:
       Composition roots cannot reconstruct the role bundle ad hoc outside the sanctioned boundary.
     evidence_refs:
       - docs/planning/closeouts/20260513-s18-f1-a-state-store-role-boundary-closeout.md
-    status_reason: >-
+    status_reason:
       Implemented by accepted S18-F1-A state-store role boundary closeout, feature-mechanization
       plan, API role-binding tests, and dvt-api typecheck.
     last_verified: '2026-05-22'
@@ -269,12 +254,12 @@ tasks:
     progress_pct: 100
     objective: add regression guards against convenience rewiring of state-store roles.
     dependency: S18-F1-A
-    target: >-
+    target:
       Regression coverage fails if roots drift back to convenience aliasing or aggregate
       reconstruction.
     evidence_refs:
       - docs/planning/closeouts/20260514-s18-f1-b-state-store-role-regression-guards-closeout.md
-    status_reason: >-
+    status_reason:
       Implemented by accepted S18-F1-B state-store role regression guards closeout and executable
       API architecture guard coverage against convenience rewiring.
     last_verified: '2026-05-22'
@@ -292,7 +277,7 @@ tasks:
       Consumers see a locked boundary shape with negative-path coverage for invalid role sources.
     evidence_refs:
       - docs/planning/closeouts/20260515-s18-f1-c-state-store-role-contract-shape-closeout.md
-    status_reason: >-
+    status_reason:
       Implemented by accepted S18-F1-C state-store role contract-shape closeout with explicit export
       semantics and negative-path boundary coverage.
     last_verified: '2026-05-22'
@@ -323,7 +308,7 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
       - packages/@dvt/contracts/src/adapters/IProviderAdapter.v1.ts
       - packages/@dvt/engine/src/services/startRun/StartRunExecutionService.ts
-    status_reason: >-
+    status_reason:
       The duplicate declaration is no longer present in the provider contract path and the review
       records the slice as closed.
     last_verified: '2026-03-31'
@@ -332,7 +317,7 @@ tasks:
     status: done
     objective: retire contract ownership drift across `engine`, `planner`, and `shared`.
     dependency: none
-    target: >-
+    target:
       Ownership matrix is frozen in docs, the migration is sequenced as `RC-G1-A..D`, and the
       workboard reflects the active tracker instead of an orphan review note.
     complexity: L
@@ -340,7 +325,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/planning/closeouts/20260514-rc-g1-contract-ownership-closure-closeout.md
-    status_reason: >-
+    status_reason:
       Closed by accepted RC-G1 contract ownership closure closeout, ARC-2 evidence, mitigated risk
       register, and focused ownership architecture validation after RC-G1-B/C/D completed.
     last_verified: '2026-05-22'
@@ -353,14 +338,14 @@ tasks:
     progress_pct: 100
     objective: freeze the ownership matrix and the `stay shared` versus `move to owner` taxonomy.
     dependency: none
-    target: >-
+    target:
       Every contract family affected by the review is classified as either `stay shared` or `move to
       owner`, with no intermediate category.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
       - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
-    status_reason: >-
+    status_reason:
       The active ownership proposal now freezes the family taxonomy and maps it to the `RC-G1`
       execution slices.
     last_verified: '2026-04-02'
@@ -373,7 +358,7 @@ tasks:
     progress_pct: 100
     objective: move non-shared engine ports out of `@dvt/contracts` and into `@dvt/engine`.
     dependency: RC-G1-A
-    target: >-
+    target:
       Engine-owned behavioral ports live under `packages/@dvt/engine/src/{adapters,ports,domain}`
       with a single cutover in the owner package, no shared-kernel compatibility aliases, and zero
       residual engine-port imports from `@dvt/contracts` at closeout. The scoped port set for this
@@ -387,9 +372,10 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/evidence/ED-20260411-rc-g1-b4-engine-shared-kernel-hardening.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: >-
-      Engine ownership closure is now complete: the mandatory scope, downstream cutover, legacy root
-      exports, residual equivalent-port imports, and regression guards are all closed in `RC-G1-B4`.
+    status_reason:
+      'Engine ownership closure is now complete: the mandatory scope, downstream cutover, legacy
+      root exports, residual equivalent-port imports, and regression guards are all closed in
+      `RC-G1-B4`.'
     last_verified: '2026-04-11'
   - task_id: RC-G1-B1
     parent_task: RC-G1-B
@@ -398,18 +384,18 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       freeze the exact engine-owned port inventory, target paths, and residual-import baseline
       before the code cutover starts.
     dependency: RC-G1-A
-    target: >-
+    target:
       A docs/contracts-first manifest exists for the mandatory engine-owned port set, each source
       path has an owner-package destination, and the residual-import inventory identifies the exact
       `@dvt/contracts` references that the cutover must drive to zero.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: >-
+    status_reason:
       The mandatory engine-owned port set, owner-package destination paths, and TypeScript
       residual-import baseline are now frozen in the active proposal.
     last_verified: '2026-04-11'
@@ -420,17 +406,17 @@ tasks:
     complexity: M
     effort_points: 3
     progress_pct: 100
-    objective: >-
+    objective:
       move the engine-owned behavioral ports into `@dvt/engine` and cut the engine package over to
       owner-local source paths.
     dependency: RC-G1-B1
-    target: >-
+    target:
       The mandatory engine-owned ports live under `packages/@dvt/engine/src/{adapters,ports,domain}`
       and `@dvt/engine` no longer imports the moved ports from `@dvt/contracts`.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: >-
+    status_reason:
       The mandatory engine-owned ports already live under owner-local engine paths and `@dvt/engine`
       no longer imports the moved port set from `@dvt/contracts`.
     last_verified: '2026-04-11'
@@ -441,18 +427,18 @@ tasks:
     complexity: M
     effort_points: 3
     progress_pct: 100
-    objective: >-
+    objective:
       cut adapters, state-store, and any other governed consumers over to the owner-local engine
       ports and close residual imports.
     dependency: RC-G1-B2
-    target: >-
-      `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, `@dvt/state-store`, and any additional
+    target:
+      '`@dvt/adapter-postgres`, `@dvt/adapter-temporal`, `@dvt/state-store`, and any additional
       governed consumers use the owner-local engine ports, and residual imports of the moved ports
-      from `@dvt/contracts` are zero.
+      from `@dvt/contracts` are zero.'
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: >-
+    status_reason:
       Governed downstream consumers already import the moved engine-owned ports from `@dvt/engine`;
       no direct TypeScript imports of the moved port set from `@dvt/contracts` remain in
       `@dvt/adapter-postgres`, `@dvt/adapter-temporal`, `@dvt/state-store`, or `apps/api`.
@@ -464,11 +450,11 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       harden the cutover with import guards, export-map cleanup, ARC-2 evidence, and final
       validation.
     dependency: RC-G1-B3
-    target: >-
+    target:
       No legacy exports remain for the moved engine ports or the equivalent engine-owned behavioral
       ports still published from `@dvt/contracts`, import guards prevent regression, docs/contracts
       and planning stay in sync, ARC-2 evidence is published, and `pnpm verify:prepush` closes the
@@ -477,7 +463,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contracts-domain-ownership-migration-plan-20260327.md
       - docs/evidence/ED-20260411-rc-g1-b4-engine-shared-kernel-hardening.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: >-
+    status_reason:
       Legacy root exports were removed from `@dvt/contracts`, the final residual
       `RunStateCommandPort` consumer moved to `@dvt/engine`, lint guards now block reintroduction in
       governed packages, and ARC-2 evidence/risk were updated.
@@ -491,7 +477,7 @@ tasks:
     progress_pct: 100
     objective: move non-shared delivery, traceability, and artifacts ports to their owner packages.
     dependency: RC-G1-B
-    target: >-
+    target:
       Delivery, traceability, and artifacts ownership matches the bounded context and
       `@dvt/contracts` retains only shared transport shapes for those areas.
     evidence_refs:
@@ -500,7 +486,7 @@ tasks:
       - docs/evidence/ED-20260419-rc-g1-c-owner-package-migration.md
       - docs/planning/reviews/architecture-and-governance/20260417-dvt-artifacts-review.md
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: >-
+    status_reason:
       Delivery-owned outbox ports now live in `@dvt/delivery`, lineage runtime and ports now live in
       `@dvt/traceability-service`, the generic shared-kernel artifact-store surface is retired in
       favor of `@dvt/artifacts`, residual imports were cut to zero, and lint guards plus ARC-2
@@ -516,7 +502,7 @@ tasks:
     objective:
       move planner-private ports to `@dvt/planner` and close the final shared-kernel cleanup.
     dependency: RC-G1-C
-    target: >-
+    target:
       Planner-private ports leave `@dvt/contracts`, ADR-0035 public planner contracts stay shared,
       and final import guards prevent regression.
     evidence_refs:
@@ -525,7 +511,7 @@ tasks:
       - docs/evidence/ed-20260427-rc-g1-d-planner-ownership-migration.md
       - docs/risk-register/quality/R-20260427-RC-G1-D-PLANNER-OWNERSHIP.yaml
       - docs/risk-register/quality/R-20260402-RC-G1-CONTRACT-OWNERSHIP-EXECUTION-DRIFT.yaml
-    status_reason: >-
+    status_reason:
       Planner-private behavior ports now live in `@dvt/planner`, shared serializable planner
       vocabulary remains in `@dvt/contracts`, API and Postgres adapter consumers import the owner
       package, and ARC-2 evidence plus lint and architecture guards close the final RC-G1 migration
@@ -534,14 +520,14 @@ tasks:
   - task_id: RC-G1-C-TRUTH-SYNC
     priority: P1
     status: done
-    objective: >-
+    objective:
       reconcile post-RC-G1-C documentation and barrel truth so active architecture surfaces describe
       the shipped ownership model exactly.
     dependency: RC-G1-C
-    target: >-
-      `system-delivery-status`, the RC-G1-C closeout, and linked planning or architecture surfaces
+    target:
+      '`system-delivery-status`, the RC-G1-C closeout, and linked planning or architecture surfaces
       distinguish shared DTO re-exports from owner-local behavioral ports and align quantitative
-      status claims with `generated-code-state`.
+      status claims with `generated-code-state`.'
     complexity: S
     effort_points: 2
     progress_pct: 100
@@ -551,7 +537,7 @@ tasks:
       - docs/planning/closeouts/20260426-rc-g1-c-truth-sync-closeout.md
       - docs/architecture/system-delivery-status.md
       - docs/planning/status/generated-code-state.md
-    status_reason: >-
+    status_reason:
       Active architecture and planning surfaces now distinguish DTO-only shared re-exports from
       owner-local behavioral ownership and the quantitative status snapshot matches the published
       generated code inventory.
@@ -562,7 +548,7 @@ tasks:
     objective:
       add a quick-start governance router so startup no longer requires a deep inventory read.
     dependency: none
-    target: >-
+    target:
       The governance inventory opens with a startup card and the AI work protocol points
       contributors to that router before deeper reference reading.
     complexity: S
@@ -572,18 +558,18 @@ tasks:
       - docs/planning/proposals/governance-startup-card-router-plan-20260402.md
       - docs/planning/closeouts/20260402-rc-g1-governance-startup-reconciliation-closeout.md
       - docs/evidence/ED-20260402-rc-g1-governance-startup-reconciliation.md
-    status_reason: >-
+    status_reason:
       The startup card/router is now implemented in the canonical governance inventory and aligned
       with the AI work protocol.
     last_verified: '2026-04-02'
   - task_id: GOV-S2
     priority: P1
     status: done
-    objective: >-
+    objective:
       formalize the repository's doc-driven operating model as a governed framework with information
       architecture, planning-data rules, authoring scaffolds, and traceability automation.
     dependency: GOV-S1, DOC-ARCH-01
-    target: >-
+    target:
       One canonical proposal defines the framework, rollout waves, lane ownership, and the
       transition from isolated governance scripts to a coherent doc-driven operating system.
     complexity: M
@@ -599,17 +585,17 @@ tasks:
       - docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md
       - docs/architecture/components/ci-governance/system-governance-generation-workflow-component.md
       - docs/planning/closeouts/20260507-gov-s2-doc-driven-operating-framework-closeout.md
-    status_reason: >-
-      The doc-driven operating framework is now accepted and closed as one canonical umbrella:
+    status_reason:
+      'The doc-driven operating framework is now accepted and closed as one canonical umbrella:
       startup routing, planning control, documentation information architecture, maintenance
       guidance, governance refresh, feature mechanization, and the local planning/governance DB path
       are linked. Future scaffold, traceability, export, or generated-artifact compaction work must
-      use concrete task IDs rather than reopening GOV-S2.
+      use concrete task IDs rather than reopening GOV-S2.'
     last_verified: '2026-05-07'
   - task_id: RC-A5
     priority: P1
     status: done
-    objective: >-
+    objective:
       replace silent markResolved catch with warning/metric telemetry so intent-resolution failures
       are observable.
     dependency: none
@@ -620,14 +606,14 @@ tasks:
     evidence_refs:
       - docs/planning/archive/reviews/architecture-and-governance/20260322-rc-a5-qa-hard-review.md
       - packages/@dvt/engine/test/core/WorkflowEngine.test.ts
-    status_reason: >-
+    status_reason:
       QA findings were explicitly resolved in the review artifact and the engine tests now cover the
       negative paths.
     last_verified: '2026-03-31'
   - task_id: RC-E3
     priority: P1
     status: done
-    objective: >-
+    objective:
       replace throw-based engine errors in StartRunAuthorizedFacade with Result<T, EngineError>
       return type to eliminate the Divergent Change smell.
     dependency: none
@@ -639,18 +625,18 @@ tasks:
       - docs/planning/proposals/rc-e3-execution-tracking-plan-20260328.md
       - apps/api/src/application/services/startRunAuthorizedFacade.ts
       - apps/api/src/entrypoints/http/authErrorMapper.ts
-    status_reason: >-
+    status_reason:
       The execution-tracking plan records implementation and closure, and the facade/mapper code
       reflects the typed Result boundary.
     last_verified: '2026-03-31'
   - task_id: DHM
     priority: P1
     status: done
-    objective: >-
+    objective:
       drive DDD/Hexagonal modularization slices starting with WS5 (test fixture modularization),
       then WS1, WS3, WS4, WS2, WS6.
     dependency: none
-    target: >-
+    target:
       WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 are closed with accepted evidence and executable
       architecture guards.
     complexity: L
@@ -661,7 +647,7 @@ tasks:
       - docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
       - docs/planning/closeouts/20260522-dhm-modularization-parent-closeout.md
       - docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md
-    status_reason: >-
+    status_reason:
       DHM is closed as a modularization parent after WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 all
       have accepted closeout/evidence records and executable architecture guards.
     last_verified: '2026-05-22'
@@ -675,7 +661,7 @@ tasks:
     objective:
       modularize the first WS5 engine fixture slice around intent-log tests using shared builders.
     dependency: none
-    target: >-
+    target:
       Initial WS5 helper extraction is closed without semantic drift in WorkflowEngine intent-log
       coverage.
     evidence_refs:
@@ -696,7 +682,7 @@ tasks:
       - docs/evidence/critical/ED-20260331-lane-a-ws5-b-engine-test-fixture-modularization.md
       - docs/planning/closeouts/20260331-dhm-ws5-b-engine-test-fixture-modularization-closeout.md
       - docs/risk-register/quality/R-20260330-WS5-ENGINE-TEST-FIXTURE-DRIFT.md
-    status_reason: >-
+    status_reason:
       Shared helper-backed engine fixtures now cover the remaining helper-heavy contract, security,
       core-service, and maintenance suites without inline engine construction drift.
     last_verified: '2026-03-31'
@@ -715,10 +701,10 @@ tasks:
       - docs/planning/reviews/execution-runtime/20260323-start-run-route-parser-qa-review.md
       - docs/planning/closeouts/20260331-rc-c1-http-error-envelope-normalization-closeout.md
       - docs/planning/closeouts/20260401-dhm-ws1-start-run-boundary-residual-hardening-closeout.md
-    status_reason: >-
-      The residual WS1 hardening slice is closed: parser-root decomposition completed, targetAdapter
-      ownership moved to command-contract helper, and helper-level seams are covered by focused
-      tests.
+    status_reason:
+      'The residual WS1 hardening slice is closed: parser-root decomposition completed,
+      targetAdapter ownership moved to command-contract helper, and helper-level seams are covered
+      by focused tests.'
     last_verified: '2026-04-01'
   - task_id: DHM-WS3
     parent_task: DHM
@@ -735,9 +721,9 @@ tasks:
       - docs/evidence/ed-20260518-dhm-ws3-admission-seam.md
       - docs/planning/closeouts/20260512-we-hx-3-start-run-application-decomposition-closeout.md
       - docs/planning/closeouts/20260518-dhm-ws3-admission-seam-closeout.md
-    status_reason: >-
-      WS3 is closed: start-run execution, failure, and admission phases are injected through
-      explicit seams, with component docs and architecture guards covering the decomposition.
+    status_reason:
+      'WS3 is closed: start-run execution, failure, and admission phases are injected through
+      explicit seams, with component docs and architecture guards covering the decomposition.'
     last_verified: '2026-05-22'
   - task_id: DHM-WS4
     parent_task: DHM
@@ -753,9 +739,9 @@ tasks:
       - docs/evidence/ed-20260512-dhm-ws4-runtime-path-decomposition.md
       - docs/planning/closeouts/20260512-dhm-ws4-runtime-path-decomposition-closeout.md
       - docs/risk-register/quality/R-20260512-DHM-WS4-RUNTIME-PATH-DECOMPOSITION.yaml
-    status_reason: >-
-      WS4 is closed: cancel and signal runtime-control paths are split behind command and signal
-      services, while the compatibility facade remains a delegator.
+    status_reason:
+      'WS4 is closed: cancel and signal runtime-control paths are split behind command and signal
+      services, while the compatibility facade remains a delegator.'
     last_verified: '2026-05-22'
   - task_id: DHM-WS2
     parent_task: DHM
@@ -771,9 +757,9 @@ tasks:
       - docs/evidence/ed-20260512-dhm-ws2-runtime-composition-root.md
       - docs/planning/closeouts/20260512-dhm-ws2-runtime-composition-root-closeout.md
       - docs/risk-register/quality/R-20260512-DHM-WS2-RUNTIME-COMPOSITION-ROOT.yaml
-    status_reason: >-
-      WS2 is closed: the intent reconciler runtime startup sequence is owned by the API runtime
-      composition object and guarded by component-level architecture tests.
+    status_reason:
+      'WS2 is closed: the intent reconciler runtime startup sequence is owned by the API runtime
+      composition object and guarded by component-level architecture tests.'
     last_verified: '2026-05-22'
   - task_id: DHM-WS6
     parent_task: DHM
@@ -790,18 +776,18 @@ tasks:
       - docs/evidence/ed-20260512-dhm-ws6-semantic-closure.md
       - docs/planning/closeouts/20260512-dhm-ws6-semantic-closure-closeout.md
       - docs/risk-register/quality/R-20260512-DHM-WS6-SEMANTIC-CLOSURE.yaml
-    status_reason: >-
-      WS6 is closed: semantic owned-concern headers, component documentation, user stories, and
-      architecture guards now cover the full modularization stream.
+    status_reason:
+      'WS6 is closed: semantic owned-concern headers, component documentation, user stories, and
+      architecture guards now cover the full modularization stream.'
     last_verified: '2026-05-22'
   - task_id: S08
     priority: P0
     status: done
-    objective: >-
+    objective:
       formalize the plan-record and plan-store model without reintroducing shared-kernel drift, dual
       plan identity, or repository-shaped CQRS collapse.
     dependency: none
-    target: >-
+    target:
       Accepted ownership ADR, executable proposal, and truth-corrected planning surfaces that keep
       serializable planner records in `@dvt/contracts`, move plan-storage behavior to
       `@dvt/artifacts`, and sequence the Postgres-backed migration from the current lifecycle
@@ -820,23 +806,23 @@ tasks:
       - docs/evidence/ed-20260515-s08-lifecycle-contract-retirement.md
       - docs/risk-register/quality/R-20260514-S08-PLAN-STORE-INVENTORY-DRIFT.yaml
       - docs/risk-register/quality/R-20260515-S08-LIFECYCLE-CONTRACT-RETIREMENT.yaml
-    status_reason: >-
-      S08 scope is closed: the scoped plan-store command/query matrix is accepted, scoped contracts
+    status_reason:
+      'S08 scope is closed: the scoped plan-store command/query matrix is accepted, scoped contracts
       and artifacts ports are implemented, Postgres scoped records are guarded, lifecycle contract
-      vocabulary is retired, and future plan-store behavior requires a reviewed matrix amendment.
+      vocabulary is retired, and future plan-store behavior requires a reviewed matrix amendment.'
     last_verified: '2026-05-22'
   - task_id: S08-3
     parent_task: S08
     priority: P0
     status: done
-    objective: >-
+    objective:
       introduce TenantId, RunId, PlanId branded/nominal types in @dvt/contracts and propagate to all
       port signatures to prevent silent parameter swapping and enforce tenant isolation at compile
       time.
     dependency: none
-    target: >-
-      `@dvt/artifacts` publishes `IPlanStoreWriter` and `IPlanStoreReader` and no new plan-storage
-      behavior port is introduced in `@dvt/contracts`.
+    target:
+      '`@dvt/artifacts` publishes `IPlanStoreWriter` and `IPlanStoreReader` and no new plan-storage
+      behavior port is introduced in `@dvt/contracts`.'
     complexity: S
     effort_points: 2
     progress_pct: 100
@@ -846,7 +832,7 @@ tasks:
       - docs/planning/closeouts/20260403-s08-3-artifacts-plan-store-ports-closeout.md
       - packages/@dvt/artifacts/src/ports/IPlanStoreWriter.ts
       - packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts
-    status_reason: >-
+    status_reason:
       Artifacts-owned plan-store writer/reader ports are now implemented and exported from
       `@dvt/artifacts`, with no new plan-storage behavior port added in `@dvt/contracts`.
     last_verified: '2026-04-03'
@@ -854,12 +840,12 @@ tasks:
     parent_task: S08
     priority: P0
     status: done
-    objective: >-
+    objective:
       harden stored-plan admission by validating `stepTypeConfig` semantically per `StepKind` in
       `@dvt/plan-verifier` while keeping `ExecutionPlan.stepTypeConfig` extensible in
       `@dvt/contracts`.
     dependency: S08-3
-    target: >-
+    target:
       Stored executable plans are parsed through a verifier-owned StepKind gate that rejects invalid
       configs and unregistered kinds by default before adapter execution, while still allowing
       injected registries for governed non-dbt extensions.
@@ -874,7 +860,7 @@ tasks:
       - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
       - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
       - docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md
-    status_reason: >-
+    status_reason:
       Identified in deep architectural review as P0 — untyped Record<string, unknown> will cause
       runtime failures as step kinds multiply; wave `S08-4-A` is now implemented in
       `@dvt/plan-verifier` with parse-plus-verify helpers and fail-closed rejection for unregistered
@@ -891,17 +877,17 @@ tasks:
     objective:
       add verifier-owned StepKind semantic validation APIs backed by an injectable registry.
     dependency: S08-3
-    target: >-
-      `@dvt/plan-verifier` exposes parse-plus-verify helpers that use `IStepTypeRegistry`, reject
-      unregistered kinds by default, and leave `@dvt/contracts` unchanged.
+    target:
+      '`@dvt/plan-verifier` exposes parse-plus-verify helpers that use `IStepTypeRegistry`, reject
+      unregistered kinds by default, and leave `@dvt/contracts` unchanged.'
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
       - packages/@dvt/plan-verifier/src/stepTypeConfig.ts
       - packages/@dvt/plan-verifier/test/verify.test.ts
-    status_reason: >-
-      `@dvt/plan-verifier` now exposes verifier-owned parse-plus-verify helpers backed by
+    status_reason:
+      '`@dvt/plan-verifier` now exposes verifier-owned parse-plus-verify helpers backed by
       `IStepTypeRegistry`, rejects unregistered kinds by default, and supports injected registries
-      for governed extensions.
+      for governed extensions.'
     last_verified: '2026-04-04'
   - task_id: S08-4-B
     parent_task: S08-4
@@ -912,16 +898,16 @@ tasks:
     progress_pct: 100
     objective: cut the stored-plan executability gate over to the verifier-owned semantic boundary.
     dependency: S08-4-A
-    target: >-
-      `parseStoredExecutablePlan` and `StoredPlanExecutabilityValidator` consume the verifier,
+    target:
+      '`parseStoredExecutablePlan` and `StoredPlanExecutabilityValidator` consume the verifier,
       surface invalid kind/config outcomes before capability checks, and support optional registry
-      injection.
+      injection.'
     evidence_refs:
       - apps/api/src/application/services/storedExecutablePlan.ts
       - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
       - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
       - docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md
-    status_reason: >-
+    status_reason:
       API admission now parses stored executable plans via `@dvt/plan-verifier`, supports optional
       `stepTypeRegistry` injection, and surfaces verifier rejection outcomes before adapter
       capability checks.
@@ -935,7 +921,7 @@ tasks:
     progress_pct: 100
     objective: close fail-closed regression coverage and explicit handoff to `MW-A1`.
     dependency: S08-4-B
-    target: >-
+    target:
       Tests prove valid DBT, invalid config rejection, unregistered-kind default rejection, and
       injected non-dbt registry acceptance, while planning surfaces keep full extension protocol
       work in `MW-A1`.
@@ -943,7 +929,7 @@ tasks:
       - apps/api/test/application/services/StoredPlanExecutabilityValidator.test.ts
       - docs/planning/closeouts/20260406-s08-4c-fail-closed-admission-coverage-closeout.md
       - docs/planning/state/agent-lane-a.yaml
-    status_reason: >-
+    status_reason:
       Regression coverage now proves fail-closed rejection for invalid config and unknown kinds,
       preserves valid DBT acceptance, and confirms injected custom-registry acceptance; extension
       protocol design remains explicitly sequenced in `MW-A1`.
@@ -952,11 +938,12 @@ tasks:
     parent_task: S08
     priority: P0
     status: done
-    objective: >-
-      close the post-`S08-4` residual invariants: release-order contract versus claim timing, public
-      serialized `runExecutionContext` boundary, and plan-level plugin compatibility fingerprint.
+    objective:
+      'close the post-`S08-4` residual invariants: release-order contract versus claim timing,
+      public serialized `runExecutionContext` boundary, and plan-level plugin compatibility
+      fingerprint.'
     dependency: S08-4-C
-    target: >-
+    target:
       A short three-wave closure arc (`S08-5-A/B/C`) retires documented ambiguity on assignment
       determinism, runtime-context ownership/provenance, and replay compatibility pinning.
     complexity: M
@@ -966,10 +953,10 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-5-post-s08-4-invariant-closure-plan-20260403.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/s08-4-stepkind-step-type-config-hardening-plan-20260403.md
       - docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
-    status_reason: >-
-      The full post-`S08-4` invariant arc is closed: release-vs-claim semantics (`S08-5-A`),
+    status_reason:
+      'The full post-`S08-4` invariant arc is closed: release-vs-claim semantics (`S08-5-A`),
       governed public `runExecutionContext` boundary (`S08-5-B`), and plan-level plugin
-      compatibility fingerprinting with fail-closed admission diagnostics (`S08-5-C`).
+      compatibility fingerprinting with fail-closed admission diagnostics (`S08-5-C`).'
     last_verified: '2026-04-06'
   - task_id: S08-5-A
     parent_task: S08-5
@@ -980,7 +967,7 @@ tasks:
     progress_pct: 100
     objective: codify deterministic scheduler release order separately from worker claim timing.
     dependency: S08-4-C
-    target: >-
+    target:
       Engine-facing boundary docs/tests distinguish deterministic release sequencing from
       intentionally non-deterministic worker assignment.
     evidence_refs:
@@ -990,7 +977,7 @@ tasks:
       - packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts
       - packages/@dvt/adapter-temporal/src/workflows/executionSegmentResolver.ts
       - packages/@dvt/adapter-temporal/test/workflow-dag-scheduler.test.ts
-    status_reason: >-
+    status_reason:
       Delivered with engine-facing contract, runtime execution-path guardrail emitting
       `RELEASE_ORDER_CONTRACT_BROKEN`, and conformance tests for release stability, dependency
       gating, claim-order variance, and outcome-equivalence.
@@ -1002,11 +989,11 @@ tasks:
     complexity: M
     effort_points: 3
     progress_pct: 100
-    objective: >-
+    objective:
       promote `runExecutionContext` to a governed public serialized boundary with explicit ownership
       and provenance validation.
     dependency: S08-5-A
-    target: >-
+    target:
       Contract and runtime boundary for `runExecutionContext` are explicit, parseable, and covered
       by negative-path provenance checks.
     evidence_refs:
@@ -1015,9 +1002,9 @@ tasks:
       - packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts
       - apps/api/src/entrypoints/http/planRouteRunExecutionContextRefParser.ts
       - docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
-    status_reason: >-
-      `runExecutionContext` is now a governed serialized boundary across contracts, API parsing, and
-      engine admission with explicit provenance checks and negative-path test coverage.
+    status_reason:
+      '`runExecutionContext` is now a governed serialized boundary across contracts, API parsing,
+      and engine admission with explicit provenance checks and negative-path test coverage.'
     last_verified: '2026-04-06'
   - task_id: S08-5-C
     parent_task: S08-5
@@ -1026,11 +1013,11 @@ tasks:
     complexity: M
     effort_points: 3
     progress_pct: 100
-    objective: >-
+    objective:
       add plan-level plugin compatibility fingerprinting so replay checks do not depend only on
       active deployment policy.
     dependency: S08-5-B
-    target: >-
+    target:
       Admission/replay compatibility can be evaluated from stored plan artifacts and fails early
       with explicit diagnostics on mismatch.
     evidence_refs:
@@ -1040,7 +1027,7 @@ tasks:
       - packages/@dvt/engine/src/services/startRun/RunExecutionContextAdmissionPolicy.ts
       - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
       - docs/planning/closeouts/20260406-s08-5c-plugin-compatibility-fingerprint-closeout.md
-    status_reason: >-
+    status_reason:
       Plan-level `pluginCompatibilityFingerprint` now propagates from planner metadata into stored
       `PlanRef` and admission boundaries, and fail-closed mismatch/missing checks reject replay
       incompatibilities with explicit diagnostics.
@@ -1048,11 +1035,11 @@ tasks:
   - task_id: MW-A1
     priority: P0
     status: done
-    objective: >-
+    objective:
       create a StepKindRegistry with per-kind schema validation, adapter-to-kind mapping, and a
       documented extension protocol so that adding a new StepKind is a governed, testable operation.
     dependency: S08-5-C
-    target: >-
+    target:
       Registry maps each StepKind to its JSON Schema, supported adapters, and required capabilities;
       adding a new kind follows a documented protocol with contract tests.
     complexity: L
@@ -1064,20 +1051,20 @@ tasks:
       - packages/@dvt/planner/src/domain/Planner.ts
       - apps/api/src/application/services/StoredPlanExecutabilityValidator.ts
       - docs/planning/closeouts/20260406-mw-a1-step-kind-registry-governance-closeout.md
-    status_reason: >-
-      Step-kind governance is now executable: registry entries carry schema validation plus
+    status_reason:
+      'Step-kind governance is now executable: registry entries carry schema validation plus
       execution metadata (supported adapters and required capabilities), planner projects capability
       requirements into plan metadata, and admission rejects adapter-step kind incompatibilities
-      with explicit diagnostics.
+      with explicit diagnostics.'
     last_verified: '2026-04-06'
   - task_id: MW-A2
     priority: P0
     status: done
-    objective: >-
+    objective:
       create a GenericGraphSource format that allows defining DAGs without dbt manifests, so the
       planner can accept workflow definitions from any source (Spark, Python, API, custom ETL).
     dependency: none
-    target: >-
+    target:
       A documented, schema-validated GenericGraphSource boundary becomes the canonical planner
       ingress; dbt ingestion remains only as an adapter-to-generic translation path, not as a
       parallel public planner contract.
@@ -1089,10 +1076,10 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
       - docs/guides/generic-graph-source-technical-manual-20260404.md
       - docs/guides/generic-graph-source-user-manual-20260404.md
-    status_reason: >-
-      `MW-A2-A..E` are now closed; GenericGraphSourceV1 is the active planner graph-source boundary,
-      API/planner wiring is aligned to that boundary, and determinism plus fail-closed invariants
-      are covered through contract/planner/api tests.
+    status_reason:
+      '`MW-A2-A..E` are now closed; GenericGraphSourceV1 is the active planner graph-source
+      boundary, API/planner wiring is aligned to that boundary, and determinism plus fail-closed
+      invariants are covered through contract/planner/api tests.'
     last_verified: '2026-04-06'
   - task_id: MW-A2-A
     parent_task: MW-A2
@@ -1101,11 +1088,11 @@ tasks:
     complexity: S
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       publish the canonical technical manual, user manual, and execution proposal for the
       GenericGraphSource target.
     dependency: none
-    target: >-
+    target:
       Contributors and integrators have one canonical target description for GenericGraphSource,
       including diagrams, class responsibilities, procedures, invariants, and negative-path tests.
     evidence_refs:
@@ -1121,14 +1108,14 @@ tasks:
     complexity: M
     effort_points: 3
     progress_pct: 100
-    objective: >-
+    objective:
       replace planner graph-source contracts with GenericGraphSourceV1 as the single canonical
       boundary, with no compatibility aliases or legacy planner input shapes.
     dependency: MW-A2-A
-    target: >-
-      `@dvt/contracts` exposes GenericGraphSourceV1 parser/schema/fixtures as the only active
+    target:
+      '`@dvt/contracts` exposes GenericGraphSourceV1 parser/schema/fixtures as the only active
       planner graph-source surface; PlannerGraphSourceV1 and legacy planner input aliases are
-      removed from active ingestion paths.
+      removed from active ingestion paths.'
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/mw-a2-generic-graph-source-plan-20260404.md
       - packages/@dvt/contracts/src/index.ts
@@ -1142,10 +1129,10 @@ tasks:
       - apps/api/test/entrypoints/http/startRunRoute.planSourcePolicy.test.ts
       - apps/api/test/entrypoints/http/planRoutePlanSourcePolicy.test.ts
       - docs/planning/closeouts/20260406-mw-a2-b-contract-cleanup-closeout.md
-    status_reason: >-
-      Planner graph-source contract surface is now GenericGraphSourceV1-only: remaining legacy
+    status_reason:
+      'Planner graph-source contract surface is now GenericGraphSourceV1-only: remaining legacy
       public alias (`DbtManifestLike`) was removed, schema/validation enforce canonical envelope
-      inputs, and API plan-source policy/tests keep legacy planner payload shapes fail-closed.
+      inputs, and API plan-source policy/tests keep legacy planner payload shapes fail-closed.'
     last_verified: '2026-04-06'
   - task_id: MW-A2-C
     parent_task: MW-A2
@@ -1154,11 +1141,11 @@ tasks:
     complexity: M
     effort_points: 3
     progress_pct: 100
-    objective: >-
+    objective:
       refactor the planner boundary so dbt manifest handling becomes a source adapter instead of the
       semantic center.
     dependency: MW-A2-B
-    target: >-
+    target:
       PlannerFacade accepts the generic graph source contract, translation from normalized nodes to
       planner steps is explicit, and dbt normalization is isolated behind an adapter seam.
     evidence_refs:
@@ -1172,7 +1159,7 @@ tasks:
       - packages/@dvt/planner/test/unit/planner-facade.test.ts
       - packages/@dvt/planner/test/unit/determinism.test.ts
       - docs/planning/closeouts/20260406-mw-a2-c-planner-boundary-evolution-closeout.md
-    status_reason: >-
+    status_reason:
       Planner internal node model now uses stepKind as the semantic center, facade no longer maps
       stepKind to legacy resourceType, and planner build+tests pass with the updated boundary shape.
       dbt manifest handling remains isolated behind a source-adapter seam instead of serving as the
@@ -1185,10 +1172,9 @@ tasks:
     complexity: M
     effort_points: 3
     progress_pct: 100
-    objective: >-
-      align API and ref-resolution wiring with the generic graph-source boundary.
+    objective: align API and ref-resolution wiring with the generic graph-source boundary.
     dependency: MW-A2-C
-    target: >-
+    target:
       Application wiring accepts direct generic graph sources and ref-based resolution without
       presenting manifest-specific seams as the canonical product story.
     evidence_refs:
@@ -1200,7 +1186,7 @@ tasks:
       - packages/@dvt/planner/test/unit/planner-facade.test.ts
       - apps/api/test/integration/plannerEngineContract.test.ts
       - docs/planning/closeouts/20260406-mw-a2-d-api-ref-resolution-alignment-closeout.md
-    status_reason: >-
+    status_reason:
       API and planner boundary wiring now use graph-source-centric resolver semantics; canonical
       naming is `IGraphSourceResolver`/`graphSourceResolver` while legacy resolver names remain
       explicit compatibility aliases.
@@ -1212,11 +1198,11 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       harden determinism, invariant coverage, and negative-path tests for the new graph-source
       boundary.
     dependency: MW-A2-D
-    target: >-
+    target:
       Contract, planner, and API tests fail on duplicate nodes, broken dependencies, malformed refs,
       dbt key-order drift, provenance-only metadata identity drift, and other canonical negative
       paths for GenericGraphSource.
@@ -1231,21 +1217,21 @@ tasks:
       - apps/api/test/entrypoints/http/startRunRouteParserHelpers.test.ts
       - apps/api/test/integration/plannerEngineContract.test.ts
       - docs/planning/closeouts/20260406-mw-a2-e-determinism-and-integration-hardening-closeout.md
-    status_reason: >-
-      Determinism and negative-path hardening are now explicit across contract/planner/api:
+    status_reason:
+      'Determinism and negative-path hardening are now explicit across contract/planner/api:
       duplicate node ids, missing dependency targets, and malformed manifest refs are rejected at
       contract boundary; planner input hash is now semantic-order deterministic and ignores
-      provenance-only metadata; API parser coverage includes the new fail-closed vectors.
+      provenance-only metadata; API parser coverage includes the new fail-closed vectors.'
     last_verified: '2026-04-06'
   - task_id: AR-A3
     priority: P1
     status: done
-    objective: >-
+    objective:
       extract enrichRunStatus from IWorkflowEngine into a separate IRunEnrichmentService interface
       to keep the engine contract pure and remove adapter availability dependency from the read
       path.
     dependency: WE-HX-4
-    target: >-
+    target:
       IWorkflowEngine has 4 methods (startRun, cancelRun, getRunStatus, signal); enrichment lives in
       a separate service behind a circuit breaker; no adapter call on the core status read path.
     complexity: M
@@ -1254,18 +1240,18 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: >-
+    status_reason:
       Scope is no longer tracked as a standalone execution line; it is explicitly absorbed by
       `WE-HX-4` query/command decomposition to avoid parallel architecture threads.
     last_verified: '2026-04-03'
   - task_id: MW-A3
     priority: P1
     status: done
-    objective: >-
+    objective:
       generalize compiledCodeRef to StepArtifactRef â€” not every step produces SQL; the artifact
       model must be step-kind-agnostic to support Python scripts, Spark jobs, API calls, etc.
     dependency: MW-A1
-    target: >-
+    target:
       StepStarted.payload uses StepArtifactRef (content-addressable, kind-aware) instead of
       compiledCodeRef; existing dbt SQL artifacts are a specialization, not the only type.
     complexity: M
@@ -1278,7 +1264,7 @@ tasks:
       - packages/@dvt/adapter-temporal/src/workflows/workflowArtifactHelpers.ts
       - packages/@dvt/traceability-service/src/lineage/compiledCodeRef.ts
       - docs/planning/closeouts/20260406-mw-a3-step-artifact-ref-generalization-closeout.md
-    status_reason: >-
+    status_reason:
       StepStarted payload now supports canonical step-kind-agnostic `stepArtifactRef`; Temporal
       emits `stepArtifactRef` for DBT compiled SQL, and lineage consumers parse `stepArtifactRef`
       with compatibility fallback for legacy `compiledCodeRef`.
@@ -1286,11 +1272,11 @@ tasks:
   - task_id: MW-A4
     priority: P1
     status: done
-    objective: >-
+    objective:
       document a governed 'How to add a new StepKind' guide covering schema definition, adapter
       implementation, activity registration, policy mapping, and contract test requirements.
     dependency: MW-A1
-    target: >-
+    target:
       A contributor can add a new StepKind (e.g., PYTHON_SCRIPT) by following the documented
       protocol without implicit knowledge of adapter internals.
     complexity: S
@@ -1300,7 +1286,7 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review.md
       - docs/guides/how-to-add-step-kind-20260406.md
       - docs/planning/closeouts/20260406-mw-a4-step-kind-extension-guide-closeout.md
-    status_reason: >-
+    status_reason:
       The governed extension protocol is now documented with canonical file touchpoints, required
       tests, validation commands, and planning closeout rules so contributors can add new step kinds
       without reverse-engineering runtime internals.
@@ -1308,11 +1294,11 @@ tasks:
   - task_id: AR-A4
     priority: P2
     status: done
-    objective: >-
+    objective:
       remove or freeze the custom policy namespace registry (CustomPolicyNamespaceRegistry.v1.ts)
       until a real consumer exists to reduce speculative extensibility maintenance cost.
     dependency: none
-    target: >-
+    target:
       Registry is either deleted or explicitly frozen with a note that reactivation requires a real
       consumer and ADR backing.
     complexity: S
@@ -1320,18 +1306,18 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/planning/closeouts/20260513-ar-a4-custom-policy-namespace-freeze-closeout.md
-    status_reason: >-
+    status_reason:
       Implemented by accepted AR-A4 freeze plan, closeout, ARC evidence, risk entry, and
       planner/contracts architecture guards.
     last_verified: '2026-05-22'
   - task_id: AR-A5
     priority: P2
     status: done
-    objective: >-
+    objective:
       verify that createdAtIso is excluded from the planCore JCS input for planId computation; if
       included, the same logical plan at different times produces different identity.
     dependency: none
-    target: >-
+    target:
       Determinism tests confirm `createdAtIso` is excluded from the planId hash. No code fix was
       required because `PlanAssembler` already derives `planId` from `sha256(JCS(planCore))` before
       adding `createdAtIso` to the final `ExecutionPlan` metadata.
@@ -1344,21 +1330,21 @@ tasks:
       - packages/@dvt/planner/test/unit/determinism.test.ts
       - packages/@dvt/contracts/src/schema-packs/planner-build.ts
       - packages/@dvt/engine/src/security/planIntegrity.ts
-    status_reason: >-
-      Verified existing implementation: `canonicalPlanCoreJson` excludes `createdAtIso`, planner
+    status_reason:
+      'Verified existing implementation: `canonicalPlanCoreJson` excludes `createdAtIso`, planner
       tests prove differing build timestamps keep the same `planId`, the planner-build contract
       validates `plan.metadata.planId === sha256(canonicalPlanCoreJson)`, and engine integrity
-      recomputes the same plan-core identity.
+      recomputes the same plan-core identity.'
     last_verified: '2026-05-06'
   - task_id: AR-A6
     priority: P2
     status: done
-    objective: >-
+    objective:
       add snapshot projection concurrency requirement to IRunStateStore contract so that mutual
       exclusion during rebuild is a contract invariant, not an implementation detail of advisory
       locks.
     dependency: none
-    target: >-
+    target:
       IRunStateStoreMaintenance.rebuildSnapshot contract mandates mutual exclusion semantics;
       alternative adapter implementations must honor the invariant.
     complexity: S
@@ -1366,18 +1352,18 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/planning/closeouts/20260513-ar-a6-snapshot-rebuild-concurrency-contract-closeout.md
-    status_reason: >-
+    status_reason:
       Implemented by accepted AR-A6 snapshot rebuild concurrency contract closeout, ARC evidence,
       risk entry, state-store docs, and contracts/engine/Postgres validation guards.
     last_verified: '2026-05-22'
   - task_id: AR-A7
     priority: P2
     status: done
-    objective: >-
+    objective:
       split @dvt/delivery into domain rules (backpressure policy, admission guard) and runtime
       orchestration (worker runtime, polling loop) to maintain hexagonal architecture purity.
     dependency: none
-    target: >-
+    target:
       Backpressure domain logic is independently testable without worker runtime; worker runtime
       depends on domain rules, not vice versa.
     complexity: M
@@ -1390,18 +1376,18 @@ tasks:
       - docs/planning/closeouts/20260514-ar-a7-delivery-domain-runtime-split-closeout.md
       - docs/evidence/ed-20260514-ar-a7-delivery-in-memory-outbox-ownership.md
       - docs/risk-register/quality/R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP.yaml
-    status_reason: >-
-      Validated as already implemented: Delivery-owned InMemoryOutboxStorageCore, engine facade,
-      architecture guard, ARC-2 evidence, and package validation gates passed on 2026-05-22.
+    status_reason:
+      'Validated as already implemented: Delivery-owned InMemoryOutboxStorageCore, engine facade,
+      architecture guard, ARC-2 evidence, and package validation gates passed on 2026-05-22.'
     last_verified: '2026-05-22'
   - task_id: AR-A8
     priority: P1
     status: done
-    objective: >-
+    objective:
       remove non-implemented provider adapter illusions from runtime contracts by deleting dead
       provider stubs and narrowing provider typing to implemented runtime adapters.
     dependency: WE-HX-2
-    target: >-
+    target:
       Runtime provider union and adapter registry expose only implemented providers by default, and
       dead stubs are removed so portability claims match executable behavior.
     complexity: S
@@ -1413,7 +1399,7 @@ tasks:
       - docs/evidence/ed-20260424-hard-cut-runtime-provider-vocabulary.md
       - docs/risk-register/quality/R-20260424-HARD-CUT-RUNTIME-PROVIDER-VOCABULARY.yaml
       - packages/@dvt/contracts/test/provider-vocabulary.architecture.test.ts
-    status_reason: >-
+    status_reason:
       Closed by hard-cutting active runtime provider vocabulary to implemented providers only,
       deleting dead provider stubs, narrowing validation schemas, removing active adapter docs for
       non-implemented providers, and adding semantic architecture coverage across contracts,
@@ -1422,11 +1408,11 @@ tasks:
   - task_id: AR-A9
     priority: P1
     status: done
-    objective: >-
+    objective:
       harden fail-closed handling for cyclic planner inputs after topological sort and surface a
       typed `PlannerErrorCode.GRAPH_CYCLE` outcome with deterministic diagnostics.
     dependency: none
-    target: >-
+    target:
       Planner rejects cyclic graphs with deterministic error payloads and negative tests cover
       simple/multi-cycle inputs and partial-selection cycle cases.
     complexity: S
@@ -1441,20 +1427,20 @@ tasks:
       - packages/@dvt/planner/src/domain/graph/TopoSort.ts
       - packages/@dvt/planner/test/unit/graph.test.ts
       - packages/@dvt/planner/test/unit/planner-facade.test.ts
-    status_reason: >-
-      AR-A9 is now delivered with docs-first and TDD-first closure: canonical docs published,
+    status_reason:
+      'AR-A9 is now delivered with docs-first and TDD-first closure: canonical docs published,
       contract language aligned to GRAPH_CYCLE, deterministic cycle diagnostics hardened, and
-      boundary regression coverage added.
+      boundary regression coverage added.'
     last_verified: '2026-04-04'
   - task_id: AR-A9-A
     parent_task: AR-A9
     priority: P1
     status: done
-    objective: >-
+    objective:
       publish proposal, technical manual, and user manual for planner cycle fail-closed behavior and
       reconcile active contract language to `GRAPH_CYCLE`.
     dependency: none
-    target: >-
+    target:
       Canonical proposal and manuals are published with coherent Mermaid diagrams and active
       planning surfaces stop requiring `CYCLE_DETECTED`.
     complexity: S
@@ -1471,11 +1457,11 @@ tasks:
     parent_task: AR-A9
     priority: P1
     status: done
-    objective: >-
+    objective:
       add TDD-first negative coverage for cycle handling (simple cycle, self-cycle, disconnected
       selected cycle, partial acyclic selection).
     dependency: AR-A9-A
-    target: >-
+    target:
       Planner tests encode cycle rejection and non-regression scenarios with canonical
       `PlannerErrorCode.GRAPH_CYCLE`.
     complexity: S
@@ -1490,13 +1476,13 @@ tasks:
     parent_task: AR-A9
     priority: P1
     status: done
-    objective: >-
+    objective:
       harden deterministic cycle diagnostics in `topoSort` while preserving the existing public
       error code contract.
     dependency: AR-A9-B
-    target: >-
-      `topoSort` rejects cyclic selected subgraphs with deterministic `GRAPH_CYCLE` diagnostics and
-      does not change planner public boundary APIs.
+    target:
+      '`topoSort` rejects cyclic selected subgraphs with deterministic `GRAPH_CYCLE` diagnostics and
+      does not change planner public boundary APIs.'
     complexity: S
     effort_points: 1
     progress_pct: 100
@@ -1509,11 +1495,11 @@ tasks:
     parent_task: AR-A9
     priority: P1
     status: done
-    objective: >-
+    objective:
       extend boundary coverage so cycle rejection is observable through public planner boundary and
       acyclic partial selections remain valid.
     dependency: AR-A9-C
-    target: >-
+    target:
       Planner and PlannerFacade tests cover cycle rejection propagation and non-regression for
       acyclic selections in larger graphs.
     complexity: S
@@ -1528,11 +1514,11 @@ tasks:
     parent_task: AR-A9
     priority: P1
     status: done
-    objective: >-
+    objective:
       close planning traceability with updated lane progress, closeout evidence, and validation
       baseline for the AR-A9 slice.
     dependency: AR-A9-D
-    target: >-
+    target:
       Lane registry reflects AR-A9 delivery and closeout captures validation evidence and no-debt
       assertions.
     complexity: S
@@ -1546,11 +1532,11 @@ tasks:
   - task_id: AR-A10
     priority: P1
     status: done
-    objective: >-
+    objective:
       formalize the API-to-engine start-run boundary in `@dvt/contracts` so API command/result
       shapes cannot drift from engine expectations outside contract CI.
     dependency: RC-G1-B
-    target: >-
+    target:
       Shared `StartRunCommand`/`StartRunResult` contracts exist with schema fixtures and contract
       tests, and API composition uses the shared versions instead of app-local shadow types.
     complexity: M
@@ -1560,39 +1546,39 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
       - docs/evidence/ED-20260412-ar-a10-start-run-boundary-contract.md
       - docs/risk-register/quality/R-20260412-AR-A10-START-RUN-BOUNDARY-CONTRACT-DRIFT.yaml
-    status_reason: >-
+    status_reason:
       Shared start-run command/result contracts now live in `@dvt/contracts` with schema fixtures,
       contract tests, API re-export cutover, active contract docs, and ARC-2 evidence/risk updates.
     last_verified: '2026-04-12'
   - task_id: AR-A11
     priority: P1
     status: done
-    objective: >-
+    objective:
       move retry/backoff policy from hardcoded Temporal activity defaults into governed plan
       contracts with per-step override semantics.
     dependency: S09, S08-5-C
-    target: >-
-      `ExecutionStep` supports explicit retry policy metadata, adapter policy mapping consumes it,
-      and negative tests fail when unsupported retry shape or invalid bounds are supplied.
+    target:
+      '`ExecutionStep` supports explicit retry policy metadata, adapter policy mapping consumes it,
+      and negative tests fail when unsupported retry shape or invalid bounds are supplied.'
     complexity: M
     effort_points: 3
     progress_pct: 100
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md
       - docs/evidence/ED-20260412-ar-a11-step-retry-policy-governance.md
-    status_reason: >-
-      `ExecutionStep.retryPolicy` now owns canonical per-step retry/backoff metadata, the planner
+    status_reason:
+      '`ExecutionStep.retryPolicy` now owns canonical per-step retry/backoff metadata, the planner
       materializes that policy into executable plans, and the Temporal adapter consumes it directly
-      without interpreting retry metadata from non-canonical `stepTypeConfig` locations.
+      without interpreting retry metadata from non-canonical `stepTypeConfig` locations.'
     last_verified: '2026-04-12'
   - task_id: AR-A12
     priority: P0
     status: done
-    objective: >-
+    objective:
       reset the active engine-runtime contract pack and run-status read boundary so the repository
       stops layering architecture fixes on top of a mixed active contract line.
     dependency: none
-    target: >-
+    target:
       A docs-first reset package defines one canonical `v1` engine-runtime contract line, separates
       canonical status from provider-live diagnostics, and sequences the implementation and diagram
       convergence required to make that boundary real.
@@ -1606,7 +1592,7 @@ tasks:
       - docs/planning/closeouts/20260413-ar-a12-a-contract-pack-reset-closeout.md
       - docs/planning/closeouts/20260413-ar-a12-b-status-model-split-closeout.md
       - docs/evidence/ED-20260412-ar-a12-c5-read-boundary-purity-closeout.md
-    status_reason: >-
+    status_reason:
       Completed. The engine-runtime pack now publishes one canonical `v1` line, canonical status is
       split from provider-live diagnostics, and the engine/API read boundary convergence slice has
       already removed enrichment from the engine facade; the generated contract sources now align to
@@ -1617,16 +1603,16 @@ tasks:
     parent_task: AR-A12
     priority: P0
     status: done
-    objective: >-
+    objective:
       collapse the active engine-runtime contract pack to one canonical `v1` line and remove the
       mixed `v2`, `v1.1`, redirect, and `reference` reading paths from the active tree.
     dependency: none
-    target: >-
-      `IWorkflowEngine`, `IProviderAdapter`, `RunEvents`, `ExecutionSemantics`, and `SignalsAndAuth`
-      each have one active `v1` surface; the contracts landing page, contracts registry,
-      engine-runtime index, capabilities companion, contributor guidance, and any migration or
-      redirect companion entrypoint expose one reading path only; and no sibling file remains in the
-      active tree to present a second contract truth for the same topic.
+    target:
+      '`IWorkflowEngine`, `IProviderAdapter`, `RunEvents`, `ExecutionSemantics`, and
+      `SignalsAndAuth` each have one active `v1` surface; the contracts landing page, contracts
+      registry, engine-runtime index, capabilities companion, contributor guidance, and any
+      migration or redirect companion entrypoint expose one reading path only; and no sibling file
+      remains in the active tree to present a second contract truth for the same topic.'
     complexity: L
     effort_points: 5
     progress_pct: 100
@@ -1635,7 +1621,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
       - docs/architecture/components/engine/contracts/VERSIONING.md
       - docs/planning/closeouts/20260413-ar-a12-a-contract-pack-reset-closeout.md
-    status_reason: >-
+    status_reason:
       Completed. The active pack now reads `IWorkflowEngine`, `IProviderAdapter`, `RunEvents`,
       `ExecutionSemantics`, and `SignalsAndAuth` only; `IRunEnrichmentService` is demoted to a
       companion page; the `RunEventCatalog` alias, generated-code `v2` contract filenames, and the
@@ -1647,11 +1633,11 @@ tasks:
     parent_task: AR-A12
     priority: P0
     status: done
-    objective: >-
+    objective:
       split canonical run status from provider-live diagnostics in the contract model, read
       boundary, and target diagrams.
     dependency: AR-A12-A
-    target: >-
+    target:
       The boundary defines explicit canonical status, run-status enrichment, and provider-live
       status-view models instead of reusing one semantic status object for different authority
       planes.
@@ -1665,7 +1651,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-b-status-model-split-plan-20260411.md
       - docs/adr/ADR-0015-getRunStatus-read-model-separation.md
       - docs/planning/closeouts/20260413-ar-a12-b-status-model-split-closeout.md
-    status_reason: >-
+    status_reason:
       Completed. The active shared contract line no longer exports `RunStatusSnapshot`; live
       consumers now use `CanonicalRunStatus`, current docs name canonical status, provider-live
       diagnostics, and enrichment as separate authority planes, and the closeout captures the
@@ -1675,20 +1661,20 @@ tasks:
     parent_task: AR-A12
     priority: P1
     status: done
-    objective: >-
+    objective:
       finish the remaining `AR-A3` intent through `AR-A12-C` / `WE-HX` convergence by removing
       enrichment from the engine facade and converging implementation, current subsystem docs, and
       diagrams on the reset contract pack and read boundary.
     dependency: AR-A12-B, RC-G1-B
-    target: >-
-      `IWorkflowEngine` exposes commands plus canonical read only, enrichment moves behind a
+    target:
+      '`IWorkflowEngine` exposes commands plus canonical read only, enrichment moves behind a
       dedicated `IRunEnrichmentService`, Engine/API/adapter consumers all follow that split, the
       read subsystem page describes the real current use-case shape, the Temporal workflow
       `runtimeStateQuery` is demoted to a runtime-internal or debug-oriented surface instead of
       reading like a contractual status API, `RuntimeWorkflowState` is treated as runtime-internal
       state rather than a published boundary model, adapter barrel exports are pruned to remove
       illegitimate public exposure of workflow-internal types, and current diagrams describe
-      implemented structure rather than target-only decomposition.
+      implemented structure rather than target-only decomposition.'
     complexity: M
     effort_points: 3
     progress_pct: 100
@@ -1697,21 +1683,21 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: >-
-      `AR-A12-C1` through `AR-A12-C5` are now delivered: the public engine facade is narrowed to
+    status_reason:
+      '`AR-A12-C1` through `AR-A12-C5` are now delivered: the public engine facade is narrowed to
       commands plus canonical read, current docs and diagrams match that split, dedicated enrichment
       and health boundaries stay explicit, and regression guards plus ARC evidence/risk closeout now
-      protect the shipped boundary.
+      protect the shipped boundary.'
     last_verified: '2026-04-12'
   - task_id: AR-A12-C1
     parent_task: AR-A12-C
     priority: P1
     status: done
-    objective: >-
+    objective:
       publish the docs/contracts-first facade-purity cutover that removes enrichment from the
       `IWorkflowEngine` target boundary and routes it to `IRunEnrichmentService`.
     dependency: AR-A12-B, RC-G1-B
-    target: >-
+    target:
       Active planning and target-boundary docs no longer treat `getRunEnrichment()` as an
       `IWorkflowEngine` method, and `AR-A12-C` is sequenced as the post-`WE-HX-4` closure wave for
       the remaining `AR-A3` intent.
@@ -1722,7 +1708,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/contract-pack-and-read-boundary-reset-plan-20260410.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: >-
+    status_reason:
       Active planning, contract docs, and target architecture now treat enrichment as a dedicated
       service boundary rather than an `IWorkflowEngine` method.
     last_verified: '2026-04-11'
@@ -1730,14 +1716,14 @@ tasks:
     parent_task: AR-A12-C
     priority: P1
     status: done
-    objective: >-
+    objective:
       cut enrichment off the engine facade in code and move API callers to a dedicated
       `IRunEnrichmentService`.
     dependency: AR-A12-C1
-    target: >-
-      `WorkflowEngine` no longer exposes `getRunEnrichment()`, owner-local enrichment service wiring
-      exists, API query flow uses that service directly, and residual active-code references to
-      `IWorkflowEngine['getRunEnrichment']` are zero.
+    target:
+      "`WorkflowEngine` no longer exposes `getRunEnrichment()`, owner-local enrichment service
+      wiring exists, API query flow uses that service directly, and residual active-code references
+      to `IWorkflowEngine['getRunEnrichment']` are zero."
     complexity: M
     effort_points: 1
     progress_pct: 100
@@ -1745,7 +1731,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/adr/ADR-0015-getRunStatus-read-model-separation.md
       - docs/adr/ADR-0003-execution-model.md
-    status_reason: >-
+    status_reason:
       The public engine facade no longer exposes `getRunEnrichment()`, the API runtime injects
       `IRunEnrichmentService` directly, and residual active-code references to
       `IWorkflowEngine['getRunEnrichment']` are zero.
@@ -1754,11 +1740,11 @@ tasks:
     parent_task: AR-A12-C
     priority: P1
     status: done
-    objective: >-
+    objective:
       converge current subsystem docs and diagrams on the narrowed facade and explicit enrichment
       service path.
     dependency: AR-A12-C2
-    target: >-
+    target:
       Current read-subsystem docs, engine subsystem current docs, and active diagrams describe the
       shipped split between canonical status reads and enrichment service calls, while
       runtime-internal Temporal state surfaces remain explicitly internal/debug-only.
@@ -1769,7 +1755,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/architecture/system/subsystems/read/index.md
       - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
-    status_reason: >-
+    status_reason:
       Current docs and active diagrams now describe canonical status reads separately from
       `IRunEnrichmentService`, and no longer narrate enrichment as an engine-facade method.
     last_verified: '2026-04-11'
@@ -1777,13 +1763,13 @@ tasks:
     parent_task: AR-A12-C
     priority: P1
     status: done
-    objective: >-
+    objective:
       remove the remaining facade-width residual by delegating recover-run orchestration and health
       probing out of `WorkflowEngine`.
     dependency: AR-A12-C3
-    target: >-
-      `WorkflowEngine` is reduced to normalization, trace context, and delegation, while dedicated
-      recovery and health services own the residual orchestration/probing logic.
+    target:
+      '`WorkflowEngine` is reduced to normalization, trace context, and delegation, while dedicated
+      recovery and health services own the residual orchestration/probing logic.'
     complexity: S
     effort_points: 1
     progress_pct: 100
@@ -1791,20 +1777,20 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - packages/@dvt/engine/src/core/WorkflowEngine.ts
       - docs/architecture/components/engine/architecture/workflow-engine-subsystem-context.md
-    status_reason: >-
-      `WorkflowEngine` now delegates recover-run orchestration to `RecoverRunApplicationService` and
-      health probing to `RunHealthService`, so facade width is reduced to normalization, trace
-      context, and delegation.
+    status_reason:
+      '`WorkflowEngine` now delegates recover-run orchestration to `RecoverRunApplicationService`
+      and health probing to `RunHealthService`, so facade width is reduced to normalization, trace
+      context, and delegation.'
     last_verified: '2026-04-11'
   - task_id: AR-A12-C5
     parent_task: AR-A12-C
     priority: P1
     status: done
-    objective: >-
+    objective:
       harden and close the read-boundary purity wave with regression guards, ARC-2 evidence, risk
       updates, and final validation.
     dependency: AR-A12-C4
-    target: >-
+    target:
       The slice ships with evidence, risk updates, touched-package validation, `pnpm
       verify:prepush`, and guards that prevent enrichment or local facade re-growth from silently
       reappearing on `IWorkflowEngine`.
@@ -1815,7 +1801,7 @@ tasks:
       - docs/planning/proposals/mandatory/runtime-and-contracts/ar-a12-c-read-boundary-purity-plan-20260411.md
       - docs/evidence/index.md
       - docs/risk-register/index.md
-    status_reason: >-
+    status_reason:
       Engine and API tests now guard the narrowed facade against enrichment/health regrowth, active
       status and contract docs are aligned with the shipped split, and ARC-2 evidence plus risk
       updates close the wave with touched-scope validation and `pnpm verify:prepush`.
@@ -1823,12 +1809,12 @@ tasks:
   - task_id: DOC-ARCH-01
     priority: P1
     status: done
-    objective: >-
+    objective:
       reconcile repository-wide architecture docs with current code, simplify overlapping
       architecture surfaces, and archive stale snapshots that no longer describe the shipped
       runtime.
     dependency: none
-    target: >-
+    target:
       Canonical architecture reading order is explicit, stale architecture snapshots are either
       rewritten or archived, broken planning-domain references are removed, and contributors have a
       guide for keeping architecture docs aligned after runtime changes.
@@ -1843,7 +1829,7 @@ tasks:
       - docs/planning/status/documentation-information-architecture-current-vs-target-20260407.md
       - docs/guides/documentation-maintenance-guide-20260407.md
       - docs/planning/closeouts/20260407-doc-arch-01-documentation-governance-audit-closeout.md
-    status_reason: >-
+    status_reason:
       Canonical reading order is explicit, stale architecture component packs were archived out of
       the active tree, active component routes were rewritten as summary navigation to canonical
       docs, broken active planning-domain references were repaired, and contributors now have a
@@ -1852,11 +1838,11 @@ tasks:
   - task_id: WE-HX
     priority: P1
     status: done
-    objective: >-
+    objective:
       derive the full WorkflowEngine subsystem to a hardcut hexagonal architecture with canonical
       docs and executable lane sequencing.
     dependency: DOC-ARCH-01
-    target: >-
+    target:
       Canonical subsystem context and target architecture are published, stale engine navigation is
       replaced, and execution-ready waves `WE-HX-0..6` are tracked in Lane A.
     complexity: L
@@ -1868,11 +1854,11 @@ tasks:
       - docs/guides/workflow-engine-user-manual.v1.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
       - docs/planning/closeouts/20260522-we-hx-parent-hardcut-closeout.md
-    status_reason: >-
-      WE-HX parent closure is accepted: WE-HX-0..6 plus DHM-WS2/DHM-WS4/DHM-WS6 are implemented with
-      component guides, user stories, architecture guards, ARC evidence where package paths changed,
-      and accepted closeouts. Remaining engine work must now be tracked as separate tasks instead of
-      keeping this umbrella open.
+    status_reason:
+      'WE-HX parent closure is accepted: WE-HX-0..6 plus DHM-WS2/DHM-WS4/DHM-WS6 are implemented
+      with component guides, user stories, architecture guards, ARC evidence where package paths
+      changed, and accepted closeouts. Remaining engine work must now be tracked as separate tasks
+      instead of keeping this umbrella open.'
     last_verified: '2026-05-22'
   - task_id: WE-HX-0
     parent_task: WE-HX
@@ -1883,7 +1869,7 @@ tasks:
     progress_pct: 100
     objective: deliver canonical map and doc replacement for WorkflowEngine subsystem.
     dependency: DOC-ARCH-01
-    target: >-
+    target:
       New subsystem context, target architecture spec, and user manual are canonical; engine and
       component navigation route to them.
     evidence_refs:
@@ -1897,7 +1883,7 @@ tasks:
       - docs/evidence/ed-20260514-we-hx-0-hardcut-canonical-map.md
       - docs/risk-register/quality/R-20260514-WE-HX-0-HARDCUT-CANONICAL-MAP.yaml
       - docs/architecture/components/engine/roadmap/engine-phases.md
-    status_reason: >-
+    status_reason:
       WE-HX-0 hardcut canonical map is closed with accepted closeout, roadmap alignment, semantic
       architecture guard, evidence, and risk updates.
     last_verified: '2026-05-22'
@@ -1910,7 +1896,7 @@ tasks:
     progress_pct: 100
     objective: close boundary ownership mapping for WorkflowEngine external seams.
     dependency: S08-5-B, RC-G1-B
-    target: >-
+    target:
       Ownership mapping is explicit for `PlanRef`, `runExecutionContextRef`, engine resolver seam,
       and artifacts reader seam across contracts/engine/artifacts/api boundaries.
     evidence_refs:
@@ -1921,12 +1907,12 @@ tasks:
       - docs/evidence/ed-20260429-we-hx-1-boundary-ownership.md
       - docs/risk-register/quality/R-20260429-WE-HX-1-BOUNDARY-OWNERSHIP.yaml
       - packages/@dvt/engine/test/architecture/workflowEngineBoundaryOwnership.architecture.test.ts
-    status_reason: >-
-      Boundary ownership mapping is closed: PlanRef and runExecutionContextRef remain shared refs,
+    status_reason:
+      'Boundary ownership mapping is closed: PlanRef and runExecutionContextRef remain shared refs,
       plan artifact reading is a dedicated engine-owned port, run-state persistence no longer
       publishes plan-fetching concerns, API validation reuses the engine-owned artifact shape, and
       semantic architecture coverage now guards docs, user stories, review analysis, module
-      owned-concern headers, and the engine/artifacts/API seam.
+      owned-concern headers, and the engine/artifacts/API seam.'
     last_verified: '2026-04-29'
   - task_id: WE-HX-2
     parent_task: WE-HX
@@ -1937,7 +1923,7 @@ tasks:
     progress_pct: 100
     objective: narrow WorkflowEngine to a facade over dedicated use-case services.
     dependency: WE-HX-1
-    target: >-
+    target:
       WorkflowEngine responsibilities are reduced to contract normalization and delegation, with
       semantic behavior hosted by explicit use-case services.
     evidence_refs:
@@ -1946,7 +1932,7 @@ tasks:
       - docs/evidence/ed-20260430-we-hx-2-facade-use-cases.md
       - docs/risk-register/quality/R-20260430-WE-HX-2-FACADE-USE-CASES.yaml
       - docs/architecture/components/engine/architecture/workflow-engine-facade-use-cases-component.md
-    status_reason: >-
+    status_reason:
       WorkflowEngine is now a normalization-and-delegation facade over explicit facade-facing use
       cases; start-run tracing and resolved-context construction live in WorkflowStartRunUseCase,
       and semantic architecture coverage prevents facade regrowth.
@@ -1960,7 +1946,7 @@ tasks:
     progress_pct: 100
     objective: decompose start-run application flow into narrow collaborators.
     dependency: WE-HX-2
-    target: >-
+    target:
       Admission, provider/capability resolution, intent creation, execution dispatch, and failure
       policy are isolated and independently testable.
     evidence_refs:
@@ -1973,7 +1959,7 @@ tasks:
       - packages/@dvt/engine/test/architecture/startRunApplicationDecomposition.architecture.test.ts
       - packages/@dvt/engine/test/architecture/startRunApplicationDecompositionDocs.architecture.test.ts
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
-    status_reason: >-
+    status_reason:
       Start-run application flow is decomposed into admission, intent, execution, and failure-policy
       phase services with architecture and behavior gates passing.
     last_verified: '2026-05-22'
@@ -1986,13 +1972,13 @@ tasks:
     progress_pct: 100
     objective: split runtime query, command, signal, and enrichment paths.
     dependency: WE-HX-2
-    target: >-
-      `WorkflowEngineCoreService` responsibilities are decomposed into dedicated services and
-      ADR-0015 read-path discipline is structurally explicit.
+    target:
+      '`WorkflowEngineCoreService` responsibilities are decomposed into dedicated services and
+      ADR-0015 read-path discipline is structurally explicit.'
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
       - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
-    status_reason: >-
+    status_reason:
       Completed. Signal ownership, canonical-signal narrowing, provider mapping, and read-path
       discipline are now explicitly governed across `WE-HX-4-A..D`.
     last_verified: '2026-04-08'
@@ -2005,16 +1991,16 @@ tasks:
     progress_pct: 100
     objective: separate DVT-governed canonical signals from provider-private runtime commands.
     dependency: WE-HX-2
-    target: >-
-      `SignalType` only represents engine-owned semantics, while provider-private retry and recovery
-      operations move to a dedicated adapter command boundary instead of remaining mixed into the
-      canonical contract.
+    target:
+      '`SignalType` only represents engine-owned semantics, while provider-private retry and
+      recovery operations move to a dedicated adapter command boundary instead of remaining mixed
+      into the canonical contract.'
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/workflow-engine-hexagonal-derivation-plan-20260403.md
       - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
       - packages/@dvt/contracts/src/types/contracts.ts
       - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
-    status_reason: >-
+    status_reason:
       Completed. Canonical `SignalType` is now limited to DVT-governed run-control semantics and
       retry-oriented business recovery no longer leaks through the generic signal contract.
     last_verified: '2026-04-08'
@@ -2028,7 +2014,7 @@ tasks:
     objective:
       add an explicit provider mapper seam between canonical signals and native adapter commands.
     dependency: WE-HX-4-A
-    target: >-
+    target:
       Engine-owned signals translate through a provider mapper, adapter-private commands do not leak
       into canonical contracts, and signal or command negotiation fails closed instead of silently
       falling back.
@@ -2037,7 +2023,7 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
       - packages/@dvt/engine/src/adapters/IProviderAdapter.ts
       - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
-    status_reason: >-
+    status_reason:
       Completed. Canonical run-control signals now translate through explicit provider mapping
       helpers in the Temporal and mock adapters, and unsupported semantics fail closed before
       leaking provider-private commands into shared contracts.
@@ -2053,7 +2039,7 @@ tasks:
       resolve ownership of `RETRY_RUN` and `RETRY_STEP` and lock the tests and docs to that
       decision.
     dependency: WE-HX-4-B
-    target: >-
+    target:
       Retry-oriented signal semantics are explicitly classified as engine-owned or adapter-owned,
       and contract or runtime coverage prevents those concerns from being mixed again.
     evidence_refs:
@@ -2063,7 +2049,7 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-and-use-case-review.md
       - packages/@dvt/contracts/src/types/contracts.ts
       - packages/@dvt/engine/test/core/WorkflowEngineCoreService.test.ts
-    status_reason: >-
+    status_reason:
       Completed. `RETRY_STEP` is governed by ADR-0048 as a future dedicated step-retry use case and
       `RETRY_RUN` is now governed by ADR-0049 as a future dedicated recover-run use case outside
       canonical `SignalType`.
@@ -2079,10 +2065,10 @@ tasks:
       move `PAUSE/RESUME` realized lifecycle ownership to the runtime and retire duplicate engine
       emission.
     dependency: WE-HX-2
-    target: >-
-      `WorkflowEngineCoreService` no longer appends `RunPaused` or `RunResumed`, Temporal runtime
+    target:
+      '`WorkflowEngineCoreService` no longer appends `RunPaused` or `RunResumed`, Temporal runtime
       remains the sole producer of those realized lifecycle facts, and `SignalSemantics` plus
-      `SignalTransitionGuard` are updated without silent semantic drift.
+      `SignalTransitionGuard` are updated without silent semantic drift.'
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md
       - packages/@dvt/engine/src/core/WorkflowEngineCoreService.ts
@@ -2099,7 +2085,7 @@ tasks:
       - packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
       - packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts
       - packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts
-    status_reason: >-
+    status_reason:
       Completed. `WorkflowEngineCoreService` now validates and dispatches `PAUSE/RESUME` without
       appending realized lifecycle events, the runtime remains the sole producer of `RunPaused` and
       `RunResumed`, Temporal and mock runtimes deduplicate stale `signalId` replays across
@@ -2115,7 +2101,7 @@ tasks:
     progress_pct: 100
     objective: standardize provider resolution and telemetry policy seams.
     dependency: WE-HX-3, WE-HX-4
-    target: >-
+    target:
       Provider resolution and telemetry behavior are consolidated behind single seams to reduce
       duplication in orchestration paths.
     evidence_refs:
@@ -2126,7 +2112,7 @@ tasks:
       - docs/evidence/ed-20260512-we-hx-5-provider-telemetry-seams.md
       - docs/risk-register/quality/R-20260512-WE-HX-5-PROVIDER-TELEMETRY-SEAMS.yaml
       - packages/@dvt/engine/test/architecture/workflowEngineProviderTelemetrySeams.architecture.test.ts
-    status_reason: >-
+    status_reason:
       Closed by accepted WE-HX-5 provider and telemetry seams closeout, ARC evidence, risk entry,
       component guide, user stories, and semantic architecture guard.
     last_verified: '2026-05-22'
@@ -2139,7 +2125,7 @@ tasks:
     progress_pct: 100
     objective: harden test doubles and architecture fitness checks for subsystem boundaries.
     dependency: WE-HX-5
-    target: >-
+    target:
       In-memory doubles and fixtures are narrowed, and regression checks enforce ownership and
       boundary constraints.
     evidence_refs:
@@ -2150,14 +2136,14 @@ tasks:
       - docs/evidence/ed-20260512-we-hx-6-boundary-fitness.md
       - docs/risk-register/quality/R-20260512-WE-HX-6-BOUNDARY-FITNESS.yaml
       - packages/@dvt/engine/test/architecture/workflowEngineBoundaryFitness.architecture.test.ts
-    status_reason: >-
+    status_reason:
       Closed by accepted WE-HX-6 boundary-fitness closeout, ARC evidence, risk entry, component
       guide, user stories, and semantic architecture guard for fixture/runtime boundary drift.
     last_verified: '2026-05-22'
   - task_id: plan-version-reset
     priority: P1
     status: done
-    objective: >-
+    objective:
       reset planVersion from '2.3' to '1.0' across contracts, registry, and test helpers before
       go-live.
     dependency: none
@@ -2172,12 +2158,12 @@ tasks:
   - task_id: TF-A1
     priority: P0
     status: done
-    objective: >-
+    objective:
       formalize the SQL-first transformation contract pack for the v1 design graph, preview-persist
       boundary, and graph-to-plan compiler so execution-first work starts from a stable doc set
       rather than UI-local assumptions.
     dependency: F-22
-    target: >-
+    target:
       Shared contract and planner boundary define `DesignGraphDraft`, `GitArtifactRef`,
       `PlanPreviewPersistRequest/Response`, v1 `source -> sql_transform -> sink` invariants, and the
       deterministic compiler mapping into a persisted immutable plan with `PlanRef`.
@@ -2195,7 +2181,7 @@ tasks:
       - docs/planning/closeouts/20260414-tf-a1-b-compiler-mapping-closeout.md
       - docs/evidence/ED-20260414-tf-a1-b-compiler-mapping-freeze.md
       - docs/architecture/components/planner/index.md
-    status_reason: >-
+    status_reason:
       Completed. `TF-A1-A` froze the shared SQL-first design-graph and preview-persist boundary, and
       `TF-A1-B` now freezes the deterministic compiler mapping, canonical step vocabulary, and
       persisted-plan summary derivation across `@dvt/contracts`, `api`, and `web`.
@@ -2203,11 +2189,11 @@ tasks:
   - task_id: TF-A1-A
     priority: P0
     status: done
-    objective: >-
+    objective:
       freeze the design-graph contract, node vocabulary, invariants, and preview request or response
       surface for the first SQL-first vertical.
     dependency: F-22
-    target: >-
+    target:
       Lane A publishes the governed `DesignGraphDraft` contract, `source -> sql_transform -> sink`
       invariants, negative-path rules, and preview surface expected by downstream API, runtime, and
       UI work.
@@ -2221,7 +2207,7 @@ tasks:
       - docs/contracts/planner/TransformationFlowPreview.v1.md
       - docs/evidence/ED-20260413-tf-a1-a-preview-contract-freeze.md
       - docs/planning/closeouts/20260413-tf-a1-a-preview-contract-freeze-closeout.md
-    status_reason: >-
+    status_reason:
       Lane A now ships the governed `DesignGraphDraft`, Git-first preview provenance, explicit
       `previewProfile`, negative-path validation, and the persisted preview response envelope from
       `@dvt/contracts`, with `api` and `web` consuming the shared surface instead of route-local DTO
@@ -2230,11 +2216,11 @@ tasks:
   - task_id: TF-A1-B
     priority: P0
     status: done
-    objective: >-
+    objective:
       define the deterministic compiler mapping from the three-node design graph into canonical
       execution steps and persisted plan metadata.
     dependency: TF-A1-A
-    target: >-
+    target:
       Lane A freezes the ordered step kinds, step configs, plan identity fields, and compiler rules
       that convert the design graph into a persisted immutable plan consumed by runtime.
     complexity: S
@@ -2247,7 +2233,7 @@ tasks:
       - docs/architecture/components/planner/index.md
       - docs/evidence/ED-20260414-tf-a1-b-compiler-mapping-freeze.md
       - docs/planning/closeouts/20260414-tf-a1-b-compiler-mapping-closeout.md
-    status_reason: >-
+    status_reason:
       Completed. The shared planner contract pack now publishes the SQL-first compiler mapping, web
       emits the canonical step chain and required `stepTypeConfig`, the preview route validates the
       request through shared parser logic, and the response summary is derived from the persisted
@@ -2256,12 +2242,12 @@ tasks:
   - task_id: TF-A1-C
     priority: P0
     status: done
-    objective: >-
+    objective:
       harden the frozen SQL-first transformation pack into SRP-correct seams so step-kind authority,
       compiler validation, preview graph assembly, execution actions, and preview-route
       orchestration stop drifting across `contracts`, `web`, and `api`.
     dependency: TF-A1-B
-    target: >-
+    target:
       Step-kind authority is single-sourced, `StepTypeRegistry` is family-neutral, compiler shape
       and summary projection are split, Canvas preview or execution seams are decomposed, and the
       preview-route entrypoint no longer mixes transport, policy, binding, and projection.
@@ -2277,7 +2263,7 @@ tasks:
       - docs/risk-register/quality/R-20260414-TF-A1-C-SRP-HARDENING-DRIFT.yaml
       - packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts
       - packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts
-    status_reason: >-
+    status_reason:
       Completed. The SQL-first hardening follow-up now single-sources step-kind authority through
       `KNOWN_STEP_KINDS`, splits compiler graph/config/summary seams in `@dvt/contracts`, decomposes
       Canvas preview and execution orchestration into smaller helpers, and composes the preview
@@ -2291,19 +2277,19 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       make step-kind authority single-sourced and reduce the shared-kernel `StepTypeRegistry` to a
       family-neutral registry seam.
     dependency: TF-A1-B
-    target: >-
-      `KNOWN_STEP_KINDS` is the only authority for canonical kinds, dbt-specific config lives
+    target:
+      '`KNOWN_STEP_KINDS` is the only authority for canonical kinds, dbt-specific config lives
       outside the registry core, and transformation default registrations no longer redefine kind
-      authority inside the registry implementation.
+      authority inside the registry implementation.'
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
       - packages/@dvt/contracts/src/contracts/planner/StepKindRegistry.v1.ts
       - packages/@dvt/contracts/src/step-registry/StepTypeRegistry.ts
-    status_reason: >-
+    status_reason:
       Completed. DBT config and built-in registration now live outside the registry core, and the
       default registry consumes canonical kind authority instead of redeclaring it locally.
     last_verified: '2026-04-14'
@@ -2314,17 +2300,17 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       split `TransformationFlowCompiler.v1` into explicit seams for graph shape, step-type config,
       and plan-summary derivation.
     dependency: TF-A1-C1
-    target: >-
+    target:
       The compiler contract remains semantically frozen, but graph schema, step config schema, and
       summary projection no longer change together inside one shared-kernel module.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
       - docs/contracts/planner/TransformationFlowCompiler.v1.md
-    status_reason: >-
+    status_reason:
       Completed. Compiler graph shape, step-config schemas, and plan-summary derivation now live in
       separate `TransformationFlow*` seams while preserving the frozen SQL-first contract.
     last_verified: '2026-04-14'
@@ -2335,17 +2321,17 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       split `previewGraphSource.ts` into smaller seams for compiler mapping, draft signature,
       design-graph draft building, and artifact serialization.
     dependency: TF-A1-C2
-    target: >-
+    target:
       The Canvas preview builder no longer mixes compiler graph assembly, stale detection, design
       artifact construction, and YAML serialization in one module.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
       - apps/web/src/app/views/canvas/previewGraphSource.ts
-    status_reason: >-
+    status_reason:
       Completed. Canvas preview graph assembly now delegates compiler mapping, signature,
       design-graph draft construction, and artifact serialization through dedicated modules.
     last_verified: '2026-04-14'
@@ -2356,17 +2342,17 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       decompose `useCanvasExecutionActions.ts` into provenance, readiness, preview, and run-start
       seams.
     dependency: TF-A1-C3
-    target: >-
+    target:
       Canvas execution actions stop mixing workspace provenance, plan readiness policy, preview
       orchestration, run-start orchestration, and shell UI side effects in one hook.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.ts
-    status_reason: >-
+    status_reason:
       Completed. Canvas execution actions now compose provenance, readiness, preview planning, and
       run-start dispatch through dedicated seams instead of one convenience hook.
     last_verified: '2026-04-14'
@@ -2377,17 +2363,17 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       split `planRoutes.ts` so preview and import routes compose transport, policy, binding, and
       response projection through smaller seams.
     dependency: TF-A1-C4
-    target: >-
+    target:
       The preview or import route entrypoint no longer owns transport parsing, scope-policy,
       planner-envelope binding, ownership checks, and response projection in one file.
     evidence_refs:
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a1-c-srp-and-extensibility-hardening-plan-20260414.md
       - apps/api/src/entrypoints/http/planRoutes.ts
-    status_reason: >-
+    status_reason:
       Completed. The preview route now composes route-scope parsing, preview-contract guarding,
       planner-envelope binding, ownership checks, and response projection through dedicated helper
       seams.
@@ -2399,20 +2385,20 @@ tasks:
     complexity: S
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       restore Fowler remote-facade posture on preview by moving preview orchestration behind a
       dedicated route parser and application use case, and remove route-local text coupling from
       preview contract failures.
     dependency: TF-A1-C5
-    target: >-
-      `previewPlanRoute` only owns transport, authn/authz, delegation, and HTTP response mapping,
+    target:
+      '`previewPlanRoute` only owns transport, authn/authz, delegation, and HTTP response mapping,
       while preview parsing, planner envelope assembly, persistence, and executability validation
-      live behind explicit seams with stable error details.
+      live behind explicit seams with stable error details.'
     evidence_refs:
       - docs/planning/closeouts/20260419-tf-a1-c6-preview-route-facade-realignment-closeout.md
       - apps/api/src/entrypoints/http/previewPlanRoute.ts
       - apps/api/src/application/services/PreviewPlanUseCase.ts
-    status_reason: >-
+    status_reason:
       Completed. Preview now parses through `previewPlanRouteParser`, delegates planner
       build/store/validate orchestration to `PreviewPlanUseCase`, keeps the HTTP facade focused on
       authn/authz plus response mapping, and returns stable contract-failure details without
@@ -2425,19 +2411,19 @@ tasks:
     complexity: S
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       close the remaining import-route drift by moving import parsing and ownership checks behind
       dedicated seams, and remove preview/import coupling around plan-ref mapping.
     dependency: TF-A1-C6
-    target: >-
-      `importPlanRoute` becomes a thin HTTP facade, import no longer lives in the residual
+    target:
+      '`importPlanRoute` becomes a thin HTTP facade, import no longer lives in the residual
       multi-route `planRoutes.ts` module, and plan-ref normalization/parsing no longer depends on a
-      preview-specific response mapper.
+      preview-specific response mapper.'
     evidence_refs:
       - docs/planning/closeouts/20260419-tf-a1-c7-import-route-facade-realignment-closeout.md
       - apps/api/src/entrypoints/http/importPlanRoute.ts
       - apps/api/src/application/services/ImportPlanUseCase.ts
-    status_reason: >-
+    status_reason:
       Completed. Import now parses through `importPlanRouteParser`, delegates plan fetch and scope
       ownership checks to `ImportPlanUseCase`, responds through `planImportResponseMapper`, and the
       generic plan-ref helpers live in the neutral `planRefHttpMapper` seam instead of a
@@ -2450,19 +2436,19 @@ tasks:
     complexity: S
     effort_points: 1
     progress_pct: 100
-    objective: >-
+    objective:
       close the residual preview-route helper drift so preview-route parsing and shared plan-route
       context parsing delegate validation and mapping through smaller seams.
     dependency: TF-A1-C7
-    target: >-
-      `parsePreviewPlanBody` stays as the single preview parser entrypoint and
+    target:
+      '`parsePreviewPlanBody` stays as the single preview parser entrypoint and
       `parsePlanRouteContextRecord` stays as the shared plan-route context seam, but neither helper
-      owns every validation stage and mapping branch itself.
+      owns every validation stage and mapping branch itself.'
     evidence_refs:
       - docs/planning/closeouts/20260419-tf-a1-c8-preview-route-helper-seams-closeout.md
       - apps/api/src/entrypoints/http/previewPlanRouteParser.ts
       - apps/api/src/entrypoints/http/planRouteScope.ts
-    status_reason: >-
+    status_reason:
       Completed. Preview parsing now delegates route policy parsing, planner-backed source
       validation, and command/request assembly through dedicated helpers, while shared plan-route
       context parsing splits raw context validation from scope derivation. The exported helpers now
@@ -2475,12 +2461,12 @@ tasks:
     complexity: S
     effort_points: 1
     progress_pct: 100
-    objective: >-
+    objective:
       close the remaining route-helper residuals by removing transport-coupled return values from
       preview contract validation and adding narrow unit coverage for shared plan-route scope
       parsing.
     dependency: TF-A1-C8
-    target: >-
+    target:
       Preview contract validation returns transport-neutral issues that the HTTP facade maps at the
       edge, and `planRouteScope` has its own focused regression tests instead of only transitive
       route coverage.
@@ -2490,7 +2476,7 @@ tasks:
       - apps/api/src/entrypoints/http/planPreviewContractErrorMapper.ts
       - apps/api/src/entrypoints/http/previewPlanRoute.ts
       - apps/api/test/entrypoints/http/planRouteScope.test.ts
-    status_reason: >-
+    status_reason:
       Completed. Preview contract validation now returns transport-neutral issues mapped at the HTTP
       edge, `previewPlanRoute` delegates authorization and outcome mapping through smaller helpers,
       and `planRouteScope` now has direct focused regression coverage instead of only transitive
@@ -2503,15 +2489,15 @@ tasks:
     complexity: S
     effort_points: 1
     progress_pct: 100
-    objective: >-
+    objective:
       finish the preview remote-facade split by extracting explicit request-resolution and
       response-mapping seams from `previewPlanRoute`, and reduce `previewPlanRouteParser` to a thin
       orchestrator over smaller policy and command-binding helpers.
     dependency: TF-A1-C9
-    target: >-
-      `previewPlanRoute` becomes a smaller HTTP facade over request resolution, use-case delegation,
-      and send operations, while preview parser policy and command-binding stages live in dedicated
-      helpers with no caller-visible payload changes.
+    target:
+      '`previewPlanRoute` becomes a smaller HTTP facade over request resolution, use-case
+      delegation, and send operations, while preview parser policy and command-binding stages live
+      in dedicated helpers with no caller-visible payload changes.'
     evidence_refs:
       - docs/planning/closeouts/20260419-tf-a1-c10-preview-route-facade-finalization-closeout.md
       - apps/api/src/entrypoints/http/previewPlanRoute.ts
@@ -2521,7 +2507,7 @@ tasks:
       - apps/api/src/entrypoints/http/previewPlanRoutePolicyParser.ts
       - apps/api/src/entrypoints/http/previewPlanRouteCommandParser.ts
       - apps/api/src/entrypoints/http/previewPlanRouteRequestBinder.ts
-    status_reason: >-
+    status_reason:
       Completed. Preview request resolution and response projection now live in dedicated seams,
       while `previewPlanRouteParser` delegates route-policy parsing, command-input parsing, and
       request binding through smaller helpers. The preview HTTP adapter is now closer to a pure
@@ -2534,11 +2520,11 @@ tasks:
     complexity: S
     effort_points: 1
     progress_pct: 100
-    objective: >-
+    objective:
       remove semantic cross-boundary coupling by moving shared preview/import/compile/recover route
       grammar out of `startRun*` helpers and into neutral `planRoute*` parser and policy seams.
     dependency: TF-A1-C10
-    target: >-
+    target:
       Preview/import/compile/recover route parsing no longer imports `startRun*` grammar helpers,
       while start-run composes the same behavior through start-run-specific adapters over neutral
       `planRoute*` owners.
@@ -2554,7 +2540,7 @@ tasks:
       - apps/api/src/entrypoints/http/importPlanRouteParser.ts
       - apps/api/src/entrypoints/http/planCompileRouteInputParser.ts
       - apps/api/src/entrypoints/http/recoverRunRouteParser.ts
-    status_reason: >-
+    status_reason:
       Completed. Shared preview/import/compile/recover grammar now lives behind neutral `planRoute*`
       owners, including route-scope parsing, and start-run now consumes those neutral parsers
       directly for generic route grammar. The only retained start-run-specific adapter is
@@ -2567,12 +2553,12 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       standardize the shared preview/import/compile remote-facade execution recipe so plan-route
       entrypoints stop repeating transport, auth, and response choreography behind hand-written
       seams.
     dependency: TF-A1-C11
-    target: >-
+    target:
       Preview, import, and compile routes compose one root-owned plan-route remote-facade execution
       pattern for parse or resolve, authn or authz, use-case delegation, and outcome mapping without
       collapsing route-specific parser or presenter ownership back into a new convenience module.
@@ -2588,7 +2574,7 @@ tasks:
       - apps/api/test/entrypoints/http/executePlanRouteFacade.test.ts
       - apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
       - apps/api/src/entrypoints/http/runCommandRouteExecutor.ts
-    status_reason: >-
+    status_reason:
       Completed. Preview, import, and compile now compose one shared plan-route remote-facade
       execution pattern through dedicated request-resolver and response-mapper seams plus a shared
       route-handler factory, without changing caller-visible payloads or collapsing boundary
@@ -2603,15 +2589,15 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       replace observability-tag-based import scope ownership with a canonical ownership boundary or
       explicit ownership-policy port so import no longer treats telemetry tags as authorization
       truth.
     dependency: TF-A1-C12
-    target: >-
-      `ImportPlanUseCase` enforces tenant, project, and environment ownership through first-class
+    target:
+      '`ImportPlanUseCase` enforces tenant, project, and environment ownership through first-class
       plan metadata or a dedicated ownership-policy port, with negative coverage proving that import
-      does not decode observability tags as the effective domain boundary.
+      does not decode observability tags as the effective domain boundary.'
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
       - docs/planning/closeouts/20260419-tf-a1-c13-import-ownership-canonicalization-closeout.md
@@ -2619,7 +2605,7 @@ tasks:
       - apps/api/src/application/services/PreviewPlanUseCase.ts
       - packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts
       - docs/adr/ADR-0012-plan-integrity-ownership.md
-    status_reason: >-
+    status_reason:
       Completed. Import now enforces tenant/project/environment ownership from first-class
       `ExecutionPlan.metadata.ownership`, preview and other planner-backed scoped flows emit the
       same ownership metadata, and import tests prove `observability.tags` are no longer the
@@ -2632,12 +2618,12 @@ tasks:
     complexity: S
     effort_points: 1
     progress_pct: 100
-    objective: >-
+    objective:
       converge the compile-boundary ubiquitous language and active architecture docs so `plan
       compile` is the active term, historical `external compile` wording stays historical, and
       living API guidance describes one clear ownership model.
     dependency: TF-A1-C13
-    target: >-
+    target:
       Active docs stop referencing deleted route modules, compile-boundary names follow one declared
       vocabulary strategy, and historical references remain historical instead of competing with
       current architecture truth.
@@ -2649,7 +2635,7 @@ tasks:
       - docs/guides/plan-compile-target-architecture-technical-manual-20260417.md
       - docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md
       - packages/@dvt/contracts/src/schema-packs/plan-compile.ts
-    status_reason: >-
+    status_reason:
       Completed. Active code and active guides now use `plan compile` as the compile-only
       vocabulary, the API component page references the shared plan-route facade instead of deleted
       route anchors, and compile graph-source/selection normalization now has one owner at the route
@@ -2662,14 +2648,14 @@ tasks:
     complexity: S
     effort_points: 1
     progress_pct: 100
-    objective: >-
+    objective:
       unify preview observability enrichment ownership so transport binding and application
       orchestration stop rebuilding the same preview telemetry and provenance shape.
     dependency: TF-A1-C14
-    target: >-
-      `planPreviewEnvelopeBinder` or `PreviewPlanUseCase` becomes the single owner of preview
+    target:
+      '`planPreviewEnvelopeBinder` or `PreviewPlanUseCase` becomes the single owner of preview
       observability enrichment, the other seam passes through or validates a finished shape, and
-      preview provenance/runtime metadata assembly no longer drifts across two layers.
+      preview provenance/runtime metadata assembly no longer drifts across two layers.'
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
       - docs/planning/closeouts/20260420-tf-a1-c15-c16-plan-route-seam-hardening-closeout.md
@@ -2677,7 +2663,7 @@ tasks:
       - apps/api/src/entrypoints/http/previewPlanRouteRequestBinder.ts
       - apps/api/src/application/services/PreviewPlanUseCase.ts
       - apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts
-    status_reason: >-
+    status_reason:
       Completed. Preview observability enrichment now flows through `planPreviewEnvelopeBinder` in
       the real request path, `PreviewPlanUseCase` consumes the finished observability payload
       without rebuilding it, and route-level tests assert the bound scope and transformation
@@ -2690,11 +2676,11 @@ tasks:
     complexity: S
     effort_points: 1
     progress_pct: 100
-    objective: >-
+    objective:
       externalize plan-route authorization metadata so preview, import, and compile declare their
       action semantics explicitly instead of relying on a hardcoded shared-resolver default.
     dependency: TF-A1-C14
-    target: >-
+    target:
       each plan-route request resolver passes explicit authorization action metadata into
       `resolveAuthorizedPlanRouteRequest`, the shared resolver stops owning route-family action
       policy, and future authorization changes do not hide behind one implicit default.
@@ -2707,7 +2693,7 @@ tasks:
       - apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts
       - apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts
       - apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
-    status_reason: >-
+    status_reason:
       Completed. The shared plan-route resolver now accepts explicit authorization action metadata,
       preview/import/compile declare that metadata at the wrapper seam, and the shared resolver
       tests prove it authorizes the action supplied by the caller rather than an implicit default.
@@ -2719,12 +2705,12 @@ tasks:
     complexity: S
     effort_points: 1
     progress_pct: 100
-    objective: >-
+    objective:
       codify the plan-route request-resolution recipe as a declarative shared seam so preview,
       import, and compile stop expressing parse plus authorize plus optional guard as wrapper
       boilerplate.
     dependency: TF-A1-C16
-    target: >-
+    target:
       one shared builder accepts route parser, authorization metadata, scope selector, and optional
       post-authorization guard, while the plan-route wrappers shrink to route-local declarations
       instead of re-implementing the request-resolution workflow.
@@ -2736,7 +2722,7 @@ tasks:
       - apps/api/src/entrypoints/http/importPlanRouteRequestResolver.ts
       - apps/api/src/entrypoints/http/compilePlanRouteRequestResolver.ts
       - apps/api/test/entrypoints/http/planRouteRequestResolver.test.ts
-    status_reason: >-
+    status_reason:
       Completed. The `plan-*` family now declares request parser, authorization action, scope
       selector, and optional post-authorization guard through one shared builder, while the
       preview/import/compile resolver wrappers shrink to route-local declarations instead of
@@ -2749,11 +2735,11 @@ tasks:
     complexity: S
     effort_points: 1
     progress_pct: 100
-    objective: >-
+    objective:
       converge plan-compile catalog, profile, and planner-builder ownership behind one root-owned
       boundary module so compile policy stops drifting across thin wrapper files.
     dependency: TF-A1-C17
-    target: >-
+    target:
       One `apps/api` composition-boundary owner declares the built-in compile catalog, the typed
       profile policy, and the planner-construction recipe, while redundant alias modules disappear
       without introducing compatibility shims.
@@ -2765,7 +2751,7 @@ tasks:
       - apps/api/test/modules.test.ts
       - apps/api/test/app.test.ts
       - docs/architecture/components/api/index.md
-    status_reason: >-
+    status_reason:
       Completed. The compile boundary now converges catalog definitions, typed profile policy,
       catalog resolution, and planner construction behind `planCompileBoundary.ts`; the previous
       alias-only module split was removed without compatibility shims, and the full `dvt-api` suite
@@ -2779,12 +2765,12 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       externalize plan-route authorization and planner-input enrichment policy into a declarative
       catalog, converge preview and compile on one canonical planner-envelope seam, and add
       policy-matrix coverage so route-family ownership cannot drift behind outcome-only tests.
     dependency: TF-A1-C18
-    target: >-
+    target:
       Preview, import, and compile declare authorization and ownership posture through one
       declarative policy catalog; preview and compile assemble canonical planner input through one
       shared helper; and route-family policy-matrix tests protect the compile boundary without
@@ -2797,7 +2783,7 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260419-plan-route-boundary-remediation-review.md
       - docs/architecture/components/api/index.md
       - docs/guides/plan-compile-target-architecture-technical-manual-20260417.md
-    status_reason: >-
+    status_reason:
       Completed. Preview, import, and compile now declare route policy through one catalog; preview
       and compile share one authorized planner-input seam; import carries canonical ownership as one
       value; and the new policy-matrix tests plus the full `dvt-api` validation baseline are green
@@ -2806,14 +2792,14 @@ tasks:
   - task_id: TF-A1-D
     priority: P1
     status: done
-    objective: >-
+    objective:
       introduce a web planning anti-corruption layer so plan ports, canvas flows, and modal/store
       state stop depending on the dbt-centric `ExecutionPlan` DTO.
     dependency: TF-A1-C
-    target: >-
-      `IPlansPort` returns a web-local planning view model, canonical step kinds survive transport
+    target:
+      '`IPlansPort` returns a web-local planning view model, canonical step kinds survive transport
       mapping without `DBT_*` coercion, and the active preview/run path no longer depends on
-      `apps/web/src/app/types/dbt.ts` for plan semantics.
+      `apps/web/src/app/types/dbt.ts` for plan semantics.'
     complexity: M
     effort_points: 3
     progress_pct: 100
@@ -2821,7 +2807,7 @@ tasks:
       - docs/planning/closeouts/20260414-tf-a1-d-web-plan-anti-corruption-closeout.md
       - apps/web/src/app/types/plans.ts
       - apps/web/src/app/services/plans/plansService.api.ts
-    status_reason: >-
+    status_reason:
       Completed. The active web plan flow now crosses an anti-corruption layer through
       `apps/web/src/app/types/plans.ts`, the plans port and API adapter preserve canonical step
       kinds instead of coercing them into `DBT_*`, and the canvas/store/modal/plugin preview path no
@@ -2830,13 +2816,13 @@ tasks:
   - task_id: TF-A2
     priority: P0
     status: done
-    objective: >-
+    objective:
       formalize the canonical workspace graph authoring-draft persistence contract so editable
       Canvas graphs use one typed read and write boundary across web, api, and the persistence owner
       instead of browser-local authority, while compile-ready `DesignGraphDraft` remains a derived
       artifact rather than the editable aggregate itself.
     dependency: TF-A1, F-04
-    target: >-
+    target:
       A governed workspace graph authoring-draft contract pack defines typed read/write semantics,
       revision or concurrency tokens, explicit schema-version versus mutable-revision posture,
       compare-and-swap semantics, reject-on-stale merge policy, idempotent write expectations,
@@ -2865,7 +2851,7 @@ tasks:
       - docs/architecture/reference-architecture.md
       - docs/architecture/components/engine/contracts/engine/SignalsAndAuth.v1.md
       - docs/architecture/components/web/frontend-data-boundary-architecture.md
-    status_reason: >-
+    status_reason:
       Contract freeze is materially further along than the previous lane note captured.
       `WorkspaceGraphDraft.v1` now persists `WorkspaceGraphAuthoringDraft` instead of embedding
       `DesignGraphDraft`, and the active contract line already defines typed scope, capability,
@@ -2884,12 +2870,12 @@ tasks:
     complexity: M
     effort_points: 3
     progress_pct: 100
-    objective: >-
+    objective:
       define the explicit `ExecutionSelection` command boundary and the derived `ExecutableSubgraph`
       read model so preview and run operate on selected closure semantics instead of whole-draft
       compile assumptions.
     dependency: TF-A2
-    target: >-
+    target:
       Canonical contracts, planner ownership, api adoption rules, and web command production are
       frozen for selection-driven preview/run, with negative-path diagnostics and no second
       frontend-only DTO family.
@@ -2907,12 +2893,12 @@ tasks:
       - docs/architecture/components/planner/execution-selection-component.md
       - docs/architecture/components/planner/executable-subgraph-derivation-component.md
       - docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
-    status_reason: >-
-      `TF-A2-C1` through `TF-A2-C5` are closed. The canonical contract pack, local component guides,
-      planner-owned derivation seam, API executable-subgraph resolver seam, Canvas
+    status_reason:
+      '`TF-A2-C1` through `TF-A2-C5` are closed. The canonical contract pack, local component
+      guides, planner-owned derivation seam, API executable-subgraph resolver seam, Canvas
       execution-selection seam, semantic architecture guards, explicit preview-persist-run proof,
       and ARC evidence now freeze the execution-selection boundary plus selected-closure adoption
-      across planner, API, and web.
+      across planner, API, and web.'
     last_verified: '2026-04-23'
   - task_id: TF-A2-C1
     parent_task: TF-A2-C
@@ -2921,13 +2907,13 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       publish canonical `ExecutionSelection` and `ExecutableSubgraph` contract artifacts with
       schemas, exports, docs, and negative-path tests.
     dependency: TF-A2-C
-    target: >-
-      `@dvt/contracts` exposes the execution-selection contract pack, planner/docs surfaces link to
-      it, and ARC-2 evidence plus risk update cover the new public boundary.
+    target:
+      '`@dvt/contracts` exposes the execution-selection contract pack, planner/docs surfaces link to
+      it, and ARC-2 evidence plus risk update cover the new public boundary.'
     evidence_refs:
       - docs/planning/closeouts/20260423-tf-a2-c1-execution-selection-contract-pack-closeout.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
@@ -2936,7 +2922,7 @@ tasks:
       - docs/architecture/components/planner/execution-selection-component.md
       - docs/evidence/ed-20260423-tf-a2-c1-execution-selection-contract-pack.md
       - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
-    status_reason: >-
+    status_reason:
       Completed. `@dvt/contracts` now exposes the canonical execution-selection contract pack
       through a planner-local semantic barrel, contract plus architecture tests, validation helpers,
       governed planner docs, and ARC-2 evidence/risk updates.
@@ -2948,15 +2934,15 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       introduce the planner-owned derivation seam that resolves selected closure from
       `WorkspaceGraphAuthoringDraft` plus `ExecutionSelection` and returns canonical
       `ExecutableSubgraph` diagnostics without widening to the whole draft.
     dependency: TF-A2-C1
-    target: >-
-      `@dvt/planner` exposes selected-closure derivation behind `PlannerFacade`, visible-only
+    target:
+      '`@dvt/planner` exposes selected-closure derivation behind `PlannerFacade`, visible-only
       traversal stays explicit, dependency gaps and cycles fail closed with canonical diagnostics,
-      and semantic architecture coverage locks the seam to the planner boundary.
+      and semantic architecture coverage locks the seam to the planner boundary.'
     evidence_refs:
       - docs/planning/closeouts/20260423-tf-a2-c2-executable-subgraph-derivation-closeout.md
       - docs/planning/proposals/mandatory/runtime-and-contracts/tf-a2-c-execution-selection-and-executable-subgraph-plan-20260423.md
@@ -2964,7 +2950,7 @@ tasks:
       - docs/contracts/planner/execution-selection-and-executable-subgraph-v1.md
       - docs/evidence/ed-20260423-tf-a2-c2-executable-subgraph-derivation.md
       - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
-    status_reason: >-
+    status_reason:
       Completed. `@dvt/planner` now derives canonical `ExecutableSubgraph` read models from
       authoring truth plus execution selection through `PlannerFacade#deriveExecutableSubgraph`,
       with semantic coverage for upstream, downstream, connected-component, no-widen,
@@ -2977,15 +2963,15 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       adopt canonical execution selection and planner-derived selected-closure resolution in API
       preview and planner-backed start-run so protected runtime flows stop depending on whole-draft
       compile assumptions.
     dependency: TF-A2-C2
-    target: >-
-      `apps/api` resolves `ExecutableSubgraph` from protected draft truth before planner build in
+    target:
+      '`apps/api` resolves `ExecutableSubgraph` from protected draft truth before planner build in
       preview and planner-backed start-run, documents the seam locally, and guards it with semantic
-      architecture plus direct behavior tests.
+      architecture plus direct behavior tests.'
     evidence_refs:
       - docs/planning/closeouts/20260423-tf-a2-c3-c4-api-web-adoption-closeout.md
       - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
@@ -2994,7 +2980,7 @@ tasks:
       - apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts
       - apps/api/test/application/services/executableSubgraphResolutionComponent.architecture.test.ts
       - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
-    status_reason: >-
+    status_reason:
       Completed. API preview and planner-backed start-run now resolve selected execution through one
       protected executable-subgraph seam before planner build, with explicit rejection outcomes,
       local component docs, direct resolver tests, and semantic architecture coverage.
@@ -3006,13 +2992,13 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       adopt canonical execution selection in Canvas preview and run so web emits one governed
       selection shape and does not invent a frontend-only execution DTO family.
     dependency: TF-A2-C3
-    target: >-
-      `apps/web` emits canonical `ExecutionSelection` for preview and run through one named Canvas
-      seam, documents that seam locally, and locks it with semantic architecture tests.
+    target:
+      '`apps/web` emits canonical `ExecutionSelection` for preview and run through one named Canvas
+      seam, documents that seam locally, and locks it with semantic architecture tests.'
     evidence_refs:
       - docs/planning/closeouts/20260423-tf-a2-c3-c4-api-web-adoption-closeout.md
       - docs/evidence/ed-20260423-tf-a2-c3-c4-api-web-adoption.md
@@ -3020,7 +3006,7 @@ tasks:
       - apps/web/src/app/views/canvas/canvasRunSelection.ts
       - apps/web/src/app/views/canvas/canvasExecutionSelection.architecture.test.ts
       - docs/risk-register/quality/R-20260423-WORKSPACE-AUTHORING-DRAFT-AGGREGATE.yaml
-    status_reason: >-
+    status_reason:
       Completed. Canvas preview and run now emit canonical execution selection through one shared
       browser-local seam used by both actions, with local component docs and semantic architecture
       coverage preventing preview/run DTO drift.
@@ -3032,11 +3018,11 @@ tasks:
     complexity: M
     effort_points: 2
     progress_pct: 100
-    objective: >-
+    objective:
       prove selected-closure preview-persist-run behavior end to end before any further planner or
       contracts refactor, using explicit current-state diagrams plus vertical web/api validation.
     dependency: TF-A2-C4
-    target: >-
+    target:
       Local component docs show the intended selected-node sequence and involved components, Canvas
       proves persisted preview-to-run reuse of canonical selection within a larger workspace, and
       protected-runtime integration covers selected-closure success plus fail-closed rejection on
@@ -3049,105 +3035,147 @@ tasks:
       - apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.core.test.tsx
       - apps/api/test/integration/protectedRuntime.integration.selectedClosure.scenarios.ts
       - apps/api/test/integration/protectedRuntime.integration.test.ts
-    status_reason: >-
+    status_reason:
       Completed. The route is now documented as an explicit preview-persist-run sequence with
       component diagrams, Canvas proves selected-subgraph preview proof reuse for start-run, and
       protected-runtime integration covers selected-closure success plus fail-closed dependency-gap
       and graph-source mismatch behavior.
     last_verified: '2026-04-23'
+  - status: queued
+    target: API and Contracts validation boundary
+    task_id: A-API-ZOD4-BOUNDARY-CONVERGENCE-1
+    priority: P2
+    objective:
+      Converge API and Contracts boundary validation on Zod 4, move shared schemas to their owning
+      contract boundary, add compatibility tests, and reject unapproved multiple boundary-library
+      majors.
+    complexity: L
+    progress_pct: 0
+    effort_points: 8
+    evidence_refs:
+      - https://github.com/dunay2/dvt/pull/1978
+      - apps/api/package.json
+      - packages/@dvt/contracts/package.json
+    status_reason:
+      'Verified RR-08 from PR #1978; API and Contracts still declare different Zod majors.'
+  - status: queued
+    target: Governance maintainability
+    task_id: A-GOVERNANCE-CHANGE-AMPLIFICATION-1
+    priority: P2
+    objective:
+      Introduce a governance change-amplification policy that uses one canonical declarative fact
+      source and generated current projections, reserving migrations for schema changes or coherent
+      durable history without weakening append-only identity protections.
+    complexity: L
+    progress_pct: 0
+    effort_points: 8
+    evidence_refs:
+      - https://github.com/dunay2/dvt/pull/1978
+      - https://github.com/dunay2/dvt/pull/1977
+    status_reason:
+      'Verified RR-12 from PR #1978; policy refinements still require excessive migration and review
+      churn.'
+  - status: done
+    target: Planning DB migration safety
+    task_id: A-PLANNING-MIGRATION-ORDINAL-UNIQUENESS-1
+    priority: P1
+    objective:
+      Enforce unique numeric migration ordinals and preserve append-only applied migration identity,
+      including deleted trailing migration rejection.
+    complexity: M
+    progress_pct: 100
+    effort_points: 5
+    evidence_refs:
+      - https://github.com/dunay2/dvt/pull/1977
+      - d0269d527d7742f72818584321e001eacc4734db
+    status_reason: 'Completed and merged in PR #1977.'
+  - status: queued
+    target: Repository current-state authority
+    task_id: A-SYSTEM-CURRENT-STATE-TRUTH-1
+    priority: P1
+    objective:
+      Replace the stale handwritten repository implementation snapshot with mechanically refreshed
+      product capability truth tied to the reviewed main SHA, owning contracts, rails, components,
+      evidence, blockers, and freshness checks.
+    complexity: L
+    progress_pct: 0
+    effort_points: 8
+    evidence_refs:
+      - https://github.com/dunay2/dvt/pull/1978
+      - docs/architecture/system-delivery-status.md
+    status_reason:
+      'Verified RR-03 from PR #1978; the current system-delivery-status snapshot remains dated
+      2026-04-26.'
 dependency_notes:
-  - >-
-    `MVP-A1` is now closed as the contractual MVP baseline through the reviewed proposal plus the
-    accepted evidence artifact dated 2026-03-31.
-  - >-
-    `S02` depends on `RC-A6` and is now code-grounded by the split role contracts plus
-    composition-root wiring.
-  - >-
-    `S18` and `S19` are verified as closed slices; `S19-F1` is now decomposed into phase-level
-    subtasks.
-  - >-
-    `S19-F1-A` and `S19-F1-B` are delivered; `S19-F1-C` remains the benchmark and residual-risk
-    closeout slice.
-  - >-
-    `S18-F1` is decomposed into boundary hardening, anti-rewiring guards, and export/negative-path
-    contract closure.
-  - >-
-    `schema-migration-rollback` remains dependent on `S02` and is already closed with a concrete
-    adapter rollback path.
-  - >-
-    `DHM` is closed after WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 all landed with evidence,
-    closeouts, component docs, and architecture guards.
-  - >-
-    The older DHM modularization backlog is no longer the active queue; future WorkflowEngine
+  - '`MVP-A1` is now closed as the contractual MVP baseline through the reviewed proposal plus the
+    accepted evidence artifact dated 2026-03-31.'
+  - '`S02` depends on `RC-A6` and is now code-grounded by the split role contracts plus
+    composition-root wiring.'
+  - '`S18` and `S19` are verified as closed slices; `S19-F1` is now decomposed into phase-level
+    subtasks.'
+  - '`S19-F1-A` and `S19-F1-B` are delivered; `S19-F1-C` remains the benchmark and residual-risk
+    closeout slice.'
+  - '`S18-F1` is decomposed into boundary hardening, anti-rewiring guards, and export/negative-path
+    contract closure.'
+  - '`schema-migration-rollback` remains dependent on `S02` and is already closed with a concrete
+    adapter rollback path.'
+  - '`DHM` is closed after WS5-A, WS5-B, WS1, WS3, WS4, WS2, and WS6 all landed with evidence,
+    closeouts, component docs, and architecture guards.'
+  - The older DHM modularization backlog is no longer the active queue; future WorkflowEngine
     hardcut work continues under the `WE-HX-*` sequence.
-  - >-
-    `RC-G1` is now the active Lane A tracker for contract ownership drift; `RC-G1-A` is closed and
-    `RC-G1-B/C/D` define the remaining execution sequence.
+  - '`RC-G1` is now the active Lane A tracker for contract ownership drift; `RC-G1-A` is closed and
+    `RC-G1-B/C/D` define the remaining execution sequence.'
   - '`GOV-S1` is closed with the startup card/router now published in the governance inventory.'
-  - >-
-    `S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary
+  - '`S08` is now explicitly owned by Lane A as a planner-contracts plus artifacts-boundary
     workstream; documentation truth-correction, ownership ADR, and artifacts-owned ports are
-    delivered while migration and admission slices remain open.
-  - >-
-    `S08-3` is closed. `S08-4` is decomposed into `S08-4-A/B/C` for fail-closed admission hardening,
-    and `S08-5` (`A/B/C`) is the explicit post-`S08-4` invariant-closure arc for release-order
-    semantics, `runExecutionContext` boundary ownership, and plan-level compatibility pinning.
+    delivered while migration and admission slices remain open.'
+  - '`S08-3` is closed. `S08-4` is decomposed into `S08-4-A/B/C` for fail-closed admission
+    hardening, and `S08-5` (`A/B/C`) is the explicit post-`S08-4` invariant-closure arc for
+    release-order semantics, `runExecutionContext` boundary ownership, and plan-level compatibility
+    pinning.'
   - '`plan-version-reset` is closed and remains independent.'
-  - >-
-    The 2026-04-02 deep architectural review now feeds the active `S08-4` tracker plus `AR-A3`
+  - The 2026-04-02 deep architectural review now feeds the active `S08-4` tracker plus `AR-A3`
     through `AR-A7`; the missing `AR-A2` placeholder is retired in favor of the live stepTypeConfig
     admission-hardening work under `S08-4`.
-  - >-
-    The 2026-04-02 principal deep architectural review now feeds `AR-A8..AR-A11` for provider
+  - The 2026-04-02 principal deep architectural review now feeds `AR-A8..AR-A11` for provider
     truthfulness, planner cycle fail-closed behavior, API-engine contract formalization, and
     step-level retry policy governance.
-  - >-
-    `AR-A9` is now decomposed into `AR-A9-A..E` and closed with docs-first/TDD-first evidence while
-    preserving `PlannerErrorCode.GRAPH_CYCLE` as the canonical cycle contract.
-  - >-
-    `MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0),
+  - '`AR-A9` is now decomposed into `AR-A9-A..E` and closed with docs-first/TDD-first evidence while
+    preserving `PlannerErrorCode.GRAPH_CYCLE` as the canonical cycle contract.'
+  - '`MW-A1` through `MW-A4` are multi-workflow generalization tasks: StepKindRegistry (P0),
     GenericGraphSource (P0), StepArtifactRef (P1), and step-kind extension guide (P1). `MW-A1`,
-    `MW-A2`, `MW-A3`, and `MW-A4` are now closed after `S08-5-C`.
-  - >-
-    `WE-HX` introduces canonical WorkflowEngine subsystem derivation with waves `WE-HX-0..6` and
+    `MW-A2`, `MW-A3`, and `MW-A4` are now closed after `S08-5-C`.'
+  - '`WE-HX` introduces canonical WorkflowEngine subsystem derivation with waves `WE-HX-0..6` and
     folds former `AR-A3` execution intent into `WE-HX-4`; the remaining post-`WE-HX-4` facade-purity
-    closure now executes under `AR-A12-C`.
-  - >-
-    `WE-HX-4-A..D` are now closed. The engine/runtime signal boundary is governed by runtime-owned
+    closure now executes under `AR-A12-C`.'
+  - '`WE-HX-4-A..D` are now closed. The engine/runtime signal boundary is governed by runtime-owned
     realized lifecycle facts, canonical run-control signals, explicit provider mapping helpers, and
-    dedicated future use-case boundaries for step retry and run recovery.
-  - >-
-    `GOV-S2` is closed as the doc-driven operating framework umbrella. Future governance work must
+    dedicated future use-case boundaries for step retry and run recovery.'
+  - '`GOV-S2` is closed as the doc-driven operating framework umbrella. Future governance work must
     use concrete task IDs such as `GOV-S3-PLANNING-STATE-QUERY-STORE` for local DB operation,
     derived query-store parity, or the existing docs-governance gates for scoped authoring and
-    traceability helpers.
-  - >-
-    `TF-A1` is now decomposed into `TF-A1-A` and `TF-A1-B` so the design-graph and preview surface
+    traceability helpers.'
+  - '`TF-A1` is now decomposed into `TF-A1-A` and `TF-A1-B` so the design-graph and preview surface
     freeze before the graph-to-step compiler mapping lands; downstream runtime and UI work should
-    depend on those narrower tasks instead of treating Lane A as one opaque block.
-  - >-
-    `TF-A2` is the contract-first follow-up to `TF-A1`: it freezes the workspace graph-draft
+    depend on those narrower tasks instead of treating Lane A as one opaque block.'
+  - '`TF-A2` is the contract-first follow-up to `TF-A1`: it freezes the workspace graph-draft
     read/write boundary, revision semantics, and port ownership so Lane C can implement the
     protected API/store path and Lane E cannot continue productizing editable graphs on browser-
-    local authority.
-  - >-
-    `TF-A2-C` now isolates the remaining execution-selection and executable-subgraph seam after the
+    local authority.'
+  - '`TF-A2-C` now isolates the remaining execution-selection and executable-subgraph seam after the
     authoring-aggregate reset, so preview/run adoption can proceed without drifting back to
-    whole-draft compile semantics.
-  - >-
-    `TF-A1-C12..C14` now capture the post-`TF-A1-C` backend follow-through: standardize the shared
+    whole-draft compile semantics.'
+  - '`TF-A1-C12..C14` now capture the post-`TF-A1-C` backend follow-through: standardize the shared
     plan-route remote-facade recipe, replace observability-tag import ownership with a canonical
-    boundary, and converge compile-boundary vocabulary plus active architecture docs.
-  - >-
-    `TF-A1-C18` is the next post-`TF-A1-C17` ownership-convergence slice: it keeps the compile
+    boundary, and converge compile-boundary vocabulary plus active architecture docs.'
+  - '`TF-A1-C18` is the next post-`TF-A1-C17` ownership-convergence slice: it keeps the compile
     catalog and profile concepts separate but moves their executable ownership behind one
-    composition-boundary module instead of three thin wrappers.
-  - >-
-    `AR-A12` now captures the Fowler-style reset of the engine-runtime contract pack and the
+    composition-boundary module instead of three thin wrappers.'
+  - '`AR-A12` now captures the Fowler-style reset of the engine-runtime contract pack and the
     run-status read boundary: `AR-A12-A` resets the active line to one canonical pre-stable `v1`
     pack, `AR-A12-B` separates canonical status from provider-live diagnostics, and `AR-A12-C`
     finishes the remaining `AR-A3` intent by removing enrichment from the engine facade while
-    converging implementation and current diagrams after the boundary is reset.
+    converging implementation and current diagrams after the boundary is reset.'
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
@@ -3156,7 +3184,7 @@ verification_summary:
   total_effort_points: 369
   completed_weighted_points: 315.89
   lane_progress_pct: 86
-  notes: >-
+  notes:
     Weighted progress uses effort_points. Parent umbrella tasks with subtasks carry
     coordination-only effort. `TF-A2` now adds the missing contract-first workspace graph-draft
     persistence boundary so typed web/api/store ownership is frozen before frontend productization
