@@ -138,6 +138,7 @@ const SCRIPT_FILE_RULES = [
   ],
   [/^scripts\/policy-validation-(files|text)\.cjs$/u, 'contracts'],
   [/^scripts\/planning-db-[\w-]+(\.test)?\.cjs$/u, 'planning-db'],
+  [/^scripts\/planning-github-status-projection(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/planning-db\/(?:[\w-]+\/)*[\w-]+(\.test)?\.cjs$/u, 'planning-db'],
   [/^scripts\/planning-db-operate-tests\/[\w-]+\.cjs$/u, 'planning-db'],
   [/^scripts\/planning-db-query-tests\/[\w-]+\.cjs$/u, 'planning-db'],
