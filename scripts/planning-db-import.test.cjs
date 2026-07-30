@@ -27,8 +27,10 @@ const {
   insertRepositoryCommandSnapshot,
   listChangedFiles,
   mergePlanningTaskIds,
+  mergeCanonicalFeatureMechanizationRails,
   normalizeText,
   parseArgs,
+  readCanonicalStateSnapshot,
   readTrackedDocumentPaths,
   readLocalFeatureMechanizationRails,
   readLocalPlanningTaskIds,
@@ -39,6 +41,7 @@ const {
   refreshComponentTreeMaterializedProjection,
   refreshComponentFileOwnershipMaterializedProjection,
   refreshComponentRuleEvaluationMaterializedProjection,
+  restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
   runPlanningImport,
   sha256,
@@ -1607,6 +1610,100 @@ test('planning DB import preserves DB-local feature mechanization rails during g
   assert.match(hashRefreshQuery.sql, /governance_files file_ref/);
   assert.doesNotMatch(insertQuery.sql, /delete\s+from/i);
   assert.doesNotMatch(insertQuery.sql, /truncate\s+/i);
+});
+
+test('planning DB import reads and validates the canonical DB-authored state snapshot', () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-canonical-state-'));
+  const snapshotPath = path.join(tempRoot, 'canonical-state.json');
+  const rail = {
+    railId: 'local#PLANNING-DB-RECOVERY#query#checkstate',
+    featureId: 'PLANNING-DB-RECOVERY',
+    revision: 1,
+  };
+
+  try {
+    fs.writeFileSync(
+      snapshotPath,
+      JSON.stringify({
+        schemaVersion: 1,
+        featureMechanizationRails: [rail],
+        featureMechanizationRailOperations: [],
+      }),
+      'utf8'
+    );
+
+    const snapshot = readCanonicalStateSnapshot(snapshotPath);
+    assert.deepEqual(snapshot.featureMechanizationRails, [rail]);
+
+    fs.writeFileSync(snapshotPath, JSON.stringify({ schemaVersion: 2 }), 'utf8');
+    assert.throws(
+      () => readCanonicalStateSnapshot(snapshotPath),
+      /Unsupported Planning DB canonical state schema version/
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('planning DB import keeps a newer local rail over an older canonical snapshot', () => {
+  const canonicalRail = {
+    railId: 'local#PLANNING-DB-RECOVERY#query#checkstate',
+    featureId: 'PLANNING-DB-RECOVERY',
+    revision: 1,
+    railStatus: 'declared',
+  };
+  const newerLocalRail = {
+    ...canonicalRail,
+    revision: 2,
+    railStatus: 'implemented',
+  };
+  const canonicalOnlyRail = {
+    railId: 'local#PLANNING-DB-RECOVERY#command#exportstate',
+    featureId: 'PLANNING-DB-RECOVERY',
+    revision: 0,
+    railStatus: 'implemented',
+  };
+
+  assert.deepEqual(
+    mergeCanonicalFeatureMechanizationRails([canonicalRail, canonicalOnlyRail], [newerLocalRail]),
+    [canonicalOnlyRail, newerLocalRail]
+  );
+});
+
+test('planning DB import restores canonical feature rail operations idempotently', async () => {
+  const queries = [];
+  const operation = {
+    operationId: 'feature-mechanization:test-operation',
+    idempotencyKey: 'feature-mechanization-test-operation',
+    operationType: 'feature_mechanization_rail_record',
+    actor: 'codex',
+    railId: 'local#PLANNING-DB-RECOVERY#query#checkstate',
+    sourcePath: 'scripts/planning-db-export.cjs',
+    sourceContentSha256: 'a'.repeat(64),
+    expectedRevision: 0,
+    previousRevision: 0,
+    resultingRevision: 1,
+    payload: { railName: 'CheckState' },
+    createdAt: '2026-07-30T11:00:00.000Z',
+  };
+
+  await restoreLocalFeatureMechanizationOperations(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql: String(sql), params });
+      },
+    },
+    [operation]
+  );
+
+  assert.equal(queries.length, 1);
+  assert.match(queries[0].sql, /feature_mechanization_local_operations/u);
+  assert.match(queries[0].sql, /on conflict \(operation_id\) do nothing/u);
+  assert.equal(queries[0].params[0], operation.operationId);
+  assert.equal(queries[0].params[1], operation.idempotencyKey);
 });
 
 test('frontend component reflection import reloads normalized component rows', async () => {

@@ -23,6 +23,8 @@ const exportedArtifactPaths = [
   'docs/planning/state/execution-workboard.md',
   'docs/planning/state/open-task-route.md',
 ];
+const canonicalStateArtifactPath = 'tools/planning-db/state/canonical-state.json';
+const planningLaneFilePattern = /^agent-lane-[a-z]\.yaml$/iu;
 
 class PlanningDbExportRunner {
   constructor(deps = dependencies) {
@@ -118,25 +120,48 @@ class PlanningDbExportRunner {
     }
   }
 
+  readVersionedLaneDocument(row) {
+    const sourcePath = String(row.sourcePath || '').trim();
+    if (!sourcePath) {
+      return null;
+    }
+
+    const absolutePath = this.deps.path.resolve(this.deps.repoRoot, sourcePath);
+    const relativePath = this.deps.path.relative(this.deps.repoRoot, absolutePath);
+    if (
+      relativePath.startsWith('..') ||
+      this.deps.path.isAbsolute(relativePath) ||
+      !this.deps.fs.existsSync(absolutePath)
+    ) {
+      return null;
+    }
+
+    const parsed = this.deps.yaml.load(this.deps.fs.readFileSync(absolutePath, 'utf8'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+  }
+
   buildLaneDocuments(rows) {
     const laneById = new Map();
     const taskOrderByLaneId = new Map();
+    const sourceTaskByLaneId = new Map();
     const lanes = [...(rows.lanes || [])].sort((left, right) =>
       String(left.laneId).localeCompare(String(right.laneId))
     );
 
     for (const row of lanes) {
-      const lane = this.cloneJson(row.rawLane);
+      const lane = this.cloneJson(this.readVersionedLaneDocument(row) || row.rawLane);
       if (!lane || typeof lane !== 'object' || Array.isArray(lane)) {
         throw new Error(`Lane ${row.laneId} has no raw lane document.`);
       }
 
       const originalTasks = Array.isArray(lane.tasks) ? lane.tasks : [];
       const taskOrder = new Map();
+      const sourceTasks = new Map();
       for (const [index, task] of originalTasks.entries()) {
         const taskId = task && typeof task === 'object' ? task.task_id : null;
         if (taskId && !taskOrder.has(taskId)) {
           taskOrder.set(String(taskId), index);
+          sourceTasks.set(String(taskId), task);
         }
       }
 
@@ -144,6 +169,7 @@ class PlanningDbExportRunner {
       lane.tasks = [];
       laneById.set(row.laneId, lane);
       taskOrderByLaneId.set(row.laneId, taskOrder);
+      sourceTaskByLaneId.set(row.laneId, sourceTasks);
     }
 
     const tasks = [...(rows.tasks || [])].sort((left, right) => {
@@ -169,7 +195,9 @@ class PlanningDbExportRunner {
         throw new Error(`Task ${row.taskId} references missing lane ${row.laneId}.`);
       }
 
-      const task = this.cloneJson(row.rawTask);
+      const task = this.cloneJson(
+        sourceTaskByLaneId.get(row.laneId)?.get(String(row.taskId)) || row.rawTask
+      );
       if (!task || typeof task !== 'object' || Array.isArray(task)) {
         throw new Error(`Task ${row.laneId}/${row.taskId} has no raw task document.`);
       }
@@ -187,6 +215,7 @@ class PlanningDbExportRunner {
       client.query(`
         select
           lane_id as "laneId",
+          source_path as "sourcePath",
           raw_lane as "rawLane"
         from ${this.deps.schemaName}.planning_lanes
         order by lane_id
@@ -212,6 +241,90 @@ class PlanningDbExportRunner {
     };
   }
 
+  async readCanonicalStateRows(client) {
+    const [featureMechanizationRails, featureMechanizationRailOperations] = await Promise.all([
+      client.query(`
+        select
+          rail.rail_id as "railId",
+          rail.feature_id as "featureId",
+          rail.mechanization_status as "mechanizationStatus",
+          rail.rail_name as "railName",
+          rail.normalized_rail_name as "normalizedRailName",
+          rail.rail_type as "railType",
+          rail.ddd_owner as "dddOwner",
+          rail.rail_status as "railStatus",
+          rail.symbol_refs as "symbolRefs",
+          rail.implementation_refs as "implementationRefs",
+          rail.documentation_refs as "documentationRefs",
+          rail.governing_sources as "governingSources",
+          rail.allowed_implementation_surfaces as "allowedImplementationSurfaces",
+          rail.architecture_guards as "architectureGuards",
+          rail.completion_gate as "completionGate",
+          rail.source_path as "sourcePath",
+          rail.source_content_sha256 as "sourceContentSha256",
+          rail.raw_rail as "rawRail",
+          rail.raw_manifest as "rawManifest",
+          rail.revision,
+          rail.created_by as "createdBy",
+          rail.created_at as "createdAt"
+        from ${this.deps.schemaName}.feature_mechanization_local_rails rail
+        where rail.source_path not like 'tools/planning-db/migrations/%'
+          and exists (
+            select 1
+            from ${this.deps.schemaName}.feature_mechanization_local_operations operation
+            where operation.rail_id = rail.rail_id
+          )
+        order by rail.rail_id
+      `),
+      client.query(`
+        select
+          operation.operation_id as "operationId",
+          operation.idempotency_key as "idempotencyKey",
+          operation.operation_type as "operationType",
+          operation.actor,
+          operation.rail_id as "railId",
+          operation.source_path as "sourcePath",
+          operation.source_content_sha256 as "sourceContentSha256",
+          operation.expected_revision as "expectedRevision",
+          operation.previous_revision as "previousRevision",
+          operation.resulting_revision as "resultingRevision",
+          operation.payload,
+          operation.created_at as "createdAt"
+        from ${this.deps.schemaName}.feature_mechanization_local_operations operation
+        where exists (
+          select 1
+          from ${this.deps.schemaName}.feature_mechanization_local_rails rail
+          where rail.rail_id = operation.rail_id
+            and rail.source_path not like 'tools/planning-db/migrations/%'
+        )
+        order by operation.created_at, operation.operation_id
+      `),
+    ]);
+
+    return {
+      featureMechanizationRails: featureMechanizationRails.rows,
+      featureMechanizationRailOperations: featureMechanizationRailOperations.rows,
+    };
+  }
+
+  writeCanonicalState(snapshotRows, outputRoot) {
+    const artifactPath = this.deps.path.join(outputRoot, canonicalStateArtifactPath);
+    this.deps.fs.mkdirSync(this.deps.path.dirname(artifactPath), { recursive: true });
+    this.deps.fs.writeFileSync(
+      artifactPath,
+      `${JSON.stringify(
+        {
+          schemaVersion: 1,
+          featureMechanizationRails: snapshotRows.featureMechanizationRails,
+          featureMechanizationRailOperations: snapshotRows.featureMechanizationRailOperations,
+        },
+        null,
+        2
+      )}\n`,
+      'utf8'
+    );
+  }
+
   writeLaneYamlFiles(lanes, sourceStateDir) {
     this.deps.fs.mkdirSync(sourceStateDir, { recursive: true });
 
@@ -232,8 +345,32 @@ class PlanningDbExportRunner {
     }
   }
 
-  ensureExistingArtifacts(root) {
-    const missing = exportedArtifactPaths.filter(
+  planningLaneArtifactPaths(lanes) {
+    return lanes.map((lane) => {
+      const laneId = String(lane.lane_id || '').trim();
+      if (!laneId) {
+        throw new Error('Cannot resolve an artifact path for a lane without lane_id.');
+      }
+
+      return `docs/planning/state/agent-lane-${laneId.toLowerCase()}.yaml`;
+    });
+  }
+
+  listExistingPlanningLaneArtifactPaths(root) {
+    const sourceStateDir = this.deps.path.join(root, 'docs', 'planning', 'state');
+    if (!this.deps.fs.existsSync(sourceStateDir)) {
+      return [];
+    }
+
+    return this.deps.fs
+      .readdirSync(sourceStateDir)
+      .filter((fileName) => planningLaneFilePattern.test(fileName))
+      .sort()
+      .map((fileName) => `docs/planning/state/${fileName}`);
+  }
+
+  ensureExistingArtifacts(root, artifactPaths = exportedArtifactPaths) {
+    const missing = artifactPaths.filter(
       (artifactPath) => !this.deps.fs.existsSync(this.deps.path.join(root, artifactPath))
     );
 
@@ -244,10 +381,10 @@ class PlanningDbExportRunner {
     }
   }
 
-  copyExistingArtifacts(targetRoot) {
-    this.ensureExistingArtifacts(this.deps.repoRoot);
+  copyExistingArtifacts(targetRoot, artifactPaths = exportedArtifactPaths) {
+    this.ensureExistingArtifacts(this.deps.repoRoot, artifactPaths);
 
-    for (const artifactPath of exportedArtifactPaths) {
+    for (const artifactPath of artifactPaths) {
       const sourcePath = this.deps.path.join(this.deps.repoRoot, artifactPath);
       const targetPath = this.deps.path.join(targetRoot, artifactPath);
       this.deps.fs.mkdirSync(this.deps.path.dirname(targetPath), { recursive: true });
@@ -327,11 +464,39 @@ class PlanningDbExportRunner {
     return this.deps.fs.readFileSync(absolutePath, 'utf8');
   }
 
-  compareGeneratedArtifacts({ expectedRoot, actualRoot }) {
+  canonicalizeStructuredValue(value) {
+    if (Array.isArray(value)) {
+      return value.map((item) => this.canonicalizeStructuredValue(item));
+    }
+
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(
+        Object.keys(value)
+          .sort()
+          .map((key) => [key, this.canonicalizeStructuredValue(value[key])])
+      );
+    }
+
+    return value;
+  }
+
+  normalizeArtifactForComparison(artifactPath, content) {
+    if (planningLaneFilePattern.test(this.deps.path.basename(artifactPath))) {
+      return JSON.stringify(this.canonicalizeStructuredValue(this.deps.yaml.load(content)));
+    }
+
+    if (artifactPath === canonicalStateArtifactPath) {
+      return JSON.stringify(this.canonicalizeStructuredValue(JSON.parse(content)));
+    }
+
+    return content;
+  }
+
+  compareGeneratedArtifacts({ expectedRoot, actualRoot, artifactPaths = exportedArtifactPaths }) {
     const missing = [];
     const changed = [];
 
-    for (const artifactPath of exportedArtifactPaths) {
+    for (const artifactPath of artifactPaths) {
       const expected = this.readArtifact(expectedRoot, artifactPath);
       const actual = this.readArtifact(actualRoot, artifactPath);
 
@@ -340,7 +505,10 @@ class PlanningDbExportRunner {
         continue;
       }
 
-      if (expected !== actual) {
+      if (
+        this.normalizeArtifactForComparison(artifactPath, expected) !==
+        this.normalizeArtifactForComparison(artifactPath, actual)
+      ) {
         changed.push(artifactPath);
       }
     }
@@ -384,7 +552,10 @@ class PlanningDbExportRunner {
     }
 
     try {
-      const rows = await this.readPlanningRows(client);
+      const [rows, canonicalStateRows] = await Promise.all([
+        this.readPlanningRows(client),
+        this.readCanonicalStateRows(client),
+      ]);
       const lanes = this.buildLaneDocuments(rows);
 
       const outputRoot = options.check
@@ -400,6 +571,16 @@ class PlanningDbExportRunner {
         this.deps.fs.mkdirSync(outputRoot, { recursive: true });
       }
 
+      this.writeLaneYamlFiles(lanes, this.deps.path.join(outputRoot, 'docs', 'planning', 'state'));
+      this.writeCanonicalState(canonicalStateRows, outputRoot);
+      const canonicalArtifactPaths = [
+        ...new Set([
+          canonicalStateArtifactPath,
+          ...exportedArtifactPaths,
+          ...this.planningLaneArtifactPaths(lanes),
+          ...this.listExistingPlanningLaneArtifactPaths(this.deps.repoRoot),
+        ]),
+      ].sort();
       this.runWorkboardGenerator({
         outputRoot,
         databaseUrl: this.databaseUrl(options.databaseUrl),
@@ -409,6 +590,7 @@ class PlanningDbExportRunner {
         ? this.compareGeneratedArtifacts({
             expectedRoot: this.deps.repoRoot,
             actualRoot: outputRoot,
+            artifactPaths: canonicalArtifactPaths,
           })
         : { ok: true, missing: [], changed: [] };
 
@@ -421,7 +603,9 @@ class PlanningDbExportRunner {
       return {
         lanes: lanes.length,
         tasks: rows.tasks.length,
+        canonicalFeatureMechanizationRails: canonicalStateRows.featureMechanizationRails.length,
         outputRoot,
+        canonicalArtifactPaths,
         report,
       };
     } finally {
@@ -464,5 +648,6 @@ if (require.main === module) {
 
 module.exports = {
   PlanningDbExportRunner,
+  canonicalStateArtifactPath,
   exportedArtifactPaths,
 };

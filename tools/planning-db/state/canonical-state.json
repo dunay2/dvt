@@ -1,0 +1,981 @@
+{
+  "schemaVersion": 1,
+  "featureMechanizationRails": [
+    {
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicallanestate",
+      "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+      "mechanizationStatus": "implemented",
+      "railName": "ExportPlanningDbCanonicalLaneState",
+      "normalizedRailName": "exportplanningdbcanonicallanestate",
+      "railType": "command",
+      "dddOwner": "PlanningDbCanonicalStateExport",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-export.cjs#planningLaneFilePattern",
+        "scripts/planning-db-export.cjs#PlanningDbExportRunner",
+        "scripts/planning-db-export.cjs#canonicalStateArtifactPath"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-export.cjs#planningLaneFilePattern",
+        "scripts/planning-db-export.cjs#PlanningDbExportRunner",
+        "scripts/planning-db-export.cjs#canonicalStateArtifactPath"
+      ],
+      "documentationRefs": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-export.cjs",
+        "scripts/planning-db-export.test.cjs",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": ["node --test scripts/planning-db-export.test.cjs"],
+      "completionGate": [
+        "node --test scripts/planning-db-export.test.cjs",
+        "pnpm planning:db:export:check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/planning-db-export.cjs",
+      "sourceContentSha256": "6e28267647ec9f50170452780cc8a9224c61a856747fd9346ad006a17116cdd1",
+      "rawRail": {
+        "name": "ExportPlanningDbCanonicalLaneState",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "PlanningDbCanonicalStateExport"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "planningLaneFilePattern",
+            "path": "scripts/planning-db-export.cjs",
+            "cqRails": ["ExportPlanningDbCanonicalLaneState"],
+            "dddOwner": "PlanningDbCanonicalStateExport",
+            "unitTests": ["scripts/planning-db-export.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "PlanningDbExportRunner",
+            "path": "scripts/planning-db-export.cjs",
+            "cqRails": ["ExportPlanningDbCanonicalLaneState"],
+            "dddOwner": "PlanningDbCanonicalStateExport",
+            "unitTests": ["scripts/planning-db-export.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-export.test.cjs"
+          },
+          {
+            "name": "canonicalStateArtifactPath",
+            "path": "scripts/planning-db-export.cjs",
+            "cqRails": ["ExportPlanningDbCanonicalLaneState"],
+            "dddOwner": "PlanningDbCanonicalStateExport",
+            "unitTests": ["scripts/planning-db-export.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-export.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "userStories": [
+          "A governance maintainer rebuilds DB-authored planning state deterministically from versioned canonical state."
+        ],
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": [
+          "PlanningLaneStateSnapshot",
+          "PlanningDbCanonicalStateSnapshot"
+        ],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "completionGate": [
+          "node --test scripts/planning-db-export.test.cjs",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "exportplanningdbcanonicallanestate-record",
+            "redTest": "node --test scripts/planning-db-export.test.cjs",
+            "greenTest": "node --test scripts/planning-db-export.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-export.cjs",
+              "scripts/planning-db-export.test.cjs",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "DB-authored feature rails are absent after a clean Planning DB rebuild or the canonical snapshot changes on a no-delta cycle."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
+        ],
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ExportPlanningDbCanonicalLaneState",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "PlanningDbCanonicalStateExport"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-export.test.cjs"
+        ],
+        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "GitHub issue status as planning authority"
+        ]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-07-30T20:01:41.639Z"
+    },
+    {
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#query#enforceplanningdbschemaonlymigrations",
+      "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+      "mechanizationStatus": "implemented",
+      "railName": "EnforcePlanningDbSchemaOnlyMigrations",
+      "normalizedRailName": "enforceplanningdbschemaonlymigrations",
+      "railType": "query",
+      "dddOwner": "PlanningDbMigrationPolicy",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-migrate.cjs#migrationContentPolicy",
+        "scripts/planning-db-migrate.cjs#allowedTopLevelSchemaStatementKinds",
+        "scripts/planning-db-migrate.cjs#maskedSqlSegment",
+        "scripts/planning-db-migrate.cjs#maskSqlCommentsAndLiterals",
+        "scripts/planning-db-migrate.cjs#findForbiddenTopLevelDataStatements",
+        "scripts/planning-db-migrate.cjs#assertSchemaOnlyMigrationPolicy"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-migrate.cjs#migrationContentPolicy",
+        "scripts/planning-db-migrate.cjs#allowedTopLevelSchemaStatementKinds",
+        "scripts/planning-db-migrate.cjs#maskedSqlSegment",
+        "scripts/planning-db-migrate.cjs#maskSqlCommentsAndLiterals",
+        "scripts/planning-db-migrate.cjs#findForbiddenTopLevelDataStatements",
+        "scripts/planning-db-migrate.cjs#assertSchemaOnlyMigrationPolicy"
+      ],
+      "documentationRefs": [
+        "docs/adr/adr-0055-planning-db-canonical-operational-source.md"
+      ],
+      "governingSources": [
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-migrate.cjs",
+        "scripts/planning-db-migrate.test.cjs"
+      ],
+      "architectureGuards": [
+        "node --test scripts/planning-db-migrate.test.cjs"
+      ],
+      "completionGate": [
+        "node --test scripts/planning-db-migrate.test.cjs",
+        "pnpm planning:db:migrate",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/planning-db-migrate.cjs",
+      "sourceContentSha256": "9c72073a56911e004c07ae25da78acb49288f81e3776ce7e4ea68eb681b8588e",
+      "rawRail": {
+        "name": "EnforcePlanningDbSchemaOnlyMigrations",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "PlanningDbMigrationPolicy"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "migrationContentPolicy",
+            "path": "scripts/planning-db-migrate.cjs",
+            "cqRails": ["EnforcePlanningDbSchemaOnlyMigrations"],
+            "dddOwner": "PlanningDbMigrationPolicy",
+            "unitTests": ["scripts/planning-db-migrate.test.cjs"],
+            "fowlerSignals": ["specification", "fail_closed_policy"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-migrate.test.cjs"
+          },
+          {
+            "name": "allowedTopLevelSchemaStatementKinds",
+            "path": "scripts/planning-db-migrate.cjs",
+            "cqRails": ["EnforcePlanningDbSchemaOnlyMigrations"],
+            "dddOwner": "PlanningDbMigrationPolicy",
+            "unitTests": ["scripts/planning-db-migrate.test.cjs"],
+            "fowlerSignals": ["specification", "fail_closed_policy"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-migrate.test.cjs"
+          },
+          {
+            "name": "maskedSqlSegment",
+            "path": "scripts/planning-db-migrate.cjs",
+            "cqRails": ["EnforcePlanningDbSchemaOnlyMigrations"],
+            "dddOwner": "PlanningDbMigrationPolicy",
+            "unitTests": ["scripts/planning-db-migrate.test.cjs"],
+            "fowlerSignals": ["specification", "fail_closed_policy"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-migrate.test.cjs"
+          },
+          {
+            "name": "maskSqlCommentsAndLiterals",
+            "path": "scripts/planning-db-migrate.cjs",
+            "cqRails": ["EnforcePlanningDbSchemaOnlyMigrations"],
+            "dddOwner": "PlanningDbMigrationPolicy",
+            "unitTests": ["scripts/planning-db-migrate.test.cjs"],
+            "fowlerSignals": ["specification", "fail_closed_policy"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-migrate.test.cjs"
+          },
+          {
+            "name": "findForbiddenTopLevelDataStatements",
+            "path": "scripts/planning-db-migrate.cjs",
+            "cqRails": ["EnforcePlanningDbSchemaOnlyMigrations"],
+            "dddOwner": "PlanningDbMigrationPolicy",
+            "unitTests": ["scripts/planning-db-migrate.test.cjs"],
+            "fowlerSignals": ["specification", "fail_closed_policy"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-migrate.test.cjs"
+          },
+          {
+            "name": "assertSchemaOnlyMigrationPolicy",
+            "path": "scripts/planning-db-migrate.cjs",
+            "cqRails": ["EnforcePlanningDbSchemaOnlyMigrations"],
+            "dddOwner": "PlanningDbMigrationPolicy",
+            "unitTests": ["scripts/planning-db-migrate.test.cjs"],
+            "fowlerSignals": ["specification", "fail_closed_policy"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-migrate.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "userStories": [
+          "A governance maintainer cannot encode mutable current state in a new schema migration."
+        ],
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": ["PlanningDbMigrationContentPolicy"],
+        "fowlerSignals": ["specification", "fail_closed_policy"],
+        "completionGate": [
+          "node --test scripts/planning-db-migrate.test.cjs",
+          "pnpm planning:db:migrate",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "enforceplanningdbschemaonlymigrations-record",
+            "redTest": "node --test scripts/planning-db-migrate.test.cjs",
+            "greenTest": "node --test scripts/planning-db-migrate.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-migrate.cjs",
+              "scripts/planning-db-migrate.test.cjs"
+            ],
+            "expectedFailure": "A migration at the schema-only cutoff can insert or update canonical current-state rows."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
+        ],
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "EnforcePlanningDbSchemaOnlyMigrations",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "PlanningDbMigrationPolicy"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-migrate.test.cjs"
+        ],
+        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-migrate.cjs",
+          "scripts/planning-db-migrate.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/*_feature_*.sql"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-07-30T20:01:19.771Z"
+    },
+    {
+      "railId": "local#PLANNING-DB-IMPORT-LOCAL-FEATURE-RAIL-PERSISTENCE-20260619#command#preservelocalfeaturemechanizationrails",
+      "featureId": "PLANNING-DB-IMPORT-LOCAL-FEATURE-RAIL-PERSISTENCE-20260619",
+      "mechanizationStatus": "implemented",
+      "railName": "PreserveLocalFeatureMechanizationRails",
+      "normalizedRailName": "preservelocalfeaturemechanizationrails",
+      "railType": "command",
+      "dddOwner": "PlanningDbImport",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-import.cjs#readLocalFeatureMechanizationRails",
+        "scripts/planning-db-import.cjs#refreshLocalFeatureMechanizationRailSourceHashes",
+        "scripts/planning-db-import.cjs#restoreLocalFeatureMechanizationRails",
+        "scripts/planning-db-import.cjs#canonicalStatePath",
+        "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
+        "scripts/planning-db-import.cjs#mergeCanonicalFeatureMechanizationRails",
+        "scripts/planning-db-import.cjs#restoreLocalFeatureMechanizationOperations"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-import.cjs#readLocalFeatureMechanizationRails",
+        "scripts/planning-db-import.cjs#refreshLocalFeatureMechanizationRailSourceHashes",
+        "scripts/planning-db-import.cjs#restoreLocalFeatureMechanizationRails",
+        "scripts/planning-db-import.cjs#canonicalStatePath",
+        "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
+        "scripts/planning-db-import.cjs#mergeCanonicalFeatureMechanizationRails",
+        "scripts/planning-db-import.cjs#restoreLocalFeatureMechanizationOperations"
+      ],
+      "documentationRefs": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/guides/ai-work-protocol.md",
+        "docs/planning/state/planning-control-tower.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-import.cjs",
+        "scripts/planning-db-import.test.cjs",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "node --test scripts/planning-db-import.test.cjs",
+        "pnpm docs:feature-mechanization:implementation"
+      ],
+      "completionGate": [
+        "node --test scripts/planning-db-import.test.cjs",
+        "node --test scripts/planning-db-migrate.test.cjs",
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "scripts/planning-db-import.cjs",
+      "sourceContentSha256": "ca54abe2f86d6105d845aced09509edd9871280a2b3bb947ee210a98675a8f12",
+      "rawRail": {
+        "name": "PreserveLocalFeatureMechanizationRails",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "PlanningDbImport"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "readLocalFeatureMechanizationRails",
+            "path": "scripts/planning-db-import.cjs",
+            "cqRails": ["PreserveLocalFeatureMechanizationRails"],
+            "dddOwner": "PlanningDbImport",
+            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: planning DB import tool",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+          },
+          {
+            "name": "refreshLocalFeatureMechanizationRailSourceHashes",
+            "path": "scripts/planning-db-import.cjs",
+            "cqRails": ["PreserveLocalFeatureMechanizationRails"],
+            "dddOwner": "PlanningDbImport",
+            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: planning DB import tool",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+          },
+          {
+            "name": "restoreLocalFeatureMechanizationRails",
+            "path": "scripts/planning-db-import.cjs",
+            "cqRails": ["PreserveLocalFeatureMechanizationRails"],
+            "dddOwner": "PlanningDbImport",
+            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: planning DB import tool",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+          },
+          {
+            "name": "canonicalStatePath",
+            "path": "scripts/planning-db-import.cjs",
+            "cqRails": ["PreserveLocalFeatureMechanizationRails"],
+            "dddOwner": "PlanningDbImport",
+            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: planning DB import tool",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+          },
+          {
+            "name": "readCanonicalStateSnapshot",
+            "path": "scripts/planning-db-import.cjs",
+            "cqRails": ["PreserveLocalFeatureMechanizationRails"],
+            "dddOwner": "PlanningDbImport",
+            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: planning DB import tool",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+          },
+          {
+            "name": "mergeCanonicalFeatureMechanizationRails",
+            "path": "scripts/planning-db-import.cjs",
+            "cqRails": ["PreserveLocalFeatureMechanizationRails"],
+            "dddOwner": "PlanningDbImport",
+            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: planning DB import tool",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+          },
+          {
+            "name": "restoreLocalFeatureMechanizationOperations",
+            "path": "scripts/planning-db-import.cjs",
+            "cqRails": ["PreserveLocalFeatureMechanizationRails"],
+            "dddOwner": "PlanningDbImport",
+            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: planning DB import tool",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "PLANNING-DB-IMPORT-LOCAL-FEATURE-RAIL-PERSISTENCE-20260619",
+        "userStories": [
+          "As a governance operator, a clean Planning DB rebuild restores DB-authored feature rails and preserves their audit history."
+        ],
+        "cypressFlows": ["not applicable: planning DB import tool"],
+        "domainObjects": [
+          "PlanningDbCanonicalStateSnapshot",
+          "FeatureMechanizationLocalRail",
+          "FeatureMechanizationLocalOperation"
+        ],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "completionGate": [
+          "node --test scripts/planning-db-import.test.cjs",
+          "node --test scripts/planning-db-migrate.test.cjs",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "preservelocalfeaturemechanizationrails-record",
+            "redTest": "node --test --test-name-pattern canonical scripts/planning-db-import.test.cjs",
+            "greenTest": "node --test scripts/planning-db-import.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-import.cjs",
+              "scripts/planning-db-import.test.cjs",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "A clean governance reload loses DB-authored feature rails, overwrites a newer local revision, or duplicates audit operations."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/planning/state/planning-control-tower.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "PreserveLocalFeatureMechanizationRails",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "PlanningDbImport"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-import.test.cjs",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "implementationPlan": "Planning DB governance import restores versioned DB-authored feature rails and their audit operations from canonical state without overwriting newer local revisions.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-import.cjs",
+          "scripts/planning-db-import.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/state/agent-lane-a.yaml",
+          "docs/planning/state/agent-lane-b.yaml",
+          "docs/planning/state/agent-lane-c.yaml",
+          "docs/planning/state/agent-lane-d.yaml",
+          "docs/planning/state/agent-lane-e.yaml"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-07-17T09:20:08.742Z"
+    }
+  ],
+  "featureMechanizationRailOperations": [
+    {
+      "operationId": "6189ecbb-7446-45f8-93c4-c7338887451c",
+      "idempotencyKey": "codex-20260730-schema-only-feature-rail",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#query#enforceplanningdbschemaonlymigrations",
+      "sourcePath": "scripts/planning-db-migrate.cjs",
+      "sourceContentSha256": "9c72073a56911e004c07ae25da78acb49288f81e3776ce7e4ea68eb681b8588e",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-migrate.test.cjs",
+        "dddOwner": "PlanningDbMigrationPolicy",
+        "railName": "EnforcePlanningDbSchemaOnlyMigrations",
+        "railType": "query",
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "greenTest": "node --test scripts/planning-db-migrate.test.cjs",
+        "sourceRef": "scripts/planning-db-migrate.cjs",
+        "unitTests": ["scripts/planning-db-migrate.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "A governance maintainer cannot encode mutable current state in a new schema migration."
+        ],
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": ["PlanningDbMigrationContentPolicy"],
+        "fowlerSignals": ["specification", "fail_closed_policy"],
+        "patchSurfaces": [
+          "scripts/planning-db-migrate.cjs",
+          "scripts/planning-db-migrate.test.cjs"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-migrate.test.cjs",
+          "pnpm planning:db:migrate",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
+        ],
+        "expectedFailure": "A migration at the schema-only cutoff can insert or update canonical current-state rows.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-migrate.test.cjs"
+        ],
+        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
+        "implementationRefs": [
+          "scripts/planning-db-migrate.cjs#migrationContentPolicy",
+          "scripts/planning-db-migrate.cjs#allowedTopLevelSchemaStatementKinds",
+          "scripts/planning-db-migrate.cjs#maskedSqlSegment",
+          "scripts/planning-db-migrate.cjs#maskSqlCommentsAndLiterals",
+          "scripts/planning-db-migrate.cjs#findForbiddenTopLevelDataStatements",
+          "scripts/planning-db-migrate.cjs#assertSchemaOnlyMigrationPolicy"
+        ],
+        "normalizedRailName": "enforceplanningdbschemaonlymigrations",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9c72073a56911e004c07ae25da78acb49288f81e3776ce7e4ea68eb681b8588e",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-migrate.cjs",
+          "scripts/planning-db-migrate.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/*_feature_*.sql"
+        ]
+      },
+      "createdAt": "2026-07-30T20:01:19.771Z"
+    },
+    {
+      "operationId": "dd9db39a-f11b-465b-b295-7e8849cea8f4",
+      "idempotencyKey": "codex-20260730-lane-export-feature-rail",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicallanestate",
+      "sourcePath": "scripts/planning-db-export.cjs",
+      "sourceContentSha256": "6bb959fa0751ed0ffe7b76efac1a08085afcfebbf2dd1fb9909da4b6ceef19f3",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-export.test.cjs",
+        "dddOwner": "PlanningDbCanonicalStateExport",
+        "railName": "ExportPlanningDbCanonicalLaneState",
+        "railType": "command",
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "greenTest": "node --test scripts/planning-db-export.test.cjs",
+        "sourceRef": "scripts/planning-db-export.cjs",
+        "unitTests": ["scripts/planning-db-export.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "A governance maintainer exports effective lane state without claims or formatting-only drift."
+        ],
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": ["PlanningLaneStateSnapshot"],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "patchSurfaces": [
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-export.test.cjs",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
+        ],
+        "expectedFailure": "Effective lane task state is absent from the exported recovery surface or claim state leaks into Git.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-export.test.cjs"
+        ],
+        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
+        "implementationRefs": [
+          "scripts/planning-db-export.cjs#planningLaneFilePattern",
+          "scripts/planning-db-export.cjs#PlanningDbExportRunner"
+        ],
+        "normalizedRailName": "exportplanningdbcanonicallanestate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6bb959fa0751ed0ffe7b76efac1a08085afcfebbf2dd1fb9909da4b6ceef19f3",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "GitHub issue status as planning authority"
+        ]
+      },
+      "createdAt": "2026-07-30T20:01:41.639Z"
+    },
+    {
+      "operationId": "10059394-b171-44fd-97f4-d0b6b566f3d2",
+      "idempotencyKey": "codex-20260730-schema-only-feature-rail-fowler",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#query#enforceplanningdbschemaonlymigrations",
+      "sourcePath": "scripts/planning-db-migrate.cjs",
+      "sourceContentSha256": "9c72073a56911e004c07ae25da78acb49288f81e3776ce7e4ea68eb681b8588e",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-migrate.test.cjs",
+        "dddOwner": "PlanningDbMigrationPolicy",
+        "railName": "EnforcePlanningDbSchemaOnlyMigrations",
+        "railType": "query",
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "greenTest": "node --test scripts/planning-db-migrate.test.cjs",
+        "sourceRef": "scripts/planning-db-migrate.cjs",
+        "unitTests": ["scripts/planning-db-migrate.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "A governance maintainer cannot encode mutable current state in a new schema migration."
+        ],
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": ["PlanningDbMigrationContentPolicy"],
+        "fowlerSignals": ["specification", "fail_closed_policy"],
+        "patchSurfaces": [
+          "scripts/planning-db-migrate.cjs",
+          "scripts/planning-db-migrate.test.cjs"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-migrate.test.cjs",
+          "pnpm planning:db:migrate",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
+        ],
+        "expectedFailure": "A migration at the schema-only cutoff can insert or update canonical current-state rows.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-migrate.test.cjs"
+        ],
+        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
+        "implementationRefs": [
+          "scripts/planning-db-migrate.cjs#migrationContentPolicy",
+          "scripts/planning-db-migrate.cjs#allowedTopLevelSchemaStatementKinds",
+          "scripts/planning-db-migrate.cjs#maskedSqlSegment",
+          "scripts/planning-db-migrate.cjs#maskSqlCommentsAndLiterals",
+          "scripts/planning-db-migrate.cjs#findForbiddenTopLevelDataStatements",
+          "scripts/planning-db-migrate.cjs#assertSchemaOnlyMigrationPolicy"
+        ],
+        "normalizedRailName": "enforceplanningdbschemaonlymigrations",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9c72073a56911e004c07ae25da78acb49288f81e3776ce7e4ea68eb681b8588e",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-migrate.cjs",
+          "scripts/planning-db-migrate.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/*_feature_*.sql"
+        ]
+      },
+      "createdAt": "2026-07-30T20:02:20.561Z"
+    },
+    {
+      "operationId": "cc3b1af4-1fec-42dc-9540-7b4ee6f3ca92",
+      "idempotencyKey": "codex-20260730-lane-export-feature-rail-fowler",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicallanestate",
+      "sourcePath": "scripts/planning-db-export.cjs",
+      "sourceContentSha256": "6bb959fa0751ed0ffe7b76efac1a08085afcfebbf2dd1fb9909da4b6ceef19f3",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-export.test.cjs",
+        "dddOwner": "PlanningDbCanonicalStateExport",
+        "railName": "ExportPlanningDbCanonicalLaneState",
+        "railType": "command",
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "greenTest": "node --test scripts/planning-db-export.test.cjs",
+        "sourceRef": "scripts/planning-db-export.cjs",
+        "unitTests": ["scripts/planning-db-export.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "A governance maintainer exports effective lane state without claims or formatting-only drift."
+        ],
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": ["PlanningLaneStateSnapshot"],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "patchSurfaces": [
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-export.test.cjs",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
+        ],
+        "expectedFailure": "Effective lane task state is absent from the exported recovery surface or claim state leaks into Git.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-export.test.cjs"
+        ],
+        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
+        "implementationRefs": [
+          "scripts/planning-db-export.cjs#planningLaneFilePattern",
+          "scripts/planning-db-export.cjs#PlanningDbExportRunner"
+        ],
+        "normalizedRailName": "exportplanningdbcanonicallanestate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6bb959fa0751ed0ffe7b76efac1a08085afcfebbf2dd1fb9909da4b6ceef19f3",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "GitHub issue status as planning authority"
+        ]
+      },
+      "createdAt": "2026-07-30T20:02:39.633Z"
+    },
+    {
+      "operationId": "582aa594-17b3-43c3-9352-643073a3a723",
+      "idempotencyKey": "codex-20260730-export-canonical-state-rev2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicallanestate",
+      "sourcePath": "scripts/planning-db-export.cjs",
+      "sourceContentSha256": "4ef57dd41ee0cb46bd424f78512e0b0a3622cd2e1718439a28b2bf1ae5bd2c5f",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-export.test.cjs",
+        "dddOwner": "PlanningDbCanonicalStateExport",
+        "railName": "ExportPlanningDbCanonicalLaneState",
+        "railType": "command",
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "greenTest": "node --test scripts/planning-db-export.test.cjs",
+        "sourceRef": "scripts/planning-db-export.cjs",
+        "unitTests": ["scripts/planning-db-export.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "A governance maintainer rebuilds DB-authored planning state deterministically from versioned canonical state."
+        ],
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": [
+          "PlanningLaneStateSnapshot",
+          "PlanningDbCanonicalStateSnapshot"
+        ],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "patchSurfaces": [
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-export.test.cjs",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
+        ],
+        "expectedFailure": "DB-authored feature rails are absent after a clean Planning DB rebuild or the canonical snapshot changes on a no-delta cycle.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-export.test.cjs"
+        ],
+        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
+        "implementationRefs": [
+          "scripts/planning-db-export.cjs#planningLaneFilePattern",
+          "scripts/planning-db-export.cjs#PlanningDbExportRunner",
+          "scripts/planning-db-export.cjs#canonicalStateArtifactPath"
+        ],
+        "normalizedRailName": "exportplanningdbcanonicallanestate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4ef57dd41ee0cb46bd424f78512e0b0a3622cd2e1718439a28b2bf1ae5bd2c5f",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "GitHub issue status as planning authority"
+        ]
+      },
+      "createdAt": "2026-07-30T20:25:13.368Z"
+    },
+    {
+      "operationId": "e29881dd-45fe-46a7-ad74-41f63812d838",
+      "idempotencyKey": "codex-20260730-preserve-canonical-feature-rails-rev1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PLANNING-DB-IMPORT-LOCAL-FEATURE-RAIL-PERSISTENCE-20260619#command#preservelocalfeaturemechanizationrails",
+      "sourcePath": "scripts/planning-db-import.cjs",
+      "sourceContentSha256": "ca54abe2f86d6105d845aced09509edd9871280a2b3bb947ee210a98675a8f12",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test --test-name-pattern canonical scripts/planning-db-import.test.cjs",
+        "dddOwner": "PlanningDbImport",
+        "railName": "PreserveLocalFeatureMechanizationRails",
+        "railType": "command",
+        "featureId": "PLANNING-DB-IMPORT-LOCAL-FEATURE-RAIL-PERSISTENCE-20260619",
+        "greenTest": "node --test scripts/planning-db-import.test.cjs",
+        "sourceRef": "scripts/planning-db-import.cjs",
+        "unitTests": ["scripts/planning-db-import.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a governance operator, a clean Planning DB rebuild restores DB-authored feature rails and preserves their audit history."
+        ],
+        "cypressFlows": ["not applicable: planning DB import tool"],
+        "domainObjects": [
+          "PlanningDbCanonicalStateSnapshot",
+          "FeatureMechanizationLocalRail",
+          "FeatureMechanizationLocalOperation"
+        ],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "patchSurfaces": [
+          "scripts/planning-db-import.cjs",
+          "scripts/planning-db-import.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-import.test.cjs",
+          "node --test scripts/planning-db-migrate.test.cjs",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "expectedFailure": "A clean governance reload loses DB-authored feature rails, overwrites a newer local revision, or duplicates audit operations.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/planning/state/planning-control-tower.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-import.test.cjs",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "implementationPlan": "Planning DB governance import restores versioned DB-authored feature rails and their audit operations from canonical state without overwriting newer local revisions.",
+        "implementationRefs": [
+          "scripts/planning-db-import.cjs#readLocalFeatureMechanizationRails",
+          "scripts/planning-db-import.cjs#refreshLocalFeatureMechanizationRailSourceHashes",
+          "scripts/planning-db-import.cjs#restoreLocalFeatureMechanizationRails",
+          "scripts/planning-db-import.cjs#canonicalStatePath",
+          "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
+          "scripts/planning-db-import.cjs#mergeCanonicalFeatureMechanizationRails",
+          "scripts/planning-db-import.cjs#restoreLocalFeatureMechanizationOperations"
+        ],
+        "normalizedRailName": "preservelocalfeaturemechanizationrails",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "ca54abe2f86d6105d845aced09509edd9871280a2b3bb947ee210a98675a8f12",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-import.cjs",
+          "scripts/planning-db-import.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/state/agent-lane-a.yaml",
+          "docs/planning/state/agent-lane-b.yaml",
+          "docs/planning/state/agent-lane-c.yaml",
+          "docs/planning/state/agent-lane-d.yaml",
+          "docs/planning/state/agent-lane-e.yaml"
+        ]
+      },
+      "createdAt": "2026-07-30T20:25:40.332Z"
+    }
+  ]
+}

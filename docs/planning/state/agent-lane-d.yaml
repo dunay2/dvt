@@ -8,52 +8,37 @@ expected_outcome:
   - storage and read-path scale are bounded
   - snapshot correctness is preserved
   - GTM work is separated from code execution
-header_markdown: >
-  Eres Dana, lider de escala y GTM readiness. Tu foco es sostenibilidad operativa y riesgos
-  residuales explicitamente gestionados.
-
+header_markdown: |
+  Eres Dana, lider de escala y GTM readiness. Tu foco es sostenibilidad operativa y riesgos residuales explicitamente gestionados.
 
   ## Principios obligatorios
 
-
   - Escala con limites: retencion, costos y crecimiento acotados
-
   - Correctitud de snapshot y storage por encima de throughput bruto
-
   - Riesgo explicito: lo diferido debe tener dueno y razon no-bloqueante
-
   - GTM desacoplado de cambios runtime de alto riesgo
-
   - Priorizar capacidad operativa antes de optimizacion prematura
-
 
   ## Forma de trabajo
 
-
   - Convertir riesgos en backlog ejecutable y medible
-
   - Definir criterios de cierre por capacidad (no solo actividad)
-
   - Mantener separacion entre roadmap comercial y hardening tecnico
-
 
   ## Restricciones
 
-
   - No introducir complejidad de escala sin evidencia de cuello real
-
   - No mezclar tareas P3 de negocio con bloqueantes del MVP
-
   - No cerrar riesgos sin evidencia de mitigacion verificable
 tasks:
   - task_id: MVP-D1
     priority: P0
     status: done
-    objective: >-
+    objective:
       define the residual-risk baseline explicitly accepted after MVP backend operability reset,
       including what is deferred and why it does not block MVP.
     dependency: MVP-A1, MVP-B1
-    target: >-
+    target:
       Residual-risk baseline published with explicit deferred items, lane ownership, and
       non-blocking rationale for MVP control-plane operation, while the underlying risk register
       remains open for post-acceptance stability monitoring.
@@ -64,7 +49,7 @@ tasks:
       - docs/planning/reviews/event-lifecycle-and-retention/20260330-mvp-d1-residual-risk-baseline-review.md
       - docs/risk-register/quality/R-20260329-MVP-BACKEND-SCOPE-DRIFT-01.md
       - docs/planning/proposals/nice-to-have/architecture/mvp-backend-operability-baseline-roadmap-20260329.md
-    status_reason: >-
+    status_reason:
       Residual-risk ownership is documented and the only remaining dependency-gated blocker
       (`MVP-A1`/`MVP-B1` acceptance) is now resolved.
     last_verified: '2026-03-31'
@@ -100,7 +85,7 @@ tasks:
   - task_id: S15
     priority: P1
     status: done
-    objective: >-
+    objective:
       add monotonic CAS guard on run_snapshots.last_run_seq upsert to prevent snapshot regression
       under concurrency.
     dependency: none
@@ -137,7 +122,7 @@ tasks:
     progress_pct: 100
     evidence_refs:
       - docs/planning/closeouts/20260324-s14-gateway-context-across-continue-as-new-closeout.md
-    status_reason: >-
+    status_reason:
       Continue-as-new gateway context preservation is closed with code, tests, and closeout
       evidence.
     last_verified: '2026-03-31'
@@ -152,7 +137,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
-    status_reason: >-
+    status_reason:
       Payload-version, state-store split, and retention prerequisites are now closed in the lane
       registry, so this is no longer dependency-blocked. The work remains queued because no usage
       accounting or finance-reporting implementation evidence exists yet.
@@ -179,7 +164,7 @@ tasks:
       - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
       - packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts
       - packages/@dvt/adapter-postgres/test/PostgresTenantIsolationPolicy.test.ts
-    status_reason: >-
+    status_reason:
       Run events hash partitioning is implemented as core_021 in adapter-postgres. Fresh schemas
       create run_events as a HASH(run_id) partitioned parent with 16 children, legacy heaps convert
       through a reversible migration, canonical run ordering and idempotency constraints are
@@ -210,7 +195,7 @@ tasks:
     evidence_refs:
       - docs/planning/reviews/architecture-and-governance/20260326-dvt-principal-architectural-review.md
       - docs/planning/roadmap/strategic-product-roadmap.md
-    status_reason: >-
+    status_reason:
       The read-your-writes contract is now closed, so this is no longer dependency-blocked. The
       queue-shaped mitigation is identified, but the runtime invalidation slice has not started.
     last_verified: '2026-05-06'
@@ -230,11 +215,11 @@ tasks:
   - task_id: AR-D1
     priority: P1
     status: done
-    objective: >-
+    objective:
       implement incremental snapshot projection (apply event delta instead of full replay) so that
       getRunStatus does not degrade to O(n) for high-step-count DAGs when snapshot is stale.
     dependency: S19-F1
-    target: >-
+    target:
       Snapshot projector applies only new events since last projection checkpoint; full replay is
       fallback-only for corrupted or missing snapshots; projection latency is O(delta), not
       O(total).
@@ -246,7 +231,7 @@ tasks:
       - docs/planning/closeouts/20260416-ar-d1-incremental-snapshot-projection-closeout.md
       - docs/evidence/ED-20260416-ar-d1-incremental-snapshot-projection.md
       - docs/risk-register/quality/R-20260416-AR-D1-INCREMENTAL-SNAPSHOT-PROJECTION.yaml
-    status_reason: >-
+    status_reason:
       Rebuild and read paths now consume snapshot checkpoints and replay only event deltas across
       Postgres and in-memory stores, while retaining full-replay fallback when checkpoint state is
       missing or incompatible.
@@ -254,11 +239,11 @@ tasks:
   - task_id: AR-D2
     priority: P2
     status: done
-    objective: >-
+    objective:
       define Temporal continueAsNew threshold as a governed contract parameter with documented SLA
       for maximum workflow history size and step count per segment.
     dependency: none
-    target: >-
+    target:
       continueAsNewAfterLayerCount is a documented, configurable parameter with tests that verify
       workflow correctly continues-as-new at the threshold boundary.
     complexity: S
@@ -279,19 +264,19 @@ tasks:
       - docs/evidence/ed-20260430-ar-d2-temporal-planref-capacity-sla.md
       - docs/risk-register/quality/R-20260430-AR-D2-TEMPORAL-CAPACITY-SLA.yaml
       - docs/planning/closeouts/20260514-ar-d2-temporal-planref-capacity-sla-closeout.md
-    status_reason: >-
-      Closed as an evidence-backed Temporal PlanRef capacity SLA: governed continueAsNew threshold,
+    status_reason:
+      'Closed as an evidence-backed Temporal PlanRef capacity SLA: governed continueAsNew threshold,
       executable production-readiness policy, component docs, Fowler analysis, semantic architecture
-      tests, ARC-2 evidence, and residual empirical tuning tracked in the risk register.
+      tests, ARC-2 evidence, and residual empirical tuning tracked in the risk register.'
     last_verified: '2026-05-14'
   - task_id: AR-D-PLAN-POINTER
     priority: P0
     status: done
-    objective: >-
+    objective:
       replace the full Temporal workflow plan payload with a plan-pointer execution seam and compact
       continue-as-new handoff so large DAG runs stop scaling with durable workflow input size.
     dependency: AR-D2
-    target: >-
+    target:
       Workflow start and rollover inputs carry `PlanRef` plus compact execution cursor state only,
       bounded segment resolution replaces durable whole-plan carriage, and the cutover path for
       in-flight workflows is explicit and replay-safe.
@@ -331,7 +316,7 @@ tasks:
       - docs/evidence/ed-20260515-ar-d-plan-pointer-semantic-fitness.md
       - docs/risk-register/quality/R-20260515-AR-D-PLAN-POINTER-SEMANTIC-FITNESS.yaml
       - docs/planning/closeouts/20260515-ar-d-plan-pointer-final-closeout.md
-    status_reason: >-
+    status_reason:
       Closed after the PlanRef-plus-cursor workflow boundary, bounded segment resolution,
       continue-as-new payload guard, drained cutover runbook, continuation-safety ADR/evidence,
       AR-D2 capacity SLA, DBT plugin package extraction hardcut, and semantic component-fitness
@@ -342,11 +327,11 @@ tasks:
   - task_id: AR-D3
     priority: P2
     status: done
-    objective: >-
+    objective:
       document worker scaling strategy for 1000+ tenants — per-tenant workers vs shared pool, task
       queue density model, cold-start latency targets, and worker auto-scaling policy.
     dependency: none
-    target: >-
+    target:
       Architecture document defines worker topology for multi-tenant scale; operational runbook
       covers worker provisioning, scaling triggers, and tenant-to-queue assignment policy.
     complexity: S
@@ -360,21 +345,21 @@ tasks:
       - docs/evidence/ed-20260514-ar-d3-worker-scaling-strategy.md
       - docs/risk-register/quality/R-20260514-AR-D3-WORKER-SCALING.yaml
       - packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts
-    status_reason: >-
-      AR-D3 is closed by the accepted 2026-05-14 strategy closeout: the architecture document,
+    status_reason:
+      'AR-D3 is closed by the accepted 2026-05-14 strategy closeout: the architecture document,
       operations runbook, ARC evidence, residual risk entry, and semantic architecture test align
       around queue-local worker pools, deterministic tenant queue assignment, cold-start targets,
       autoscaling signals, and explicit residual work for provisioning automation rather than
-      claiming a global shared worker pool.
+      claiming a global shared worker pool.'
     last_verified: '2026-05-22'
   - task_id: AR-D4
     priority: P2
     status: done
-    objective: >-
+    objective:
       design and implement zero-downtime schema rollback strategy to eliminate the maintenance-mode
       requirement for state-store schema changes in a multi-tenant SaaS environment.
     dependency: schema-migration-rollback
-    target: >-
+    target:
       Schema migrations can be rolled back without setting hasActiveClients=false; rollback strategy
       uses expand-contract pattern for backward-compatible transitions; tested with concurrent reads
       during rollback.
@@ -392,21 +377,21 @@ tasks:
       - packages/@dvt/adapter-postgres/test/PostgresSchemaRollbackZeroDowntime.architecture.test.ts
       - packages/@dvt/adapter-postgres/test/PostgresSchemaManager.rollback.test.ts
       - packages/@dvt/adapter-postgres/test/PostgresStateStoreAdapter.migrate.test.ts
-    status_reason: >-
-      AR-D4 is closed by the accepted 2026-05-13 zero-downtime schema rollback work:
+    status_reason:
+      'AR-D4 is closed by the accepted 2026-05-13 zero-downtime schema rollback work:
       PostgresStateStoreAdminAdapter plans rollback first, rejects offline-only steps through
       PostgresSchemaRollbackCompatibilityPolicy, and executes online-compatible rollback without
       maintenance mode or hasActiveClients=false. Component docs, user stories, ARC evidence, risk,
-      and semantic architecture tests guard the policy.
+      and semantic architecture tests guard the policy.'
     last_verified: '2026-05-22'
   - task_id: AR-D5
     priority: P2
     status: done
-    objective: >-
+    objective:
       add tenant-configurable retention policies so enterprise tenants can retain data longer and
       free-tier tenants have aggressive purging, instead of one-size-fits-all hotRetentionDays.
     dependency: run event log retention + TTL
-    target: >-
+    target:
       Retention configuration is per-tenant in tenant settings; archive lifecycle respects
       tenant-specific retention windows; tests validate that different tenants within the same
       archive unit respect their individual retention policies.
@@ -426,7 +411,7 @@ tasks:
       - packages/@dvt/adapter-postgres/test/PostgresRunArchiveStore.tenant-retention.integration.test.ts
       - apps/outbox-worker/test/plugins/env.test.ts
       - apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts
-    status_reason: >-
+    status_reason:
       AR-D5 is closed by tenant-specific run-event retention policy overrides. The state-store
       policy resolves per-tenant hot-retention windows, the outbox worker parses and passes
       overrides, and Postgres archive eligibility preserves ADR-0037 unit integrity by waiting for
@@ -435,11 +420,11 @@ tasks:
   - task_id: MW-D1
     priority: P1
     status: done
-    objective: >-
+    objective:
       create an SDK/API for external plan definition that allows systems outside the dbt ecosystem
       to submit DAGs to the planner without going through the dbt manifest format.
     dependency: MW-A2
-    target: >-
+    target:
       A documented API endpoint or SDK function accepts a GenericGraphSource payload and returns an
       ExecutionPlan; integration tests demonstrate plan creation from a non-dbt source (e.g., a
       Python script DAG or a Spark job dependency graph).
@@ -454,7 +439,7 @@ tasks:
       - docs/planning/reviews/architecture-and-governance/20260418-mw-d1-external-compile-boundary-review.md
       - docs/planning/closeouts/20260417-mw-d1-planning-closeout.md
       - docs/planning/closeouts/20260419-mw-d1-external-compile-boundary-closeout.md
-    status_reason: >-
+    status_reason:
       The compile-only ingress now delegates through a dedicated application use case and response
       mapper, composition resolves a catalog-first family-and-kind registry, the `spark` family owns
       a shared-kernel contract schema instead of app-local schema construction, legacy ingress stays
@@ -464,12 +449,12 @@ tasks:
   - task_id: MW-D2
     priority: P2
     status: done
-    objective: >-
+    objective:
       define worker routing model by step kind — which workers execute which types of steps, how
       task queues are assigned per step kind, and how worker images are specialized (e.g., a
       SPARK_JOB worker needs Spark client, not dbt CLI).
     dependency: MW-C1
-    target: >-
+    target:
       Architecture document defines worker-to-step-kind routing; task queue naming convention
       includes step kind or capability; worker deployment manifests are parameterized by step kind.
     complexity: M
@@ -488,7 +473,7 @@ tasks:
       - packages/@dvt/adapter-temporal/test/TemporalAdapter.startRun.test.ts
       - packages/@dvt/adapter-temporal/test/workflow-continue-as-new.test.ts
       - packages/@dvt/adapter-temporal/test/dbt-core-decoupling.architecture.test.ts
-    status_reason: >-
+    status_reason:
       MW-D2 is implemented through ADR-0057 as provider-neutral Temporal executeStep activity
       routing by capability. Workflow starts remain tenant queue scoped, routes are frozen into
       RunPlanWorkflowInput.stepActivityRouting, continue-as-new preserves the snapshot, and DBT
@@ -497,12 +482,12 @@ tasks:
   - task_id: AR-D6
     priority: P2
     status: done
-    objective: >-
+    objective:
       assess triple versioning (planVersion + schemaVersion + contractVersion) governance burden
       after 6 months — if still only planVersion '1.0', evaluate whether the overhead is justified
       and consider simplification.
     dependency: none
-    target: >-
+    target:
       Review document assesses governance cost vs value of triple versioning; decision to retain,
       simplify, or defer is recorded as an ADR addendum.
     complexity: S
@@ -513,21 +498,21 @@ tasks:
       - docs/planning/proposals/mandatory/governance-and-docs/ar-d6-triple-versioning-governance-review-plan-20260513.md
       - docs/planning/reviews/architecture-and-governance/20260513-ar-d6-triple-versioning-governance-review.md
       - docs/adr/ADR-0036-execution-plan-planversion-registry-and-runtime-matrix.md
-    status_reason: >-
-      AR-D6 is closed by the accepted 2026-05-13 governance review and ADR-0036 addendum: retain
+    status_reason:
+      'AR-D6 is closed by the accepted 2026-05-13 governance review and ADR-0036 addendum: retain
       separate planVersion, schemaVersion, and contractVersion governance for now, because
       schemaVersion is part of executable admission, contractVersion records the shared-kernel
       contract line, and only planVersion 1.0 being active is intentional rather than drift.
-      Simplification is deferred to a later checkpoint or real version-line change.
+      Simplification is deferred to a later checkpoint or real version-line change.'
     last_verified: '2026-05-22'
   - task_id: AR-D7
     priority: P1
     status: done
-    objective: >-
+    objective:
       implement tenant-aware outbox shard assignment so high-volume tenants cannot starve unrelated
       tenants through shared run_id hash distribution.
     dependency: AR-C3
-    target: >-
+    target:
       Outbox shard strategy includes tenant-aware partitioning, fairness tests validate noisy-tenant
       isolation, and operational docs define shard rebalance and migration rollout.
     complexity: M
@@ -541,7 +526,7 @@ tasks:
       - docs/risk-register/quality/R-20260509-TENANT-AWARE-OUTBOX-SHARDING.yaml
       - docs/architecture/components/outbox-worker/tenant-aware-outbox-sharding-component.md
       - docs/architecture/components/outbox-worker/tenant-aware-outbox-sharding-user-stories.md
-    status_reason: >-
+    status_reason:
       Delivery now owns tenant-aware outbox shard assignment, in-memory stores and PostgreSQL
       enqueue SQL apply the same tenant-affine policy for new rows, worker tests cover noisy-tenant
       containment and tenant/run ordering isolation, and rollout risk is tracked explicitly as ARC-2
@@ -550,11 +535,11 @@ tasks:
   - task_id: AR-D8
     priority: P1
     status: done
-    objective: >-
+    objective:
       enforce default retention policy wiring (archive and purge) as a mandatory runtime baseline
       with explicit health alerts when retention jobs are not active.
     dependency: run event log retention + TTL
-    target: >-
+    target:
       Deployments ship default retention windows and retention worker scheduling by default, and
       health checks alert on stale terminal-run backlog beyond policy thresholds.
     complexity: M
@@ -571,7 +556,7 @@ tasks:
       - apps/outbox-worker/test/plugins/env.test.ts
       - apps/outbox-worker/test/runtime/createOutboxWorkerRuntime.test.ts
       - apps/outbox-worker/test/ops/OutboxWorkerMonitor.test.ts
-    status_reason: >-
+    status_reason:
       Active outbox workers now default delivery-buffer purge and run-event retention archive
       scheduling to enabled, while retaining explicit diagnostic opt-outs. `/metrics` exposes
       configured and disabled posture gauges for both retention paths so missing scheduling is
@@ -580,11 +565,11 @@ tasks:
   - task_id: TF-D1
     priority: P1
     status: done
-    objective: >-
+    objective:
       define the repeatable Docker PostgreSQL proof-environment lifecycle, cleanup rules, and
       retention or reset baseline for transformation execution acceptance.
     dependency: TF-C2-A
-    target: >-
+    target:
       The first transformation vertical has a documented and testable seed, reset, cleanup, and
       retention procedure so repeated proof runs do not accumulate ambiguous sink state or runtime
       artifacts.
@@ -598,7 +583,7 @@ tasks:
       - docs/runbooks/temporal-postgres-proof-environment.md
       - scripts/run-temporal-postgres-proof.cjs
       - scripts/run-temporal-postgres-proof.test.cjs
-    status_reason: >-
+    status_reason:
       The canonical proof wrapper now distinguishes destructive reset from warm cleanup, verifies
       the seeded Docker PostgreSQL baseline after reset, documents the transient proof-schema
       policy, and supports repeatable reruns without ambiguous retained sink state.
@@ -614,7 +599,7 @@ tasks:
     progress_pct: 0
     evidence_refs:
       - docs/planning/roadmap/strategic-product-roadmap.md
-    status_reason: >-
+    status_reason:
       Runtime-safety prerequisites are now closed in the lane registry, so the pilot is no longer
       dependency-blocked. It remains queued GTM validation work because no customer execution
       evidence exists yet.
@@ -659,38 +644,81 @@ tasks:
       - docs/planning/roadmap/strategic-product-roadmap.md
     status_reason: Deferred GTM collateral with no implementation evidence yet.
     last_verified: '2026-03-31'
+  - status: queued
+    target:
+      Define receipt lifecycle policy and command/query rails, implement indexed discovery and
+      bounded purge behind workspace authorization, and prove active revert receipts remain
+      available while expired receipts are removed observably
+    task_id: D-DBT-YAML-RECEIPT-LIFECYCLE-1
+    priority: P2
+    objective:
+      Give immutable DBT YAML edit receipts a scoped discovery, retention, purge, and audit
+      lifecycle so server-owned metadata cannot grow without bound or become operationally invisible
+    complexity: M
+    progress_pct: 0
+    effort_points: 5
+    evidence_refs:
+      - apps/api/src/infrastructure/dbtYamlDescriptionEdit/WorkspaceMetadataDbtYamlDescriptionReceiptStore.ts
+      - origin/agent/dvt-review-20260719-0209
+    status_reason:
+      'Verified repeated Fowler finding: WorkspaceMetadataDbtYamlDescriptionReceiptStore only saves
+      and finds by ID under .dvt, with no list, index, retention, or purge authority'
+  - status: queued
+    target: Planning authority projection
+    task_id: D-PLANNING-GITHUB-STATUS-PROJECTION-1
+    priority: P2
+    objective:
+      Reconcile active GitHub issues against effective Planning DB tasks, mark superseded stories
+      mechanically, and preserve Planning DB as status authority while GitHub remains the
+      collaboration surface.
+    complexity: M
+    progress_pct: 0
+    effort_points: 5
+    evidence_refs:
+      - https://github.com/dunay2/dvt/pull/1978
+    status_reason:
+      'Verified RR-11 from PR #1978; historical GitHub stories remain ambiguous against implemented
+      product truth.'
+  - status: queued
+    target: Production-like failure and scale evidence
+    task_id: D-PRODUCTION-FAILURE-OPERABILITY-PROOF-1
+    priority: P1
+    objective:
+      Prove the selected multi-worker ordering strategy, duplicate and crash windows, canary
+      ownership and rollback, sustained throughput, database and worker recovery, Temporal
+      interruption, network delay, lock contention, and observed recovery objectives.
+    complexity: XL
+    dependency: C/AR-C2
+    progress_pct: 0
+    effort_points: 21
+    evidence_refs:
+      - https://github.com/dunay2/dvt/pull/1978
+    status_reason:
+      'Verified RR-10 from PR #1978; contracts exist but production-like scale and failure evidence
+      remains incomplete.'
 dependency_notes:
-  - >-
-    `MVP-D1` is now closed as the explicit residual-risk baseline for MVP backend operability, but
-    the underlying scope-drift risk entry remains open.
-  - >-
-    `run event log retention + TTL` is now verified as delivered by closeout plus accepted evidence
-    from 2026-03-30.
+  - '`MVP-D1` is now closed as the explicit residual-risk baseline for MVP backend operability, but
+    the underlying scope-drift risk entry remains open.'
+  - '`run event log retention + TTL` is now verified as delivered by closeout plus accepted evidence
+    from 2026-03-30.'
   - '`G5-PR2`, `S15`, `S15-F1`, and `S14` are closed with code-backed closeouts.'
-  - >-
-    `cost attribution model` moved from blocked to queued because `S05`, `S02`, and retention are
-    now closed; no usage-accounting implementation evidence exists yet.
-  - >-
-    `projector event-driven invalidation` moved from blocked to queued because the read-your-writes
-    contract is now closed; runtime invalidation work has not started.
-  - >-
-    `first enterprise pilot` moved from blocked to queued because its runtime prerequisites are now
-    closed. Billing, compliance, and acquisition collateral remain blocked behind pilot execution.
-  - >-
-    `AR-D1`, `AR-D2`, and `AR-D-PLAN-POINTER` are now closed with evidence-backed runtime scale
+  - '`cost attribution model` moved from blocked to queued because `S05`, `S02`, and retention are
+    now closed; no usage-accounting implementation evidence exists yet.'
+  - '`projector event-driven invalidation` moved from blocked to queued because the read-your-writes
+    contract is now closed; runtime invalidation work has not started.'
+  - '`first enterprise pilot` moved from blocked to queued because its runtime prerequisites are now
+    closed. Billing, compliance, and acquisition collateral remain blocked behind pilot execution.'
+  - '`AR-D1`, `AR-D2`, and `AR-D-PLAN-POINTER` are now closed with evidence-backed runtime scale
     hardening. `AR-D3` through `AR-D6` remain the original open scale backlog from the 2026-04-02
-    deep architectural review.
-  - >-
-    The 2026-04-02 principal deep architectural review adds `AR-D7` (tenant-aware outbox sharding)
+    deep architectural review.'
+  - The 2026-04-02 principal deep architectural review adds `AR-D7` (tenant-aware outbox sharding)
     and `AR-D8` (default retention policy plus retention health alerting) as scale hardening tasks.
-  - >-
-    `MW-D1` and `MW-D2` are multi-workflow scale tasks: external plan SDK/API (P1, depends on MW-A2)
-    and worker routing model by step kind (P2, depends on MW-C1).
-  - >-
-    `TF-D1` and `AR-D-PLAN-POINTER` are now closed: the transformation proof environment has a
+  - '`MW-D1` and `MW-D2` are multi-workflow scale tasks: external plan SDK/API (P1, depends on
+    MW-A2) and worker routing model by step kind (P2, depends on MW-C1).'
+  - '`TF-D1` and `AR-D-PLAN-POINTER` are now closed: the transformation proof environment has a
     canonical reset, cleanup, and rerun lifecycle, and the Temporal PlanRef workflow payload
     hardening line has accepted evidence. Remaining Lane D work now splits between default retention
-    hardening (`AR-D8`) and the broader scale backlog.
+    hardening (`AR-D8`) and the broader scale backlog.'
 verification_summary:
   status_model: evidence-backed lane registry
   done_rule: done only with accepted evidence or equivalent verifiable closure
@@ -699,7 +727,7 @@ verification_summary:
   total_effort_points: 143
   completed_weighted_points: 71.54
   lane_progress_pct: 50
-  notes: >-
+  notes:
     Weighted progress uses effort_points. The 2026-05-15 AR-D-PLAN-POINTER final closeout closes the
     Temporal PlanRef workflow payload hardening line with capacity SLA, continuation safety, DBT
     package extraction, and semantic component-fitness evidence. Remaining Lane D near-term work is

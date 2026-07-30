@@ -15,6 +15,18 @@ const migrationOrdinalPolicy = Object.freeze({
   firstStrictOrdinal: 722,
   historicalFileNameSha256: 'cf3ca7b58eb93139ab8e7357a78d5aa42439c3510b3177d1cc7a6a86cc57957e',
 });
+const migrationContentPolicy = Object.freeze({
+  firstSchemaOnlyOrdinal: 804,
+});
+const allowedTopLevelSchemaStatementKinds = new Set([
+  'alter',
+  'comment',
+  'create',
+  'drop',
+  'grant',
+  'revoke',
+  'security',
+]);
 
 function databaseUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
@@ -158,6 +170,129 @@ function assertMigrationOrdinalPolicy(fileNames, policy = migrationOrdinalPolicy
   }
 
   return report;
+}
+
+function maskedSqlSegment(value) {
+  return String(value).replace(/[^\r\n]/gu, ' ');
+}
+
+function maskSqlCommentsAndLiterals(sql) {
+  const source = String(sql);
+  let output = '';
+  let index = 0;
+
+  while (index < source.length) {
+    const current = source[index];
+    const next = source[index + 1];
+
+    if (current === '-' && next === '-') {
+      const end = source.indexOf('\n', index + 2);
+      const stop = end === -1 ? source.length : end;
+      output += maskedSqlSegment(source.slice(index, stop));
+      index = stop;
+      continue;
+    }
+
+    if (current === '/' && next === '*') {
+      let depth = 1;
+      let cursor = index + 2;
+      while (cursor < source.length && depth > 0) {
+        if (source[cursor] === '/' && source[cursor + 1] === '*') {
+          depth += 1;
+          cursor += 2;
+          continue;
+        }
+        if (source[cursor] === '*' && source[cursor + 1] === '/') {
+          depth -= 1;
+          cursor += 2;
+          continue;
+        }
+        cursor += 1;
+      }
+      output += maskedSqlSegment(source.slice(index, cursor));
+      index = cursor;
+      continue;
+    }
+
+    if (current === "'" || current === '"') {
+      const quote = current;
+      let cursor = index + 1;
+      while (cursor < source.length) {
+        if (source[cursor] !== quote) {
+          cursor += 1;
+          continue;
+        }
+        if (source[cursor + 1] === quote) {
+          cursor += 2;
+          continue;
+        }
+        cursor += 1;
+        break;
+      }
+      output += maskedSqlSegment(source.slice(index, cursor));
+      index = cursor;
+      continue;
+    }
+
+    if (current === '$') {
+      const delimiterMatch = /^(?:\$\$|\$[A-Za-z_][A-Za-z0-9_]*\$)/u.exec(source.slice(index));
+      if (delimiterMatch) {
+        const delimiter = delimiterMatch[0];
+        const closingIndex = source.indexOf(delimiter, index + delimiter.length);
+        const cursor = closingIndex === -1 ? source.length : closingIndex + delimiter.length;
+        output += maskedSqlSegment(source.slice(index, cursor));
+        index = cursor;
+        continue;
+      }
+    }
+
+    output += current;
+    index += 1;
+  }
+
+  return output;
+}
+
+function findForbiddenTopLevelDataStatements(sql) {
+  return maskSqlCommentsAndLiterals(sql)
+    .split(';')
+    .map((statement) => statement.trim().toLowerCase())
+    .filter(Boolean)
+    .flatMap((statement) => {
+      const [firstKeyword] = /^[a-z]+/u.exec(statement) || [];
+      if (!firstKeyword || !allowedTopLevelSchemaStatementKinds.has(firstKeyword)) {
+        return [firstKeyword || 'unknown'];
+      }
+
+      if (
+        /^create\s+(?:(?:global|local)\s+)?(?:temporary\s+|temp\s+|unlogged\s+)?table\b/u.test(
+          statement
+        ) &&
+        /\bas\s+(?:select|values)\b/u.test(statement)
+      ) {
+        return ['create-table-as-data'];
+      }
+
+      return [];
+    });
+}
+
+function assertSchemaOnlyMigrationPolicy(files, policy = migrationContentPolicy) {
+  for (const file of files) {
+    const parsed = parseMigrationOrdinal(file.fileName);
+    if (!parsed || parsed.ordinal < policy.firstSchemaOnlyOrdinal) {
+      continue;
+    }
+
+    const [forbiddenStatement] = findForbiddenTopLevelDataStatements(file.sql);
+    if (forbiddenStatement) {
+      throw new Error(
+        `Planning DB migration ${file.fileName} contains forbidden top-level data statement "${forbiddenStatement}". ` +
+          `Migrations at ordinal ${policy.firstSchemaOnlyOrdinal} and above are schema-only; ` +
+          'export current state through planning:db:export instead.'
+      );
+    }
+  }
 }
 
 function migrationOrdinalPolicyForDirectory(directory) {
@@ -307,10 +442,15 @@ function readMigrationFiles(directory = migrationsDir) {
   assertMigrationOrdinalPolicy(fileNames, policy);
   fileNames.sort(compareMigrationFileNamesByOrdinal);
 
-  return fileNames.map((fileName) => ({
+  const files = fileNames.map((fileName) => ({
     fileName,
     sql: fs.readFileSync(path.join(directory, fileName), 'utf8'),
   }));
+  if (path.resolve(directory) === path.resolve(migrationsDir)) {
+    assertSchemaOnlyMigrationPolicy(files);
+  }
+
+  return files;
 }
 
 function buildMigrationRecords(files) {
@@ -452,8 +592,11 @@ module.exports = {
   analyzeMigrationOrdinals,
   assertAppliedMigrationIdentities,
   assertMigrationOrdinalPolicy,
+  assertSchemaOnlyMigrationPolicy,
   buildMigrationFileNameFingerprint,
+  findForbiddenTopLevelDataStatements,
   migrationsDir,
+  migrationContentPolicy,
   migrationOrdinalPolicy,
   migrationVersionsFromRepoPaths,
   readKnownCanonicalMigrationVersions,
