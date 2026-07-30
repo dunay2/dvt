@@ -8,9 +8,11 @@ const {
   analyzeMigrationOrdinals,
   assertAppliedMigrationIdentities,
   assertMigrationOrdinalPolicy,
+  assertSchemaOnlyMigrationPolicy,
   buildMigrationRecords,
   buildMigrationFileNameFingerprint,
   detectChecksumMismatch,
+  migrationContentPolicy,
   migrationVersionsFromRepoPaths,
   migrationOrdinalPolicy,
   readKnownCanonicalMigrationVersions,
@@ -66,6 +68,65 @@ test('migration ordinal policy rejects changes to the applied filename history',
         }
       ),
     /Applied migration filename history changed below strict ordinal 003/
+  );
+});
+
+test('schema-only migration policy rejects current-state data mutations after the cutoff', () => {
+  assert.throws(
+    () =>
+      assertSchemaOnlyMigrationPolicy(
+        [
+          {
+            fileName: '804_feature_closeout.sql',
+            sql: `
+              create table planning_query_store.feature_state (feature_id text primary key);
+              insert into planning_query_store.feature_state (feature_id) values ('F-1');
+            `,
+          },
+        ],
+        migrationContentPolicy
+      ),
+    /804_feature_closeout\.sql contains forbidden top-level data statement "insert"/
+  );
+});
+
+test('schema-only migration policy permits DDL and ignores function body implementation SQL', () => {
+  assert.doesNotThrow(() =>
+    assertSchemaOnlyMigrationPolicy(
+      [
+        {
+          fileName: '804_schema_function.sql',
+          sql: `
+            create table planning_query_store.feature_state (feature_id text primary key);
+            create function planning_query_store.record_feature_state()
+            returns trigger
+            language plpgsql
+            as $body$
+            begin
+              insert into planning_query_store.feature_state (feature_id)
+              values (new.feature_id);
+              return new;
+            end;
+            $body$;
+          `,
+        },
+      ],
+      migrationContentPolicy
+    )
+  );
+});
+
+test('schema-only migration policy preserves already-applied data migration history', () => {
+  assert.doesNotThrow(() =>
+    assertSchemaOnlyMigrationPolicy(
+      [
+        {
+          fileName: '803_historical_feature_symbols.sql',
+          sql: `insert into planning_query_store.feature_state (feature_id) values ('F-1');`,
+        },
+      ],
+      migrationContentPolicy
+    )
   );
 });
 
