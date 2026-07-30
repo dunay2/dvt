@@ -79,7 +79,11 @@ function sortRows(rows) {
 
 function runGit(args, options = {}) {
   return childProcess.spawnSync('git', args, {
-    cwd: options.repoRoot || repoRoot,
+    cwd:
+      options.gitEvidenceRepoRoot ||
+      process.env.DVT_GIT_EVIDENCE_REPO ||
+      options.repoRoot ||
+      repoRoot,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
