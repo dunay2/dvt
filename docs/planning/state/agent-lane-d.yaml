@@ -663,7 +663,7 @@ tasks:
     status_reason:
       'Verified repeated Fowler finding: WorkspaceMetadataDbtYamlDescriptionReceiptStore only saves
       and finds by ID under .dvt, with no list, index, retention, or purge authority'
-  - status: queued
+  - status: in_progress
     target: Planning authority projection
     task_id: D-PLANNING-GITHUB-STATUS-PROJECTION-1
     priority: P2
@@ -672,13 +672,16 @@ tasks:
       mechanically, and preserve Planning DB as status authority while GitHub remains the
       collaboration surface.
     complexity: M
-    progress_pct: 0
+    progress_pct: 35
     effort_points: 5
     evidence_refs:
       - https://github.com/dunay2/dvt/pull/1978
+      - scripts/planning-db/github-planning-projection-policy.cjs
+      - scripts/planning-github-status-projection.cjs
     status_reason:
-      'Verified RR-11 from PR #1978; historical GitHub stories remain ambiguous against implemented
-      product truth.'
+      'Implemented fail-closed Planning DB to GitHub projection rails; verified one terminal close,
+      preserved active planning and operational incident states, and reported 148 unmapped
+      historical issues.'
   - status: queued
     target: Production-like failure and scale evidence
     task_id: D-PRODUCTION-FAILURE-OPERABILITY-PROOF-1

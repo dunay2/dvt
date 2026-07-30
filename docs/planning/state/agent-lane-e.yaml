@@ -3535,6 +3535,7 @@ tasks:
     dependency: E-WEB-DBT-MODEL-SQL-AUTHORITY-1
     effort_points: 8
     evidence_refs:
+      - https://github.com/dunay2/dvt/issues/2098
       - https://github.com/dunay2/dvt/pull/2040
       - docs/evidence/ED-20260729-graph-dbt-atomic-publication.md
     progress_pct: 100

@@ -3058,7 +3058,7 @@ tasks:
       - packages/@dvt/contracts/package.json
     status_reason:
       'Verified RR-08 from PR #1978; API and Contracts still declare different Zod majors.'
-  - status: queued
+  - status: in_progress
     target: Governance maintainability
     task_id: A-GOVERNANCE-CHANGE-AMPLIFICATION-1
     priority: P2
@@ -3067,14 +3067,16 @@ tasks:
       source and generated current projections, reserving migrations for schema changes or coherent
       durable history without weakening append-only identity protections.
     complexity: L
-    progress_pct: 0
+    progress_pct: 55
     effort_points: 8
     evidence_refs:
-      - https://github.com/dunay2/dvt/pull/1978
-      - https://github.com/dunay2/dvt/pull/1977
+      - https://github.com/dunay2/dvt/issues/2104
+      - https://github.com/dunay2/dvt/pull/2109
+      - 7932e40e0b22e8b66dd4f41a65dea4e029720893
     status_reason:
-      'Verified RR-12 from PR #1978; policy refinements still require excessive migration and review
-      churn.'
+      'PR #2109 established schema-only migrations, deterministic lane and feature-rail recovery,
+      and no-delta export checks; canonical schema compaction and migration-history retirement
+      remain.'
   - status: done
     target: Planning DB migration safety
     task_id: A-PLANNING-MIGRATION-ORDINAL-UNIQUENESS-1
