@@ -147,6 +147,73 @@ node.test(
   }
 );
 
+node.test('planning DB export preserves versioned lane and task field order', () => {
+  const repoRoot = node.fs.mkdtempSync(node.path.join(node.os.tmpdir(), 'planning-db-repo-'));
+  const sourcePath = 'docs/planning/state/agent-lane-a.yaml';
+  const absoluteSourcePath = node.path.join(repoRoot, sourcePath);
+  const runner = new PlanningDbExportRunner({
+    fs: node.fs,
+    os: node.os,
+    path: node.path,
+    repoRoot,
+    schemaName: 'planning_query_store',
+    yaml: node.yaml,
+  });
+
+  try {
+    node.fs.mkdirSync(node.path.dirname(absoluteSourcePath), { recursive: true });
+    node.fs.writeFileSync(
+      absoluteSourcePath,
+      [
+        'lane_id: A',
+        'title: Lane A',
+        'tasks:',
+        '  - task_id: A-1',
+        '    priority: P1',
+        '    status: queued',
+        '    objective: Preserve source order.',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const [lane] = runner.buildLaneDocuments({
+      lanes: [
+        {
+          laneId: 'A',
+          sourcePath,
+          rawLane: {
+            tasks: [{ task_id: 'A-1' }],
+            title: 'Lane A',
+            lane_id: 'A',
+          },
+        },
+      ],
+      tasks: [
+        {
+          laneId: 'A',
+          taskId: 'A-1',
+          rawTask: {
+            objective: 'Preserve source order.',
+            status: 'queued',
+            priority: 'P1',
+            task_id: 'A-1',
+          },
+          status: 'in_progress',
+        },
+      ],
+    });
+    const rendered = node.yaml.dump(lane);
+
+    node.assert.ok(rendered.indexOf('lane_id:') < rendered.indexOf('title:'));
+    node.assert.ok(rendered.indexOf('task_id:') < rendered.indexOf('priority:'));
+    node.assert.ok(rendered.indexOf('priority:') < rendered.indexOf('status:'));
+    node.assert.match(rendered, /status: in_progress/u);
+  } finally {
+    node.fs.rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
 node.test('planning DB export reads effective task rows from the query store', async () => {
   const runner = new PlanningDbExportRunner();
   const capturedSql = [];

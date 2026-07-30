@@ -119,25 +119,48 @@ class PlanningDbExportRunner {
     }
   }
 
+  readVersionedLaneDocument(row) {
+    const sourcePath = String(row.sourcePath || '').trim();
+    if (!sourcePath) {
+      return null;
+    }
+
+    const absolutePath = this.deps.path.resolve(this.deps.repoRoot, sourcePath);
+    const relativePath = this.deps.path.relative(this.deps.repoRoot, absolutePath);
+    if (
+      relativePath.startsWith('..') ||
+      this.deps.path.isAbsolute(relativePath) ||
+      !this.deps.fs.existsSync(absolutePath)
+    ) {
+      return null;
+    }
+
+    const parsed = this.deps.yaml.load(this.deps.fs.readFileSync(absolutePath, 'utf8'));
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : null;
+  }
+
   buildLaneDocuments(rows) {
     const laneById = new Map();
     const taskOrderByLaneId = new Map();
+    const sourceTaskByLaneId = new Map();
     const lanes = [...(rows.lanes || [])].sort((left, right) =>
       String(left.laneId).localeCompare(String(right.laneId))
     );
 
     for (const row of lanes) {
-      const lane = this.cloneJson(row.rawLane);
+      const lane = this.cloneJson(this.readVersionedLaneDocument(row) || row.rawLane);
       if (!lane || typeof lane !== 'object' || Array.isArray(lane)) {
         throw new Error(`Lane ${row.laneId} has no raw lane document.`);
       }
 
       const originalTasks = Array.isArray(lane.tasks) ? lane.tasks : [];
       const taskOrder = new Map();
+      const sourceTasks = new Map();
       for (const [index, task] of originalTasks.entries()) {
         const taskId = task && typeof task === 'object' ? task.task_id : null;
         if (taskId && !taskOrder.has(taskId)) {
           taskOrder.set(String(taskId), index);
+          sourceTasks.set(String(taskId), task);
         }
       }
 
@@ -145,6 +168,7 @@ class PlanningDbExportRunner {
       lane.tasks = [];
       laneById.set(row.laneId, lane);
       taskOrderByLaneId.set(row.laneId, taskOrder);
+      sourceTaskByLaneId.set(row.laneId, sourceTasks);
     }
 
     const tasks = [...(rows.tasks || [])].sort((left, right) => {
@@ -170,7 +194,9 @@ class PlanningDbExportRunner {
         throw new Error(`Task ${row.taskId} references missing lane ${row.laneId}.`);
       }
 
-      const task = this.cloneJson(row.rawTask);
+      const task = this.cloneJson(
+        sourceTaskByLaneId.get(row.laneId)?.get(String(row.taskId)) || row.rawTask
+      );
       if (!task || typeof task !== 'object' || Array.isArray(task)) {
         throw new Error(`Task ${row.laneId}/${row.taskId} has no raw task document.`);
       }
@@ -188,6 +214,7 @@ class PlanningDbExportRunner {
       client.query(`
         select
           lane_id as "laneId",
+          source_path as "sourcePath",
           raw_lane as "rawLane"
         from ${this.deps.schemaName}.planning_lanes
         order by lane_id
