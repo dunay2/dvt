@@ -21,11 +21,15 @@ test('planning DB operate CLI prints action help before parsing flag values', ()
   assert.doesNotMatch(result.stderr, /Missing value for --help/);
 });
 
-test('planning DB operate CLI prints audit help after filtered resource flags', () => {
-  const result = runPlanningDbOperateCli(['audit', '--limit', '1', '--help']);
+test('planning DB operate CLI rejects retired local task rails', () => {
+  for (const args of [
+    ['task', 'show', '--task', 'MVP-2099'],
+    ['task-gap', 'resolve', '--kind', 'missing_evidence'],
+    ['audit', '--limit', '10'],
+  ]) {
+    const result = runPlanningDbOperateCli(args);
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /Planning DB operate resource: audit/);
-  assert.match(result.stdout, /pnpm planning:db:operate audit \[--lane <lane>\]/);
-  assert.doesNotMatch(result.stderr, /Unknown audit operation|Missing value/);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /task lifecycle, gaps, and audit are owned by GitHub Issues/);
+  }
 });

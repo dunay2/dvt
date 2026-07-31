@@ -1,7 +1,4 @@
 require('./planning-db-operate-tests/cli.test.cjs');
-require('./planning-db-operate-tests/task-parse.test.cjs');
-require('./planning-db-operate-tests/task-idempotency.test.cjs');
-require('./planning-db-operate-tests/task-plan.test.cjs');
 require('./planning-db-operate-tests/docs-resolution.test.cjs');
 require('./planning-db-operate-tests/db-surface.test.cjs');
 require('./planning-db-operate-tests/feature-mechanization.test.cjs');

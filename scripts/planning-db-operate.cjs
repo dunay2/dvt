@@ -1,11 +1,11 @@
 /**
  * @file scripts/planning-db-operate.cjs
- * @ownedConcern Execute DB-first local planning and governance command rails with idempotent audit.
+ * @ownedConcern Execute DB-first architecture and governance command rails with idempotent audit.
  * @baseline ADR-0055: Planning DB canonical operational source
  * @decision Keep operational writes behind explicit command rails instead of direct generated-file edits.
- * @consequence Task lifecycle, docs resolutions, and governance component definitions share
+ * @consequence Architecture, docs resolutions, and governance component definitions share
  *   validation, idempotency, and audit semantics before projections consume them.
- * @version 1.1.0
+ * @version 1.2.0
  */
 const crypto = require('node:crypto');
 const { Client } = require('pg');
@@ -28,7 +28,6 @@ const {
   validateGovernanceRefreshRunState,
 } = require('./planning-db/commands/governance-refresh-command.cjs');
 
-const allowedStatuses = new Set(['queued', 'in_progress', 'blocked', 'review', 'done']);
 const allowedDocsResolutionStatuses = new Set(['resolved', 'accepted', 'ignored', 'linked']);
 const allowedFowlerAnalysisDispositionStatuses = new Set([
   'proposed',
@@ -274,15 +273,6 @@ const featureMechanizationListOptionKeys = new Set([
 ]);
 const architectureListOptionKeys = new Set(['negative-test']);
 const operationHelp = Object.freeze({
-  task: {
-    operations: ['claim', 'release', 'update', 'create', 'delete', 'show'],
-    usage:
-      'pnpm planning:db:operate task <claim|release|update|create|delete|show> --lane <lane> --task <task> --actor <actor>',
-    details: [
-      'Lifecycle commands require --lane, --task, and --actor except task show, which is read-only.',
-      'Write commands accept --expected-revision and --idempotency-key for guarded replays.',
-    ],
-  },
   component: {
     operations: ['create', 'reparent'],
     usage:
@@ -376,15 +366,6 @@ const operationHelp = Object.freeze({
       'Use --resolution resolved|accepted|ignored|linked to choose the durable disposition.',
     ],
   },
-  'task-gap': {
-    operations: ['resolve'],
-    usage:
-      'pnpm planning:db:operate task-gap resolve --kind <kind> --actor <actor> --reason <reason>',
-    details: [
-      'ResolveTaskGapQueue records disposition for Planning DB task gap findings.',
-      'Provide --path or both --lane and --task to select the source finding.',
-    ],
-  },
   'feature-mechanization': {
     operations: ['record'],
     usage:
@@ -417,11 +398,6 @@ const operationHelp = Object.freeze({
       'Requires --source-ref, --source-content-sha256, --max-passes, and --generation-passes.',
     ],
   },
-  audit: {
-    operations: [],
-    usage: 'pnpm planning:db:operate audit [--lane <lane>] [--task <task>] [--limit <n>]',
-    details: ['Reads durable local operation audit rows without modifying Planning DB state.'],
-  },
 });
 
 function isHelpCommand(value) {
@@ -433,7 +409,7 @@ function isHelpFlag(value) {
 }
 
 function unknownOperationMessage() {
-  return 'Unknown planning DB operation. Expected "task", "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-contract", "architecture-port", "architecture-fitness", "architecture-evidence", "docs-disposition", "task-gap", "feature-mechanization", "fowler-analysis", "governance-refresh", or "audit".';
+  return 'Unknown planning DB operation. Expected "component", "db-surface", "architecture-design", "architecture-component", "architecture-relation", "architecture-contract", "architecture-port", "architecture-fitness", "architecture-evidence", "docs-disposition", "feature-mechanization", "fowler-analysis", or "governance-refresh".';
 }
 
 function buildPlanningDbOperateHelpText(resource, action) {
@@ -451,7 +427,6 @@ function buildPlanningDbOperateHelpText(resource, action) {
       `  ${Object.keys(operationHelp).join(', ')}`,
       '',
       'Examples:',
-      '  pnpm planning:db:operate task update --lane E --task F-29 --actor codex --status review',
       '  pnpm planning:db:operate component create --component SYS-WEB-EXAMPLE --parent SYS-WEB-ROOT --actor codex',
     ].join('\n');
   }
@@ -544,16 +519,6 @@ function requireOption(options, key) {
   if (value === undefined || value === null || value === '') {
     throw new Error(
       `Missing required --${key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`)}`
-    );
-  }
-
-  return value;
-}
-
-function validateTaskStatus(value) {
-  if (!allowedStatuses.has(value)) {
-    throw new Error(
-      `Invalid planning task status "${value}". Expected: ${[...allowedStatuses].join(', ')}.`
     );
   }
 
@@ -1086,32 +1051,6 @@ function parseBooleanOption(value, optionName) {
   throw new Error(`Invalid --${optionName} "${value}". Expected true or false.`);
 }
 
-function parseNonNegativeNumberOption(value, optionName) {
-  if (value === undefined || value === null || value === '') {
-    return null;
-  }
-
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0) {
-    throw new Error(`Invalid --${optionName} "${value}". Expected a non-negative number.`);
-  }
-
-  return parsed;
-}
-
-function parseProgress(value) {
-  if (value === undefined || value === null || value === '') {
-    return null;
-  }
-
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) {
-    throw new Error(`Invalid --progress "${value}". Expected a number between 0 and 100.`);
-  }
-
-  return parsed;
-}
-
 function parseFlagOptions(args) {
   const options = { evidence: [] };
 
@@ -1147,18 +1086,14 @@ function parseFlagOptions(args) {
 }
 
 function operationPayload(command) {
-  if (command.kind === 'docs_disposition_resolve' || command.kind === 'task_gap_resolve') {
+  if (command.kind === 'docs_disposition_resolve') {
     return {
       resolutionScope: command.resolutionScope,
       issueKind: command.issueKind,
       documentPath: normalizeOptionalText(command.documentPath),
       referenceText: normalizeOptionalText(command.referenceText),
-      laneId: normalizeOptionalText(command.laneId),
-      taskId: normalizeOptionalText(command.taskId),
       resolutionStatus: command.resolutionStatus,
       reason: command.reason,
-      targetLaneId: normalizeOptionalText(command.targetLaneId),
-      targetTaskId: normalizeOptionalText(command.targetTaskId),
     };
   }
 
@@ -1202,48 +1137,6 @@ function operationPayload(command) {
       decisionStatus: command.decisionStatus,
       reason: command.reason,
       sourceContentSha256: command.sourceContentSha256,
-    };
-  }
-
-  if (command.kind === 'task_claim') {
-    return {
-      ttlMinutes: command.ttlMinutes ?? null,
-    };
-  }
-
-  if (command.kind === 'task_release') {
-    return {};
-  }
-
-  if (command.kind === 'task_update') {
-    return {
-      status: command.status ?? null,
-      progressPct: command.progressPct ?? null,
-      statusReason: normalizeOptionalText(command.statusReason),
-      evidenceRefs: command.evidenceRefs || [],
-    };
-  }
-
-  if (command.kind === 'task_create') {
-    return {
-      parentTaskId: normalizeOptionalText(command.parentTaskId),
-      priority: normalizeOptionalText(command.priority),
-      status: command.status,
-      objective: command.objective,
-      dependency: normalizeOptionalText(command.dependency),
-      target: normalizeOptionalText(command.target),
-      complexity: normalizeOptionalText(command.complexity),
-      effortPoints: command.effortPoints ?? null,
-      progressPct: command.progressPct ?? null,
-      evidenceRefs: command.evidenceRefs || [],
-      statusReason: normalizeOptionalText(command.statusReason),
-      lastVerified: normalizeOptionalText(command.lastVerified),
-    };
-  }
-
-  if (command.kind === 'task_delete') {
-    return {
-      statusReason: normalizeOptionalText(command.statusReason),
     };
   }
 
@@ -1480,7 +1373,7 @@ function docsResolutionIdempotencyPayload(command) {
 }
 
 function defaultIdempotencyKey(command) {
-  if (command.kind === 'docs_disposition_resolve' || command.kind === 'task_gap_resolve') {
+  if (command.kind === 'docs_disposition_resolve') {
     return [
       command.kind,
       command.actor || 'anonymous',
@@ -1488,8 +1381,6 @@ function defaultIdempotencyKey(command) {
       command.issueKind,
       command.documentPath || 'no-document',
       command.referenceText || 'no-reference',
-      command.laneId || 'no-lane',
-      command.taskId || 'no-task',
       crypto
         .createHash('sha256')
         .update(canonicalJson(docsResolutionIdempotencyPayload(command)))
@@ -1586,8 +1477,6 @@ function defaultIdempotencyKey(command) {
   return [
     command.kind,
     command.actor || 'anonymous',
-    command.laneId || 'all',
-    command.taskId || 'all',
     command.expectedRevision ?? 'latest',
     crypto
       .createHash('sha256')
@@ -1613,8 +1502,6 @@ function assertDocsResolutionIdempotentReplayMatches(existingOperation, command)
       normalizeOptionalText(command.documentPath) &&
     normalizeOptionalText(existingOperation.reference_text) ===
       normalizeOptionalText(command.referenceText) &&
-    normalizeOptionalText(existingOperation.lane_id) === normalizeOptionalText(command.laneId) &&
-    normalizeOptionalText(existingOperation.task_id) === normalizeOptionalText(command.taskId) &&
     existingOperation.resolution_status === command.resolutionStatus &&
     canonicalJson(existingPayload) === canonicalJson(expectedPayload);
 
@@ -1662,41 +1549,6 @@ function canonicalJson(value) {
 
 function normalizeRevision(value) {
   return value === undefined || value === null ? null : Number(value);
-}
-
-function assertIdempotentReplayMatches(existingOperation, command, currentState = null) {
-  const expectedPayload = operationPayload(command);
-  const existingPayload = normalizeExistingPayload(existingOperation.payload);
-  const sameOperation =
-    existingOperation.operation_type === command.kind &&
-    existingOperation.actor === command.actor &&
-    existingOperation.lane_id === command.laneId &&
-    existingOperation.task_id === command.taskId &&
-    normalizeRevision(existingOperation.expected_revision) ===
-      normalizeRevision(command.expectedRevision) &&
-    canonicalJson(existingPayload) === canonicalJson(expectedPayload);
-
-  if (!sameOperation) {
-    throw new Error(
-      `Idempotency key "${command.idempotencyKey}" already belongs to a different planning operation.`
-    );
-  }
-
-  if (currentState) {
-    const resultingRevision = normalizeRevision(
-      existingOperation.resulting_revision ?? existingOperation.resultingRevision
-    );
-    const currentRevision = normalizeRevision(currentState.revision);
-    if (
-      resultingRevision !== null &&
-      currentRevision !== null &&
-      resultingRevision !== currentRevision
-    ) {
-      throw new Error(
-        `Idempotency key "${command.idempotencyKey}" already completed at revision ${resultingRevision}, but ${command.laneId}/${command.taskId} is now at revision ${currentRevision}. Use a new idempotency key for a new planning operation.`
-      );
-    }
-  }
 }
 
 function assertComponentIdempotentReplayMatches(existingOperation, command) {
@@ -1830,146 +1682,24 @@ function assertFowlerAnalysisIdempotentReplayMatches(existingOperation, command)
   }
 }
 
-function parseTaskCommand(action, args) {
-  const options = parseFlagOptions(args);
-  const laneId = requireOption(options, 'lane');
-  const taskId = requireOption(options, 'task');
-
-  if (action === 'show') {
-    return {
-      kind: 'task_show',
-      laneId,
-      taskId,
-    };
-  }
-
-  const actor = requireOption(options, 'actor');
-  const expectedRevision = parseIntegerOption(options.expectedRevision, 'expected-revision');
-  const ttlMinutes = parseIntegerOption(options.ttlMinutes, 'ttl-minutes') ?? 120;
-
-  if (action === 'claim') {
-    const command = {
-      kind: 'task_claim',
-      laneId,
-      taskId,
-      actor,
-      ttlMinutes,
-      expectedRevision,
-      idempotencyKey: options.idempotencyKey,
-    };
-    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
-  }
-
-  if (action === 'release') {
-    const command = {
-      kind: 'task_release',
-      laneId,
-      taskId,
-      actor,
-      expectedRevision,
-      idempotencyKey: options.idempotencyKey,
-    };
-    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
-  }
-
-  if (action === 'update') {
-    const status = options.status === undefined ? undefined : validateTaskStatus(options.status);
-    const progressPct = parseProgress(options.progress);
-    const command = {
-      kind: 'task_update',
-      laneId,
-      taskId,
-      actor,
-      status,
-      progressPct,
-      statusReason: options.reason,
-      evidenceRefs: options.evidence,
-      expectedRevision,
-      idempotencyKey: options.idempotencyKey,
-    };
-    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
-  }
-
-  if (action === 'create') {
-    const status = options.status === undefined ? 'queued' : validateTaskStatus(options.status);
-    const progressPct = parseProgress(options.progress);
-    const effortPoints = parseNonNegativeNumberOption(options.effortPoints, 'effort-points');
-    const command = {
-      kind: 'task_create',
-      laneId,
-      taskId,
-      actor,
-      parentTaskId: options.parentTask,
-      priority: options.priority,
-      status,
-      objective: requireOption(options, 'objective'),
-      dependency: options.dependency,
-      target: options.target,
-      complexity: options.complexity,
-      effortPoints,
-      progressPct,
-      statusReason: options.reason,
-      evidenceRefs: options.evidence,
-      lastVerified: options.lastVerified,
-      idempotencyKey: options.idempotencyKey,
-    };
-    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
-  }
-
-  if (action === 'delete') {
-    const command = {
-      kind: 'task_delete',
-      laneId,
-      taskId,
-      actor,
-      statusReason: options.reason,
-      expectedRevision,
-      idempotencyKey: options.idempotencyKey,
-    };
-    return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
-  }
-
-  throw new Error(
-    `Unknown planning task operation "${action}". Expected claim, release, update, create, delete, or show.`
-  );
-}
-
-function parseDocsResolutionCommand(resource, action, args) {
+function parseDocsResolutionCommand(action, args) {
   if (action !== 'resolve') {
-    throw new Error(`Unknown ${resource} operation "${action}". Expected resolve.`);
+    throw new Error(`Unknown docs-disposition operation "${action}". Expected resolve.`);
   }
 
   const options = parseFlagOptions(args);
-  const actor = requireOption(options, 'actor');
-  const issueKind = requireOption(options, 'kind');
-  const reason = requireOption(options, 'reason');
-  const resolutionStatus = validateDocsResolutionStatus(options.resolution || 'resolved');
-  const resolutionScope = resource === 'docs-disposition' ? 'docs_disposition' : 'task_gap';
-  const kind = resource === 'docs-disposition' ? 'docs_disposition_resolve' : 'task_gap_resolve';
   const command = {
-    kind,
-    resolutionScope,
-    issueKind,
-    documentPath: normalizeOptionalText(options.path),
+    kind: 'docs_disposition_resolve',
+    resolutionScope: 'docs_disposition',
+    issueKind: requireOption(options, 'kind'),
+    documentPath: requireOption(options, 'path'),
     referenceText: normalizeOptionalText(options.reference),
-    laneId: normalizeOptionalText(options.lane),
-    taskId: normalizeOptionalText(options.task),
-    actor,
-    resolutionStatus,
-    reason,
-    targetLaneId: normalizeOptionalText(options.targetLane),
-    targetTaskId: normalizeOptionalText(options.targetTask),
+    actor: requireOption(options, 'actor'),
+    resolutionStatus: validateDocsResolutionStatus(options.resolution || 'resolved'),
+    reason: requireOption(options, 'reason'),
     idempotencyKey: options.idempotencyKey,
     idempotencyKeyDefaulted: !options.idempotencyKey,
   };
-
-  if (resource === 'docs-disposition') {
-    command.documentPath = requireOption(options, 'path');
-  }
-
-  if (resource === 'task-gap' && !command.documentPath && !(command.laneId && command.taskId)) {
-    throw new Error('Task gap resolution requires --path or both --lane and --task.');
-  }
 
   return { ...command, idempotencyKey: command.idempotencyKey || defaultIdempotencyKey(command) };
 }
@@ -2868,14 +2598,10 @@ function parseArgs(args = process.argv.slice(2)) {
 
   const [resource, action, ...rest] = args;
 
-  if (resource === 'task') {
-    if (!action) {
-      throw new Error(
-        'Missing task operation. Expected claim, release, update, create, delete, or show.'
-      );
-    }
-
-    return parseTaskCommand(action, rest);
+  if (resource === 'task' || resource === 'task-gap' || resource === 'audit') {
+    throw new Error(
+      'Planning task lifecycle, gaps, and audit are owned by GitHub Issues; the local task rails are retired.'
+    );
   }
 
   if (resource === 'component') {
@@ -2952,16 +2678,6 @@ function parseArgs(args = process.argv.slice(2)) {
     return parseArchitectureEvidenceCommand(action, rest);
   }
 
-  if (resource === 'audit') {
-    const options = parseFlagOptions([action, ...rest].filter(Boolean));
-    return {
-      kind: 'audit',
-      laneId: options.lane || null,
-      taskId: options.task || null,
-      limit: parseIntegerOption(options.limit, 'limit') ?? 20,
-    };
-  }
-
   if (resource === 'feature-mechanization') {
     if (!action) {
       throw new Error('Missing feature-mechanization operation. Expected record.');
@@ -2988,205 +2704,19 @@ function parseArgs(args = process.argv.slice(2)) {
     return parseGovernanceRefreshCommand(action, rest);
   }
 
-  if (resource === 'docs-disposition' || resource === 'task-gap') {
+  if (resource === 'docs-disposition') {
     if (!action) {
-      throw new Error(`Missing ${resource} operation. Expected resolve.`);
+      throw new Error('Missing docs-disposition operation. Expected resolve.');
     }
 
-    return parseDocsResolutionCommand(resource, action, rest);
+    return parseDocsResolutionCommand(action, rest);
   }
 
   throw new Error(unknownOperationMessage());
 }
 
-function normalizeState(row) {
-  if (!row) {
-    return null;
-  }
-
-  return {
-    laneId: row.lane_id ?? row.laneId,
-    taskId: row.task_id ?? row.taskId,
-    sourcePath: row.source_path ?? row.sourcePath,
-    baseSourceContentSha256: row.base_source_content_sha256 ?? row.baseSourceContentSha256,
-    revision: Number(row.revision ?? 0),
-    status: row.status,
-    progressPct: row.progress_pct === undefined ? row.progressPct : row.progress_pct,
-    evidenceRefs: row.evidence_refs ?? row.evidenceRefs ?? [],
-    statusReason: row.status_reason ?? row.statusReason ?? null,
-    claimedBy: row.claimed_by ?? row.claimedBy ?? null,
-    claimToken: row.claim_token ?? row.claimToken ?? null,
-    claimExpiresAt: row.claim_expires_at ?? row.claimExpiresAt ?? null,
-  };
-}
-
-function buildInitialState(importedTask) {
-  return {
-    laneId: importedTask.laneId,
-    taskId: importedTask.taskId,
-    sourcePath: importedTask.sourcePath,
-    baseSourceContentSha256: importedTask.sourceContentSha256,
-    revision: 0,
-    status: importedTask.status,
-    progressPct: importedTask.progressPct ?? null,
-    evidenceRefs: importedTask.evidenceRefs || [],
-    statusReason: importedTask.statusReason ?? null,
-    claimedBy: null,
-    claimToken: null,
-    claimExpiresAt: null,
-  };
-}
-
-function rebaseLocalStateToImportedSource(state, importedTask) {
-  if (!state) {
-    return buildInitialState(importedTask);
-  }
-
-  if (
-    state.sourcePath === importedTask.sourcePath &&
-    state.baseSourceContentSha256 === importedTask.sourceContentSha256
-  ) {
-    return state;
-  }
-
-  return {
-    ...state,
-    sourcePath: importedTask.sourcePath,
-    baseSourceContentSha256: importedTask.sourceContentSha256,
-  };
-}
-
 function toIso(value) {
   return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
-}
-
-function planTaskLocalOperation({ command, importedTask, currentState, operationId, now }) {
-  if (!importedTask) {
-    throw new Error(
-      `Planning task ${command.laneId}/${command.taskId} was not imported into the planning DB.`
-    );
-  }
-
-  const previous = rebaseLocalStateToImportedSource(normalizeState(currentState), importedTask);
-  const expectedRevision = command.expectedRevision;
-  if (
-    expectedRevision !== null &&
-    expectedRevision !== undefined &&
-    expectedRevision !== previous.revision
-  ) {
-    throw new Error(
-      `Stale planning task revision for ${command.laneId}/${command.taskId}: expected ${expectedRevision} but current revision is ${previous.revision}.`
-    );
-  }
-
-  const resultingRevision = previous.revision + 1;
-  const state = {
-    ...previous,
-    revision: resultingRevision,
-    updatedAt: toIso(now),
-  };
-
-  if (command.kind === 'task_claim') {
-    const expiresAt = new Date(new Date(now).getTime() + command.ttlMinutes * 60 * 1000);
-    state.claimedBy = command.actor;
-    state.claimToken = operationId;
-    state.claimExpiresAt = expiresAt.toISOString();
-  } else if (command.kind === 'task_release') {
-    state.claimedBy = null;
-    state.claimToken = null;
-    state.claimExpiresAt = null;
-  } else if (command.kind === 'task_update') {
-    if (command.status !== undefined) {
-      state.status = command.status;
-    }
-    if (command.progressPct !== null && command.progressPct !== undefined) {
-      state.progressPct = command.progressPct;
-    }
-    if (command.statusReason !== undefined) {
-      state.statusReason = normalizeOptionalText(command.statusReason);
-    }
-    if (command.evidenceRefs && command.evidenceRefs.length > 0) {
-      state.evidenceRefs = command.evidenceRefs;
-    }
-  } else {
-    throw new Error(`Unsupported local operation kind "${command.kind}".`);
-  }
-
-  const audit = {
-    operationId,
-    idempotencyKey: command.idempotencyKey,
-    operationType: command.kind,
-    actor: command.actor,
-    laneId: command.laneId,
-    taskId: command.taskId,
-    sourcePath: importedTask.sourcePath,
-    baseSourceContentSha256: importedTask.sourceContentSha256,
-    expectedRevision: expectedRevision ?? null,
-    previousRevision: previous.revision,
-    resultingRevision,
-    payload: operationPayload(command),
-    createdAt: toIso(now),
-  };
-
-  return { state, audit };
-}
-
-function buildRawTaskFromCreateCommand(command) {
-  const rawTask = {
-    task_id: command.taskId,
-    status: command.status,
-    objective: command.objective,
-  };
-
-  const optionalFields = [
-    ['parent_task', command.parentTaskId],
-    ['priority', command.priority],
-    ['dependency', command.dependency],
-    ['target', command.target],
-    ['complexity', command.complexity],
-    ['effort_points', command.effortPoints],
-    ['progress_pct', command.progressPct],
-    ['status_reason', command.statusReason],
-    ['last_verified', command.lastVerified],
-  ];
-
-  for (const [key, value] of optionalFields) {
-    if (value !== undefined && value !== null && value !== '') {
-      rawTask[key] = value;
-    }
-  }
-
-  if (command.evidenceRefs && command.evidenceRefs.length > 0) {
-    rawTask.evidence_refs = command.evidenceRefs;
-  }
-
-  return rawTask;
-}
-
-function buildDefinitionFromCreateCommand({ command, importedLane, now }) {
-  const rawTask = buildRawTaskFromCreateCommand(command);
-
-  return {
-    laneId: command.laneId,
-    taskId: command.taskId,
-    sourcePath: importedLane.sourcePath,
-    sourceContentSha256: importedLane.sourceContentSha256,
-    parentTaskId: normalizeOptionalText(command.parentTaskId),
-    priority: normalizeOptionalText(command.priority),
-    status: command.status,
-    objective: command.objective,
-    dependency: normalizeOptionalText(command.dependency),
-    target: normalizeOptionalText(command.target),
-    complexity: normalizeOptionalText(command.complexity),
-    effortPoints: command.effortPoints ?? null,
-    progressPct: command.progressPct ?? null,
-    evidenceRefs: command.evidenceRefs || [],
-    statusReason: normalizeOptionalText(command.statusReason),
-    lastVerified: normalizeOptionalText(command.lastVerified),
-    createdBy: command.actor,
-    createdAt: toIso(now),
-    rawTask,
-  };
 }
 
 function normalizeGovernanceUnit(row) {
@@ -4300,135 +3830,6 @@ function planFowlerAnalysisOperation({ command, operationId, now }) {
   throw new Error(`Unsupported Fowler analysis operation kind "${command.kind}".`);
 }
 
-function normalizeTaskDefinition(row) {
-  if (!row) {
-    return null;
-  }
-
-  return {
-    laneId: row.lane_id ?? row.laneId,
-    taskId: row.task_id ?? row.taskId,
-    sourcePath: row.source_path ?? row.sourcePath,
-    sourceContentSha256: row.source_content_sha256 ?? row.sourceContentSha256,
-    parentTaskId: row.parent_task_id ?? row.parentTaskId ?? null,
-    priority: row.priority ?? null,
-    status: row.status,
-    objective: row.objective,
-    dependency: row.dependency ?? null,
-    target: row.target ?? null,
-    complexity: row.complexity ?? null,
-    effortPoints: row.effort_points ?? row.effortPoints ?? null,
-    progressPct: row.progress_pct ?? row.progressPct ?? null,
-    evidenceRefs: row.evidence_refs ?? row.evidenceRefs ?? [],
-    statusReason: row.status_reason ?? row.statusReason ?? null,
-    lastVerified: row.last_verified ?? row.lastVerified ?? null,
-    rawTask: row.raw_task ?? row.rawTask,
-  };
-}
-
-function planTaskDefinitionOperation({
-  command,
-  importedLane,
-  importedTask,
-  localDefinition,
-  localTombstone,
-  currentState,
-  operationId,
-  now,
-}) {
-  if (localTombstone) {
-    throw new Error(
-      `Planning task ${command.laneId}/${command.taskId} is already deleted locally.`
-    );
-  }
-
-  if (command.kind === 'task_create') {
-    if (!importedLane) {
-      throw new Error(`Planning lane ${command.laneId} was not imported into the planning DB.`);
-    }
-    if (importedTask || localDefinition) {
-      throw new Error(`Planning task ${command.laneId}/${command.taskId} already exists.`);
-    }
-
-    const definition = buildDefinitionFromCreateCommand({ command, importedLane, now });
-    const audit = {
-      operationId,
-      idempotencyKey: command.idempotencyKey,
-      operationType: command.kind,
-      actor: command.actor,
-      laneId: command.laneId,
-      taskId: command.taskId,
-      sourcePath: importedLane.sourcePath,
-      baseSourceContentSha256: importedLane.sourceContentSha256,
-      expectedRevision: null,
-      previousRevision: 0,
-      resultingRevision: 0,
-      payload: operationPayload(command),
-      createdAt: toIso(now),
-    };
-
-    return { definition, audit };
-  }
-
-  if (command.kind === 'task_delete') {
-    const effectiveTask = normalizeTaskDefinition(importedTask || localDefinition);
-    if (!effectiveTask) {
-      throw new Error(`Planning task ${command.laneId}/${command.taskId} does not exist.`);
-    }
-
-    const previous = {
-      ...buildInitialState(effectiveTask),
-      ...(normalizeState(currentState) || {}),
-    };
-    const expectedRevision = command.expectedRevision;
-    if (
-      expectedRevision !== null &&
-      expectedRevision !== undefined &&
-      expectedRevision !== previous.revision
-    ) {
-      throw new Error(
-        `Stale planning task revision for ${command.laneId}/${command.taskId}: expected ${expectedRevision} but current revision is ${previous.revision}.`
-      );
-    }
-
-    const resultingRevision = previous.revision + 1;
-    const state = {
-      ...previous,
-      revision: resultingRevision,
-      statusReason: normalizeOptionalText(command.statusReason),
-      updatedAt: toIso(now),
-    };
-    const tombstone = {
-      laneId: command.laneId,
-      taskId: command.taskId,
-      sourcePath: effectiveTask.sourcePath,
-      baseSourceContentSha256: effectiveTask.sourceContentSha256,
-      deletedBy: command.actor,
-      deletedAt: toIso(now),
-      statusReason: normalizeOptionalText(command.statusReason),
-    };
-    const audit = {
-      operationId,
-      idempotencyKey: command.idempotencyKey,
-      operationType: command.kind,
-      actor: command.actor,
-      laneId: command.laneId,
-      taskId: command.taskId,
-      sourcePath: effectiveTask.sourcePath,
-      baseSourceContentSha256: effectiveTask.sourceContentSha256,
-      expectedRevision: expectedRevision ?? null,
-      previousRevision: previous.revision,
-      resultingRevision,
-      payload: operationPayload(command),
-      createdAt: toIso(now),
-    };
-
-    return { state, tombstone, audit };
-  }
-
-  throw new Error(`Unsupported task definition operation kind "${command.kind}".`);
-}
-
 function resolutionSourceValue(row, key) {
   return row[key] === undefined ? null : row[key];
 }
@@ -4439,8 +3840,6 @@ function buildResolutionKey(source) {
     source.issueKind,
     source.documentPath || '',
     source.referenceText || '',
-    source.laneId || '',
-    source.taskId || '',
   ].join('\0');
 
   return `${source.resolutionScope}:${crypto.createHash('sha256').update(seed).digest('hex')}`;
@@ -4453,14 +3852,9 @@ function normalizeDocsResolutionSource(command, sourceRow) {
 
   return {
     resolutionScope: command.resolutionScope,
-    issueKind:
-      resolutionSourceValue(sourceRow, 'action_kind') ||
-      resolutionSourceValue(sourceRow, 'gap_kind') ||
-      command.issueKind,
+    issueKind: resolutionSourceValue(sourceRow, 'action_kind') || command.issueKind,
     documentPath: resolutionSourceValue(sourceRow, 'document_path') || command.documentPath,
     referenceText: resolutionSourceValue(sourceRow, 'reference_text') || command.referenceText,
-    laneId: resolutionSourceValue(sourceRow, 'lane_id') || command.laneId,
-    taskId: resolutionSourceValue(sourceRow, 'task_id') || command.taskId,
     sourceContentSha256:
       resolutionSourceValue(sourceRow, 'source_content_sha256') || command.sourceContentSha256,
     sourceReason: resolutionSourceValue(sourceRow, 'reason'),
@@ -4483,14 +3877,10 @@ function planDocsResolutionOperation({ command, sourceRow, operationId, now }) {
     issueKind: source.issueKind,
     documentPath: normalizeOptionalText(source.documentPath),
     referenceText: normalizeOptionalText(source.referenceText),
-    laneId: normalizeOptionalText(source.laneId),
-    taskId: normalizeOptionalText(source.taskId),
     resolutionStatus: command.resolutionStatus,
     resolvedBy: command.actor,
     resolvedAt,
     reason: command.reason,
-    targetLaneId: normalizeOptionalText(command.targetLaneId),
-    targetTaskId: normalizeOptionalText(command.targetTaskId),
     sourceContentSha256: source.sourceContentSha256,
   };
   resolution.rawResolution = {
@@ -4508,8 +3898,6 @@ function planDocsResolutionOperation({ command, sourceRow, operationId, now }) {
     issueKind: source.issueKind,
     documentPath: normalizeOptionalText(source.documentPath),
     referenceText: normalizeOptionalText(source.referenceText),
-    laneId: normalizeOptionalText(source.laneId),
-    taskId: normalizeOptionalText(source.taskId),
     resolutionStatus: command.resolutionStatus,
     sourceContentSha256: source.sourceContentSha256,
     payload: operationPayload(command),
@@ -4540,120 +3928,11 @@ function materializeDocsResolutionCommand(command, sourceRow) {
   return materialized;
 }
 
-function buildAuditRows(rows) {
-  return rows.map(
-    (row) =>
-      `${row.created_at} ${row.operation_id} ${row.operation_type} ${row.lane_id}/${row.task_id} actor=${row.actor} expected=${row.expected_revision ?? 'null'} resulting=${row.resulting_revision}`
-  );
-}
-
 function buildDocsResolutionAuditRows(rows) {
   return rows.map((row) => {
     const reference = row.reference_text ? ` ref=${row.reference_text}` : '';
-    const target =
-      row.lane_id && row.task_id ? ` ${row.lane_id}/${row.task_id}` : ` ${row.document_path}`;
-    return `${row.created_at} ${row.operation_id} ${row.operation_type} ${row.resolution_scope}/${row.issue_kind}${target}${reference} status=${row.resolution_status} actor=${row.actor}`;
+    return `${row.created_at} ${row.operation_id} ${row.operation_type} ${row.resolution_scope}/${row.issue_kind} ${row.document_path}${reference} status=${row.resolution_status} actor=${row.actor}`;
   });
-}
-
-async function readImportedTask(client, command) {
-  const result = await client.query(
-    `select
-       lane_id as "laneId",
-       task_id as "taskId",
-       status,
-       progress_pct as "progressPct",
-       evidence_refs as "evidenceRefs",
-       status_reason as "statusReason",
-       source_path as "sourcePath",
-       source_content_sha256 as "sourceContentSha256"
-     from ${schemaName}.planning_tasks
-     where lane_id = $1 and task_id = $2`,
-    [command.laneId, command.taskId]
-  );
-
-  return result.rows[0] || null;
-}
-
-async function readImportedLane(client, command) {
-  const result = await client.query(
-    `select
-       lane_id as "laneId",
-       source_path as "sourcePath",
-       source_content_sha256 as "sourceContentSha256"
-     from ${schemaName}.planning_lanes
-     where lane_id = $1`,
-    [command.laneId]
-  );
-
-  return result.rows[0] || null;
-}
-
-async function readEffectiveTask(client, command) {
-  const result = await client.query(
-    `select
-       lane_id as "laneId",
-       task_id as "taskId",
-       status,
-       progress_pct as "progressPct",
-       evidence_refs as "evidenceRefs",
-       status_reason as "statusReason",
-       source_path as "sourcePath",
-       source_content_sha256 as "sourceContentSha256",
-       raw_task as "rawTask"
-     from ${schemaName}.planning_effective_tasks
-     where lane_id = $1 and task_id = $2`,
-    [command.laneId, command.taskId]
-  );
-
-  return result.rows[0] || null;
-}
-
-async function readLocalDefinition(client, command, lock = false) {
-  const result = await client.query(
-    `select *
-     from ${schemaName}.planning_task_local_definitions
-     where lane_id = $1 and task_id = $2
-     ${lock ? 'for update' : ''}`,
-    [command.laneId, command.taskId]
-  );
-
-  return result.rows[0] || null;
-}
-
-async function readLocalTombstone(client, command, lock = false) {
-  const result = await client.query(
-    `select *
-     from ${schemaName}.planning_task_local_tombstones
-     where lane_id = $1 and task_id = $2
-     ${lock ? 'for update' : ''}`,
-    [command.laneId, command.taskId]
-  );
-
-  return result.rows[0] || null;
-}
-
-async function readCurrentState(client, command, lock = false) {
-  const result = await client.query(
-    `select *
-     from ${schemaName}.planning_task_local_state
-     where lane_id = $1 and task_id = $2
-     ${lock ? 'for update' : ''}`,
-    [command.laneId, command.taskId]
-  );
-
-  return result.rows[0] || null;
-}
-
-async function readExistingOperation(client, idempotencyKey) {
-  const result = await client.query(
-    `select *
-     from ${schemaName}.planning_local_operations
-     where idempotency_key = $1`,
-    [idempotencyKey]
-  );
-
-  return result.rows[0] || null;
 }
 
 async function readExistingDocsResolutionOperation(client, idempotencyKey) {
@@ -4961,223 +4240,6 @@ async function readDocsDispositionAction(client, command) {
   );
 
   return result.rows[0] || null;
-}
-
-async function readTaskGapSource(client, command) {
-  const params = [command.issueKind];
-  const predicates = ['gap_kind = $1'];
-
-  if (command.documentPath) {
-    params.push(command.documentPath);
-    predicates.push(`document_path = $${params.length}`);
-  }
-  if (command.laneId) {
-    params.push(command.laneId);
-    predicates.push(`lane_id = $${params.length}`);
-  }
-  if (command.taskId) {
-    params.push(command.taskId);
-    predicates.push(`task_id = $${params.length}`);
-  }
-
-  const result = await client.query(
-    `select
-       gap_kind,
-       severity,
-       lane_id,
-       task_id,
-       document_path,
-       reason,
-       source_path,
-       source_content_sha256
-     from ${schemaName}.planning_task_gap_query
-     where ${predicates.join(' and ')}`,
-    params
-  );
-
-  if (result.rows.length > 1) {
-    throw new Error(
-      `Task gap selector ${command.issueKind} matched ${result.rows.length} rows. Add --path or --lane/--task.`
-    );
-  }
-
-  return result.rows[0] || null;
-}
-
-async function writePlannedOperation(client, planned) {
-  await client.query(
-    `insert into ${schemaName}.planning_task_local_state
-      (lane_id, task_id, source_path, base_source_content_sha256, revision, status,
-       progress_pct, evidence_refs, status_reason, claimed_by, claim_token,
-       claim_expires_at, updated_at, raw_overlay)
-     values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14::jsonb)
-     on conflict (lane_id, task_id) do update set
-       source_path = excluded.source_path,
-       base_source_content_sha256 = excluded.base_source_content_sha256,
-       revision = excluded.revision,
-       status = excluded.status,
-       progress_pct = excluded.progress_pct,
-       evidence_refs = excluded.evidence_refs,
-       status_reason = excluded.status_reason,
-       claimed_by = excluded.claimed_by,
-       claim_token = excluded.claim_token,
-       claim_expires_at = excluded.claim_expires_at,
-       updated_at = excluded.updated_at,
-       raw_overlay = excluded.raw_overlay`,
-    [
-      planned.state.laneId,
-      planned.state.taskId,
-      planned.state.sourcePath,
-      planned.state.baseSourceContentSha256,
-      planned.state.revision,
-      planned.state.status,
-      planned.state.progressPct,
-      toJson(planned.state.evidenceRefs),
-      planned.state.statusReason,
-      planned.state.claimedBy,
-      planned.state.claimToken,
-      planned.state.claimExpiresAt,
-      planned.state.updatedAt,
-      toJson(planned.state),
-    ]
-  );
-
-  await client.query(
-    `insert into ${schemaName}.planning_local_operations
-      (operation_id, idempotency_key, operation_type, actor, lane_id, task_id,
-       source_path, base_source_content_sha256, expected_revision, previous_revision,
-       resulting_revision, payload, created_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13)`,
-    [
-      planned.audit.operationId,
-      planned.audit.idempotencyKey,
-      planned.audit.operationType,
-      planned.audit.actor,
-      planned.audit.laneId,
-      planned.audit.taskId,
-      planned.audit.sourcePath,
-      planned.audit.baseSourceContentSha256,
-      planned.audit.expectedRevision,
-      planned.audit.previousRevision,
-      planned.audit.resultingRevision,
-      toJson(planned.audit.payload),
-      planned.audit.createdAt,
-    ]
-  );
-}
-
-async function writePlannedDefinitionOperation(client, planned) {
-  if (planned.state) {
-    await client.query(
-      `insert into ${schemaName}.planning_task_local_state
-        (lane_id, task_id, source_path, base_source_content_sha256, revision, status,
-         progress_pct, evidence_refs, status_reason, claimed_by, claim_token,
-         claim_expires_at, updated_at, raw_overlay)
-       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11, $12, $13, $14::jsonb)
-       on conflict (lane_id, task_id) do update set
-         source_path = excluded.source_path,
-         base_source_content_sha256 = excluded.base_source_content_sha256,
-         revision = excluded.revision,
-         status = excluded.status,
-         progress_pct = excluded.progress_pct,
-         evidence_refs = excluded.evidence_refs,
-         status_reason = excluded.status_reason,
-         claimed_by = excluded.claimed_by,
-         claim_token = excluded.claim_token,
-         claim_expires_at = excluded.claim_expires_at,
-         updated_at = excluded.updated_at,
-         raw_overlay = excluded.raw_overlay`,
-      [
-        planned.state.laneId,
-        planned.state.taskId,
-        planned.state.sourcePath,
-        planned.state.baseSourceContentSha256,
-        planned.state.revision,
-        planned.state.status,
-        planned.state.progressPct,
-        toJson(planned.state.evidenceRefs),
-        planned.state.statusReason,
-        planned.state.claimedBy,
-        planned.state.claimToken,
-        planned.state.claimExpiresAt,
-        planned.state.updatedAt,
-        toJson(planned.state),
-      ]
-    );
-  }
-
-  if (planned.definition) {
-    await client.query(
-      `insert into ${schemaName}.planning_task_local_definitions
-        (lane_id, task_id, source_path, source_content_sha256, parent_task_id, priority,
-         status, objective, dependency, target, complexity, effort_points, progress_pct,
-         evidence_refs, status_reason, last_verified, created_by, created_at, raw_task)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-               $14::jsonb, $15, $16, $17, $18, $19::jsonb)`,
-      [
-        planned.definition.laneId,
-        planned.definition.taskId,
-        planned.definition.sourcePath,
-        planned.definition.sourceContentSha256,
-        planned.definition.parentTaskId,
-        planned.definition.priority,
-        planned.definition.status,
-        planned.definition.objective,
-        planned.definition.dependency,
-        planned.definition.target,
-        planned.definition.complexity,
-        planned.definition.effortPoints,
-        planned.definition.progressPct,
-        toJson(planned.definition.evidenceRefs),
-        planned.definition.statusReason,
-        planned.definition.lastVerified,
-        planned.definition.createdBy,
-        planned.definition.createdAt,
-        toJson(planned.definition.rawTask),
-      ]
-    );
-  }
-
-  if (planned.tombstone) {
-    await client.query(
-      `insert into ${schemaName}.planning_task_local_tombstones
-        (lane_id, task_id, source_path, base_source_content_sha256, deleted_by,
-         deleted_at, status_reason)
-       values ($1, $2, $3, $4, $5, $6, $7)`,
-      [
-        planned.tombstone.laneId,
-        planned.tombstone.taskId,
-        planned.tombstone.sourcePath,
-        planned.tombstone.baseSourceContentSha256,
-        planned.tombstone.deletedBy,
-        planned.tombstone.deletedAt,
-        planned.tombstone.statusReason,
-      ]
-    );
-  }
-
-  await client.query(
-    `insert into ${schemaName}.planning_local_operations
-      (operation_id, idempotency_key, operation_type, actor, lane_id, task_id,
-       source_path, base_source_content_sha256, expected_revision, previous_revision,
-       resulting_revision, payload, created_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13)`,
-    [
-      planned.audit.operationId,
-      planned.audit.idempotencyKey,
-      planned.audit.operationType,
-      planned.audit.actor,
-      planned.audit.laneId,
-      planned.audit.taskId,
-      planned.audit.sourcePath,
-      planned.audit.baseSourceContentSha256,
-      planned.audit.expectedRevision,
-      planned.audit.previousRevision,
-      planned.audit.resultingRevision,
-      toJson(planned.audit.payload),
-      planned.audit.createdAt,
-    ]
-  );
 }
 
 async function writePlannedArchitectureDesignCreateOperation(client, planned) {
@@ -6005,16 +5067,13 @@ async function writePlannedDocsResolutionOperation(client, planned) {
   await client.query(
     `insert into ${schemaName}.doc_resolution_overlays
       (resolution_key, resolution_scope, issue_kind, document_path, reference_text,
-       lane_id, task_id, resolution_status, resolved_by, resolved_at, reason,
-       target_lane_id, target_task_id, source_content_sha256, raw_resolution)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::jsonb)
+       resolution_status, resolved_by, resolved_at, reason, source_content_sha256, raw_resolution)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11::jsonb)
      on conflict (resolution_key) do update set
        resolution_status = excluded.resolution_status,
        resolved_by = excluded.resolved_by,
        resolved_at = excluded.resolved_at,
        reason = excluded.reason,
-       target_lane_id = excluded.target_lane_id,
-       target_task_id = excluded.target_task_id,
        source_content_sha256 = excluded.source_content_sha256,
        raw_resolution = excluded.raw_resolution`,
     [
@@ -6023,14 +5082,10 @@ async function writePlannedDocsResolutionOperation(client, planned) {
       planned.resolution.issueKind,
       planned.resolution.documentPath,
       planned.resolution.referenceText,
-      planned.resolution.laneId,
-      planned.resolution.taskId,
       planned.resolution.resolutionStatus,
       planned.resolution.resolvedBy,
       planned.resolution.resolvedAt,
       planned.resolution.reason,
-      planned.resolution.targetLaneId,
-      planned.resolution.targetTaskId,
       planned.resolution.sourceContentSha256,
       toJson(planned.resolution.rawResolution),
     ]
@@ -6039,9 +5094,9 @@ async function writePlannedDocsResolutionOperation(client, planned) {
   await client.query(
     `insert into ${schemaName}.doc_resolution_operations
       (operation_id, idempotency_key, operation_type, actor, resolution_key,
-       resolution_scope, issue_kind, document_path, reference_text, lane_id, task_id,
-       resolution_status, source_content_sha256, payload, created_at)
-     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb, $15)`,
+       resolution_scope, issue_kind, document_path, reference_text, resolution_status,
+       source_content_sha256, payload, created_at)
+     values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13)`,
     [
       planned.audit.operationId,
       planned.audit.idempotencyKey,
@@ -6052,8 +5107,6 @@ async function writePlannedDocsResolutionOperation(client, planned) {
       planned.audit.issueKind,
       planned.audit.documentPath,
       planned.audit.referenceText,
-      planned.audit.laneId,
-      planned.audit.taskId,
       planned.audit.resolutionStatus,
       planned.audit.sourceContentSha256,
       toJson(planned.audit.payload),
@@ -6075,10 +5128,7 @@ async function applyDocsResolutionOperation(command, options = {}) {
     await runMigrations({ client, silent: true });
     await client.query('begin');
 
-    const sourceRow =
-      command.resolutionScope === 'docs_disposition'
-        ? await readDocsDispositionAction(client, command)
-        : await readTaskGapSource(client, command);
+    const sourceRow = await readDocsDispositionAction(client, command);
     const materializedCommand = materializeDocsResolutionCommand(command, sourceRow);
 
     const existing = await readExistingDocsResolutionOperation(
@@ -6717,155 +5767,6 @@ async function applyFowlerAnalysisOperation(command, options = {}) {
   }
 }
 
-async function applyTaskLocalOperation(command, options = {}) {
-  const client =
-    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
-  const ownsClient = !options.client;
-
-  if (ownsClient) {
-    await client.connect();
-  }
-
-  try {
-    await runMigrations({ client, silent: true });
-    await client.query('begin');
-
-    const existing = await readExistingOperation(client, command.idempotencyKey);
-    if (existing) {
-      const currentState = await readCurrentState(client, command);
-      assertIdempotentReplayMatches(existing, command, currentState);
-      await client.query('commit');
-      return { idempotent: true, audit: existing };
-    }
-
-    if (command.kind === 'task_create' || command.kind === 'task_delete') {
-      const importedLane =
-        command.kind === 'task_create' ? await readImportedLane(client, command) : null;
-      const importedTask =
-        command.kind === 'task_create'
-          ? await readImportedTask(client, command)
-          : await readEffectiveTask(client, command);
-      const localDefinition = await readLocalDefinition(client, command, true);
-      const localTombstone = await readLocalTombstone(client, command, true);
-      const currentState =
-        command.kind === 'task_delete' ? await readCurrentState(client, command, true) : null;
-      const planned = planTaskDefinitionOperation({
-        command,
-        importedLane,
-        importedTask,
-        localDefinition,
-        localTombstone,
-        currentState,
-        operationId: options.operationId || crypto.randomUUID(),
-        now: options.now || new Date(),
-      });
-
-      await writePlannedDefinitionOperation(client, planned);
-      await client.query('commit');
-      return { idempotent: false, ...planned };
-    }
-
-    const importedTask = await readEffectiveTask(client, command);
-    const currentState = await readCurrentState(client, command, true);
-    const planned = planTaskLocalOperation({
-      command,
-      importedTask,
-      currentState,
-      operationId: options.operationId || crypto.randomUUID(),
-      now: options.now || new Date(),
-    });
-
-    await writePlannedOperation(client, planned);
-    await client.query('commit');
-    return { idempotent: false, ...planned };
-  } catch (error) {
-    await client.query('rollback');
-    throw error;
-  } finally {
-    if (ownsClient) {
-      await client.end();
-    }
-  }
-}
-
-async function showTask(command, options = {}) {
-  const client =
-    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
-  const ownsClient = !options.client;
-
-  if (ownsClient) {
-    await client.connect();
-  }
-
-  try {
-    await runMigrations({ client, silent: true });
-    const importedTask = await readImportedTask(client, command);
-    const effectiveTask = await readEffectiveTask(client, command);
-    const currentState = await readCurrentState(client, command);
-    const localDefinition = await readLocalDefinition(client, command);
-    const localTombstone = await readLocalTombstone(client, command);
-    return {
-      importedTask,
-      effectiveTask,
-      localDefinition: normalizeTaskDefinition(localDefinition),
-      localTombstone,
-      localState: normalizeState(currentState),
-    };
-  } finally {
-    if (ownsClient) {
-      await client.end();
-    }
-  }
-}
-
-async function readAudit(command, options = {}) {
-  const client =
-    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
-  const ownsClient = !options.client;
-
-  if (ownsClient) {
-    await client.connect();
-  }
-
-  try {
-    await runMigrations({ client, silent: true });
-    const params = [];
-    const predicates = [];
-    if (command.laneId) {
-      params.push(command.laneId);
-      predicates.push(`lane_id = $${params.length}`);
-    }
-    if (command.taskId) {
-      params.push(command.taskId);
-      predicates.push(`task_id = $${params.length}`);
-    }
-    params.push(command.limit);
-
-    const result = await client.query(
-      `select
-         operation_id,
-         operation_type,
-         actor,
-         lane_id,
-         task_id,
-         expected_revision,
-         resulting_revision,
-         created_at::text
-       from ${schemaName}.planning_local_operations
-       ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-       order by created_at desc, operation_id desc
-       limit $${params.length}`,
-      params
-    );
-
-    return result.rows;
-  } finally {
-    if (ownsClient) {
-      await client.end();
-    }
-  }
-}
-
 function printOperationResult(result) {
   if (result.idempotent) {
     if (result.audit.component_id) {
@@ -7035,8 +5936,8 @@ function printOperationResult(result) {
     return;
   }
 
-  console.log(
-    `[planning:db:operate] ${result.audit.operationType} ${result.audit.laneId}/${result.audit.taskId} revision=${result.audit.resultingRevision}`
+  throw new Error(
+    `Unsupported planning DB operation result "${result.audit.operationType || 'unknown'}".`
   );
 }
 
@@ -7047,22 +5948,8 @@ async function main() {
     return;
   }
 
-  if (command.kind === 'task_show') {
-    const task = await showTask(command);
-    console.log(JSON.stringify(task, null, 2));
-    return;
-  }
-
-  if (command.kind === 'audit') {
-    const rows = await readAudit(command);
-    for (const row of buildAuditRows(rows)) {
-      console.log(row);
-    }
-    return;
-  }
-
   const result =
-    command.kind === 'docs_disposition_resolve' || command.kind === 'task_gap_resolve'
+    command.kind === 'docs_disposition_resolve'
       ? await applyDocsResolutionOperation(command)
       : command.kind === 'architecture_design_create'
         ? await applyArchitectureDesignCreateOperation(command)
@@ -7092,7 +5979,11 @@ async function main() {
                                 ? await applyGovernanceRefreshRunRecordOperation(command)
                                 : command.kind.startsWith('fowler_analysis_')
                                   ? await applyFowlerAnalysisOperation(command)
-                                  : await applyTaskLocalOperation(command);
+                                  : (() => {
+                                      throw new Error(
+                                        `Unsupported planning DB operation "${command.kind}".`
+                                      );
+                                    })();
   printOperationResult(result);
 }
 
@@ -7119,7 +6010,6 @@ module.exports = {
   applyFowlerAnalysisOperation,
   applyFeatureMechanizationRailRecordOperation,
   applyGovernanceRefreshRunRecordOperation,
-  applyTaskLocalOperation,
   assertArchitectureDesignIdempotentReplayMatches,
   assertArchitectureScopedOperationIdempotentReplayMatches,
   assertComponentIdempotentReplayMatches,
@@ -7127,8 +6017,6 @@ module.exports = {
   assertDocsResolutionIdempotentReplayMatches,
   assertFeatureMechanizationRailIdempotentReplayMatches,
   assertFowlerAnalysisIdempotentReplayMatches,
-  assertIdempotentReplayMatches,
-  buildAuditRows,
   buildDocsResolutionAuditRows,
   buildPlanningDbOperateHelpText,
   databaseUrl,
@@ -7149,16 +6037,11 @@ module.exports = {
   planFowlerAnalysisOperation,
   planGovernanceRefreshRunRecordOperation,
   planDocsResolutionOperation,
-  planTaskDefinitionOperation,
-  planTaskLocalOperation,
-  readAudit,
-  showTask,
   validateArchitectureDesignStatus,
   validateComponentStatus,
   validateDbSurfaceMigrationState,
   validateDbSurfaceWriteRailKind,
   validateGovernanceRefreshRunState,
-  validateTaskStatus,
   resolveOperateHelpRequest,
   writePlannedComponentCreateOperation,
   writePlannedComponentReparentOperation,
