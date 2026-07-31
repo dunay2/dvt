@@ -31,3 +31,7 @@ when the implementation changes them.
 
 GitHub issue state must not be inferred from Planning DB status. Planning DB
 must not mutate GitHub issue lifecycle.
+
+## Governing Decision
+
+- [ADR-0061 - GitHub MVP task authority and Planning DB architecture boundary](../../adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md)

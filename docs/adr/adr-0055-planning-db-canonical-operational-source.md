@@ -1,18 +1,20 @@
 ---
 title: ADR-0055 - Planning DB canonical operational source
-status: Accepted
+status: Superseded
 date: 2026-05-10
 owners:
   - docs
   - governance
   - planning
+superseded_by: ADR-0061
 ---
 
 # ADR-0055 - Planning DB Canonical Operational Source
 
 ## Status
 
-Accepted.
+Superseded by
+[ADR-0061](./ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md).
 
 ## Context
 
