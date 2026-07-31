@@ -58,15 +58,14 @@ function renderSnowflakeTask(values: ExecutionTemplateParameterValues): string {
   const taskName = normalizeIdentifier(values.taskName ?? '');
   const warehouse = normalizeIdentifier(values.warehouse ?? '');
   const schedule = values.schedule?.trim() ?? '';
-  const sqlBody = values.sqlBody?.trim() ?? '';
+  const sqlBody = (values.sqlBody?.trim() ?? '').replace(/;+$/, '');
 
   return [
     `create or replace task ${taskName}`,
     `  warehouse = ${warehouse}`,
     `  schedule = '${schedule}'`,
     'as',
-    `${sqlBody}`,
-    ';',
+    `${sqlBody};`,
   ].join('\n');
 }
 

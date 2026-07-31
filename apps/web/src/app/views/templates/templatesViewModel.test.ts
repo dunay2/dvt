@@ -41,24 +41,30 @@ describe('templatesViewModel', () => {
     ]);
   });
 
-  it('generates deterministic read-only Snowflake task source when required values are present', () => {
+  it.each([
+    ['without a terminator', 'call analytics.load_orders()'],
+    ['with one terminator', 'call analytics.load_orders();'],
+    ['with repeated terminators', 'call analytics.load_orders();;;   '],
+  ])('normalizes Snowflake task SQL %s', (_case, sqlBody) => {
     const selected = resolveExecutionTemplateSelection('snowflake-task');
     const preview = resolveExecutionTemplatePreview(selected, {
       taskName: 'load_orders',
       schedule: 'USING CRON 0 * * * * UTC',
       warehouse: 'transforming_wh',
-      sqlBody: 'call analytics.load_orders();',
+      sqlBody,
     });
 
-    expect(preview.kind).toBe('ready');
-    if (preview.kind !== 'ready') {
-      throw new Error('Expected ready template preview.');
-    }
-
-    expect(preview.exportFileName).toBe('load_orders.task.sql');
-    expect(preview.source).toContain('create or replace task load_orders');
-    expect(preview.source).toContain('warehouse = transforming_wh');
-    expect(preview.source).toContain("schedule = 'USING CRON 0 * * * * UTC'");
-    expect(preview.source).toContain('call analytics.load_orders();');
+    expect(preview).toEqual({
+      kind: 'ready',
+      errors: [],
+      exportFileName: 'load_orders.task.sql',
+      source: [
+        'create or replace task load_orders',
+        '  warehouse = transforming_wh',
+        "  schedule = 'USING CRON 0 * * * * UTC'",
+        'as',
+        'call analytics.load_orders();',
+      ].join('\n'),
+    });
   });
 });
