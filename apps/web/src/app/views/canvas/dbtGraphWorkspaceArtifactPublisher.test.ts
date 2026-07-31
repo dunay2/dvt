@@ -1,4 +1,4 @@
-import { sha256HexUtf8 } from '@dvt/contracts';
+import { PublishGraphDbtWorkspaceArtifactsRequestSchema, sha256HexUtf8 } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
@@ -261,23 +261,37 @@ describe('DBT graph workspace artifact publisher', () => {
 
   it('still asks the server to authorize an unchanged artifact set', async () => {
     const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
-      async () => ({
-        schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
-        kind: 'authority_refused',
-        canvasId: CANVAS_ID,
-        reason: 'mixed_authority',
-      })
+      async (request) => {
+        PublishGraphDbtWorkspaceArtifactsRequestSchema.parse(request);
+        return {
+          schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+          kind: 'authority_refused',
+          canvasId: CANVAS_ID,
+          reason: 'mixed_authority',
+        };
+      }
     );
-    const unchangedYaml = 'name: analytics\n';
+    const unchangedProject = 'name: analytics\n';
+    const unchangedSchema = 'version: 2\n';
 
     const result = await publishGraphDbtWorkspaceArtifacts({
       canvasId: CANVAS_ID,
-      artifacts: [{ path: 'dbt_project.yml', language: 'yaml', content: unchangedYaml }],
+      artifacts: [
+        { path: 'dbt_project.yml', language: 'yaml', content: unchangedProject },
+        { path: 'models/orders.sql', language: 'sql', content: FIRST_SQL },
+        { path: 'models/schema.yml', language: 'yaml', content: unchangedSchema },
+      ],
       workspaceFilesQuery: {
         listFiles: vi.fn(),
-        getFileContent: vi.fn(async (path) =>
-          file(path, unchangedYaml, sha256HexUtf8(unchangedYaml))
-        ),
+        getFileContent: vi.fn(async (path) => {
+          const content =
+            path === 'dbt_project.yml'
+              ? unchangedProject
+              : path === 'models/schema.yml'
+                ? unchangedSchema
+                : FIRST_SQL;
+          return file(path, content, sha256HexUtf8(content));
+        }),
       },
       publicationCommand: { publish },
     });
@@ -294,9 +308,18 @@ describe('DBT graph workspace artifact publisher', () => {
           path: 'dbt_project.yml',
           writeRequired: false,
         }),
+        expect.objectContaining({
+          path: 'models/orders.sql',
+          writeRequired: false,
+        }),
+        expect.objectContaining({
+          path: 'models/schema.yml',
+          writeRequired: false,
+        }),
       ],
       idempotencyKey: expect.stringMatching(/^graph-dbt:[a-f0-9]{64}$/u),
     });
+    expect(publish).toHaveBeenCalledTimes(1);
   });
 
   it('preserves a server revision conflict as a concurrent-edit outcome', async () => {

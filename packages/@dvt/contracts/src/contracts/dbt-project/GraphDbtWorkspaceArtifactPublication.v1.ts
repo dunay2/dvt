@@ -119,13 +119,6 @@ export const PublishGraphDbtWorkspaceArtifactsRequestSchema = z
         path: ['artifacts'],
       });
     }
-    if (!request.artifacts.some((artifact) => artifact.writeRequired)) {
-      context.addIssue({
-        code: 'custom',
-        message: 'A publication request must contain at least one required write.',
-        path: ['artifacts'],
-      });
-    }
   });
 
 const GraphDbtWorkspaceArtifactPublishedWriteSchema = z
@@ -142,7 +135,7 @@ export const GraphDbtWorkspaceArtifactPublicationAppliedSchema = z
     idempotencyKey: NonBlankStringSchema.max(256),
     requestHash: Sha256HexStringSchema,
     deduplicated: z.boolean(),
-    writes: z.array(GraphDbtWorkspaceArtifactPublishedWriteSchema).min(1).max(500),
+    writes: z.array(GraphDbtWorkspaceArtifactPublishedWriteSchema).max(500),
   })
   .strict();
 

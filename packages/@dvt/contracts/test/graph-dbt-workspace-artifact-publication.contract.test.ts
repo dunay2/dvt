@@ -45,6 +45,30 @@ describe('graph DBT workspace artifact publication contract', () => {
     expect(PublishGraphDbtWorkspaceArtifactsRequestSchema.parse(request())).toEqual(request());
   });
 
+  it('accepts a complete no-op publication and its empty applied receipt', () => {
+    const unchangedRequest = {
+      ...request(),
+      artifacts: request().artifacts.map((artifact) => ({
+        ...artifact,
+        writeRequired: false,
+      })),
+    };
+
+    expect(PublishGraphDbtWorkspaceArtifactsRequestSchema.parse(unchangedRequest)).toEqual(
+      unchangedRequest
+    );
+    expect(
+      GraphDbtWorkspaceArtifactPublicationResultSchema.parse({
+        schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+        kind: 'applied',
+        idempotencyKey: unchangedRequest.idempotencyKey,
+        requestHash: 'd'.repeat(64),
+        deduplicated: false,
+        writes: [],
+      })
+    ).toMatchObject({ kind: 'applied', writes: [] });
+  });
+
   it('rejects generic workspace paths and incomplete project proposals', () => {
     expect(() =>
       PublishGraphDbtWorkspaceArtifactsRequestSchema.parse({
