@@ -1,6 +1,9 @@
 /**
- * Owned concern: define the protected runtime query port for server-owned
- * effective workspace context resolution.
+ * @file apps/api/src/application/ports/workspaceContext.ts
+ * @baseline ADR-0062: Server-owned effective workspace context
+ * @decision Keep effective workspace selection behind a distinct server-owned query port.
+ * @consequence Protected web routes consume granted workspace scope instead of browser authority.
+ * @version 1.0.0
  */
 import type { AuthenticatedPrincipal } from '../../domain/auth/types.js';
 

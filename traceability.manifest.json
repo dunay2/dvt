@@ -1117,6 +1117,14 @@
       ],
       "implemented_by": ["scripts/planning-db-query.cjs"],
       "title": "ADR-0061 - GitHub MVP Task Authority And Planning DB Architecture Boundary"
+    },
+    {
+      "number": "ADR-0062",
+      "decisions": [
+        "Keep effective workspace selection behind a distinct server-owned query port."
+      ],
+      "implemented_by": ["apps/api/src/application/ports/workspaceContext.ts"],
+      "title": "ADR-0062 - Server-Owned Effective Workspace Context"
     }
   ]
 }
