@@ -145,7 +145,7 @@ componentGuides:
   - apps/api/docs/start-run-application-component.md
   - apps/api/docs/start-run-runtime-composition-component.md
 userStories:
-  - docs/planning/state/lane-e-shell-baseline-target-guide.md
+  - docs/architecture/components/web/appshell/shell-baseline-target-guide.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md

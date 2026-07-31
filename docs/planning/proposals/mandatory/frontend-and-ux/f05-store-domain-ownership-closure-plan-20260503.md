@@ -58,7 +58,7 @@ runtime ownership:
 | -------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `F05-DRIFT-01` | `docs/planning/state/agent-lane-e.yaml` | Closed in this slice: F-05 now points at the actual four-store topology and this plan.                              | Keep Lane E aligned when store ownership changes.                                                                   |
 | `F05-DRIFT-02` | generated workboard views               | Closed in this slice: generated views were regenerated from Lane E.                                                 | Regenerate workboard after future Lane E changes.                                                                   |
-| `F05-DRIFT-03` | `lane-e-shell-baseline-target-guide.md` | Closed in this slice: active baseline now lists the current stores, not `useAppStore`.                              | Keep the guide current with the component map.                                                                      |
+| `F05-DRIFT-03` | `shell-baseline-target-guide.md`        | Closed in this slice: active baseline now lists the current stores, not `useAppStore`.                              | Keep the guide current with the component map.                                                                      |
 | `F05-DRIFT-04` | `executionStore.ts`                     | Hard-cut target: runtime evidence (`currentPlan`, `currentRun`) and permission projection must not share one store. | `authorizationStore.ts` owns `Authorization capability display`; `executionStore.ts` retains runtime evidence only. |
 | `F05-DRIFT-05` | `uiLayoutStore.ts`                      | Closed in this slice: `connectionStatus` moved out of shell layout ownership.                                       | `platformConnectionStore.ts` owns the `ProjectPlatformConnectionStatus` query projection.                           |
 | `F05-DRIFT-06` | historical planning/review docs         | Informational only: old reviews and closeouts may describe `appStore` because they captured earlier states.         | Do not rewrite historical evidence; active docs route to this plan and the component map.                           |
@@ -227,7 +227,7 @@ componentGuides:
   - docs/architecture/components/web/web-store-domain-ownership-component.md
   - docs/architecture/components/web/web-store-domain-ownership-local-guide.md
 userStories:
-  - docs/planning/state/lane-e-shell-baseline-target-guide.md
+  - docs/architecture/components/web/appshell/shell-baseline-target-guide.md
   - docs/architecture/components/web/web-store-domain-ownership-user-stories.md
 governingSources:
   - AGENTS.md
@@ -246,7 +246,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/f05-store-domain-ownership-closure-plan-20260503.md
   - docs/planning/state/agent-lane-e.yaml
   - docs/planning/state/agent-lane-e.md
-  - docs/planning/state/lane-e-shell-baseline-target-guide.md
+  - docs/architecture/components/web/appshell/shell-baseline-target-guide.md
   - docs/planning/state/execution-workboard.md
   - docs/planning/state/open-task-route.md
   - docs/planning/status/**
@@ -331,7 +331,7 @@ redGreenCycles:
     expectedFailure: Lane E still describes the retired appStore surface as current implementation truth.
     patchSurfaces:
       - docs/planning/state/agent-lane-e.yaml
-      - docs/planning/state/lane-e-shell-baseline-target-guide.md
+      - docs/architecture/components/web/appshell/shell-baseline-target-guide.md
       - docs/planning/state/agent-lane-e.md
       - docs/planning/state/execution-workboard.md
       - docs/planning/state/open-task-route.md

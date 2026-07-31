@@ -72,7 +72,7 @@ implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/f06-fronte
 componentGuides:
   - docs/architecture/components/web/frontend-query-boundary-component.md
 userStories:
-  - docs/planning/state/lane-e-shell-baseline-target-guide.md
+  - docs/architecture/components/web/appshell/shell-baseline-target-guide.md
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md

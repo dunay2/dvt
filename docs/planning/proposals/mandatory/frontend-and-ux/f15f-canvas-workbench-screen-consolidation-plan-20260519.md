@@ -184,7 +184,7 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/state/lane-e-shell-baseline-target-guide.md
+  - docs/architecture/components/web/appshell/shell-baseline-target-guide.md
   - docs/architecture/components/web/main-workspace-views-and-ux.md
   - docs/architecture/components/web/ux-implementation-guide.md
   - docs/planning/proposals/mandatory/frontend-and-ux/f15d-workbench-navigation-disposition-plan-20260518.md

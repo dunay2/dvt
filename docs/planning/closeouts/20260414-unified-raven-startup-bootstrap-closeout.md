@@ -48,7 +48,7 @@ at different times without one governing state machine.
   code edits; planning-affecting tasks must update canonical planning surfaces.
 - `docs/planning/state/planning-control-tower.md`: active Lane E work must update the lane registry
   and regenerate planning-derived views.
-- `docs/planning/state/lane-e-shell-baseline-target-guide.md`: shell evolution must stay explicit
+- `docs/architecture/components/web/appshell/shell-baseline-target-guide.md`: shell evolution must stay explicit
   about current state, target state, rationale, and diagrams.
 - `docs/architecture/components/web/workbench-ui-contract-and-component-inventory.md`: the shell
   stays persistent, stateful, and explicit about `loading`, `empty`, `error`, `degraded`, and
@@ -117,7 +117,7 @@ flowchart TD
 
 - Mode: Slim
 - Scope:
-  - `docs/planning/state/lane-e-shell-baseline-target-guide.md`
+  - `docs/architecture/components/web/appshell/shell-baseline-target-guide.md`
   - `docs/planning/state/agent-lane-e.yaml`
   - `docs/planning/closeouts/20260414-unified-raven-startup-bootstrap-closeout.md`
   - `apps/web/index.html`

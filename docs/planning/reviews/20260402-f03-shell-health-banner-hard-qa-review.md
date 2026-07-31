@@ -155,7 +155,7 @@ pre-settle shell truth, and capability-boundary consolidation are corrected.
 ## References
 
 - `docs/planning/proposals/frontend-roadmap-20260219.md`
-- `docs/planning/state/lane-e-shell-baseline-target-guide.md`
+- `docs/architecture/components/web/appshell/shell-baseline-target-guide.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/closeouts/F-02-closeout.md`
 - `docs/architecture/frontend/planning/frontend-planning-capability-architecture.md`
