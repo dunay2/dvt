@@ -1,0 +1,25 @@
+---
+id: R-20260731-ENGINE-GUARD-PLANNING-AUTHORITY
+title: Engine architecture checks could regain a local task-authority dependency
+status: Open
+date: 2026-07-31
+owners:
+  - packages/@dvt/engine
+  - ci-governance
+severity: Low
+probability: Low
+context: >
+  The WorkflowEngine architecture suite previously coupled engine invariants to a local lane YAML
+  that is retired by ADR-0061.
+risk: >
+  A future architecture test could again read local assignment or task-state files, recreating a
+  second task authority and making engine verification depend on unrelated planning projections.
+mitigations:
+  - Keep engine architecture tests scoped to engine documents, contracts, and source ownership.
+  - Keep MVP task lifecycle and acceptance state exclusively in GitHub Issues.
+  - Run the engine package suite and the governed pre-push baseline before merge.
+residual_risk: >
+  Historical documents can still mention former lanes as historical context, but they cannot act as
+  executable task state or an input to engine architecture verification.
+review_after: 2026-08-31
+---
