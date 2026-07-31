@@ -304,7 +304,9 @@
         "scripts/sync-docs.cjs",
         "scripts/verify-changed.test.cjs",
         "tools/ci/**",
-        "tools/planning-db/state/canonical-state.json"
+        "tools/planning-db/state/canonical-state.json",
+        "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md"
       ],
       "architectureGuards": [
         "node --test tools/ci/planning-review-canon.test.mjs"
@@ -401,7 +403,9 @@
               "scripts/sync-docs.cjs",
               "scripts/verify-changed.test.cjs",
               "tools/ci/**",
-              "tools/planning-db/state/canonical-state.json"
+              "tools/planning-db/state/canonical-state.json",
+              "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md"
             ],
             "expectedFailure": "Review governance recreates local task lifecycle, lane state, or generated workboard authority beside GitHub Issues."
           }
@@ -471,11 +475,13 @@
           "scripts/sync-docs.cjs",
           "scripts/verify-changed.test.cjs",
           "tools/ci/**",
-          "tools/planning-db/state/canonical-state.json"
+          "tools/planning-db/state/canonical-state.json",
+          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md"
         ],
         "forbiddenImplementationSurfaces": ["apps/**"]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-07-31T11:30:50.789Z"
     },
@@ -1844,6 +1850,161 @@
         "forbiddenImplementationSurfaces": ["apps/**"]
       },
       "createdAt": "2026-07-31T11:30:50.789Z"
+    },
+    {
+      "operationId": "0ee212af-aeda-4783-b5ef-aff1dd4a2771",
+      "idempotencyKey": "codex-gd-review-paths-20260731",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
+      "sourcePath": "tools/ci/planning-review-canon.test.mjs",
+      "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test tools/ci/planning-review-canon.test.mjs",
+        "dddOwner": "PlanningBoardTraceability",
+        "railName": "ValidatePlanningReviewBoardTraceability",
+        "railType": "query",
+        "featureId": "GD-REV-PLANNING-CANON",
+        "greenTest": "node --test tools/ci/planning-review-canon.test.mjs",
+        "sourceRef": "tools/ci/planning-review-canon.test.mjs",
+        "unitTests": ["tools/ci/planning-review-canon.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/architecture/components/ci-governance/planning-review-canon-user-stories.md"
+        ],
+        "cypressFlows": ["not applicable: repository governance query"],
+        "domainObjects": ["PlanningReviewBoardTraceability"],
+        "fowlerSignals": [
+          "single_source_of_truth",
+          "semantic_fitness_function"
+        ],
+        "patchSurfaces": [
+          ".github/actions/prepare-planning-db/action.yml",
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          ".gitignore",
+          "AGENTS.md",
+          "package.json",
+          "docs/DOCS_README.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
+          "docs/architecture/components/ci-governance/**",
+          "docs/architecture/components/engine/roadmap/engine-phases.md",
+          "docs/architecture/components/web/**",
+          "docs/architecture/system-delivery-status.md",
+          "docs/generated-docs-policy.json",
+          "docs/guides/*.md",
+          "docs/planning/gaps/**",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
+          "docs/planning/reviews/review-status-board.md",
+          "docs/planning/reviews/sprints/index.md",
+          "docs/planning/roadmap/**",
+          "docs/planning/state/**",
+          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
+          "docs/planning/templates/execution-work-item-template.md",
+          "docs/runbooks/*.md",
+          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+          "scripts/README.md",
+          "scripts/check-feature-mechanization*",
+          "scripts/closeout-changed.test.cjs",
+          "scripts/docs-*.cjs",
+          "scripts/generate-planning-lanes*",
+          "scripts/generate-workboard*",
+          "scripts/governance-*.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/planning-db*.cjs",
+          "scripts/planning-db/**",
+          "scripts/planning-db-operate-tests/**",
+          "scripts/planning-github-status-projection*",
+          "scripts/sync-docs.cjs",
+          "scripts/verify-changed.test.cjs",
+          "tools/ci/**",
+          "tools/planning-db/state/canonical-state.json",
+          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md"
+        ],
+        "completionGate": [
+          "node --test tools/ci/planning-review-canon.test.mjs",
+          "pnpm planning:db:integrity:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/planning-review-canon-component.md"
+        ],
+        "expectedFailure": "Review governance recreates local task lifecycle, lane state, or generated workboard authority beside GitHub Issues.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
+        ],
+        "architectureGuards": [
+          "node --test tools/ci/planning-review-canon.test.mjs"
+        ],
+        "implementationPlan": "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "implementationRefs": [
+          "tools/ci/planning-review-canon.test.mjs#requiredFiles"
+        ],
+        "normalizedRailName": "validateplanningreviewboardtraceability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
+        "allowedImplementationSurfaces": [
+          ".github/actions/prepare-planning-db/action.yml",
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          ".gitignore",
+          "AGENTS.md",
+          "package.json",
+          "docs/DOCS_README.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
+          "docs/architecture/components/ci-governance/**",
+          "docs/architecture/components/engine/roadmap/engine-phases.md",
+          "docs/architecture/components/web/**",
+          "docs/architecture/system-delivery-status.md",
+          "docs/generated-docs-policy.json",
+          "docs/guides/*.md",
+          "docs/planning/gaps/**",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
+          "docs/planning/reviews/review-status-board.md",
+          "docs/planning/reviews/sprints/index.md",
+          "docs/planning/roadmap/**",
+          "docs/planning/state/**",
+          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
+          "docs/planning/templates/execution-work-item-template.md",
+          "docs/runbooks/*.md",
+          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+          "scripts/README.md",
+          "scripts/check-feature-mechanization*",
+          "scripts/closeout-changed.test.cjs",
+          "scripts/docs-*.cjs",
+          "scripts/generate-planning-lanes*",
+          "scripts/generate-workboard*",
+          "scripts/governance-*.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/planning-db*.cjs",
+          "scripts/planning-db/**",
+          "scripts/planning-db-operate-tests/**",
+          "scripts/planning-github-status-projection*",
+          "scripts/sync-docs.cjs",
+          "scripts/verify-changed.test.cjs",
+          "tools/ci/**",
+          "tools/planning-db/state/canonical-state.json",
+          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/**"]
+      },
+      "createdAt": "2026-07-31T12:50:30.216Z"
     }
   ]
 }
