@@ -41,24 +41,48 @@ describe('templatesViewModel', () => {
     ]);
   });
 
-  it('generates deterministic read-only Snowflake task source when required values are present', () => {
+  it.each([
+    {
+      caseName: 'without a terminator',
+      input: 'call analytics.load_orders()',
+      normalizedBody: 'call analytics.load_orders()',
+    },
+    {
+      caseName: 'with one terminator',
+      input: 'call analytics.load_orders();',
+      normalizedBody: 'call analytics.load_orders()',
+    },
+    {
+      caseName: 'with repeated terminators',
+      input: 'call analytics.load_orders();;;   ',
+      normalizedBody: 'call analytics.load_orders()',
+    },
+    {
+      caseName: 'with a trailing line comment',
+      input: 'call analytics.load_orders() -- scheduled task',
+      normalizedBody: 'call analytics.load_orders() -- scheduled task',
+    },
+  ])('normalizes Snowflake task SQL $caseName', ({ input, normalizedBody }) => {
     const selected = resolveExecutionTemplateSelection('snowflake-task');
     const preview = resolveExecutionTemplatePreview(selected, {
       taskName: 'load_orders',
       schedule: 'USING CRON 0 * * * * UTC',
       warehouse: 'transforming_wh',
-      sqlBody: 'call analytics.load_orders();',
+      sqlBody: input,
     });
 
-    expect(preview.kind).toBe('ready');
-    if (preview.kind !== 'ready') {
-      throw new Error('Expected ready template preview.');
-    }
-
-    expect(preview.exportFileName).toBe('load_orders.task.sql');
-    expect(preview.source).toContain('create or replace task load_orders');
-    expect(preview.source).toContain('warehouse = transforming_wh');
-    expect(preview.source).toContain("schedule = 'USING CRON 0 * * * * UTC'");
-    expect(preview.source).toContain('call analytics.load_orders();');
+    expect(preview).toEqual({
+      kind: 'ready',
+      errors: [],
+      exportFileName: 'load_orders.task.sql',
+      source: [
+        'create or replace task load_orders',
+        '  warehouse = transforming_wh',
+        "  schedule = 'USING CRON 0 * * * * UTC'",
+        'as',
+        normalizedBody,
+        ';',
+      ].join('\n'),
+    });
   });
 });
