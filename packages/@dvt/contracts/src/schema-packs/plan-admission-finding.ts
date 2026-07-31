@@ -1,3 +1,9 @@
+/**
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Validate canonical plan-admission findings through one focused strict schema pack.
+ * @consequence Contract consumers reject malformed findings without importing admission orchestration behavior.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 import {

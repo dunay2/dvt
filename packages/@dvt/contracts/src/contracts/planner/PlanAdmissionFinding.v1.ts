@@ -6,6 +6,9 @@
  * own those decisions and use this module only to describe an existing
  * rejection without losing machine-readable evidence.
  *
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Publish one versioned finding vocabulary for the existing preview-selection and stored-plan executability decisions.
+ * @consequence Admission authorities can expose structured rejection evidence without creating a parallel result hierarchy.
  * @version 1.0.0
  */
 import type { PlanRef } from '../../types/contracts.js';
