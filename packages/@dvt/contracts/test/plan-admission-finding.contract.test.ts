@@ -7,6 +7,7 @@ import {
   parsePlanAdmissionFindingCollection,
   type PlanAdmissionFindingIdentityInput,
   type PlanRef,
+  type PreviewSelectionFinding,
 } from '../src/index.js';
 
 const PLAN_REF = {
@@ -48,7 +49,7 @@ function buildSelectionIdentity(
   };
 }
 
-function buildSelectionFinding() {
+function buildSelectionFinding(): PreviewSelectionFinding {
   const identity = buildSelectionIdentity();
   return {
     ...identity,
