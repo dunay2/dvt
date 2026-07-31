@@ -119,6 +119,14 @@ describe('canvasDraftRepository read/write', () => {
       },
       remoteDraftState: {
         accessMode: 'writable',
+        authoringAuthority: {
+          kind: 'resolved',
+          binding: {
+            schemaVersion: 'canvas-authoring-authority-binding.v1',
+            canvasId: 'main-canvas',
+            authority: { kind: 'graph-draft' },
+          },
+        },
         capabilityReason: 'authorized',
         formatError: null,
         formatMeta: null,
@@ -167,9 +175,11 @@ describe('canvasDraftRepository read/write', () => {
     const repository = createCanvasDraftRepository(authoringPort);
     const firstCanvasDraft = {
       canvas: {
+        id: 'transformation-canvas',
         kind: 'transformation',
         title: 'Transformation canvas',
       },
+      activeCanvasId: 'transformation-canvas',
       nodeIds: [],
       nodePositions: {},
       nodes: [],
@@ -191,6 +201,14 @@ describe('canvasDraftRepository read/write', () => {
       },
       remoteDraftState: {
         accessMode: 'writable',
+        authoringAuthority: {
+          kind: 'resolved',
+          binding: {
+            schemaVersion: 'canvas-authoring-authority-binding.v1',
+            canvasId: 'transformation-canvas',
+            authority: { kind: 'graph-draft' },
+          },
+        },
         capabilityReason: 'authorized',
         formatError: null,
         formatMeta: null,

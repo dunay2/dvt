@@ -52,15 +52,21 @@ function cloneSemanticGraph(
   semanticGraph: CanvasAuthoringSemanticGraph
 ): CanvasAuthoringSemanticGraph {
   return {
-    canonicalNodes: semanticGraph.canonicalNodes.map((node) => ({
-      ...node,
-      tags: [...node.tags],
-      metadata: toCanvasAuthoringMetadata(node.metadata),
-    })),
-    canonicalEdges: semanticGraph.canonicalEdges.map((edge) => ({
-      ...edge,
-      metadata: toCanvasAuthoringMetadata(edge.metadata),
-    })),
+    canonicalNodes: semanticGraph.canonicalNodes.map((node) => {
+      const metadata = toCanvasAuthoringMetadata(node.metadata);
+      return {
+        ...node,
+        tags: [...node.tags],
+        ...(metadata == null ? {} : { metadata }),
+      };
+    }),
+    canonicalEdges: semanticGraph.canonicalEdges.map((edge) => {
+      const metadata = toCanvasAuthoringMetadata(edge.metadata);
+      return {
+        ...edge,
+        ...(metadata == null ? {} : { metadata }),
+      };
+    }),
   };
 }
 

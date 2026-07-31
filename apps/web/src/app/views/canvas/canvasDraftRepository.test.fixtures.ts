@@ -74,9 +74,11 @@ const CANONICAL_EDGES = [
 export function buildAuthoringDraft(): WorkspaceGraphAuthoringDraft {
   return {
     canvas: {
+      id: DEFAULT_AUTHORING_DRAFT_LAYOUT.canvas.id,
       kind: DEFAULT_AUTHORING_DRAFT_LAYOUT.canvas.kind,
       title: DEFAULT_AUTHORING_DRAFT_LAYOUT.canvas.title,
     },
+    activeCanvasId: DEFAULT_AUTHORING_DRAFT_LAYOUT.canvas.id,
     nodeIds: [...DEFAULT_AUTHORING_DRAFT_LAYOUT.nodeIds],
     nodePositions: { ...DEFAULT_AUTHORING_DRAFT_LAYOUT.nodePositions },
     nodes: CANONICAL_NODES.map((node) => ({
