@@ -15,6 +15,7 @@ export const WORKSPACE_SCOPE = {
 } as const;
 const DEFAULT_AUTHORING_DRAFT_LAYOUT = {
   canvas: {
+    id: 'main-canvas',
     kind: 'transformation',
     title: 'Main canvas',
   },
@@ -111,6 +112,14 @@ const DEFAULT_READ_RESULT: WorkspaceGraphDraftAuthoringReadResult = {
     schemaVersion: 'workspace-graph-draft.v1',
     storedSchemaVersion: 'workspace-graph-draft.v1',
     migrationState: 'native',
+  },
+  authoringAuthority: {
+    kind: 'resolved',
+    binding: {
+      schemaVersion: 'canvas-authoring-authority-binding.v1',
+      canvasId: 'main-canvas',
+      authority: { kind: 'graph-draft' },
+    },
   },
   record: {
     scope: WORKSPACE_SCOPE,

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildProtectedDraftRecord } from './workspaceGraphDraftAuthoring.test.fixtures';
-import { buildDraftReadDeniedResponse } from './workspaceGraphDraftProtocol.test.fixtures';
+import {
+  buildDraftReadDeniedResponse,
+  buildDraftReadOkResponse,
+} from './workspaceGraphDraftProtocol.test.fixtures';
 import {
   projectWorkspaceGraphAuthoringDraftSnapshot,
   projectWorkspaceGraphDraftReadResponseSnapshot,
@@ -62,5 +65,25 @@ describe('workspaceGraphDraftSnapshotProjection', () => {
     expect(() =>
       projectWorkspaceGraphDraftReadResponseSnapshot(buildDraftReadDeniedResponse(WORKSPACE_SCOPE))
     ).toThrow('Workspace graph snapshot read denied for the current scope');
+  });
+
+  it('preserves canonical Canvas authoring authority in the graph snapshot', () => {
+    const response = buildDraftReadOkResponse(WORKSPACE_SCOPE, {
+      authoringAuthority: {
+        kind: 'resolved',
+        binding: {
+          schemaVersion: 'canvas-authoring-authority-binding.v1',
+          canvasId: 'main-canvas',
+          authority: { kind: 'graph-draft' },
+        },
+      },
+      record: buildProtectedDraftRecord(WORKSPACE_SCOPE, {
+        draft: buildProtectedDraftRecord(WORKSPACE_SCOPE).draft,
+      }),
+    });
+
+    expect(projectWorkspaceGraphDraftReadResponseSnapshot(response).authoringAuthority).toEqual(
+      response.kind === 'ok' ? response.authoringAuthority : null
+    );
   });
 });

@@ -81,12 +81,25 @@ export function buildDraftReadOkResponse(
   scope: WorkspaceGraphDraftScope,
   overrides: Partial<WorkspaceGraphDraftReadResponse & { kind: 'ok' }> = {}
 ): WorkspaceGraphDraftReadResponse {
+  const record = overrides.record ?? buildProtectedDraftRecord(scope);
+  const canvasId = record.draft.activeCanvasId ?? record.draft.canvas.id ?? null;
   return {
     kind: 'ok',
     capability: buildDraftCapability(scope),
     auditRef: buildDraftAuditRef('draft_read', 'allowed'),
     formatMeta: buildDraftFormatMeta(),
-    record: buildProtectedDraftRecord(scope),
+    authoringAuthority:
+      canvasId === null
+        ? { kind: 'unresolved', reason: 'missing_authority', canvasId: null }
+        : {
+            kind: 'resolved',
+            binding: {
+              schemaVersion: 'canvas-authoring-authority-binding.v1',
+              canvasId,
+              authority: { kind: 'graph-draft' },
+            },
+          },
+    record,
     ...overrides,
   };
 }

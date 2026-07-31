@@ -151,8 +151,10 @@ export type {
 } from './contracts/planner/WorkspaceGraphAuthoringCommand.v1.js';
 export {
   CanvasAuthoringAuthorityBindingSchema,
+  CanvasAuthoringAuthorityResolutionSchema,
   WorkspaceRelativeProjectRootSchema,
   type CanvasAuthoringAuthorityBinding,
+  type CanvasAuthoringAuthorityResolution,
 } from './contracts/planner/CanvasAuthoringAuthorityBinding.v1.js';
 export {
   DbtProjectGraphProjectionSchema,

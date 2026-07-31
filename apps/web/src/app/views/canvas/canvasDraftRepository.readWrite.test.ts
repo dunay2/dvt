@@ -55,6 +55,14 @@ function buildExpectedAuthoringSemanticGraph(): NonNullable<AuthoringReadState['
 function buildExpectedAuthoringReadState(): AuthoringReadState {
   return {
     accessMode: 'writable' as const,
+    authoringAuthority: {
+      kind: 'resolved',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'main-canvas',
+        authority: { kind: 'graph-draft' },
+      },
+    },
     capabilityReason: 'authorized' as const,
     formatError: null,
     formatMeta: {

@@ -66,6 +66,11 @@ describe('canvasAuthoringState', () => {
       canMutateGraphTransport: true,
       draftReadModel: {
         accessMode: 'read_only',
+        authoringAuthority: {
+          kind: 'unresolved',
+          reason: 'missing_authority',
+          canvasId: null,
+        },
         capabilityReason: 'write_denied',
         formatError: null,
         formatMeta: null,
@@ -99,6 +104,11 @@ describe('canvasAuthoringState', () => {
       canMutateGraphTransport: true,
       draftReadModel: {
         accessMode: 'forbidden',
+        authoringAuthority: {
+          kind: 'unresolved',
+          reason: 'missing_authority',
+          canvasId: null,
+        },
         capabilityReason: 'workspace_scope_denied',
         formatError: null,
         formatMeta: null,

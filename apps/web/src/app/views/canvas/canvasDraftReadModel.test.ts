@@ -8,6 +8,7 @@ import {
 import {
   createUnknownCanvasAuthoringDraftReadModel,
   projectCanvasAuthoringDraftReadModel,
+  resolveGraphDraftAuthoringCanvasId,
   type CanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
 
@@ -62,7 +63,25 @@ describe('Canvas authoring draft read model', () => {
       'transform_node',
       'sink_node',
     ]);
+    expect(resolveGraphDraftAuthoringCanvasId(result)).toBe('main-canvas');
   });
+
+  it.each(['missing_authority', 'mixed_authority'] as const)(
+    'fails closed when Canvas authority is %s',
+    (reason) => {
+      const result = projectCanvasAuthoringDraftReadModel(
+        buildDraftReadOkResponse(DEFAULT_CANVAS_AUTHORING_SCOPE, {
+          authoringAuthority: {
+            kind: 'unresolved',
+            reason,
+            canvasId: reason === 'mixed_authority' ? 'main-canvas' : null,
+          },
+        })
+      );
+
+      expect(resolveGraphDraftAuthoringCanvasId(result)).toBeNull();
+    }
+  );
 
   it('keeps not_found as an unknown read model with no synthetic draft', () => {
     const result = projectCanvasAuthoringDraftReadModel({ kind: 'not_found' });

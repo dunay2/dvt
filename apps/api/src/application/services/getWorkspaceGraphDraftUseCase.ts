@@ -14,6 +14,8 @@ import {
   WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE,
   WorkspaceGraphAuthoringDraftSchema,
   parseWorkspaceGraphDraftReadResponse,
+  type CanvasAuthoringAuthorityResolution,
+  type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphDraftAuditOutcome,
   type WorkspaceGraphDraftAuditRef,
   type WorkspaceGraphDraftCapabilityMode,
@@ -110,6 +112,7 @@ export class GetWorkspaceGraphDraftUseCase {
           storedSchemaVersion: stored.schemaVersion,
           migrationState: WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE.native,
         },
+        authoringAuthority: resolveGraphDraftAuthoringAuthority(draft),
         record: {
           scope: stored.scope,
           schemaVersion: stored.schemaVersion,
@@ -154,6 +157,26 @@ export class GetWorkspaceGraphDraftUseCase {
       };
     }
   }
+}
+
+function resolveGraphDraftAuthoringAuthority(
+  draft: WorkspaceGraphAuthoringDraft
+): CanvasAuthoringAuthorityResolution {
+  const canvasId = draft.activeCanvasId ?? draft.canvas.id ?? null;
+  return canvasId === null
+    ? {
+        kind: 'unresolved',
+        reason: 'missing_authority',
+        canvasId: null,
+      }
+    : {
+        kind: 'resolved',
+        binding: {
+          schemaVersion: 'canvas-authoring-authority-binding.v1',
+          canvasId,
+          authority: { kind: 'graph-draft' },
+        },
+      };
 }
 
 function buildAuditRef(

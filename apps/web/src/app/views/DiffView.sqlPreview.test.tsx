@@ -4,6 +4,7 @@ import { waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import type { FileContent } from '../ports/workspace';
+import { mockGraphDraftAuthoringAuthority } from '../../testing/workspacePortDoubles';
 import {
   activateDiffViewButton,
   buildFileContent,
@@ -123,6 +124,7 @@ describe('DiffView SQL preview', () => {
     mounted = await renderDiffView({
       graph: {
         getGraphSnapshot: async () => ({
+          authoringAuthority: mockGraphDraftAuthoringAuthority,
           nodes: [],
           edges: [],
         }),

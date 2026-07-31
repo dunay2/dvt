@@ -10,6 +10,7 @@ export function buildWorkspaceGraphAuthoringDraft(
 ): WorkspaceGraphAuthoringDraft {
   return {
     canvas: {
+      id: 'main-canvas',
       kind: 'transformation',
       title: 'Main canvas',
     },
