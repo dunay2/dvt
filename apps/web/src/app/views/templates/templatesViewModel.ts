@@ -65,7 +65,8 @@ function renderSnowflakeTask(values: ExecutionTemplateParameterValues): string {
     `  warehouse = ${warehouse}`,
     `  schedule = '${schedule}'`,
     'as',
-    `${sqlBody};`,
+    sqlBody,
+    ';',
   ].join('\n');
 }
 

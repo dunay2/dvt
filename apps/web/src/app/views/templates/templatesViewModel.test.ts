@@ -42,16 +42,33 @@ describe('templatesViewModel', () => {
   });
 
   it.each([
-    ['without a terminator', 'call analytics.load_orders()'],
-    ['with one terminator', 'call analytics.load_orders();'],
-    ['with repeated terminators', 'call analytics.load_orders();;;   '],
-  ])('normalizes Snowflake task SQL %s', (_case, sqlBody) => {
+    {
+      caseName: 'without a terminator',
+      input: 'call analytics.load_orders()',
+      normalizedBody: 'call analytics.load_orders()',
+    },
+    {
+      caseName: 'with one terminator',
+      input: 'call analytics.load_orders();',
+      normalizedBody: 'call analytics.load_orders()',
+    },
+    {
+      caseName: 'with repeated terminators',
+      input: 'call analytics.load_orders();;;   ',
+      normalizedBody: 'call analytics.load_orders()',
+    },
+    {
+      caseName: 'with a trailing line comment',
+      input: 'call analytics.load_orders() -- scheduled task',
+      normalizedBody: 'call analytics.load_orders() -- scheduled task',
+    },
+  ])('normalizes Snowflake task SQL $caseName', ({ input, normalizedBody }) => {
     const selected = resolveExecutionTemplateSelection('snowflake-task');
     const preview = resolveExecutionTemplatePreview(selected, {
       taskName: 'load_orders',
       schedule: 'USING CRON 0 * * * * UTC',
       warehouse: 'transforming_wh',
-      sqlBody,
+      sqlBody: input,
     });
 
     expect(preview).toEqual({
@@ -63,7 +80,8 @@ describe('templatesViewModel', () => {
         '  warehouse = transforming_wh',
         "  schedule = 'USING CRON 0 * * * * UTC'",
         'as',
-        'call analytics.load_orders();',
+        normalizedBody,
+        ';',
       ].join('\n'),
     });
   });
