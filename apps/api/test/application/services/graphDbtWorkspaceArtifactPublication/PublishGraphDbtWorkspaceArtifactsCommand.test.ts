@@ -1,7 +1,13 @@
 import { sha256HexUtf8, type PublishGraphDbtWorkspaceArtifactsRequest } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { IWorkspaceFileBatchMutationPort } from '../../../../src/application/ports/workspaceFiles.js';
+import {
+  WorkspaceFileNotFoundError,
+  type IWorkspaceFileBatchMutationPort,
+  type IWorkspaceFileRepository,
+  type WorkspaceFileContent,
+} from '../../../../src/application/ports/workspaceFiles.js';
+import type { CanvasAuthoringAuthorityPolicy } from '../../../../src/application/services/canvasAuthoringAuthorityPolicy.js';
 import { PublishGraphDbtWorkspaceArtifactsCommand } from '../../../../src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.js';
 
 const SCOPE = {
@@ -13,6 +19,7 @@ const SCOPE = {
 const SQL_PAYLOAD = 'select 2\n';
 
 const REQUEST: PublishGraphDbtWorkspaceArtifactsRequest = {
+  canvasId: 'orders-canvas',
   artifacts: [
     {
       path: 'dbt_project.yml',
@@ -39,6 +46,67 @@ const REQUEST: PublishGraphDbtWorkspaceArtifactsRequest = {
   idempotencyKey: 'graph-dbt:' + 'd'.repeat(64),
 };
 
+function authorityPolicy(
+  authorizeGraphArtifactPublication: CanvasAuthoringAuthorityPolicy['authorizeGraphArtifactPublication']
+): CanvasAuthoringAuthorityPolicy {
+  return { authorizeGraphArtifactPublication } as CanvasAuthoringAuthorityPolicy;
+}
+
+function allowedAuthorityPolicy(): CanvasAuthoringAuthorityPolicy {
+  return authorityPolicy(
+    vi.fn().mockResolvedValue({
+      kind: 'allowed',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: REQUEST.canvasId,
+        authority: { kind: 'graph-draft' },
+      },
+    })
+  );
+}
+
+function workspaceFile(path: string, content: string, contentSha256: string): WorkspaceFileContent {
+  return {
+    path,
+    name: path.split('/').at(-1)!,
+    language: path.endsWith('.sql') ? 'sql' : 'yaml',
+    content,
+    contentSha256,
+    lastModified: '2026-07-31T12:00:00.000Z',
+  };
+}
+
+function workspaceFiles(
+  overrides: Readonly<Record<string, WorkspaceFileContent | null>> = {}
+): Pick<IWorkspaceFileRepository, 'getFileContent'> {
+  const files: Readonly<Record<string, WorkspaceFileContent | null>> = {
+    'dbt_project.yml': workspaceFile(
+      'dbt_project.yml',
+      'name: previous\n',
+      REQUEST.artifacts[0]!.expectedRevision.kind === 'content_sha256'
+        ? REQUEST.artifacts[0]!.expectedRevision.value
+        : ''
+    ),
+    'models/orders.sql': workspaceFile(
+      'models/orders.sql',
+      REQUEST.artifacts[1]!.content,
+      REQUEST.artifacts[1]!.expectedRevision.kind === 'content_sha256'
+        ? REQUEST.artifacts[1]!.expectedRevision.value
+        : ''
+    ),
+    'models/schema.yml': null,
+    ...overrides,
+  };
+
+  return {
+    async getFileContent(_scope, path) {
+      const file = files[path];
+      if (!file) throw new WorkspaceFileNotFoundError(path);
+      return file;
+    },
+  };
+}
+
 describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
   it('derives writes from proposed content instead of trusting caller write flags', async () => {
     const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>(async (_scope, mutation) => ({
@@ -52,7 +120,11 @@ describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
       })),
       deletes: [],
     }));
-    const command = new PublishGraphDbtWorkspaceArtifactsCommand({ apply });
+    const command = new PublishGraphDbtWorkspaceArtifactsCommand(
+      allowedAuthorityPolicy(),
+      workspaceFiles(),
+      { apply }
+    );
 
     await expect(command.execute({ scope: SCOPE, ...REQUEST })).resolves.toMatchObject({
       kind: 'applied',
@@ -88,7 +160,11 @@ describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
         { path: 'models/schema.yml', currentContentSha256: null },
       ],
     }));
-    const command = new PublishGraphDbtWorkspaceArtifactsCommand({ apply });
+    const command = new PublishGraphDbtWorkspaceArtifactsCommand(
+      allowedAuthorityPolicy(),
+      workspaceFiles(),
+      { apply }
+    );
 
     await expect(command.execute({ scope: SCOPE, ...REQUEST })).resolves.toEqual({
       schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
@@ -99,5 +175,122 @@ describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
       ],
     });
     expect(apply).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses file authority before any workspace mutation', async () => {
+    const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>();
+    const command = new PublishGraphDbtWorkspaceArtifactsCommand(
+      authorityPolicy(
+        vi.fn().mockResolvedValue({
+          kind: 'refused',
+          reason: 'dbt_project_files_authority',
+        })
+      ),
+      workspaceFiles(),
+      { apply }
+    );
+
+    await expect(command.execute({ scope: SCOPE, ...REQUEST })).resolves.toEqual({
+      schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+      kind: 'authority_refused',
+      canvasId: REQUEST.canvasId,
+      reason: 'dbt_project_files_authority',
+    });
+    expect(apply).not.toHaveBeenCalled();
+  });
+
+  it('returns a typed missing-authority refusal before any workspace mutation', async () => {
+    const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>();
+    const command = new PublishGraphDbtWorkspaceArtifactsCommand(
+      authorityPolicy(
+        vi.fn().mockResolvedValue({
+          kind: 'refused',
+          reason: 'missing_authority',
+        })
+      ),
+      workspaceFiles(),
+      { apply }
+    );
+
+    await expect(command.execute({ scope: SCOPE, ...REQUEST })).resolves.toEqual({
+      schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+      kind: 'authority_refused',
+      canvasId: REQUEST.canvasId,
+      reason: 'missing_authority',
+    });
+    expect(apply).not.toHaveBeenCalled();
+  });
+
+  it('returns a typed mixed-authority refusal before any workspace mutation', async () => {
+    const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>();
+    const command = new PublishGraphDbtWorkspaceArtifactsCommand(
+      authorityPolicy(
+        vi.fn().mockResolvedValue({
+          kind: 'refused',
+          reason: 'mixed_authority',
+        })
+      ),
+      workspaceFiles(),
+      { apply }
+    );
+
+    await expect(command.execute({ scope: SCOPE, ...REQUEST })).resolves.toEqual({
+      schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+      kind: 'authority_refused',
+      canvasId: REQUEST.canvasId,
+      reason: 'mixed_authority',
+    });
+    expect(apply).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    {
+      name: 'unmarked SQL',
+      currentContent: 'select * from manually_authored_orders\n',
+    },
+    {
+      name: 'a mismatched divergence marker',
+      currentContent: `-- dvt:graph-draft-content-sha256=${'0'.repeat(64)}\nselect 7\n`,
+    },
+  ])('refuses $name before any workspace mutation', async ({ currentContent }) => {
+    const currentContentSha256 = sha256HexUtf8(currentContent);
+    const request: PublishGraphDbtWorkspaceArtifactsRequest = {
+      ...REQUEST,
+      artifacts: REQUEST.artifacts.map((artifact) =>
+        artifact.path === 'models/orders.sql'
+          ? {
+              ...artifact,
+              expectedRevision: {
+                kind: 'content_sha256' as const,
+                value: currentContentSha256,
+              },
+            }
+          : artifact
+      ),
+    };
+    const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>();
+    const command = new PublishGraphDbtWorkspaceArtifactsCommand(
+      allowedAuthorityPolicy(),
+      workspaceFiles({
+        'models/orders.sql': workspaceFile(
+          'models/orders.sql',
+          currentContent,
+          currentContentSha256
+        ),
+      }),
+      { apply }
+    );
+
+    await expect(command.execute({ scope: SCOPE, ...request })).resolves.toEqual({
+      schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+      kind: 'conflict',
+      conflicts: [
+        {
+          path: 'models/orders.sql',
+          currentContentSha256,
+        },
+      ],
+    });
+    expect(apply).not.toHaveBeenCalled();
   });
 });

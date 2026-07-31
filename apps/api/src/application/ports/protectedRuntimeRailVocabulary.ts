@@ -42,6 +42,10 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   occupiedCanvas: 'occupied Canvas',
   projectionFailure: 'projection failure',
   missingFileAuthority: 'missing dbt project file authority',
+  missingCanvasAuthoringAuthority: 'missing Canvas authoring authority',
+  mixedCanvasAuthoringAuthority: 'mixed Canvas authoring authority',
+  fileAuthorityCannotPublishGraphArtifacts:
+    'dbt project file authority cannot publish graph-derived artifacts',
   tenantMismatch: 'tenant mismatch',
   tenantWorkspaceMismatch: 'tenant/workspace mismatch',
   unknownRun: 'unknown run',
@@ -92,6 +96,10 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   dbtProjectGraphRoutes: 'apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts',
   graphDbtWorkspaceArtifactPublicationRoutes:
     'apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts',
+  graphDbtWorkspaceArtifactPublicationCommand:
+    'apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts',
+  canvasAuthoringAuthorityPolicy:
+    'apps/api/test/application/canvasAuthoringAuthorityPolicy.test.ts',
   dbtProjectAnalyzer: 'apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts',
   dbtProjectImportRoutes: 'apps/api/test/entrypoints/http/dbtProjectImportRoutes.test.ts',
   dbtProjectImportUseCases: 'apps/api/test/application/dbtProjectImportUseCases.test.ts',
@@ -187,8 +195,8 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
   },
   getWorkspaceGraphDraft: {
     name: 'GetWorkspaceGraphDraft',
-    boundedContext: 'Workspace graph drafting',
-    dddObject: 'Workspace draft read model',
+    boundedContext: 'Workspace graph drafting and Canvas authoring authority',
+    dddObject: 'Workspace draft read model and graph-authority membership fact',
     applicationPort: 'getWorkspaceGraphDraftUseCase',
     adapterSurface: 'GET /workspace/graph/draft',
     scopeAndAuthorization: 'workspace:graph-draft:view, tenant/project/environment scope',
@@ -215,10 +223,10 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     boundedContext: 'dbt graph workspace publication',
     dddObject: 'GraphDbtWorkspaceArtifactPublication',
     applicationPort:
-      'IPublishGraphDbtWorkspaceArtifactsCommand via IWorkspaceFileBatchMutationPort',
+      'IPublishGraphDbtWorkspaceArtifactsCommand via CanvasAuthoringAuthorityPolicy and IWorkspaceFileBatchMutationPort',
     adapterSurface: 'POST /workspace/dbt/graph-artifacts/publications',
     scopeAndAuthorization:
-      'workspace:files:save, tenant/project/environment scope and idempotency key',
+      'workspace:files:save, tenant/project/environment scope, Canvas identity, graph-draft authority, and idempotency key',
   },
   proposeDbtYamlDescriptionEdit: {
     name: 'ProposeDbtYamlDescriptionEdit',

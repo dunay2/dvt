@@ -14,6 +14,30 @@ import { sha256HexUtf8 } from '../../utils/sha256HexUtf8.js';
 const NonBlankStringSchema = z.string().trim().min(1);
 const Sha256HexStringSchema = z.string().regex(/^[a-f0-9]{64}$/u);
 const GraphDbtArtifactPathSchema = NonBlankStringSchema.max(4_096);
+export const GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX = '-- dvt:graph-draft-content-sha256=';
+const GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN =
+  /^-- dvt:graph-draft-content-sha256=([a-f0-9]{64})\r?\n([\s\S]*)$/u;
+
+export type GraphDbtModelDivergenceMarker = Readonly<{
+  contentSha256: string;
+  payload: string;
+  valid: boolean;
+}>;
+
+export function parseGraphDbtModelDivergenceMarker(
+  content: string
+): GraphDbtModelDivergenceMarker | null {
+  const match = GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN.exec(content);
+  if (!match) return null;
+
+  const contentSha256 = match[1]!;
+  const payload = match[2]!;
+  return {
+    contentSha256,
+    payload,
+    valid: sha256HexUtf8(payload) === contentSha256,
+  };
+}
 
 export const GraphDbtWorkspaceArtifactExpectedRevisionSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('absent') }).strict(),
@@ -48,19 +72,17 @@ export const GraphDbtWorkspaceArtifactPublicationItemSchema = z
       });
     }
     if (artifact.language === 'sql') {
-      const markerMatch = /^-- dvt:graph-draft-content-sha256=([a-f0-9]{64})\r?\n([\s\S]*)$/u.exec(
-        artifact.content
-      );
-      if (!markerMatch) {
+      const marker = parseGraphDbtModelDivergenceMarker(artifact.content);
+      if (!marker) {
         context.addIssue({
           code: 'custom',
-          message: 'Graph-derived dbt model SQL must carry the managed integrity marker.',
+          message: 'Graph-derived dbt model SQL must carry the graph-draft divergence marker.',
           path: ['content'],
         });
-      } else if (sha256HexUtf8(markerMatch[2]!) !== markerMatch[1]) {
+      } else if (!marker.valid) {
         context.addIssue({
           code: 'custom',
-          message: 'Graph-derived dbt model SQL integrity marker must match its payload.',
+          message: 'Graph-derived dbt model SQL divergence marker must match its payload.',
           path: ['content'],
         });
       }
@@ -69,6 +91,7 @@ export const GraphDbtWorkspaceArtifactPublicationItemSchema = z
 
 export const PublishGraphDbtWorkspaceArtifactsRequestSchema = z
   .object({
+    canvasId: NonBlankStringSchema.max(256),
     artifacts: z.array(GraphDbtWorkspaceArtifactPublicationItemSchema).min(3).max(500),
     idempotencyKey: NonBlankStringSchema.max(256),
   })
@@ -141,9 +164,19 @@ export const GraphDbtWorkspaceArtifactPublicationConflictSchema = z
   })
   .strict();
 
+export const GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema = z
+  .object({
+    schemaVersion: z.literal('graph-dbt-workspace-artifact-publication.v1'),
+    kind: z.literal('authority_refused'),
+    canvasId: NonBlankStringSchema.max(256),
+    reason: z.enum(['missing_authority', 'mixed_authority', 'dbt_project_files_authority']),
+  })
+  .strict();
+
 export const GraphDbtWorkspaceArtifactPublicationResultSchema = z.discriminatedUnion('kind', [
   GraphDbtWorkspaceArtifactPublicationAppliedSchema,
   GraphDbtWorkspaceArtifactPublicationConflictSchema,
+  GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema,
 ]);
 
 export type GraphDbtWorkspaceArtifactExpectedRevision = z.infer<
@@ -160,6 +193,9 @@ export type GraphDbtWorkspaceArtifactPublicationApplied = z.infer<
 >;
 export type GraphDbtWorkspaceArtifactPublicationConflict = z.infer<
   typeof GraphDbtWorkspaceArtifactPublicationConflictSchema
+>;
+export type GraphDbtWorkspaceArtifactPublicationAuthorityRefused = z.infer<
+  typeof GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema
 >;
 export type GraphDbtWorkspaceArtifactPublicationResult = z.infer<
   typeof GraphDbtWorkspaceArtifactPublicationResultSchema

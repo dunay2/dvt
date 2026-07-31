@@ -34,6 +34,10 @@ export interface ICanvasAuthoringAuthorityStore {
   migrate(): Promise<void>;
   close(): Promise<void>;
   read(key: CanvasAuthoringAuthorityKey): Promise<CanvasAuthoringAuthorityStoredRecord | null>;
+  readFileAuthorityByProjectRoot(
+    scope: WorkspaceGraphDraftScope,
+    projectRoot: string
+  ): Promise<CanvasAuthoringAuthorityStoredRecord | null>;
   bind(input: {
     readonly key: CanvasAuthoringAuthorityKey;
     readonly binding: CanvasAuthoringAuthorityBinding;

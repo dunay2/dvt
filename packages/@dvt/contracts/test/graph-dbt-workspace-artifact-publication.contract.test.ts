@@ -12,6 +12,7 @@ const MANAGED_SQL = `-- dvt:graph-draft-content-sha256=${sha256HexUtf8(SQL_PAYLO
 
 function request(): PublishGraphDbtWorkspaceArtifactsRequest {
   return {
+    canvasId: 'orders-canvas',
     artifacts: [
       {
         path: 'dbt_project.yml',
@@ -58,7 +59,7 @@ describe('graph DBT workspace artifact publication contract', () => {
     ).toThrow();
   });
 
-  it('rejects graph-managed SQL when the marker digest does not match its payload', () => {
+  it('rejects graph-draft SQL when the divergence marker does not match its payload', () => {
     const malformed = request();
     malformed.artifacts[1] = {
       ...malformed.artifacts[1]!,
@@ -66,11 +67,11 @@ describe('graph DBT workspace artifact publication contract', () => {
     };
 
     expect(() => PublishGraphDbtWorkspaceArtifactsRequestSchema.parse(malformed)).toThrow(
-      /integrity marker must match/i
+      /divergence marker must match/i
     );
   });
 
-  it('accepts immutable applied and conflict results', () => {
+  it('accepts immutable applied, conflict, and authority-refused results', () => {
     expect(
       GraphDbtWorkspaceArtifactPublicationResultSchema.parse({
         schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
@@ -89,5 +90,27 @@ describe('graph DBT workspace artifact publication contract', () => {
         conflicts: [{ path: 'models/orders.sql', currentContentSha256: null }],
       })
     ).toMatchObject({ kind: 'conflict' });
+
+    expect(
+      GraphDbtWorkspaceArtifactPublicationResultSchema.parse({
+        schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+        kind: 'authority_refused',
+        canvasId: 'orders-canvas',
+        reason: 'dbt_project_files_authority',
+      })
+    ).toEqual({
+      schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+      kind: 'authority_refused',
+      canvasId: 'orders-canvas',
+      reason: 'dbt_project_files_authority',
+    });
+  });
+
+  it('requires explicit Canvas identity for the server-side authority decision', () => {
+    const { canvasId: _canvasId, ...missingCanvasIdentity } = request();
+
+    expect(() =>
+      PublishGraphDbtWorkspaceArtifactsRequestSchema.parse(missingCanvasIdentity)
+    ).toThrow();
   });
 });

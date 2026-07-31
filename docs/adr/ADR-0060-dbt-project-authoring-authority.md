@@ -93,15 +93,24 @@ Allowed transitions are:
 ```text
 none -> graph-draft
 none -> dbt-project-files
-graph-draft -> dbt-project-files through explicit adoption
 ```
 
-Adoption succeeds only after generated files are durably written, dbt analysis
-succeeds, and a parity check proves that the intended graph is represented. The
-authority switch and its required file mutations must be atomic.
+The MVP does not support authority transitions or adoption. Once a Canvas is
+created as a graph draft or imported as a dbt project, its authority cannot
+change. A future transition in either direction requires a separate accepted
+decision, command rail, losslessness policy, and atomic mutation boundary.
 
-There is no automatic `dbt-project-files -> graph-draft` transition. A future
-explicit migration would require its own losslessness policy and decision.
+Authority resolution is exhaustive and fail-closed:
+
+| Graph draft owns the Canvas | File binding exists | Result              |
+| --------------------------- | ------------------- | ------------------- |
+| yes                         | no                  | `graph-draft`       |
+| no                          | yes                 | `dbt-project-files` |
+| no                          | no                  | missing authority   |
+| yes                         | yes                 | mixed authority     |
+
+Missing and mixed authority are typed refusals. Absence is never interpreted as
+an implicit graph-draft default.
 
 ## Command And Query Rails
 
@@ -118,6 +127,8 @@ The following existing rails remain canonical and are extended in place:
 - `StartRun`
 - `GetRunStatus`
 - `GetRunEvents`
+- `GetWorkspaceGraphDraft`
+- `PublishGraphDbtWorkspaceArtifacts`
 
 `SaveDbtProjectFileEdit` and `RunPersistedDbtProject` remain retired synonyms.
 
@@ -141,8 +152,7 @@ File-backed authoring requires the existing workspace-file rails to gain:
 - compare-and-swap on writes;
 - an explicit stale-write rejection;
 - atomic replacement in the local filesystem adapter;
-- an atomic batch mutation boundary before import, adoption, or cross-file
-  edits.
+- an atomic batch mutation boundary before import or cross-file edits.
 
 The browser may hold an editable buffer, but it cannot overwrite a newer
 workspace revision silently.
@@ -186,6 +196,16 @@ files. It consumes `DbtProjectGraphProjection` and records project root,
 project revision, and analysis hash. Runtime bundle construction must use that
 same identity.
 
+`PublishGraphDbtWorkspaceArtifacts` must resolve authority again on the server
+before any workspace-file mutation. Only `graph-draft` may publish generated
+artifacts. Missing, mixed, and `dbt-project-files` authority fail closed.
+
+The `graph-draft-content-sha256` line in generated model SQL is a divergence
+marker. It detects whether generated content changed since the graph projection;
+it is not authentication, authorization, a signature, or a trust claim.
+Unmarked or mismatched SQL is never adopted or overwritten by an MVP
+confirmation path.
+
 `profiles.yml`, credentials, resolved secrets, build output, and editor-private
 layout are excluded from project bundles and exports. Execution target
 selection remains a separate policy/reference boundary.
@@ -205,7 +225,6 @@ Costs:
 
 - file revision/CAS and batch mutation are prerequisites;
 - a server-side dbt analyzer adapter and projection store are required;
-- adoption needs parity and failure tests;
 - `WorkspaceGraphAuthoringDraft.v1` cannot represent file-backed Canvas state.
 
 ## Validation
@@ -213,7 +232,11 @@ Costs:
 Each implementation phase must prove:
 
 - no Canvas has two active semantic authorities;
+- missing and mixed authority fail closed;
 - file-backed preview does not call `GenerateDbtWorkspaceArtifacts`;
+- file-backed, missing, and mixed authority cannot call
+  `PublishGraphDbtWorkspaceArtifacts`;
+- unmarked or mismatched SQL cannot be adopted through a confirmation path;
 - stale file writes fail without changing content;
 - Code edits reach the working tree through the existing conditional command
   without a user-facing Save action;
