@@ -72,7 +72,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "tools/docs/check-filenames.ts",
-      "sourceContentSha256": "c22af090217c364cc39f654637ff0e703c5c10cda3ca094488efd2ce19cf3655",
+      "sourceContentSha256": "fd2f58de1c857a1f8259914a590bcecb91aabc192bf511e56da420aeab2c651c",
       "rawRail": {
         "name": "ValidateChangedDocumentFilenames",
         "type": "query",
