@@ -506,6 +506,7 @@ async function runMigrations(options = {}) {
         ? readKnownCanonicalMigrationVersions(options)
         : new Set()
       : new Set(options.knownMigrationVersions);
+
   if (records.length === 0) {
     if (!silent) {
       console.log('[planning:db:migrate] No migration files found.');
