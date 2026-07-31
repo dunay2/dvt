@@ -1,6 +1,7 @@
 import {
   PREVIEW_PROFILE,
   parseExecutionPlan,
+  parsePlanPreviewRejectedOutcome,
   parsePlanPreviewProvenance,
   parsePlanPreviewPersistResponse,
   parsePlanRef,
@@ -10,7 +11,7 @@ import {
 import type { PlanRef, RunContext } from '../../types/engine';
 import type { PlanViewModel } from '../../types/plans';
 import type { IPlansPort, PlanPreviewInput } from '../../ports/plans';
-import type { ApiClient } from '../api/createApiClient';
+import { ApiError, type ApiClient } from '../api/createApiClient';
 import { normalizeProtectedRuntimeRejection } from '../api/protectedRuntimeRejection';
 
 type PlanPreviewView = NonNullable<PlanViewModel['preview']>;
@@ -152,7 +153,7 @@ function mapContractPlanToUi(
   planRef: PlanRef,
   preview?: PlanPreviewView,
   previewProfile?: string
-): PlanViewModel {
+): PlanViewModel & { readonly planRef: PlanRef } {
   const tags = contractPlan.observability?.tags ?? {};
   const extra = contractPlan.observability?.extra ?? {};
   const adapter = asString(tags.adapter) ?? 'unknown';
@@ -223,30 +224,22 @@ export function createApiPlansService(apiClient: ApiClient): IPlansPort {
           input
         );
         const preview = parsePlanPreviewPersistResponse(payload);
-        return mapContractPlanToUi(
-          preview.plan,
-          preview.planRef,
-          {
-            ...(preview.planSummary
-              ? {
-                  summary: {
-                    executor: preview.planSummary.executor,
-                    nodeCount: preview.planSummary.nodeCount,
-                    stepCount: preview.planSummary.stepCount,
-                    sourceTables: [...preview.planSummary.sourceTables],
-                    sinkTables: [...preview.planSummary.sinkTables],
-                  },
-                }
-              : {}),
-            persisted: {
-              planRecordId: preview.persisted.planRecordId,
-              canonicalPlanSha256: preview.persisted.canonicalPlanSha256,
-            },
-            ...(preview.provenance ? { provenance: preview.provenance } : {}),
-          },
-          preview.previewProfile
-        );
+        return { kind: 'accepted', plan: mapPreviewPayloadToUi(preview) };
       } catch (error) {
+        const rejectedOutcome = parseTypedPreviewRejection(error);
+        if (rejectedOutcome?.kind === 'selection-rejected') {
+          return {
+            kind: rejectedOutcome.kind,
+            rejection: rejectedOutcome.rejection,
+          };
+        }
+        if (rejectedOutcome?.kind === 'plan-invalid') {
+          return {
+            kind: rejectedOutcome.kind,
+            plan: mapPreviewPayloadToUi(rejectedOutcome),
+            validation: rejectedOutcome.validation,
+          };
+        }
         throw normalizeProtectedRuntimeRejection(error) ?? error;
       }
     },
@@ -272,4 +265,58 @@ export function createApiPlansService(apiClient: ApiClient): IPlansPort {
       });
     },
   };
+}
+
+function mapPreviewPayloadToUi(
+  preview:
+    | ReturnType<typeof parsePlanPreviewPersistResponse>
+    | Extract<ReturnType<typeof parsePlanPreviewRejectedOutcome>, { readonly kind: 'plan-invalid' }>
+): PlanViewModel & { readonly planRef: PlanRef } {
+  return mapContractPlanToUi(
+    preview.plan,
+    preview.planRef,
+    {
+      ...(preview.planSummary
+        ? {
+            summary: {
+              executor: preview.planSummary.executor,
+              nodeCount: preview.planSummary.nodeCount,
+              stepCount: preview.planSummary.stepCount,
+              sourceTables: [...preview.planSummary.sourceTables],
+              sinkTables: [...preview.planSummary.sinkTables],
+            },
+          }
+        : {}),
+      persisted: {
+        planRecordId: preview.persisted.planRecordId,
+        canonicalPlanSha256: preview.persisted.canonicalPlanSha256,
+      },
+      ...(preview.provenance ? { provenance: preview.provenance } : {}),
+    },
+    preview.previewProfile
+  );
+}
+
+function parseTypedPreviewRejection(
+  error: unknown
+): ReturnType<typeof parsePlanPreviewRejectedOutcome> | null {
+  if (!(error instanceof ApiError) || error.statusCode !== 422) {
+    return null;
+  }
+
+  const envelope = asRecord(error.responseBody);
+  const errorBody = asRecord(envelope?.error);
+  if (
+    errorBody?.type !== 'unprocessable' ||
+    errorBody.reason !== 'plan_rejected' ||
+    errorBody.details === undefined
+  ) {
+    return null;
+  }
+
+  try {
+    return parsePlanPreviewRejectedOutcome(errorBody.details);
+  } catch {
+    return null;
+  }
 }

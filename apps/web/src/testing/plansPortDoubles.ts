@@ -4,7 +4,10 @@ import { mockExecutionPlan } from './fixtures/mockDbtData';
 
 export function createMockPlansService(): IPlansPort {
   return {
-    previewPlan: async () => ({ ...mockExecutionPlan }),
+    previewPlan: async () => ({
+      kind: 'accepted',
+      plan: { ...mockExecutionPlan, planRef: mockExecutionPlan.planRef! },
+    }),
     importPlan: async () => ({ ...mockExecutionPlan }),
   };
 }

@@ -22,7 +22,7 @@ import type {
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
 } from '../../ports/workspace';
-import { makeRunContext } from '../../testing/contractTestUtils';
+import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { getRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { buildAppServices } from './appServices';
@@ -189,7 +189,10 @@ function buildPlansPortStub(): IPlansPort {
   };
 
   return {
-    previewPlan: vi.fn(async () => planViewModel),
+    previewPlan: vi.fn(async () => ({
+      kind: 'accepted' as const,
+      plan: { ...planViewModel, planRef: makePlanRef({ planId: planViewModel.planId }) },
+    })),
     importPlan: vi.fn(async () => planViewModel),
   };
 }

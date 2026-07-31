@@ -22,7 +22,7 @@ import type {
 import type { IWorkspaceGraphDraftAuthoringPort } from '../ports/workspaceGraphDraftAuthoring';
 import type { IDbtProjectGraphQueryPort } from '../ports/dbtProjectGraph';
 import type { IDbtProjectImportPort } from '../ports/dbtProjectImport';
-import { makeRunContext } from '../testing/contractTestUtils';
+import { makePlanRef, makeRunContext } from '../testing/contractTestUtils';
 import {
   AppServicesProvider,
   useAppDataSourceMode,
@@ -277,13 +277,17 @@ describe('AppServicesProvider', () => {
     };
     const plansService = {
       previewPlan: async () => ({
-        planId: 'plan_1',
-        planVersion: '1',
-        generatedAt: '2026-04-06T00:00:00Z',
-        adapter: 'dbt',
-        target: 'dev',
-        steps: [],
-        capabilities: [],
+        kind: 'accepted' as const,
+        plan: {
+          planId: 'plan_1',
+          planVersion: '1',
+          planRef: makePlanRef({ planId: 'plan_1' }),
+          generatedAt: '2026-04-06T00:00:00Z',
+          adapter: 'dbt',
+          target: 'dev',
+          steps: [],
+          capabilities: [],
+        },
       }),
       importPlan: async () => ({
         planId: 'plan_1',

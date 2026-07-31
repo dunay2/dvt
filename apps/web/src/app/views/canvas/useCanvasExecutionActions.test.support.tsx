@@ -471,7 +471,10 @@ export function createGraphDbtWorkspaceArtifactPublicationCommandMock(): IGraphD
 
 export function createPlansServiceMock(plan: PlanViewModel = mockExecutionPlan): IPlansPort {
   return {
-    previewPlan: vi.fn(async () => plan),
+    previewPlan: vi.fn(async () => ({
+      kind: 'accepted' as const,
+      plan: { ...plan, planRef: plan.planRef! },
+    })),
     importPlan: vi.fn(async () => plan),
   };
 }
