@@ -2568,15 +2568,59 @@ function readCanonicalStateSnapshot(snapshotPath = canonicalStatePath) {
   }
 
   if (
+    !Array.isArray(snapshot.architectureComponentStatusOverrides) ||
     !Array.isArray(snapshot.featureMechanizationRails) ||
     !Array.isArray(snapshot.featureMechanizationRailOperations)
   ) {
     throw new Error(
-      'Planning DB canonical state must contain featureMechanizationRails and featureMechanizationRailOperations arrays.'
+      'Planning DB canonical state must contain architectureComponentStatusOverrides, featureMechanizationRails, and featureMechanizationRailOperations arrays.'
     );
   }
 
+  for (const override of snapshot.architectureComponentStatusOverrides) {
+    if (
+      typeof override?.componentId !== 'string' ||
+      override.status !== 'deprecated' ||
+      typeof override.sourceRef !== 'string' ||
+      !/^[a-f0-9]{64}$/u.test(override.sourceContentSha256 || '')
+    ) {
+      throw new Error(
+        'Planning DB canonical state contains an invalid architecture component status override.'
+      );
+    }
+  }
+
   return snapshot;
+}
+
+async function restoreArchitectureComponentStatusOverrides(client, overrides) {
+  if (!Array.isArray(overrides) || overrides.length === 0) {
+    return;
+  }
+
+  const result = await client.query(
+    `
+      update architecture.component component
+      set
+        status = override.status,
+        updated_at = now()
+      from jsonb_to_recordset($1::jsonb) as override(
+        "componentId" text,
+        status text,
+        "sourceRef" text,
+        "sourceContentSha256" text
+      )
+      where component.component_id = override."componentId"
+        and override.status = 'deprecated'
+    `,
+    [JSON.stringify(overrides)]
+  );
+
+  if (result.rowCount !== overrides.length) {
+    throw new Error(
+      `Planning DB canonical state references ${overrides.length - result.rowCount} unknown architecture component(s).`
+    );
+  }
 }
 
 function mergeCanonicalFeatureMechanizationRails(canonicalRails, localRails) {
@@ -3681,6 +3725,10 @@ async function importContent(options = {}) {
     await restoreLocalFeatureMechanizationOperations(
       client,
       canonicalStateSnapshot.featureMechanizationRailOperations
+    );
+    await restoreArchitectureComponentStatusOverrides(
+      client,
+      canonicalStateSnapshot.architectureComponentStatusOverrides
     );
     await reconcileDeprecatedLocalRailSources(client);
     await reconcileSupersededCanvasNodeWorkbenchPanel(client);
@@ -4895,6 +4943,7 @@ module.exports = {
   refreshLocalFeatureMechanizationRailSourceHashes,
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
+  restoreArchitectureComponentStatusOverrides,
   retireLocalTaskLifecycle,
   runPlanningImport,
   sha256,

@@ -84,7 +84,11 @@ class PlanningDbExportRunner {
   }
 
   async readCanonicalStateRows(client) {
-    const [featureMechanizationRails, featureMechanizationRailOperations] = await Promise.all([
+    const [
+      featureMechanizationRails,
+      featureMechanizationRailOperations,
+      architectureComponentStatusOverrides,
+    ] = await Promise.all([
       client.query(`
         select
           rail.rail_id as "railId",
@@ -141,9 +145,35 @@ class PlanningDbExportRunner {
         )
         order by operation.created_at, operation.operation_id
       `),
+      client.query(`
+        with ranked_overrides as (
+          select
+            operation.payload->>'componentId' as component_id,
+            operation.payload->>'status' as status,
+            operation.source_ref,
+            operation.source_content_sha256,
+            row_number() over (
+              partition by operation.payload->>'componentId'
+              order by operation.created_at desc, operation.operation_id desc
+            ) as row_number
+          from architecture.design_operations operation
+          where operation.operation_type = 'architecture_component_record'
+            and operation.source_ref not like 'tools/planning-db/migrations/%'
+        )
+        select
+          component_id as "componentId",
+          status,
+          source_ref as "sourceRef",
+          source_content_sha256 as "sourceContentSha256"
+        from ranked_overrides
+        where row_number = 1
+          and status = 'deprecated'
+        order by component_id
+      `),
     ]);
 
     return {
+      architectureComponentStatusOverrides: architectureComponentStatusOverrides.rows,
       featureMechanizationRails: featureMechanizationRails.rows,
       featureMechanizationRailOperations: featureMechanizationRailOperations.rows,
     };
@@ -157,6 +187,7 @@ class PlanningDbExportRunner {
       `${JSON.stringify(
         {
           schemaVersion: 1,
+          architectureComponentStatusOverrides: snapshotRows.architectureComponentStatusOverrides,
           featureMechanizationRails: snapshotRows.featureMechanizationRails,
           featureMechanizationRailOperations: snapshotRows.featureMechanizationRailOperations,
         },
@@ -288,6 +319,8 @@ class PlanningDbExportRunner {
       }
 
       return {
+        canonicalArchitectureComponentStatusOverrides:
+          canonicalStateRows.architectureComponentStatusOverrides.length,
         canonicalFeatureMechanizationRails: canonicalStateRows.featureMechanizationRails.length,
         outputRoot,
         canonicalArtifactPaths,

@@ -56,8 +56,17 @@ function createCanonicalStateFixture(repoRoot) {
     payload: { railName: rail.railName },
     createdAt: '2026-07-31T10:00:00.000Z',
   };
+  const architectureComponentStatusOverride = {
+    componentId: 'SYS-WEB-EXAMPLE',
+    status: 'deprecated',
+    sourceRef: 'docs/adr/ADR-0001-example.md',
+    sourceContentSha256: 'b'.repeat(64),
+  };
   const client = {
     async query(sql) {
+      if (String(sql).includes('architecture.design_operations')) {
+        return { rows: [architectureComponentStatusOverride] };
+      }
       if (String(sql).includes('operation.operation_id as "operationId"')) {
         return { rows: [operation] };
       }
@@ -68,7 +77,7 @@ function createCanonicalStateFixture(repoRoot) {
     },
   };
 
-  return { client, operation, rail, runner };
+  return { architectureComponentStatusOverride, client, operation, rail, runner };
 }
 
 test('planning DB export accepts canonical-state options only', () => {
@@ -98,11 +107,14 @@ test('planning DB export reads operated feature rails outside migration history'
   assert.match(capturedSql[0], /feature_mechanization_local_operations/u);
   assert.match(capturedSql[0], /source_path not like 'tools\/planning-db\/migrations\/%'/u);
   assert.match(capturedSql[1], /feature_mechanization_local_operations/u);
+  assert.match(capturedSql[2], /where row_number = 1\s+and status = 'deprecated'/u);
+  assert.doesNotMatch(capturedSql[2], /operation\.payload->>'status' = 'deprecated'/u);
 });
 
-test('planning DB export writes only deterministic architecture mechanization state', async () => {
+test('planning DB export writes deterministic current architecture state', async () => {
   const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-canonical-state-'));
-  const { client, operation, rail, runner } = createCanonicalStateFixture('C:/repo');
+  const { architectureComponentStatusOverride, client, operation, rail, runner } =
+    createCanonicalStateFixture('C:/repo');
 
   try {
     const result = await runner.exportPlanningDerivedSurfaces({ client, outputRoot });
@@ -111,6 +123,9 @@ test('planning DB export writes only deterministic architecture mechanization st
     );
 
     assert.equal(snapshot.schemaVersion, 1);
+    assert.deepEqual(snapshot.architectureComponentStatusOverrides, [
+      architectureComponentStatusOverride,
+    ]);
     assert.deepEqual(snapshot.featureMechanizationRails, [rail]);
     assert.deepEqual(snapshot.featureMechanizationRailOperations, [operation]);
     assert.deepEqual(result.canonicalArtifactPaths, [canonicalStateArtifactPath]);

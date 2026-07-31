@@ -1,5 +1,13 @@
 {
   "schemaVersion": 1,
+  "architectureComponentStatusOverrides": [
+    {
+      "componentId": "SYS-WEB-CANVAS-DBT-GRAPH-SQL-REPLACEMENT-CONFIRMATION",
+      "status": "deprecated",
+      "sourceRef": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3"
+    }
+  ],
   "featureMechanizationRails": [
     {
       "railId": "local#DOCS-CANONICAL-FILENAME-GATE-20260731#query#validatechangeddocumentfilenames",
@@ -238,6 +246,1382 @@
       "revision": 0,
       "createdBy": "codex",
       "createdAt": "2026-07-31T11:29:35.729Z"
+    },
+    {
+      "railId": "local#E-WEB-DBT-ATOMIC-PUBLICATION-1#command#publishgraphdbtworkspaceartifacts",
+      "featureId": "E-WEB-DBT-ATOMIC-PUBLICATION-1",
+      "mechanizationStatus": "implemented",
+      "railName": "PublishGraphDbtWorkspaceArtifacts",
+      "normalizedRailName": "publishgraphdbtworkspaceartifacts",
+      "railType": "command",
+      "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts#IPublishGraphDbtWorkspaceArtifactsCommand",
+        "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts#PublishGraphDbtWorkspaceArtifactsInput",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#PublishGraphDbtWorkspaceArtifactsCommand",
+        "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRouteGroup.ts#registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup",
+        "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#GraphDbtWorkspaceArtifactPublicationRouteDeps",
+        "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#registerGraphDbtWorkspaceArtifactPublicationRoutes",
+        "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#respondInvalidRequest",
+        "apps/web/src/app/ports/graphDbtWorkspaceArtifactPublication.ts#IGraphDbtWorkspaceArtifactPublicationCommandPort",
+        "apps/web/src/app/services/AppServicesContext.tsx#useGraphDbtWorkspaceArtifactPublicationCommandPort",
+        "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#buildScopedEndpoint",
+        "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#createApiGraphDbtWorkspaceArtifactPublicationCommandPort",
+        "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#GRAPH_DBT_WORKSPACE_ARTIFACT_PUBLICATION_ENDPOINT",
+        "apps/web/src/app/views/canvas/canvasPlanAction.ts#CanvasPlanActionResult",
+        "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts#publicationIdempotencyKey",
+        "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts#publishGraphDbtWorkspaceArtifacts",
+        "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx#createGraphDbtWorkspaceArtifactPublicationCommandMock",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtArtifactPathSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactExpectedRevision",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactExpectedRevisionSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationApplied",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAppliedSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationConflict",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationConflictSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationItem",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationItemSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationResult",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublishedWriteSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#NonBlankStringSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#PublishGraphDbtWorkspaceArtifactsRequest",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#PublishGraphDbtWorkspaceArtifactsRequestSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#Sha256HexStringSchema",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#ObservedArtifact",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#currentSqlMarkerIsValid",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#matchesExpectedRevision",
+        "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts#serializeProjectRootAuthorityKey",
+        "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#createGraphDraftMarkedDbtModelSql",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtModelDivergenceMarker",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#parseGraphDbtModelDivergenceMarker"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts#IPublishGraphDbtWorkspaceArtifactsCommand",
+        "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts#PublishGraphDbtWorkspaceArtifactsInput",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#PublishGraphDbtWorkspaceArtifactsCommand",
+        "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRouteGroup.ts#registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup",
+        "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#GraphDbtWorkspaceArtifactPublicationRouteDeps",
+        "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#registerGraphDbtWorkspaceArtifactPublicationRoutes",
+        "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#respondInvalidRequest",
+        "apps/web/src/app/ports/graphDbtWorkspaceArtifactPublication.ts#IGraphDbtWorkspaceArtifactPublicationCommandPort",
+        "apps/web/src/app/services/AppServicesContext.tsx#useGraphDbtWorkspaceArtifactPublicationCommandPort",
+        "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#buildScopedEndpoint",
+        "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#createApiGraphDbtWorkspaceArtifactPublicationCommandPort",
+        "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#GRAPH_DBT_WORKSPACE_ARTIFACT_PUBLICATION_ENDPOINT",
+        "apps/web/src/app/views/canvas/canvasPlanAction.ts#CanvasPlanActionResult",
+        "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts#publicationIdempotencyKey",
+        "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts#publishGraphDbtWorkspaceArtifacts",
+        "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx#createGraphDbtWorkspaceArtifactPublicationCommandMock",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtArtifactPathSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactExpectedRevision",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactExpectedRevisionSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationApplied",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAppliedSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationConflict",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationConflictSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationItem",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationItemSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationResult",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublishedWriteSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#NonBlankStringSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#PublishGraphDbtWorkspaceArtifactsRequest",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#PublishGraphDbtWorkspaceArtifactsRequestSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#Sha256HexStringSchema",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#ObservedArtifact",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#currentSqlMarkerIsValid",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#matchesExpectedRevision",
+        "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts#serializeProjectRootAuthorityKey",
+        "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#createGraphDraftMarkedDbtModelSql",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtModelDivergenceMarker",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#parseGraphDbtModelDivergenceMarker"
+      ],
+      "documentationRefs": [
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "docs/evidence/ED-20260729-graph-dbt-atomic-publication.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+        "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+        "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts",
+        "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts",
+        "apps/web/src/app/ports/graphDbtWorkspaceArtifactPublication.ts",
+        "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts",
+        "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+        "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+        "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+      ],
+      "architectureGuards": [
+        "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+        "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+        "pnpm --filter dvt-api test:ci"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/contracts test",
+        "pnpm --filter dvt-api test",
+        "pnpm --filter @dvt/web test",
+        "pnpm test:web:e2e:dbt-author-code-run:live",
+        "pnpm verify:prepush",
+        "pnpm docs:feature-mechanization:implementation"
+      ],
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "rawRail": {
+        "name": "PublishGraphDbtWorkspaceArtifacts",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "GraphDbtWorkspaceArtifactPublication"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "IPublishGraphDbtWorkspaceArtifactsCommand",
+            "path": "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "PublishGraphDbtWorkspaceArtifactsInput",
+            "path": "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "PublishGraphDbtWorkspaceArtifactsCommand",
+            "path": "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup",
+            "path": "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRouteGroup.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationRouteDeps",
+            "path": "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "registerGraphDbtWorkspaceArtifactPublicationRoutes",
+            "path": "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "respondInvalidRequest",
+            "path": "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "IGraphDbtWorkspaceArtifactPublicationCommandPort",
+            "path": "apps/web/src/app/ports/graphDbtWorkspaceArtifactPublication.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "useGraphDbtWorkspaceArtifactPublicationCommandPort",
+            "path": "apps/web/src/app/services/AppServicesContext.tsx",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "buildScopedEndpoint",
+            "path": "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "createApiGraphDbtWorkspaceArtifactPublicationCommandPort",
+            "path": "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GRAPH_DBT_WORKSPACE_ARTIFACT_PUBLICATION_ENDPOINT",
+            "path": "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "CanvasPlanActionResult",
+            "path": "apps/web/src/app/views/canvas/canvasPlanAction.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "publicationIdempotencyKey",
+            "path": "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "publishGraphDbtWorkspaceArtifacts",
+            "path": "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "createGraphDbtWorkspaceArtifactPublicationCommandMock",
+            "path": "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtArtifactPathSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactExpectedRevision",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactExpectedRevisionSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationApplied",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationAppliedSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationConflict",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationConflictSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationItem",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationItemSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationResult",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationResultSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublishedWriteSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "NonBlankStringSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "PublishGraphDbtWorkspaceArtifactsRequest",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "PublishGraphDbtWorkspaceArtifactsRequestSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "Sha256HexStringSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphArtifactPublicationAuthorityDecision",
+            "path": "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphArtifactPublicationExecution",
+            "path": "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "ObservedArtifact",
+            "path": "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "currentSqlMarkerIsValid",
+            "path": "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "matchesExpectedRevision",
+            "path": "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "serializeProjectRootAuthorityKey",
+            "path": "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "createGraphDraftMarkedDbtModelSql",
+            "path": "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtModelDivergenceMarker",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          },
+          {
+            "name": "parseGraphDbtModelDivergenceMarker",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+              "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+              "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+            ],
+            "fowlerSignals": [
+              "unit_of_work",
+              "command",
+              "gateway",
+              "optimistic_offline_lock",
+              "idempotent_receiver",
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+            "architectureGuard": "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "E-WEB-DBT-ATOMIC-PUBLICATION-1",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": [
+          "GraphDbtWorkspaceArtifactPublication",
+          "GraphDbtWorkspaceArtifactPublicationItem",
+          "WorkspaceFileBatchMutation",
+          "CanvasAuthoringAuthority"
+        ],
+        "fowlerSignals": [
+          "unit_of_work",
+          "command",
+          "gateway",
+          "optimistic_offline_lock",
+          "idempotent_receiver",
+          "Authority is rechecked under one serialized publication boundary."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter dvt-api test",
+          "pnpm --filter @dvt/web test",
+          "pnpm test:web:e2e:dbt-author-code-run:live",
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "publishgraphdbtworkspaceartifacts-record",
+            "redTest": "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+            "greenTest": "pnpm --filter dvt-api test:ci",
+            "patchSurfaces": [
+              "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+              "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts",
+              "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+              "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts",
+              "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts",
+              "apps/web/src/app/ports/graphDbtWorkspaceArtifactPublication.ts",
+              "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts",
+              "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+              "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+            ],
+            "expectedFailure": "Artifact publication can pass an authority check that changes before the write completes."
+          }
+        ],
+        "componentGuides": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/evidence/ED-20260729-graph-dbt-atomic-publication.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "PublishGraphDbtWorkspaceArtifacts",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "GraphDbtWorkspaceArtifactPublication"
+          }
+        ],
+        "architectureGuards": [
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+          "pnpm --filter dvt-api test:ci"
+        ],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+          "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts",
+          "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts",
+          "apps/web/src/app/ports/graphDbtWorkspaceArtifactPublication.ts",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "a browser loop over SaveWorkspaceFileContent",
+          "a second workspace-file store",
+          "a fake success or partial-write recovery path",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "revision": 3,
+      "createdBy": "codex",
+      "createdAt": "2026-07-30T21:41:49.879Z"
     },
     {
       "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
@@ -514,7 +1898,7 @@
       "normalizedRailName": "publishgraphdbtworkspaceartifacts",
       "railType": "command",
       "dddOwner": "CanvasAuthoringAuthority",
-      "railStatus": "implemented",
+      "railStatus": "retired",
       "symbolRefs": [
         "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
         "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
@@ -570,7 +1954,7 @@
       "rawRail": {
         "name": "PublishGraphDbtWorkspaceArtifacts",
         "type": "command",
-        "status": "implemented",
+        "status": "retired",
         "dddOwner": "CanvasAuthoringAuthority"
       },
       "rawManifest": {
@@ -585,7 +1969,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -600,7 +1985,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -615,7 +2001,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -630,7 +2017,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -645,7 +2033,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -660,7 +2049,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -675,7 +2065,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -690,7 +2081,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -705,7 +2097,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -720,7 +2113,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -735,7 +2129,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -750,7 +2145,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -765,7 +2161,8 @@
               "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
             ],
             "fowlerSignals": [
-              "Authority is rechecked under one serialized publication boundary."
+              "Authority is rechecked under one serialized publication boundary.",
+              "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
             ],
             "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
             "architectureGuard": "pnpm --filter dvt-api test:ci"
@@ -782,7 +2179,8 @@
           "GraphDbtWorkspaceArtifactPublication"
         ],
         "fowlerSignals": [
-          "Authority is rechecked under one serialized publication boundary."
+          "Authority is rechecked under one serialized publication boundary.",
+          "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -800,7 +2198,7 @@
               "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
               "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
             ],
-            "expectedFailure": "Artifact publication can pass an authority check that changes before the write completes."
+            "expectedFailure": "Parallel publication declaration duplicated the existing canonical rail."
           }
         ],
         "componentGuides": [
@@ -815,7 +2213,7 @@
           {
             "name": "PublishGraphDbtWorkspaceArtifacts",
             "type": "command",
-            "status": "implemented",
+            "status": "retired",
             "dddOwner": "CanvasAuthoringAuthority"
           }
         ],
@@ -832,7 +2230,7 @@
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-07-31T18:29:30.142Z"
     },
@@ -1364,6 +2762,132 @@
       "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-07-31T10:13:21.589Z"
+    },
+    {
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#restoreplanningdbcanonicalarchitecturestate",
+      "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+      "mechanizationStatus": "implemented",
+      "railName": "RestorePlanningDbCanonicalArchitectureState",
+      "normalizedRailName": "restoreplanningdbcanonicalarchitecturestate",
+      "railType": "command",
+      "dddOwner": "PlanningDbCanonicalStateImport",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
+        "scripts/planning-db-import.cjs#restoreArchitectureComponentStatusOverrides"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
+        "scripts/planning-db-import.cjs#restoreArchitectureComponentStatusOverrides"
+      ],
+      "documentationRefs": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "scripts/planning-db-import.cjs",
+        "scripts/planning-db-import.test.cjs",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": ["node --test scripts/planning-db-import.test.cjs"],
+      "completionGate": [
+        "node --test scripts/planning-db-import.test.cjs",
+        "pnpm planning:db:export:check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/architecture/command-query-rail-governance.md",
+      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+      "rawRail": {
+        "name": "RestorePlanningDbCanonicalArchitectureState",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "PlanningDbCanonicalStateImport"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "readCanonicalStateSnapshot",
+            "path": "scripts/planning-db-import.cjs",
+            "cqRails": ["RestorePlanningDbCanonicalArchitectureState"],
+            "dddOwner": "PlanningDbCanonicalStateImport",
+            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+          },
+          {
+            "name": "restoreArchitectureComponentStatusOverrides",
+            "path": "scripts/planning-db-import.cjs",
+            "cqRails": ["RestorePlanningDbCanonicalArchitectureState"],
+            "dddOwner": "PlanningDbCanonicalStateImport",
+            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "fowlerSignals": ["gateway", "data_mapper"],
+            "cypressCoverage": "not applicable: repository governance CLI",
+            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2104"],
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": ["PlanningDbCanonicalArchitectureState"],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "completionGate": [
+          "node --test scripts/planning-db-import.test.cjs",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "restoreplanningdbcanonicalarchitecturestate-record",
+            "redTest": "node --test scripts/planning-db-import.test.cjs",
+            "greenTest": "node --test scripts/planning-db-import.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-import.cjs",
+              "scripts/planning-db-import.test.cjs",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "A rebuilt Planning DB loses DB-authored component retirement state."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RestorePlanningDbCanonicalArchitectureState",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "PlanningDbCanonicalStateImport"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-import.test.cjs"
+        ],
+        "implementationPlan": "Restore versioned current architecture state after the schema is available.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-import.cjs",
+          "scripts/planning-db-import.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-07-31T19:13:06.127Z"
     },
     {
       "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#query#enforceplanningdbschemaonlymigrations",
@@ -3379,6 +4903,464 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-07-31T18:31:09.591Z"
+    },
+    {
+      "operationId": "400c452b-fc13-4668-8166-95e91b2146bc",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:E-WEB-DBT-ATOMIC-PUBLICATION-1:command:publishgraphdbtworkspaceartifacts:1:355846241336d375",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#E-WEB-DBT-ATOMIC-PUBLICATION-1#command#publishgraphdbtworkspaceartifacts",
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+        "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+        "railName": "PublishGraphDbtWorkspaceArtifacts",
+        "railType": "command",
+        "featureId": "E-WEB-DBT-ATOMIC-PUBLICATION-1",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "unitTests": [
+          "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+          "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+          "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.graphSqlReplacement.test.tsx",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+          "apps/web/src/app/views/canvas/GraphSqlReplacementConfirmationDialog.test.tsx",
+          "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": [
+          "GraphDbtWorkspaceArtifactPublication",
+          "GraphDbtWorkspaceArtifactPublicationItem",
+          "WorkspaceFileBatchMutation",
+          "CanvasAuthoringAuthority"
+        ],
+        "fowlerSignals": [
+          "unit_of_work",
+          "command",
+          "gateway",
+          "optimistic_offline_lock",
+          "idempotent_receiver",
+          "Authority is rechecked under one serialized publication boundary."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter dvt-api test",
+          "pnpm --filter @dvt/web test",
+          "pnpm test:web:e2e:dbt-author-code-run:live",
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "componentGuides": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/evidence/ED-20260729-graph-dbt-atomic-publication.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Artifact publication can pass an authority check that changes before the write completes.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/evidence/ED-20260729-graph-dbt-atomic-publication.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+          "pnpm --filter dvt-api test:ci"
+        ],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "implementationRefs": [
+          "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts#IPublishGraphDbtWorkspaceArtifactsCommand",
+          "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts#PublishGraphDbtWorkspaceArtifactsInput",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#PublishGraphDbtWorkspaceArtifactsCommand",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRouteGroup.ts#registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#GraphDbtWorkspaceArtifactPublicationRouteDeps",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#registerGraphDbtWorkspaceArtifactPublicationRoutes",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#respondInvalidRequest",
+          "apps/web/src/app/ports/graphDbtWorkspaceArtifactPublication.ts#IGraphDbtWorkspaceArtifactPublicationCommandPort",
+          "apps/web/src/app/services/AppServicesContext.tsx#useGraphDbtWorkspaceArtifactPublicationCommandPort",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#buildScopedEndpoint",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#createApiGraphDbtWorkspaceArtifactPublicationCommandPort",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#GRAPH_DBT_WORKSPACE_ARTIFACT_PUBLICATION_ENDPOINT",
+          "apps/web/src/app/views/canvas/canvasExecutionActions.types.ts#GraphSqlReplacementConfirmationState",
+          "apps/web/src/app/views/canvas/canvasPlanAction.ts#CanvasPlanActionGraphSqlReplacementConfirmation",
+          "apps/web/src/app/views/canvas/canvasPlanAction.ts#CanvasPlanActionResult",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#GraphModelSqlReplacementAuthorization",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts#GraphSqlReplacementAuthorization",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts#publicationIdempotencyKey",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts#publishGraphDbtWorkspaceArtifacts",
+          "apps/web/src/app/views/canvas/GraphSqlReplacementConfirmationDialog.tsx#GraphSqlReplacementConfirmationDialog",
+          "apps/web/src/app/views/canvas/GraphSqlReplacementConfirmationDialog.tsx#GraphSqlReplacementConfirmationDialogProps",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx#createGraphDbtWorkspaceArtifactPublicationCommandMock",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtArtifactPathSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactExpectedRevision",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactExpectedRevisionSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationApplied",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAppliedSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationConflict",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationConflictSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationItem",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationItemSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationResult",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationResultSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublishedWriteSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#NonBlankStringSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#PublishGraphDbtWorkspaceArtifactsRequest",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#PublishGraphDbtWorkspaceArtifactsRequestSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#Sha256HexStringSchema",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#ObservedArtifact",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#currentSqlMarkerIsValid",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#matchesExpectedRevision",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts#serializeProjectRootAuthorityKey",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#createGraphDraftMarkedDbtModelSql",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtModelDivergenceMarker",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#parseGraphDbtModelDivergenceMarker"
+        ],
+        "normalizedRailName": "publishgraphdbtworkspaceartifacts",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+          "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts",
+          "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts",
+          "apps/web/src/app/ports/graphDbtWorkspaceArtifactPublication.ts",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "a browser loop over SaveWorkspaceFileContent",
+          "a second workspace-file store",
+          "a fake success or partial-write recovery path",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-07-31T18:47:37.321Z"
+    },
+    {
+      "operationId": "97aa4edb-db3e-4cd4-8b7f-c2592352339d",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2099-DBT-AUTHORING-AUTHORITY:command:publishgraphdbtworkspaceartifacts:1:2c53e8f92468ed02",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2099-DBT-AUTHORING-AUTHORITY#command#publishgraphdbtworkspaceartifacts",
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test:ci",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "PublishGraphDbtWorkspaceArtifacts",
+        "railType": "command",
+        "featureId": "MVP-2099-DBT-AUTHORING-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "unitTests": [
+          "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": [
+          "CanvasAuthoringAuthority",
+          "GraphDbtWorkspaceArtifactPublication"
+        ],
+        "fowlerSignals": [
+          "Authority is rechecked under one serialized publication boundary.",
+          "Reuses E-WEB-DBT-ATOMIC-PUBLICATION-1 instead of a parallel command rail."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Parallel publication declaration duplicated the existing canonical rail.",
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api test:ci"],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "implementationRefs": [
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#ObservedArtifact",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#currentSqlMarkerIsValid",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#matchesExpectedRevision",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts#serializeProjectRootAuthorityKey",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#createGraphDraftMarkedDbtModelSql",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtModelDivergenceMarker",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#parseGraphDbtModelDivergenceMarker"
+        ],
+        "normalizedRailName": "publishgraphdbtworkspaceartifacts",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-07-31T18:48:05.195Z"
+    },
+    {
+      "operationId": "8e24de9d-2e58-4ca1-9a28-497a274e9f3c",
+      "idempotencyKey": "codex-mvp2099-clean-canonical-publication-r3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#E-WEB-DBT-ATOMIC-PUBLICATION-1#command#publishgraphdbtworkspaceartifacts",
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+        "dddOwner": "GraphDbtWorkspaceArtifactPublication",
+        "railName": "PublishGraphDbtWorkspaceArtifacts",
+        "railType": "command",
+        "featureId": "E-WEB-DBT-ATOMIC-PUBLICATION-1",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "unitTests": [
+          "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+          "apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.test.ts",
+          "apps/web/src/app/views/canvas/canvasPlanAction.graphDraftSqlAuthority.test.ts",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.test.ts",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts",
+          "packages/@dvt/contracts/test/graph-dbt-workspace-artifact-publication.contract.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts",
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": [
+          "GraphDbtWorkspaceArtifactPublication",
+          "GraphDbtWorkspaceArtifactPublicationItem",
+          "WorkspaceFileBatchMutation",
+          "CanvasAuthoringAuthority"
+        ],
+        "fowlerSignals": [
+          "unit_of_work",
+          "command",
+          "gateway",
+          "optimistic_offline_lock",
+          "idempotent_receiver",
+          "Authority is rechecked under one serialized publication boundary."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter dvt-api test",
+          "pnpm --filter @dvt/web test",
+          "pnpm test:web:e2e:dbt-author-code-run:live",
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "componentGuides": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/evidence/ED-20260729-graph-dbt-atomic-publication.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Artifact publication can pass an authority check that changes before the write completes.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/evidence/ED-20260729-graph-dbt-atomic-publication.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+          "pnpm --filter dvt-api test:ci"
+        ],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "implementationRefs": [
+          "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts#IPublishGraphDbtWorkspaceArtifactsCommand",
+          "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts#PublishGraphDbtWorkspaceArtifactsInput",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#PublishGraphDbtWorkspaceArtifactsCommand",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRouteGroup.ts#registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#GraphDbtWorkspaceArtifactPublicationRouteDeps",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#registerGraphDbtWorkspaceArtifactPublicationRoutes",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts#respondInvalidRequest",
+          "apps/web/src/app/ports/graphDbtWorkspaceArtifactPublication.ts#IGraphDbtWorkspaceArtifactPublicationCommandPort",
+          "apps/web/src/app/services/AppServicesContext.tsx#useGraphDbtWorkspaceArtifactPublicationCommandPort",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#buildScopedEndpoint",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#createApiGraphDbtWorkspaceArtifactPublicationCommandPort",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts#GRAPH_DBT_WORKSPACE_ARTIFACT_PUBLICATION_ENDPOINT",
+          "apps/web/src/app/views/canvas/canvasPlanAction.ts#CanvasPlanActionResult",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts#publicationIdempotencyKey",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts#publishGraphDbtWorkspaceArtifacts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.test.support.tsx#createGraphDbtWorkspaceArtifactPublicationCommandMock",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtArtifactPathSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactExpectedRevision",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactExpectedRevisionSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationApplied",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAppliedSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationConflict",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationConflictSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationItem",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationItemSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationResult",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationResultSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublishedWriteSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#NonBlankStringSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#PublishGraphDbtWorkspaceArtifactsRequest",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#PublishGraphDbtWorkspaceArtifactsRequestSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#Sha256HexStringSchema",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#ObservedArtifact",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#currentSqlMarkerIsValid",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#matchesExpectedRevision",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts#serializeProjectRootAuthorityKey",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#createGraphDraftMarkedDbtModelSql",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtModelDivergenceMarker",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#parseGraphDbtModelDivergenceMarker"
+        ],
+        "normalizedRailName": "publishgraphdbtworkspaceartifacts",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+          "apps/api/src/application/ports/graphDbtWorkspaceArtifactPublication.ts",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+          "apps/api/src/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.ts",
+          "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.ts",
+          "apps/web/src/app/ports/graphDbtWorkspaceArtifactPublication.ts",
+          "apps/web/src/app/services/dbtProject/graphDbtWorkspaceArtifactPublication.api.ts",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "a browser loop over SaveWorkspaceFileContent",
+          "a second workspace-file store",
+          "a fake success or partial-write recovery path",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-07-31T19:10:07.369Z"
+    },
+    {
+      "operationId": "ec2b697d-37b4-4021-acd9-949d99170272",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730:command:restoreplanningdbcanonicalarchitecturestate:latest:3e3601206a9ce51d",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#restoreplanningdbcanonicalarchitecturestate",
+      "sourcePath": "docs/architecture/command-query-rail-governance.md",
+      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-import.test.cjs",
+        "dddOwner": "PlanningDbCanonicalStateImport",
+        "railName": "RestorePlanningDbCanonicalArchitectureState",
+        "railType": "command",
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "greenTest": "node --test scripts/planning-db-import.test.cjs",
+        "sourceRef": "docs/architecture/command-query-rail-governance.md",
+        "unitTests": ["scripts/planning-db-import.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2104"],
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": ["PlanningDbCanonicalArchitectureState"],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "node --test scripts/planning-db-import.test.cjs",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A rebuilt Planning DB loses DB-authored component retirement state.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-import.test.cjs"
+        ],
+        "implementationPlan": "Restore versioned current architecture state after the schema is available.",
+        "implementationRefs": [
+          "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
+          "scripts/planning-db-import.cjs#restoreArchitectureComponentStatusOverrides"
+        ],
+        "normalizedRailName": "restoreplanningdbcanonicalarchitecturestate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-import.cjs",
+          "scripts/planning-db-import.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-07-31T19:13:06.127Z"
     }
   ]
 }
