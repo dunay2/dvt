@@ -2757,15 +2757,87 @@
       "dddOwner": "ResolveAuthorizedPreviewSelectionService",
       "railStatus": "implemented",
       "symbolRefs": [
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_EVIDENCE_REFERENCE_KIND",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_CONTRACT_VERSION",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_ID_PREFIX",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_PHASE",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_SUBJECT_KIND",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidence",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidenceReference",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidenceReferenceKind",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidenceValue",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFinding",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingBase",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingCollection",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingIdentityInput",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingPhase",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingSubject",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingSubjectKind",
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PreviewSelectionFinding",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#canonicalizeEvidence",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#canonicalizePlanRef",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#canonicalizeSubjects",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#compareCanonicalValues",
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#toCanonicalFindingIdentity",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#FindingIdSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionEvidenceReferenceSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionEvidenceSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionEvidenceValueSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingBaseShape",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingCollectionSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingCollectionSchemaT",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingSchemaT",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingSubjectSchema",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PreviewSelectionFindingSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PreviewSelectionFindingSchemaT",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#RemediationCodeSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#validateFindingIdentity",
+        "packages/@dvt/contracts/src/validation/planner.ts#parsePlanAdmissionFinding",
+        "packages/@dvt/contracts/src/validation/planner.ts#parsePlanAdmissionFindingCollection",
         "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#ExecutableSubgraphSelectionRejection"
       ],
       "implementationRefs": [
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_EVIDENCE_REFERENCE_KIND",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_CONTRACT_VERSION",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_ID_PREFIX",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_PHASE",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_SUBJECT_KIND",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidence",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidenceReference",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidenceReferenceKind",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidenceValue",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFinding",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingBase",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingCollection",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingIdentityInput",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingPhase",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingSubject",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingSubjectKind",
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PreviewSelectionFinding",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#canonicalizeEvidence",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#canonicalizePlanRef",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#canonicalizeSubjects",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#compareCanonicalValues",
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#toCanonicalFindingIdentity",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#FindingIdSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionEvidenceReferenceSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionEvidenceSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionEvidenceValueSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingBaseShape",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingCollectionSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingCollectionSchemaT",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingSchemaT",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingSubjectSchema",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PreviewSelectionFindingSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PreviewSelectionFindingSchemaT",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#RemediationCodeSchema",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#validateFindingIdentity",
+        "packages/@dvt/contracts/src/validation/planner.ts#parsePlanAdmissionFinding",
+        "packages/@dvt/contracts/src/validation/planner.ts#parsePlanAdmissionFindingCollection",
         "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#ExecutableSubgraphSelectionRejection"
       ],
       "documentationRefs": [
@@ -2778,6 +2850,7 @@
       "allowedImplementationSurfaces": [
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+        "packages/@dvt/contracts/src/validation/planner.ts",
         "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts"
       ],
       "architectureGuards": [
@@ -2799,7 +2872,307 @@
       "rawManifest": {
         "symbols": [
           {
+            "name": "PLAN_ADMISSION_EVIDENCE_REFERENCE_KIND",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PLAN_ADMISSION_FINDING_CONTRACT_VERSION",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PLAN_ADMISSION_FINDING_ID_PREFIX",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PLAN_ADMISSION_FINDING_PHASE",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PLAN_ADMISSION_FINDING_SUBJECT_KIND",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionEvidence",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionEvidenceReference",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionEvidenceReferenceKind",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionEvidenceValue",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFinding",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingBase",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingCollection",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingIdentityInput",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingPhase",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingSubject",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingSubjectKind",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
             "name": "PreviewSelectionFinding",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "canonicalizeEvidence",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "canonicalizePlanRef",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "canonicalizeSubjects",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "compareCanonicalValues",
             "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
             "cqRails": ["PreviewExecutionPlan"],
             "dddOwner": "ResolveAuthorizedPreviewSelectionService",
@@ -2829,8 +3202,248 @@
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
           },
           {
+            "name": "toCanonicalFindingIdentity",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "FindingIdSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionEvidenceReferenceSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionEvidenceSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionEvidenceValueSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingBaseShape",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingCollectionSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingCollectionSchemaT",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingSchemaT",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanAdmissionFindingSubjectSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
             "name": "PreviewSelectionFindingSchema",
             "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PreviewSelectionFindingSchemaT",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "RemediationCodeSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "validateFindingIdentity",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "parsePlanAdmissionFinding",
+            "path": "packages/@dvt/contracts/src/validation/planner.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "parsePlanAdmissionFindingCollection",
+            "path": "packages/@dvt/contracts/src/validation/planner.ts",
             "cqRails": ["PreviewExecutionPlan"],
             "dddOwner": "ResolveAuthorizedPreviewSelectionService",
             "unitTests": [
@@ -2880,6 +3493,7 @@
             "patchSurfaces": [
               "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
               "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+              "packages/@dvt/contracts/src/validation/planner.ts",
               "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts"
             ],
             "expectedFailure": "The canonical selection finding contract, deterministic identity, and authority boundary did not exist."
@@ -2909,6 +3523,7 @@
         "allowedImplementationSurfaces": [
           "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
           "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+          "packages/@dvt/contracts/src/validation/planner.ts",
           "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts"
         ],
         "forbiddenImplementationSurfaces": [
@@ -2917,7 +3532,7 @@
           "apps/web/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-07-31T22:18:52.534Z"
     },
@@ -2932,15 +3547,15 @@
       "railStatus": "implemented",
       "symbolRefs": [
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
-        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+        "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
-        "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult"
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT"
       ],
       "implementationRefs": [
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
-        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+        "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
-        "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult"
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260731-plan-admission-findings.md"
@@ -2988,8 +3603,8 @@
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
           },
           {
-            "name": "createPlanAdmissionFindingId",
-            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "name": "ExecutabilityValidationResult",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
             "cqRails": ["RecordPlanExecutability"],
             "dddOwner": "StoredPlanExecutabilityValidator",
             "unitTests": [
@@ -3018,8 +3633,8 @@
             "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
           },
           {
-            "name": "ExecutabilityValidationResult",
-            "path": "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+            "name": "PlanExecutabilityFindingSchemaT",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
             "cqRails": ["RecordPlanExecutability"],
             "dddOwner": "StoredPlanExecutabilityValidator",
             "unitTests": [
@@ -3091,7 +3706,7 @@
           "apps/web/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-07-31T22:19:13.431Z"
     },
@@ -5969,6 +6584,189 @@
         ]
       },
       "createdAt": "2026-07-31T22:19:13.431Z"
+    },
+    {
+      "operationId": "fb776d01-cdea-4a43-ab47-769c31e91e80",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-F6-2A-PLAN-ADMISSION-FINDINGS:command:previewexecutionplan:0:8eea20defbe7b737",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2A-PLAN-ADMISSION-FINDINGS#command#previewexecutionplan",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2077",
+      "sourceContentSha256": "a2957a160a54947f7e7000dc20694fd9e7994f71ba3141c9da2677e71dddc313",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts",
+        "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+        "railName": "PreviewExecutionPlan",
+        "railType": "command",
+        "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+        "greenTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts plan-admission-finding.architecture.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2077",
+        "unitTests": [
+          "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+          "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2077"],
+        "cypressFlows": ["N/A - canonical contract slice with no UI behavior"],
+        "domainObjects": ["PreviewSelectionFinding", "PlanAdmissionFinding"],
+        "fowlerSignals": [
+          "One canonical finding value object extends the existing selection decision without duplicating authority."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/contracts typecheck",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The canonical selection finding contract, deterministic identity, and authority boundary did not exist.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260731-plan-admission-findings.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2077",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_EVIDENCE_REFERENCE_KIND",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_CONTRACT_VERSION",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_ID_PREFIX",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_PHASE",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PLAN_ADMISSION_FINDING_SUBJECT_KIND",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidence",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidenceReference",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidenceReferenceKind",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionEvidenceValue",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFinding",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingBase",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingCollection",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingIdentityInput",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingPhase",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingSubject",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanAdmissionFindingSubjectKind",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PreviewSelectionFinding",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#canonicalizeEvidence",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#canonicalizePlanRef",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#canonicalizeSubjects",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#compareCanonicalValues",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#toCanonicalFindingIdentity",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#FindingIdSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionEvidenceReferenceSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionEvidenceSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionEvidenceValueSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingBaseShape",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingCollectionSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingCollectionSchemaT",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingSchemaT",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanAdmissionFindingSubjectSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PreviewSelectionFindingSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PreviewSelectionFindingSchemaT",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#RemediationCodeSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#validateFindingIdentity",
+          "packages/@dvt/contracts/src/validation/planner.ts#parsePlanAdmissionFinding",
+          "packages/@dvt/contracts/src/validation/planner.ts#parsePlanAdmissionFindingCollection",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#ExecutableSubgraphSelectionRejection"
+        ],
+        "normalizedRailName": "previewexecutionplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "a2957a160a54947f7e7000dc20694fd9e7994f71ba3141c9da2677e71dddc313",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+          "packages/@dvt/contracts/src/validation/planner.ts",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/web/**"
+        ]
+      },
+      "createdAt": "2026-07-31T22:25:03.656Z"
+    },
+    {
+      "operationId": "f2b206d5-cc8e-4826-8242-0ba19ce7bf1c",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-F6-2A-PLAN-ADMISSION-FINDINGS:command:recordplanexecutability:0:bc746823f7a4a232",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2A-PLAN-ADMISSION-FINDINGS#command#recordplanexecutability",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2077",
+      "sourceContentSha256": "a2957a160a54947f7e7000dc20694fd9e7994f71ba3141c9da2677e71dddc313",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts",
+        "dddOwner": "StoredPlanExecutabilityValidator",
+        "railName": "RecordPlanExecutability",
+        "railType": "command",
+        "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+        "greenTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts plan-admission-finding.architecture.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2077",
+        "unitTests": [
+          "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+          "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2077"],
+        "cypressFlows": ["N/A - canonical contract slice with no UI behavior"],
+        "domainObjects": ["PlanExecutabilityFinding", "PlanAdmissionFinding"],
+        "fowlerSignals": [
+          "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/contracts typecheck",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The canonical executability finding contract did not preserve exact plan and adapter identity.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260731-plan-admission-findings.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2077",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchemaT"
+        ],
+        "normalizedRailName": "recordplanexecutability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "a2957a160a54947f7e7000dc20694fd9e7994f71ba3141c9da2677e71dddc313",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/web/**"
+        ]
+      },
+      "createdAt": "2026-07-31T22:25:28.970Z"
     }
   ]
 }
