@@ -15,9 +15,9 @@ This artifact is the hard QA gate for the 2026-04-08 slice that narrowed
 `RETRY_RUN` out of canonical `SignalType` and made provider signal mapping
 explicit for the remaining canonical run-control surface.
 
-Canonical execution tracking remains in:
+Canonical execution tracking is defined by:
 
-- [agent-lane-a.yaml](../../state/agent-lane-a.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 - [20260408 Retry-run boundary and provider signal mapper review](./20260408-retry-run-boundary-and-provider-signal-mapper-review.md)
 - [ADR-0049](./C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
 

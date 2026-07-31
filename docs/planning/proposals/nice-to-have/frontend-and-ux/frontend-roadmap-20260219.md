@@ -10,10 +10,10 @@ planning_type: proposal
 
 ## Context
 
-The execution of this roadmap is tracked in
-[Agent Lane E](../../../state/agent-lane-e.yaml)
-(`docs/planning/state/agent-lane-e.yaml`).
-Lane E tasks (`MVP-E1`, `F-01` through `F-23`) are the canonical work units.
+The execution of this roadmap is tracked through the
+[GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md).
+The former Lane E identifiers (`MVP-E1`, `F-01` through `F-23`) remain
+historical cross-references, not current task authority.
 This document captures the convergence sequence and the architectural rationale
 behind those tasks.
 The dedicated F-04 boundary pack is tracked here:
@@ -300,7 +300,7 @@ but the UI still needs its own frontend-facing contract artifact that records:
 
 ## Related Files
 
-- [Agent Lane E](../../../state/agent-lane-e.yaml) - execution tracking
+- [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md) - execution tracking
 - [Frontend Architecture](../../../../architecture/components/web/index.md)
 - [UI / Visualization Domain](../../../../architecture/domain-ui.md)
 - [`apps/web/src/`](../../../../../apps/web/src) - frontend source

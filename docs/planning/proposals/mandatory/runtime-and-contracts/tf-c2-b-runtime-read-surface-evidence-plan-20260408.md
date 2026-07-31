@@ -21,7 +21,7 @@ from API responses without backend log access.
 - [Transformation Flow Architecture And Contracts 2026-04-05](./transformation-flow-architecture-and-contracts-20260405.md)
 - [Transformation Flow Delivery Plan 2026-04-05](./transformation-flow-delivery-plan-20260405.md)
 - [Plan Creation Interface Route Proposal 2026-04-05](./plan-creation-interface-route-proposal-20260405.md)
-- [Lane C state](../../../state/agent-lane-c.yaml)
+- [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 
 ## Scope
 
@@ -121,4 +121,5 @@ type RunStatusSnapshot = {
 
 ## Planning Disposition
 
-- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.
+- Action: no standalone implementation starts from this document without an
+  accepted GitHub Issue.

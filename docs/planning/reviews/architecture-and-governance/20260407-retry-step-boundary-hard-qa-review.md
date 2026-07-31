@@ -18,9 +18,9 @@ Historical note: `RETRY_RUN` was unresolved when this QA artifact closed. It is
 now governed separately by `ADR-0049` and is no longer part of canonical
 generic `SignalType`.
 
-Canonical execution tracking remains in:
+Canonical execution tracking is defined by:
 
-- [agent-lane-a.yaml](../../state/agent-lane-a.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 - [20260407 Retry-step boundary and use-case review](./20260407-retry-step-boundary-and-use-case-review.md)
 
 The original blockers identified in this QA pass were corrected in the same

@@ -32,7 +32,7 @@ Canvas runtime truth.
 - [Data Source Service Boundary](../../../architecture/components/web/appshell/data-source-service-boundary.md)
 - [Frontend Runtime Modes User Manual](../../../architecture/components/web/frontend-runtime-modes-user-manual.md)
 - [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](../../proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
-- [Agent Lane E](../../state/agent-lane-e.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 
 ## Scope
 

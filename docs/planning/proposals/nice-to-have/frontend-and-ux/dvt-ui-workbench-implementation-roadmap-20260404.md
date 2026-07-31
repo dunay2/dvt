@@ -11,11 +11,11 @@ planning_type: proposal
 ## Summary
 
 This roadmap translates the workbench architecture proposal into execution work
-bound to scheduled Lane E tasks only.
+bound to accepted GitHub Issues only.
 
 Canonical execution tracking remains in:
 
-- [Agent Lane E](../../../state/agent-lane-e.yaml)
+- [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 - [Frontend roadmap](./frontend-roadmap-20260219.md)
 
 This document is the implementation sequence and Definition of Done map for the
@@ -147,11 +147,11 @@ DoD:
   contracts;
 - open-data visual language is explicit and scoped.
 
-## Execution status snapshot (source of truth: Lane E)
+## Historical Execution Status Snapshot
 
 Date: `2026-04-04`
 
-| Package | Task set                                                               | Lane E status snapshot                                                                                                                                         |
+| Package | Task set                                                               | Historical Lane E status snapshot                                                                                                                              |
 | ------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A       | `MVP-E1`, `F-07`, `F-13`, `F-20`                                       | `MVP-E1` queued, `F-07` in_progress, `F-13` in_progress, `F-20` review                                                                                         |
 | B       | `F-04`, `F-05`, `F-06`, `F-12`                                         | `F-04` in_progress (`F-04-D/E/F` queued), `F-05` in_progress, `F-06` queued, `F-12` queued                                                                     |
@@ -160,9 +160,8 @@ Date: `2026-04-04`
 
 Traceability rule:
 
-- progress and status classification must be updated in `agent-lane-e.yaml`
-  first;
-- this roadmap snapshot is descriptive and must not override lane state.
+- current progress and status live only in GitHub Issues;
+- this dated snapshot is historical and must not override GitHub issue state.
 
 ## Mermaid execution maps
 

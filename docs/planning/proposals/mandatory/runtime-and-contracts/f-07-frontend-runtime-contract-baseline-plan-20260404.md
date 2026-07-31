@@ -124,8 +124,9 @@ drifting endpoints.
 - [Frontend Runtime Contract Technical Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-technical-manual.md)
 - [Frontend Runtime Contract User Manual](../../../../architecture/components/web/runs/frontend-runtime-contract-user-manual.md)
 - [Frontend Roadmap - Prototype To Operational UI](../../nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md)
-- [Lane E](../../../state/agent-lane-e.yaml)
+- [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 
 ## Planning Disposition
 
-- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.
+- Action: no standalone implementation starts from this document without an
+  accepted GitHub Issue.

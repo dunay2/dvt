@@ -148,11 +148,10 @@ Outcome:
 
 ## Related Task Route
 
-- [Lane A](../../../state/agent-lane-a.yaml)
-- [Lane C](../../../state/agent-lane-c.yaml)
-- [Lane D](../../../state/agent-lane-d.yaml)
+- [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 - [Deep Architectural Review](../../../reviews/architecture-and-governance/20260402-deep-architectural-review.md)
 
 ## Planning Disposition
 
-- Action: classify this mandatory proposal through `RUNTIME-PROP-DISP-1`; no standalone implementation starts from this document without Planning DB ownership.
+- Action: no standalone implementation starts from this document without an
+  accepted GitHub Issue.

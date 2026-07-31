@@ -35,7 +35,7 @@ Primary governing and status sources:
 - [System delivery status](../../../architecture/system-delivery-status.md)
 - [Canonical doc code matrix](../../status/canonical-doc-code-matrix.md)
 - [Planning control tower](../../state/planning-control-tower.md)
-- [Agent lane A](../../state/agent-lane-a.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 - [ADR-0018 shared-kernel ownership governance](../../../adr/ADR-0018_Shared_Kernel_Ownership_Governance.md)
 - [ADR-0034 bounded-context boundaries and communication rules](../../../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md)
 
@@ -208,7 +208,7 @@ Evidence:
 - [ADR-0018](../../../adr/ADR-0018_Shared_Kernel_Ownership_Governance.md)
 - [packages/@dvt/contracts/src/index.ts](../../../../packages/@dvt/contracts/src/index.ts)
 - [packages/@dvt/engine/src/contracts](../../../../packages/@dvt/engine/src/contracts)
-- [agent-lane-a.yaml](../../state/agent-lane-a.yaml)
+- `agent-lane-a.yaml` (retired historical artifact)
 
 Judgment:
 

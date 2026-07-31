@@ -25,7 +25,7 @@ This review is the canonical mailbox for the handler-seam follow-up on
 - [Canvas Draft Session Component](../../../architecture/components/web/graph/canvas-draft-session-component.md)
 - [Canvas Graph Lifecycle Component](../../../architecture/components/web/graph/canvas-graph-lifecycle-component.md)
 - [TF-E2 Canvas Target Architecture Execution Plan 2026-04-17](../../proposals/mandatory/frontend-and-ux/tf-e2-canvas-target-architecture-execution-plan-20260417.md)
-- [Agent Lane E](../../state/agent-lane-e.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 
 ## Scope
 

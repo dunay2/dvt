@@ -35,7 +35,7 @@ multi-canvas host model explicit in code, tests, and documentation.
 - [Canvas Playground Host Component](../../../architecture/components/web/graph/canvas-playground-host-component.md)
 - [Canvas Controller Current To Target Architecture](../../../architecture/components/web/graph/canvas-controller-current-to-target-architecture.md)
 - [TF-E2 Project Playground And Multi-Canvas Host Plan](../../proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md)
-- [Agent Lane E](../../state/agent-lane-e.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 
 ## Summary
 
