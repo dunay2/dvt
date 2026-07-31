@@ -123,6 +123,30 @@ describe('CanvasAuthoringAuthorityPolicy', () => {
     await expect(policy.resolve(KEY)).rejects.toBeInstanceOf(CanvasAuthoringAuthorityMixedError);
   });
 
+  it('reports mixed authority when a graph draft read observes a persisted binding', async () => {
+    const policy = new CanvasAuthoringAuthorityPolicy(
+      storeWithRead(
+        vi.fn().mockResolvedValue({
+          key: KEY,
+          binding: {
+            schemaVersion: 'canvas-authoring-authority-binding.v1',
+            canvasId: KEY.canvasId,
+            authority: { kind: 'dbt-project-files', projectRoot: 'analytics' },
+          },
+          revision: 'authority-1',
+          updatedAt: '2026-07-14T10:00:00.000Z',
+        })
+      ),
+      draftStoreWithCanvas(true)
+    );
+
+    await expect(policy.resolveGraphDraftReadAuthority(KEY)).resolves.toEqual({
+      kind: 'unresolved',
+      reason: 'mixed_authority',
+      canvasId: KEY.canvasId,
+    });
+  });
+
   it('refuses graph publication when another file-authoritative Canvas owns the project root', async () => {
     const policy = new CanvasAuthoringAuthorityPolicy(
       storeWithRead(

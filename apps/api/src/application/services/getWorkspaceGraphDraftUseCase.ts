@@ -15,7 +15,6 @@ import {
   WorkspaceGraphAuthoringDraftSchema,
   parseWorkspaceGraphDraftReadResponse,
   type CanvasAuthoringAuthorityResolution,
-  type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphDraftAuditOutcome,
   type WorkspaceGraphDraftAuditRef,
   type WorkspaceGraphDraftCapabilityMode,
@@ -28,6 +27,8 @@ import type {
   WorkspaceGraphDraftDecisionContext,
 } from '../ports/workspaceGraphDraft.js';
 import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../ports/workspaceGraphDraft.js';
+
+import type { CanvasAuthoringAuthorityPolicy } from './canvasAuthoringAuthorityPolicy.js';
 
 export type GetWorkspaceGraphDraftUseCaseResult =
   | {
@@ -42,7 +43,11 @@ export type GetWorkspaceGraphDraftUseCaseResult =
 export class GetWorkspaceGraphDraftUseCase {
   public constructor(
     private readonly store: IWorkspaceGraphDraftStore,
-    private readonly audit: IWorkspaceGraphDraftAuditPort
+    private readonly audit: IWorkspaceGraphDraftAuditPort,
+    private readonly authorityPolicy: Pick<
+      CanvasAuthoringAuthorityPolicy,
+      'resolveGraphDraftReadAuthority'
+    >
   ) {}
 
   public async execute(
@@ -101,39 +106,8 @@ export class GetWorkspaceGraphDraftUseCase {
       };
     }
 
-    try {
-      const draft = WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload);
-      const ok = {
-        kind: 'ok',
-        capability: decision.capability,
-        auditRef: buildAuditRef(decision, outcomeForReadableMode(decision.capability.mode)),
-        formatMeta: {
-          schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-          storedSchemaVersion: stored.schemaVersion,
-          migrationState: WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE.native,
-        },
-        authoringAuthority: resolveGraphDraftAuthoringAuthority(draft),
-        record: {
-          scope: stored.scope,
-          schemaVersion: stored.schemaVersion,
-          revision: stored.revision,
-          draft,
-          updatedAt: stored.updatedAt,
-        },
-      } as const;
-      const response = parseWorkspaceGraphDraftReadResponse(ok);
-      await this.audit.record({
-        action: WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION.draftRead,
-        outcome: response.auditRef.outcome,
-        decision,
-        metadata: { revision: ok.record.revision },
-      });
-      return {
-        kind: 'response',
-        httpStatus: 200,
-        response,
-      };
-    } catch {
+    const parsedDraft = WorkspaceGraphAuthoringDraftSchema.safeParse(stored.draftPayload);
+    if (!parsedDraft.success) {
       const corrupt = {
         kind: 'format_error',
         capability: decision.capability,
@@ -156,27 +130,57 @@ export class GetWorkspaceGraphDraftUseCase {
         response,
       };
     }
+
+    const draft = parsedDraft.data;
+    const ok = {
+      kind: 'ok',
+      capability: decision.capability,
+      auditRef: buildAuditRef(decision, outcomeForReadableMode(decision.capability.mode)),
+      formatMeta: {
+        schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+        storedSchemaVersion: stored.schemaVersion,
+        migrationState: WORKSPACE_GRAPH_DRAFT_MIGRATION_STATE.native,
+      },
+      authoringAuthority: await resolveGraphDraftAuthoringAuthority(
+        this.authorityPolicy,
+        stored.scope,
+        draft.activeCanvasId ?? draft.canvas.id ?? null
+      ),
+      record: {
+        scope: stored.scope,
+        schemaVersion: stored.schemaVersion,
+        revision: stored.revision,
+        draft,
+        updatedAt: stored.updatedAt,
+      },
+    } as const;
+    const response = parseWorkspaceGraphDraftReadResponse(ok);
+    await this.audit.record({
+      action: WORKSPACE_GRAPH_DRAFT_AUDIT_ACTION.draftRead,
+      outcome: response.auditRef.outcome,
+      decision,
+      metadata: { revision: ok.record.revision },
+    });
+    return {
+      kind: 'response',
+      httpStatus: 200,
+      response,
+    };
   }
 }
 
-function resolveGraphDraftAuthoringAuthority(
-  draft: WorkspaceGraphAuthoringDraft
-): CanvasAuthoringAuthorityResolution {
-  const canvasId = draft.activeCanvasId ?? draft.canvas.id ?? null;
+async function resolveGraphDraftAuthoringAuthority(
+  authorityPolicy: Pick<CanvasAuthoringAuthorityPolicy, 'resolveGraphDraftReadAuthority'>,
+  scope: WorkspaceGraphDraftDecisionContext['scope'],
+  canvasId: string | null
+): Promise<CanvasAuthoringAuthorityResolution> {
   return canvasId === null
     ? {
         kind: 'unresolved',
         reason: 'missing_authority',
         canvasId: null,
       }
-    : {
-        kind: 'resolved',
-        binding: {
-          schemaVersion: 'canvas-authoring-authority-binding.v1',
-          canvasId,
-          authority: { kind: 'graph-draft' },
-        },
-      };
+    : authorityPolicy.resolveGraphDraftReadAuthority({ ...scope, canvasId });
 }
 
 function buildAuditRef(

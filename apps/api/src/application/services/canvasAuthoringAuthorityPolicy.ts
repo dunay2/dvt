@@ -1,6 +1,7 @@
 import {
   WorkspaceGraphAuthoringDraftSchema,
   type CanvasAuthoringAuthorityBinding,
+  type CanvasAuthoringAuthorityResolution,
   type GraphDbtWorkspaceArtifactPublicationAuthorityRefused,
 } from '@dvt/contracts';
 
@@ -27,11 +28,6 @@ export class CanvasAuthoringAuthorityMixedError extends Error {
   }
 }
 
-type CanvasAuthoringAuthorityResolution =
-  | Readonly<{ kind: 'resolved'; binding: CanvasAuthoringAuthorityBinding }>
-  | Readonly<{ kind: 'missing' }>
-  | Readonly<{ kind: 'mixed' }>;
-
 export type GraphArtifactPublicationAuthorityDecision =
   | Readonly<{ kind: 'allowed'; binding: CanvasAuthoringAuthorityBinding }>
   | Readonly<{
@@ -54,6 +50,22 @@ export class CanvasAuthoringAuthorityPolicy {
       throw new CanvasAuthoringAuthorityMissingError(key.canvasId);
     }
     return resolution.binding;
+  }
+
+  public async resolveGraphDraftReadAuthority(
+    key: CanvasAuthoringAuthorityKey
+  ): Promise<CanvasAuthoringAuthorityResolution> {
+    const stored = await this.store.read(key);
+    return stored
+      ? {
+          kind: 'unresolved',
+          reason: 'mixed_authority',
+          canvasId: key.canvasId,
+        }
+      : {
+          kind: 'resolved',
+          binding: graphDraftBinding(key.canvasId),
+        };
   }
 
   public async authorizeGraphArtifactPublication(
@@ -79,7 +91,11 @@ export class CanvasAuthoringAuthorityPolicy {
 
   private async resolveAuthorityFacts(
     key: CanvasAuthoringAuthorityKey
-  ): Promise<CanvasAuthoringAuthorityResolution> {
+  ): Promise<
+    | Readonly<{ kind: 'resolved'; binding: CanvasAuthoringAuthorityBinding }>
+    | Readonly<{ kind: 'missing' }>
+    | Readonly<{ kind: 'mixed' }>
+  > {
     const [stored, graphDraftRecord] = await Promise.all([
       this.store.read(key),
       this.graphDraftStore.read({
@@ -106,11 +122,15 @@ export class CanvasAuthoringAuthorityPolicy {
 
     return {
       kind: 'resolved',
-      binding: {
-        schemaVersion: 'canvas-authoring-authority-binding.v1',
-        canvasId: key.canvasId,
-        authority: { kind: 'graph-draft' },
-      },
+      binding: graphDraftBinding(key.canvasId),
     };
   }
+}
+
+function graphDraftBinding(canvasId: string): CanvasAuthoringAuthorityBinding {
+  return {
+    schemaVersion: 'canvas-authoring-authority-binding.v1',
+    canvasId,
+    authority: { kind: 'graph-draft' },
+  };
 }

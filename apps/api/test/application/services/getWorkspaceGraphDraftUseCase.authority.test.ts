@@ -1,3 +1,4 @@
+import type { CanvasAuthoringAuthorityResolution } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -6,6 +7,7 @@ import type {
   WorkspaceGraphDraftDecisionContext,
 } from '../../../src/application/ports/workspaceGraphDraft.js';
 import { GetWorkspaceGraphDraftUseCase } from '../../../src/application/services/getWorkspaceGraphDraftUseCase.js';
+import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 import {
   buildWorkspaceGraphDraft,
   TEST_WORKSPACE_SCOPE,
@@ -17,7 +19,11 @@ const DECISION = {
   correlationId: 'correlation-authority',
   decisionId: 'decision-authority',
   recordedAt: '2026-07-31T00:00:00.000Z',
-  requestedScope: TEST_WORKSPACE_SCOPE,
+  requestedScope: {
+    tenantId: TenantId.unsafe(TEST_WORKSPACE_SCOPE.tenantId),
+    projectId: ProjectId.unsafe(TEST_WORKSPACE_SCOPE.projectId),
+    environmentId: EnvironmentId.unsafe(TEST_WORKSPACE_SCOPE.environmentId),
+  },
   scope: TEST_WORKSPACE_SCOPE,
   capability: {
     scope: TEST_WORKSPACE_SCOPE,
@@ -28,7 +34,17 @@ const DECISION = {
   },
 } as const satisfies WorkspaceGraphDraftDecisionContext;
 
-function buildUseCase(canvasId: string | null): GetWorkspaceGraphDraftUseCase {
+function buildUseCase(
+  canvasId: string | null,
+  authority: CanvasAuthoringAuthorityResolution = {
+    kind: 'resolved',
+    binding: {
+      schemaVersion: 'canvas-authoring-authority-binding.v1',
+      canvasId: canvasId ?? 'unused-canvas',
+      authority: { kind: 'graph-draft' },
+    },
+  }
+): GetWorkspaceGraphDraftUseCase {
   const store = {
     read: vi.fn(async () => ({
       scope: TEST_WORKSPACE_SCOPE,
@@ -48,7 +64,9 @@ function buildUseCase(canvasId: string | null): GetWorkspaceGraphDraftUseCase {
     record: vi.fn(async () => undefined),
   } satisfies IWorkspaceGraphDraftAuditPort;
 
-  return new GetWorkspaceGraphDraftUseCase(store, audit);
+  return new GetWorkspaceGraphDraftUseCase(store, audit, {
+    resolveGraphDraftReadAuthority: vi.fn(async () => authority),
+  });
 }
 
 describe('GetWorkspaceGraphDraftUseCase authoring authority', () => {
@@ -83,6 +101,27 @@ describe('GetWorkspaceGraphDraftUseCase authoring authority', () => {
           kind: 'unresolved',
           reason: 'missing_authority',
           canvasId: null,
+        },
+      },
+    });
+  });
+
+  it('returns mixed authority reported by the canonical policy', async () => {
+    const result = await buildUseCase('main-canvas', {
+      kind: 'unresolved',
+      reason: 'mixed_authority',
+      canvasId: 'main-canvas',
+    }).execute(DECISION);
+
+    expect(result).toMatchObject({
+      kind: 'response',
+      httpStatus: 200,
+      response: {
+        kind: 'ok',
+        authoringAuthority: {
+          kind: 'unresolved',
+          reason: 'mixed_authority',
+          canvasId: 'main-canvas',
         },
       },
     });

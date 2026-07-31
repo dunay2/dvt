@@ -9,6 +9,7 @@ import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
+import { GetWorkspaceGraphDraftUseCase } from '../application/services/getWorkspaceGraphDraftUseCase.js';
 import { getPgPool } from '../db/pool.js';
 import { ConfiguredDbtExecutionTargetResolver } from '../infrastructure/dbt/ConfiguredDbtExecutionTargetResolver.js';
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
@@ -101,6 +102,11 @@ export async function buildProtectedRuntimeModule(
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
     queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
   });
+  const getWorkspaceGraphDraftUseCase = new GetWorkspaceGraphDraftUseCase(
+    workspaceGraphDraftRuntime.workspaceGraphDraftStore,
+    workspaceGraphDraftRuntime.workspaceGraphDraftAudit,
+    canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy
+  );
   const dbtProjectAnalyzer = new DbtCliProjectAnalyzer({
     workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
     ...(env.DVT_DBT_ANALYZER_PROFILES_DIR === undefined
@@ -189,7 +195,7 @@ export async function buildProtectedRuntimeModule(
     workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
     workspaceGraphDraftCapabilityService:
       workspaceGraphDraftRuntime.workspaceGraphDraftCapabilityService,
-    getWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.getWorkspaceGraphDraftUseCase,
+    getWorkspaceGraphDraftUseCase,
     saveWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.saveWorkspaceGraphDraftUseCase,
     migrate: async () => {
       await securityRuntime.migrateAccessDecisionService();
