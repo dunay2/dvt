@@ -1,7 +1,7 @@
 /**
  * @file scripts/planning-db-query.cjs
  * @ownedConcern Expose DB-owned architecture and governance read models through one operator query command.
- * @baseline ADR-0055: Planning DB architecture and governance source
+ * @baseline ADR-0061: GitHub MVP task authority and Planning DB architecture boundary
  * @decision Keep MVP task lifecycle in GitHub Issues and expose only architecture and governance DB reads.
  * @consequence The CLI cannot create a second local task backlog or workboard.
  * @version 1.0.0

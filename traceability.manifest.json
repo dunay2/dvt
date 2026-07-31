@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-07-14",
+  "generated": "2026-07-31",
   "repo": {
     "sha": "local"
   },
@@ -1040,14 +1040,6 @@
       "title": "ADR-0054: Plan Store Scoped Record Identity"
     },
     {
-      "number": "ADR-0055",
-      "decisions": [
-        "Expose DB-owned planning and governance read models through one operator query command."
-      ],
-      "implemented_by": ["scripts/planning-db-query.cjs"],
-      "title": "ADR-0055 - Planning DB Canonical Operational Source"
-    },
-    {
       "number": "ADR-0056",
       "decisions": [
         "Section 2 - Authorization defaults deny privileged UI actions until server projection loads",
@@ -1094,23 +1086,37 @@
         "Enforce scoped compare-and-swap before atomically replacing authoritative workspace files.",
         "Expose stable content revisions and compare-and-swap writes at the workspace-file port.",
         "Keep dbt file analysis in a versioned projection separate from execution and draft persistence.",
-        "Re-export only the versioned dbt project import published language from this barrel.",
+        "Publish the complete graph-derived dbt artifact set through one specific atomic command.",
+        "Re-export only versioned dbt project published language",
         "Resolve authority on the server and return a discriminated outcome for the one mutated authority.",
         "Serialize mutations per scoped path and publish writes through atomic replacement.",
+        "Use one discriminated provenance contract for transformation Git artifacts and file-authoritative dbt projects.",
         "Validation is read-only; import requires its content-addressed receipt and an unbound Canvas.",
-        "Version graph-draft and dbt-project-files authority outside WorkspaceGraphAuthoringDraft.v1."
+        "Version graph-draft and dbt-project-files authority outside WorkspaceGraphAuthoringDraft.v1.",
+        "Visual description edits carry a content-addressed proposal and never expose a generic node update."
       ],
       "implemented_by": [
         "apps/api/src/application/ports/workspaceFiles.ts",
         "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileMutationCoordinator.ts",
         "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtYamlDescriptionEdit.v1.ts",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/index.ts",
         "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/PlanPreviewProvenance.v1.ts",
         "packages/@dvt/contracts/src/contracts/source-import/SourceImportOperations.v2.ts"
       ],
       "title": "ADR-0060: dbt Project Authoring Authority"
+    },
+    {
+      "number": "ADR-0061",
+      "decisions": [
+        "Keep MVP task lifecycle in GitHub Issues and expose only architecture and governance DB reads."
+      ],
+      "implemented_by": ["scripts/planning-db-query.cjs"],
+      "title": "ADR-0061 - GitHub MVP Task Authority And Planning DB Architecture Boundary"
     }
   ]
 }
