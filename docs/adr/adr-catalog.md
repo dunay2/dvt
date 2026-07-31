@@ -48,6 +48,7 @@ Canonical catalog of ADRs in this repository.
 | ADR-0046   | Execution plan definition and run execution policy separation                                   | Accepted                 | 2026-04-07                       | [ADR-0046-execution-plan-definition-and-run-execution-policy-separation.md](./ADR-0046-execution-plan-definition-and-run-execution-policy-separation.md)     |
 | ADR-0055   | Planning DB canonical operational source                                                        | Superseded               | 2026-05-10                       | [adr-0055-planning-db-canonical-operational-source.md](./adr-0055-planning-db-canonical-operational-source.md)                                               |
 | ADR-0061   | GitHub MVP task authority and Planning DB architecture boundary                                 | Accepted                 | 2026-07-31                       | [ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md](./ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md) |
+| ADR-0062   | Server-owned effective workspace context                                                        | Accepted                 | 2026-05-10                       | [ADR-0062-server-owned-effective-workspace-context.md](./ADR-0062-server-owned-effective-workspace-context.md)                                               |
 
 ## Usage rules
 
