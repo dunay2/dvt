@@ -79,6 +79,14 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
         PROTECTED_RUNTIME_NEGATIVE_CASE.tenantWorkspaceMismatch,
         PROTECTED_RUNTIME_TEST_REF.workspaceDraftAuth,
       ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingCanvasAuthoringAuthority,
+        PROTECTED_RUNTIME_TEST_REF.workspaceDraftAuthorityQuery,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.mixedCanvasAuthoringAuthority,
+        PROTECTED_RUNTIME_TEST_REF.workspaceDraftAuthorityQuery,
+      ],
     ],
   }),
   defineProtectedRuntimeRail({
@@ -148,7 +156,7 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
       ],
       [
         PROTECTED_RUNTIME_NEGATIVE_CASE.mixedCanvasAuthoringAuthority,
-        PROTECTED_RUNTIME_TEST_REF.canvasAuthoringAuthorityPolicy,
+        PROTECTED_RUNTIME_TEST_REF.graphDbtWorkspaceArtifactPublicationCommand,
       ],
       [
         PROTECTED_RUNTIME_NEGATIVE_CASE.fileAuthorityCannotPublishGraphArtifacts,

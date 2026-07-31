@@ -93,13 +93,13 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   workspaceDraftAuth:
     'apps/api/test/application/services/authorizeWorkspaceGraphDraftCapabilityService.test.ts',
   workspaceDraftRoutes: 'apps/api/test/entrypoints/http/workspaceGraphDraftRoutes.test.ts',
+  workspaceDraftAuthorityQuery:
+    'apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts',
   dbtProjectGraphRoutes: 'apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts',
   graphDbtWorkspaceArtifactPublicationRoutes:
     'apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts',
   graphDbtWorkspaceArtifactPublicationCommand:
     'apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts',
-  canvasAuthoringAuthorityPolicy:
-    'apps/api/test/application/canvasAuthoringAuthorityPolicy.test.ts',
   dbtProjectAnalyzer: 'apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts',
   dbtProjectImportRoutes: 'apps/api/test/entrypoints/http/dbtProjectImportRoutes.test.ts',
   dbtProjectImportUseCases: 'apps/api/test/application/dbtProjectImportUseCases.test.ts',
