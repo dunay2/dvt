@@ -2748,6 +2748,354 @@
       "createdAt": "2026-07-31T18:28:21.965Z"
     },
     {
+      "railId": "local#MVP-F6-2A-PLAN-ADMISSION-FINDINGS#command#previewexecutionplan",
+      "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+      "mechanizationStatus": "implemented",
+      "railName": "PreviewExecutionPlan",
+      "normalizedRailName": "previewexecutionplan",
+      "railType": "command",
+      "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PreviewSelectionFinding",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PreviewSelectionFindingSchema",
+        "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#ExecutableSubgraphSelectionRejection"
+      ],
+      "implementationRefs": [
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PreviewSelectionFinding",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PreviewSelectionFindingSchema",
+        "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#ExecutableSubgraphSelectionRejection"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260731-plan-admission-findings.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+        "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/contracts test",
+        "pnpm --filter @dvt/contracts typecheck",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2077",
+      "sourceContentSha256": "a2957a160a54947f7e7000dc20694fd9e7994f71ba3141c9da2677e71dddc313",
+      "rawRail": {
+        "name": "PreviewExecutionPlan",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "ResolveAuthorizedPreviewSelectionService"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "PreviewSelectionFinding",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "createPlanAdmissionFindingId",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PreviewSelectionFindingSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "ExecutableSubgraphSelectionRejection",
+            "path": "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical finding value object extends the existing selection decision without duplicating authority."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2077"],
+        "cypressFlows": ["N/A - canonical contract slice with no UI behavior"],
+        "domainObjects": ["PreviewSelectionFinding", "PlanAdmissionFinding"],
+        "fowlerSignals": [
+          "One canonical finding value object extends the existing selection decision without duplicating authority."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/contracts typecheck",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "previewexecutionplan-record",
+            "redTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts",
+            "greenTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts plan-admission-finding.architecture.test.ts",
+            "patchSurfaces": [
+              "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+              "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+              "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts"
+            ],
+            "expectedFailure": "The canonical selection finding contract, deterministic identity, and authority boundary did not exist."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "PreviewExecutionPlan",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2077",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/web/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-07-31T22:18:52.534Z"
+    },
+    {
+      "railId": "local#MVP-F6-2A-PLAN-ADMISSION-FINDINGS#command#recordplanexecutability",
+      "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+      "mechanizationStatus": "implemented",
+      "railName": "RecordPlanExecutability",
+      "normalizedRailName": "recordplanexecutability",
+      "railType": "command",
+      "dddOwner": "StoredPlanExecutabilityValidator",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
+        "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult"
+      ],
+      "implementationRefs": [
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
+        "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260731-plan-admission-findings.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/contracts test",
+        "pnpm --filter @dvt/contracts typecheck",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2077",
+      "sourceContentSha256": "a2957a160a54947f7e7000dc20694fd9e7994f71ba3141c9da2677e71dddc313",
+      "rawRail": {
+        "name": "RecordPlanExecutability",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "StoredPlanExecutabilityValidator"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "PlanExecutabilityFinding",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "StoredPlanExecutabilityValidator",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "createPlanAdmissionFindingId",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "StoredPlanExecutabilityValidator",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "PlanExecutabilityFindingSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "StoredPlanExecutabilityValidator",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          },
+          {
+            "name": "ExecutabilityValidationResult",
+            "path": "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+            "cqRails": ["RecordPlanExecutability"],
+            "dddOwner": "StoredPlanExecutabilityValidator",
+            "unitTests": [
+              "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+              "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+            ],
+            "cypressCoverage": "N/A - canonical contract slice with no UI behavior",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2077"],
+        "cypressFlows": ["N/A - canonical contract slice with no UI behavior"],
+        "domainObjects": ["PlanExecutabilityFinding", "PlanAdmissionFinding"],
+        "fowlerSignals": [
+          "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/contracts typecheck",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "recordplanexecutability-record",
+            "redTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts",
+            "greenTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts plan-admission-finding.architecture.test.ts",
+            "patchSurfaces": [
+              "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+              "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+              "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts"
+            ],
+            "expectedFailure": "The canonical executability finding contract did not preserve exact plan and adapter identity."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordPlanExecutability",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "StoredPlanExecutabilityValidator"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2077",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/web/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-07-31T22:19:13.431Z"
+    },
+    {
       "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicalarchitecturestate",
       "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
       "mechanizationStatus": "implemented",
@@ -5475,6 +5823,152 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-07-31T19:13:06.127Z"
+    },
+    {
+      "operationId": "83f99d91-5500-4d87-a03c-00661c22240b",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-F6-2A-PLAN-ADMISSION-FINDINGS:command:previewexecutionplan:latest:3e6a64b74f15e2d7",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2A-PLAN-ADMISSION-FINDINGS#command#previewexecutionplan",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2077",
+      "sourceContentSha256": "a2957a160a54947f7e7000dc20694fd9e7994f71ba3141c9da2677e71dddc313",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts",
+        "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+        "railName": "PreviewExecutionPlan",
+        "railType": "command",
+        "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+        "greenTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts plan-admission-finding.architecture.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2077",
+        "unitTests": [
+          "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+          "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2077"],
+        "cypressFlows": ["N/A - canonical contract slice with no UI behavior"],
+        "domainObjects": ["PreviewSelectionFinding", "PlanAdmissionFinding"],
+        "fowlerSignals": [
+          "One canonical finding value object extends the existing selection decision without duplicating authority."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/contracts typecheck",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The canonical selection finding contract, deterministic identity, and authority boundary did not exist.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260731-plan-admission-findings.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2077",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PreviewSelectionFinding",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PreviewSelectionFindingSchema",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#ExecutableSubgraphSelectionRejection"
+        ],
+        "normalizedRailName": "previewexecutionplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "a2957a160a54947f7e7000dc20694fd9e7994f71ba3141c9da2677e71dddc313",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/web/**"
+        ]
+      },
+      "createdAt": "2026-07-31T22:18:52.534Z"
+    },
+    {
+      "operationId": "59a4daec-0cdc-4844-b920-eb0ac9bd14c8",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-F6-2A-PLAN-ADMISSION-FINDINGS:command:recordplanexecutability:latest:89bdf304ee0cfcd6",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2A-PLAN-ADMISSION-FINDINGS#command#recordplanexecutability",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2077",
+      "sourceContentSha256": "a2957a160a54947f7e7000dc20694fd9e7994f71ba3141c9da2677e71dddc313",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts",
+        "dddOwner": "StoredPlanExecutabilityValidator",
+        "railName": "RecordPlanExecutability",
+        "railType": "command",
+        "featureId": "MVP-F6-2A-PLAN-ADMISSION-FINDINGS",
+        "greenTest": "pnpm --filter @dvt/contracts test -- plan-admission-finding.contract.test.ts plan-admission-finding.architecture.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2077",
+        "unitTests": [
+          "packages/@dvt/contracts/test/plan-admission-finding.contract.test.ts",
+          "packages/@dvt/contracts/test/plan-admission-finding.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2077"],
+        "cypressFlows": ["N/A - canonical contract slice with no UI behavior"],
+        "domainObjects": ["PlanExecutabilityFinding", "PlanAdmissionFinding"],
+        "fowlerSignals": [
+          "The stored-plan validator remains the single executability authority and exposes one canonical fail-fast finding."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/contracts typecheck",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The canonical executability finding contract did not preserve exact plan and adapter identity.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260731-plan-admission-findings.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- plan-admission-finding.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2077",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#PlanExecutabilityFinding",
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts#createPlanAdmissionFindingId",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts#PlanExecutabilityFindingSchema",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts#ExecutabilityValidationResult"
+        ],
+        "normalizedRailName": "recordplanexecutability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "a2957a160a54947f7e7000dc20694fd9e7994f71ba3141c9da2677e71dddc313",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/api/src/entrypoints/http/**",
+          "apps/web/**"
+        ]
+      },
+      "createdAt": "2026-07-31T22:19:13.431Z"
     }
   ]
 }
