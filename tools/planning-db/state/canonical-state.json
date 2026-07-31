@@ -2,10 +2,124 @@
   "schemaVersion": 1,
   "architectureComponentStatusOverrides": [
     {
+      "componentId": "SYS-API-DBT-YAML-DESCRIPTION-EDIT",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-ARCHITECTURE-COMPONENTS",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-ARCHITECTURE-ROOT",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-ARTIFACT-STORE-PACK",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-HISTORICAL-BLUEPRINTS",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-PLANNER",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-PLANNING-GAPS",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-PLANNING-PROPOSALS",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-PLANNING-ROOT",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-ROOT-RECORDS",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-TRACEABILITY-PACK",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-ARCHIVE-WORKING-NOTES",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-EVIDENCE-ARCHIVE",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-DOCS-PLANNING-ENTRYPOINTS",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-PLANNER-ARTIFACT-COMPAT-BRIDGE",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-PLANNER-LEGACY-AUDIT-ARTIFACT",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-REPO-METADATA-AGENT-LOCAL-CONFIG",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-REPO-METADATA-GIT-HISTORY-REWRITE-ARCHIVE",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-REPO-METADATA-GITHUB-COMMENT-ARCHIVE",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-REPO-METADATA-LEGACY-PROTOTYPE-INFRA",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-RUNTIME-ARCHITECTURE-DOCS",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-RUNTIME-CLI-VALIDATION-LEGACY-LOOSE-PACKAGE",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-WEB-CANVAS-ADD-NODE-PALETTE",
+      "status": "deprecated"
+    },
+    {
       "componentId": "SYS-WEB-CANVAS-DBT-GRAPH-SQL-REPLACEMENT-CONFIRMATION",
-      "status": "deprecated",
-      "sourceRef": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
-      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3"
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-WEB-CANVAS-INSPECTOR-PANEL",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-WEB-CANVAS-LEGACY-ADD-NODE-PALETTE-RETIREMENT",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-WEB-CANVAS-NODE-WORKBENCH-FIELDS",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-WEB-CANVAS-OUTPUT-TARGET-TEMPLATES",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
+      "status": "deprecated"
+    },
+    {
+      "componentId": "SYS-WEB-VIEWS-LEGACY-DIFF-HARNESS",
+      "status": "deprecated"
     }
   ],
   "featureMechanizationRails": [
@@ -2671,7 +2785,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "0ec8df8917bab22135984599d5ac18d62a4949f9877217e836b039757fb53e1c",
+      "sourceContentSha256": "d0029005543957c4becbc646aa19c18ed8b2a7fc40f25366a21cf8167e743a99",
       "rawRail": {
         "name": "ExportPlanningDbCanonicalArchitectureState",
         "type": "command",
@@ -3118,7 +3232,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-import.cjs",
-      "sourceContentSha256": "985afddaebe7efe622e8f2635ed8360f40e7606bc7d85de58fabe2965ce95d6b",
+      "sourceContentSha256": "2596309f2032a0de80854ddb9c3f6c65ac20881e89ee2ef19b5f0cb53ff8797b",
       "rawRail": {
         "name": "PreserveLocalFeatureMechanizationRails",
         "type": "command",

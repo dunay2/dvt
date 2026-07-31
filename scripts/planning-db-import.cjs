@@ -2578,12 +2578,7 @@ function readCanonicalStateSnapshot(snapshotPath = canonicalStatePath) {
   }
 
   for (const override of snapshot.architectureComponentStatusOverrides) {
-    if (
-      typeof override?.componentId !== 'string' ||
-      override.status !== 'deprecated' ||
-      typeof override.sourceRef !== 'string' ||
-      !/^[a-f0-9]{64}$/u.test(override.sourceContentSha256 || '')
-    ) {
+    if (typeof override?.componentId !== 'string' || override.status !== 'deprecated') {
       throw new Error(
         'Planning DB canonical state contains an invalid architecture component status override.'
       );
@@ -2606,9 +2601,7 @@ async function restoreArchitectureComponentStatusOverrides(client, overrides) {
         updated_at = now()
       from jsonb_to_recordset($1::jsonb) as override(
         "componentId" text,
-        status text,
-        "sourceRef" text,
-        "sourceContentSha256" text
+        status text
       )
       where component.component_id = override."componentId"
         and override.status = 'deprecated'

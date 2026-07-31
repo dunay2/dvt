@@ -146,28 +146,11 @@ class PlanningDbExportRunner {
         order by operation.created_at, operation.operation_id
       `),
       client.query(`
-        with ranked_overrides as (
-          select
-            operation.payload->>'componentId' as component_id,
-            operation.payload->>'status' as status,
-            operation.source_ref,
-            operation.source_content_sha256,
-            row_number() over (
-              partition by operation.payload->>'componentId'
-              order by operation.created_at desc, operation.operation_id desc
-            ) as row_number
-          from architecture.design_operations operation
-          where operation.operation_type = 'architecture_component_record'
-            and operation.source_ref not like 'tools/planning-db/migrations/%'
-        )
         select
           component_id as "componentId",
-          status,
-          source_ref as "sourceRef",
-          source_content_sha256 as "sourceContentSha256"
-        from ranked_overrides
-        where row_number = 1
-          and status = 'deprecated'
+          status
+        from architecture.component
+        where status = 'deprecated'
         order by component_id
       `),
     ]);

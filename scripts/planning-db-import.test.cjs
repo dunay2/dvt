@@ -1657,8 +1657,6 @@ test('planning DB import restores canonical architecture component status overri
   const override = {
     componentId: 'SYS-WEB-EXAMPLE',
     status: 'deprecated',
-    sourceRef: 'docs/adr/ADR-0001-example.md',
-    sourceContentSha256: 'b'.repeat(64),
   };
 
   await restoreArchitectureComponentStatusOverrides(
