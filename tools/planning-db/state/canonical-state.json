@@ -655,7 +655,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-migrate.cjs",
-      "sourceContentSha256": "68ee7163dba6718ed64f6ef0657fd4480638c51d7ec55315836f4311e67da4fd",
+      "sourceContentSha256": "9c72073a56911e004c07ae25da78acb49288f81e3776ce7e4ea68eb681b8588e",
       "rawRail": {
         "name": "EnforcePlanningDbSchemaOnlyMigrations",
         "type": "query",
