@@ -28,6 +28,8 @@ export {
   parseExecutionSelection,
   parseExecutionStepV1,
   parseGenericGraphSourceV1,
+  parsePlanAdmissionFinding,
+  parsePlanAdmissionFindingCollection,
   parsePlanAdmissionLink,
   parsePlanCompileRequest,
   parsePlanCompileResponse,

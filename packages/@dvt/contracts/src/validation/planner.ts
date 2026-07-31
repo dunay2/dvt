@@ -30,6 +30,10 @@ import {
   type PlannerObservabilitySchemaT,
   PlannerSelectionSchema,
   type PlannerSelectionSchemaT,
+  PlanAdmissionFindingCollectionSchema,
+  type PlanAdmissionFindingCollectionSchemaT,
+  PlanAdmissionFindingSchema,
+  type PlanAdmissionFindingSchemaT,
   PlanAdmissionLinkSchema,
   PlanCompileRequestV1Schema,
   type PlanCompileRequestV1SchemaT,
@@ -149,6 +153,16 @@ export function parsePlanRecord(input: unknown): PlanRecord {
 
 export function parsePlanExecutabilityRecord(input: unknown): PlanExecutabilityRecord {
   return parseWithSchema(PlanExecutabilityRecordSchema, input);
+}
+
+export function parsePlanAdmissionFinding(input: unknown): PlanAdmissionFindingSchemaT {
+  return parseWithSchema(PlanAdmissionFindingSchema, input);
+}
+
+export function parsePlanAdmissionFindingCollection(
+  input: unknown
+): PlanAdmissionFindingCollectionSchemaT {
+  return parseWithSchema(PlanAdmissionFindingCollectionSchema, input);
 }
 
 export function parsePlanAdmissionLink(input: unknown): PlanAdmissionLink {
