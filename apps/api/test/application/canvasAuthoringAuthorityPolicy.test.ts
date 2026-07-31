@@ -1,3 +1,4 @@
+import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type {
@@ -37,24 +38,30 @@ function storeWithRead(
 }
 
 function draftStoreWithCanvas(hasCanvas: boolean): Pick<IWorkspaceGraphDraftStore, 'read'> {
+  return hasCanvas
+    ? draftStoreWithDraft(
+        buildWorkspaceGraphDraft({
+          canvas: {
+            id: KEY.canvasId,
+            kind: 'transformation',
+            title: 'Orders',
+          },
+        })
+      )
+    : { read: vi.fn().mockResolvedValue(null) };
+}
+
+function draftStoreWithDraft(
+  draftPayload: WorkspaceGraphAuthoringDraft
+): Pick<IWorkspaceGraphDraftStore, 'read'> {
   return {
-    read: vi.fn().mockResolvedValue(
-      hasCanvas
-        ? {
-            scope: KEY,
-            schemaVersion: 'workspace-graph-draft.v1',
-            revision: 'draft-1',
-            draftPayload: buildWorkspaceGraphDraft({
-              canvas: {
-                id: KEY.canvasId,
-                kind: 'transformation',
-                title: 'Orders',
-              },
-            }),
-            updatedAt: '2026-07-14T10:00:00.000Z',
-          }
-        : null
-    ),
+    read: vi.fn().mockResolvedValue({
+      scope: KEY,
+      schemaVersion: 'workspace-graph-draft.v1',
+      revision: 'draft-1',
+      draftPayload,
+      updatedAt: '2026-07-14T10:00:00.000Z',
+    }),
   };
 }
 
@@ -169,6 +176,63 @@ describe('CanvasAuthoringAuthorityPolicy', () => {
     await expect(policy.authorizeGraphArtifactPublication(KEY, '.')).resolves.toEqual({
       kind: 'refused',
       reason: 'dbt_project_files_authority',
+    });
+  });
+
+  it('refuses a stale Canvas after another retained Canvas becomes active', async () => {
+    const graphShape = buildWorkspaceGraphDraft();
+    const staleCanvas = {
+      canvas: {
+        id: KEY.canvasId,
+        kind: 'transformation',
+        title: 'Orders',
+      },
+      nodeIds: graphShape.nodeIds,
+      nodePositions: graphShape.nodePositions,
+      nodes: graphShape.nodes,
+      edges: graphShape.edges,
+    };
+    const activeCanvas = {
+      ...staleCanvas,
+      canvas: {
+        ...staleCanvas.canvas,
+        id: 'customers-canvas',
+        title: 'Customers',
+      },
+    };
+    const policy = new CanvasAuthoringAuthorityPolicy(
+      storeWithRead(vi.fn().mockResolvedValue(null)),
+      draftStoreWithDraft(
+        buildWorkspaceGraphDraft({
+          canvas: activeCanvas.canvas,
+          activeCanvasId: activeCanvas.canvas.id,
+          canvases: [staleCanvas, activeCanvas],
+        })
+      )
+    );
+
+    await expect(policy.authorizeGraphArtifactPublication(KEY, '.')).resolves.toEqual({
+      kind: 'refused',
+      reason: 'missing_authority',
+    });
+  });
+
+  it('accepts the legacy canvas id only when activeCanvasId is absent', async () => {
+    const policy = new CanvasAuthoringAuthorityPolicy(
+      storeWithRead(vi.fn().mockResolvedValue(null)),
+      draftStoreWithDraft(
+        buildWorkspaceGraphDraft({
+          canvas: {
+            id: KEY.canvasId,
+            kind: 'transformation',
+            title: 'Orders',
+          },
+        })
+      )
+    );
+
+    await expect(policy.authorizeGraphArtifactPublication(KEY, '.')).resolves.toMatchObject({
+      kind: 'allowed',
     });
   });
 

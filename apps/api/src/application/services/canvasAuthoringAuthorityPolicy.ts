@@ -9,10 +9,7 @@ import type {
   CanvasAuthoringAuthorityKey,
   ICanvasAuthoringAuthorityStore,
 } from '../ports/canvasAuthoringAuthority.js';
-import {
-  resolveWorkspaceGraphDraftCanvasIds,
-  type IWorkspaceGraphDraftStore,
-} from '../ports/workspaceGraphDraft.js';
+import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
 
 export class CanvasAuthoringAuthorityMissingError extends Error {
   public constructor(readonly canvasId: string) {
@@ -127,11 +124,11 @@ export class CanvasAuthoringAuthorityPolicy {
         environmentId: key.environmentId,
       }),
     ]);
-    const graphOwnsCanvas =
-      graphDraftRecord !== null &&
-      resolveWorkspaceGraphDraftCanvasIds(
-        WorkspaceGraphAuthoringDraftSchema.parse(graphDraftRecord.draftPayload)
-      ).includes(key.canvasId);
+    let graphOwnsCanvas = false;
+    if (graphDraftRecord !== null) {
+      const graphDraft = WorkspaceGraphAuthoringDraftSchema.parse(graphDraftRecord.draftPayload);
+      graphOwnsCanvas = (graphDraft.activeCanvasId ?? graphDraft.canvas.id) === key.canvasId;
+    }
 
     if (stored && graphOwnsCanvas) {
       return { kind: 'mixed' };
