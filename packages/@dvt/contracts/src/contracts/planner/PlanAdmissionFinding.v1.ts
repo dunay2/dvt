@@ -165,5 +165,12 @@ function canonicalizePlanRef(planRef: PlanRef): object {
 }
 
 function compareCanonicalValues(left: object, right: object): number {
-  return JSON.stringify(left).localeCompare(JSON.stringify(right));
+  const leftJson = JSON.stringify(left);
+  const rightJson = JSON.stringify(right);
+
+  if (leftJson === rightJson) {
+    return 0;
+  }
+
+  return leftJson < rightJson ? -1 : 1;
 }

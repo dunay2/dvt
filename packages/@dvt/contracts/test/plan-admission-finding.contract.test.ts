@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   PLAN_ADMISSION_FINDING_PHASE,
@@ -94,6 +94,20 @@ describe('PlanAdmissionFinding contract', () => {
     });
 
     expect(createPlanAdmissionFindingId(reordered)).toBe(createPlanAdmissionFindingId(identity));
+  });
+
+  it('does not depend on host-locale collation when canonicalizing identity', () => {
+    const localeCompare = vi.spyOn(String.prototype, 'localeCompare').mockImplementation(() => {
+      throw new Error('ambient locale collation must not be used');
+    });
+
+    try {
+      expect(createPlanAdmissionFindingId(buildSelectionIdentity())).toMatch(
+        /^plan-admission-finding\.v1:[a-f0-9]{64}$/u
+      );
+    } finally {
+      localeCompare.mockRestore();
+    }
   });
 
   it('changes identity when the authoritative evaluation identity changes', () => {
