@@ -3127,6 +3127,64 @@ async function reconcileSupersededCiPolicyValidationSplitComponents(client) {
   `);
 }
 
+async function reconcileRetiredPlanningTaskAuthorityComponents(client) {
+  await client.query(`
+    with retired_component(component_id) as (
+      values
+        ('SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS'),
+        ('SYS-PLANNING-GITHUB-ISSUE-ADAPTER'),
+        ('SYS-PLANNING-GITHUB-PROJECTION-POLICY')
+    )
+    delete from architecture.component_flow_step
+    where component_id in (select component_id from retired_component);
+
+    with retired_component(component_id) as (
+      values
+        ('SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS'),
+        ('SYS-PLANNING-GITHUB-ISSUE-ADAPTER'),
+        ('SYS-PLANNING-GITHUB-PROJECTION-POLICY')
+    )
+    delete from architecture.component_flow
+    where entry_component_id in (select component_id from retired_component)
+       or exit_component_id in (select component_id from retired_component);
+
+    with retired_component(component_id) as (
+      values
+        ('SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS'),
+        ('SYS-PLANNING-GITHUB-ISSUE-ADAPTER'),
+        ('SYS-PLANNING-GITHUB-PROJECTION-POLICY')
+    )
+    delete from architecture.component_relation
+    where source_component_id in (select component_id from retired_component)
+       or target_component_id in (select component_id from retired_component);
+
+    with retired_component(component_id) as (
+      values
+        ('SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS'),
+        ('SYS-PLANNING-GITHUB-ISSUE-ADAPTER'),
+        ('SYS-PLANNING-GITHUB-PROJECTION-POLICY')
+    )
+    delete from architecture.contract
+    where owner_component_id in (select component_id from retired_component);
+
+    delete from ${schemaName}.governance_component_local_ownership_patterns
+    where component_id = 'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS';
+
+    delete from ${schemaName}.governance_component_local_semantic_items
+    where component_id = 'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS';
+
+    delete from ${schemaName}.governance_component_local_definitions
+    where component_id = 'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS';
+
+    delete from architecture.component
+    where component_id in (
+      'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS',
+      'SYS-PLANNING-GITHUB-ISSUE-ADAPTER',
+      'SYS-PLANNING-GITHUB-PROJECTION-POLICY'
+    );
+  `);
+}
+
 async function insertFrontendComponentReflectionSnapshot(client, snapshot) {
   await client.query(`delete from ${schemaName}.frontend_component_evidence`);
   await client.query(`delete from ${schemaName}.frontend_component_cq_rails`);
@@ -3627,6 +3685,10 @@ async function importContent(options = {}) {
     await reconcileDeprecatedLocalRailSources(client);
     await reconcileSupersededCanvasNodeWorkbenchPanel(client);
     await reconcileSupersededCiPolicyValidationSplitComponents(client);
+    await reconcileRetiredPlanningTaskAuthorityComponents(client);
+    await refreshComponentTreeMaterializedProjection(client);
+    await refreshComponentFileOwnershipMaterializedProjection(client);
+    await refreshComponentRuleEvaluationMaterializedProjection(client);
     await client.query('commit');
   } catch (error) {
     await client.query('rollback');
@@ -4825,6 +4887,7 @@ module.exports = {
   reconcileRetiredLocalTaskSurfaces,
   reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
+  reconcileRetiredPlanningTaskAuthorityComponents,
   refreshCodeSymbolMaterializedProjection,
   refreshComponentTreeMaterializedProjection,
   refreshComponentFileOwnershipMaterializedProjection,

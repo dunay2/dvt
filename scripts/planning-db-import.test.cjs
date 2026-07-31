@@ -36,6 +36,7 @@ const {
   reconcileRetiredLocalTaskSurfaces,
   reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
+  reconcileRetiredPlanningTaskAuthorityComponents,
   refreshCodeSymbolMaterializedProjection,
   refreshComponentTreeMaterializedProjection,
   refreshComponentFileOwnershipMaterializedProjection,
@@ -1512,6 +1513,33 @@ test('planning DB import retires phantom CI policy validation split components w
   assert.match(retirementQuery.sql, /scripts\/policy-validation-files\.cjs/);
   assert.match(retirementQuery.sql, /scripts\/policy-validation-text\.cjs/);
   assert.doesNotMatch(retirementQuery.sql, /truncate\s+/i);
+});
+
+test('planning DB import removes retired local task authority components', async () => {
+  const queries = [];
+
+  await reconcileRetiredPlanningTaskAuthorityComponents({
+    query: async (sql, params = []) => {
+      queries.push({ sql: String(sql), params });
+      return { rows: [] };
+    },
+  });
+
+  assert.equal(queries.length, 1);
+  const reconciliationQuery = queries[0].sql;
+  for (const componentId of [
+    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS',
+    'SYS-PLANNING-GITHUB-ISSUE-ADAPTER',
+    'SYS-PLANNING-GITHUB-PROJECTION-POLICY',
+  ]) {
+    assert.match(reconciliationQuery, new RegExp(componentId));
+  }
+  assert.match(reconciliationQuery, /delete from architecture\.component_flow_step/);
+  assert.match(reconciliationQuery, /delete from architecture\.component_relation/);
+  assert.match(reconciliationQuery, /delete from architecture\.contract/);
+  assert.match(reconciliationQuery, /delete from architecture\.component/);
+  assert.match(reconciliationQuery, /governance_component_local_definitions/);
+  assert.doesNotMatch(reconciliationQuery, /truncate\s+/i);
 });
 
 test('planning DB import preserves DB-local feature mechanization rails during governance reload', async () => {
