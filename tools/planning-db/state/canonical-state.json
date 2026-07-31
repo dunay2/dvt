@@ -507,6 +507,735 @@
       "createdAt": "2026-07-31T11:30:50.789Z"
     },
     {
+      "railId": "local#MVP-2099-DBT-AUTHORING-AUTHORITY#command#publishgraphdbtworkspaceartifacts",
+      "featureId": "MVP-2099-DBT-AUTHORING-AUTHORITY",
+      "mechanizationStatus": "implemented",
+      "railName": "PublishGraphDbtWorkspaceArtifacts",
+      "normalizedRailName": "publishgraphdbtworkspaceartifacts",
+      "railType": "command",
+      "dddOwner": "CanvasAuthoringAuthority",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#ObservedArtifact",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#currentSqlMarkerIsValid",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#matchesExpectedRevision",
+        "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts#serializeProjectRootAuthorityKey",
+        "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#createGraphDraftMarkedDbtModelSql",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtModelDivergenceMarker",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#parseGraphDbtModelDivergenceMarker"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#ObservedArtifact",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#currentSqlMarkerIsValid",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#matchesExpectedRevision",
+        "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts#serializeProjectRootAuthorityKey",
+        "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#createGraphDraftMarkedDbtModelSql",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtModelDivergenceMarker",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#parseGraphDbtModelDivergenceMarker"
+      ],
+      "documentationRefs": [
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+      ],
+      "governingSources": [
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+        "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+        "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+      ],
+      "architectureGuards": ["pnpm --filter dvt-api test:ci"],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "rawRail": {
+        "name": "PublishGraphDbtWorkspaceArtifacts",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "CanvasAuthoringAuthority"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "GraphArtifactPublicationAuthorityDecision",
+            "path": "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "GraphArtifactPublicationExecution",
+            "path": "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "ObservedArtifact",
+            "path": "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "currentSqlMarkerIsValid",
+            "path": "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "matchesExpectedRevision",
+            "path": "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "serializeProjectRootAuthorityKey",
+            "path": "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "createGraphDraftMarkedDbtModelSql",
+            "path": "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "GraphDbtModelDivergenceMarker",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "parseGraphDbtModelDivergenceMarker",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+            "cqRails": ["PublishGraphDbtWorkspaceArtifacts"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authority is rechecked under one serialized publication boundary."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-2099-DBT-AUTHORING-AUTHORITY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": [
+          "CanvasAuthoringAuthority",
+          "GraphDbtWorkspaceArtifactPublication"
+        ],
+        "fowlerSignals": [
+          "Authority is rechecked under one serialized publication boundary."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "publishgraphdbtworkspaceartifacts-record",
+            "redTest": "pnpm --filter dvt-api test:ci",
+            "greenTest": "pnpm --filter dvt-api test:ci",
+            "patchSurfaces": [
+              "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+              "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+              "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+              "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+              "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+            ],
+            "expectedFailure": "Artifact publication can pass an authority check that changes before the write completes."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "PublishGraphDbtWorkspaceArtifacts",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "CanvasAuthoringAuthority"
+          }
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api test:ci"],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-07-31T18:29:30.142Z"
+    },
+    {
+      "railId": "local#MVP-2099-DBT-AUTHORING-AUTHORITY#query#getworkspacegraphdraft",
+      "featureId": "MVP-2099-DBT-AUTHORING-AUTHORITY",
+      "mechanizationStatus": "implemented",
+      "railName": "GetWorkspaceGraphDraft",
+      "normalizedRailName": "getworkspacegraphdraft",
+      "railType": "query",
+      "dddOwner": "CanvasAuthoringAuthority",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#CanvasAuthoringAuthorityMissingError",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#CanvasAuthoringAuthorityMixedError",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#graphDraftBinding",
+        "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#resolveGraphDraftAuthoringAuthority",
+        "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts#CanvasAuthoringAuthorityRuntime",
+        "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts#buildWorkspaceGraphDraftRuntime",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts#resolveDraftAuthoringAuthority",
+        "apps/web/src/app/views/canvas/canvasDraftReadModel.ts#resolveGraphDraftAuthoringCanvasId",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#DEFAULT_READ_RESULT",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#DEFAULT_SAVE_RESULT",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#buildGraphDraftAuthority",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.ts#SAVED_RELOAD_ERROR",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.ts#resolveSavedCanvasDraftResult",
+        "apps/web/src/testing/workspacePortDoubles.ts#mockGraphDraftAuthoringAuthority",
+        "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts#CanvasAuthoringAuthorityResolution",
+        "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts#CanvasAuthoringAuthorityResolutionSchema"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#CanvasAuthoringAuthorityMissingError",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#CanvasAuthoringAuthorityMixedError",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#graphDraftBinding",
+        "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#resolveGraphDraftAuthoringAuthority",
+        "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts#CanvasAuthoringAuthorityRuntime",
+        "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts#buildWorkspaceGraphDraftRuntime",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts#resolveDraftAuthoringAuthority",
+        "apps/web/src/app/views/canvas/canvasDraftReadModel.ts#resolveGraphDraftAuthoringCanvasId",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#DEFAULT_READ_RESULT",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#DEFAULT_SAVE_RESULT",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#buildGraphDraftAuthority",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.ts#SAVED_RELOAD_ERROR",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.ts#resolveSavedCanvasDraftResult",
+        "apps/web/src/testing/workspacePortDoubles.ts#mockGraphDraftAuthoringAuthority",
+        "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts#CanvasAuthoringAuthorityResolution",
+        "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts#CanvasAuthoringAuthorityResolutionSchema"
+      ],
+      "documentationRefs": [
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+      ],
+      "governingSources": [
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+        "apps/api/src/application/ports/canvasAuthoringAuthority.ts",
+        "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+        "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+        "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts",
+        "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts",
+        "apps/web/src/app/views/canvas/canvasDraftReadModel.ts",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.ts",
+        "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts",
+        "apps/web/src/testing/workspacePortDoubles.ts"
+      ],
+      "architectureGuards": ["pnpm --filter dvt-api test:ci"],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "rawRail": {
+        "name": "GetWorkspaceGraphDraft",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CanvasAuthoringAuthority"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "CanvasAuthoringAuthorityMissingError",
+            "path": "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "CanvasAuthoringAuthorityMixedError",
+            "path": "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "graphDraftBinding",
+            "path": "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "resolveGraphDraftAuthoringAuthority",
+            "path": "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "CanvasAuthoringAuthorityRuntime",
+            "path": "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "buildWorkspaceGraphDraftRuntime",
+            "path": "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "resolveDraftAuthoringAuthority",
+            "path": "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "resolveGraphDraftAuthoringCanvasId",
+            "path": "apps/web/src/app/views/canvas/canvasDraftReadModel.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "DEFAULT_READ_RESULT",
+            "path": "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "DEFAULT_SAVE_RESULT",
+            "path": "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "buildGraphDraftAuthority",
+            "path": "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "SAVED_RELOAD_ERROR",
+            "path": "apps/web/src/app/views/canvas/canvasDraftRepository.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "resolveSavedCanvasDraftResult",
+            "path": "apps/web/src/app/views/canvas/canvasDraftRepository.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "mockGraphDraftAuthoringAuthority",
+            "path": "apps/web/src/testing/workspacePortDoubles.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "CanvasAuthoringAuthorityResolution",
+            "path": "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          },
+          {
+            "name": "CanvasAuthoringAuthorityResolutionSchema",
+            "path": "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasAuthoringAuthority",
+            "unitTests": [
+              "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+            ],
+            "fowlerSignals": [
+              "Canonical query authority is resolved by the owning policy and fails closed."
+            ],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
+            "architectureGuard": "pnpm --filter dvt-api test:ci"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-2099-DBT-AUTHORING-AUTHORITY",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": ["CanvasAuthoringAuthority", "WorkspaceGraphDraft"],
+        "fowlerSignals": [
+          "Canonical query authority is resolved by the owning policy and fails closed."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "getworkspacegraphdraft-record",
+            "redTest": "pnpm --filter dvt-api test:ci",
+            "greenTest": "pnpm --filter dvt-api test:ci",
+            "patchSurfaces": [
+              "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+              "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+              "apps/api/src/application/ports/canvasAuthoringAuthority.ts",
+              "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+              "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+              "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts",
+              "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+              "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts",
+              "apps/web/src/app/views/canvas/canvasDraftReadModel.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.ts",
+              "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts",
+              "apps/web/src/testing/workspacePortDoubles.ts"
+            ],
+            "expectedFailure": "Graph draft reads infer writable authority from draft shape or local save state."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GetWorkspaceGraphDraft",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CanvasAuthoringAuthority"
+          }
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api test:ci"],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+          "apps/api/src/application/ports/canvasAuthoringAuthority.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+          "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts",
+          "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts",
+          "apps/web/src/app/views/canvas/canvasDraftReadModel.ts",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.ts",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts",
+          "apps/web/src/testing/workspacePortDoubles.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-07-31T18:28:21.965Z"
+    },
+    {
       "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicalarchitecturestate",
       "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
       "mechanizationStatus": "implemented",
@@ -2195,6 +2924,461 @@
         "forbiddenImplementationSurfaces": ["apps/**"]
       },
       "createdAt": "2026-07-31T14:42:19.087Z"
+    },
+    {
+      "operationId": "3fbd9ffd-d61b-4c21-b6b8-277d827104b9",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2099-DBT-AUTHORING-AUTHORITY:query:getworkspacegraphdraft:latest:e8008d9a9b7a11cc",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2099-DBT-AUTHORING-AUTHORITY#query#getworkspacegraphdraft",
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test:ci",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "GetWorkspaceGraphDraft",
+        "railType": "query",
+        "featureId": "MVP-2099-DBT-AUTHORING-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "unitTests": [
+          "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+          "apps/api/test/application/canvasAuthoringAuthorityPolicy.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": [
+          "CanvasAuthoringAuthority",
+          "WorkspaceGraphDraft",
+          "GraphDbtWorkspaceArtifactPublication"
+        ],
+        "fowlerSignals": [
+          "One explicit authoring authority mode governs reads and publications.",
+          "Mixed and missing authority fail closed."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Graph draft reads or publications can infer writable authority from local state.",
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api test:ci"],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "implementationRefs": [
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#CanvasAuthoringAuthorityMissingError",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#CanvasAuthoringAuthorityMixedError",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#graphDraftBinding",
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#resolveGraphDraftAuthoringAuthority",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#ObservedArtifact",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#currentSqlMarkerIsValid",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#matchesExpectedRevision",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts#serializeProjectRootAuthorityKey",
+          "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts#CanvasAuthoringAuthorityRuntime",
+          "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts#buildWorkspaceGraphDraftRuntime",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts#resolveDraftAuthoringAuthority",
+          "apps/web/src/app/views/canvas/canvasDraftReadModel.ts#resolveGraphDraftAuthoringCanvasId",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#DEFAULT_READ_RESULT",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#DEFAULT_SAVE_RESULT",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#buildGraphDraftAuthority",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.ts#SAVED_RELOAD_ERROR",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.ts#resolveSavedCanvasDraftResult",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#createGraphDraftMarkedDbtModelSql",
+          "apps/web/src/testing/workspacePortDoubles.ts#mockGraphDraftAuthoringAuthority",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtModelDivergenceMarker",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#parseGraphDbtModelDivergenceMarker",
+          "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts#CanvasAuthoringAuthorityResolution",
+          "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts#CanvasAuthoringAuthorityResolutionSchema"
+        ],
+        "normalizedRailName": "getworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+          "apps/api/src/application/ports/canvasAuthoringAuthority.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+          "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts",
+          "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts",
+          "apps/web/src/app/views/canvas/canvasDraftReadModel.ts",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.ts",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts",
+          "apps/web/src/testing/workspacePortDoubles.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-07-31T18:28:21.965Z"
+    },
+    {
+      "operationId": "a5e968bb-87e4-4c6d-864f-0a399349dc96",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2099-DBT-AUTHORING-AUTHORITY:query:getworkspacegraphdraft:0:1d805e0ba46fc1ba",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2099-DBT-AUTHORING-AUTHORITY#query#getworkspacegraphdraft",
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test:ci",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "GetWorkspaceGraphDraft",
+        "railType": "query",
+        "featureId": "MVP-2099-DBT-AUTHORING-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "unitTests": [
+          "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": ["CanvasAuthoringAuthority", "WorkspaceGraphDraft"],
+        "fowlerSignals": [
+          "Canonical query authority is resolved by the owning policy and fails closed."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Graph draft reads infer writable authority from draft shape or local save state.",
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api test:ci"],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "implementationRefs": [
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#CanvasAuthoringAuthorityMissingError",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#CanvasAuthoringAuthorityMixedError",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#graphDraftBinding",
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#resolveGraphDraftAuthoringAuthority",
+          "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts#CanvasAuthoringAuthorityRuntime",
+          "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts#buildWorkspaceGraphDraftRuntime",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts#resolveDraftAuthoringAuthority",
+          "apps/web/src/app/views/canvas/canvasDraftReadModel.ts#resolveGraphDraftAuthoringCanvasId",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#DEFAULT_READ_RESULT",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#DEFAULT_SAVE_RESULT",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#buildGraphDraftAuthority",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.ts#SAVED_RELOAD_ERROR",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.ts#resolveSavedCanvasDraftResult",
+          "apps/web/src/testing/workspacePortDoubles.ts#mockGraphDraftAuthoringAuthority",
+          "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts#CanvasAuthoringAuthorityResolution",
+          "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts#CanvasAuthoringAuthorityResolutionSchema"
+        ],
+        "normalizedRailName": "getworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+          "apps/api/src/application/ports/canvasAuthoringAuthority.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+          "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts",
+          "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts",
+          "apps/web/src/app/views/canvas/canvasDraftReadModel.ts",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.ts",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts",
+          "apps/web/src/testing/workspacePortDoubles.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-07-31T18:29:01.106Z"
+    },
+    {
+      "operationId": "e9d43447-752e-4923-90d2-294fc2caa4c3",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2099-DBT-AUTHORING-AUTHORITY:command:publishgraphdbtworkspaceartifacts:latest:d79094822aa2c861",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2099-DBT-AUTHORING-AUTHORITY#command#publishgraphdbtworkspaceartifacts",
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test:ci",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "PublishGraphDbtWorkspaceArtifacts",
+        "railType": "command",
+        "featureId": "MVP-2099-DBT-AUTHORING-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "unitTests": [
+          "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": [
+          "CanvasAuthoringAuthority",
+          "GraphDbtWorkspaceArtifactPublication"
+        ],
+        "fowlerSignals": [
+          "Authority is rechecked under one serialized publication boundary."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Artifact publication can pass an authority check that changes before the write completes.",
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api test:ci"],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "implementationRefs": [
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#ObservedArtifact",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#currentSqlMarkerIsValid",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#matchesExpectedRevision",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts#serializeProjectRootAuthorityKey",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#createGraphDraftMarkedDbtModelSql",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtModelDivergenceMarker",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#parseGraphDbtModelDivergenceMarker"
+        ],
+        "normalizedRailName": "publishgraphdbtworkspaceartifacts",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-07-31T18:29:30.142Z"
+    },
+    {
+      "operationId": "4a879402-5e6d-476c-a6a0-af4420a3d4fa",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2099-DBT-AUTHORING-AUTHORITY:query:getworkspacegraphdraft:1:b96187a74a906001",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2099-DBT-AUTHORING-AUTHORITY#query#getworkspacegraphdraft",
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test:ci",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "GetWorkspaceGraphDraft",
+        "railType": "query",
+        "featureId": "MVP-2099-DBT-AUTHORING-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "unitTests": [
+          "apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.readWrite.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": ["CanvasAuthoringAuthority", "WorkspaceGraphDraft"],
+        "fowlerSignals": [
+          "Canonical query authority is resolved by the owning policy and fails closed."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Graph draft reads infer writable authority from draft shape or local save state.",
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api test:ci"],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "implementationRefs": [
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#CanvasAuthoringAuthorityMissingError",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#CanvasAuthoringAuthorityMixedError",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#graphDraftBinding",
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts#resolveGraphDraftAuthoringAuthority",
+          "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts#CanvasAuthoringAuthorityRuntime",
+          "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts#buildWorkspaceGraphDraftRuntime",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts#resolveDraftAuthoringAuthority",
+          "apps/web/src/app/views/canvas/canvasDraftReadModel.ts#resolveGraphDraftAuthoringCanvasId",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#DEFAULT_READ_RESULT",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#DEFAULT_SAVE_RESULT",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts#buildGraphDraftAuthority",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.ts#SAVED_RELOAD_ERROR",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.ts#resolveSavedCanvasDraftResult",
+          "apps/web/src/testing/workspacePortDoubles.ts#mockGraphDraftAuthoringAuthority",
+          "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts#CanvasAuthoringAuthorityResolution",
+          "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts#CanvasAuthoringAuthorityResolutionSchema"
+        ],
+        "normalizedRailName": "getworkspacegraphdraft",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts",
+          "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphDraft.v1.ts",
+          "apps/api/src/application/ports/canvasAuthoringAuthority.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts",
+          "apps/api/src/modules/canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.ts",
+          "apps/api/src/modules/workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftSnapshotProjection.ts",
+          "apps/web/src/app/views/canvas/canvasDraftReadModel.ts",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.ts",
+          "apps/web/src/app/views/canvas/canvasDraftRepository.test.fixtures.ts",
+          "apps/web/src/testing/workspacePortDoubles.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-07-31T18:30:39.824Z"
+    },
+    {
+      "operationId": "76ad39c0-881b-4437-a40a-54ef9eccc3e6",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2099-DBT-AUTHORING-AUTHORITY:command:publishgraphdbtworkspaceartifacts:0:afe5a83334e66ac5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2099-DBT-AUTHORING-AUTHORITY#command#publishgraphdbtworkspaceartifacts",
+      "sourcePath": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+      "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test:ci",
+        "dddOwner": "CanvasAuthoringAuthority",
+        "railName": "PublishGraphDbtWorkspaceArtifacts",
+        "railType": "command",
+        "featureId": "MVP-2099-DBT-AUTHORING-AUTHORITY",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "unitTests": [
+          "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+          "apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2099"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live"
+        ],
+        "domainObjects": [
+          "CanvasAuthoringAuthority",
+          "GraphDbtWorkspaceArtifactPublication"
+        ],
+        "fowlerSignals": [
+          "Authority is rechecked under one serialized publication boundary."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Artifact publication can pass an authority check that changes before the write completes.",
+        "governingSources": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api test:ci"],
+        "implementationPlan": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+        "implementationRefs": [
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationAuthorityDecision",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts#GraphArtifactPublicationExecution",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#ObservedArtifact",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#currentSqlMarkerIsValid",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts#matchesExpectedRevision",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts#serializeProjectRootAuthorityKey",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts#createGraphDraftMarkedDbtModelSql",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PATTERN",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GRAPH_DBT_MODEL_DIVERGENCE_MARKER_PREFIX",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtModelDivergenceMarker",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefused",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#GraphDbtWorkspaceArtifactPublicationAuthorityRefusedSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts#parseGraphDbtModelDivergenceMarker"
+        ],
+        "normalizedRailName": "publishgraphdbtworkspaceartifacts",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1b41930d93d0402d9a984361cb64b6014e280b5c0e0dbbd014bb9d1be6494ed3",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
+          "apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+          "apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts",
+          "apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-07-31T18:31:09.591Z"
     }
   ]
 }
