@@ -2195,8 +2195,6 @@ test('runQuery refreshes stale governance projections only when explicitly reque
   assert.deepEqual(events[0][1], {
     databaseUrl: 'postgresql://example/db',
     ifStale: true,
-    includePlanning: false,
-    includeGovernance: true,
     silent: true,
   });
   assert.equal(events[1][0], 'query');

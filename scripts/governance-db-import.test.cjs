@@ -14,7 +14,7 @@ test('governance DB import parses database URL without planning flags', () => {
   );
 });
 
-test('governance DB import delegates only the governance snapshot import scope', async () => {
+test('governance DB import delegates to the single architecture-governance import', async () => {
   const calls = [];
   const result = await runGovernanceImport(
     { databaseUrl: 'postgres://example/planning', ifStale: true },
@@ -30,8 +30,6 @@ test('governance DB import delegates only the governance snapshot import scope',
     {
       databaseUrl: 'postgres://example/planning',
       ifStale: true,
-      includePlanning: false,
-      includeGovernance: true,
     },
   ]);
   assert.deepEqual(result, {

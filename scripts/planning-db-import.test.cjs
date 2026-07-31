@@ -2,12 +2,12 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const {
+  beginImportTransaction,
   buildDocsDispositionSnapshot,
   buildGovernanceAuxiliarySourceExpectedState,
   buildGovernanceFileSnapshot,
   buildGovernanceGeneratedInputs,
   buildKnowledgeIntakeRepositoryReferenceSnapshot,
-  buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
   buildCommandQueryRailSnapshot,
@@ -17,7 +17,6 @@ const {
   buildRepositoryCommandSnapshot,
   clearGovernanceSnapshotTables,
   governanceImportDeleteTables,
-  importContent,
   insertDocsDispositionSnapshot,
   insertFrontendComponentReflectionSnapshot,
   insertFrontendMechanicalTruthSnapshot,
@@ -26,15 +25,15 @@ const {
   insertKnowledgeIntakeRepositoryReferences,
   insertRepositoryCommandSnapshot,
   listChangedFiles,
-  mergePlanningTaskIds,
   mergeCanonicalFeatureMechanizationRails,
   normalizeText,
   parseArgs,
   readCanonicalStateSnapshot,
   readTrackedDocumentPaths,
   readLocalFeatureMechanizationRails,
-  readLocalPlanningTaskIds,
   reconcileDeprecatedLocalRailSources,
+  reconcileRetiredPlanningState,
+  reconcileRetiredLocalTaskSurfaces,
   reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
   refreshCodeSymbolMaterializedProjection,
@@ -272,46 +271,62 @@ const governanceFileSnapshotFixture = (() => {
   return readSnapshot;
 })();
 
-test('planning content snapshot preserves real lane task content and hashes', () => {
-  const snapshot = buildPlanningContentSnapshot();
+test('planning import reconciles retired local task lifecycle state', async () => {
+  const sql = [];
+  const client = {
+    async query(statement) {
+      sql.push(String(statement).replace(/\s+/gu, ' ').trim());
+      return { rows: [] };
+    },
+  };
 
-  assert.deepEqual(snapshot.lanes.map((lane) => lane.laneId).sort(), ['A', 'B', 'C', 'D', 'E']);
-  assert.equal(
-    snapshot.sources.every((source) => /^[a-f0-9]{64}$/.test(source.contentSha256)),
-    true
-  );
+  await reconcileRetiredPlanningState(client);
 
-  const mvpA1 = snapshot.tasks.find((task) => task.laneId === 'A' && task.taskId === 'MVP-A1');
-  assert.ok(mvpA1);
-  assert.equal(mvpA1.status, 'done');
-  assert.equal(mvpA1.priority, 'P0');
-  assert.match(mvpA1.objective, /inventory the current backend MVP contractual surface/);
-  assert.ok(
-    mvpA1.evidenceRefs.includes(
-      'docs/evidence/critical/ED-20260331-mvp-a1-backend-contractual-inventory.md'
-    )
-  );
+  assert.deepEqual(sql, [
+    `delete from ${schemaName}.doc_resolution_operations where resolution_scope = 'task_gap'`,
+    `delete from ${schemaName}.doc_resolution_overlays where resolution_scope = 'task_gap'`,
+    `delete from ${schemaName}.planning_artifacts where artifact_kind in ('workboard', 'open-task-route') or artifact_path in ( 'docs/planning/state/execution-workboard.md', 'docs/planning/state/open-task-route.md' )`,
+    `delete from ${schemaName}.planning_task_local_state`,
+    `delete from ${schemaName}.planning_task_local_definitions`,
+    `delete from ${schemaName}.planning_task_local_tombstones`,
+    `delete from ${schemaName}.planning_local_operations`,
+    `delete from ${schemaName}.planning_sources`,
+    `delete from ${schemaName}.db_governance_surface_operations where surface_name = any($1::text[])`,
+    `delete from ${schemaName}.db_governance_surfaces where surface_name = any($1::text[])`,
+  ]);
 });
 
-test('planning DB import parses stale-aware scoped import flags', () => {
+test('planning import removes retired lane and workboard inventory surfaces', async () => {
+  const calls = [];
+  const client = {
+    async query(sql, params) {
+      calls.push({ sql: String(sql).replace(/\s+/gu, ' ').trim(), params });
+      return { rows: [] };
+    },
+  };
+
+  await reconcileRetiredLocalTaskSurfaces(client);
+
+  assert.equal(calls.length, 2);
+  assert.match(calls[0].sql, /delete from planning_query_store\.db_governance_surface_operations/u);
+  assert.match(calls[1].sql, /delete from planning_query_store\.db_governance_surfaces/u);
+  assert.deepEqual(calls[0].params, [
+    ['Planning task lifecycle', 'Planning lane registry', 'Workboard and open task route'],
+  ]);
+  assert.deepEqual(calls[1].params, calls[0].params);
+});
+
+test('planning DB import parses its single architecture-governance scope', () => {
   assert.deepEqual(
-    parseArgs([
-      '--',
-      '--if-stale',
-      '--planning-only',
-      '--database-url',
-      'postgres://example/planning',
-    ]),
+    parseArgs(['--', '--if-stale', '--database-url', 'postgres://example/planning']),
     {
       databaseUrl: 'postgres://example/planning',
       help: false,
       ifStale: true,
-      includeGovernance: false,
-      includePlanning: true,
     }
   );
 
-  assert.throws(() => parseArgs(['--planning-only', '--governance-only']), /mutually exclusive/);
+  assert.throws(() => parseArgs(['--planning-only']), /Unknown planning DB import option/);
 });
 
 test('planning DB import falls back to direct tree diff for shallow merge refs', () => {
@@ -585,47 +600,44 @@ test('command/query rail catalog ignores tracked source files deleted in the wor
   ]);
 });
 
-test('planning DB import skips all selected scopes when stale-aware checks are fresh', async () => {
+test('planning DB import reconciles retired task state when governance sources are fresh', async () => {
   const calls = [];
+  const reconciliations = [];
   const logs = [];
 
   const result = await runPlanningImport(
     {
       databaseUrl: 'postgres://example/planning',
       ifStale: true,
-      includePlanning: true,
-      includeGovernance: true,
     },
     {
-      checkPlanningDatabase: async () => ({ ok: true }),
       checkGovernanceDatabase: async () => ({ ok: true }),
       checkGovernanceAuxiliaryProjections: async () => ({ ok: true }),
+      reconcileRetiredPlanningDatabase: async (options) => reconciliations.push(options),
       importContent: async (options) => {
         calls.push(options);
-        return { lanes: 99 };
+        return { governanceFiles: 99 };
       },
       logger: { log: (message) => logs.push(message) },
     }
   );
 
   assert.deepEqual(calls, []);
+  assert.deepEqual(reconciliations, [{ databaseUrl: 'postgres://example/planning' }]);
   assert.deepEqual(result.importedScopes, []);
-  assert.deepEqual(result.skippedScopes, ['planning', 'governance']);
-  assert.match(logs.join('\n'), /skipped fresh scopes: planning, governance/);
+  assert.deepEqual(result.skippedScopes, ['governance']);
+  assert.match(logs.join('\n'), /skipped fresh scopes: governance/);
 });
 
-test('planning DB import only imports stale selected scopes', async () => {
+test('planning DB import imports stale governance state', async () => {
   const calls = [];
 
   const result = await runPlanningImport(
     {
       databaseUrl: 'postgres://example/planning',
       ifStale: true,
-      includePlanning: true,
-      includeGovernance: true,
     },
     {
-      checkPlanningDatabase: async () => ({ ok: true }),
       checkGovernanceDatabase: async () => ({ ok: false, sections: {} }),
       importContent: async (options) => {
         calls.push(options);
@@ -638,12 +650,10 @@ test('planning DB import only imports stale selected scopes', async () => {
   assert.deepEqual(calls, [
     {
       databaseUrl: 'postgres://example/planning',
-      includePlanning: false,
-      includeGovernance: true,
     },
   ]);
   assert.deepEqual(result.importedScopes, ['governance']);
-  assert.deepEqual(result.skippedScopes, ['planning']);
+  assert.deepEqual(result.skippedScopes, []);
 });
 
 test('planning DB import can silence importContent output for query-time refreshes', async () => {
@@ -652,8 +662,6 @@ test('planning DB import can silence importContent output for query-time refresh
   await runPlanningImport(
     {
       databaseUrl: 'postgres://example/planning',
-      includePlanning: false,
-      includeGovernance: true,
       silent: true,
     },
     {
@@ -668,8 +676,6 @@ test('planning DB import can silence importContent output for query-time refresh
   assert.deepEqual(calls, [
     {
       databaseUrl: 'postgres://example/planning',
-      includePlanning: false,
-      includeGovernance: true,
       silent: true,
     },
   ]);
@@ -738,11 +744,8 @@ test('planning DB import reimports governance when auxiliary projections are sta
     {
       databaseUrl: 'postgres://example/planning',
       ifStale: true,
-      includePlanning: true,
-      includeGovernance: true,
     },
     {
-      checkPlanningDatabase: async () => ({ ok: true }),
       checkGovernanceDatabase: async () => ({ ok: true }),
       checkGovernanceAuxiliaryProjections: async () => ({
         ok: false,
@@ -765,12 +768,10 @@ test('planning DB import reimports governance when auxiliary projections are sta
   assert.deepEqual(calls, [
     {
       databaseUrl: 'postgres://example/planning',
-      includePlanning: false,
-      includeGovernance: true,
     },
   ]);
   assert.deepEqual(result.importedScopes, ['governance']);
-  assert.deepEqual(result.skippedScopes, ['planning']);
+  assert.deepEqual(result.skippedScopes, []);
 });
 
 test('planning DB import skips governance through source freshness before rebuilding auxiliary projections', async () => {
@@ -780,8 +781,6 @@ test('planning DB import skips governance through source freshness before rebuil
     {
       databaseUrl: 'postgres://example/planning',
       ifStale: true,
-      includePlanning: false,
-      includeGovernance: true,
     },
     {
       checkGovernanceDatabase: async () => ({ ok: true }),
@@ -789,6 +788,7 @@ test('planning DB import skips governance through source freshness before rebuil
       checkGovernanceAuxiliaryProjections: async () => {
         throw new Error('full auxiliary projection check should not run for fresh sources');
       },
+      reconcileRetiredPlanningDatabase: async () => {},
       importContent: async (options) => {
         calls.push(options);
         return { governanceFiles: 3, governanceComponents: 2 };
@@ -810,8 +810,6 @@ test('planning DB import reimports governance when auxiliary source freshness is
     {
       databaseUrl: 'postgres://example/planning',
       ifStale: true,
-      includePlanning: false,
-      includeGovernance: true,
     },
     {
       checkGovernanceDatabase: async () => ({ ok: true }),
@@ -831,8 +829,6 @@ test('planning DB import reimports governance when auxiliary source freshness is
   assert.deepEqual(calls, [
     {
       databaseUrl: 'postgres://example/planning',
-      includePlanning: false,
-      includeGovernance: true,
     },
   ]);
   assert.deepEqual(result.importedScopes, ['governance']);
@@ -847,8 +843,6 @@ test('planning DB import skips governance through core source freshness before f
     {
       databaseUrl: 'postgres://example/planning',
       ifStale: true,
-      includePlanning: false,
-      includeGovernance: true,
     },
     {
       checkGovernanceSourceFreshness: async () => ({ ok: true }),
@@ -856,6 +850,7 @@ test('planning DB import skips governance through core source freshness before f
         throw new Error('full governance DB check should not run for fresh core sources');
       },
       checkGovernanceAuxiliarySourceFreshness: async () => ({ ok: true }),
+      reconcileRetiredPlanningDatabase: async () => {},
       importContent: async (options) => {
         calls.push(options);
         return { governanceFiles: 3, governanceComponents: 2 };
@@ -877,8 +872,6 @@ test('planning DB import reimports governance when core source freshness is stal
     {
       databaseUrl: 'postgres://example/planning',
       ifStale: true,
-      includePlanning: false,
-      includeGovernance: true,
     },
     {
       checkGovernanceSourceFreshness: async () => ({ ok: false }),
@@ -898,8 +891,6 @@ test('planning DB import reimports governance when core source freshness is stal
   assert.deepEqual(calls, [
     {
       databaseUrl: 'postgres://example/planning',
-      includePlanning: false,
-      includeGovernance: true,
     },
   ]);
   assert.deepEqual(result.importedScopes, ['governance']);
@@ -928,7 +919,6 @@ test('governance auxiliary source state hashes only knowledge-surface documents 
   ].join('\n');
 
   const state = await buildGovernanceAuxiliarySourceExpectedState({
-    planningSnapshot: { sources: [] },
     repositoryCommandSnapshot: { commands: [] },
     prReadinessSnapshot: {
       readiness: {
@@ -1056,23 +1046,6 @@ test('knowledge intake repository reference import batches DB-owned backrefs', a
     "readFileSync('buzon/example.md')",
     'source-a',
   ]);
-});
-
-test('planning content snapshot normalizes dependencies and evidence refs for DB reads', () => {
-  const snapshot = buildPlanningContentSnapshot();
-  const dependency = snapshot.dependencies.find(
-    (row) => row.taskId === 'F-28-C' && row.dependencyTaskId === 'F-28-B'
-  );
-  const evidenceRef = snapshot.evidenceRefs.find(
-    (row) => row.taskId === 'MVP-A1' && /ED-20260331-mvp-a1/.test(row.evidenceRef)
-  );
-
-  assert.ok(dependency);
-  assert.equal(dependency.sourceKind, 'planning_task');
-  assert.ok(Number.isInteger(dependency.dependencyOrder));
-  assert.ok(evidenceRef);
-  assert.equal(evidenceRef.sourceKind, 'planning_task');
-  assert.ok(Number.isInteger(evidenceRef.evidenceOrder));
 });
 
 test('governance file snapshot consumes supplied generated inputs', () => {
@@ -2563,27 +2536,7 @@ test('normalizeText keeps structured lane fields queryable without dropping cont
   assert.equal(normalizeText({ a: 1 }), '{"a":1}');
 });
 
-test('planning governance import includes DB-local task ids in knowledge task linking', async () => {
-  const queries = [];
-  const client = {
-    async query(sql) {
-      queries.push(String(sql).trim());
-      return {
-        rows: [{ task_id: 'E-PROP-DISP-1' }, { taskId: 'GOV-PROP-DISP-1' }],
-      };
-    },
-  };
-
-  assert.deepEqual(mergePlanningTaskIds(['F-30', 'E-PROP-DISP-1'], ['E-PROP-DISP-1', '']), [
-    'F-30',
-    'E-PROP-DISP-1',
-  ]);
-  assert.deepEqual(await readLocalPlanningTaskIds(client), ['E-PROP-DISP-1', 'GOV-PROP-DISP-1']);
-  assert.match(queries[0], /planning_task_local_definitions/);
-  assert.match(queries[0], /planning_task_local_tombstones/);
-});
-
-test('importContent serializes destructive read-model replacement with an advisory lock', async () => {
+test('architecture-governance import transactions serialize destructive replacement', async () => {
   const queries = [];
   const client = {
     async query(sql, params) {
@@ -2592,20 +2545,9 @@ test('importContent serializes destructive read-model replacement with an adviso
     },
   };
 
-  await importContent({
-    client,
-    includeGovernance: false,
-    includePlanning: false,
-    silent: true,
-  });
+  await beginImportTransaction(client);
 
-  const beginIndexes = queries
-    .map((query, index) => (query.sql === 'begin' ? index : -1))
-    .filter((index) => index >= 0);
-  const importBeginIndex = beginIndexes.at(-1);
-  const lockQuery = queries[importBeginIndex + 1];
-
-  assert.ok(importBeginIndex > 0);
-  assert.match(lockQuery.sql, /pg_advisory_xact_lock/);
-  assert.deepEqual(lockQuery.params, ['dvt:planning-query-store', 'import-content-v1']);
+  assert.equal(queries[0].sql, 'begin');
+  assert.match(queries[1].sql, /pg_advisory_xact_lock/);
+  assert.deepEqual(queries[1].params, ['dvt:planning-query-store', 'import-content-v1']);
 });

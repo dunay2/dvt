@@ -51,8 +51,6 @@ async function runGovernanceImport(options = {}, deps = { runPlanningImport }) {
   return deps.runPlanningImport({
     databaseUrl: options.databaseUrl,
     ifStale: options.ifStale,
-    includePlanning: false,
-    includeGovernance: true,
   });
 }
 

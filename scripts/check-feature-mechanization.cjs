@@ -894,8 +894,6 @@ async function readFeatureMechanizationManifestsFromDb(options = {}) {
           {
             databaseUrl: connectionString,
             ifStale: false,
-            includePlanning: false,
-            includeGovernance: true,
             silent: true,
           },
           {

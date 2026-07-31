@@ -2,7 +2,107 @@ const { Client } = require('pg');
 
 const { buildGovernanceFileSnapshot, databaseUrl } = require('./planning-db-import.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
-const { compareRows, formatDriftReport } = require('./planning-db-check.cjs');
+
+function normalizeComparable(value) {
+  if (value === undefined) {
+    return null;
+  }
+
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (Array.isArray(value) || (value && typeof value === 'object')) {
+    return JSON.stringify(value);
+  }
+
+  return value;
+}
+
+function formatValue(value) {
+  const normalized = normalizeComparable(value);
+  if (normalized === null) {
+    return 'null';
+  }
+
+  const text = String(normalized);
+  return text.length > 96 ? `${text.slice(0, 93)}...` : text;
+}
+
+function compareRows(expectedRows, actualRows, options) {
+  const indexBy = (rows) => new Map((rows || []).map((row) => [options.keyOf(row), row]));
+  const expectedByKey = indexBy(expectedRows);
+  const actualByKey = indexBy(actualRows);
+  const expectedKeys = [...expectedByKey.keys()];
+  const actualKeys = [...actualByKey.keys()];
+  const sortUnique = (values) => [...new Set(values)].sort();
+  const missing = sortUnique(expectedKeys.filter((key) => !actualByKey.has(key)));
+  const unexpected = sortUnique(actualKeys.filter((key) => !expectedByKey.has(key)));
+  const stale = [];
+
+  for (const key of expectedKeys) {
+    if (!actualByKey.has(key)) {
+      continue;
+    }
+
+    const expected = expectedByKey.get(key);
+    const actual = actualByKey.get(key);
+    const differences = [];
+
+    for (const field of options.compareFields) {
+      const expectedValue = normalizeComparable(expected[field]);
+      const actualValue = normalizeComparable(actual[field]);
+      if (expectedValue !== actualValue) {
+        differences.push({ field, expected: expectedValue, actual: actualValue });
+      }
+    }
+
+    if (differences.length > 0) {
+      stale.push({ key, differences });
+    }
+  }
+
+  return {
+    missing,
+    unexpected,
+    stale: stale.sort((left, right) => left.key.localeCompare(right.key)),
+  };
+}
+
+function formatSection(name, section) {
+  const lines = [
+    `- ${name}: missing rows: ${section.missing.length}; unexpected rows: ${section.unexpected.length}; stale rows: ${section.stale.length}`,
+  ];
+
+  for (const key of section.missing.slice(0, 10)) {
+    lines.push(`  missing: ${key}`);
+  }
+  for (const key of section.unexpected.slice(0, 10)) {
+    lines.push(`  unexpected: ${key}`);
+  }
+  for (const stale of section.stale.slice(0, 10)) {
+    const differences = stale.differences
+      .map(
+        (difference) =>
+          `${difference.field} expected=${formatValue(difference.expected)} actual=${formatValue(difference.actual)}`
+      )
+      .join('; ');
+    lines.push(`  stale: ${stale.key} (${differences})`);
+  }
+
+  return lines.join('\n');
+}
+
+function formatDriftReport(commandName, report) {
+  if (report.ok) {
+    return `[${commandName}] OK`;
+  }
+
+  const sections = Object.entries(report.sections).map(([name, section]) =>
+    formatSection(name, section)
+  );
+  return [`[${commandName}] Drift detected:`, ...sections].join('\n');
+}
 
 function buildGovernanceExpectedState(snapshot = buildGovernanceFileSnapshot()) {
   return {

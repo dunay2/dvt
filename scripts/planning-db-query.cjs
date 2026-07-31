@@ -579,8 +579,6 @@ async function ensureFreshGovernanceProjection(queryName, options = {}) {
     {
       databaseUrl: options.databaseUrl || databaseUrl(),
       ifStale: true,
-      includePlanning: false,
-      includeGovernance: true,
       silent: true,
     },
     {

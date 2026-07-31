@@ -13,17 +13,6 @@ const {
 } = require('./planning-db/db-surface-inventory.cjs');
 
 const requiredSurfaces = [
-  {
-    surfaceName: 'Planning task lifecycle',
-    migrationState: 'DB-first',
-    writeRailKind: 'db_command',
-  },
-  {
-    surfaceName: 'Planning lane registry',
-    migrationState: 'Bootstrap/export',
-    writeRailKind: 'bootstrap_export',
-  },
-  { surfaceName: 'Workboard and open task route', migrationState: 'Generated-only' },
   { surfaceName: 'Governance file inventory', migrationState: 'Hybrid indexed' },
   {
     surfaceName: 'Architecture design authority',

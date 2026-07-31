@@ -1,4 +1,4 @@
-/** Owned concern: materialize planning and governance query-store snapshots with stale-aware imports. */
+/** Owned concern: materialize architecture and governance query-store snapshots. */
 const crypto = require('node:crypto');
 const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
@@ -35,7 +35,6 @@ const {
 const { buildCodeSymbolSnapshot } = require('./planning-db/code-symbol-inventory.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
-const laneDirectory = path.join(repoRoot, 'docs', 'planning', 'state');
 const canonicalStatePath = path.join(
   repoRoot,
   'tools',
@@ -96,11 +95,7 @@ function parseArgs(argv = process.argv.slice(2)) {
     databaseUrl: null,
     help: false,
     ifStale: false,
-    includePlanning: true,
-    includeGovernance: true,
   };
-  let planningOnly = false;
-  let governanceOnly = false;
 
   for (let index = 0; index < argv.length; index += 1) {
     const token = argv[index];
@@ -124,16 +119,6 @@ function parseArgs(argv = process.argv.slice(2)) {
       continue;
     }
 
-    if (token === '--planning-only') {
-      planningOnly = true;
-      continue;
-    }
-
-    if (token === '--governance-only') {
-      governanceOnly = true;
-      continue;
-    }
-
     if (token === '--help' || token === '-h') {
       options.help = true;
       continue;
@@ -142,31 +127,15 @@ function parseArgs(argv = process.argv.slice(2)) {
     throw new Error(`Unknown planning DB import option "${token}".`);
   }
 
-  if (planningOnly && governanceOnly) {
-    throw new Error('--planning-only and --governance-only are mutually exclusive.');
-  }
-
-  if (planningOnly) {
-    options.includePlanning = true;
-    options.includeGovernance = false;
-  }
-
-  if (governanceOnly) {
-    options.includePlanning = false;
-    options.includeGovernance = true;
-  }
-
   return options;
 }
 
 function printHelp() {
   console.log(
     [
-      'Usage: pnpm planning:db:import [--if-stale] [--planning-only|--governance-only] [--database-url <url>]',
+      'Usage: pnpm planning:db:import [--if-stale] [--database-url <url>]',
       '',
-      '--if-stale       Skip selected scopes that already match the imported DB state.',
-      '--planning-only  Import or check only planning lane/task bootstrap rows.',
-      '--governance-only Import or check only governance/query projection rows.',
+      '--if-stale  Skip the architecture/governance import when its source state is current.',
     ].join('\n')
   );
 }
@@ -336,56 +305,6 @@ function normalizeNumber(value) {
   return Number.isFinite(number) ? number : null;
 }
 
-function normalizeDate(value) {
-  if (value === undefined || value === null || value === '') {
-    return null;
-  }
-
-  return String(value).slice(0, 10);
-}
-
-function normalizeDependencyTokens(value) {
-  const text = normalizeText(value).trim();
-  if (!text || text.toLowerCase() === 'none') {
-    return [];
-  }
-
-  return text
-    .split(/,|\band\b/i)
-    .map((entry) => entry.trim())
-    .filter(Boolean)
-    .map((entry) => ({
-      dependencyTaskId: entry.split(/\s+/)[0] || null,
-      dependencyText: entry,
-    }))
-    .filter((entry) => entry.dependencyTaskId && entry.dependencyTaskId.toLowerCase() !== 'none');
-}
-
-function buildTaskDependencyRows(task, sourceKind) {
-  return normalizeDependencyTokens(task.dependency).map((dependency, index) => ({
-    laneId: task.laneId,
-    taskId: task.taskId,
-    dependencyOrder: index + 1,
-    dependencyTaskId: dependency.dependencyTaskId,
-    dependencyText: dependency.dependencyText,
-    sourceKind,
-    sourcePath: task.sourcePath,
-    sourceContentSha256: task.sourceContentSha256,
-  }));
-}
-
-function buildTaskEvidenceRows(task, sourceKind) {
-  return normalizeArray(task.evidenceRefs).map((evidenceRef, index) => ({
-    laneId: task.laneId,
-    taskId: task.taskId,
-    evidenceOrder: index + 1,
-    evidenceRef: normalizeText(evidenceRef),
-    sourceKind,
-    sourcePath: task.sourcePath,
-    sourceContentSha256: task.sourceContentSha256,
-  }));
-}
-
 function addGovernanceSource(sources, source, sourceType, metadata = {}) {
   if (sources.some((entry) => entry.sourcePath === source.sourcePath)) {
     return;
@@ -545,88 +464,6 @@ function buildCoverageRows(coverageSource) {
   }
 
   return rows;
-}
-
-function planningLaneFiles() {
-  return fs
-    .readdirSync(laneDirectory)
-    .filter((fileName) => /^agent-lane-[a-z]\.yaml$/i.test(fileName))
-    .sort()
-    .map((fileName) => path.join(laneDirectory, fileName));
-}
-
-function buildPlanningContentSnapshot() {
-  const sources = [];
-  const lanes = [];
-  const tasks = [];
-  const dependencies = [];
-  const evidenceRefs = [];
-
-  for (const laneFile of planningLaneFiles()) {
-    const source = readYamlSource(laneFile);
-    const lane = source.parsed;
-    const laneTasks = Array.isArray(lane.tasks) ? lane.tasks : [];
-
-    sources.push({
-      sourcePath: source.sourcePath,
-      sourceType: 'planning_lane',
-      contentSha256: source.contentSha256,
-      sourceBytes: source.sourceBytes,
-      metadata: {
-        laneId: normalizeText(lane.lane_id),
-        taskCount: laneTasks.length,
-      },
-      rawSource: lane,
-      rawSourceText: source.rawSourceText,
-    });
-
-    lanes.push({
-      laneId: normalizeText(lane.lane_id),
-      sourcePath: source.sourcePath,
-      title: normalizeText(lane.title),
-      owner: normalizeText(lane.owner),
-      status: normalizeText(lane.status),
-      lastReviewed: normalizeDate(lane.last_reviewed),
-      goal: normalizeText(lane.goal),
-      expectedOutcome: normalizeArray(lane.expected_outcome),
-      headerMarkdown: normalizeText(lane.header_markdown),
-      sourceContentSha256: source.contentSha256,
-      rawLane: lane,
-    });
-
-    for (const task of laneTasks) {
-      const row = {
-        laneId: normalizeText(lane.lane_id),
-        taskId: normalizeText(task.task_id),
-        parentTaskId: task.parent_task === undefined ? null : normalizeText(task.parent_task),
-        priority: task.priority === undefined ? null : normalizeText(task.priority),
-        status: normalizeText(task.status),
-        objective: normalizeText(task.objective),
-        dependency: task.dependency === undefined ? null : normalizeText(task.dependency),
-        target: task.target === undefined ? null : normalizeText(task.target),
-        complexity: task.complexity === undefined ? null : normalizeText(task.complexity),
-        effortPoints: normalizeNumber(task.effort_points),
-        progressPct: normalizeNumber(task.progress_pct),
-        evidenceRefs: normalizeArray(task.evidence_refs),
-        statusReason: task.status_reason === undefined ? null : normalizeText(task.status_reason),
-        lastVerified: normalizeDate(task.last_verified),
-        sourcePath: source.sourcePath,
-        sourceContentSha256: source.contentSha256,
-        rawTask: task,
-      };
-      tasks.push(row);
-
-      for (const dependency of buildTaskDependencyRows(row, 'planning_task')) {
-        dependencies.push(dependency);
-      }
-
-      for (const evidenceRef of buildTaskEvidenceRows(row, 'planning_task')) {
-        evidenceRefs.push(evidenceRef);
-      }
-    }
-  }
-
-  return { sources, lanes, tasks, dependencies, evidenceRefs };
 }
 
 function buildGovernanceGeneratedInputs(options = {}) {
@@ -2159,77 +1996,52 @@ function buildPrReadinessSnapshot(options = {}) {
   };
 }
 
-async function insertPlanningSnapshot(client, snapshot) {
+async function retireLocalTaskLifecycle(client) {
+  await client.query(
+    `delete from ${schemaName}.doc_resolution_operations
+     where resolution_scope = 'task_gap'`
+  );
+  await client.query(
+    `delete from ${schemaName}.doc_resolution_overlays
+     where resolution_scope = 'task_gap'`
+  );
+  await client.query(
+    `delete from ${schemaName}.planning_artifacts
+     where artifact_kind in ('workboard', 'open-task-route')
+        or artifact_path in (
+          'docs/planning/state/execution-workboard.md',
+          'docs/planning/state/open-task-route.md'
+        )`
+  );
+  await client.query(`delete from ${schemaName}.planning_task_local_state`);
+  await client.query(`delete from ${schemaName}.planning_task_local_definitions`);
+  await client.query(`delete from ${schemaName}.planning_task_local_tombstones`);
+  await client.query(`delete from ${schemaName}.planning_local_operations`);
+}
+
+async function reconcileRetiredLocalTaskSurfaces(client) {
+  const retiredSurfaceNames = [
+    'Planning task lifecycle',
+    'Planning lane registry',
+    'Workboard and open task route',
+  ];
+
+  await client.query(
+    `delete from ${schemaName}.db_governance_surface_operations
+     where surface_name = any($1::text[])`,
+    [retiredSurfaceNames]
+  );
+  await client.query(
+    `delete from ${schemaName}.db_governance_surfaces
+     where surface_name = any($1::text[])`,
+    [retiredSurfaceNames]
+  );
+}
+
+async function reconcileRetiredPlanningState(client) {
+  await retireLocalTaskLifecycle(client);
   await client.query(`delete from ${schemaName}.planning_sources`);
-
-  for (const source of snapshot.sources) {
-    await client.query(
-      `insert into ${schemaName}.planning_sources
-        (source_path, source_type, content_sha256, source_bytes, metadata, raw_source, raw_source_text, source_authority)
-       values ($1, $2, $3, $4, $5::jsonb, $6::jsonb, $7, $8)`,
-      [
-        source.sourcePath,
-        source.sourceType,
-        source.contentSha256,
-        source.sourceBytes,
-        toJson(source.metadata),
-        toJson(source.rawSource),
-        source.rawSourceText || null,
-        'database',
-      ]
-    );
-  }
-
-  for (const lane of snapshot.lanes) {
-    await client.query(
-      `insert into ${schemaName}.planning_lanes
-        (lane_id, source_path, title, owner, status, last_reviewed, goal,
-         expected_outcome, header_markdown, source_content_sha256, raw_lane)
-       values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11::jsonb)`,
-      [
-        lane.laneId,
-        lane.sourcePath,
-        lane.title,
-        lane.owner,
-        lane.status,
-        lane.lastReviewed,
-        lane.goal,
-        toJson(lane.expectedOutcome),
-        lane.headerMarkdown,
-        lane.sourceContentSha256,
-        toJson(lane.rawLane),
-      ]
-    );
-  }
-
-  for (const task of snapshot.tasks) {
-    await client.query(
-      `insert into ${schemaName}.planning_tasks
-        (lane_id, task_id, parent_task_id, priority, status, objective, dependency, target,
-         complexity, effort_points, progress_pct, evidence_refs, status_reason, last_verified,
-         source_path, source_content_sha256, raw_task)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12::jsonb, $13, $14, $15, $16, $17::jsonb)`,
-      [
-        task.laneId,
-        task.taskId,
-        task.parentTaskId,
-        task.priority,
-        task.status,
-        task.objective,
-        task.dependency,
-        task.target,
-        task.complexity,
-        task.effortPoints,
-        task.progressPct,
-        toJson(task.evidenceRefs),
-        task.statusReason,
-        task.lastVerified,
-        task.sourcePath,
-        task.sourceContentSha256,
-        toJson(task.rawTask),
-      ]
-    );
-  }
+  await reconcileRetiredLocalTaskSurfaces(client);
 }
 
 async function clearGovernanceSnapshotTables(client) {
@@ -3742,70 +3554,25 @@ async function beginImportTransaction(client) {
   ]);
 }
 
-function mergePlanningTaskIds(...taskIdGroups) {
-  return [
-    ...new Set(
-      taskIdGroups
-        .flat()
-        .map((taskId) => normalizeText(taskId).trim())
-        .filter(Boolean)
-    ),
-  ];
-}
-
-async function readLocalPlanningTaskIds(client) {
-  const result = await client.query(
-    `select local_definition.task_id
-     from ${schemaName}.planning_task_local_definitions local_definition
-     where not exists (
-       select 1
-       from ${schemaName}.planning_task_local_tombstones tombstone
-       where tombstone.lane_id = local_definition.lane_id
-         and tombstone.task_id = local_definition.task_id
-     )
-     order by local_definition.task_id`
-  );
-
-  return result.rows.map((row) => row.task_id ?? row.taskId);
-}
-
 async function importContent(options = {}) {
   const url = options.databaseUrl || databaseUrl();
   const silent = options.silent === true;
-  const includePlanning = options.includePlanning !== false;
-  const includeGovernance = options.includeGovernance !== false;
-  const planningSnapshot = includePlanning ? buildPlanningContentSnapshot() : null;
-  const governanceSnapshot = includeGovernance ? buildGovernanceFileSnapshot() : null;
-  const repositoryCommandSnapshot = includeGovernance
-    ? await buildRepositoryCommandSnapshot()
-    : null;
-  const commandQueryRailSnapshot = includeGovernance
-    ? buildCommandQueryRailSnapshot({ governanceSnapshot })
-    : null;
-  const codeSymbolSnapshot = includeGovernance
-    ? buildCodeSymbolSnapshot({ governanceSnapshot })
-    : null;
-  const frontendMechanicalTruthSnapshot = includeGovernance
-    ? buildFrontendMechanicalTruthSnapshot()
-    : null;
-  const frontendComponentReflectionSnapshot = includeGovernance
-    ? buildFrontendComponentReflectionSnapshot()
-    : null;
-  const prReadinessSnapshot = includeGovernance ? buildPrReadinessSnapshot() : null;
-  const markdownDocuments = includeGovernance ? listTrackedMarkdownDocuments() : [];
-  const knowledgeDocuments = includeGovernance
-    ? listTrackedKnowledgeDocuments({ markdownDocuments })
-    : [];
-  const knowledgeIntakeRepositoryReferenceSnapshot = includeGovernance
-    ? buildKnowledgeIntakeRepositoryReferenceSnapshot({
-        intakeDocumentPaths: knowledgeDocuments
-          .map((document) => document.sourcePath)
-          .filter((sourcePath) => /^buzon\/.*\.md$/i.test(toPosix(sourcePath))),
-      })
-    : null;
-  const canonicalStateSnapshot = includeGovernance ? readCanonicalStateSnapshot() : null;
-  const docsDispositionPlanningSnapshot =
-    includeGovernance && !planningSnapshot ? buildPlanningContentSnapshot() : planningSnapshot;
+  const governanceSnapshot = buildGovernanceFileSnapshot();
+  const repositoryCommandSnapshot = await buildRepositoryCommandSnapshot();
+  const commandQueryRailSnapshot = buildCommandQueryRailSnapshot({ governanceSnapshot });
+  const codeSymbolSnapshot = buildCodeSymbolSnapshot({ governanceSnapshot });
+  const frontendMechanicalTruthSnapshot = buildFrontendMechanicalTruthSnapshot();
+  const frontendComponentReflectionSnapshot = buildFrontendComponentReflectionSnapshot();
+  const prReadinessSnapshot = buildPrReadinessSnapshot();
+  const markdownDocuments = listTrackedMarkdownDocuments();
+  const knowledgeDocuments = listTrackedKnowledgeDocuments({ markdownDocuments });
+  const knowledgeIntakeRepositoryReferenceSnapshot =
+    buildKnowledgeIntakeRepositoryReferenceSnapshot({
+      intakeDocumentPaths: knowledgeDocuments
+        .map((document) => document.sourcePath)
+        .filter((sourcePath) => /^buzon\/.*\.md$/i.test(toPosix(sourcePath))),
+    });
+  const canonicalStateSnapshot = readCanonicalStateSnapshot();
   let docsDispositionSnapshot;
   let knowledgeSnapshot;
   const client = options.client || new Client({ connectionString: url });
@@ -3817,58 +3584,49 @@ async function importContent(options = {}) {
 
   try {
     await runMigrations({ client, silent: true });
-    const localFeatureMechanizationRails = includeGovernance
-      ? await readLocalFeatureMechanizationRails(client)
-      : [];
+    const localFeatureMechanizationRails = await readLocalFeatureMechanizationRails(client);
     await beginImportTransaction(client);
-    const planningTaskIds = includeGovernance
-      ? mergePlanningTaskIds(
-          (docsDispositionPlanningSnapshot?.tasks || []).map((task) => task.taskId),
-          await readLocalPlanningTaskIds(client)
-        )
-      : [];
-    docsDispositionSnapshot = includeGovernance
-      ? buildDocsDispositionSnapshot({ planningTaskIds, documents: markdownDocuments })
-      : null;
-    knowledgeSnapshot = includeGovernance
-      ? buildKnowledgeDocumentSnapshot({ planningTaskIds, documents: knowledgeDocuments })
-      : null;
-    if (includePlanning) {
-      await insertPlanningSnapshot(client, planningSnapshot);
-    }
-    if (includeGovernance) {
-      await insertGovernanceSnapshot(client, governanceSnapshot);
-      await refreshComponentTreeMaterializedProjection(client);
-      await refreshComponentFileOwnershipMaterializedProjection(client);
-      await refreshComponentRuleEvaluationMaterializedProjection(client);
-      await insertCodeSymbolSnapshot(client, codeSymbolSnapshot);
-      await refreshCodeSymbolMaterializedProjection(client);
-      await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
-      await insertCommandQueryRailSnapshot(client, commandQueryRailSnapshot);
-      await insertFrontendMechanicalTruthSnapshot(client, frontendMechanicalTruthSnapshot);
-      await insertFrontendComponentReflectionSnapshot(client, frontendComponentReflectionSnapshot);
-      await insertPrReadinessSnapshot(client, prReadinessSnapshot);
-      await insertDocsDispositionSnapshot(client, docsDispositionSnapshot);
-      await insertKnowledgeSnapshot(client, knowledgeSnapshot);
-      await insertKnowledgeIntakeRepositoryReferences(
-        client,
-        knowledgeIntakeRepositoryReferenceSnapshot
-      );
-      await restoreLocalFeatureMechanizationRails(
-        client,
-        mergeCanonicalFeatureMechanizationRails(
-          canonicalStateSnapshot.featureMechanizationRails,
-          localFeatureMechanizationRails
-        )
-      );
-      await restoreLocalFeatureMechanizationOperations(
-        client,
-        canonicalStateSnapshot.featureMechanizationRailOperations
-      );
-      await reconcileDeprecatedLocalRailSources(client);
-      await reconcileSupersededCanvasNodeWorkbenchPanel(client);
-      await reconcileSupersededCiPolicyValidationSplitComponents(client);
-    }
+    const planningTaskIds = [];
+    docsDispositionSnapshot = buildDocsDispositionSnapshot({
+      planningTaskIds,
+      documents: markdownDocuments,
+    });
+    knowledgeSnapshot = buildKnowledgeDocumentSnapshot({
+      planningTaskIds,
+      documents: knowledgeDocuments,
+    });
+    await reconcileRetiredPlanningState(client);
+    await insertGovernanceSnapshot(client, governanceSnapshot);
+    await refreshComponentTreeMaterializedProjection(client);
+    await refreshComponentFileOwnershipMaterializedProjection(client);
+    await refreshComponentRuleEvaluationMaterializedProjection(client);
+    await insertCodeSymbolSnapshot(client, codeSymbolSnapshot);
+    await refreshCodeSymbolMaterializedProjection(client);
+    await insertRepositoryCommandSnapshot(client, repositoryCommandSnapshot);
+    await insertCommandQueryRailSnapshot(client, commandQueryRailSnapshot);
+    await insertFrontendMechanicalTruthSnapshot(client, frontendMechanicalTruthSnapshot);
+    await insertFrontendComponentReflectionSnapshot(client, frontendComponentReflectionSnapshot);
+    await insertPrReadinessSnapshot(client, prReadinessSnapshot);
+    await insertDocsDispositionSnapshot(client, docsDispositionSnapshot);
+    await insertKnowledgeSnapshot(client, knowledgeSnapshot);
+    await insertKnowledgeIntakeRepositoryReferences(
+      client,
+      knowledgeIntakeRepositoryReferenceSnapshot
+    );
+    await restoreLocalFeatureMechanizationRails(
+      client,
+      mergeCanonicalFeatureMechanizationRails(
+        canonicalStateSnapshot.featureMechanizationRails,
+        localFeatureMechanizationRails
+      )
+    );
+    await restoreLocalFeatureMechanizationOperations(
+      client,
+      canonicalStateSnapshot.featureMechanizationRailOperations
+    );
+    await reconcileDeprecatedLocalRailSources(client);
+    await reconcileSupersededCanvasNodeWorkbenchPanel(client);
+    await reconcileSupersededCiPolicyValidationSplitComponents(client);
     await client.query('commit');
   } catch (error) {
     await client.query('rollback');
@@ -3880,35 +3638,31 @@ async function importContent(options = {}) {
   }
 
   const result = {
-    lanes: planningSnapshot?.lanes.length ?? 0,
-    tasks: planningSnapshot?.tasks.length ?? 0,
-    governanceFiles: governanceSnapshot?.files.length ?? 0,
-    governanceComponents: governanceSnapshot?.components.length ?? 0,
-    governanceComponentFiles: governanceSnapshot?.componentFiles.length ?? 0,
-    governanceFingerprints: governanceSnapshot?.fingerprints.length ?? 0,
-    governanceCoverageRows: governanceSnapshot?.coverageRows.length ?? 0,
-    governanceRemediationTasks: governanceSnapshot?.remediationTasks.length ?? 0,
-    riskDebtItems: governanceSnapshot?.riskDebtItems.length ?? 0,
-    repositoryCommands: repositoryCommandSnapshot?.commands.length ?? 0,
-    commandQueryRails: commandQueryRailSnapshot?.rails.length ?? 0,
-    codeSymbols: codeSymbolSnapshot?.symbols.length ?? 0,
-    frontendMechanicalTruthSurfaces: frontendMechanicalTruthSnapshot?.surfaces.length ?? 0,
-    frontendComponents: frontendComponentReflectionSnapshot?.components.length ?? 0,
-    prReadinessChecks: prReadinessSnapshot ? 1 : 0,
-    docsDispositionDocuments: docsDispositionSnapshot?.documents.length ?? 0,
-    docsDispositionActions: docsDispositionSnapshot?.actions.length ?? 0,
-    docsTaskLikeReferences: docsDispositionSnapshot?.references.length ?? 0,
-    knowledgeDocuments: knowledgeSnapshot?.documents.length ?? 0,
-    knowledgeActions: knowledgeSnapshot?.actions.length ?? 0,
+    governanceFiles: governanceSnapshot.files.length,
+    governanceComponents: governanceSnapshot.components.length,
+    governanceComponentFiles: governanceSnapshot.componentFiles.length,
+    governanceFingerprints: governanceSnapshot.fingerprints.length,
+    governanceCoverageRows: governanceSnapshot.coverageRows.length,
+    governanceRemediationTasks: governanceSnapshot.remediationTasks.length,
+    riskDebtItems: governanceSnapshot.riskDebtItems.length,
+    repositoryCommands: repositoryCommandSnapshot.commands.length,
+    commandQueryRails: commandQueryRailSnapshot.rails.length,
+    codeSymbols: codeSymbolSnapshot.symbols.length,
+    frontendMechanicalTruthSurfaces: frontendMechanicalTruthSnapshot.surfaces.length,
+    frontendComponents: frontendComponentReflectionSnapshot.components.length,
+    prReadinessChecks: 1,
+    docsDispositionDocuments: docsDispositionSnapshot.documents.length,
+    docsDispositionActions: docsDispositionSnapshot.actions.length,
+    docsTaskLikeReferences: docsDispositionSnapshot.references.length,
+    knowledgeDocuments: knowledgeSnapshot.documents.length,
+    knowledgeActions: knowledgeSnapshot.actions.length,
     knowledgeIntakeRepositoryReferences:
-      knowledgeIntakeRepositoryReferenceSnapshot?.references.length ?? 0,
+      knowledgeIntakeRepositoryReferenceSnapshot.references.length,
   };
 
   if (!silent) {
     const message = [
-      `[planning:db:import] lanes=${result.lanes}`,
-      `tasks=${result.tasks}`,
-      `governanceFiles=${result.governanceFiles}`,
+      `[planning:db:import] governanceFiles=${result.governanceFiles}`,
       `governanceComponents=${result.governanceComponents}`,
       `governanceRemediationTasks=${result.governanceRemediationTasks}`,
       `riskDebtItems=${result.riskDebtItems}`,
@@ -4129,11 +3883,10 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
   const codeSymbolSnapshot =
     options.codeSymbolSnapshot || buildCodeSymbolSnapshot({ governanceSnapshot });
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
-  const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
   const docsDispositionSnapshot =
     options.docsDispositionSnapshot ||
     buildDocsDispositionSnapshot({
-      planningTaskIds: planningSnapshot.tasks.map((task) => task.taskId),
+      planningTaskIds: [],
     });
   const knowledgeIntakeRepositoryReferenceSnapshot =
     options.knowledgeIntakeRepositoryReferenceSnapshot ||
@@ -4649,7 +4402,6 @@ function buildGovernanceSourceExpectedState(options = {}) {
 }
 
 async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
-  const planningSnapshot = options.planningSnapshot || buildPlanningContentSnapshot();
   const repositoryCommandSnapshot =
     options.repositoryCommandSnapshot || (await buildRepositoryCommandSnapshot());
   const commandQueryRailSnapshot =
@@ -4666,9 +4418,7 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
     buildKnowledgeIntakeRepositoryReferenceSnapshot();
 
   return {
-    planningSources: uniqueSourceHashRows(planningSnapshot.sources, {
-      hashField: 'contentSha256',
-    }),
+    planningSources: [],
     repositoryCommandSources: uniqueSourceHashRows(repositoryCommandSnapshot.commands),
     commandQueryRailSources: uniqueSourceHashRows(commandQueryRailSnapshot.rails),
     codeSymbolSources: uniqueSourceHashRows(codeSymbolSnapshot.symbols, {
@@ -4877,103 +4627,102 @@ async function checkGovernanceAuxiliarySourceFreshness(options = {}) {
   }
 }
 
-async function isScopeFresh(scope, options, deps) {
+async function reconcileRetiredPlanningDatabase(options = {}) {
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
   try {
-    if (scope === 'planning') {
-      const checkPlanningDatabase =
-        deps.checkPlanningDatabase || require('./planning-db-check.cjs').checkPlanningDatabase;
-      const report = await checkPlanningDatabase({ databaseUrl: options.databaseUrl });
-      return report.ok;
+    await runMigrations({ client, silent: true });
+    await beginImportTransaction(client);
+    await reconcileRetiredPlanningState(client);
+    await client.query('commit');
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
     }
+  }
+}
 
-    if (scope === 'governance') {
-      const hasGovernanceDatabaseOverride = typeof deps.checkGovernanceDatabase === 'function';
-      const shouldTryGovernanceSourceFreshness =
-        typeof deps.checkGovernanceSourceFreshness === 'function' || !hasGovernanceDatabaseOverride;
-      if (shouldTryGovernanceSourceFreshness) {
-        const sourceFreshness =
-          deps.checkGovernanceSourceFreshness || checkGovernanceSourceFreshness;
-        const sourceFreshnessReport = await sourceFreshness({
-          databaseUrl: options.databaseUrl,
-        });
-        if (!sourceFreshnessReport.ok) {
-          return false;
-        }
-      } else {
-        const checkGovernanceDatabase = deps.checkGovernanceDatabase;
-        const report = await checkGovernanceDatabase({ databaseUrl: options.databaseUrl });
-        if (!report.ok) {
-          return false;
-        }
-      }
-
-      const hasAuxiliaryProjectionOverride =
-        typeof deps.checkGovernanceAuxiliaryProjections === 'function';
-      const shouldTrySourceFreshness =
-        typeof deps.checkGovernanceAuxiliarySourceFreshness === 'function' ||
-        !hasAuxiliaryProjectionOverride;
-      if (shouldTrySourceFreshness) {
-        const checkAuxiliarySourceFreshness =
-          deps.checkGovernanceAuxiliarySourceFreshness || checkGovernanceAuxiliarySourceFreshness;
-        const sourceFreshnessReport = await checkAuxiliarySourceFreshness({
-          databaseUrl: options.databaseUrl,
-        });
-        if (sourceFreshnessReport.ok) {
-          return true;
-        }
+async function isGovernanceFresh(options, deps) {
+  try {
+    const hasGovernanceDatabaseOverride = typeof deps.checkGovernanceDatabase === 'function';
+    const shouldTryGovernanceSourceFreshness =
+      typeof deps.checkGovernanceSourceFreshness === 'function' || !hasGovernanceDatabaseOverride;
+    if (shouldTryGovernanceSourceFreshness) {
+      const sourceFreshness = deps.checkGovernanceSourceFreshness || checkGovernanceSourceFreshness;
+      const sourceFreshnessReport = await sourceFreshness({
+        databaseUrl: options.databaseUrl,
+      });
+      if (!sourceFreshnessReport.ok) {
         return false;
       }
-
-      const checkAuxiliary = hasAuxiliaryProjectionOverride
-        ? deps.checkGovernanceAuxiliaryProjections
-        : checkGovernanceAuxiliaryProjections;
-      const auxiliaryReport = await checkAuxiliary({ databaseUrl: options.databaseUrl });
-      return auxiliaryReport.ok;
+    } else {
+      const checkGovernanceDatabase = deps.checkGovernanceDatabase;
+      const report = await checkGovernanceDatabase({ databaseUrl: options.databaseUrl });
+      if (!report.ok) {
+        return false;
+      }
     }
+
+    const hasAuxiliaryProjectionOverride =
+      typeof deps.checkGovernanceAuxiliaryProjections === 'function';
+    const shouldTrySourceFreshness =
+      typeof deps.checkGovernanceAuxiliarySourceFreshness === 'function' ||
+      !hasAuxiliaryProjectionOverride;
+    if (shouldTrySourceFreshness) {
+      const checkAuxiliarySourceFreshness =
+        deps.checkGovernanceAuxiliarySourceFreshness || checkGovernanceAuxiliarySourceFreshness;
+      const sourceFreshnessReport = await checkAuxiliarySourceFreshness({
+        databaseUrl: options.databaseUrl,
+      });
+      if (sourceFreshnessReport.ok) {
+        return true;
+      }
+      return false;
+    }
+
+    const checkAuxiliary = hasAuxiliaryProjectionOverride
+      ? deps.checkGovernanceAuxiliaryProjections
+      : checkGovernanceAuxiliaryProjections;
+    const auxiliaryReport = await checkAuxiliary({ databaseUrl: options.databaseUrl });
+    return auxiliaryReport.ok;
   } catch {
     return false;
   }
-
-  throw new Error(`Unknown import scope "${scope}".`);
 }
 
 async function runPlanningImport(options = {}, deps = {}) {
   const actualDeps = {
     importContent,
     logger: console,
+    reconcileRetiredPlanningDatabase,
     ...deps,
-  };
-  const selected = {
-    planning: options.includePlanning !== false,
-    governance: options.includeGovernance !== false,
   };
   const skippedScopes = [];
 
-  if (options.ifStale) {
-    for (const scope of ['planning', 'governance']) {
-      if (!selected[scope]) {
-        continue;
-      }
-
-      if (await isScopeFresh(scope, options, actualDeps)) {
-        selected[scope] = false;
-        skippedScopes.push(scope);
-      }
-    }
+  if (options.ifStale && (await isGovernanceFresh(options, actualDeps))) {
+    await actualDeps.reconcileRetiredPlanningDatabase({
+      databaseUrl: options.databaseUrl,
+    });
+    skippedScopes.push('governance');
   }
 
   if (skippedScopes.length > 0) {
     actualDeps.logger.log(`[planning:db:import] skipped fresh scopes: ${skippedScopes.join(', ')}`);
   }
 
-  const importedScopes = Object.entries(selected)
-    .filter(([, enabled]) => enabled)
-    .map(([scope]) => scope);
+  const importedScopes = skippedScopes.length === 0 ? ['governance'] : [];
 
   if (importedScopes.length === 0) {
     return {
-      lanes: 0,
-      tasks: 0,
       governanceFiles: 0,
       governanceComponents: 0,
       governanceComponentFiles: 0,
@@ -4996,8 +4745,6 @@ async function runPlanningImport(options = {}, deps = {}) {
 
   const importOptions = {
     databaseUrl: options.databaseUrl,
-    includePlanning: selected.planning,
-    includeGovernance: selected.governance,
   };
   if (options.silent === true) {
     importOptions.silent = true;
@@ -5036,7 +4783,6 @@ module.exports = {
   buildFrontendMechanicalTruthSnapshot,
   buildKnowledgeDocumentSnapshot,
   buildKnowledgeIntakeRepositoryReferenceSnapshot,
-  buildPlanningContentSnapshot,
   buildPrReadinessSnapshot,
   buildRiskDebtSnapshot,
   buildRepositoryCommandSnapshot,
@@ -5054,7 +4800,6 @@ module.exports = {
   insertGovernanceSnapshot,
   insertCodeSymbolSnapshot,
   insertRows,
-  mergePlanningTaskIds,
   mergeCanonicalFeatureMechanizationRails,
   insertDocsDispositionSnapshot,
   insertCommandQueryRailSnapshot,
@@ -5070,12 +4815,14 @@ module.exports = {
   readTrackedDocumentPaths,
   readCanonicalStateSnapshot,
   readLocalFeatureMechanizationRails,
-  readLocalPlanningTaskIds,
   readGovernanceSourceState,
   readGovernanceAuxiliarySourceState,
   readGovernanceAuxiliaryState,
   readYamlSource,
   reconcileDeprecatedLocalRailSources,
+  reconcileRetiredPlanningDatabase,
+  reconcileRetiredPlanningState,
+  reconcileRetiredLocalTaskSurfaces,
   reconcileSupersededCiPolicyValidationSplitComponents,
   reconcileSupersededCanvasNodeWorkbenchPanel,
   refreshCodeSymbolMaterializedProjection,
@@ -5085,6 +4832,7 @@ module.exports = {
   refreshLocalFeatureMechanizationRailSourceHashes,
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
+  retireLocalTaskLifecycle,
   runPlanningImport,
   sha256,
 };
