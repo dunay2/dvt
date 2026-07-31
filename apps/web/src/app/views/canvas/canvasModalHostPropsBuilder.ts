@@ -18,9 +18,6 @@ type CanvasModalHostBuilderSource = Readonly<
     | 'confirmEdgeModal'
     | 'setConfirmEdgeModal'
     | 'confirmEdgeCreation'
-    | 'graphSqlReplacementConfirmation'
-    | 'confirmGraphSqlReplacement'
-    | 'cancelGraphSqlReplacement'
   >
 >;
 
@@ -43,13 +40,6 @@ export function buildCanvasModalHostProps(
       edge: controller.confirmEdgeModal.edge,
       onClose: () => controller.setConfirmEdgeModal({ open: false, edge: null }),
       onConfirm: controller.confirmEdgeCreation,
-    },
-    graphSqlReplacement: {
-      ...controller.graphSqlReplacementConfirmation,
-      onCancel: controller.cancelGraphSqlReplacement,
-      onConfirm: () => {
-        void controller.confirmGraphSqlReplacement();
-      },
     },
   };
 }

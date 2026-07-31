@@ -87,7 +87,6 @@ type CanvasExecutionDefaultsDto = {
   executionSelectionRecovery: CanvasController['executionSelectionRecovery'];
   executionSelectionRecoveryCommands: CanvasController['executionSelectionRecoveryCommands'];
   confirmEdgeModal: CanvasController['confirmEdgeModal'];
-  graphSqlReplacementConfirmation: CanvasController['graphSqlReplacementConfirmation'];
 };
 
 type CanvasControllerStateDefaults = CanvasWorkbenchDefaultsDto &
@@ -261,7 +260,6 @@ function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
     executionSelectionRecovery: null,
     executionSelectionRecoveryCommands: null,
     confirmEdgeModal: { open: false, edge: null },
-    graphSqlReplacementConfirmation: { open: false, paths: [], busy: false },
   } satisfies CanvasExecutionDefaultsDto;
 }
 
@@ -316,8 +314,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'setPlanModalOpen'
   | 'setConfirmEdgeModal'
   | 'confirmEdgeCreation'
-  | 'confirmGraphSqlReplacement'
-  | 'cancelGraphSqlReplacement'
 > &
   Pick<CanvasController, 'importedNodeFocusIds'> {
   return {
@@ -363,7 +359,5 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     setPlanModalOpen: vi.fn(),
     setConfirmEdgeModal: vi.fn(),
     confirmEdgeCreation: vi.fn(),
-    confirmGraphSqlReplacement: vi.fn(),
-    cancelGraphSqlReplacement: vi.fn(),
   };
 }

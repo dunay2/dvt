@@ -10,6 +10,7 @@ import {
 } from './canvasActiveGraphStrategy';
 import { buildCanvasControllerViewModel } from './canvasControllerViewModel';
 import { applyCanvasDraftPostureToRuntimePolicyInput } from './canvasDraftAccessPostureModel';
+import { resolveGraphDraftAuthoringCanvasId } from './canvasDraftReadModel';
 import { resolveCanvasRuntimePolicy } from './canvasRuntimePolicy';
 import { useCanvasAuthoringRuntime } from './useCanvasAuthoringRuntime';
 import { useCanvasControllerEnvironment } from './useCanvasControllerEnvironment';
@@ -101,12 +102,16 @@ export function useCanvasController() {
     () => resolveActiveCanvasAuthoringMode(draftReadModel),
     [draftReadModel?.record?.draft.canvas.kind]
   );
+  const resolvedGraphDraftCanvasId = resolveGraphDraftAuthoringCanvasId(draftReadModel);
+  const hasResolvedGraphDraftAuthority = resolvedGraphDraftCanvasId !== null;
   const runtimePolicy = useMemo(() => {
     const draftAdmission = applyCanvasDraftPostureToRuntimePolicyInput({
       posture: draftAccessPosture,
-      canMutateGraph,
-      canPlan: store.userPermissions.canPlan && !isDraftRecoveryBlocked,
-      canRun: store.userPermissions.canRun && !isDraftRecoveryBlocked,
+      canMutateGraph: canMutateGraph && hasResolvedGraphDraftAuthority,
+      canPlan:
+        store.userPermissions.canPlan && !isDraftRecoveryBlocked && hasResolvedGraphDraftAuthority,
+      canRun:
+        store.userPermissions.canRun && !isDraftRecoveryBlocked && hasResolvedGraphDraftAuthority,
       canReloadLatestDraft: authoringRuntime.draftStatusState.showReloadAction,
     });
 
@@ -123,6 +128,7 @@ export function useCanvasController() {
     authoringRuntime.draftStatusState.showReloadAction,
     canMutateGraph,
     draftAccessPosture,
+    hasResolvedGraphDraftAuthority,
     isDraftRecoveryBlocked,
     store.userPermissions.canPlan,
     store.userPermissions.canRun,
@@ -273,6 +279,7 @@ export function useCanvasController() {
   );
 
   const executionActions = useCanvasExecutionActions({
+    graphDraftCanvasId: resolvedGraphDraftCanvasId,
     plansService,
     runsService,
     workspaceFilesQuery,

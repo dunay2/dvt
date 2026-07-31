@@ -221,9 +221,6 @@ function buildCanvasExecutionViewModel(args: CanvasControllerViewModelArgs) {
     planModalOpen: executionActions.planModalOpen,
     setPlanModalOpen: executionActions.setPlanModalOpen,
     currentPlan: store.currentPlan,
-    graphSqlReplacementConfirmation: executionActions.graphSqlReplacementConfirmation,
-    confirmGraphSqlReplacement: executionActions.confirmGraphSqlReplacement,
-    cancelGraphSqlReplacement: executionActions.cancelGraphSqlReplacement,
     executionSelectionRecovery: args.executionSelectionRecovery.model,
     executionSelectionRecoveryCommands: args.executionSelectionRecovery.commands,
   };

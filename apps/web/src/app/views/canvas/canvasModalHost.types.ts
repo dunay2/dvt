@@ -3,7 +3,6 @@
  */
 import type { PlanViewModel } from '../../types/plans';
 import type { ConfirmEdgeModalState } from './canvasGraphHandlerContracts';
-import type { GraphSqlReplacementConfirmationState } from './canvasExecutionActions.types';
 
 export type CanvasPlanPreviewModalContract = Readonly<{
   open: boolean;
@@ -24,9 +23,4 @@ export type CanvasEdgeConfirmationModalContract = Readonly<{
 export type CanvasModalHostProps = Readonly<{
   planPreview: CanvasPlanPreviewModalContract;
   edgeConfirmation?: CanvasEdgeConfirmationModalContract;
-  graphSqlReplacement?: GraphSqlReplacementConfirmationState &
-    Readonly<{
-      onCancel: () => void;
-      onConfirm: () => void;
-    }>;
 }>;

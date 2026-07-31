@@ -4,11 +4,12 @@ import { describe, expect, it, vi } from 'vitest';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { FileContent, IWorkspaceFilesQueryPort } from '../../ports/workspace';
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
-import { createGraphManagedDbtModelSql } from './dbtGraphModelSqlPublicationPolicy';
+import { createGraphDraftMarkedDbtModelSql } from './dbtGraphModelSqlPublicationPolicy';
 import { publishGraphDbtWorkspaceArtifacts } from './dbtGraphWorkspaceArtifactPublisher';
 
-const FIRST_SQL = createGraphManagedDbtModelSql('select 1 as order_id\n');
-const NEXT_SQL = createGraphManagedDbtModelSql('select 2 as order_id\n');
+const FIRST_SQL = createGraphDraftMarkedDbtModelSql('select 1 as order_id\n');
+const NEXT_SQL = createGraphDraftMarkedDbtModelSql('select 2 as order_id\n');
+const CANVAS_ID = 'orders-canvas';
 
 function file(path: string, content: string, revision: string): FileContent {
   return {
@@ -40,7 +41,7 @@ function applied(
 }
 
 describe('DBT graph workspace artifact publisher', () => {
-  it('preflights every artifact and requests confirmation for divergent pre-marker SQL', async () => {
+  it('preflights every artifact and refuses divergent pre-marker SQL', async () => {
     const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>();
     const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>(async (path) => {
       if (path === 'models/second.sql') {
@@ -50,6 +51,7 @@ describe('DBT graph workspace artifact publisher', () => {
     });
 
     const result = await publishGraphDbtWorkspaceArtifacts({
+      canvasId: CANVAS_ID,
       artifacts: [
         { path: 'dbt_project.yml', language: 'yaml', content: 'name: analytics\n' },
         { path: 'models/first.sql', language: 'sql', content: FIRST_SQL },
@@ -62,63 +64,12 @@ describe('DBT graph workspace artifact publisher', () => {
 
     expect(result).toMatchObject({
       ok: false,
-      kind: 'replacement_confirmation_required',
-      requests: [{ path: 'models/second.sql' }],
+      kind: 'non_replaceable_conflict',
+      conflictPath: 'models/second.sql',
+      reason: 'unmarked',
     });
     expect(getFileContent).toHaveBeenCalledTimes(4);
     expect(publish).not.toHaveBeenCalled();
-  });
-
-  it('publishes pre-marker SQL atomically only after exact confirmation', async () => {
-    let currentSql = 'select 1 as legacy_graph_sql\n';
-    const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
-      async (request) => applied(request)
-    );
-    const getFileContent = vi.fn<IWorkspaceFilesQueryPort['getFileContent']>(async (path) =>
-      file(
-        path,
-        currentSql,
-        currentSql === 'select 1 as legacy_graph_sql\n' ? 'a'.repeat(64) : 'b'.repeat(64)
-      )
-    );
-    const args = {
-      artifacts: [{ path: 'models/orders.sql', language: 'sql' as const, content: NEXT_SQL }],
-      workspaceFilesQuery: { listFiles: vi.fn(), getFileContent },
-      publicationCommand: { publish },
-    };
-
-    const pending = await publishGraphDbtWorkspaceArtifacts(args);
-    expect(pending).toMatchObject({ ok: false, kind: 'replacement_confirmation_required' });
-    if (pending.ok || pending.kind !== 'replacement_confirmation_required') {
-      throw new Error('Expected graph SQL replacement confirmation.');
-    }
-
-    currentSql = 'select 2 as concurrent_external_edit\n';
-    const stale = await publishGraphDbtWorkspaceArtifacts({
-      ...args,
-      replacementAuthorizations: pending.requests,
-    });
-    expect(stale).toMatchObject({ ok: false, kind: 'replacement_confirmation_required' });
-    expect(publish).not.toHaveBeenCalled();
-
-    currentSql = 'select 1 as legacy_graph_sql\n';
-    const published = await publishGraphDbtWorkspaceArtifacts({
-      ...args,
-      replacementAuthorizations: pending.requests,
-    });
-    expect(published).toEqual({ ok: true, writtenArtifactPaths: ['models/orders.sql'] });
-    expect(publish).toHaveBeenCalledWith({
-      artifacts: [
-        {
-          path: 'models/orders.sql',
-          language: 'sql',
-          content: NEXT_SQL,
-          expectedRevision: { kind: 'content_sha256', value: 'a'.repeat(64) },
-          writeRequired: true,
-        },
-      ],
-      idempotencyKey: expect.stringMatching(/^graph-dbt:[a-f0-9]{64}$/u),
-    });
   });
 
   it('never offers replacement for a malformed managed marker', async () => {
@@ -126,6 +77,7 @@ describe('DBT graph workspace artifact publisher', () => {
     const malformed = `${FIRST_SQL.slice(0, 55)}${'0'.repeat(64)}\nselect tampered\n`;
 
     const result = await publishGraphDbtWorkspaceArtifacts({
+      canvasId: CANVAS_ID,
       artifacts: [{ path: 'models/orders.sql', language: 'sql', content: NEXT_SQL }],
       workspaceFilesQuery: {
         listFiles: vi.fn(),
@@ -138,6 +90,7 @@ describe('DBT graph workspace artifact publisher', () => {
       ok: false,
       kind: 'non_replaceable_conflict',
       conflictPath: 'models/orders.sql',
+      reason: 'invalid_marker',
     });
     expect(publish).not.toHaveBeenCalled();
   });
@@ -164,6 +117,7 @@ describe('DBT graph workspace artifact publisher', () => {
 
     await expect(
       publishGraphDbtWorkspaceArtifacts({
+        canvasId: CANVAS_ID,
         artifacts: [
           { path: 'dbt_project.yml', language: 'yaml', content: 'name: analytics\n' },
           { path: 'models/orders.sql', language: 'sql', content: NEXT_SQL },
@@ -195,6 +149,7 @@ describe('DBT graph workspace artifact publisher', () => {
     });
 
     const result = await publishGraphDbtWorkspaceArtifacts({
+      canvasId: CANVAS_ID,
       artifacts: [
         { path: 'dbt_project.yml', language: 'yaml', content: 'name: analytics\n' },
         { path: 'models/orders.sql', language: 'sql', content: NEXT_SQL },
@@ -210,6 +165,7 @@ describe('DBT graph workspace artifact publisher', () => {
     });
     expect(publish).toHaveBeenCalledTimes(1);
     expect(publish).toHaveBeenCalledWith({
+      canvasId: CANVAS_ID,
       artifacts: [
         {
           path: 'dbt_project.yml',
@@ -243,6 +199,7 @@ describe('DBT graph workspace artifact publisher', () => {
     );
 
     const result = await publishGraphDbtWorkspaceArtifacts({
+      canvasId: CANVAS_ID,
       artifacts: [
         { path: 'dbt_project.yml', language: 'yaml', content: 'name: analytics\n' },
         { path: 'models/orders.sql', language: 'sql', content: FIRST_SQL },
@@ -267,5 +224,74 @@ describe('DBT graph workspace artifact publisher', () => {
       true
     );
     expect(request.artifacts.every((artifact) => artifact.writeRequired)).toBe(true);
+  });
+
+  it('projects a server authority refusal without treating it as a file conflict', async () => {
+    const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
+      async () => ({
+        schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+        kind: 'authority_refused',
+        canvasId: CANVAS_ID,
+        reason: 'mixed_authority',
+      })
+    );
+
+    const result = await publishGraphDbtWorkspaceArtifacts({
+      canvasId: CANVAS_ID,
+      artifacts: [
+        { path: 'dbt_project.yml', language: 'yaml', content: 'name: analytics\n' },
+        { path: 'models/orders.sql', language: 'sql', content: FIRST_SQL },
+        { path: 'models/schema.yml', language: 'yaml', content: 'version: 2\n' },
+      ],
+      workspaceFilesQuery: {
+        listFiles: vi.fn(),
+        getFileContent: vi.fn(async (path) => {
+          throw new WorkspaceFileLoadError('not_found', path);
+        }),
+      },
+      publicationCommand: { publish },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      kind: 'authority_refused',
+      reason: 'mixed_authority',
+    });
+  });
+
+  it('preserves a server revision conflict as a concurrent-edit outcome', async () => {
+    const result = await publishGraphDbtWorkspaceArtifacts({
+      canvasId: CANVAS_ID,
+      artifacts: [
+        { path: 'dbt_project.yml', language: 'yaml', content: 'name: analytics\n' },
+        { path: 'models/orders.sql', language: 'sql', content: FIRST_SQL },
+        { path: 'models/schema.yml', language: 'yaml', content: 'version: 2\n' },
+      ],
+      workspaceFilesQuery: {
+        listFiles: vi.fn(),
+        getFileContent: vi.fn(async (path) => {
+          throw new WorkspaceFileLoadError('not_found', path);
+        }),
+      },
+      publicationCommand: {
+        publish: vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(async () => ({
+          schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+          kind: 'conflict',
+          conflicts: [
+            {
+              path: 'models/orders.sql',
+              currentContentSha256: 'f'.repeat(64),
+            },
+          ],
+        })),
+      },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      kind: 'non_replaceable_conflict',
+      conflictPath: 'models/orders.sql',
+      reason: 'revision_conflict',
+    });
   });
 });

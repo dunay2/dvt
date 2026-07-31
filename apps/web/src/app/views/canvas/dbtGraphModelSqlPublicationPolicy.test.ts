@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   classifyGraphModelSqlPublication,
-  createGraphManagedDbtModelSql,
+  createGraphDraftMarkedDbtModelSql,
 } from './dbtGraphModelSqlPublicationPolicy';
 
 const FIRST_GRAPH_SQL = "{{ config(materialized='view') }}\n\nselect 1 as order_id\n";
@@ -16,25 +16,25 @@ function currentFile(
 }
 
 describe('DBT graph model SQL publication policy', () => {
-  it('creates a deterministic self-verifying graph-managed representation', () => {
-    const managed = createGraphManagedDbtModelSql(FIRST_GRAPH_SQL);
+  it('creates a deterministic graph-draft divergence marker', () => {
+    const marked = createGraphDraftMarkedDbtModelSql(FIRST_GRAPH_SQL);
 
-    expect(managed).toMatch(/^-- dvt:graph-draft-content-sha256=[a-f0-9]{64}\n/);
-    expect(createGraphManagedDbtModelSql(FIRST_GRAPH_SQL)).toBe(managed);
-    expect(managed.endsWith(FIRST_GRAPH_SQL)).toBe(true);
+    expect(marked).toMatch(/^-- dvt:graph-draft-content-sha256=[a-f0-9]{64}\n/);
+    expect(createGraphDraftMarkedDbtModelSql(FIRST_GRAPH_SQL)).toBe(marked);
+    expect(marked.endsWith(FIRST_GRAPH_SQL)).toBe(true);
   });
 
-  it('classifies absent, unchanged, managed replacement, and legacy-equivalent files', () => {
-    const firstManaged = createGraphManagedDbtModelSql(FIRST_GRAPH_SQL);
-    const nextManaged = createGraphManagedDbtModelSql(NEXT_GRAPH_SQL);
+  it('classifies absent, unchanged, and marked replacement files', () => {
+    const firstMarked = createGraphDraftMarkedDbtModelSql(FIRST_GRAPH_SQL);
+    const nextMarked = createGraphDraftMarkedDbtModelSql(NEXT_GRAPH_SQL);
 
     expect(
-      classifyGraphModelSqlPublication({ proposedContent: firstManaged, currentFile: undefined })
+      classifyGraphModelSqlPublication({ proposedContent: firstMarked, currentFile: undefined })
     ).toMatchObject({ kind: 'create', expectedRevision: { kind: 'absent' } });
     expect(
       classifyGraphModelSqlPublication({
-        proposedContent: firstManaged,
-        currentFile: currentFile(firstManaged),
+        proposedContent: firstMarked,
+        currentFile: currentFile(firstMarked),
       })
     ).toMatchObject({
       kind: 'unchanged',
@@ -42,74 +42,38 @@ describe('DBT graph model SQL publication policy', () => {
     });
     expect(
       classifyGraphModelSqlPublication({
-        proposedContent: nextManaged,
-        currentFile: currentFile(firstManaged),
+        proposedContent: nextMarked,
+        currentFile: currentFile(firstMarked),
       })
-    ).toMatchObject({ kind: 'replace_managed' });
-    expect(
-      classifyGraphModelSqlPublication({
-        proposedContent: firstManaged,
-        currentFile: currentFile(FIRST_GRAPH_SQL),
-      })
-    ).toMatchObject({ kind: 'adopt_legacy_equivalent' });
+    ).toMatchObject({ kind: 'replace_marked' });
   });
 
-  it('rejects unmarked edits and tampered graph-managed payloads', () => {
-    const managed = createGraphManagedDbtModelSql(FIRST_GRAPH_SQL);
-    const tampered = managed.replace('select 1', 'select 999');
+  it('never adopts an unmarked file even when its payload matches exactly', () => {
+    const proposedContent = createGraphDraftMarkedDbtModelSql(FIRST_GRAPH_SQL);
 
     expect(
       classifyGraphModelSqlPublication({
-        proposedContent: managed,
+        proposedContent,
+        currentFile: currentFile(FIRST_GRAPH_SQL),
+      })
+    ).toEqual({ kind: 'conflict', reason: 'unmarked' });
+  });
+
+  it('rejects unmarked edits and tampered graph-draft marker payloads', () => {
+    const marked = createGraphDraftMarkedDbtModelSql(FIRST_GRAPH_SQL);
+    const tampered = marked.replace('select 1', 'select 999');
+
+    expect(
+      classifyGraphModelSqlPublication({
+        proposedContent: marked,
         currentFile: currentFile('select customer_secret from external_edit'),
       })
     ).toMatchObject({ kind: 'conflict', reason: 'unmarked' });
     expect(
       classifyGraphModelSqlPublication({
-        proposedContent: managed,
+        proposedContent: marked,
         currentFile: currentFile(tampered),
       })
-    ).toMatchObject({ kind: 'conflict', reason: 'invalid_managed' });
-  });
-
-  it('replaces divergent pre-marker SQL only with an exact one-use authorization', () => {
-    const proposedContent = createGraphManagedDbtModelSql(NEXT_GRAPH_SQL);
-    const current = currentFile(FIRST_GRAPH_SQL);
-    const pending = classifyGraphModelSqlPublication({ proposedContent, currentFile: current });
-
-    expect(pending).toMatchObject({
-      kind: 'conflict',
-      reason: 'unmarked',
-      replacementAuthorization: {
-        observedContentSha256: current.contentSha256,
-      },
-    });
-    if (pending.kind !== 'conflict' || pending.reason !== 'unmarked') {
-      throw new Error('Expected an unmarked SQL replacement request.');
-    }
-
-    expect(
-      classifyGraphModelSqlPublication({
-        proposedContent,
-        currentFile: current,
-        replacementAuthorization: pending.replacementAuthorization,
-      })
-    ).toMatchObject({ kind: 'replace_legacy_authorized' });
-
-    expect(
-      classifyGraphModelSqlPublication({
-        proposedContent: createGraphManagedDbtModelSql(`${NEXT_GRAPH_SQL}-- changed\n`),
-        currentFile: current,
-        replacementAuthorization: pending.replacementAuthorization,
-      })
-    ).toMatchObject({ kind: 'conflict', reason: 'unmarked' });
-
-    expect(
-      classifyGraphModelSqlPublication({
-        proposedContent,
-        currentFile: currentFile(FIRST_GRAPH_SQL, 'b'.repeat(64)),
-        replacementAuthorization: pending.replacementAuthorization,
-      })
-    ).toMatchObject({ kind: 'conflict', reason: 'unmarked' });
+    ).toMatchObject({ kind: 'conflict', reason: 'invalid_marker' });
   });
 });

@@ -7,7 +7,7 @@ import {
   type DbtModelArtifactProjection,
   type DbtModelArtifactSource,
 } from './canvasDbtModelArtifactProjection';
-import { createGraphManagedDbtModelSql } from './dbtGraphModelSqlPublicationPolicy';
+import { createGraphDraftMarkedDbtModelSql } from './dbtGraphModelSqlPublicationPolicy';
 
 export type DbtWorkspaceArtifact = Readonly<{
   path: string;
@@ -149,7 +149,7 @@ export function buildDbtWorkspaceArtifacts(args: {
       .sort((a, b) => a.artifact.name.localeCompare(b.artifact.name))
       .map((model) => ({
         path: model.artifact.path,
-        content: createGraphManagedDbtModelSql(model.artifact.content),
+        content: createGraphDraftMarkedDbtModelSql(model.artifact.content),
         language: 'sql' as const,
       })),
     {
