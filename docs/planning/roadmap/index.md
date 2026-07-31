@@ -32,8 +32,7 @@ Concept anchors for this page:
 - Current planning hub: [Planning Control Tower](../state/planning-control-tower.md)
 - Current planning status:
   [Governance Document And Rule Inventory](../status/governance-document-rule-inventory.md)
-- Current execution tracking:
-  [Execution Workboard](../state/execution-workboard.md)
+- Current MVP execution tracking: GitHub Issues and pull requests
 
 ## Document Classification
 
@@ -140,11 +139,6 @@ Use these surfaces for domain-first planning navigation and updated diagrams:
 - [Planning Control Tower](../state/planning-control-tower.md)
 - [Planning Domains](../domains/index.md)
 - [Planning State](../state/index.md)
-- [Agent Lane A YAML](../state/agent-lane-a.yaml)
-- [Agent Lane B YAML](../state/agent-lane-b.yaml)
-- [Agent Lane C YAML](../state/agent-lane-c.yaml)
-- [Agent Lane D YAML](../state/agent-lane-d.yaml)
-- [Agent Lane E YAML](../state/agent-lane-e.yaml)
 - [Planning Roadmap Diagrams](./diagrams/index.md)
 - [Planning Domain Map](./diagrams/planning-domain-map.md)
 

@@ -20,7 +20,6 @@ Operational runbooks for incidents, recovery, and maintenance.
 - [Gap 5 Archive Operations Runbook](gap-5-archive-operations-runbook-20260319.md)
 - [Governed Changed Slice Closeout](governed-changed-slice-closeout-20260506.md)
 - [Outbox Worker Runbook](outbox-worker-g5.md)
-- [Planning Generated Artifacts Operations](planning-generated-artifacts-operations-20260403.md)
 - [Read-Your-Writes Freshness SLO](read-your-writes-freshness-slo-20260330.md)
 - [Temporal PlanRef Drained Cutover Runbook](temporal-planref-drained-cutover-20260427.md)
 - [Temporal Postgres Proof Environment](temporal-postgres-proof-environment.md)

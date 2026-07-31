@@ -346,43 +346,25 @@ pnpm governance:refresh
 
 Run it near final closeout, after the content/code slice is materially done and
 before `pnpm ci:docs` or `pnpm verify:prepush`. The command owns the final
-quadrature for docs indexes, workboard views, docs manifests,
-`system-governance-*` indexes, fingerprints, coverage, remediation outputs, and
-planning/governance query-store import/checks.
+quadrature for docs indexes, docs manifests, `system-governance-*` indexes,
+fingerprints, coverage, remediation outputs, and governance query-store
+import/checks.
 
 `pnpm governance:refresh` is not a replacement for `pnpm verify:prepush`; it is
 the canonical refresh sequence that makes the later gates meaningful.
 
 ## Planning State Rule
 
-Agent task assignments, claims, releases, status changes, progress, evidence
-refs, task creation, and task deletion live in the local planning DB command
-and query rails.
+MVP task creation, assignment, priority, status, blockers, acceptance, and
+closure live in GitHub Issues. Pull requests carry implementation review and
+merge state.
 
-The `docs/planning/state/agent-lane-*.yaml` files remain bootstrap, export, and
-recovery snapshots for Git review. They are not the daily operational write
-surface for task lifecycle changes.
+Planning DB remains canonical for architecture components, capabilities,
+relations, ownership, command/query rails, feature mechanization, and governed
+evidence. Do not create local task rows, `agent-lane-*` files, workboards,
+open-task routes, or DB-to-GitHub task projections.
 
-- `execution-workboard.md` and `open-task-route.md` are **generated views** — never edit them directly.
-- To add or update a task, use `pnpm planning:db:operate`.
-- To inspect active or next work, use `pnpm planning:db:query open`,
-  `pnpm planning:db:query tasks`, `pnpm planning:db:query next`, or
-  `pnpm planning:db:query focus`.
-- For bootstrap/export snapshot refresh only, run
-  `pnpm planning:db:import -- --if-stale --planning-only`, then
-  `pnpm docs:workboard:generate`.
-
-Lane ownership:
-
-| Lane | File                | Scope                                                 |
-| ---- | ------------------- | ----------------------------------------------------- |
-| A    | `agent-lane-a.yaml` | Contracts, state-store boundaries, DDD modularization |
-| B    | `agent-lane-b.yaml` | Event contracts, traceability, lineage                |
-| C    | `agent-lane-c.yaml` | Runtime safety, admission control, RBAC               |
-| D    | `agent-lane-d.yaml` | Scale, retention, GTM                                 |
-| E    | `agent-lane-e.yaml` | Frontend and UI - shell, API integration, core flow   |
-
-See `docs/planning/state/how-to-add-tasks.md` for the full task format.
+See `docs/planning/state/github-mvp-issue-workflow.md` for the delivery flow.
 
 ## Canonical Governance Entry Point
 
