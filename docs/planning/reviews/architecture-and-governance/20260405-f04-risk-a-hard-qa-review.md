@@ -42,8 +42,8 @@ plus regression evidence.
 - `AGENTS.md`
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+- `docs/planning/templates/qa/qa-global-check-prompt.md`
+- `docs/planning/templates/qa/qa-artifact-example-template.md`
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`
 

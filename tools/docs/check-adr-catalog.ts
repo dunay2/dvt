@@ -100,11 +100,11 @@ function main(): void {
   }
 
   // ── Load index ──────────────────────────────────────────────────────────
-  const candidatePaths = [join(ADR_DIR, 'index.md'), join(ADR_DIR, 'ADR-Index.md')];
+  const candidatePaths = [join(ADR_DIR, 'index.md'), join(ADR_DIR, 'adr-catalog.md')];
   const indexPath = candidatePaths.find(existsSync) ?? null;
 
   if (!indexPath) {
-    report.error(ADR_DIR, 'No index file found', 'Expected docs/adr/index.md or ADR-Index.md');
+    report.error(ADR_DIR, 'No index file found', 'Expected docs/adr/index.md or adr-catalog.md');
     report.print();
     process.exit(report.exitCode);
   }

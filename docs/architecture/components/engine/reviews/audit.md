@@ -1,4 +1,4 @@
-﻿# QA REVIEW â€” SLICE S19-F1
+# QA REVIEW â€” SLICE S19-F1
 
 ---
 
@@ -18,7 +18,7 @@
 
 - Description: No se encontrÃ³ evidencia de tests negativos implementados para los escenarios crÃ­ticos descritos en la matriz de tests.
 - Evidence:
-  - docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md (matriz de tests solo declarativa, sin referencias a archivos de test ni resultados)
+  - docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md (matriz de tests solo declarativa, sin referencias a archivos de test ni resultados)
   - NO EVIDENCE FOUND de archivos de test, funciones o resultados para: cross-tenant, out-of-order, head missing, fallo de tx, batch size 0
 - Broken Principle: CQRS, DDD, ADR
 - Impact: Reversiones silenciosas, falsos "fresh", regresiÃ³n no detectable
@@ -39,7 +39,7 @@ QA Response:
 
 - Description: No se encontrÃ³ evidencia de enforcement que impida que adapters o infraestructura muten directamente la tabla run_event_heads sin pasar por el dominio/event sourcing.
 - Evidence:
-  - docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md (regla declarada, pero sin referencia a enforcement en cÃ³digo ni tests)
+  - docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md (regla declarada, pero sin referencia a enforcement en cÃ³digo ni tests)
   - NO EVIDENCE FOUND de contratos, interfaces o tests que bloqueen bypass
 - Broken Principle: Event Sourcing, Hexagonal
 - Impact: Estado inconsistente, corrupciÃ³n de proyecciÃ³n
@@ -60,7 +60,7 @@ QA Response:
 
 - Description: No se encontrÃ³ evidencia de que los jobs de migraciÃ³n y reconciliaciÃ³n estÃ©n ligados a contratos versionados o bounded context explÃ­cito.
 - Evidence:
-  - docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md (plan de migraciÃ³n solo narrativo)
+  - docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md (plan de migraciÃ³n solo narrativo)
   - NO EVIDENCE FOUND de contratos, interfaces o versionado en jobs
 - Broken Principle: ADR, DDD
 - Impact: Migraciones futuras pueden romper consistencia
@@ -83,7 +83,7 @@ QA Response:
 
 - Description: LÃ³gica de reconciliaciÃ³n y migraciÃ³n puede operar fuera del dominio si se implementa en adapters/infra sin contrato.
 - Evidence:
-  - docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md (plan de migraciÃ³n y reconciliaciÃ³n sin referencia a contratos de dominio)
+  - docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md (plan de migraciÃ³n y reconciliaciÃ³n sin referencia a contratos de dominio)
 - Impact: ViolaciÃ³n de lÃ­mites, riesgo de corrupciÃ³n de estado
 
 ---
@@ -94,7 +94,7 @@ QA Response:
 
 - Description: No existe referencia a un servicio de dominio explÃ­cito para la gestiÃ³n de heads; riesgo de duplicaciÃ³n de lÃ³gica en adapters.
 - Evidence:
-  - docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md (no se menciona servicio de dominio, solo upsert SQL)
+  - docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md (no se menciona servicio de dominio, solo upsert SQL)
 - Impact: LÃ³gica anÃ©mica, duplicaciÃ³n, mantenimiento difÃ­cil
 
 ---
@@ -105,7 +105,7 @@ QA Response:
 
 - Risk: Estado stale/fresh incorrecto si falla el dual-write
 - Evidence:
-  - docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md (regla declarada, sin evidencia de enforcement ni test)
+  - docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md (regla declarada, sin evidencia de enforcement ni test)
 - Root Cause: Falta de enforcement transaccional comprobable
 - Impact: CorrupciÃ³n de estado, bugs difÃ­ciles de detectar
 - Mitigation: NO EVIDENCE FOUND
@@ -127,7 +127,7 @@ QA Response:
 
 - Finding: No se encontrÃ³ evidencia de tests negativos, validaciÃ³n de idempotencia ni cobertura de fallos silenciosos.
 - Evidence:
-  - docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md (matriz de tests solo declarativa)
+  - docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md (matriz de tests solo declarativa)
   - NO EVIDENCE FOUND de archivos de test, funciones o resultados
 - Missing:
   - Unit: NO EVIDENCE FOUND
@@ -172,7 +172,7 @@ Status:
 - Expected: Event log es source of truth, runSeq monotÃ³nico
 - Observed: Heads derivados, enforcement no evidenciado
 - Evidence:
-  - docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md
+  - docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md
   - NO EVIDENCE FOUND de enforcement en cÃ³digo/tests
 - Status: PARTIAL
 
@@ -181,7 +181,7 @@ Status:
 - Expected: Aislamiento tenant en adapters
 - Observed: Declarado, no testeado
 - Evidence:
-  - docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md
+  - docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md
   - NO EVIDENCE FOUND de tests cross-tenant
 - Status: PARTIAL
 
@@ -190,7 +190,7 @@ Status:
 - Expected: Snapshots son cache, no source
 - Observed: Mantenido
 - Evidence:
-  - docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md
+  - docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md
 - Status: OK
 
 ---
@@ -198,7 +198,7 @@ Status:
 ## 9. Principles Validation
 
 - DDD: `Parcial`
-  Evidence: `docs/architecture/components/engine/reviews/refactor-listStaleSnapshotRunsSql.md` (fuga en migracion)
+  Evidence: `docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md` (fuga en migracion)
 - SOLID: `Parcial`
   Evidence: Falta de asignacion clara de responsabilidad (`NO EVIDENCE FOUND`)
 - CQRS: `Parcial`

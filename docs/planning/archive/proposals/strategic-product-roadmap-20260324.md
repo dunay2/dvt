@@ -1,4 +1,4 @@
-﻿---
+---
 title: Strategic Product Roadmap - DVT+ (2026-2027)
 status: Archived
 owner: Architecture / Product
@@ -539,6 +539,6 @@ The following areas are explicitly frozen pending stated blockers:
 
 - Principal Architect Review: `docs/reviews/DVT+_Architectural_Review_20260324.md`
 - System Delivery Status: `docs/architecture/system-delivery-status.md`
-- ADR Index: `docs/adr/ADR-Index.md`
+- ADR Index: `docs/adr/adr-catalog.md`
 - Phase 2 open slices: S02, S03, S04, S05, S07, S08, S11
 - Gap tracking: `docs/planning/gaps/GAP_EXECUTION_PLANS.md`

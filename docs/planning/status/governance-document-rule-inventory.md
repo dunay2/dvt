@@ -105,8 +105,8 @@ full catalog.
 The ADR catalog is the primary decision register:
 
 - [ADR landing page](../../adr/index.md)
-- [ADR full index](../../adr/ADR-Index.md)
-- [ADR implementation status](../../adr/ADR-Implementation-Status.md)
+- [ADR full index](../../adr/adr-catalog.md)
+- [ADR implementation status](../../adr/adr-implementation-status.md)
 
 Usage rules already declared in the ADR index:
 

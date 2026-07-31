@@ -186,7 +186,7 @@ DVT-owned behavior, and remove the old `PostgresPrincipalAccessRepository` plus
   module architecture tests.
 - Updated active ADR/API/planning surfaces to reflect the embedded-first
   boundary.
-- Left `docs/adr/ADR-Index.md` untouched in the final diff because
+- Left `docs/adr/adr-catalog.md` untouched in the final diff because
   `docs:gov:filenames:changed` blocks changed non-kebab-case markdown files.
   ADR navigation is instead updated through generated `docs/adr/index.md`.
 
@@ -214,7 +214,7 @@ DVT-owned behavior, and remove the old `PostgresPrincipalAccessRepository` plus
 - `pnpm docs:status:generate`
   - passed and regenerated `docs/planning/status/generated-code-state.md`
 - `pnpm verify:prepush`
-  - first run failed because `docs/adr/ADR-Index.md` is a changed non-kebab-case
+  - first run failed because `docs/adr/adr-catalog.md` is a changed non-kebab-case
     markdown file
   - final run passed after removing that delta and keeping ADR navigation on the
     generated kebab-safe surfaces

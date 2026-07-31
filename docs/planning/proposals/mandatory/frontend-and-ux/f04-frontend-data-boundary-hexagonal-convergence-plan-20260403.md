@@ -26,7 +26,7 @@ the backend's hexagonal principles already established in the engine subsystem.
   code-style baseline
 - `docs/planning/proposals/frontend-f04-scope-and-slicing-20260404.md` — F-04
   scope and slicing reference
-- `docs/planning/templates/qa/TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md` — QA quality
+- `docs/planning/templates/qa/qa-global-check-prompt.md` — QA quality
   bar
 
 ## As-is findings
@@ -453,9 +453,9 @@ one is created. Task structure:
 
 Reference templates:
 
-- `docs/planning/templates/qa/TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+- `docs/planning/templates/qa/qa-global-check-prompt.md`
+- `docs/planning/templates/qa/qa-current-task-check-prompt.md`
+- `docs/planning/templates/qa/qa-artifact-example-template.md`
 
 ### Minimum quality bar per wave
 
@@ -534,7 +534,7 @@ prompt. Reviewers MUST produce findings ordered by severity across:
 ### Wave closeout artifact requirements
 
 Each wave closeout MUST produce a reusable Markdown artifact following
-`TEMPLATE_QA_ARTIFACT_EXAMPLE.md` as the baseline output shape. The artifact
+`qa-artifact-example-template.md` as the baseline output shape. The artifact
 MUST include:
 
 - **Findings** ordered by severity (Blocker / High / Medium / Low)

@@ -29,7 +29,7 @@ multi-canvas host model explicit in code, tests, and documentation.
 - [Governance Document And Rule Inventory](../../status/governance-document-rule-inventory.md)
 - [AI Work Protocol](../../../guides/ai-work-protocol.md)
 - [Review Naming Policy](../review-naming-policy.md)
-- [QA Artifact Example Template](../../templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md)
+- [QA Artifact Example Template](../../templates/qa/qa-artifact-example-template.md)
 - [Graph Frontend Architecture](../../../architecture/components/web/graph/graph-frontend-architecture.md)
 - [Canvas Inspector Authoring Component](../../../architecture/components/web/graph/canvas-inspector-authoring-component.md)
 - [Canvas Playground Host Component](../../../architecture/components/web/graph/canvas-playground-host-component.md)

@@ -60,7 +60,7 @@ Debt handling for this review:
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/reviews/review-status-board.md`
 - `docs/planning/reviews/review-naming-policy.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+- `docs/planning/templates/qa/qa-artifact-example-template.md`
 - `docs/adr/ADR-0004-event-sourcing-strategy.md`
 - `docs/adr/ADR-0015-getRunStatus-read-model-separation.md`
 - `docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md`

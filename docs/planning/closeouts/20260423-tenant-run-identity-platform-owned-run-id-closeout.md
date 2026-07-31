@@ -148,7 +148,7 @@ The web start-run boundary now sends only:
   - `apps/web/src/app/views/canvas/useCanvasController.test.serviceDefaults.ts`
 - Governed docs:
   - `docs/adr/adr-0050-platform-owned-start-run-identity.md`
-  - `docs/adr/ADR-Index.md`
+  - `docs/adr/adr-catalog.md`
   - `docs/architecture/components/web/runs/frontend-backend-mvp-contract.md`
   - `docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md`
   - `docs/architecture/components/web/runs/start-run-client-identity-boundary.md`
