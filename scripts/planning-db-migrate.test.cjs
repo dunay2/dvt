@@ -7219,6 +7219,9 @@ test('tracked migrations include DB-first surface inventory command rail tables'
     /migration_state <> 'DB-first'\s+or write_rail_kind = 'db_command'/s
   );
   assert.match(surfaceInventoryMigration.sql, /Architecture design authority/);
+  assert.doesNotMatch(surfaceInventoryMigration.sql, /Planning task lifecycle/);
+  assert.doesNotMatch(surfaceInventoryMigration.sql, /Planning lane registry/);
+  assert.doesNotMatch(surfaceInventoryMigration.sql, /Workboard and open task route/);
 });
 
 test('tracked migrations repair component definition surface inventory to DB-first', () => {

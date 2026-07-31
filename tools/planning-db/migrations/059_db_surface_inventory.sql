@@ -66,51 +66,6 @@ insert into planning_query_store.db_governance_surfaces (
 )
 values
   (
-    'Planning task lifecycle',
-    'planning_query_store effective task rows with DB local definitions and overlays',
-    'pnpm planning:db:operate task <claim|release|update|create|delete>',
-    'db_command',
-    'pnpm planning:db:query tasks|next|open|focus|real-work',
-    'docs/planning/state/execution-workboard.md and docs/planning/state/open-task-route.md',
-    'pnpm planning:db:check; pnpm planning:db:export:check; pnpm docs:workboard:check',
-    'DB-first',
-    'tools/planning-db/migrations/059_db_surface_inventory.sql',
-    repeat('0', 64),
-    0,
-    'migration',
-    '{"authority":"db"}'::jsonb
-  ),
-  (
-    'Planning lane registry',
-    'planning_query_store lane rows plus lane YAML bootstrap/export snapshots',
-    'pnpm planning:db:import -- --if-stale --planning-only',
-    'bootstrap_export',
-    'pnpm planning:db:query summary; pnpm planning:db:query tasks --lane <id>',
-    'DB lane rows and exported lane YAML',
-    'pnpm planning:db:check; pnpm planning:db:export:check',
-    'Bootstrap/export',
-    'tools/planning-db/migrations/059_db_surface_inventory.sql',
-    repeat('0', 64),
-    0,
-    'migration',
-    '{"authority":"bootstrap_export"}'::jsonb
-  ),
-  (
-    'Workboard and open task route',
-    'DB effective planning views generated from planning query store rows',
-    'No direct write rail; use planning task lifecycle or lane registry rails',
-    'generated',
-    'pnpm planning:db:query next',
-    'docs/planning/state/execution-workboard.md and docs/planning/state/open-task-route.md',
-    'pnpm docs:workboard:check; pnpm planning:db:export:check',
-    'Generated-only',
-    'tools/planning-db/migrations/059_db_surface_inventory.sql',
-    repeat('0', 64),
-    0,
-    'migration',
-    '{"authority":"generated"}'::jsonb
-  ),
-  (
     'Governance file inventory',
     'Git tracked docs and source files imported into governance DB tables',
     'Git edit followed by pnpm governance:refresh or pnpm governance:db:import',
