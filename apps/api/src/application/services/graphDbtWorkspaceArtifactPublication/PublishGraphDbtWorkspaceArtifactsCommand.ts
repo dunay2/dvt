@@ -30,22 +30,29 @@ export class PublishGraphDbtWorkspaceArtifactsCommand implements IPublishGraphDb
   public async execute(
     input: Parameters<IPublishGraphDbtWorkspaceArtifactsCommand['execute']>[0]
   ): ReturnType<IPublishGraphDbtWorkspaceArtifactsCommand['execute']> {
-    const authorityDecision = await this.authorityPolicy.authorizeGraphArtifactPublication(
+    const publication = await this.authorityPolicy.runAuthorizedGraphArtifactPublication(
       {
         ...input.scope,
         canvasId: input.canvasId,
       },
-      '.'
+      '.',
+      async () => this.publishAuthorized(input)
     );
-    if (authorityDecision.kind === 'refused') {
+    if (publication.kind === 'refused') {
       return GraphDbtWorkspaceArtifactPublicationResultSchema.parse({
         schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
         kind: 'authority_refused',
         canvasId: input.canvasId,
-        reason: authorityDecision.reason,
+        reason: publication.reason,
       });
     }
 
+    return publication.value;
+  }
+
+  private async publishAuthorized(
+    input: Parameters<IPublishGraphDbtWorkspaceArtifactsCommand['execute']>[0]
+  ): ReturnType<IPublishGraphDbtWorkspaceArtifactsCommand['execute']> {
     const observedArtifacts = await Promise.all(
       input.artifacts.map(async (proposed): Promise<ObservedArtifact> => ({
         proposed,

@@ -35,6 +35,13 @@ export type GraphArtifactPublicationAuthorityDecision =
       reason: GraphDbtWorkspaceArtifactPublicationAuthorityRefused['reason'];
     }>;
 
+export type GraphArtifactPublicationExecution<T> =
+  | Readonly<{ kind: 'executed'; value: T }>
+  | Readonly<{
+      kind: 'refused';
+      reason: GraphDbtWorkspaceArtifactPublicationAuthorityRefused['reason'];
+    }>;
+
 export class CanvasAuthoringAuthorityPolicy {
   public constructor(
     private readonly store: ICanvasAuthoringAuthorityStore,
@@ -87,6 +94,22 @@ export class CanvasAuthoringAuthorityPolicy {
     return rootOwner
       ? { kind: 'refused', reason: 'dbt_project_files_authority' }
       : { kind: 'allowed', binding: resolution.binding };
+  }
+
+  public async runAuthorizedGraphArtifactPublication<T>(
+    key: CanvasAuthoringAuthorityKey,
+    projectRoot: string,
+    operation: () => Promise<T>
+  ): Promise<GraphArtifactPublicationExecution<T>> {
+    return this.store.withGraphArtifactPublicationLock({ key, projectRoot }, async () => {
+      const decision = await this.authorizeGraphArtifactPublication(key, projectRoot);
+      return decision.kind === 'refused'
+        ? decision
+        : {
+            kind: 'executed',
+            value: await operation(),
+          };
+    });
   }
 
   private async resolveAuthorityFacts(

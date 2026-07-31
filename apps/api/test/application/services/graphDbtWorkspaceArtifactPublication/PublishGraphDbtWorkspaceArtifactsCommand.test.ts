@@ -49,7 +49,14 @@ const REQUEST: PublishGraphDbtWorkspaceArtifactsRequest = {
 function authorityPolicy(
   authorizeGraphArtifactPublication: CanvasAuthoringAuthorityPolicy['authorizeGraphArtifactPublication']
 ): CanvasAuthoringAuthorityPolicy {
-  return { authorizeGraphArtifactPublication } as CanvasAuthoringAuthorityPolicy;
+  return {
+    runAuthorizedGraphArtifactPublication: vi.fn(async (key, projectRoot, operation) => {
+      const decision = await authorizeGraphArtifactPublication(key, projectRoot);
+      return decision.kind === 'refused'
+        ? decision
+        : { kind: 'executed', value: await operation() };
+    }),
+  } as unknown as CanvasAuthoringAuthorityPolicy;
 }
 
 function allowedAuthorityPolicy(): CanvasAuthoringAuthorityPolicy {

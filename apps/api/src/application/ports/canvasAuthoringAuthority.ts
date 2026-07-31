@@ -38,6 +38,13 @@ export interface ICanvasAuthoringAuthorityStore {
     scope: WorkspaceGraphDraftScope,
     projectRoot: string
   ): Promise<CanvasAuthoringAuthorityStoredRecord | null>;
+  withGraphArtifactPublicationLock<T>(
+    input: {
+      readonly key: CanvasAuthoringAuthorityKey;
+      readonly projectRoot: string;
+    },
+    operation: () => Promise<T>
+  ): Promise<T>;
   bind(input: {
     readonly key: CanvasAuthoringAuthorityKey;
     readonly binding: CanvasAuthoringAuthorityBinding;

@@ -30,6 +30,7 @@ function storeWithRead(
     close: vi.fn(),
     read,
     readFileAuthorityByProjectRoot,
+    withGraphArtifactPublicationLock: vi.fn(async (_input, operation) => operation()),
     bind: vi.fn(),
     release: vi.fn(),
   };
@@ -200,6 +201,27 @@ describe('CanvasAuthoringAuthorityPolicy', () => {
       kind: 'refused',
       reason: 'mixed_authority',
     });
+  });
+
+  it('holds the authority boundary for the complete authorized publication', async () => {
+    const publicationLock = vi.fn();
+    const store = storeWithRead(vi.fn().mockResolvedValue(null));
+    store.withGraphArtifactPublicationLock = async (input, operation) => {
+      publicationLock(input, operation);
+      return operation();
+    };
+    const policy = new CanvasAuthoringAuthorityPolicy(store, draftStoreWithCanvas(true));
+
+    await expect(
+      policy.runAuthorizedGraphArtifactPublication(KEY, '.', async () => 'published')
+    ).resolves.toEqual({
+      kind: 'executed',
+      value: 'published',
+    });
+    expect(publicationLock).toHaveBeenCalledWith(
+      { key: KEY, projectRoot: '.' },
+      expect.any(Function)
+    );
   });
 
   it('fails closed when persistence cannot resolve authority', async () => {

@@ -135,7 +135,12 @@ export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAu
     const client = await this.config.pool.connect();
     try {
       await client.query('BEGIN');
-      await this.lockKey(client, input.key);
+      await this.lockResources(client, [
+        serializeCanvasAuthoringAuthorityKey(input.key),
+        ...(binding.authority.kind === 'dbt-project-files'
+          ? [serializeProjectRootAuthorityKey(input.key, binding.authority.projectRoot)]
+          : []),
+      ]);
 
       const idempotency = await this.readIdempotency(client, input.key, input.idempotencyKey);
       if (idempotency) {
@@ -224,7 +229,7 @@ export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAu
     const client = await this.config.pool.connect();
     try {
       await client.query('BEGIN');
-      await this.lockKey(client, input.key);
+      await this.lockResources(client, [serializeCanvasAuthoringAuthorityKey(input.key)]);
       const idempotency = await this.readIdempotency(client, input.key, input.idempotencyKey);
       if (!idempotency) {
         await client.query('ROLLBACK');
@@ -267,13 +272,42 @@ export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAu
     }
   }
 
-  private async lockKey(client: PoolClient, key: CanvasAuthoringAuthorityKey): Promise<void> {
-    await client.query(
-      withTimeout(this.config.queryTimeoutMs, {
-        text: 'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
-        values: [serializeCanvasAuthoringAuthorityKey(key)],
-      })
-    );
+  public async withGraphArtifactPublicationLock<T>(
+    input: {
+      readonly key: CanvasAuthoringAuthorityKey;
+      readonly projectRoot: string;
+    },
+    operation: () => Promise<T>
+  ): Promise<T> {
+    const client = await this.config.pool.connect();
+    try {
+      await client.query('BEGIN');
+      await this.lockResources(client, [
+        serializeCanvasAuthoringAuthorityKey(input.key),
+        serializeProjectRootAuthorityKey(input.key, input.projectRoot),
+      ]);
+      const result = await operation();
+      await client.query('COMMIT');
+      return result;
+    } catch (error) {
+      await rollbackPreservingError(client);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  private async lockResources(client: PoolClient, resources: readonly string[]): Promise<void> {
+    for (const resource of [...new Set(resources)].sort((left, right) =>
+      left.localeCompare(right)
+    )) {
+      await client.query(
+        withTimeout(this.config.queryTimeoutMs, {
+          text: 'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
+          values: [resource],
+        })
+      );
+    }
   }
 
   private async isCanvasOccupiedByGraphDraft(
@@ -344,6 +378,19 @@ export class PostgresCanvasAuthoringAuthorityStore implements ICanvasAuthoringAu
 
 function keyValues(key: CanvasAuthoringAuthorityKey): string[] {
   return [key.tenantId, key.projectId, key.environmentId, key.canvasId];
+}
+
+function serializeProjectRootAuthorityKey(
+  scope: Pick<CanvasAuthoringAuthorityKey, 'tenantId' | 'projectId' | 'environmentId'>,
+  projectRoot: string
+): string {
+  return [
+    'dbt-project-root',
+    scope.tenantId,
+    scope.projectId,
+    scope.environmentId,
+    projectRoot,
+  ].join('\u001f');
 }
 
 function mapAuthorityRow(row: AuthorityRow): CanvasAuthoringAuthorityStoredRecord {
