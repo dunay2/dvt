@@ -655,7 +655,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-migrate.cjs",
-      "sourceContentSha256": "137c9144525bbfcd507f1fefad4cd43a3cbdb09512ed63c8de91919f282c293a",
+      "sourceContentSha256": "68ee7163dba6718ed64f6ef0657fd4480638c51d7ec55315836f4311e67da4fd",
       "rawRail": {
         "name": "EnforcePlanningDbSchemaOnlyMigrations",
         "type": "query",
@@ -838,7 +838,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-import.cjs",
-      "sourceContentSha256": "dad16014521837417313c1729a174302ac65ead6df93b97b30a5217af9339dac",
+      "sourceContentSha256": "985afddaebe7efe622e8f2635ed8360f40e7606bc7d85de58fabe2965ce95d6b",
       "rawRail": {
         "name": "PreserveLocalFeatureMechanizationRails",
         "type": "command",
