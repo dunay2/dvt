@@ -15,7 +15,9 @@ code_refs:
   - apps/api/src/application/services/canvasAuthoringAuthorityPolicy.ts
   - apps/api/src/application/services/getWorkspaceGraphDraftUseCase.ts
   - apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts
+  - apps/api/src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.ts
   - apps/web/src/app/views/canvas/canvasDraftReadModel.ts
+  - apps/web/src/app/views/canvas/canvasDraftRepository.ts
   - apps/web/src/app/views/canvas/dbtGraphModelSqlPublicationPolicy.ts
   - apps/web/src/app/views/canvas/dbtGraphWorkspaceArtifactPublisher.ts
 evidence:
@@ -48,8 +50,12 @@ separate file-backed surface and cannot become graph authority implicitly.
   grant authority or authorize replacement of external SQL.
 - The API re-reads current files and validates marker ownership before applying
   the existing atomic compare-and-swap publication command.
+- Canvas identity and dbt project root authority remain locked from server-side
+  authorization through the complete compare-and-swap publication.
 - Web planning, preview, run, and code-edit posture consume the canonical
   authority instead of reconstructing it from route state.
+- Web confirms a successful save by re-reading the canonical draft revision and
+  authority before updating its query cache.
 
 # Failure semantics
 

@@ -24,6 +24,9 @@ mitigations:
   - 'Treat graph-managed SQL markers as divergence evidence only, never as authority grants.'
   - 'Re-read current files and validate marker ownership server-side before the atomic
     compare-and-swap publication.'
+  - 'Serialize Canvas identity and dbt project root authority from authorization through the
+    complete artifact publication.'
+  - 'Re-read the canonical draft authority after save before replacing the Web query cache.'
   - 'Gate Web code editing, planning, preview, and run posture on the canonical authority.'
   - 'Cover successful resolution, every refusal mode, marker integrity, revision conflict, and
     zero-mutation failure behavior with contract, API, and Web tests.'
