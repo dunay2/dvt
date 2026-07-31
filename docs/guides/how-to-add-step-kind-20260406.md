@@ -46,9 +46,9 @@ or a new plan compile profile, also follow
    - If lineage is required, add mapping/parsing for the new artifact kind.
    - Keep compatibility behavior explicit when supporting legacy payload shapes.
 7. Documentation and planning:
-   - Update lane status in `docs/planning/state/agent-lane-a.yaml`.
+   - Update acceptance and evidence in the governing GitHub issue.
    - Add a closeout file under `docs/planning/closeouts/`.
-   - Run `pnpm docs:workboard:generate` and `pnpm docs:sync`.
+   - Run `pnpm docs:sync`.
 
 ## Required Tests
 

@@ -174,32 +174,29 @@ Relevant code and fixtures:
 
 ## Documentation Quality Gates
 
-| Capability                                | Command                                         | Source                                                                                                         |
-| ----------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Docs sync                                 | `pnpm docs:sync`                                | [`package.json`](../../package.json)                                                                           |
-| Docs sync drift check                     | `pnpm docs:sync:check`                          | [`package.json`](../../package.json)                                                                           |
-| Planning generated artifact check         | `pnpm docs:planning:generated:check`            | [`package.json`](../../package.json)                                                                           |
-| Planning workboard drift check            | `pnpm docs:workboard:check`                     | [`package.json`](../../package.json)                                                                           |
-| Conditional workboard drift check         | `node scripts/docs-workboard-check-changed.cjs` | [`scripts/docs-workboard-check-changed.cjs`](../../scripts/docs-workboard-check-changed.cjs)                   |
-| Local docs PR fast preflight              | `pnpm docs:pr:fast`                             | [`package.json`](../../package.json)                                                                           |
-| Local docs PR full preflight              | `pnpm docs:pr:full`                             | [`package.json`](../../package.json)                                                                           |
-| Deterministic docs PR wrapper             | `pnpm docs:pr:create`                           | [`package.json`](../../package.json)                                                                           |
-| Docs quality policy check                 | `pnpm docs:quality:check`                       | [`package.json`](../../package.json)                                                                           |
-| Docs doctor                               | `pnpm docs:doctor`                              | [`package.json`](../../package.json)                                                                           |
-| Changed Markdown lint                     | `pnpm lint:md:changed`                          | [`package.json`](../../package.json)                                                                           |
-| Markdown location policy                  | `pnpm docs:gov:locations`                       | [`package.json`](../../package.json)                                                                           |
-| Docs governance manifest generate         | `pnpm docs:gov:manifest`                        | [`package.json`](../../package.json)                                                                           |
-| Docs governance manifest drift check      | `pnpm docs:gov:manifest:check`                  | [`package.json`](../../package.json)                                                                           |
-| Generated-doc single-writer policy        | `pnpm docs:gov:generated-policy`                | [`package.json`](../../package.json)                                                                           |
-| Governed changed-files gate               | `pnpm docs:governance:changed-files:check`      | [`scripts/check-governance-changed-files.cjs`](../../scripts/check-governance-changed-files.cjs)               |
-| Governance coverage report drift check    | `pnpm docs:governance:coverage-report:check`    | [`scripts/generate-governance-coverage-report.cjs`](../../scripts/generate-governance-coverage-report.cjs)     |
-| Governance remediation queue drift check  | `pnpm docs:governance:remediation-queue:check`  | [`scripts/generate-governance-remediation-queue.cjs`](../../scripts/generate-governance-remediation-queue.cjs) |
-| Changed docs filename policy              | `pnpm docs:gov:filenames:changed`               | [`package.json`](../../package.json)                                                                           |
-| Changed docs frontmatter policy           | `pnpm docs:gov:frontmatter:changed`             | [`package.json`](../../package.json)                                                                           |
-| Canonical path/link check                 | `pnpm docs:canonical:check`                     | [`package.json`](../../package.json)                                                                           |
-| Generated code-state drift check          | `pnpm docs:status:check`                        | [`package.json`](../../package.json)                                                                           |
-| Generated capability coverage drift check | `pnpm docs:capability:check`                    | [`package.json`](../../package.json)                                                                           |
-| Local docs regenerate-and-validate flow   | `pnpm docs:ci`                                  | [`package.json`](../../package.json)                                                                           |
+| Capability                                | Command                                        | Source                                                                                                         |
+| ----------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Docs sync                                 | `pnpm docs:sync`                               | [`package.json`](../../package.json)                                                                           |
+| Docs sync drift check                     | `pnpm docs:sync:check`                         | [`package.json`](../../package.json)                                                                           |
+| Local docs PR fast preflight              | `pnpm docs:pr:fast`                            | [`package.json`](../../package.json)                                                                           |
+| Local docs PR full preflight              | `pnpm docs:pr:full`                            | [`package.json`](../../package.json)                                                                           |
+| Deterministic docs PR wrapper             | `pnpm docs:pr:create`                          | [`package.json`](../../package.json)                                                                           |
+| Docs quality policy check                 | `pnpm docs:quality:check`                      | [`package.json`](../../package.json)                                                                           |
+| Docs doctor                               | `pnpm docs:doctor`                             | [`package.json`](../../package.json)                                                                           |
+| Changed Markdown lint                     | `pnpm lint:md:changed`                         | [`package.json`](../../package.json)                                                                           |
+| Markdown location policy                  | `pnpm docs:gov:locations`                      | [`package.json`](../../package.json)                                                                           |
+| Docs governance manifest generate         | `pnpm docs:gov:manifest`                       | [`package.json`](../../package.json)                                                                           |
+| Docs governance manifest drift check      | `pnpm docs:gov:manifest:check`                 | [`package.json`](../../package.json)                                                                           |
+| Generated-doc single-writer policy        | `pnpm docs:gov:generated-policy`               | [`package.json`](../../package.json)                                                                           |
+| Governed changed-files gate               | `pnpm docs:governance:changed-files:check`     | [`scripts/check-governance-changed-files.cjs`](../../scripts/check-governance-changed-files.cjs)               |
+| Governance coverage report drift check    | `pnpm docs:governance:coverage-report:check`   | [`scripts/generate-governance-coverage-report.cjs`](../../scripts/generate-governance-coverage-report.cjs)     |
+| Governance remediation queue drift check  | `pnpm docs:governance:remediation-queue:check` | [`scripts/generate-governance-remediation-queue.cjs`](../../scripts/generate-governance-remediation-queue.cjs) |
+| Changed docs filename policy              | `pnpm docs:gov:filenames:changed`              | [`package.json`](../../package.json)                                                                           |
+| Changed docs frontmatter policy           | `pnpm docs:gov:frontmatter:changed`            | [`package.json`](../../package.json)                                                                           |
+| Canonical path/link check                 | `pnpm docs:canonical:check`                    | [`package.json`](../../package.json)                                                                           |
+| Generated code-state drift check          | `pnpm docs:status:check`                       | [`package.json`](../../package.json)                                                                           |
+| Generated capability coverage drift check | `pnpm docs:capability:check`                   | [`package.json`](../../package.json)                                                                           |
+| Local docs regenerate-and-validate flow   | `pnpm docs:ci`                                 | [`package.json`](../../package.json)                                                                           |
 
 Generated documentation sources:
 
@@ -221,8 +218,6 @@ Command semantics:
 
 - `pnpm docs:ci` is the local-friendly docs validation flow. It regenerates derived docs surfaces first and then validates the resulting worktree.
 - `pnpm docs:sync:check` is the strict drift gate for tracked generated docs.
-- `pnpm docs:planning:generated:check` regenerates planning-only derived pages, verifies required sections, checks determinism, and fails if those files are tracked in git again.
-- `pnpm docs:workboard:check` is the planning-generated artifact gate and currently delegates to `pnpm docs:planning:generated:check`.
 - `pnpm docs:status:check` and `pnpm docs:capability:check` remain strict drift gates for their tracked generated outputs.
 - `pnpm docs:gov:manifest` regenerates the tracked compact docs inventory at `docs/.manifest.json`; use `pnpm exec tsx tools/docs/generate-docs-manifest.ts --full --stdout` for the exhaustive audit catalog.
 - `pnpm docs:gov:manifest:check` is the strict drift gate for that tracked docs governance manifest.
@@ -429,9 +424,6 @@ Planning-generated pages that are intentionally untracked:
 - `docs/planning/proposals/index.md`
 - `docs/planning/reviews/index.md`
 - `docs/planning/status/index.md`
-- `docs/planning/state/agent-lane-*.md`
-- `docs/planning/state/execution-workboard.md`
-- `docs/planning/state/open-task-route.md`
 
 ## GitHub Workflow Coverage
 

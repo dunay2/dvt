@@ -79,12 +79,12 @@ flowchart LR
   Catalog["Executable rail catalog"] --> Architecture["Architecture design view"]
   Catalog --> ComponentGuide["API component guide"]
   Catalog --> RouteTests["Route and negative tests"]
-  Catalog --> Workboard["Lane C planning state"]
+  Catalog --> Issues["GitHub MVP issues"]
 
   Architecture --> Rules["C&Q rail governance"]
   ComponentGuide --> Operators["Readers and maintainers"]
   RouteTests --> CI["PR quality gates"]
-  Workboard --> Alpha["F-27 alpha route dependencies"]
+  Issues --> Alpha["F-27 alpha route dependencies"]
 ```
 
 The target posture is one executable rail catalog with multiple derived or
@@ -171,7 +171,6 @@ negative evidence reference, or compatibility posture drifts.
 For docs-only changes:
 
 - `pnpm docs:sync`
-- `pnpm docs:workboard:generate`
 - `pnpm verify:prepush`
 
 For the source-of-truth implementation follow-up:

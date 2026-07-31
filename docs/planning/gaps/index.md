@@ -26,7 +26,7 @@ current authority reference.
 
 - [Planning Control Tower](../state/planning-control-tower.md)
 - [Review Status Board](../reviews/review-status-board.md)
-- [Agent Lane C YAML](../state/agent-lane-c.yaml)
+- [GitHub MVP Issue Workflow](../state/github-mvp-issue-workflow.md)
 - [Roadmap Of Record](../roadmap/index.md)
 - [Domain Status Board](../state/domain-status-board.md)
 - [System Delivery Status](../../architecture/system-delivery-status.md)

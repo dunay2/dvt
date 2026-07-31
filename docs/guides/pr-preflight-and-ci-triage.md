@@ -49,7 +49,6 @@ Start with failed-job extraction first, then decide the minimal rerun set.
 If the slice touches planning/docs structure or workspace structure, run required generators before push:
 
 - `pnpm docs:sync`
-- `pnpm docs:workboard:generate` (if lane/workboard sources changed)
 - `pnpm docs:status:generate` (when workspace source sets changed)
 
 Then run `pnpm verify:prepush` again.

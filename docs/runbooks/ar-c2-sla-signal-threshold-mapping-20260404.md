@@ -26,7 +26,7 @@ Use this mapping to wire and verify `AR-C2-T2` and `AR-C2-T3`.
 - `docs/runbooks/api-runtime-sla-canonical-20260404.md`
 - `docs/guides/api-control-plane-technical-manual-20260404.md`
 - `docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md`
-- `docs/planning/state/agent-lane-c.yaml`
+- the governing GitHub issue
 
 ## Mapping table
 

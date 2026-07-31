@@ -209,7 +209,8 @@ These should be reconciled by class, not bulk-converted to tasks:
 
 ## Non-Goals
 
-- Do not edit `execution-workboard.md` or `open-task-route.md` directly.
+- GitHub Issues now owns MVP task lifecycle; the former generated workboard
+  and open-task route are retired.
 - Do not use this inventory as a replacement for planning DB queries.
 - Do not batch-promote `Draft` documents without owner and evidence checks.
 - Do not archive ADRs, closeouts, or evidence files without updating their
