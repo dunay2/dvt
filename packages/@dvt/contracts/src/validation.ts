@@ -42,6 +42,7 @@ export {
   parsePlannerPolicyClassSet,
   parsePlannerSelection,
   parsePlanPreviewPersistResponse,
+  parsePlanPreviewRejectedOutcome,
   parsePlanPreviewProvenance,
   parsePlanPreviewRequest,
   parsePlanRecord,

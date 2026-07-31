@@ -44,6 +44,8 @@ import {
   PlanExecutabilityRecordSchema,
   PlanPreviewPersistResponseSchema,
   type PlanPreviewPersistResponseSchemaT,
+  PlanPreviewRejectedOutcomeSchema,
+  type PlanPreviewRejectedOutcomeSchemaT,
   PlanPreviewProvenanceSchema,
   type PlanPreviewProvenanceSchemaT,
   PlanPreviewRequestSchema,
@@ -95,6 +97,10 @@ export function parseTransformationSqlFirstCompilerGraphSource(
 
 export function parsePlanPreviewPersistResponse(input: unknown): PlanPreviewPersistResponseSchemaT {
   return parseWithSchema(PlanPreviewPersistResponseSchema, input);
+}
+
+export function parsePlanPreviewRejectedOutcome(input: unknown): PlanPreviewRejectedOutcomeSchemaT {
+  return parseWithSchema(PlanPreviewRejectedOutcomeSchema, input);
 }
 
 export function parsePlannerSelection(input: unknown): PlannerSelectionSchemaT {

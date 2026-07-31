@@ -10,6 +10,7 @@ export { PlanPreviewRequestSchema } from './plan-preview-request.js';
 export {
   PlanPreviewPersistedRecordSchema,
   PlanPreviewPersistResponseSchema,
+  PlanPreviewRejectedOutcomeSchema,
   PlanPreviewSummarySchema,
   PlanPreviewValidationSchema,
 } from './plan-preview-response.js';
@@ -27,6 +28,7 @@ export type {
 export type {
   PlanPreviewPersistedRecordSchemaT,
   PlanPreviewPersistResponseSchemaT,
+  PlanPreviewRejectedOutcomeSchemaT,
   PlanPreviewSummarySchemaT,
   PlanPreviewValidationSchemaT,
 } from './plan-preview-response.js';

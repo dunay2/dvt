@@ -4,6 +4,7 @@ import {
   ContractValidationError,
   parseDesignGraphDraft,
   parsePlanPreviewPersistResponse,
+  parsePlanPreviewRejectedOutcome,
   parsePlanPreviewRequest,
 } from '../../src/validation.js';
 
@@ -292,6 +293,81 @@ export function registerValidationPreviewSuite(): void {
             valid: true,
             warnings: [],
           },
+        })
+      ).toThrow(ContractValidationError);
+    });
+
+    it('parses the versioned selection-rejected outcome without plan identity', () => {
+      const outcome = parsePlanPreviewRejectedOutcome({
+        contractVersion: '1.0.0',
+        kind: 'selection-rejected',
+        rejection: {
+          code: 'REJECTED',
+          cause: 'dependency_gap',
+          reason: 'Selected closure is missing a dependency.',
+        },
+      });
+
+      expect(outcome).toEqual({
+        contractVersion: '1.0.0',
+        kind: 'selection-rejected',
+        rejection: {
+          code: 'REJECTED',
+          cause: 'dependency_gap',
+          reason: 'Selected closure is missing a dependency.',
+        },
+      });
+      expect(outcome).not.toHaveProperty('planRef');
+    });
+
+    it('parses the versioned plan-invalid outcome with exact plan identity', () => {
+      const planRef = {
+        uri: 'dvt-plan://plans/plan-1',
+        sha256: 'd'.repeat(64),
+        schemaVersion: '1.0',
+        planId: transformationPlan.metadata.planId,
+        planVersion: transformationPlan.metadata.planVersion,
+      };
+
+      const outcome = parsePlanPreviewRejectedOutcome({
+        contractVersion: '1.0.0',
+        kind: 'plan-invalid',
+        previewProfile: 'planner-generic-v1',
+        plan: transformationPlan,
+        planRef,
+        persisted: {
+          planRecordId: transformationPlan.metadata.planId,
+          canonicalPlanSha256: 'e'.repeat(64),
+        },
+        validation: {
+          status: 'ERROR',
+          code: 'MISSING_CAPABILITY',
+          planId: transformationPlan.metadata.planId,
+          adapterId: 'temporal',
+          degradable: false,
+          reason: 'The adapter is missing executor.dbt.',
+          cause: 'executor.dbt',
+        },
+      });
+
+      expect(outcome.kind).toBe('plan-invalid');
+      if (outcome.kind === 'plan-invalid') {
+        expect(outcome.plan).toEqual(transformationPlan);
+        expect(outcome.planRef).toEqual(planRef);
+        expect(outcome.validation.code).toBe('MISSING_CAPABILITY');
+      }
+    });
+
+    it('rejects malformed preview rejection outcomes instead of coercing them', () => {
+      expect(() =>
+        parsePlanPreviewRejectedOutcome({
+          contractVersion: '1.0.0',
+          kind: 'selection-rejected',
+          rejection: {
+            code: 'REJECTED',
+            reason: 'Rejected.',
+          },
+          planRef: { planId: 'fabricated' },
         })
       ).toThrow(ContractValidationError);
     });
