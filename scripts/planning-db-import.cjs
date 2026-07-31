@@ -21,13 +21,7 @@ const {
 const { buildCoverageReport } = require('./generate-governance-coverage-report.cjs');
 const { buildRemediationQueue } = require('./generate-governance-remediation-queue.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
-const {
-  reconcileRetiredLocalTaskSurfaces,
-  reconcileRetiredPlanningState,
-  retireLocalTaskLifecycle,
-  runMigrations,
-  schemaName,
-} = require('./planning-db-migrate.cjs');
+const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
 const {
   buildKnowledgeSnapshotFromDocuments,
 } = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
@@ -2002,6 +1996,54 @@ function buildPrReadinessSnapshot(options = {}) {
   };
 }
 
+async function retireLocalTaskLifecycle(client) {
+  await client.query(
+    `delete from ${schemaName}.doc_resolution_operations
+     where resolution_scope = 'task_gap'`
+  );
+  await client.query(
+    `delete from ${schemaName}.doc_resolution_overlays
+     where resolution_scope = 'task_gap'`
+  );
+  await client.query(
+    `delete from ${schemaName}.planning_artifacts
+     where artifact_kind in ('workboard', 'open-task-route')
+        or artifact_path in (
+          'docs/planning/state/execution-workboard.md',
+          'docs/planning/state/open-task-route.md'
+        )`
+  );
+  await client.query(`delete from ${schemaName}.planning_task_local_state`);
+  await client.query(`delete from ${schemaName}.planning_task_local_definitions`);
+  await client.query(`delete from ${schemaName}.planning_task_local_tombstones`);
+  await client.query(`delete from ${schemaName}.planning_local_operations`);
+}
+
+async function reconcileRetiredLocalTaskSurfaces(client) {
+  const retiredSurfaceNames = [
+    'Planning task lifecycle',
+    'Planning lane registry',
+    'Workboard and open task route',
+  ];
+
+  await client.query(
+    `delete from ${schemaName}.db_governance_surface_operations
+     where surface_name = any($1::text[])`,
+    [retiredSurfaceNames]
+  );
+  await client.query(
+    `delete from ${schemaName}.db_governance_surfaces
+     where surface_name = any($1::text[])`,
+    [retiredSurfaceNames]
+  );
+}
+
+async function reconcileRetiredPlanningState(client) {
+  await retireLocalTaskLifecycle(client);
+  await client.query(`delete from ${schemaName}.planning_sources`);
+  await reconcileRetiredLocalTaskSurfaces(client);
+}
+
 async function clearGovernanceSnapshotTables(client) {
   for (const tableName of governanceImportDeleteTables) {
     await client.query(`delete from ${schemaName}.${tableName}`);
@@ -3611,6 +3653,7 @@ async function importContent(options = {}) {
       planningTaskIds,
       documents: knowledgeDocuments,
     });
+    await reconcileRetiredPlanningState(client);
     await insertGovernanceSnapshot(client, governanceSnapshot);
     await refreshComponentTreeMaterializedProjection(client);
     await refreshComponentFileOwnershipMaterializedProjection(client);
@@ -4647,11 +4690,27 @@ async function checkGovernanceAuxiliarySourceFreshness(options = {}) {
 }
 
 async function reconcileRetiredPlanningDatabase(options = {}) {
-  await runMigrations({
-    client: options.client,
-    databaseUrl: options.databaseUrl || databaseUrl(),
-    silent: true,
-  });
+  const client =
+    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
+  const ownsClient = !options.client;
+
+  if (ownsClient) {
+    await client.connect();
+  }
+
+  try {
+    await runMigrations({ client, silent: true });
+    await beginImportTransaction(client);
+    await reconcileRetiredPlanningState(client);
+    await client.query('commit');
+  } catch (error) {
+    await client.query('rollback');
+    throw error;
+  } finally {
+    if (ownsClient) {
+      await client.end();
+    }
+  }
 }
 
 async function isGovernanceFresh(options, deps) {

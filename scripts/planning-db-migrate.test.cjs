@@ -391,42 +391,6 @@ test('migration runner serializes shared database invocations before reading app
   }
 });
 
-test('canonical migration execution retires local planning authority before commit', async () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'dvt-planning-migrations-'));
-  const queryCalls = [];
-
-  try {
-    fs.writeFileSync(path.join(directory, '001_current.sql'), 'select 1;', 'utf8');
-
-    await runMigrations({
-      migrationsDir: directory,
-      reconcileRetiredPlanningAuthority: true,
-      client: {
-        query: async (sql, parameters) => {
-          queryCalls.push({ sql: String(sql).replace(/\s+/gu, ' ').trim(), parameters });
-          if (/select version, checksum_sha256/u.test(sql)) {
-            return { rows: [] };
-          }
-          return { rows: [] };
-        },
-      },
-      silent: true,
-    });
-
-    const retiredSurfaceDelete = queryCalls.find(({ sql }) =>
-      /delete from planning_query_store\.db_governance_surfaces/u.test(sql)
-    );
-    const commitIndex = queryCalls.findIndex(({ sql }) => sql === 'commit');
-
-    assert.deepEqual(retiredSurfaceDelete?.parameters, [
-      ['Planning task lifecycle', 'Planning lane registry', 'Workboard and open task route'],
-    ]);
-    assert.ok(queryCalls.indexOf(retiredSurfaceDelete) < commitIndex);
-  } finally {
-    fs.rmSync(directory, { recursive: true, force: true });
-  }
-});
-
 test('tracked migrations preserve applied identities and use unique strict ordinals', () => {
   const migrations = readMigrationFiles();
   const report = analyzeMigrationOrdinals(

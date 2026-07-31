@@ -9,11 +9,6 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const repoRoot = path.resolve(__dirname, '..');
 const migrationsDir = path.join(repoRoot, 'tools', 'planning-db', 'migrations');
 const schemaName = 'planning_query_store';
-const retiredPlanningSurfaceNames = Object.freeze([
-  'Planning task lifecycle',
-  'Planning lane registry',
-  'Workboard and open task route',
-]);
 const canonicalMigrationsRepoPath = 'tools/planning-db/migrations';
 const migrationAdvisoryLockKeys = Object.freeze([0x445654, 0x4d494752]);
 const migrationOrdinalPolicy = Object.freeze({
@@ -499,48 +494,6 @@ async function acquireMigrationTransactionLock(client) {
   );
 }
 
-async function retireLocalTaskLifecycle(client) {
-  await client.query(
-    `delete from ${schemaName}.doc_resolution_operations
-     where resolution_scope = 'task_gap'`
-  );
-  await client.query(
-    `delete from ${schemaName}.doc_resolution_overlays
-     where resolution_scope = 'task_gap'`
-  );
-  await client.query(
-    `delete from ${schemaName}.planning_artifacts
-     where artifact_kind in ('workboard', 'open-task-route')
-        or artifact_path in (
-          'docs/planning/state/execution-workboard.md',
-          'docs/planning/state/open-task-route.md'
-        )`
-  );
-  await client.query(`delete from ${schemaName}.planning_task_local_state`);
-  await client.query(`delete from ${schemaName}.planning_task_local_definitions`);
-  await client.query(`delete from ${schemaName}.planning_task_local_tombstones`);
-  await client.query(`delete from ${schemaName}.planning_local_operations`);
-}
-
-async function reconcileRetiredLocalTaskSurfaces(client) {
-  await client.query(
-    `delete from ${schemaName}.db_governance_surface_operations
-     where surface_name = any($1::text[])`,
-    [retiredPlanningSurfaceNames]
-  );
-  await client.query(
-    `delete from ${schemaName}.db_governance_surfaces
-     where surface_name = any($1::text[])`,
-    [retiredPlanningSurfaceNames]
-  );
-}
-
-async function reconcileRetiredPlanningState(client) {
-  await retireLocalTaskLifecycle(client);
-  await client.query(`delete from ${schemaName}.planning_sources`);
-  await reconcileRetiredLocalTaskSurfaces(client);
-}
-
 async function runMigrations(options = {}) {
   const url = options.databaseUrl || databaseUrl();
   const silent = options.silent === true;
@@ -553,10 +506,6 @@ async function runMigrations(options = {}) {
         ? readKnownCanonicalMigrationVersions(options)
         : new Set()
       : new Set(options.knownMigrationVersions);
-  const shouldReconcileRetiredPlanningAuthority =
-    options.reconcileRetiredPlanningAuthority ??
-    path.resolve(directory) === path.resolve(migrationsDir);
-
   if (records.length === 0) {
     if (!silent) {
       console.log('[planning:db:migrate] No migration files found.');
@@ -610,10 +559,6 @@ async function runMigrations(options = {}) {
       applied += 1;
     }
 
-    if (shouldReconcileRetiredPlanningAuthority) {
-      await reconcileRetiredPlanningState(client);
-    }
-
     await client.query('commit');
   } catch (error) {
     await client.query('rollback');
@@ -659,9 +604,6 @@ module.exports = {
   databaseUrl,
   detectChecksumMismatch,
   readMigrationFiles,
-  reconcileRetiredLocalTaskSurfaces,
-  reconcileRetiredPlanningState,
-  retireLocalTaskLifecycle,
   runMigrations,
   sha256,
 };
