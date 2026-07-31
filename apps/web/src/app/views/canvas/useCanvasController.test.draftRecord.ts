@@ -22,6 +22,7 @@ const DEFAULT_PROTECTED_SCOPE = {
   environmentId: 'dev',
 } as const;
 const DEFAULT_CANVAS_DOCUMENT = {
+  id: 'main-canvas',
   kind: 'transformation',
   title: 'Main canvas',
 } as const;
@@ -130,23 +131,37 @@ function buildCanvasHarnessAuthoringDraft(
   draft: CanvasHarnessDraftInput
 ): WorkspaceGraphAuthoringDraft {
   const totalNodeCount = draft.nodeIds.length;
+  const canvas = {
+    id: draft.canvas?.id ?? DEFAULT_CANVAS_DOCUMENT.id,
+    kind: draft.canvas?.kind ?? DEFAULT_CANVAS_DOCUMENT.kind,
+    title: draft.canvas?.title ?? DEFAULT_CANVAS_DOCUMENT.title,
+  };
+  const nodes = draft.nodeIds.map((nodeId, index) =>
+    buildAuthoringDraftNode(nodeId, resolveAuthoringDraftNodeKind(nodeId, index, totalNodeCount))
+  );
+  const edges = draft.edges.map((edge) => ({
+    id: `draft_edge_${edge.sourceId}_${edge.targetId}`,
+    sourceId: edge.sourceId,
+    targetId: edge.targetId,
+    relation: 'lineage' as const,
+  }));
 
   return {
-    canvas: {
-      kind: draft.canvas?.kind ?? DEFAULT_CANVAS_DOCUMENT.kind,
-      title: draft.canvas?.title ?? DEFAULT_CANVAS_DOCUMENT.title,
-    },
+    canvas,
+    activeCanvasId: canvas.id,
+    canvases: [
+      {
+        canvas,
+        nodeIds: [...draft.nodeIds],
+        nodePositions: { ...draft.nodePositions },
+        nodes: nodes.map((node) => ({ ...node })),
+        edges: edges.map((edge) => ({ ...edge })),
+      },
+    ],
     nodeIds: [...draft.nodeIds],
     nodePositions: { ...draft.nodePositions },
-    nodes: draft.nodeIds.map((nodeId, index) =>
-      buildAuthoringDraftNode(nodeId, resolveAuthoringDraftNodeKind(nodeId, index, totalNodeCount))
-    ),
-    edges: draft.edges.map((edge) => ({
-      id: `draft_edge_${edge.sourceId}_${edge.targetId}`,
-      sourceId: edge.sourceId,
-      targetId: edge.targetId,
-      relation: 'lineage',
-    })),
+    nodes,
+    edges,
   };
 }
 
