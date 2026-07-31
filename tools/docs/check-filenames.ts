@@ -19,6 +19,7 @@
  *   tsx tools/docs/check-filenames.ts [--strict] [--changed-only]
  */
 import { createRequire } from 'node:module';
+import { existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -179,7 +180,7 @@ function normalizeChangedPath(entry: string): string[] {
   }
 
   const absolute = resolve(REPO_ROOT, candidate);
-  if (!absolute.startsWith(DOCS_DIR)) {
+  if (!absolute.startsWith(DOCS_DIR) || !existsSync(absolute)) {
     return [];
   }
 
