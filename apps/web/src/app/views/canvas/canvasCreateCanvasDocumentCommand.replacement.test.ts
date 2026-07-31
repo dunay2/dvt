@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { createWritableCanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
+import { buildGraphDraftAuthority } from './canvasDraftRepository.test.fixtures';
 import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
 import {
   buildCommandArgs,
@@ -54,7 +55,10 @@ describe('canvasCreateCanvasDocumentCommand replacement modes', () => {
         mode: 'replace_current',
       },
       graphDraftQuery: {
-        data: createWritableCanvasAuthoringDraftReadModel(existingRecord),
+        data: createWritableCanvasAuthoringDraftReadModel(
+          existingRecord,
+          buildGraphDraftAuthority(null)
+        ),
         isPending: false,
         isError: false,
       },
@@ -127,7 +131,10 @@ describe('canvasCreateCanvasDocumentCommand replacement modes', () => {
       },
       currentDraftPayload: existingDraft,
       graphDraftQuery: {
-        data: createWritableCanvasAuthoringDraftReadModel(existingRecord),
+        data: createWritableCanvasAuthoringDraftReadModel(
+          existingRecord,
+          buildGraphDraftAuthority(null)
+        ),
         isPending: false,
         isError: false,
       },

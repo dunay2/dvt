@@ -114,7 +114,7 @@ describe('canvasDraftRepository read/write', () => {
       outcome: 'saved',
       record: {
         revision: 'rev-2',
-        savedAt: expect.any(String),
+        savedAt: '2026-04-18T00:00:01Z',
         draft: buildAuthoringDraft(),
       },
       remoteDraftState: {
@@ -129,10 +129,14 @@ describe('canvasDraftRepository read/write', () => {
         },
         capabilityReason: 'authorized',
         formatError: null,
-        formatMeta: null,
+        formatMeta: {
+          schemaVersion: 'workspace-graph-draft.v1',
+          storedSchemaVersion: 'workspace-graph-draft.v1',
+          migrationState: 'native',
+        },
         record: {
           revision: 'rev-2',
-          savedAt: expect.any(String),
+          savedAt: '2026-04-18T00:00:01Z',
           draft: buildAuthoringDraft(),
         },
         semanticGraph: projectWorkspaceGraphAuthoringDraftSemanticGraph(buildAuthoringDraft()),
@@ -196,7 +200,7 @@ describe('canvasDraftRepository read/write', () => {
       outcome: 'saved',
       record: {
         revision: 'rev-2',
-        savedAt: expect.any(String),
+        savedAt: '2026-04-18T00:00:01Z',
         draft: firstCanvasDraft,
       },
       remoteDraftState: {
@@ -211,10 +215,14 @@ describe('canvasDraftRepository read/write', () => {
         },
         capabilityReason: 'authorized',
         formatError: null,
-        formatMeta: null,
+        formatMeta: {
+          schemaVersion: 'workspace-graph-draft.v1',
+          storedSchemaVersion: 'workspace-graph-draft.v1',
+          migrationState: 'native',
+        },
         record: {
           revision: 'rev-2',
-          savedAt: expect.any(String),
+          savedAt: '2026-04-18T00:00:01Z',
           draft: firstCanvasDraft,
         },
         semanticGraph: {
@@ -248,6 +256,19 @@ describe('canvasDraftRepository read/write', () => {
         kind: 'idempotency_mismatch',
       },
       'Workspace graph draft authoring rejected the idempotency key for a different payload.'
+    );
+  });
+
+  it('fails closed when the canonical reload does not confirm the saved revision', async () => {
+    const authoringPort = buildAuthoringPort({
+      readGraphDraft: vi.fn(async () => ({
+        kind: 'not_found' as const,
+      })),
+    });
+    const repository = createCanvasDraftRepository(authoringPort);
+
+    await expect(repository.saveGraphDraft(buildSaveInput())).rejects.toThrow(
+      'Workspace graph draft save could not confirm the canonical remote revision.'
     );
   });
 });

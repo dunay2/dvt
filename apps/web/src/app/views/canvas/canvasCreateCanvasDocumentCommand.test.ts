@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { serializeCanvasDraftAuthoringSignature } from './canvasDraftAuthoring';
 import { createWritableCanvasAuthoringDraftReadModel } from './canvasDraftReadModel';
+import { buildGraphDraftAuthority } from './canvasDraftRepository.test.fixtures';
 import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
 import {
   buildCommandArgs,
@@ -68,7 +69,10 @@ describe('canvasCreateCanvasDocumentCommand save outcomes', () => {
           saveGraphDraft: vi.fn(async () => ({
             outcome: 'conflict' as const,
             current: currentRecord,
-            remoteDraftState: createWritableCanvasAuthoringDraftReadModel(currentRecord),
+            remoteDraftState: createWritableCanvasAuthoringDraftReadModel(
+              currentRecord,
+              buildGraphDraftAuthority(null)
+            ),
           })),
         },
       });

@@ -162,10 +162,6 @@ export async function publishGraphDbtWorkspaceArtifacts(args: {
     }
     return result.value;
   });
-  if (!preparedArtifacts.some((artifact) => artifact.writeRequired)) {
-    return { ok: true, writtenArtifactPaths: [] };
-  }
-
   const publication = await args.publicationCommand.publish({
     canvasId: args.canvasId,
     artifacts: preparedArtifacts.map(({ artifact, expectedRevision, writeRequired }) => ({

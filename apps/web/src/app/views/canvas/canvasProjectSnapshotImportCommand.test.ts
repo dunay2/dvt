@@ -14,7 +14,10 @@ import type {
 } from './canvasDraftLifecycle.types';
 import { canvasProjectSnapshot } from './canvasProjectSnapshot';
 import { executeImportProjectSnapshotCommand } from './canvasProjectSnapshotImportCommand';
-import { buildAuthoringDraft } from './canvasDraftRepository.test.fixtures';
+import {
+  buildAuthoringDraft,
+  buildGraphDraftAuthority,
+} from './canvasDraftRepository.test.fixtures';
 
 const { toastError } = vi.hoisted(() => ({
   toastError: vi.fn(),
@@ -84,7 +87,6 @@ type BuildImportArgsResult = {
   draftQueryCache: {
     fetchLatestRemoteDraftState: ReturnType<typeof vi.fn>;
     fetchLatestRemoteDraft: ReturnType<typeof vi.fn>;
-    replaceRemoteDraft: ReturnType<typeof vi.fn>;
     replaceRemoteDraftState: ReturnType<typeof vi.fn>;
   };
   setDraftSession: ReturnType<typeof vi.fn>;
@@ -113,13 +115,15 @@ function buildImportArgs(overrides: BuildImportArgsOverrides = {}): BuildImportA
     saveGraphDraft: vi.fn(async () => ({
       outcome: 'saved' as const,
       record: savedRecord,
-      remoteDraftState: createWritableCanvasAuthoringDraftReadModel(savedRecord),
+      remoteDraftState: createWritableCanvasAuthoringDraftReadModel(
+        savedRecord,
+        buildGraphDraftAuthority()
+      ),
     })),
   };
   const draftQueryCache = {
     fetchLatestRemoteDraftState: vi.fn(),
     fetchLatestRemoteDraft: vi.fn(),
-    replaceRemoteDraft: vi.fn(),
     replaceRemoteDraftState: vi.fn(),
   };
   const refs = overrides.refs ?? createDraftAttemptRefs();
@@ -142,7 +146,10 @@ function buildImportArgs(overrides: BuildImportArgsOverrides = {}): BuildImportA
       canImportProjectSnapshot: true,
       draftRepository: effectiveDraftRepository,
       graphDraftQuery: {
-        data: createWritableCanvasAuthoringDraftReadModel(buildRecord({ revision: 'rev-current' })),
+        data: createWritableCanvasAuthoringDraftReadModel(
+          buildRecord({ revision: 'rev-current' }),
+          buildGraphDraftAuthority()
+        ),
         isPending: false,
         isError: false,
       },

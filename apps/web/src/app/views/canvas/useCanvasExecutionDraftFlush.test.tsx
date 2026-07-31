@@ -4,7 +4,10 @@ import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildAuthoringDraft } from './canvasDraftRepository.test.fixtures';
+import {
+  buildAuthoringDraft,
+  buildGraphDraftAuthority,
+} from './canvasDraftRepository.test.fixtures';
 import {
   createWritableCanvasAuthoringDraftReadModel,
   type CanvasAuthoringDraftReadModel,
@@ -28,11 +31,14 @@ function buildRefs(): DraftAttemptRefs {
 }
 
 function buildDraftState(revision = 'rev-2'): CanvasAuthoringDraftReadModel {
-  return createWritableCanvasAuthoringDraftReadModel({
-    revision,
-    savedAt: '2026-05-28T00:00:00.000Z',
-    draft: buildAuthoringDraft(),
-  });
+  return createWritableCanvasAuthoringDraftReadModel(
+    {
+      revision,
+      savedAt: '2026-05-28T00:00:00.000Z',
+      draft: buildAuthoringDraft(),
+    },
+    buildGraphDraftAuthority()
+  );
 }
 
 function buildHookArgs(overrides: Partial<HookArgs> = {}): HookArgs {
@@ -45,7 +51,6 @@ function buildHookArgs(overrides: Partial<HookArgs> = {}): HookArgs {
     draftQueryCache: {
       fetchLatestRemoteDraftState: vi.fn(),
       fetchLatestRemoteDraft: vi.fn(),
-      replaceRemoteDraft: vi.fn(),
       replaceRemoteDraftState: vi.fn(),
     },
     graphDraftState: buildDraftState('rev-1'),

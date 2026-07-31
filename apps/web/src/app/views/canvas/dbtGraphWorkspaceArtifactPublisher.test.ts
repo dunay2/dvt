@@ -259,6 +259,46 @@ describe('DBT graph workspace artifact publisher', () => {
     });
   });
 
+  it('still asks the server to authorize an unchanged artifact set', async () => {
+    const publish = vi.fn<IGraphDbtWorkspaceArtifactPublicationCommandPort['publish']>(
+      async () => ({
+        schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+        kind: 'authority_refused',
+        canvasId: CANVAS_ID,
+        reason: 'mixed_authority',
+      })
+    );
+    const unchangedYaml = 'name: analytics\n';
+
+    const result = await publishGraphDbtWorkspaceArtifacts({
+      canvasId: CANVAS_ID,
+      artifacts: [{ path: 'dbt_project.yml', language: 'yaml', content: unchangedYaml }],
+      workspaceFilesQuery: {
+        listFiles: vi.fn(),
+        getFileContent: vi.fn(async (path) =>
+          file(path, unchangedYaml, sha256HexUtf8(unchangedYaml))
+        ),
+      },
+      publicationCommand: { publish },
+    });
+
+    expect(result).toEqual({
+      ok: false,
+      kind: 'authority_refused',
+      reason: 'mixed_authority',
+    });
+    expect(publish).toHaveBeenCalledWith({
+      canvasId: CANVAS_ID,
+      artifacts: [
+        expect.objectContaining({
+          path: 'dbt_project.yml',
+          writeRequired: false,
+        }),
+      ],
+      idempotencyKey: expect.stringMatching(/^graph-dbt:[a-f0-9]{64}$/u),
+    });
+  });
+
   it('preserves a server revision conflict as a concurrent-edit outcome', async () => {
     const result = await publishGraphDbtWorkspaceArtifacts({
       canvasId: CANVAS_ID,

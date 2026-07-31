@@ -44,22 +44,6 @@ export function resolveGraphDraftAuthoringCanvasId(
     : null;
 }
 
-function resolveLocalGraphDraftAuthority(
-  record: CanvasAuthoringDraftRecord
-): CanvasAuthoringAuthorityResolution {
-  const canvasId = record.draft.activeCanvasId ?? record.draft.canvas.id ?? null;
-  return canvasId === null
-    ? { kind: 'unresolved', reason: 'missing_authority', canvasId: null }
-    : {
-        kind: 'resolved',
-        binding: {
-          schemaVersion: 'canvas-authoring-authority-binding.v1',
-          canvasId,
-          authority: { kind: 'graph-draft' },
-        },
-      };
-}
-
 export function projectProtectedCanvasAuthoringDraftRecord(
   record: ProtectedWorkspaceGraphDraftRecord
 ): CanvasAuthoringDraftRecord {
@@ -90,11 +74,12 @@ export function createUnknownCanvasAuthoringDraftReadModel(
 
 export function createWritableCanvasAuthoringDraftReadModel(
   record: CanvasAuthoringDraftRecord,
+  authoringAuthority: CanvasAuthoringAuthorityResolution,
   semanticGraph: CanvasAuthoringSemanticGraph | null = null
 ): CanvasAuthoringDraftReadModel {
   return {
     accessMode: 'writable',
-    authoringAuthority: resolveLocalGraphDraftAuthority(record),
+    authoringAuthority,
     capabilityReason: 'authorized',
     formatError: null,
     formatMeta: null,

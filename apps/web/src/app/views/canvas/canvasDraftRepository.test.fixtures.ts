@@ -1,6 +1,9 @@
 import { vi } from 'vitest';
 
-import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
+import type {
+  CanvasAuthoringAuthorityResolution,
+  WorkspaceGraphAuthoringDraft,
+} from '@dvt/contracts';
 import type {
   IWorkspaceGraphDraftAuthoringPort,
   WorkspaceGraphDraftAuthoringReadResult,
@@ -13,6 +16,21 @@ export const WORKSPACE_SCOPE = {
   projectId: 'project-a',
   environmentId: 'dev',
 } as const;
+
+export function buildGraphDraftAuthority(
+  canvasId: string | null = 'main-canvas'
+): CanvasAuthoringAuthorityResolution {
+  return canvasId === null
+    ? { kind: 'unresolved', reason: 'missing_authority', canvasId: null }
+    : {
+        kind: 'resolved',
+        binding: {
+          schemaVersion: 'canvas-authoring-authority-binding.v1',
+          canvasId,
+          authority: { kind: 'graph-draft' },
+        },
+      };
+}
 const DEFAULT_AUTHORING_DRAFT_LAYOUT = {
   canvas: {
     id: 'main-canvas',
@@ -94,7 +112,7 @@ export function buildAuthoringDraft(): WorkspaceGraphAuthoringDraft {
   };
 }
 
-const DEFAULT_READ_RESULT: WorkspaceGraphDraftAuthoringReadResult = {
+const DEFAULT_READ_RESULT = {
   kind: 'ok',
   capability: {
     scope: WORKSPACE_SCOPE,
@@ -130,8 +148,8 @@ const DEFAULT_READ_RESULT: WorkspaceGraphDraftAuthoringReadResult = {
     updatedAt: '2026-04-18T00:00:00Z',
     draft: buildAuthoringDraft(),
   },
-};
-const DEFAULT_SAVE_RESULT: WorkspaceGraphDraftAuthoringSaveResult = {
+} as const satisfies WorkspaceGraphDraftAuthoringReadResult;
+const DEFAULT_SAVE_RESULT = {
   kind: 'saved',
   capability: {
     scope: WORKSPACE_SCOPE,
@@ -153,13 +171,42 @@ const DEFAULT_SAVE_RESULT: WorkspaceGraphDraftAuthoringSaveResult = {
     migrationState: 'native',
   },
   revision: 'rev-2',
-};
+} as const satisfies WorkspaceGraphDraftAuthoringSaveResult;
 export function buildAuthoringPort(
   overrides: Partial<IWorkspaceGraphDraftAuthoringPort> = {}
 ): IWorkspaceGraphDraftAuthoringPort {
+  let currentReadResult: Extract<WorkspaceGraphDraftAuthoringReadResult, { kind: 'ok' }> =
+    DEFAULT_READ_RESULT;
   return {
-    readGraphDraft: vi.fn(async () => DEFAULT_READ_RESULT),
-    saveGraphDraft: vi.fn(async () => DEFAULT_SAVE_RESULT),
+    readGraphDraft: vi.fn(async () => currentReadResult),
+    saveGraphDraft: vi.fn(async (input) => {
+      const canvasId = input.draft.activeCanvasId ?? input.draft.canvas.id;
+      currentReadResult = {
+        ...DEFAULT_READ_RESULT,
+        authoringAuthority:
+          canvasId == null
+            ? {
+                kind: 'unresolved',
+                reason: 'missing_authority',
+                canvasId: null,
+              }
+            : {
+                kind: 'resolved',
+                binding: {
+                  schemaVersion: 'canvas-authoring-authority-binding.v1',
+                  canvasId,
+                  authority: { kind: 'graph-draft' },
+                },
+              },
+        record: {
+          ...DEFAULT_READ_RESULT.record,
+          revision: DEFAULT_SAVE_RESULT.revision,
+          updatedAt: DEFAULT_SAVE_RESULT.auditRef.recordedAt,
+          draft: input.draft,
+        },
+      };
+      return DEFAULT_SAVE_RESULT;
+    }),
     ...overrides,
   };
 }
