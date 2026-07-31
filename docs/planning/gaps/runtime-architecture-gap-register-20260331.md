@@ -1,7 +1,7 @@
 ---
 title: Runtime Architecture Gap Register 2026-03-31
 status: Review
-owner: Lane C / Architecture
+owner: Runtime / Architecture
 last_reviewed: 2026-04-17
 planning_type: status
 ---
@@ -16,14 +16,14 @@ gaps for future PR slicing.
 
 This document was reviewed on 2026-04-17 to align the folder with current
 planning governance. The validated gap rows below remain the 2026-03-31
-snapshot; live execution truth now belongs to the lane registry and active
+snapshot; live execution truth now belongs to GitHub Issues and the active
 review set.
 
 ## Current routing
 
 - [Planning Control Tower](../state/planning-control-tower.md)
 - [Review Status Board](../reviews/review-status-board.md)
-- [Agent Lane C YAML](../state/agent-lane-c.yaml)
+- [GitHub MVP Issue Workflow](../state/github-mvp-issue-workflow.md)
 - [Engine boundary current state, target state, and migration review](../reviews/architecture-and-governance/20260407-engine-boundary-current-target-and-migration-review.md)
 - [Contract pack and read boundary reset Fowler review](../reviews/architecture-and-governance/20260410-contract-pack-and-read-boundary-reset-fowler-review.md)
 - [Runtime and shared-kernel risk triage review](../reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md)

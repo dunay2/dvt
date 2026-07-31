@@ -21,7 +21,7 @@ Companion manuals:
 
 ## Governing sources
 
-- `docs/planning/state/agent-lane-c.yaml`
+- the governing GitHub issue
 - `docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md`
 - `docs/planning/reviews/architecture-and-governance/20260404-ar-c2-fowler-hard-qa-review.md`
 - `docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md`

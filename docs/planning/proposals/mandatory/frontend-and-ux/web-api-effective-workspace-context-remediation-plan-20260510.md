@@ -34,7 +34,7 @@ grant read model, React route gate, Vitest, Mermaid documentation.
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
 - `docs/planning/reviews/20260510-web-api-integration-gap-review.md`
-- `docs/adr/ADR-0055a-server-owned-effective-workspace-context.md`
+- `docs/adr/ADR-0062-server-owned-effective-workspace-context.md`
 - `docs/architecture/components/web/appshell/effective-workspace-context-component.md`
 
 ## Command / Query Rail
@@ -98,11 +98,11 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/adr/ADR-0055a-server-owned-effective-workspace-context.md
+  - docs/adr/ADR-0062-server-owned-effective-workspace-context.md
 allowedImplementationSurfaces:
   - buzon/20260510-web-api-remediation-execution-log.md
   - buzon/20260510-codex-fowler-web-api-remediation-analysis.md
-  - docs/adr/ADR-0055a-server-owned-effective-workspace-context.md
+  - docs/adr/ADR-0062-server-owned-effective-workspace-context.md
   - docs/evidence/ed-20260510-web-api-effective-workspace-context.md
   - docs/risk-register/quality/r-20260510-web-api-ewc.yaml
   - docs/architecture/components/web/appshell/effective-workspace-context-component.md

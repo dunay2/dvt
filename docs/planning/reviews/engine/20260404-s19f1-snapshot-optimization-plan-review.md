@@ -23,7 +23,7 @@ Canonical execution tracking remains in:
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+- `docs/planning/templates/qa/qa-artifact-example-template.md`
 - `docs/planning/state/agent-lane-a.yaml`
 - `docs/risk-register/quality/R-20260330-S19F1-SNAPSHOT-WORK-QUEUE-CLAIM-SEMANTICS.yaml`
 

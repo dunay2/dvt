@@ -29,13 +29,13 @@ multi-canvas host model explicit in code, tests, and documentation.
 - [Governance Document And Rule Inventory](../../status/governance-document-rule-inventory.md)
 - [AI Work Protocol](../../../guides/ai-work-protocol.md)
 - [Review Naming Policy](../review-naming-policy.md)
-- [QA Artifact Example Template](../../templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md)
+- [QA Artifact Example Template](../../templates/qa/qa-artifact-example-template.md)
 - [Graph Frontend Architecture](../../../architecture/components/web/graph/graph-frontend-architecture.md)
 - [Canvas Inspector Authoring Component](../../../architecture/components/web/graph/canvas-inspector-authoring-component.md)
 - [Canvas Playground Host Component](../../../architecture/components/web/graph/canvas-playground-host-component.md)
 - [Canvas Controller Current To Target Architecture](../../../architecture/components/web/graph/canvas-controller-current-to-target-architecture.md)
 - [TF-E2 Project Playground And Multi-Canvas Host Plan](../../proposals/mandatory/frontend-and-ux/tf-e2-project-playground-and-multi-canvas-host-plan-20260423.md)
-- [Agent Lane E](../../state/agent-lane-e.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 
 ## Summary
 

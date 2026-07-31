@@ -15,9 +15,9 @@ This artifact is the hard QA gate for the 2026-04-08 slice that narrowed
 `RETRY_RUN` out of canonical `SignalType` and made provider signal mapping
 explicit for the remaining canonical run-control surface.
 
-Canonical execution tracking remains in:
+Canonical execution tracking is defined by:
 
-- [agent-lane-a.yaml](../../state/agent-lane-a.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 - [20260408 Retry-run boundary and provider signal mapper review](./20260408-retry-run-boundary-and-provider-signal-mapper-review.md)
 - [ADR-0049](./C:/dvt/docs/adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
 
@@ -34,8 +34,8 @@ surfaces all agree on the same boundary truth.
 - [governance-document-rule-inventory.md](../../status/governance-document-rule-inventory.md)
 - [AGENTS.md](./C:/dvt/AGENTS.md)
 - [ai-work-protocol.md](./C:/dvt/docs/guides/ai-work-protocol.md)
-- [TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md](../../templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md)
-- [TEMPLATE_QA_ARTIFACT_EXAMPLE.md](../../templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md)
+- [qa-current-task-check-prompt.md](../../templates/qa/qa-current-task-check-prompt.md)
+- [qa-artifact-example-template.md](../../templates/qa/qa-artifact-example-template.md)
 - [ADR-0040](./C:/dvt/docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md)
 - [ADR-0047](./C:/dvt/docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 - [ADR-0048](./C:/dvt/docs/adr/ADR-0048-retry-step-as-separate-engine-use-case.md)

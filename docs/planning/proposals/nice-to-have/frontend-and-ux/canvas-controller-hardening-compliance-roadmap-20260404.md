@@ -12,11 +12,12 @@ planning_type: proposal
 
 Track QA hard findings and close them in a deterministic item-by-item sequence.
 
-The execution target is the `F-05` canvas hardening chain in Lane E.
+The historical execution target was the `F-05` canvas hardening chain. Current
+execution starts only from an accepted GitHub Issue.
 
 ## Governing Sources
 
-- [Agent Lane E](../../../state/agent-lane-e.yaml)
+- [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 - [Canvas controller hard gate](./canvas-controller-document-first-hard-gate-20260404.md)
 - [Canvas controller current-to-target architecture](../../../../architecture/components/web/graph/canvas-controller-current-to-target-architecture.md)
 

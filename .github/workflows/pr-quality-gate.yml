@@ -111,8 +111,7 @@ jobs:
       - name: Prepare planning DB for DB-backed validation
         if:
           github.event_name == 'push' || (github.event_name == 'pull_request' &&
-          (steps.scope.outputs.lane_yaml_changed == 'true' ||
-          steps.scope.outputs.feature_mechanization_relevant == 'true' ||
+          (steps.scope.outputs.feature_mechanization_relevant == 'true' ||
           steps.scope.outputs.governance_global_relevant == 'true')) || (github.event_name ==
           'workflow_dispatch' && github.event.inputs.run_typecheck_gate == 'true')
         uses: ./.github/actions/prepare-planning-db
@@ -122,16 +121,10 @@ jobs:
             'origin/main' }}
           GIT_HEAD: ${{ github.sha }}
         with:
-          import-planning:
-            ${{ steps.scope.outputs.lane_yaml_changed == 'true' && 'true' || 'false' }}
           import-governance:
             ${{ (github.event_name != 'pull_request' ||
             steps.scope.outputs.feature_mechanization_relevant == 'true' ||
             steps.scope.outputs.governance_global_relevant == 'true') && 'true' || 'false' }}
-
-      - name: Validate planning workboard outputs
-        if: github.event_name == 'pull_request' && steps.scope.outputs.lane_yaml_changed == 'true'
-        run: pnpm docs:workboard:generate --source yaml
 
       - name: Validate docs quality policy (English/no duplicate indexes)
         if:

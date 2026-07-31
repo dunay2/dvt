@@ -193,13 +193,8 @@ Current task authority lives in:
 
 - [Planning Dashboard](../planning/state/planning-dashboard.md)
 - [Planning Control Tower](../planning/state/planning-control-tower.md)
-- Planning DB effective task views:
-  - `pnpm planning:db:query focus`
-  - `pnpm planning:db:query next`
-  - `pnpm planning:db:query open`
-  - `pnpm planning:db:query tasks`
-- [Execution Workboard](../planning/state/execution-workboard.md)
-- [Open Task Route](../planning/state/open-task-route.md)
+- GitHub Issues for backlog and task lifecycle
+- GitHub pull requests for implementation review and integration
 
 The archived Phase 2 slice roadmap remains historical context only:
 

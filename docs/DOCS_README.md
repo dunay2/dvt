@@ -51,25 +51,8 @@ pnpm docs:sync:check
 That command is the explicit clean-worktree gate for tracked generated docs
 output.
 
-For planning-generated local or CI artifacts that are intentionally not tracked
-in git:
-
-```bash
-pnpm docs:workboard:check
-```
-
-That command regenerates the planning-derived pages, verifies the required
-files and sections exist, checks determinism across repeated runs, and fails if
-those pages are accidentally tracked in git again.
-For isolated local generation (useful with concurrent agents or long-lived
-branches):
-
-```bash
-pnpm docs:planning:preview:isolated
-```
-
-This writes generated planning lane/workboard outputs to
-`.generated-docs/docs/planning/state/` without modifying tracked docs files.
+MVP task lifecycle is validated through GitHub Issues and pull requests. The
+repository does not generate a second local workboard.
 
 ## Runtime authority
 
@@ -81,20 +64,15 @@ One contract now owns the docs runtime and docs validation surfaces. CI keeps
 its explicit strict drift gates on top of that contract. There is no secondary
 compatibility config.
 
-## Planning-generated artifact rule
+## Planning authority rule
 
-The tracked planning sources of truth are:
+GitHub Issues owns MVP backlog, priority, assignment, status, blockers,
+acceptance, and task evidence. Pull requests own implementation review, checks,
+and merge.
 
-- `docs/planning/state/agent-lane-*.yaml`
-- tracked planning docs such as `planning-control-tower.md`, portfolio maps,
-  proposals, reviews, closeouts, and roadmap docs
-
-For existing task operations, the local Postgres query store is the operational
-surface. Use `pnpm planning:db:operate` for claim/release/status/progress and
-evidence overlay changes, then inspect with `pnpm planning:db:query tasks` or
-`pnpm planning:db:query next`. Lane YAML remains the bootstrap and PR-review
-compatibility surface for new task definitions until create/delete commands are
-declared for the DB rail.
+Planning DB remains the authority for architecture, components, capabilities,
+relations, command/query rails, feature mechanization, and architecture
+evidence. It is not a second task registry.
 
 The following planning surfaces are derived local/CI artifacts and must not be
 committed:
@@ -103,9 +81,6 @@ committed:
 - `docs/planning/proposals/index.md`
 - `docs/planning/reviews/index.md`
 - `docs/planning/status/index.md`
-- `docs/planning/state/agent-lane-*.md`
-- `docs/planning/state/execution-workboard.md`
-- `docs/planning/state/open-task-route.md`
 
 ## Generated-Docs Single-Writer Policy
 

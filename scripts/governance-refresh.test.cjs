@@ -26,13 +26,7 @@ test('governance refresh defers governance reports to DB-backed final generation
       'docs:governance:file-component-index',
       'docs:governance:file-fingerprint-baseline',
       'docs:governance:file-fingerprint-impact',
-      'planning:db:import',
-      'docs:workboard:generate',
     ]
-  );
-  assert.deepEqual(
-    stages.generationStages.find((stage) => stage.id === 'planning-db-import').args,
-    ['--', '--if-stale', '--planning-only']
   );
   assert.equal(
     stages.generationStages.some((stage) => stage.script === 'governance:db:import'),
@@ -50,8 +44,6 @@ test('governance refresh defers governance reports to DB-backed final generation
   assert.deepEqual(
     stages.databaseStages.map((stage) => stage.script),
     [
-      'planning:db:import',
-      'planning:db:check',
       'planning:db:inventory:check',
       'docs:db-surface-inventory:generate',
       'planning:db:export:check',
@@ -63,10 +55,6 @@ test('governance refresh defers governance reports to DB-backed final generation
       'docs:governance:remediation-queue',
       'governance:db:export:check',
     ]
-  );
-  assert.deepEqual(
-    stages.databaseStages.find((stage) => stage.id === 'planning-db-import-final').args,
-    ['--', '--if-stale', '--planning-only']
   );
   assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,
@@ -121,7 +109,7 @@ test('governance refresh writes an accepted DB run before executing generation s
     stabilized: true,
     generationPasses: 1,
     generationStagesRun: ['docs:sync'],
-    databaseStagesRun: ['planning:db:check'],
+    databaseStagesRun: ['governance:db:check'],
   };
 
   await runGovernanceRefreshCommand(
@@ -194,7 +182,7 @@ test('governance refresh fails closed when generated output does not stabilize',
   );
 
   assert.equal(
-    executedScripts.includes('planning:db:check'),
+    executedScripts.includes('governance:db:check'),
     false,
     'database drift checks must wait for stable generated surfaces'
   );

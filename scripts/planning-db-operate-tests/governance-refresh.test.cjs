@@ -40,12 +40,12 @@ test('buildGovernanceRefreshStageRunRows normalizes generation and database stag
         { id: 'docs-sync', script: 'docs:sync' },
         { id: 'planning-db-import', script: 'planning:db:import', args: ['--', '--if-stale'] },
       ],
-      databaseStages: [{ id: 'planning-db-check', script: 'planning:db:check' }],
+      databaseStages: [{ id: 'governance-db-check', script: 'governance:db:check' }],
     },
     result: {
       generationPasses: 2,
       generationStagesRun: ['docs:sync', 'planning:db:import', 'docs:sync', 'planning:db:import'],
-      databaseStagesRun: ['planning:db:check'],
+      databaseStagesRun: ['governance:db:check'],
     },
   });
 
@@ -63,7 +63,7 @@ test('buildGovernanceRefreshStageRunRows normalizes generation and database stag
       ['generation', 1, 2, 'planning-db-import', 'planning:db:import', 'passed'],
       ['generation', 2, 1, 'docs-sync', 'docs:sync', 'passed'],
       ['generation', 2, 2, 'planning-db-import', 'planning:db:import', 'passed'],
-      ['database', 1, 1, 'planning-db-check', 'planning:db:check', 'passed'],
+      ['database', 1, 1, 'governance-db-check', 'governance:db:check', 'passed'],
     ]
   );
 });

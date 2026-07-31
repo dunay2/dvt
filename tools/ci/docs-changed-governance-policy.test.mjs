@@ -57,17 +57,37 @@ test('changed-doc governance commands are wired into docs and pre-push gates', (
 });
 
 test('changed-only strict filename gate fails non-canonical changed doc names', () => {
+  const invalidPath = 'docs/planning/reviews/Bad_File.md';
+
+  try {
+    writeFileSync(invalidPath, '# Invalid filename fixture\n', 'utf8');
+    const result = runPnpm(
+      ['exec', 'tsx', 'tools/docs/check-filenames.ts', '--changed-only', '--strict'],
+      {
+        DOCS_GOV_CHANGED_FILES: invalidPath,
+      }
+    );
+    const output = `${result.stdout}\n${result.stderr}`;
+
+    assert.notEqual(result.status, 0, output);
+    assert.match(output, /Filename should be kebab-case/);
+    assert.match(output, /New or changed docs must use canonical kebab-case/);
+  } finally {
+    rmSync(invalidPath, { force: true });
+  }
+});
+
+test('changed-only strict filename gate ignores deleted non-canonical docs', () => {
   const result = runPnpm(
     ['exec', 'tsx', 'tools/docs/check-filenames.ts', '--changed-only', '--strict'],
     {
-      DOCS_GOV_CHANGED_FILES: 'docs/planning/reviews/Bad_File.md',
+      DOCS_GOV_CHANGED_FILES: 'docs/planning/reviews/Deleted_File.md',
     }
   );
   const output = `${result.stdout}\n${result.stderr}`;
 
-  assert.notEqual(result.status, 0, output);
-  assert.match(output, /Filename should be kebab-case/);
-  assert.match(output, /New or changed docs must use canonical kebab-case/);
+  assert.equal(result.status, 0, output);
+  assert.match(output, /No changed docs markdown files - skipping/);
 });
 
 test('changed-only strict filename gate allows governed evidence identity names', () => {

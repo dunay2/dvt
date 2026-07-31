@@ -89,7 +89,6 @@ flowchart TD
   QueryStore["planning_query_store governance views"]
   Coverage["docs:governance:coverage-report\nsource=db final"]
   Remediation["docs:governance:remediation-queue\nsource=db final"]
-  Workboard["docs:workboard:generate"]
   ChangedFiles["docs:governance:changed-files:check"]
   Prepush["verify:prepush / ci:docs"]
 
@@ -115,8 +114,6 @@ flowchart TD
   FingerprintBaseline --> FingerprintImpact
   FingerprintShards --> FingerprintImpact
   FileIndex --> FingerprintImpact
-  FileIndex --> Import["planning:db:import\nplanning-only"]
-  Import --> Workboard
   ComponentIndex --> GovernanceImport
   ComponentMap --> GovernanceImport
   DocumentMapOutputs --> GovernanceImport
@@ -134,7 +131,6 @@ flowchart TD
   FingerprintShards --> ChangedFiles
   Worktree --> ChangedFiles
   UnitCoverage --> Prepush
-  Workboard --> Prepush
   DocumentMapOutputs --> Prepush
   FileIndex --> Prepush
   FingerprintImpact --> Prepush
@@ -220,29 +216,24 @@ The command runs the docs and governance generation stages in this order:
 6. `docs:governance:file-component-index`
 7. `docs:governance:file-fingerprint-baseline`
 8. `docs:governance:file-fingerprint-impact`
-9. `planning:db:import -- --if-stale --planning-only`
-10. `docs:workboard:generate`
-
-After each generation pass, the runner hashes staged, unstaged, and untracked
-non-ignored worktree state. It repeats generation until that fingerprint stops
-changing, with a small maximum pass count. `planning:db:import` runs inside each
-generation pass after source-affecting generators and before workboard
-generation. Coverage and remediation projections are built in-memory for
-`governance:db:import`; their local artifacts are written only after the DB is
-fresh. Only after generated outputs are stable does it re-run
-`planning:db:import`, then `planning:db:check`, `planning:db:inventory:check`,
-`planning:db:export:check`, `governance:db:import`,
-`governance:db:check`, DB-sourced coverage/remediation generation, and
-`governance:db:export:check`.
+   After each generation pass, the runner hashes staged, unstaged, and untracked
+   non-ignored worktree state. It repeats generation until that fingerprint stops
+   changing, with a small maximum pass count. Coverage and remediation projections are built in-memory for
+   `governance:db:import`; their local artifacts are written only after the DB is
+   fresh. Only after generated outputs are stable does it run
+   `planning:db:inventory:check`, `docs:db-surface-inventory:generate`,
+   `planning:db:export:check`, `governance:db:import`,
+   `governance:db:check`, DB-sourced coverage/remediation generation, and
+   `governance:db:export:check`.
 
 The fingerprint is a convergence guard, not a new source of truth. Git-tracked
 sources, generated-docs policy, unit ownership, and generator scripts remain
 authoritative.
 
-`planning:db:import` takes a transaction-scoped advisory lock before replacing
-planning and governance read-model rows. This is required because the local
-Postgres volume is shared by all worktrees and agents on the same machine; two
-imports must not interleave their delete and insert phases.
+`governance:db:import` takes a transaction-scoped advisory lock before replacing
+governance read-model rows. This is required because the local Postgres volume
+is shared by all worktrees and agents on the same machine; two imports must not
+interleave their delete and insert phases.
 
 If the shared local Postgres volume rejects `planning:db:import` because an
 already-applied migration checksum no longer matches the Git-tracked migration

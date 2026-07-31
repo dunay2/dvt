@@ -27,12 +27,7 @@
     "scripts/validate-arc-evidence-frontmatter.cjs",
     ".markdownlint*"
   ],
-  "docs_structure_changed": [
-    "docs/**",
-    "scripts/sync-docs.cjs",
-    "scripts/generate-planning-lanes.cjs"
-  ],
-  "lane_yaml_changed": ["docs/planning/state/agent-lane-*.yaml"],
+  "docs_structure_changed": ["docs/**", "scripts/sync-docs.cjs"],
   "generated_status_relevant": [
     "apps/**",
     "packages/**",

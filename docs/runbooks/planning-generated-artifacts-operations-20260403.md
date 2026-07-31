@@ -2,108 +2,67 @@
 title: Planning Generated Artifacts Operations
 status: Active
 owner: Docs / Delivery / Architecture
-last_reviewed: 2026-04-03
+last_reviewed: 2026-07-31
 ---
 
 # Planning Generated Artifacts Operations
 
-This runbook defines how to operate planning-generated pages that are
-intentionally not tracked in git.
+This runbook operates documentation indexes and governance projections that are
+derived from canonical repository or Planning DB architecture state.
 
-> Owned concern: this runbook operates generated planning artifacts through
-> `ClassifyGeneratedDocsSurface`, `ExtractGeneratedDocsSurface`, and
-> `ValidateGeneratedDocsArtifact` so generated pages do not become hidden
-> authored governance policy.
+It does not define or project task lifecycle state. GitHub Issues are the sole
+MVP task authority under
+[ADR-0061](../adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md).
 
 ## Scope
 
-Derived planning pages:
+Retained generated surfaces:
 
-- `docs/planning/index.md`
-- `docs/planning/proposals/index.md`
-- `docs/planning/reviews/index.md`
-- `docs/planning/status/index.md`
-- `docs/planning/state/agent-lane-*.md`
-- `docs/planning/state/execution-workboard.md`
-- `docs/planning/state/open-task-route.md`
+- documentation indexes produced by `pnpm docs:sync`;
+- `docs/.manifest.json`;
+- `docs/planning/status/generated-code-state.md`;
+- governance indexes and DB exports produced by `pnpm governance:refresh`.
 
-Canonical tracked inputs:
+Retired surfaces:
 
-- `docs/planning/state/agent-lane-*.yaml`
-- tracked planning docs (control tower, portfolio maps, proposals, reviews,
-  closeouts, roadmap)
+- local lane snapshots;
+- `execution-workboard.md`;
+- `open-task-route.md`;
+- Planning DB task and assignment projections.
 
-## Generated Surface Registry
+## Rails
 
-Every generated planning surface is classified before extraction:
+`ClassifyGeneratedDocsSurface` identifies whether a generated documentation
+surface must remain tracked or can be artifact-only.
 
-| Classification             | Meaning                                                                                                                                 | Rail                           |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| `must-track`               | The generated surface carries governance-critical navigation or publication continuity that still requires a tracked file.              | `ClassifyGeneratedDocsSurface` |
-| `candidate-for-extraction` | The generated surface can become artifact-only after deterministic validation, discoverability checks, and rollback instructions exist. | `ClassifyGeneratedDocsSurface` |
+`ExtractGeneratedDocsSurface` removes an eligible projection from tracked
+documentation without changing its canonical source.
 
-`ExtractGeneratedDocsSurface` is the command rail for a future task that stops
-tracking an eligible generated page. It must name the surface, source
-generator, owning docs area, rollback path, and acceptance evidence.
+`ValidateGeneratedDocsArtifact` checks marker integrity, deterministic output,
+and discoverability for retained generated surfaces.
 
-`ValidateGeneratedDocsArtifact` is the query rail used by CI and local checks
-to prove marker integrity, deterministic output, and discoverability for
-artifact-only generated pages.
+## Standard Workflow
 
-## Standard local workflow
+1. Run `pnpm docs:sync` after adding, removing, or renaming files under `docs/`.
+2. Run `pnpm docs:status:generate` after structural source changes under
+   `apps/` or `packages/`.
+3. Run `pnpm governance:refresh` after changing governance sources,
+   generators, scripts, or package commands.
+4. Run `pnpm verify:prepush` before publishing the branch.
 
-1. Regenerate tracked docs indexes and lane views:
-   `pnpm docs:sync`
-2. Regenerate workboard views:
-   `pnpm docs:workboard:generate`
-3. Validate planning generated artifacts:
-   `pnpm docs:workboard:check`
-4. Validate pre-push baseline:
-   `pnpm verify:prepush`
+## Failure Triage
 
-For isolated local preview that must not touch tracked docs files:
+1. Use the failing check to identify the owning generator.
+2. Run that generator once.
+3. Run its check command without editing the generated output manually.
+4. If a second generation changes output again, treat it as a determinism
+   defect in the generator.
+5. If a retired task surface reappears, remove the producer or stale DB seed;
+   do not restore a local planning authority.
 
-- `pnpm docs:planning:preview:isolated`
+## CI Expectations
 
-## CI expectations
-
-- `PR Quality Gate` runs `pnpm docs:sync:check` for tracked generated docs.
-- When lane YAML changes, `PR Quality Gate` starts an ephemeral planning DB,
-  runs migrations, imports planning state with `pnpm planning:db:import --
---if-stale --planning-only`, and then runs `pnpm docs:workboard:check` for
-  planning-generated artifact integrity and determinism.
-- planning-generated pages must not be tracked in git.
-
-## Failure triage
-
-When `pnpm docs:workboard:check` fails:
-
-1. Confirm lane source files exist:
-   `docs/planning/state/agent-lane-*.yaml`
-2. Run:
-   `pnpm docs:planning:generated:check`
-3. If marker checks fail, compare generated pages with script expectations in
-   `scripts/docs-planning-generated-check.cjs`.
-4. If determinism fails, run the same command twice and diff outputs.
-5. If "must not be tracked in git" fails, untrack files and commit the removal.
-
-## Incident rollback mode (temporary)
-
-Use only for incident containment when docs publication is blocked.
-
-1. Open an incident PR documenting cause and rollback scope.
-2. Temporarily re-track only the minimal generated planning pages required for
-   release continuity.
-3. Add a follow-up task to restore untracked mode within one sprint.
-4. Re-enable `docs:planning:generated:check` fail-closed behavior before
-   incident closure.
-
-## Operational metrics
-
-Track for two sprint cycles:
-
-- merge conflicts touching extracted planning pages
-- docs CI failures in `docs:workboard:check`
-- docs-only PR lead time before/after extraction
-
-Expected trend: lower merge conflict rate with stable CI pass rate.
+- `docs:sync:check` validates tracked documentation indexes.
+- generated code-state checks validate source inventory.
+- governance refresh checks validate DB-first architecture projections.
+- no CI path may require retired lane or workboard state.

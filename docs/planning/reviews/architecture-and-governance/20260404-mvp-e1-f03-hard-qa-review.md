@@ -16,8 +16,8 @@ qa_artifact: true
 - Title: Lane E task registry is not aligned with implemented slice status.
   Why it matters: planning truth is still reporting `MVP-E1` as queued and `F-03` at 35%, so governance surfaces under-report delivered work.
   Evidence:
-  - [agent-lane-e.yaml](../../state/agent-lane-e.yaml) (`MVP-E1` queued, `progress_pct: 0`)
-  - [agent-lane-e.yaml](../../state/agent-lane-e.yaml) (`F-03` in progress, `progress_pct: 35`)
+  - `agent-lane-e.yaml` (retired historical artifact) (`MVP-E1` queued, `progress_pct: 0`)
+  - `agent-lane-e.yaml` (retired historical artifact) (`F-03` in progress, `progress_pct: 35`)
   - implemented contract and shell changes exist in:
     [frontend-backend-contract-mvp-e1-20260404.md](../../../architecture/components/web/frontend-backend-contract-mvp-e1-20260404.md),
     [Root.tsx](../../../../apps/web/src/app/Root.tsx),

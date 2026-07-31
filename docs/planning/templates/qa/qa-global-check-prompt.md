@@ -1,29 +1,30 @@
 ---
-title: QA current task check prompt template
+title: QA global check prompt template
 status: Active
 owner: Product / Architecture / QA / Docs
 last_reviewed: 2026-04-04
 planning_type: template
 ---
 
-# QA Current Task Check Prompt Template
+# QA Global Check Prompt Template
 
-Use this template for a hard, evidence-first review of the task currently in
-progress or just completed.
+Use this template for a hard, evidence-first review of a slice, branch, PR, or
+system area when you want a principal-engineer quality bar.
 
-It preserves the same standards and restrictions as the global QA prompt, but
-forces the reviewer to focus on the active task boundaries, declared scope, and
-current worktree truth.
+This is the canonical global QA prompt.
 
 ## When To Use It
 
 Use this prompt for:
 
-- task-in-progress verification
-- pre-commit or pre-PR QA
-- scope-drift detection on the current slice
-- docs-first / TDD-first completion checks
-- implementation-vs-task review before closeout
+- hard PR review
+- docs-vs-code audit
+- architecture review
+- test-adequacy review
+- pre-merge hardening review
+- release-readiness QA pass
+
+Do not use it for a casual code walkthrough or soft feedback.
 
 ## Required Deliverables
 
@@ -32,32 +33,29 @@ not only free-form review text.
 
 The output MUST include:
 
-- a Markdown review document focused on the current task
-- explicit use of `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+- a Markdown review document that can be saved as a governed artifact
+- explicit use of `docs/planning/templates/qa/qa-artifact-example-template.md`
   as the baseline output shape unless a stricter governed format overrides it
-- a checklist of corrective, blocking, or closeout tasks for the active slice
-- at least one Mermaid diagram that explains the current-task gap, flow, or
-  unblock plan
-- explicit verification of whether the task-relevant documentation is correct and updated
-- documentation update actions when the active-slice docs are stale, incomplete, or inconsistent
-- at least one Mermaid diagram of the current state for the active slice when the task touches behavior, architecture, process, or scope
-- explicit verification of whether evidence documents and risk-register updates exist when the active task requires them
+- a checklist of corrective or follow-up tasks
+- at least one Mermaid diagram that explains the risk, flow, or remediation map
+- explicit verification of whether the relevant documentation is correct and updated
+- documentation update actions when the current docs are stale, incomplete, or inconsistent
+- at least one Mermaid diagram of the current state when the review touches behavior, architecture, process, or scope
+- explicit verification of whether evidence documents and risk-register updates exist when the slice requires them
 - a Definition of Done for each proposed task
-- a comment with solution rationale for each proposed task or blocker path
-- explicit separation between active-slice findings and unrelated worktree
-  observations
+- a comment with solution rationale for each proposed task or remediation path
+- explicit separation between findings and execution tasks
 
 ## Canonical Prompt
 
 ```text
 Act as a Principal Engineer + QA Architect + Code Reviewer with a hard product-quality bar.
 
-Your mission is to review the current task in progress or just completed, using the same standards and restrictions as the global QA review, but focused on the active task scope, current worktree, and declared task intent.
+Your mission is to perform an exhaustive, critical, evidence-based review of the active slice, PR, branch, or file set that I specify.
 
 ### Goal
 
-Determine whether the current task is truly aligned across:
-- task intent
+Determine whether the system is truly aligned across:
 - documentation
 - implementation
 - tests
@@ -71,58 +69,58 @@ I want a findings-first review, ordered by severity, with concrete evidence and 
 
 ### Mandatory Method
 
-1. Explore the repository and current worktree first. Do not assume.
-2. Identify the governing docs, ADRs, contracts, proposals, reviews, closeouts, lane entries, and task-tracking surfaces that define the current task.
-3. Verify that the current task scope matches what is actually changed in the worktree or branch.
-4. Verify that everything promised for the current task actually exists in code, docs, and tests.
+1. Explore the repository first. Do not assume.
+2. Identify the governing docs, ADRs, contracts, plans, closeouts, lane entries, and technical docs that apply.
+3. Verify that documentation matches implementation.
+4. Verify that everything promised in proposal, review, manual, closeout, or lane actually exists in code and tests.
 5. Run relevant validations when possible:
    - affected package tests
    - type-check
-   - prettier/lint/eslint on changed files or equivalent baseline
-   - verify:prepush when the task requires readiness evidence
-6. Use `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md` as the
+   - prettier/lint/eslint on touched files or equivalent baseline
+   - verify:prepush when the slice requires it
+6. Use `docs/planning/templates/qa/qa-artifact-example-template.md` as the
    explicit structure baseline for the Markdown artifact unless the destination
    has a stricter governed format.
 7. Explicitly distinguish:
-   - implemented in this task
-   - documented but not implemented in this task
-   - partially implemented in this task
-   - implemented but not documented in this task
-   - unrelated changes present in the worktree
+   - implemented
+   - documented but not implemented
+   - partially implemented
+   - implemented but not documented
    - not verified
 8. If something cannot be verified, say so explicitly. Do not invent.
 
 ### Mandatory Review Axes
 
-#### 1. Task Scope And Documentation Truth
+#### 1. Documentation And System Truth
 
-Review whether the current task is:
-- correctly scoped
-- correctly documented
-- traceable to the governing planning surfaces
-- aligned with the real code and tests
+Review whether the documentation is:
+- correct
+- consistent
+- traceable
+- aligned with the real code
+- aligned with tests and evidence
 - aligned with lane / proposal / review / closeout
 
 Detect:
-- scope drift
+- documentation drift
 - promises without implementation
-- implementation outside declared task scope
-- documentation without code
-- code without required documentation
-- outdated task-relevant documentation that no longer matches current task truth
+- implementation without documentation
+- outdated documentation that no longer matches current system truth
 - missing evidence docs or risk-register updates where governance requires them
 - validations promised but not executed
-- mismatched naming, task IDs, or contract terms
+- inconsistent naming
+- unreconciled contracts or error codes
+- aspirational claims presented as current truth
 
-#### 2. Implementation Vs Task Promise
+#### 2. Implementation Vs Promise
 
-Review whether the current task implements exactly what it claims to implement.
+Review whether the code implements exactly what is promised.
 Look for:
 - overpromising
 - under-implementation
-- hidden side effects outside task scope
+- undocumented implicit behavior
 - narrative claiming a bigger change than the actual code
-- missing cases that task docs say are covered
+- cases not covered even though docs say they are covered
 
 #### 3. Architecture
 
@@ -132,17 +130,17 @@ Evaluate explicitly:
 - DDD
 - Hexagonal Architecture
 - CQRS when relevant
-- bounded-context seams touched by the current task
-- ports / adapters touched by the current task
+- bounded-context seams
+- ports / adapters
 - separation between application, domain, infrastructure, and read models
-- ownership of invariants inside the active slice
+- clear ownership of invariants
 
 State:
 - what is correct
 - what is wrong
 - what is fake modularity
-- which classes or services in the task carry too many responsibilities
-- which seams should be extracted next
+- which classes or services carry too many responsibilities
+- which seams should be extracted
 - which logic lives in the wrong layer
 
 #### 4. Code Quality
@@ -184,13 +182,13 @@ Review:
 - deterministic tests
 - tests coupled to incidental ordering
 - weak tests that only validate superficial shape
-- whether the current task meaningfully improves confidence or just adds smoke coverage
-- whether the task review uses a global view of the affected system rather than
-  only local file behavior
-- whether the active slice needs a harness or shared fixtures to validate real
+- whether tests behave like a meaningful suite or just local smoke coverage
+- whether the review applies a global system view rather than only local
+  file-level assertions
+- whether the slice needs a harness or shared fixtures to validate real
   boundary behavior without duplication
 - whether tests should be grouped by type (`unit`, `integration`, `contract`,
-  `e2e`, regression) so intent, cost, and confidence are explicit
+  `e2e`, regression) to make confidence and maintenance costs explicit
 
 Identify:
 - missing negative cases
@@ -199,33 +197,33 @@ Identify:
 - fragile tests
 - tests that validate incidental implementation instead of behavior
 - coverage claims not backed by evidence
-- missing harnesses or poor grouping by test type that hide task risk or make
-  the suite harder to maintain
+- missing harnesses or poor grouping by test type that hide integration risk or
+  inflate maintenance cost
 
 #### 6. Product Quality
 
-Evaluate the current task as product, not only code.
+Evaluate the slice as product, not only code.
 Look for:
-- behavior risks introduced by the task
+- behavior risks
 - UX / API / operational errors
 - weak messages or diagnostics
 - insufficient observability
 - missing rollout discipline
 - missing evidence
-- absence of runbook / manual / closeout when the task needs one
+- absence of runbook / manual / closeout when the slice needs one
 - hidden debt
 - placeholders
 - fake implementations
 
 #### 7. Comparison With Mature Systems
 
-Compare the current task approach with mature-system practices only when the comparison changes the recommendation.
+Compare the approach with mature-system practices only when the comparison changes the recommendation.
 Do not name-drop without consequence.
 
-Evaluate whether this task would benefit from:
+Evaluate whether the system would benefit from:
 - templates
 - test harnesses for repeated setup or cross-boundary verification
-- grouping tests by type when that improves maintenance, confidence, or reviewability
+- grouping tests by type when that improves clarity, confidence, or maintenance
 - test matrices
 - review templates
 - invariant catalogs
@@ -267,8 +265,7 @@ Even then, still report:
 
 After Findings, include these sections:
 
-## Task Alignment
-- declared task vs actual changes
+## Alignment
 - doc vs code
 - promise vs implementation
 - tests vs claims
@@ -289,7 +286,7 @@ After Findings, include these sections:
 - negative paths missing
 - regression status
 - determinism
-- local suite vs meaningful confidence for this task
+- local suite vs meaningful global confidence
 
 ## Quality Gates
 - commands executed
@@ -306,18 +303,17 @@ After Findings, include these sections:
 
 ## Action Artifact
 
-This section is mandatory and MUST be usable as an execution artifact for the
-current task.
+This section is mandatory and MUST be usable as an execution artifact.
 
 It must contain:
 - a `Markdown Artifact Path Suggestion` line with a proposed `.md` filename
 - a `Task Checklist` subsection with GitHub-style checkboxes
-- one task per corrective action, closeout action, or blocker resolution
+- one task per actionable remediation or follow-up
 - per task:
   - task ID or short label
   - objective
   - scope
-  - whether it belongs to the current task or is explicitly out of scope
+  - owner recommendation
   - dependencies if any
   - documentation impact
   - evidence / risk-doc impact
@@ -327,7 +323,7 @@ It must contain:
 Minimum structure:
 
 ### Markdown Artifact Path Suggestion
-- `docs/planning/closeouts/<date>-<slug>.md` or another governed docs path justified by the active task
+- `docs/planning/closeouts/<date>-<slug>.md` or another governed docs path justified by scope
 
 ### Task Checklist
 - [ ] `TASK-ID` Short task title
@@ -336,7 +332,7 @@ Minimum structure:
 #### `TASK-ID` Short task title
 - Objective:
 - Scope:
-- In current task scope:
+- Recommended owner:
 - Dependencies:
 - Documentation impact:
 - Evidence / risk-doc impact:
@@ -347,17 +343,14 @@ Minimum structure:
 
 This section is mandatory.
 
-Include at least one Mermaid diagram that materially helps execution of the
-current task.
-Use the most useful diagram type for the active slice:
-- `flowchart` for task flow or gap resolution
-- `sequenceDiagram` for behavior mismatch or boundary propagation
+Include at least one Mermaid diagram that materially helps execution.
+Use the most useful diagram type for the findings:
+- `flowchart` for remediation flow
+- `sequenceDiagram` for behavioral mismatch
 - `graph TD` for dependency or unblock roadmap
 
-The diagram must distinguish:
-- current task truth
-- target state for this task
-- blockers or follow-up edges where relevant
+The diagram must include the current state when the review touches behavior,
+architecture, process, or scope. Add the target correction path when relevant.
 
 ## Final Verdict
 
@@ -381,24 +374,23 @@ Close with exactly one of:
 - If no regressions are visible, say so only after reviewing real evidence.
 ```
 
-## Task-Focused Defaults
+## Repo-Aligned Defaults
 
 When using this prompt inside this repository, default expectations should
 include:
 
 - inventory-first startup
 - governing-source identification
-- current worktree inspection before conclusions
-- package-level validation for the changed scope
-- `pnpm verify:prepush` before the task is called ready, unless the user
-  explicitly limits validation
-- a review output that can be promoted into a tracked Markdown task artifact
-  without restructuring it later
-- explicit use of `TEMPLATE_QA_ARTIFACT_EXAMPLE.md` as the baseline artifact
+- package-level validation for changed scope
+- `pnpm verify:prepush` before the slice is called ready
+- evidence-based closeout, not reassurance
+- a review output that can be promoted into a tracked Markdown artifact without
+  rewriting it from scratch
+- explicit use of `qa-artifact-example-template.md` as the baseline artifact
   shape unless a stricter governed format overrides it
-- explicit confirmation that task-relevant documentation was checked and that
-  required documentation updates are captured in the task artifact
+- explicit confirmation that relevant documentation was checked and that required
+  documentation updates are part of the output tasks
 - explicit confirmation that evidence docs and risk-register updates were checked
-  whenever governance rules make them mandatory for the active slice
-- explicit assessment of whether the slice needs a global-system harness or
-  grouping by test type to achieve meaningful confidence
+  whenever governance rules make them mandatory
+- explicit assessment of whether the test plan needs a global-system harness or
+  grouping by test type to provide meaningful confidence

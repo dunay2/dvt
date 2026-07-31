@@ -3,7 +3,6 @@
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
-const { runMigrations } = require('./planning-db-migrate.cjs');
 const { textValue } = require('./planning-db/query-format.cjs');
 const {
   allowedDbSurfaceMigrationStates,
@@ -13,17 +12,6 @@ const {
 } = require('./planning-db/db-surface-inventory.cjs');
 
 const requiredSurfaces = [
-  {
-    surfaceName: 'Planning task lifecycle',
-    migrationState: 'DB-first',
-    writeRailKind: 'db_command',
-  },
-  {
-    surfaceName: 'Planning lane registry',
-    migrationState: 'Bootstrap/export',
-    writeRailKind: 'bootstrap_export',
-  },
-  { surfaceName: 'Workboard and open task route', migrationState: 'Generated-only' },
   { surfaceName: 'Governance file inventory', migrationState: 'Hybrid indexed' },
   {
     surfaceName: 'Architecture design authority',
@@ -170,7 +158,6 @@ async function runInventoryCheck(options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
     const rows = await readDbSurfaceRows(client, { limit: options.limit || 500 });
     return validateDbSurfaceInventoryRows(rows);
   } finally {

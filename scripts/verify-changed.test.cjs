@@ -18,7 +18,6 @@ test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', (
   const labels = labelsFor(['docs/planning/templates/component-engineering-record-template.md']);
 
   assert.deepEqual(labels, [
-    'node scripts/docs-workboard-check-changed.cjs',
     'pnpm planning:db:knowledge-intake:retirement:check',
     'pnpm docs:gov:locations -- --changed-only',
     'pnpm docs:gov:filenames:changed',
@@ -37,6 +36,7 @@ test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', (
   assert.ok(!labels.includes('pnpm docs:governance:coverage-report:check'));
   assert.ok(!labels.includes('pnpm docs:governance:remediation-queue:check'));
   assert.ok(!labels.includes('pnpm verify:prepush'));
+  assert.ok(!labels.includes('node scripts/docs-workboard-check-changed.cjs'));
 });
 
 test('buildVerifyChangedPlan adds planning DB validation for planning query-store changes', () => {

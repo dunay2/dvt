@@ -26,7 +26,7 @@ same feature boundary.
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/state/agent-lane-e.yaml`
+- `docs/planning/state/github-mvp-issue-workflow.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-c-first-canvas-first-node-live-proof-implementation-plan-20260501.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-k-playground-complete-cycle-stories-20260424.md`
 - `docs/architecture/components/web/graph/canvas-layout-persistence-component.md`

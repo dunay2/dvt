@@ -16,45 +16,6 @@ const scriptPath = path.join(__dirname, 'planning-db-surface-inventory-check.cjs
 const surfaceHash = 'a'.repeat(64);
 const fixtureRows = [
   {
-    surface_name: 'Planning task lifecycle',
-    canonical_source: 'planning_query_store task rows',
-    write_rail: 'pnpm planning:db:operate task update',
-    write_rail_kind: 'db_command',
-    read_query_rail: 'pnpm planning:db:query tasks',
-    projection: 'execution-workboard.md',
-    validation: 'pnpm planning:db:check',
-    migration_state: 'DB-first',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
-    source_content_sha256: surfaceHash,
-    db_first_eligible: true,
-  },
-  {
-    surface_name: 'Planning lane registry',
-    canonical_source: 'planning_query_store lane rows',
-    write_rail: 'pnpm planning:db:import -- --if-stale --planning-only',
-    write_rail_kind: 'bootstrap_export',
-    read_query_rail: 'pnpm planning:db:query summary',
-    projection: 'agent-lane-*.yaml',
-    validation: 'pnpm planning:db:export:check',
-    migration_state: 'Bootstrap/export',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
-    source_content_sha256: surfaceHash,
-    db_first_eligible: false,
-  },
-  {
-    surface_name: 'Workboard and open task route',
-    canonical_source: 'DB effective planning views',
-    write_rail: 'No direct write rail',
-    write_rail_kind: 'generated',
-    read_query_rail: 'pnpm planning:db:query next',
-    projection: 'execution-workboard.md',
-    validation: 'pnpm docs:workboard:check',
-    migration_state: 'Generated-only',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
-    source_content_sha256: surfaceHash,
-    db_first_eligible: false,
-  },
-  {
     surface_name: 'Governance file inventory',
     canonical_source: 'governance DB',
     write_rail: 'pnpm governance:refresh',
@@ -148,7 +109,7 @@ const fixtureRows = [
   {
     surface_name: 'Command/query rail catalog',
     canonical_source: 'commandQueryRails',
-    write_rail: 'pnpm planning:db:import -- --governance-only',
+    write_rail: 'pnpm planning:db:import',
     write_rail_kind: 'import',
     read_query_rail: 'pnpm planning:db:query command-query-rails',
     projection: 'command_query_rail_query',
@@ -246,11 +207,11 @@ test('DB surface inventory validates canonical planning and governance DB rows',
 test('DB surface inventory validator rejects missing required surfaces', () => {
   const { validateDbSurfaceInventoryRows } = loadInventoryCheck();
   const result = validateDbSurfaceInventoryRows(
-    fixtureRows.filter((row) => row.surface_name !== 'Planning task lifecycle')
+    fixtureRows.filter((row) => row.surface_name !== 'Architecture design authority')
   );
 
   assert.equal(result.ok, false);
-  assert.match(result.errors.join('\n'), /Planning task lifecycle/);
+  assert.match(result.errors.join('\n'), /Architecture design authority/);
 });
 
 test('DB surface inventory validator rejects DB-first labels on imported or read-only surfaces', () => {
@@ -293,10 +254,13 @@ test('DB surface inventory validator keeps component definition command rail DB-
 });
 
 test('package scripts expose and gate the DB surface inventory check', () => {
+  const scriptSource = fs.readFileSync(scriptPath, 'utf8');
+
   assert.equal(
     packageJson.scripts['planning:db:inventory:check'],
     'node scripts/planning-db-surface-inventory-check.cjs'
   );
+  assert.doesNotMatch(scriptSource, /planning-db-migrate|runMigrations/);
   assert.match(
     packageJson.scripts['test:planning:db'],
     /planning-db-surface-inventory-check\.test\.cjs/

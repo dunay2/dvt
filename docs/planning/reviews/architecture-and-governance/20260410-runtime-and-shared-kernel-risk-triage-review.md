@@ -85,7 +85,7 @@ from over-broad claims.
   [LineageWorkerRuntime.ts](../../../../packages/@dvt/delivery/src/application/LineageWorkerRuntime.ts)
 - Retention and SLA current posture:
   [System Delivery Status](../../../architecture/system-delivery-status.md),
-  [Execution Workboard](../../state/execution-workboard.md)
+  [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 
 ## Conclusion
 

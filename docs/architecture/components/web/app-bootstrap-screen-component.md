@@ -231,5 +231,5 @@ flowchart LR
 
 ## Governance Drift Guard
 
-- `tools/ci/planning-truth-sync.test.mjs` protects the planning truth for the
-  related Canvas runtime-policy closure that feeds route startup posture.
+- `tools/ci/web-bootstrap-docs.test.mjs` protects the separation between
+  component evidence and repository governance checks.

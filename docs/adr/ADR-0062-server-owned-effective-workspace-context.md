@@ -1,5 +1,5 @@
 ---
-title: Server-owned Effective Workspace Context
+title: ADR-0062 - Server-owned effective workspace context
 status: Accepted
 date: 2026-05-10
 owners:
@@ -8,7 +8,7 @@ owners:
 arc_level: ARC-1
 ---
 
-# ADR-0055a: Server-owned Effective Workspace Context
+# ADR-0062 - Server-Owned Effective Workspace Context
 
 ## Status
 

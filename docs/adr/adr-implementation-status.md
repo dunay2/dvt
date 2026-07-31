@@ -42,7 +42,7 @@ Legend: ✅ Implemented · 🟡 Partial · ❌ Not started
 
 ## 1.1) Full ADR index (0000–0030)
 
-Source of truth for ADR documents and statuses: [`ADR-Index.md`](./ADR-Index.md).
+Source of truth for ADR documents and statuses: [`adr-catalog.md`](./adr-catalog.md).
 
 ---
 
@@ -54,7 +54,7 @@ Source of truth for ADR documents and statuses: [`ADR-Index.md`](./ADR-Index.md)
 2. Synchronized ADR status references with current ADR catalog (`0000–0030`).
 3. Normalized ADR navigation to use:
    - [`index.md`](./index.md) as landing page
-   - [`ADR-Index.md`](./ADR-Index.md) as complete catalog
+   - [`adr-catalog.md`](./adr-catalog.md) as complete catalog
 
 ---
 

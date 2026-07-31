@@ -17,7 +17,7 @@ deterministic fail-closed rejection on cyclic selected subgraphs using
 
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/state/agent-lane-a.yaml`
+- the governing GitHub issue
 - `docs/planning/reviews/architecture-and-governance/20260402-deep-architectural-review-principal-architect.md`
 
 ## Current boundary

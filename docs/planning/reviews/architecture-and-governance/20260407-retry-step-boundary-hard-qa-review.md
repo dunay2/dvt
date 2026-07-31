@@ -18,9 +18,9 @@ Historical note: `RETRY_RUN` was unresolved when this QA artifact closed. It is
 now governed separately by `ADR-0049` and is no longer part of canonical
 generic `SignalType`.
 
-Canonical execution tracking remains in:
+Canonical execution tracking is defined by:
 
-- [agent-lane-a.yaml](../../state/agent-lane-a.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 - [20260407 Retry-step boundary and use-case review](./20260407-retry-step-boundary-and-use-case-review.md)
 
 The original blockers identified in this QA pass were corrected in the same
@@ -35,8 +35,8 @@ slice. The review now closes as `Ready`.
 - [governance-document-rule-inventory.md](../../status/governance-document-rule-inventory.md)
 - [AGENTS.md](./C:/dvt/AGENTS.md)
 - [ai-work-protocol.md](./C:/dvt/docs/guides/ai-work-protocol.md)
-- [TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md](../../templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md)
-- [TEMPLATE_QA_ARTIFACT_EXAMPLE.md](../../templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md)
+- [qa-current-task-check-prompt.md](../../templates/qa/qa-current-task-check-prompt.md)
+- [qa-artifact-example-template.md](../../templates/qa/qa-artifact-example-template.md)
 - [ADR-0040](./C:/dvt/docs/adr/ADR-0040-retry-ownership-and-attempt-authority.md)
 - [ADR-0047](./C:/dvt/docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 - [ADR-0048](./C:/dvt/docs/adr/ADR-0048-retry-step-as-separate-engine-use-case.md)

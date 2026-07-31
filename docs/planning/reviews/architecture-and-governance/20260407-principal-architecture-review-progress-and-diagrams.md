@@ -17,7 +17,9 @@ repository working state as of 2026-04-08.
 
 ### Lane verification snapshot
 
-Source of truth: [Execution Workboard](../../state/execution-workboard.md).
+This section is a historical snapshot from the retired execution workboard.
+Current task authority is defined by the
+[GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md).
 
 | Lane      | Scope                              | Tasks   | Total effort | Completed weighted pts | Progress                    | Verified on |
 | --------- | ---------------------------------- | ------- | ------------ | ---------------------- | --------------------------- | ----------- |
@@ -369,9 +371,4 @@ flowchart TD
 - [ADR-0047](../../../adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md)
 - [ADR-0048](../../../adr/ADR-0048-retry-step-as-separate-engine-use-case.md)
 - [ADR-0049](../../../adr/ADR-0049-retry-run-as-separate-recovery-use-case.md)
-- [Execution Workboard](../../state/execution-workboard.md)
-- [Lane A YAML](../../state/agent-lane-a.yaml)
-- [Lane B YAML](../../state/agent-lane-b.yaml)
-- [Lane C YAML](../../state/agent-lane-c.yaml)
-- [Lane D YAML](../../state/agent-lane-d.yaml)
-- [Lane E YAML](../../state/agent-lane-e.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)

@@ -2,21 +2,524 @@
   "schemaVersion": 1,
   "featureMechanizationRails": [
     {
-      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicallanestate",
+      "railId": "local#DOCS-CANONICAL-FILENAME-GATE-20260731#query#validatechangeddocumentfilenames",
+      "featureId": "DOCS-CANONICAL-FILENAME-GATE-20260731",
+      "mechanizationStatus": "implemented",
+      "railName": "ValidateChangedDocumentFilenames",
+      "normalizedRailName": "validatechangeddocumentfilenames",
+      "railType": "query",
+      "dddOwner": "ChangedDocumentFilenamePolicy",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "tools/docs/check-filenames.ts#normalizeChangedPath",
+        "tools/docs/check-filenames.ts#checkFilename"
+      ],
+      "implementationRefs": [
+        "tools/docs/check-filenames.ts#normalizeChangedPath",
+        "tools/docs/check-filenames.ts#checkFilename"
+      ],
+      "documentationRefs": ["docs/DOCS_README.md"],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "docs/.manifest.json",
+        "docs/adr/adr-catalog.md",
+        "docs/adr/adr-implementation-status.md",
+        "docs/adr/index.md",
+        "docs/architecture/components/engine/reviews/audit.md",
+        "docs/architecture/components/engine/reviews/index.md",
+        "docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md",
+        "docs/planning/archive/proposals/strategic-product-roadmap-20260324.md",
+        "docs/planning/closeouts/20260315-docs-governance-hardening-closeout.md",
+        "docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md",
+        "docs/planning/closeouts/20260404-plan-qa-tareas-mvp.md",
+        "docs/planning/closeouts/20260423-access-decision-embedded-first-closeout.md",
+        "docs/planning/closeouts/20260423-tenant-run-identity-platform-owned-run-id-closeout.md",
+        "docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md",
+        "docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md",
+        "docs/planning/reviews/architecture-and-governance/20260404-f04-frontend-data-boundary-hard-qa-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-hard-qa-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md",
+        "docs/planning/reviews/engine/20260404-s19f1-snapshot-optimization-plan-review.md",
+        "docs/planning/reviews/engine/20260405-mw-a2-policy-first-fowler-qa-review.md",
+        "docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-fowler-qa-review.md",
+        "docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md",
+        "docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/planning/templates/qa/index.md",
+        "docs/planning/templates/qa/qa-artifact-example-template.md",
+        "docs/planning/templates/qa/qa-current-task-check-prompt.md",
+        "docs/planning/templates/qa/qa-global-check-prompt.md",
+        "scripts/sync-docs.cjs",
+        "tools/ci/docs-changed-governance-policy.test.mjs",
+        "tools/docs/check-adr-catalog.ts",
+        "tools/docs/check-filenames.ts"
+      ],
+      "architectureGuards": [
+        "node --test tools/ci/docs-changed-governance-policy.test.mjs"
+      ],
+      "completionGate": [
+        "node --test tools/ci/docs-changed-governance-policy.test.mjs",
+        "pnpm docs:gov:filenames:changed",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "tools/docs/check-filenames.ts",
+      "sourceContentSha256": "fd2f58de1c857a1f8259914a590bcecb91aabc192bf511e56da420aeab2c651c",
+      "rawRail": {
+        "name": "ValidateChangedDocumentFilenames",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "ChangedDocumentFilenamePolicy"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "normalizeChangedPath",
+            "path": "tools/docs/check-filenames.ts",
+            "cqRails": ["ValidateChangedDocumentFilenames"],
+            "dddOwner": "ChangedDocumentFilenamePolicy",
+            "unitTests": ["tools/ci/docs-changed-governance-policy.test.mjs"],
+            "fowlerSignals": [
+              "policy_object",
+              "replace_implicit_semantics_with_explicit_policy"
+            ],
+            "cypressCoverage": "not applicable: repository documentation governance query",
+            "architectureGuard": "node --test tools/ci/docs-changed-governance-policy.test.mjs"
+          },
+          {
+            "name": "checkFilename",
+            "path": "tools/docs/check-filenames.ts",
+            "cqRails": ["ValidateChangedDocumentFilenames"],
+            "dddOwner": "ChangedDocumentFilenamePolicy",
+            "unitTests": ["tools/ci/docs-changed-governance-policy.test.mjs"],
+            "fowlerSignals": [
+              "policy_object",
+              "replace_implicit_semantics_with_explicit_policy"
+            ],
+            "cypressCoverage": "not applicable: repository documentation governance query",
+            "architectureGuard": "node --test tools/ci/docs-changed-governance-policy.test.mjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "DOCS-CANONICAL-FILENAME-GATE-20260731",
+        "userStories": [
+          "A maintainer can retire a noncanonical document name without the changed-file gate validating a path that no longer exists."
+        ],
+        "cypressFlows": [
+          "not applicable: repository documentation governance query"
+        ],
+        "domainObjects": ["ChangedDocumentPath"],
+        "fowlerSignals": [
+          "policy_object",
+          "replace_implicit_semantics_with_explicit_policy"
+        ],
+        "completionGate": [
+          "node --test tools/ci/docs-changed-governance-policy.test.mjs",
+          "pnpm docs:gov:filenames:changed",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "validatechangeddocumentfilenames-record",
+            "redTest": "node --test tools/ci/docs-changed-governance-policy.test.mjs",
+            "greenTest": "node --test tools/ci/docs-changed-governance-policy.test.mjs",
+            "patchSurfaces": [
+              "docs/.manifest.json",
+              "docs/adr/adr-catalog.md",
+              "docs/adr/adr-implementation-status.md",
+              "docs/adr/index.md",
+              "docs/architecture/components/engine/reviews/audit.md",
+              "docs/architecture/components/engine/reviews/index.md",
+              "docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md",
+              "docs/planning/archive/proposals/strategic-product-roadmap-20260324.md",
+              "docs/planning/closeouts/20260315-docs-governance-hardening-closeout.md",
+              "docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md",
+              "docs/planning/closeouts/20260404-plan-qa-tareas-mvp.md",
+              "docs/planning/closeouts/20260423-access-decision-embedded-first-closeout.md",
+              "docs/planning/closeouts/20260423-tenant-run-identity-platform-owned-run-id-closeout.md",
+              "docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md",
+              "docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md",
+              "docs/planning/reviews/architecture-and-governance/20260404-f04-frontend-data-boundary-hard-qa-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-hard-qa-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md",
+              "docs/planning/reviews/engine/20260404-s19f1-snapshot-optimization-plan-review.md",
+              "docs/planning/reviews/engine/20260405-mw-a2-policy-first-fowler-qa-review.md",
+              "docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-fowler-qa-review.md",
+              "docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md",
+              "docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md",
+              "docs/planning/status/governance-document-rule-inventory.md",
+              "docs/planning/templates/qa/index.md",
+              "docs/planning/templates/qa/qa-artifact-example-template.md",
+              "docs/planning/templates/qa/qa-current-task-check-prompt.md",
+              "docs/planning/templates/qa/qa-global-check-prompt.md",
+              "scripts/sync-docs.cjs",
+              "tools/ci/docs-changed-governance-policy.test.mjs",
+              "tools/docs/check-adr-catalog.ts",
+              "tools/docs/check-filenames.ts"
+            ],
+            "expectedFailure": "A deleted noncanonical Markdown path is incorrectly validated as if the document still existed."
+          }
+        ],
+        "componentGuides": [
+          "docs/guides/documentation-maintenance-guide-20260407.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ValidateChangedDocumentFilenames",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "ChangedDocumentFilenamePolicy"
+          }
+        ],
+        "architectureGuards": [
+          "node --test tools/ci/docs-changed-governance-policy.test.mjs"
+        ],
+        "implementationPlan": "Validate only present changed documents against canonical filename policy while allowing deletion of noncanonical historical paths.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "docs/.manifest.json",
+          "docs/adr/adr-catalog.md",
+          "docs/adr/adr-implementation-status.md",
+          "docs/adr/index.md",
+          "docs/architecture/components/engine/reviews/audit.md",
+          "docs/architecture/components/engine/reviews/index.md",
+          "docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md",
+          "docs/planning/archive/proposals/strategic-product-roadmap-20260324.md",
+          "docs/planning/closeouts/20260315-docs-governance-hardening-closeout.md",
+          "docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md",
+          "docs/planning/closeouts/20260404-plan-qa-tareas-mvp.md",
+          "docs/planning/closeouts/20260423-access-decision-embedded-first-closeout.md",
+          "docs/planning/closeouts/20260423-tenant-run-identity-platform-owned-run-id-closeout.md",
+          "docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md",
+          "docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md",
+          "docs/planning/reviews/architecture-and-governance/20260404-f04-frontend-data-boundary-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md",
+          "docs/planning/reviews/engine/20260404-s19f1-snapshot-optimization-plan-review.md",
+          "docs/planning/reviews/engine/20260405-mw-a2-policy-first-fowler-qa-review.md",
+          "docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-fowler-qa-review.md",
+          "docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md",
+          "docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/planning/templates/qa/index.md",
+          "docs/planning/templates/qa/qa-artifact-example-template.md",
+          "docs/planning/templates/qa/qa-current-task-check-prompt.md",
+          "docs/planning/templates/qa/qa-global-check-prompt.md",
+          "scripts/sync-docs.cjs",
+          "tools/ci/docs-changed-governance-policy.test.mjs",
+          "tools/docs/check-adr-catalog.ts",
+          "tools/docs/check-filenames.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/**"]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-07-31T11:29:35.729Z"
+    },
+    {
+      "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
+      "featureId": "GD-REV-PLANNING-CANON",
+      "mechanizationStatus": "implemented",
+      "railName": "ValidatePlanningReviewBoardTraceability",
+      "normalizedRailName": "validateplanningreviewboardtraceability",
+      "railType": "query",
+      "dddOwner": "PlanningBoardTraceability",
+      "railStatus": "implemented",
+      "symbolRefs": ["tools/ci/planning-review-canon.test.mjs#requiredFiles"],
+      "implementationRefs": [
+        "tools/ci/planning-review-canon.test.mjs#requiredFiles"
+      ],
+      "documentationRefs": [
+        "docs/planning/state/github-mvp-issue-workflow.md",
+        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        ".github/actions/prepare-planning-db/action.yml",
+        ".github/workflows/ci.yml",
+        ".github/workflows/pr-quality-gate.yml",
+        ".gitignore",
+        "AGENTS.md",
+        "package.json",
+        "docs/DOCS_README.md",
+        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+        "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
+        "docs/architecture/components/ci-governance/**",
+        "docs/architecture/components/engine/roadmap/engine-phases.md",
+        "docs/architecture/components/web/**",
+        "docs/architecture/system-delivery-status.md",
+        "docs/generated-docs-policy.json",
+        "docs/guides/*.md",
+        "docs/planning/gaps/**",
+        "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
+        "docs/planning/reviews/review-status-board.md",
+        "docs/planning/reviews/sprints/index.md",
+        "docs/planning/roadmap/**",
+        "docs/planning/state/**",
+        "docs/planning/status/docs-task-disposition-inventory-20260510.md",
+        "docs/planning/templates/execution-work-item-template.md",
+        "docs/runbooks/*.md",
+        "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+        "scripts/README.md",
+        "scripts/check-feature-mechanization*",
+        "scripts/closeout-changed.test.cjs",
+        "scripts/docs-*.cjs",
+        "scripts/generate-planning-lanes*",
+        "scripts/generate-workboard*",
+        "scripts/governance-*.cjs",
+        "scripts/local-validation-plan.cjs",
+        "scripts/planning-db*.cjs",
+        "scripts/planning-db/**",
+        "scripts/planning-db-operate-tests/**",
+        "scripts/planning-github-status-projection*",
+        "scripts/sync-docs.cjs",
+        "scripts/verify-changed.test.cjs",
+        "tools/ci/**",
+        "tools/planning-db/state/canonical-state.json",
+        "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md",
+        "docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md",
+        "docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md"
+      ],
+      "architectureGuards": [
+        "node --test tools/ci/planning-review-canon.test.mjs"
+      ],
+      "completionGate": [
+        "node --test tools/ci/planning-review-canon.test.mjs",
+        "pnpm planning:db:integrity:check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "tools/ci/planning-review-canon.test.mjs",
+      "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
+      "rawRail": {
+        "name": "ValidatePlanningReviewBoardTraceability",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "PlanningBoardTraceability"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "requiredFiles",
+            "path": "tools/ci/planning-review-canon.test.mjs",
+            "cqRails": ["ValidatePlanningReviewBoardTraceability"],
+            "dddOwner": "PlanningBoardTraceability",
+            "unitTests": ["tools/ci/planning-review-canon.test.mjs"],
+            "fowlerSignals": [
+              "single_source_of_truth",
+              "semantic_fitness_function"
+            ],
+            "cypressCoverage": "not applicable: repository governance query",
+            "architectureGuard": "node --test tools/ci/planning-review-canon.test.mjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "GD-REV-PLANNING-CANON",
+        "userStories": [
+          "docs/architecture/components/ci-governance/planning-review-canon-user-stories.md"
+        ],
+        "cypressFlows": ["not applicable: repository governance query"],
+        "domainObjects": ["PlanningReviewBoardTraceability"],
+        "fowlerSignals": [
+          "single_source_of_truth",
+          "semantic_fitness_function"
+        ],
+        "completionGate": [
+          "node --test tools/ci/planning-review-canon.test.mjs",
+          "pnpm planning:db:integrity:check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "validateplanningreviewboardtraceability-record",
+            "redTest": "node --test tools/ci/planning-review-canon.test.mjs",
+            "greenTest": "node --test tools/ci/planning-review-canon.test.mjs",
+            "patchSurfaces": [
+              ".github/actions/prepare-planning-db/action.yml",
+              ".github/workflows/ci.yml",
+              ".github/workflows/pr-quality-gate.yml",
+              ".gitignore",
+              "AGENTS.md",
+              "package.json",
+              "docs/DOCS_README.md",
+              "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+              "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+              "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
+              "docs/architecture/components/ci-governance/**",
+              "docs/architecture/components/engine/roadmap/engine-phases.md",
+              "docs/architecture/components/web/**",
+              "docs/architecture/system-delivery-status.md",
+              "docs/generated-docs-policy.json",
+              "docs/guides/*.md",
+              "docs/planning/gaps/**",
+              "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
+              "docs/planning/reviews/review-status-board.md",
+              "docs/planning/reviews/sprints/index.md",
+              "docs/planning/roadmap/**",
+              "docs/planning/state/**",
+              "docs/planning/status/docs-task-disposition-inventory-20260510.md",
+              "docs/planning/templates/execution-work-item-template.md",
+              "docs/runbooks/*.md",
+              "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+              "scripts/README.md",
+              "scripts/check-feature-mechanization*",
+              "scripts/closeout-changed.test.cjs",
+              "scripts/docs-*.cjs",
+              "scripts/generate-planning-lanes*",
+              "scripts/generate-workboard*",
+              "scripts/governance-*.cjs",
+              "scripts/local-validation-plan.cjs",
+              "scripts/planning-db*.cjs",
+              "scripts/planning-db/**",
+              "scripts/planning-db-operate-tests/**",
+              "scripts/planning-github-status-projection*",
+              "scripts/sync-docs.cjs",
+              "scripts/verify-changed.test.cjs",
+              "tools/ci/**",
+              "tools/planning-db/state/canonical-state.json",
+              "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md",
+              "docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md",
+              "docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md"
+            ],
+            "expectedFailure": "Review governance recreates local task lifecycle, lane state, or generated workboard authority beside GitHub Issues."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/planning-review-canon-component.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ValidatePlanningReviewBoardTraceability",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "PlanningBoardTraceability"
+          }
+        ],
+        "architectureGuards": [
+          "node --test tools/ci/planning-review-canon.test.mjs"
+        ],
+        "implementationPlan": "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          ".github/actions/prepare-planning-db/action.yml",
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          ".gitignore",
+          "AGENTS.md",
+          "package.json",
+          "docs/DOCS_README.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
+          "docs/architecture/components/ci-governance/**",
+          "docs/architecture/components/engine/roadmap/engine-phases.md",
+          "docs/architecture/components/web/**",
+          "docs/architecture/system-delivery-status.md",
+          "docs/generated-docs-policy.json",
+          "docs/guides/*.md",
+          "docs/planning/gaps/**",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
+          "docs/planning/reviews/review-status-board.md",
+          "docs/planning/reviews/sprints/index.md",
+          "docs/planning/roadmap/**",
+          "docs/planning/state/**",
+          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
+          "docs/planning/templates/execution-work-item-template.md",
+          "docs/runbooks/*.md",
+          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+          "scripts/README.md",
+          "scripts/check-feature-mechanization*",
+          "scripts/closeout-changed.test.cjs",
+          "scripts/docs-*.cjs",
+          "scripts/generate-planning-lanes*",
+          "scripts/generate-workboard*",
+          "scripts/governance-*.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/planning-db*.cjs",
+          "scripts/planning-db/**",
+          "scripts/planning-db-operate-tests/**",
+          "scripts/planning-github-status-projection*",
+          "scripts/sync-docs.cjs",
+          "scripts/verify-changed.test.cjs",
+          "tools/ci/**",
+          "tools/planning-db/state/canonical-state.json",
+          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md",
+          "docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/**"]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-07-31T11:30:50.789Z"
+    },
+    {
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicalarchitecturestate",
       "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
       "mechanizationStatus": "implemented",
-      "railName": "ExportPlanningDbCanonicalLaneState",
-      "normalizedRailName": "exportplanningdbcanonicallanestate",
+      "railName": "ExportPlanningDbCanonicalArchitectureState",
+      "normalizedRailName": "exportplanningdbcanonicalarchitecturestate",
       "railType": "command",
       "dddOwner": "PlanningDbCanonicalStateExport",
       "railStatus": "implemented",
       "symbolRefs": [
-        "scripts/planning-db-export.cjs#planningLaneFilePattern",
         "scripts/planning-db-export.cjs#PlanningDbExportRunner",
         "scripts/planning-db-export.cjs#canonicalStateArtifactPath"
       ],
       "implementationRefs": [
-        "scripts/planning-db-export.cjs#planningLaneFilePattern",
         "scripts/planning-db-export.cjs#PlanningDbExportRunner",
         "scripts/planning-db-export.cjs#canonicalStateArtifactPath"
       ],
@@ -24,6 +527,7 @@
         "docs/architecture/command-query-rail-governance.md"
       ],
       "governingSources": [
+        "AGENTS.md",
         "docs/planning/status/governance-document-rule-inventory.md",
         "docs/architecture/command-query-rail-governance.md",
         "docs/architecture/fowler-opportunity-planning-governance.md"
@@ -40,9 +544,9 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "6e28267647ec9f50170452780cc8a9224c61a856747fd9346ad006a17116cdd1",
+      "sourceContentSha256": "0ec8df8917bab22135984599d5ac18d62a4949f9877217e836b039757fb53e1c",
       "rawRail": {
-        "name": "ExportPlanningDbCanonicalLaneState",
+        "name": "ExportPlanningDbCanonicalArchitectureState",
         "type": "command",
         "status": "implemented",
         "dddOwner": "PlanningDbCanonicalStateExport"
@@ -50,19 +554,9 @@
       "rawManifest": {
         "symbols": [
           {
-            "name": "planningLaneFilePattern",
-            "path": "scripts/planning-db-export.cjs",
-            "cqRails": ["ExportPlanningDbCanonicalLaneState"],
-            "dddOwner": "PlanningDbCanonicalStateExport",
-            "unitTests": ["scripts/planning-db-export.test.cjs"],
-            "fowlerSignals": ["gateway", "data_mapper"],
-            "cypressCoverage": "not applicable: repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-export.test.cjs"
-          },
-          {
             "name": "PlanningDbExportRunner",
             "path": "scripts/planning-db-export.cjs",
-            "cqRails": ["ExportPlanningDbCanonicalLaneState"],
+            "cqRails": ["ExportPlanningDbCanonicalArchitectureState"],
             "dddOwner": "PlanningDbCanonicalStateExport",
             "unitTests": ["scripts/planning-db-export.test.cjs"],
             "fowlerSignals": ["gateway", "data_mapper"],
@@ -72,7 +566,7 @@
           {
             "name": "canonicalStateArtifactPath",
             "path": "scripts/planning-db-export.cjs",
-            "cqRails": ["ExportPlanningDbCanonicalLaneState"],
+            "cqRails": ["ExportPlanningDbCanonicalArchitectureState"],
             "dddOwner": "PlanningDbCanonicalStateExport",
             "unitTests": ["scripts/planning-db-export.test.cjs"],
             "fowlerSignals": ["gateway", "data_mapper"],
@@ -83,13 +577,10 @@
         "version": 1,
         "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
         "userStories": [
-          "A governance maintainer rebuilds DB-authored planning state deterministically from versioned canonical state."
+          "A governance maintainer exports current architecture state without local task lifecycle or lane snapshots."
         ],
         "cypressFlows": ["not applicable: repository governance CLI"],
-        "domainObjects": [
-          "PlanningLaneStateSnapshot",
-          "PlanningDbCanonicalStateSnapshot"
-        ],
+        "domainObjects": ["PlanningDbCanonicalArchitectureState"],
         "fowlerSignals": ["gateway", "data_mapper"],
         "completionGate": [
           "node --test scripts/planning-db-export.test.cjs",
@@ -98,7 +589,7 @@
         ],
         "redGreenCycles": [
           {
-            "id": "exportplanningdbcanonicallanestate-record",
+            "id": "exportplanningdbcanonicalarchitecturestate-record",
             "redTest": "node --test scripts/planning-db-export.test.cjs",
             "greenTest": "node --test scripts/planning-db-export.test.cjs",
             "patchSurfaces": [
@@ -106,20 +597,21 @@
               "scripts/planning-db-export.test.cjs",
               "tools/planning-db/state/canonical-state.json"
             ],
-            "expectedFailure": "DB-authored feature rails are absent after a clean Planning DB rebuild or the canonical snapshot changes on a no-delta cycle."
+            "expectedFailure": "The canonical export contains retired local task state or omits current DB-authored architecture state."
           }
         ],
         "componentGuides": [
-          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
+          "docs/architecture/command-query-rail-governance.md"
         ],
         "governingSources": [
+          "AGENTS.md",
           "docs/planning/status/governance-document-rule-inventory.md",
           "docs/architecture/command-query-rail-governance.md",
           "docs/architecture/fowler-opportunity-planning-governance.md"
         ],
         "commandQueryRails": [
           {
-            "name": "ExportPlanningDbCanonicalLaneState",
+            "name": "ExportPlanningDbCanonicalArchitectureState",
             "type": "command",
             "status": "implemented",
             "dddOwner": "PlanningDbCanonicalStateExport"
@@ -128,7 +620,7 @@
         "architectureGuards": [
           "node --test scripts/planning-db-export.test.cjs"
         ],
-        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
+        "implementationPlan": "Planning DB export serializes only current DB-authored architecture and feature-mechanization state for deterministic Git recovery.",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -137,12 +629,12 @@
           "tools/planning-db/state/canonical-state.json"
         ],
         "forbiddenImplementationSurfaces": [
-          "GitHub issue status as planning authority"
+          "docs/planning/state/agent-lane-*.yaml"
         ]
       },
-      "revision": 2,
+      "revision": 1,
       "createdBy": "codex",
-      "createdAt": "2026-07-30T20:01:41.639Z"
+      "createdAt": "2026-07-31T10:13:21.589Z"
     },
     {
       "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#query#enforceplanningdbschemaonlymigrations",
@@ -373,7 +865,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-import.cjs",
-      "sourceContentSha256": "ca54abe2f86d6105d845aced09509edd9871280a2b3bb947ee210a98675a8f12",
+      "sourceContentSha256": "985afddaebe7efe622e8f2635ed8360f40e7606bc7d85de58fabe2965ce95d6b",
       "rawRail": {
         "name": "PreserveLocalFeatureMechanizationRails",
         "type": "command",
@@ -527,603 +1019,6 @@
       "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-07-30T21:37:21.767Z"
-    },
-    {
-      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#command#reconcilegithubplanningprojection",
-      "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-      "mechanizationStatus": "implemented",
-      "railName": "ReconcileGitHubPlanningProjection",
-      "normalizedRailName": "reconcilegithubplanningprojection",
-      "railType": "command",
-      "dddOwner": "Planning Governance",
-      "railStatus": "implemented",
-      "symbolRefs": [
-        "scripts/planning-db/github-planning-projection-policy.cjs#GitHubPlanningReconciliationCommand",
-        "scripts/planning-db/github-planning-projection-policy.cjs#reconciliationComment",
-        "scripts/planning-db/github-planning-projection-policy.cjs#ReconcileGitHubPlanningProjection",
-        "scripts/planning-github-status-projection.cjs#defaultRepository",
-        "scripts/planning-github-status-projection.cjs#validateMode",
-        "scripts/planning-github-status-projection.cjs#parseCliArguments",
-        "scripts/planning-github-status-projection.cjs#PlanningDbEffectiveTaskReader",
-        "scripts/planning-github-status-projection.cjs#runGitHubCli",
-        "scripts/planning-github-status-projection.cjs#GitHubCliIssueGateway",
-        "scripts/planning-github-status-projection.cjs#runGitHubPlanningProjection",
-        "scripts/planning-github-status-projection.cjs#main"
-      ],
-      "implementationRefs": [
-        "scripts/planning-db/github-planning-projection-policy.cjs#GitHubPlanningReconciliationCommand",
-        "scripts/planning-db/github-planning-projection-policy.cjs#reconciliationComment",
-        "scripts/planning-db/github-planning-projection-policy.cjs#ReconcileGitHubPlanningProjection",
-        "scripts/planning-github-status-projection.cjs#defaultRepository",
-        "scripts/planning-github-status-projection.cjs#validateMode",
-        "scripts/planning-github-status-projection.cjs#parseCliArguments",
-        "scripts/planning-github-status-projection.cjs#PlanningDbEffectiveTaskReader",
-        "scripts/planning-github-status-projection.cjs#runGitHubCli",
-        "scripts/planning-github-status-projection.cjs#GitHubCliIssueGateway",
-        "scripts/planning-github-status-projection.cjs#runGitHubPlanningProjection",
-        "scripts/planning-github-status-projection.cjs#main"
-      ],
-      "documentationRefs": [
-        "docs/architecture/command-query-rail-governance.md"
-      ],
-      "governingSources": [
-        "AGENTS.md",
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/architecture/fowler-opportunity-planning-governance.md"
-      ],
-      "allowedImplementationSurfaces": [
-        "scripts/planning-db/github-planning-projection-policy.cjs",
-        "scripts/planning-db/github-planning-projection-policy.test.cjs",
-        "scripts/planning-github-status-projection.cjs",
-        "scripts/planning-github-status-projection.test.cjs",
-        "package.json"
-      ],
-      "architectureGuards": [
-        "The command aborts before mutation when any issue maps to multiple effective tasks",
-        "Only close and reopen are allowed; issue creation and planning lifecycle writes remain outside this rail"
-      ],
-      "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
-      "sourcePath": "scripts/planning-github-status-projection.cjs",
-      "sourceContentSha256": "814b828c6274adac88bc8151d8aebe6bd42ea574fb840ce451368ecda4ebb20d",
-      "rawRail": {
-        "name": "ReconcileGitHubPlanningProjection",
-        "type": "command",
-        "status": "implemented",
-        "dddOwner": "Planning Governance"
-      },
-      "rawManifest": {
-        "symbols": [
-          {
-            "name": "GitHubPlanningReconciliationCommand",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          },
-          {
-            "name": "reconciliationComment",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          },
-          {
-            "name": "ReconcileGitHubPlanningProjection",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          },
-          {
-            "name": "defaultRepository",
-            "path": "scripts/planning-github-status-projection.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          },
-          {
-            "name": "validateMode",
-            "path": "scripts/planning-github-status-projection.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          },
-          {
-            "name": "parseCliArguments",
-            "path": "scripts/planning-github-status-projection.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          },
-          {
-            "name": "PlanningDbEffectiveTaskReader",
-            "path": "scripts/planning-github-status-projection.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          },
-          {
-            "name": "runGitHubCli",
-            "path": "scripts/planning-github-status-projection.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          },
-          {
-            "name": "GitHubCliIssueGateway",
-            "path": "scripts/planning-github-status-projection.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          },
-          {
-            "name": "runGitHubPlanningProjection",
-            "path": "scripts/planning-github-status-projection.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          },
-          {
-            "name": "main",
-            "path": "scripts/planning-github-status-projection.cjs",
-            "cqRails": ["ReconcileGitHubPlanningProjection"],
-            "dddOwner": "Planning Governance",
-            "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-            "fowlerSignals": [
-              "Command Object owns the only authorized close and reopen mutations"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query",
-            "architectureGuard": "The command aborts before mutation when any issue maps to multiple effective tasks"
-          }
-        ],
-        "version": 1,
-        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-        "userStories": [
-          "As a maintainer, I can reconcile explicitly linked GitHub issues from verified Planning DB lifecycle state"
-        ],
-        "cypressFlows": [
-          "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query"
-        ],
-        "domainObjects": ["GitHubPlanningReconciliationCommand"],
-        "fowlerSignals": [
-          "Command Object owns the only authorized close and reopen mutations"
-        ],
-        "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
-        "redGreenCycles": [
-          {
-            "id": "reconcilegithubplanningprojection-record",
-            "redTest": "GitHub issue reads stopped after an arbitrary limit and omitted linked or planning-labeled issues",
-            "greenTest": "Adapter tests and a live check prove paginated issue projection without missing linked issues",
-            "patchSurfaces": [
-              "scripts/planning-github-status-projection.cjs",
-              "scripts/planning-github-status-projection.test.cjs"
-            ],
-            "expectedFailure": "The gateway omitted issues beyond the configured gh issue list limit"
-          }
-        ],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "governingSources": [
-          "AGENTS.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "ReconcileGitHubPlanningProjection",
-            "type": "command",
-            "status": "implemented",
-            "dddOwner": "Planning Governance"
-          }
-        ],
-        "architectureGuards": [
-          "The command aborts before mutation when any issue maps to multiple effective tasks",
-          "Only close and reopen are allowed; issue creation and planning lifecycle writes remain outside this rail"
-        ],
-        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
-        "mechanizationStatus": "implemented",
-        "noHumanDecisionsRemaining": true,
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db/github-planning-projection-policy.cjs",
-          "scripts/planning-db/github-planning-projection-policy.test.cjs",
-          "scripts/planning-github-status-projection.cjs",
-          "scripts/planning-github-status-projection.test.cjs",
-          "package.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "tools/planning-db/migrations",
-          ".github/workflows/adapter-postgres-integration-nightly.yml"
-        ]
-      },
-      "revision": 3,
-      "createdBy": "codex",
-      "createdAt": "2026-07-30T21:58:09.878Z"
-    },
-    {
-      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#query#listgithubplanningprojectiondrift",
-      "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-      "mechanizationStatus": "implemented",
-      "railName": "ListGitHubPlanningProjectionDrift",
-      "normalizedRailName": "listgithubplanningprojectiondrift",
-      "railType": "query",
-      "dddOwner": "Planning Governance",
-      "railStatus": "implemented",
-      "symbolRefs": [
-        "scripts/planning-db/github-planning-projection-policy.cjs#GitHubPlanningProjectionReadModel",
-        "scripts/planning-db/github-planning-projection-policy.cjs#planningIssueLabels",
-        "scripts/planning-db/github-planning-projection-policy.cjs#supportedTaskStatuses",
-        "scripts/planning-db/github-planning-projection-policy.cjs#terminalTaskStatuses",
-        "scripts/planning-db/github-planning-projection-policy.cjs#normalizeRepository",
-        "scripts/planning-db/github-planning-projection-policy.cjs#parseGitHubIssueReference",
-        "scripts/planning-db/github-planning-projection-policy.cjs#normalizeTask",
-        "scripts/planning-db/github-planning-projection-policy.cjs#normalizeIssue",
-        "scripts/planning-db/github-planning-projection-policy.cjs#collectTaskLinks",
-        "scripts/planning-db/github-planning-projection-policy.cjs#isPlanningIssue",
-        "scripts/planning-db/github-planning-projection-policy.cjs#classifyLinkedIssue",
-        "scripts/planning-db/github-planning-projection-policy.cjs#buildProjectionRecord",
-        "scripts/planning-db/github-planning-projection-policy.cjs#buildGitHubPlanningProjection",
-        "scripts/planning-db/github-planning-projection-policy.cjs#ListGitHubPlanningProjectionDrift"
-      ],
-      "implementationRefs": [
-        "scripts/planning-db/github-planning-projection-policy.cjs#GitHubPlanningProjectionReadModel",
-        "scripts/planning-db/github-planning-projection-policy.cjs#planningIssueLabels",
-        "scripts/planning-db/github-planning-projection-policy.cjs#supportedTaskStatuses",
-        "scripts/planning-db/github-planning-projection-policy.cjs#terminalTaskStatuses",
-        "scripts/planning-db/github-planning-projection-policy.cjs#normalizeRepository",
-        "scripts/planning-db/github-planning-projection-policy.cjs#parseGitHubIssueReference",
-        "scripts/planning-db/github-planning-projection-policy.cjs#normalizeTask",
-        "scripts/planning-db/github-planning-projection-policy.cjs#normalizeIssue",
-        "scripts/planning-db/github-planning-projection-policy.cjs#collectTaskLinks",
-        "scripts/planning-db/github-planning-projection-policy.cjs#isPlanningIssue",
-        "scripts/planning-db/github-planning-projection-policy.cjs#classifyLinkedIssue",
-        "scripts/planning-db/github-planning-projection-policy.cjs#buildProjectionRecord",
-        "scripts/planning-db/github-planning-projection-policy.cjs#buildGitHubPlanningProjection",
-        "scripts/planning-db/github-planning-projection-policy.cjs#ListGitHubPlanningProjectionDrift"
-      ],
-      "documentationRefs": [
-        "docs/architecture/command-query-rail-governance.md"
-      ],
-      "governingSources": [
-        "AGENTS.md",
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/architecture/fowler-opportunity-planning-governance.md"
-      ],
-      "allowedImplementationSurfaces": [
-        "scripts/planning-db/github-planning-projection-policy.cjs",
-        "scripts/planning-db/github-planning-projection-policy.test.cjs",
-        "scripts/planning-github-status-projection.cjs",
-        "scripts/planning-github-status-projection.test.cjs",
-        "package.json"
-      ],
-      "architectureGuards": [
-        "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership",
-        "Unmapped, missing, ambiguous, and unknown states fail closed"
-      ],
-      "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
-      "sourcePath": "scripts/planning-db/github-planning-projection-policy.cjs",
-      "sourceContentSha256": "3deb74d74d7f48ba52b72c7dbecff31838d82e38a209126ad876015ee1a65138",
-      "rawRail": {
-        "name": "ListGitHubPlanningProjectionDrift",
-        "type": "query",
-        "status": "implemented",
-        "dddOwner": "Planning Governance"
-      },
-      "rawManifest": {
-        "symbols": [
-          {
-            "name": "GitHubPlanningProjectionReadModel",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "planningIssueLabels",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "supportedTaskStatuses",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "terminalTaskStatuses",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "normalizeRepository",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "parseGitHubIssueReference",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "normalizeTask",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "normalizeIssue",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "collectTaskLinks",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "isPlanningIssue",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "classifyLinkedIssue",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "buildProjectionRecord",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "buildGitHubPlanningProjection",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          },
-          {
-            "name": "ListGitHubPlanningProjectionDrift",
-            "path": "scripts/planning-db/github-planning-projection-policy.cjs",
-            "cqRails": ["ListGitHubPlanningProjectionDrift"],
-            "dddOwner": "Planning Governance",
-            "unitTests": [
-              "scripts/planning-db/github-planning-projection-policy.test.cjs"
-            ],
-            "fowlerSignals": [
-              "Query Object isolates projection classification from the CLI adapter"
-            ],
-            "cypressCoverage": "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state",
-            "architectureGuard": "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership"
-          }
-        ],
-        "version": 1,
-        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-        "userStories": [
-          "As a maintainer, I can inspect GitHub planning-state drift without treating GitHub as lifecycle authority"
-        ],
-        "cypressFlows": [
-          "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state"
-        ],
-        "domainObjects": ["GitHubPlanningProjectionReadModel"],
-        "fowlerSignals": [
-          "Query Object isolates projection classification from the CLI adapter"
-        ],
-        "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
-        "redGreenCycles": [
-          {
-            "id": "listgithubplanningprojectiondrift-record",
-            "redTest": "Policy module import failed before the projection query existed",
-            "greenTest": "Projection policy tests classify exact links, drift, incidents, and ambiguity deterministically",
-            "patchSurfaces": [
-              "scripts/planning-db/github-planning-projection-policy.cjs",
-              "scripts/planning-db/github-planning-projection-policy.test.cjs",
-              "scripts/planning-github-status-projection.cjs",
-              "scripts/planning-github-status-projection.test.cjs",
-              "package.json"
-            ],
-            "expectedFailure": "MODULE_NOT_FOUND for the canonical projection policy"
-          }
-        ],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "governingSources": [
-          "AGENTS.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "ListGitHubPlanningProjectionDrift",
-            "type": "query",
-            "status": "implemented",
-            "dddOwner": "Planning Governance"
-          }
-        ],
-        "architectureGuards": [
-          "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership",
-          "Unmapped, missing, ambiguous, and unknown states fail closed"
-        ],
-        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
-        "mechanizationStatus": "implemented",
-        "noHumanDecisionsRemaining": true,
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db/github-planning-projection-policy.cjs",
-          "scripts/planning-db/github-planning-projection-policy.test.cjs",
-          "scripts/planning-github-status-projection.cjs",
-          "scripts/planning-github-status-projection.test.cjs",
-          "package.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "tools/planning-db/migrations",
-          ".github/workflows/adapter-postgres-integration-nightly.yml"
-        ]
-      },
-      "revision": 3,
-      "createdBy": "codex",
-      "createdAt": "2026-07-30T21:57:48.325Z"
     },
     {
       "railId": "local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties",
@@ -1323,74 +1218,6 @@
       "createdAt": "2026-07-30T20:01:19.771Z"
     },
     {
-      "operationId": "dd9db39a-f11b-465b-b295-7e8849cea8f4",
-      "idempotencyKey": "codex-20260730-lane-export-feature-rail",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicallanestate",
-      "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "6bb959fa0751ed0ffe7b76efac1a08085afcfebbf2dd1fb9909da4b6ceef19f3",
-      "expectedRevision": null,
-      "previousRevision": null,
-      "resultingRevision": 0,
-      "payload": {
-        "redTest": "node --test scripts/planning-db-export.test.cjs",
-        "dddOwner": "PlanningDbCanonicalStateExport",
-        "railName": "ExportPlanningDbCanonicalLaneState",
-        "railType": "command",
-        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
-        "greenTest": "node --test scripts/planning-db-export.test.cjs",
-        "sourceRef": "scripts/planning-db-export.cjs",
-        "unitTests": ["scripts/planning-db-export.test.cjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "A governance maintainer exports effective lane state without claims or formatting-only drift."
-        ],
-        "cypressFlows": ["not applicable: repository governance CLI"],
-        "domainObjects": ["PlanningLaneStateSnapshot"],
-        "fowlerSignals": ["gateway", "data_mapper"],
-        "patchSurfaces": [
-          "scripts/planning-db-export.cjs",
-          "scripts/planning-db-export.test.cjs"
-        ],
-        "completionGate": [
-          "node --test scripts/planning-db-export.test.cjs",
-          "pnpm planning:db:export:check",
-          "pnpm verify:prepush"
-        ],
-        "componentGuides": [
-          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
-        ],
-        "expectedFailure": "Effective lane task state is absent from the exported recovery surface or claim state leaks into Git.",
-        "governingSources": [
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/adr/adr-0055-planning-db-canonical-operational-source.md"
-        ],
-        "architectureGuards": [
-          "node --test scripts/planning-db-export.test.cjs"
-        ],
-        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
-        "implementationRefs": [
-          "scripts/planning-db-export.cjs#planningLaneFilePattern",
-          "scripts/planning-db-export.cjs#PlanningDbExportRunner"
-        ],
-        "normalizedRailName": "exportplanningdbcanonicallanestate",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "6bb959fa0751ed0ffe7b76efac1a08085afcfebbf2dd1fb9909da4b6ceef19f3",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db-export.cjs",
-          "scripts/planning-db-export.test.cjs"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "GitHub issue status as planning authority"
-        ]
-      },
-      "createdAt": "2026-07-30T20:01:41.639Z"
-    },
-    {
       "operationId": "10059394-b171-44fd-97f4-d0b6b566f3d2",
       "idempotencyKey": "codex-20260730-schema-only-feature-rail-fowler",
       "operationType": "feature_mechanization_rail_record",
@@ -1462,150 +1289,6 @@
         ]
       },
       "createdAt": "2026-07-30T20:02:20.561Z"
-    },
-    {
-      "operationId": "cc3b1af4-1fec-42dc-9540-7b4ee6f3ca92",
-      "idempotencyKey": "codex-20260730-lane-export-feature-rail-fowler",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicallanestate",
-      "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "6bb959fa0751ed0ffe7b76efac1a08085afcfebbf2dd1fb9909da4b6ceef19f3",
-      "expectedRevision": 0,
-      "previousRevision": 0,
-      "resultingRevision": 1,
-      "payload": {
-        "redTest": "node --test scripts/planning-db-export.test.cjs",
-        "dddOwner": "PlanningDbCanonicalStateExport",
-        "railName": "ExportPlanningDbCanonicalLaneState",
-        "railType": "command",
-        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
-        "greenTest": "node --test scripts/planning-db-export.test.cjs",
-        "sourceRef": "scripts/planning-db-export.cjs",
-        "unitTests": ["scripts/planning-db-export.test.cjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "A governance maintainer exports effective lane state without claims or formatting-only drift."
-        ],
-        "cypressFlows": ["not applicable: repository governance CLI"],
-        "domainObjects": ["PlanningLaneStateSnapshot"],
-        "fowlerSignals": ["gateway", "data_mapper"],
-        "patchSurfaces": [
-          "scripts/planning-db-export.cjs",
-          "scripts/planning-db-export.test.cjs"
-        ],
-        "completionGate": [
-          "node --test scripts/planning-db-export.test.cjs",
-          "pnpm planning:db:export:check",
-          "pnpm verify:prepush"
-        ],
-        "componentGuides": [
-          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
-        ],
-        "expectedFailure": "Effective lane task state is absent from the exported recovery surface or claim state leaks into Git.",
-        "governingSources": [
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/adr/adr-0055-planning-db-canonical-operational-source.md"
-        ],
-        "architectureGuards": [
-          "node --test scripts/planning-db-export.test.cjs"
-        ],
-        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
-        "implementationRefs": [
-          "scripts/planning-db-export.cjs#planningLaneFilePattern",
-          "scripts/planning-db-export.cjs#PlanningDbExportRunner"
-        ],
-        "normalizedRailName": "exportplanningdbcanonicallanestate",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "6bb959fa0751ed0ffe7b76efac1a08085afcfebbf2dd1fb9909da4b6ceef19f3",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db-export.cjs",
-          "scripts/planning-db-export.test.cjs"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "GitHub issue status as planning authority"
-        ]
-      },
-      "createdAt": "2026-07-30T20:02:39.633Z"
-    },
-    {
-      "operationId": "582aa594-17b3-43c3-9352-643073a3a723",
-      "idempotencyKey": "codex-20260730-export-canonical-state-rev2",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicallanestate",
-      "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "4ef57dd41ee0cb46bd424f78512e0b0a3622cd2e1718439a28b2bf1ae5bd2c5f",
-      "expectedRevision": 1,
-      "previousRevision": 1,
-      "resultingRevision": 2,
-      "payload": {
-        "redTest": "node --test scripts/planning-db-export.test.cjs",
-        "dddOwner": "PlanningDbCanonicalStateExport",
-        "railName": "ExportPlanningDbCanonicalLaneState",
-        "railType": "command",
-        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
-        "greenTest": "node --test scripts/planning-db-export.test.cjs",
-        "sourceRef": "scripts/planning-db-export.cjs",
-        "unitTests": ["scripts/planning-db-export.test.cjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "A governance maintainer rebuilds DB-authored planning state deterministically from versioned canonical state."
-        ],
-        "cypressFlows": ["not applicable: repository governance CLI"],
-        "domainObjects": [
-          "PlanningLaneStateSnapshot",
-          "PlanningDbCanonicalStateSnapshot"
-        ],
-        "fowlerSignals": ["gateway", "data_mapper"],
-        "patchSurfaces": [
-          "scripts/planning-db-export.cjs",
-          "scripts/planning-db-export.test.cjs",
-          "tools/planning-db/state/canonical-state.json"
-        ],
-        "completionGate": [
-          "node --test scripts/planning-db-export.test.cjs",
-          "pnpm planning:db:export:check",
-          "pnpm verify:prepush"
-        ],
-        "componentGuides": [
-          "docs/architecture/components/ci-governance/ci-delivery-governance-component.md"
-        ],
-        "expectedFailure": "DB-authored feature rails are absent after a clean Planning DB rebuild or the canonical snapshot changes on a no-delta cycle.",
-        "governingSources": [
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "architectureGuards": [
-          "node --test scripts/planning-db-export.test.cjs"
-        ],
-        "implementationPlan": "Planning DB design PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730 and task A-GOVERNANCE-CHANGE-AMPLIFICATION-1",
-        "implementationRefs": [
-          "scripts/planning-db-export.cjs#planningLaneFilePattern",
-          "scripts/planning-db-export.cjs#PlanningDbExportRunner",
-          "scripts/planning-db-export.cjs#canonicalStateArtifactPath"
-        ],
-        "normalizedRailName": "exportplanningdbcanonicallanestate",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "4ef57dd41ee0cb46bd424f78512e0b0a3622cd2e1718439a28b2bf1ae5bd2c5f",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db-export.cjs",
-          "scripts/planning-db-export.test.cjs",
-          "tools/planning-db/state/canonical-state.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "GitHub issue status as planning authority"
-        ]
-      },
-      "createdAt": "2026-07-30T20:25:13.368Z"
     },
     {
       "operationId": "e29881dd-45fe-46a7-ad74-41f63812d838",
@@ -1696,529 +1379,6 @@
         ]
       },
       "createdAt": "2026-07-30T20:25:40.332Z"
-    },
-    {
-      "operationId": "01c26e2a-6980-4310-9601-b6eecdbbfa46",
-      "idempotencyKey": "feature_mechanization_rail_record:codex:PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730:query:listgithubplanningprojectiondrift:latest:ddd07315ea70911f",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#query#listgithubplanningprojectiondrift",
-      "sourcePath": "scripts/planning-db/github-planning-projection-policy.cjs",
-      "sourceContentSha256": "3deb74d74d7f48ba52b72c7dbecff31838d82e38a209126ad876015ee1a65138",
-      "expectedRevision": null,
-      "previousRevision": null,
-      "resultingRevision": 0,
-      "payload": {
-        "redTest": "Policy module import failed before the projection query existed",
-        "dddOwner": "Planning Governance",
-        "railName": "ListGitHubPlanningProjectionDrift",
-        "railType": "query",
-        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-        "greenTest": "Projection policy tests classify exact links, drift, incidents, and ambiguity deterministically",
-        "sourceRef": "scripts/planning-db/github-planning-projection-policy.cjs",
-        "unitTests": [
-          "scripts/planning-db/github-planning-projection-policy.test.cjs"
-        ],
-        "railStatus": "implemented",
-        "userStories": [
-          "As a maintainer, I can inspect GitHub planning-state drift without treating GitHub as lifecycle authority"
-        ],
-        "cypressFlows": [
-          "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state"
-        ],
-        "domainObjects": ["GitHubPlanningProjectionReadModel"],
-        "fowlerSignals": [
-          "Query Object isolates projection classification from the CLI adapter"
-        ],
-        "patchSurfaces": [],
-        "completionGate": [
-          "pnpm verify:prepush",
-          "node --test scripts/planning-db/github-planning-projection-policy.test.cjs scripts/planning-github-status-projection.test.cjs"
-        ],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "expectedFailure": "MODULE_NOT_FOUND for the canonical projection policy",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "architectureGuards": [
-          "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership",
-          "Unmapped, missing, ambiguous, and unknown states fail closed"
-        ],
-        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
-        "implementationRefs": [
-          "scripts/planning-db/github-planning-projection-policy.cjs#ListGitHubPlanningProjectionDrift",
-          "scripts/planning-github-status-projection.cjs#PlanningDbEffectiveTaskReader"
-        ],
-        "normalizedRailName": "listgithubplanningprojectiondrift",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "3deb74d74d7f48ba52b72c7dbecff31838d82e38a209126ad876015ee1a65138",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db/github-planning-projection-policy.cjs",
-          "scripts/planning-github-status-projection.cjs"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "tools/planning-db/migrations",
-          ".github/workflows/adapter-postgres-integration-nightly.yml"
-        ]
-      },
-      "createdAt": "2026-07-30T21:57:48.325Z"
-    },
-    {
-      "operationId": "43271b61-26ff-4f0c-8861-cc9e680a5f03",
-      "idempotencyKey": "feature_mechanization_rail_record:codex:PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730:command:reconcilegithubplanningprojection:latest:082bd324101f4761",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#command#reconcilegithubplanningprojection",
-      "sourcePath": "scripts/planning-github-status-projection.cjs",
-      "sourceContentSha256": "f9b6c45119d75ad01c07453a8069ba49ca1f7881ef171b94f1b88ff90aaad7e9",
-      "expectedRevision": null,
-      "previousRevision": null,
-      "resultingRevision": 0,
-      "payload": {
-        "redTest": "CLI adapter import failed before the reconciliation command existed",
-        "dddOwner": "Planning Governance",
-        "railName": "ReconcileGitHubPlanningProjection",
-        "railType": "command",
-        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-        "greenTest": "Command tests prove approved close and reopen writes only, and check mode remains read-only",
-        "sourceRef": "scripts/planning-github-status-projection.cjs",
-        "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "As a maintainer, I can reconcile explicitly linked GitHub issues from verified Planning DB lifecycle state"
-        ],
-        "cypressFlows": [
-          "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query"
-        ],
-        "domainObjects": ["GitHubPlanningReconciliationCommand"],
-        "fowlerSignals": [
-          "Command Object owns the only authorized close and reopen mutations"
-        ],
-        "patchSurfaces": [],
-        "completionGate": [
-          "pnpm verify:prepush",
-          "node --test scripts/planning-db/github-planning-projection-policy.test.cjs scripts/planning-github-status-projection.test.cjs"
-        ],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "expectedFailure": "MODULE_NOT_FOUND for the GitHub projection CLI adapter",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "architectureGuards": [
-          "The command aborts before mutation when any issue maps to multiple effective tasks",
-          "Only close and reopen are allowed; issue creation and planning lifecycle writes remain outside this rail"
-        ],
-        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
-        "implementationRefs": [
-          "scripts/planning-db/github-planning-projection-policy.cjs#ReconcileGitHubPlanningProjection",
-          "scripts/planning-github-status-projection.cjs#GitHubCliIssueGateway"
-        ],
-        "normalizedRailName": "reconcilegithubplanningprojection",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "f9b6c45119d75ad01c07453a8069ba49ca1f7881ef171b94f1b88ff90aaad7e9",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db/github-planning-projection-policy.cjs",
-          "scripts/planning-github-status-projection.cjs"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "tools/planning-db/migrations",
-          ".github/workflows/adapter-postgres-integration-nightly.yml"
-        ]
-      },
-      "createdAt": "2026-07-30T21:58:09.878Z"
-    },
-    {
-      "operationId": "41572c29-ce3b-4a5a-b63e-aa70fd6fe61c",
-      "idempotencyKey": "feature_mechanization_rail_record:codex:PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730:command:reconcilegithubplanningprojection:0:477f5e713dd35437",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#command#reconcilegithubplanningprojection",
-      "sourcePath": "scripts/planning-github-status-projection.cjs",
-      "sourceContentSha256": "23967ce225c3ffcde89902e88133ff3b9ffeee117b5522b0fbf2260c20d439d8",
-      "expectedRevision": 0,
-      "previousRevision": 0,
-      "resultingRevision": 1,
-      "payload": {
-        "redTest": "Runner treated an unknown mode as reconciliation instead of rejecting before authority access",
-        "dddOwner": "Planning Governance",
-        "railName": "ReconcileGitHubPlanningProjection",
-        "railType": "command",
-        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-        "greenTest": "Command tests prove approved writes only and reject unknown modes before reading or mutating either authority",
-        "sourceRef": "scripts/planning-github-status-projection.cjs",
-        "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "As a maintainer, I can reconcile explicitly linked GitHub issues from verified Planning DB lifecycle state"
-        ],
-        "cypressFlows": [
-          "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query"
-        ],
-        "domainObjects": ["GitHubPlanningReconciliationCommand"],
-        "fowlerSignals": [
-          "Command Object owns the only authorized close and reopen mutations"
-        ],
-        "patchSurfaces": [],
-        "completionGate": [
-          "pnpm verify:prepush",
-          "node --test scripts/planning-db/github-planning-projection-policy.test.cjs scripts/planning-github-status-projection.test.cjs"
-        ],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "expectedFailure": "Missing expected rejection; invalid mode reached the command path",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "architectureGuards": [
-          "The command aborts before mutation when any issue maps to multiple effective tasks",
-          "Only close and reopen are allowed; issue creation and planning lifecycle writes remain outside this rail"
-        ],
-        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
-        "implementationRefs": [
-          "scripts/planning-db/github-planning-projection-policy.cjs#ReconcileGitHubPlanningProjection",
-          "scripts/planning-github-status-projection.cjs#GitHubCliIssueGateway"
-        ],
-        "normalizedRailName": "reconcilegithubplanningprojection",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "23967ce225c3ffcde89902e88133ff3b9ffeee117b5522b0fbf2260c20d439d8",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db/github-planning-projection-policy.cjs",
-          "scripts/planning-github-status-projection.cjs"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "tools/planning-db/migrations",
-          ".github/workflows/adapter-postgres-integration-nightly.yml"
-        ]
-      },
-      "createdAt": "2026-07-30T22:00:01.895Z"
-    },
-    {
-      "operationId": "7935e4f2-eee2-4862-b1da-8f5f6225aecf",
-      "idempotencyKey": "feature_mechanization_rail_record:codex:PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730:query:listgithubplanningprojectiondrift:0:9d5fe5a28c747c53",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#query#listgithubplanningprojectiondrift",
-      "sourcePath": "scripts/planning-db/github-planning-projection-policy.cjs",
-      "sourceContentSha256": "3deb74d74d7f48ba52b72c7dbecff31838d82e38a209126ad876015ee1a65138",
-      "expectedRevision": 0,
-      "previousRevision": 0,
-      "resultingRevision": 1,
-      "payload": {
-        "redTest": "Policy module import failed before the projection query existed",
-        "dddOwner": "Planning Governance",
-        "railName": "ListGitHubPlanningProjectionDrift",
-        "railType": "query",
-        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-        "greenTest": "Projection policy tests classify exact links, drift, incidents, and ambiguity deterministically",
-        "sourceRef": "scripts/planning-db/github-planning-projection-policy.cjs",
-        "unitTests": [
-          "scripts/planning-db/github-planning-projection-policy.test.cjs"
-        ],
-        "railStatus": "implemented",
-        "userStories": [
-          "As a maintainer, I can inspect GitHub planning-state drift without treating GitHub as lifecycle authority"
-        ],
-        "cypressFlows": [
-          "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state"
-        ],
-        "domainObjects": ["GitHubPlanningProjectionReadModel"],
-        "fowlerSignals": [
-          "Query Object isolates projection classification from the CLI adapter"
-        ],
-        "patchSurfaces": [],
-        "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "expectedFailure": "MODULE_NOT_FOUND for the canonical projection policy",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "architectureGuards": [
-          "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership",
-          "Unmapped, missing, ambiguous, and unknown states fail closed"
-        ],
-        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
-        "implementationRefs": [
-          "scripts/planning-db/github-planning-projection-policy.cjs#ListGitHubPlanningProjectionDrift",
-          "scripts/planning-github-status-projection.cjs#PlanningDbEffectiveTaskReader",
-          "package.json#planning:github:projection:check"
-        ],
-        "normalizedRailName": "listgithubplanningprojectiondrift",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "3deb74d74d7f48ba52b72c7dbecff31838d82e38a209126ad876015ee1a65138",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db/github-planning-projection-policy.cjs",
-          "scripts/planning-github-status-projection.cjs",
-          "package.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "tools/planning-db/migrations",
-          ".github/workflows/adapter-postgres-integration-nightly.yml"
-        ]
-      },
-      "createdAt": "2026-07-30T22:11:28.345Z"
-    },
-    {
-      "operationId": "0b1baffd-f7c5-44ee-a9b4-b1346f1795d9",
-      "idempotencyKey": "feature_mechanization_rail_record:codex:PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730:query:listgithubplanningprojectiondrift:1:8f29366c609b588d",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#query#listgithubplanningprojectiondrift",
-      "sourcePath": "scripts/planning-db/github-planning-projection-policy.cjs",
-      "sourceContentSha256": "3deb74d74d7f48ba52b72c7dbecff31838d82e38a209126ad876015ee1a65138",
-      "expectedRevision": 1,
-      "previousRevision": 1,
-      "resultingRevision": 2,
-      "payload": {
-        "redTest": "Policy module import failed before the projection query existed",
-        "dddOwner": "Planning Governance",
-        "railName": "ListGitHubPlanningProjectionDrift",
-        "railType": "query",
-        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-        "greenTest": "Projection policy tests classify exact links, drift, incidents, and ambiguity deterministically",
-        "sourceRef": "scripts/planning-db/github-planning-projection-policy.cjs",
-        "unitTests": [
-          "scripts/planning-db/github-planning-projection-policy.test.cjs"
-        ],
-        "railStatus": "implemented",
-        "userStories": [
-          "As a maintainer, I can inspect GitHub planning-state drift without treating GitHub as lifecycle authority"
-        ],
-        "cypressFlows": [
-          "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state"
-        ],
-        "domainObjects": ["GitHubPlanningProjectionReadModel"],
-        "fowlerSignals": [
-          "Query Object isolates projection classification from the CLI adapter"
-        ],
-        "patchSurfaces": [],
-        "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "expectedFailure": "MODULE_NOT_FOUND for the canonical projection policy",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "architectureGuards": [
-          "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership",
-          "Unmapped, missing, ambiguous, and unknown states fail closed"
-        ],
-        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
-        "implementationRefs": [
-          "scripts/planning-db/github-planning-projection-policy.cjs#ListGitHubPlanningProjectionDrift",
-          "scripts/planning-github-status-projection.cjs#PlanningDbEffectiveTaskReader"
-        ],
-        "normalizedRailName": "listgithubplanningprojectiondrift",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "3deb74d74d7f48ba52b72c7dbecff31838d82e38a209126ad876015ee1a65138",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db/github-planning-projection-policy.cjs",
-          "scripts/planning-github-status-projection.cjs",
-          "package.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "tools/planning-db/migrations",
-          ".github/workflows/adapter-postgres-integration-nightly.yml"
-        ]
-      },
-      "createdAt": "2026-07-30T22:12:21.643Z"
-    },
-    {
-      "operationId": "5da2b300-94ce-432e-a5f9-8b5d7cb67e8c",
-      "idempotencyKey": "feature_mechanization_rail_record:codex:PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730:query:listgithubplanningprojectiondrift:2:163ba731dda6ce11",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#query#listgithubplanningprojectiondrift",
-      "sourcePath": "scripts/planning-db/github-planning-projection-policy.cjs",
-      "sourceContentSha256": "3deb74d74d7f48ba52b72c7dbecff31838d82e38a209126ad876015ee1a65138",
-      "expectedRevision": 2,
-      "previousRevision": 2,
-      "resultingRevision": 3,
-      "payload": {
-        "redTest": "Policy module import failed before the projection query existed",
-        "dddOwner": "Planning Governance",
-        "railName": "ListGitHubPlanningProjectionDrift",
-        "railType": "query",
-        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-        "greenTest": "Projection policy tests classify exact links, drift, incidents, and ambiguity deterministically",
-        "sourceRef": "scripts/planning-db/github-planning-projection-policy.cjs",
-        "unitTests": [
-          "scripts/planning-db/github-planning-projection-policy.test.cjs"
-        ],
-        "railStatus": "implemented",
-        "userStories": [
-          "As a maintainer, I can inspect GitHub planning-state drift without treating GitHub as lifecycle authority"
-        ],
-        "cypressFlows": [
-          "Not applicable: repository-governance CLI is verified against live Planning DB and GitHub issue state"
-        ],
-        "domainObjects": ["GitHubPlanningProjectionReadModel"],
-        "fowlerSignals": [
-          "Query Object isolates projection classification from the CLI adapter"
-        ],
-        "patchSurfaces": [],
-        "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "expectedFailure": "MODULE_NOT_FOUND for the canonical projection policy",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "architectureGuards": [
-          "Only exact issue evidence URLs authorize mapping; titles, shared PRs, and labels never infer ownership",
-          "Unmapped, missing, ambiguous, and unknown states fail closed"
-        ],
-        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
-        "implementationRefs": [
-          "scripts/planning-db/github-planning-projection-policy.cjs#GitHubPlanningProjectionReadModel",
-          "scripts/planning-db/github-planning-projection-policy.cjs#planningIssueLabels",
-          "scripts/planning-db/github-planning-projection-policy.cjs#supportedTaskStatuses",
-          "scripts/planning-db/github-planning-projection-policy.cjs#terminalTaskStatuses",
-          "scripts/planning-db/github-planning-projection-policy.cjs#normalizeRepository",
-          "scripts/planning-db/github-planning-projection-policy.cjs#parseGitHubIssueReference",
-          "scripts/planning-db/github-planning-projection-policy.cjs#normalizeTask",
-          "scripts/planning-db/github-planning-projection-policy.cjs#normalizeIssue",
-          "scripts/planning-db/github-planning-projection-policy.cjs#collectTaskLinks",
-          "scripts/planning-db/github-planning-projection-policy.cjs#isPlanningIssue",
-          "scripts/planning-db/github-planning-projection-policy.cjs#classifyLinkedIssue",
-          "scripts/planning-db/github-planning-projection-policy.cjs#buildProjectionRecord",
-          "scripts/planning-db/github-planning-projection-policy.cjs#buildGitHubPlanningProjection",
-          "scripts/planning-db/github-planning-projection-policy.cjs#ListGitHubPlanningProjectionDrift"
-        ],
-        "normalizedRailName": "listgithubplanningprojectiondrift",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "3deb74d74d7f48ba52b72c7dbecff31838d82e38a209126ad876015ee1a65138",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db/github-planning-projection-policy.cjs",
-          "scripts/planning-db/github-planning-projection-policy.test.cjs",
-          "scripts/planning-github-status-projection.cjs",
-          "scripts/planning-github-status-projection.test.cjs",
-          "package.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "tools/planning-db/migrations",
-          ".github/workflows/adapter-postgres-integration-nightly.yml"
-        ]
-      },
-      "createdAt": "2026-07-30T22:20:38.279Z"
-    },
-    {
-      "operationId": "cd6b41a6-6d42-4e56-9032-f1e19095a0a8",
-      "idempotencyKey": "feature_mechanization_rail_record:codex:PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730:command:reconcilegithubplanningprojection:1:820a45f887483195",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#command#reconcilegithubplanningprojection",
-      "sourcePath": "scripts/planning-github-status-projection.cjs",
-      "sourceContentSha256": "23967ce225c3ffcde89902e88133ff3b9ffeee117b5522b0fbf2260c20d439d8",
-      "expectedRevision": 1,
-      "previousRevision": 1,
-      "resultingRevision": 2,
-      "payload": {
-        "redTest": "Runner treated an unknown mode as reconciliation instead of rejecting before authority access",
-        "dddOwner": "Planning Governance",
-        "railName": "ReconcileGitHubPlanningProjection",
-        "railType": "command",
-        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-        "greenTest": "Command tests prove approved writes only and reject unknown modes before reading or mutating either authority",
-        "sourceRef": "scripts/planning-github-status-projection.cjs",
-        "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "As a maintainer, I can reconcile explicitly linked GitHub issues from verified Planning DB lifecycle state"
-        ],
-        "cypressFlows": [
-          "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query"
-        ],
-        "domainObjects": ["GitHubPlanningReconciliationCommand"],
-        "fowlerSignals": [
-          "Command Object owns the only authorized close and reopen mutations"
-        ],
-        "patchSurfaces": [],
-        "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "expectedFailure": "Missing expected rejection; invalid mode reached the command path",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "architectureGuards": [
-          "The command aborts before mutation when any issue maps to multiple effective tasks",
-          "Only close and reopen are allowed; issue creation and planning lifecycle writes remain outside this rail"
-        ],
-        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
-        "implementationRefs": [
-          "scripts/planning-db/github-planning-projection-policy.cjs#GitHubPlanningReconciliationCommand",
-          "scripts/planning-db/github-planning-projection-policy.cjs#reconciliationComment",
-          "scripts/planning-db/github-planning-projection-policy.cjs#ReconcileGitHubPlanningProjection",
-          "scripts/planning-github-status-projection.cjs#defaultRepository",
-          "scripts/planning-github-status-projection.cjs#validateMode",
-          "scripts/planning-github-status-projection.cjs#parseCliArguments",
-          "scripts/planning-github-status-projection.cjs#PlanningDbEffectiveTaskReader",
-          "scripts/planning-github-status-projection.cjs#runGitHubCli",
-          "scripts/planning-github-status-projection.cjs#GitHubCliIssueGateway",
-          "scripts/planning-github-status-projection.cjs#runGitHubPlanningProjection",
-          "scripts/planning-github-status-projection.cjs#main"
-        ],
-        "normalizedRailName": "reconcilegithubplanningprojection",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "23967ce225c3ffcde89902e88133ff3b9ffeee117b5522b0fbf2260c20d439d8",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db/github-planning-projection-policy.cjs",
-          "scripts/planning-db/github-planning-projection-policy.test.cjs",
-          "scripts/planning-github-status-projection.cjs",
-          "scripts/planning-github-status-projection.test.cjs",
-          "package.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "tools/planning-db/migrations",
-          ".github/workflows/adapter-postgres-integration-nightly.yml"
-        ]
-      },
-      "createdAt": "2026-07-30T22:21:01.192Z"
     },
     {
       "operationId": "f81fc09a-b4b2-40fa-b9cc-7d59680f5c88",
@@ -2368,47 +1528,112 @@
       "createdAt": "2026-07-30T22:39:54.539Z"
     },
     {
-      "operationId": "24c1e7b7-5fe9-413f-ab7e-95f813b6dc6d",
-      "idempotencyKey": "codex-reconcile-github-issues-paginated-20260730",
+      "operationId": "78bca955-9cfd-49e5-92e4-4a302e84f70e",
+      "idempotencyKey": "codex-20260731-export-canonical-architecture-state",
       "operationType": "feature_mechanization_rail_record",
       "actor": "codex",
-      "railId": "local#PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730#command#reconcilegithubplanningprojection",
-      "sourcePath": "scripts/planning-github-status-projection.cjs",
-      "sourceContentSha256": "814b828c6274adac88bc8151d8aebe6bd42ea574fb840ce451368ecda4ebb20d",
-      "expectedRevision": 2,
-      "previousRevision": 2,
-      "resultingRevision": 3,
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicalarchitecturestate",
+      "sourcePath": "scripts/planning-db-export.cjs",
+      "sourceContentSha256": "0ec8df8917bab22135984599d5ac18d62a4949f9877217e836b039757fb53e1c",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
       "payload": {
-        "redTest": "GitHub issue reads stopped after an arbitrary limit and omitted linked or planning-labeled issues",
-        "dddOwner": "Planning Governance",
-        "railName": "ReconcileGitHubPlanningProjection",
+        "redTest": "node --test scripts/planning-db-export.test.cjs",
+        "dddOwner": "PlanningDbCanonicalStateExport",
+        "railName": "ExportPlanningDbCanonicalArchitectureState",
         "railType": "command",
-        "featureId": "PLANNING-GITHUB-COLLABORATION-PROJECTION-20260730",
-        "greenTest": "Adapter tests and a live check prove paginated issue projection without missing linked issues",
-        "sourceRef": "scripts/planning-github-status-projection.cjs",
-        "unitTests": ["scripts/planning-github-status-projection.test.cjs"],
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "greenTest": "node --test scripts/planning-db-export.test.cjs",
+        "sourceRef": "scripts/planning-db-export.cjs",
+        "unitTests": ["scripts/planning-db-export.test.cjs"],
         "railStatus": "implemented",
         "userStories": [
-          "As a maintainer, I can reconcile explicitly linked GitHub issues from verified Planning DB lifecycle state"
+          "A governance maintainer exports current architecture state without local task lifecycle or lane snapshots."
         ],
-        "cypressFlows": [
-          "Not applicable: repository-governance CLI is verified by dry-run, command tests, and post-write live query"
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": ["PlanningDbCanonicalArchitectureState"],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "node --test scripts/planning-db-export.test.cjs",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
         ],
-        "domainObjects": ["GitHubPlanningReconciliationCommand"],
-        "fowlerSignals": [
-          "Command Object owns the only authorized close and reopen mutations"
-        ],
-        "patchSurfaces": [
-          "scripts/planning-github-status-projection.cjs",
-          "scripts/planning-github-status-projection.test.cjs"
-        ],
-        "completionGate": ["pnpm verify:prepush", "pnpm test:planning:db"],
         "componentGuides": [
           "docs/architecture/command-query-rail-governance.md"
         ],
-        "expectedFailure": "The gateway omitted issues beyond the configured gh issue list limit",
+        "expectedFailure": "The canonical export contains retired local task state or omits current DB-authored architecture state.",
         "governingSources": [
           "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-export.test.cjs"
+        ],
+        "implementationPlan": "Planning DB export serializes only current DB-authored architecture and feature-mechanization state for deterministic Git recovery.",
+        "implementationRefs": [
+          "scripts/planning-db-export.cjs#PlanningDbExportRunner",
+          "scripts/planning-db-export.cjs#canonicalStateArtifactPath"
+        ],
+        "normalizedRailName": "exportplanningdbcanonicalarchitecturestate",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "0ec8df8917bab22135984599d5ac18d62a4949f9877217e836b039757fb53e1c",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "docs/planning/state/agent-lane-*.yaml"
+        ]
+      },
+      "createdAt": "2026-07-31T10:13:21.589Z"
+    },
+    {
+      "operationId": "09a05e88-1c5b-4d4d-a997-0c95d6f84d2a",
+      "idempotencyKey": "codex-20260731-export-canonical-architecture-state-fowler-governance",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicalarchitecturestate",
+      "sourcePath": "scripts/planning-db-export.cjs",
+      "sourceContentSha256": "0ec8df8917bab22135984599d5ac18d62a4949f9877217e836b039757fb53e1c",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-export.test.cjs",
+        "dddOwner": "PlanningDbCanonicalStateExport",
+        "railName": "ExportPlanningDbCanonicalArchitectureState",
+        "railType": "command",
+        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
+        "greenTest": "node --test scripts/planning-db-export.test.cjs",
+        "sourceRef": "scripts/planning-db-export.cjs",
+        "unitTests": ["scripts/planning-db-export.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "A governance maintainer exports current architecture state without local task lifecycle or lane snapshots."
+        ],
+        "cypressFlows": ["not applicable: repository governance CLI"],
+        "domainObjects": ["PlanningDbCanonicalArchitectureState"],
+        "fowlerSignals": ["gateway", "data_mapper"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "node --test scripts/planning-db-export.test.cjs",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The canonical export contains retired local task state or omits current DB-authored architecture state.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
           "docs/architecture/command-query-rail-governance.md",
           "docs/architecture/fowler-opportunity-planning-governance.md"
         ],
@@ -2416,39 +1641,560 @@
           "docs/architecture/command-query-rail-governance.md"
         ],
         "architectureGuards": [
-          "The command aborts before mutation when any issue maps to multiple effective tasks",
-          "Only close and reopen are allowed; issue creation and planning lifecycle writes remain outside this rail"
+          "node --test scripts/planning-db-export.test.cjs"
         ],
-        "implementationPlan": "DB-first GitHub collaboration projection governed by Planning DB effective task state",
+        "implementationPlan": "Planning DB export serializes only current DB-authored architecture and feature-mechanization state for deterministic Git recovery.",
         "implementationRefs": [
-          "scripts/planning-db/github-planning-projection-policy.cjs#GitHubPlanningReconciliationCommand",
-          "scripts/planning-db/github-planning-projection-policy.cjs#reconciliationComment",
-          "scripts/planning-db/github-planning-projection-policy.cjs#ReconcileGitHubPlanningProjection",
-          "scripts/planning-github-status-projection.cjs#defaultRepository",
-          "scripts/planning-github-status-projection.cjs#validateMode",
-          "scripts/planning-github-status-projection.cjs#parseCliArguments",
-          "scripts/planning-github-status-projection.cjs#PlanningDbEffectiveTaskReader",
-          "scripts/planning-github-status-projection.cjs#runGitHubCli",
-          "scripts/planning-github-status-projection.cjs#GitHubCliIssueGateway",
-          "scripts/planning-github-status-projection.cjs#runGitHubPlanningProjection",
-          "scripts/planning-github-status-projection.cjs#main"
+          "scripts/planning-db-export.cjs#PlanningDbExportRunner",
+          "scripts/planning-db-export.cjs#canonicalStateArtifactPath"
         ],
-        "normalizedRailName": "reconcilegithubplanningprojection",
+        "normalizedRailName": "exportplanningdbcanonicalarchitecturestate",
         "mechanizationStatus": "implemented",
-        "sourceContentSha256": "814b828c6274adac88bc8151d8aebe6bd42ea574fb840ce451368ecda4ebb20d",
+        "sourceContentSha256": "0ec8df8917bab22135984599d5ac18d62a4949f9877217e836b039757fb53e1c",
         "allowedImplementationSurfaces": [
-          "scripts/planning-db/github-planning-projection-policy.cjs",
-          "scripts/planning-db/github-planning-projection-policy.test.cjs",
-          "scripts/planning-github-status-projection.cjs",
-          "scripts/planning-github-status-projection.test.cjs",
-          "package.json"
+          "scripts/planning-db-export.cjs",
+          "scripts/planning-db-export.test.cjs",
+          "tools/planning-db/state/canonical-state.json"
         ],
         "forbiddenImplementationSurfaces": [
-          "tools/planning-db/migrations",
-          ".github/workflows/adapter-postgres-integration-nightly.yml"
+          "docs/planning/state/agent-lane-*.yaml"
         ]
       },
-      "createdAt": "2026-07-30T23:01:15.896Z"
+      "createdAt": "2026-07-31T11:28:34.885Z"
+    },
+    {
+      "operationId": "d089b95c-d51d-4ef2-897e-5f1d5104368e",
+      "idempotencyKey": "codex-20260731-validate-changed-document-filenames",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#DOCS-CANONICAL-FILENAME-GATE-20260731#query#validatechangeddocumentfilenames",
+      "sourcePath": "tools/docs/check-filenames.ts",
+      "sourceContentSha256": "c22af090217c364cc39f654637ff0e703c5c10cda3ca094488efd2ce19cf3655",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test tools/ci/docs-changed-governance-policy.test.mjs",
+        "dddOwner": "ChangedDocumentFilenamePolicy",
+        "railName": "ValidateChangedDocumentFilenames",
+        "railType": "query",
+        "featureId": "DOCS-CANONICAL-FILENAME-GATE-20260731",
+        "greenTest": "node --test tools/ci/docs-changed-governance-policy.test.mjs",
+        "sourceRef": "tools/docs/check-filenames.ts",
+        "unitTests": ["tools/ci/docs-changed-governance-policy.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "A maintainer can retire a noncanonical document name without the changed-file gate validating a path that no longer exists."
+        ],
+        "cypressFlows": [
+          "not applicable: repository documentation governance query"
+        ],
+        "domainObjects": ["ChangedDocumentPath"],
+        "fowlerSignals": [
+          "policy_object",
+          "replace_implicit_semantics_with_explicit_policy"
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "node --test tools/ci/docs-changed-governance-policy.test.mjs",
+          "pnpm docs:gov:filenames:changed",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/guides/documentation-maintenance-guide-20260407.md"
+        ],
+        "expectedFailure": "A deleted noncanonical Markdown path is incorrectly validated as if the document still existed.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["docs/DOCS_README.md"],
+        "architectureGuards": [
+          "node --test tools/ci/docs-changed-governance-policy.test.mjs"
+        ],
+        "implementationPlan": "Validate only present changed documents against canonical filename policy while allowing deletion of noncanonical historical paths.",
+        "implementationRefs": [
+          "tools/docs/check-filenames.ts#normalizeChangedPath",
+          "tools/docs/check-filenames.ts#checkFilename"
+        ],
+        "normalizedRailName": "validatechangeddocumentfilenames",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "c22af090217c364cc39f654637ff0e703c5c10cda3ca094488efd2ce19cf3655",
+        "allowedImplementationSurfaces": [
+          "docs/.manifest.json",
+          "docs/adr/adr-catalog.md",
+          "docs/adr/adr-implementation-status.md",
+          "docs/adr/index.md",
+          "docs/architecture/components/engine/reviews/audit.md",
+          "docs/architecture/components/engine/reviews/index.md",
+          "docs/architecture/components/engine/reviews/refactor-list-stale-snapshot-runs-sql.md",
+          "docs/planning/archive/proposals/strategic-product-roadmap-20260324.md",
+          "docs/planning/closeouts/20260315-docs-governance-hardening-closeout.md",
+          "docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md",
+          "docs/planning/closeouts/20260404-plan-qa-tareas-mvp.md",
+          "docs/planning/closeouts/20260423-access-decision-embedded-first-closeout.md",
+          "docs/planning/closeouts/20260423-tenant-run-identity-platform-owned-run-id-closeout.md",
+          "docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md",
+          "docs/planning/proposals/mandatory/runtime-and-contracts/ar-c2-sla-operational-closure-plan-20260404.md",
+          "docs/planning/reviews/architecture-and-governance/20260404-f04-frontend-data-boundary-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260405-f04-risk-a-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260407-execution-plan-and-run-execution-policy-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260407-retry-step-boundary-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260408-retry-run-boundary-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260425-canvas-graph-strategy-fowler-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260426-canvas-runtime-policy-architecture-review.md",
+          "docs/planning/reviews/engine/20260404-s19f1-snapshot-optimization-plan-review.md",
+          "docs/planning/reviews/engine/20260405-mw-a2-policy-first-fowler-qa-review.md",
+          "docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-fowler-qa-review.md",
+          "docs/planning/reviews/event-contract-and-traceability/20260404-s05-envelope-boundary-hardening-plan-review.md",
+          "docs/planning/reviews/execution-runtime/20260409-tf-c2-b-read-surface-hard-qa-review.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/planning/templates/qa/index.md",
+          "docs/planning/templates/qa/qa-artifact-example-template.md",
+          "docs/planning/templates/qa/qa-current-task-check-prompt.md",
+          "docs/planning/templates/qa/qa-global-check-prompt.md",
+          "scripts/sync-docs.cjs",
+          "tools/ci/docs-changed-governance-policy.test.mjs",
+          "tools/docs/check-adr-catalog.ts",
+          "tools/docs/check-filenames.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/**"]
+      },
+      "createdAt": "2026-07-31T11:29:35.729Z"
+    },
+    {
+      "operationId": "b3493573-d8a9-4304-926e-35e0f54b7e55",
+      "idempotencyKey": "codex-20260731-github-mvp-task-authority-traceability",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
+      "sourcePath": "tools/ci/planning-review-canon.test.mjs",
+      "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test tools/ci/planning-review-canon.test.mjs",
+        "dddOwner": "PlanningBoardTraceability",
+        "railName": "ValidatePlanningReviewBoardTraceability",
+        "railType": "query",
+        "featureId": "GD-REV-PLANNING-CANON",
+        "greenTest": "node --test tools/ci/planning-review-canon.test.mjs",
+        "sourceRef": "tools/ci/planning-review-canon.test.mjs",
+        "unitTests": ["tools/ci/planning-review-canon.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/architecture/components/ci-governance/planning-review-canon-user-stories.md"
+        ],
+        "cypressFlows": ["not applicable: repository governance query"],
+        "domainObjects": ["PlanningReviewBoardTraceability"],
+        "fowlerSignals": [
+          "single_source_of_truth",
+          "semantic_fitness_function"
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "node --test tools/ci/planning-review-canon.test.mjs",
+          "pnpm planning:db:integrity:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/planning-review-canon-component.md"
+        ],
+        "expectedFailure": "Review governance recreates local task lifecycle, lane state, or generated workboard authority beside GitHub Issues.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
+        ],
+        "architectureGuards": [
+          "node --test tools/ci/planning-review-canon.test.mjs"
+        ],
+        "implementationPlan": "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "implementationRefs": [
+          "tools/ci/planning-review-canon.test.mjs#requiredFiles"
+        ],
+        "normalizedRailName": "validateplanningreviewboardtraceability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
+        "allowedImplementationSurfaces": [
+          ".github/actions/prepare-planning-db/action.yml",
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          ".gitignore",
+          "AGENTS.md",
+          "package.json",
+          "docs/DOCS_README.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
+          "docs/architecture/components/ci-governance/**",
+          "docs/architecture/components/engine/roadmap/engine-phases.md",
+          "docs/architecture/components/web/**",
+          "docs/architecture/system-delivery-status.md",
+          "docs/generated-docs-policy.json",
+          "docs/guides/*.md",
+          "docs/planning/gaps/**",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
+          "docs/planning/reviews/review-status-board.md",
+          "docs/planning/reviews/sprints/index.md",
+          "docs/planning/roadmap/**",
+          "docs/planning/state/**",
+          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
+          "docs/planning/templates/execution-work-item-template.md",
+          "docs/runbooks/*.md",
+          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+          "scripts/README.md",
+          "scripts/check-feature-mechanization*",
+          "scripts/closeout-changed.test.cjs",
+          "scripts/docs-*.cjs",
+          "scripts/generate-planning-lanes*",
+          "scripts/generate-workboard*",
+          "scripts/governance-*.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/planning-db*.cjs",
+          "scripts/planning-db/**",
+          "scripts/planning-db-operate-tests/**",
+          "scripts/planning-github-status-projection*",
+          "scripts/sync-docs.cjs",
+          "scripts/verify-changed.test.cjs",
+          "tools/ci/**",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/**"]
+      },
+      "createdAt": "2026-07-31T11:30:50.789Z"
+    },
+    {
+      "operationId": "0ee212af-aeda-4783-b5ef-aff1dd4a2771",
+      "idempotencyKey": "codex-gd-review-paths-20260731",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
+      "sourcePath": "tools/ci/planning-review-canon.test.mjs",
+      "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "node --test tools/ci/planning-review-canon.test.mjs",
+        "dddOwner": "PlanningBoardTraceability",
+        "railName": "ValidatePlanningReviewBoardTraceability",
+        "railType": "query",
+        "featureId": "GD-REV-PLANNING-CANON",
+        "greenTest": "node --test tools/ci/planning-review-canon.test.mjs",
+        "sourceRef": "tools/ci/planning-review-canon.test.mjs",
+        "unitTests": ["tools/ci/planning-review-canon.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/architecture/components/ci-governance/planning-review-canon-user-stories.md"
+        ],
+        "cypressFlows": ["not applicable: repository governance query"],
+        "domainObjects": ["PlanningReviewBoardTraceability"],
+        "fowlerSignals": [
+          "single_source_of_truth",
+          "semantic_fitness_function"
+        ],
+        "patchSurfaces": [
+          ".github/actions/prepare-planning-db/action.yml",
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          ".gitignore",
+          "AGENTS.md",
+          "package.json",
+          "docs/DOCS_README.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
+          "docs/architecture/components/ci-governance/**",
+          "docs/architecture/components/engine/roadmap/engine-phases.md",
+          "docs/architecture/components/web/**",
+          "docs/architecture/system-delivery-status.md",
+          "docs/generated-docs-policy.json",
+          "docs/guides/*.md",
+          "docs/planning/gaps/**",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
+          "docs/planning/reviews/review-status-board.md",
+          "docs/planning/reviews/sprints/index.md",
+          "docs/planning/roadmap/**",
+          "docs/planning/state/**",
+          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
+          "docs/planning/templates/execution-work-item-template.md",
+          "docs/runbooks/*.md",
+          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+          "scripts/README.md",
+          "scripts/check-feature-mechanization*",
+          "scripts/closeout-changed.test.cjs",
+          "scripts/docs-*.cjs",
+          "scripts/generate-planning-lanes*",
+          "scripts/generate-workboard*",
+          "scripts/governance-*.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/planning-db*.cjs",
+          "scripts/planning-db/**",
+          "scripts/planning-db-operate-tests/**",
+          "scripts/planning-github-status-projection*",
+          "scripts/sync-docs.cjs",
+          "scripts/verify-changed.test.cjs",
+          "tools/ci/**",
+          "tools/planning-db/state/canonical-state.json",
+          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md"
+        ],
+        "completionGate": [
+          "node --test tools/ci/planning-review-canon.test.mjs",
+          "pnpm planning:db:integrity:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/planning-review-canon-component.md"
+        ],
+        "expectedFailure": "Review governance recreates local task lifecycle, lane state, or generated workboard authority beside GitHub Issues.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
+        ],
+        "architectureGuards": [
+          "node --test tools/ci/planning-review-canon.test.mjs"
+        ],
+        "implementationPlan": "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "implementationRefs": [
+          "tools/ci/planning-review-canon.test.mjs#requiredFiles"
+        ],
+        "normalizedRailName": "validateplanningreviewboardtraceability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
+        "allowedImplementationSurfaces": [
+          ".github/actions/prepare-planning-db/action.yml",
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          ".gitignore",
+          "AGENTS.md",
+          "package.json",
+          "docs/DOCS_README.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
+          "docs/architecture/components/ci-governance/**",
+          "docs/architecture/components/engine/roadmap/engine-phases.md",
+          "docs/architecture/components/web/**",
+          "docs/architecture/system-delivery-status.md",
+          "docs/generated-docs-policy.json",
+          "docs/guides/*.md",
+          "docs/planning/gaps/**",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
+          "docs/planning/reviews/review-status-board.md",
+          "docs/planning/reviews/sprints/index.md",
+          "docs/planning/roadmap/**",
+          "docs/planning/state/**",
+          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
+          "docs/planning/templates/execution-work-item-template.md",
+          "docs/runbooks/*.md",
+          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+          "scripts/README.md",
+          "scripts/check-feature-mechanization*",
+          "scripts/closeout-changed.test.cjs",
+          "scripts/docs-*.cjs",
+          "scripts/generate-planning-lanes*",
+          "scripts/generate-workboard*",
+          "scripts/governance-*.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/planning-db*.cjs",
+          "scripts/planning-db/**",
+          "scripts/planning-db-operate-tests/**",
+          "scripts/planning-github-status-projection*",
+          "scripts/sync-docs.cjs",
+          "scripts/verify-changed.test.cjs",
+          "tools/ci/**",
+          "tools/planning-db/state/canonical-state.json",
+          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/**"]
+      },
+      "createdAt": "2026-07-31T12:50:30.216Z"
+    },
+    {
+      "operationId": "eb5a1376-137f-43f7-998c-40c8053ffb00",
+      "idempotencyKey": "codex-gd-review-authority-refs-20260731",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
+      "sourcePath": "tools/ci/planning-review-canon.test.mjs",
+      "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "node --test tools/ci/planning-review-canon.test.mjs",
+        "dddOwner": "PlanningBoardTraceability",
+        "railName": "ValidatePlanningReviewBoardTraceability",
+        "railType": "query",
+        "featureId": "GD-REV-PLANNING-CANON",
+        "greenTest": "node --test tools/ci/planning-review-canon.test.mjs",
+        "sourceRef": "tools/ci/planning-review-canon.test.mjs",
+        "unitTests": ["tools/ci/planning-review-canon.test.mjs"],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/architecture/components/ci-governance/planning-review-canon-user-stories.md"
+        ],
+        "cypressFlows": ["not applicable: repository governance query"],
+        "domainObjects": ["PlanningReviewBoardTraceability"],
+        "fowlerSignals": [
+          "single_source_of_truth",
+          "semantic_fitness_function"
+        ],
+        "patchSurfaces": [
+          ".github/actions/prepare-planning-db/action.yml",
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          ".gitignore",
+          "AGENTS.md",
+          "package.json",
+          "docs/DOCS_README.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
+          "docs/architecture/components/ci-governance/**",
+          "docs/architecture/components/engine/roadmap/engine-phases.md",
+          "docs/architecture/components/web/**",
+          "docs/architecture/system-delivery-status.md",
+          "docs/generated-docs-policy.json",
+          "docs/guides/*.md",
+          "docs/planning/gaps/**",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
+          "docs/planning/reviews/review-status-board.md",
+          "docs/planning/reviews/sprints/index.md",
+          "docs/planning/roadmap/**",
+          "docs/planning/state/**",
+          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
+          "docs/planning/templates/execution-work-item-template.md",
+          "docs/runbooks/*.md",
+          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+          "scripts/README.md",
+          "scripts/check-feature-mechanization*",
+          "scripts/closeout-changed.test.cjs",
+          "scripts/docs-*.cjs",
+          "scripts/generate-planning-lanes*",
+          "scripts/generate-workboard*",
+          "scripts/governance-*.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/planning-db*.cjs",
+          "scripts/planning-db/**",
+          "scripts/planning-db-operate-tests/**",
+          "scripts/planning-github-status-projection*",
+          "scripts/sync-docs.cjs",
+          "scripts/verify-changed.test.cjs",
+          "tools/ci/**",
+          "tools/planning-db/state/canonical-state.json",
+          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md",
+          "docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md"
+        ],
+        "completionGate": [
+          "node --test tools/ci/planning-review-canon.test.mjs",
+          "pnpm planning:db:integrity:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/ci-governance/planning-review-canon-component.md"
+        ],
+        "expectedFailure": "Review governance recreates local task lifecycle, lane state, or generated workboard authority beside GitHub Issues.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
+        ],
+        "architectureGuards": [
+          "node --test tools/ci/planning-review-canon.test.mjs"
+        ],
+        "implementationPlan": "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "implementationRefs": [
+          "tools/ci/planning-review-canon.test.mjs#requiredFiles"
+        ],
+        "normalizedRailName": "validateplanningreviewboardtraceability",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
+        "allowedImplementationSurfaces": [
+          ".github/actions/prepare-planning-db/action.yml",
+          ".github/workflows/ci.yml",
+          ".github/workflows/pr-quality-gate.yml",
+          ".gitignore",
+          "AGENTS.md",
+          "package.json",
+          "docs/DOCS_README.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
+          "docs/architecture/components/ci-governance/**",
+          "docs/architecture/components/engine/roadmap/engine-phases.md",
+          "docs/architecture/components/web/**",
+          "docs/architecture/system-delivery-status.md",
+          "docs/generated-docs-policy.json",
+          "docs/guides/*.md",
+          "docs/planning/gaps/**",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
+          "docs/planning/reviews/review-status-board.md",
+          "docs/planning/reviews/sprints/index.md",
+          "docs/planning/roadmap/**",
+          "docs/planning/state/**",
+          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
+          "docs/planning/templates/execution-work-item-template.md",
+          "docs/runbooks/*.md",
+          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
+          "scripts/README.md",
+          "scripts/check-feature-mechanization*",
+          "scripts/closeout-changed.test.cjs",
+          "scripts/docs-*.cjs",
+          "scripts/generate-planning-lanes*",
+          "scripts/generate-workboard*",
+          "scripts/governance-*.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/planning-db*.cjs",
+          "scripts/planning-db/**",
+          "scripts/planning-db-operate-tests/**",
+          "scripts/planning-github-status-projection*",
+          "scripts/sync-docs.cjs",
+          "scripts/verify-changed.test.cjs",
+          "tools/ci/**",
+          "tools/planning-db/state/canonical-state.json",
+          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md",
+          "docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md",
+          "docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/**"]
+      },
+      "createdAt": "2026-07-31T14:42:19.087Z"
     }
   ]
 }

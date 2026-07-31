@@ -518,11 +518,7 @@ Several high-fan-in files are committed and regenerated from unrelated work:
 - [Proposal Portfolio Map](../../portfolio-map-20260403.md)
 - [Review Status Board](../../../reviews/review-status-board.md)
 - [Generated Planning Surfaces Extraction Plan](./generated-planning-surfaces-extraction-plan-20260403.md)
-- [Agent Lane A YAML](../../../state/agent-lane-a.yaml)
-- [Agent Lane B YAML](../../../state/agent-lane-b.yaml)
-- [Agent Lane C YAML](../../../state/agent-lane-c.yaml)
-- [Agent Lane D YAML](../../../state/agent-lane-d.yaml)
-- [Agent Lane E YAML](../../../state/agent-lane-e.yaml)
+- [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md)
 - [docs/planning/status/generated-code-state.md](../../../status/generated-code-state.md)
 - [docs/planning/status/generated-capability-coverage.md](../../../status/generated-capability-coverage.md)
 

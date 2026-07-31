@@ -399,7 +399,6 @@ So the semantic split is:
 
 ## Validation baseline
 
-- `pnpm docs:workboard:generate`
 - `pnpm docs:sync`
 - `pnpm exec markdownlint-cli2 "docs/guides/plan-compile-catalog-extension-technical-manual-20260417.md" --ignore-path .markdownlintignore --config .markdownlint-cli2.jsonc`
 - `pnpm --filter @dvt/contracts test`

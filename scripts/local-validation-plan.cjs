@@ -30,10 +30,6 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/generate-governance-remediation-queue.test.cjs',
   'scripts/generate-governance-remediation-queue.test.cjs':
     'scripts/generate-governance-remediation-queue.test.cjs',
-  'scripts/generate-planning-lanes.cjs': 'scripts/generate-planning-lanes.test.cjs',
-  'scripts/generate-planning-lanes.test.cjs': 'scripts/generate-planning-lanes.test.cjs',
-  'scripts/generate-workboard.cjs': 'scripts/generate-workboard.test.cjs',
-  'scripts/generate-workboard.test.cjs': 'scripts/generate-workboard.test.cjs',
   'scripts/governance-db-check.cjs': 'scripts/governance-db-check.test.cjs',
   'scripts/governance-db-check.test.cjs': 'scripts/governance-db-check.test.cjs',
   'scripts/governance-db-export.cjs': 'scripts/governance-db-export.test.cjs',
@@ -43,8 +39,6 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
   'scripts/governance-generated-paths.test.cjs': 'scripts/governance-generated-paths.test.cjs',
   'scripts/governance-refresh.cjs': 'scripts/governance-refresh.test.cjs',
   'scripts/governance-refresh.test.cjs': 'scripts/governance-refresh.test.cjs',
-  'scripts/planning-db-check.cjs': 'scripts/planning-db-check.test.cjs',
-  'scripts/planning-db-check.test.cjs': 'scripts/planning-db-check.test.cjs',
   'scripts/planning-db-integrity-check.cjs': 'scripts/planning-db-integrity-check.test.cjs',
   'scripts/planning-db-integrity-check.test.cjs': 'scripts/planning-db-integrity-check.test.cjs',
   'scripts/planning-db-export.cjs': 'scripts/planning-db-export.test.cjs',
@@ -111,8 +105,7 @@ function step(id, command, ...args) {
 
 const MECHANICAL_PREPUSH_STEPS = Object.freeze([step('verify-changed', 'pnpm', 'verify:changed')]);
 
-const VERIFY_CHANGED_BASE_STEPS = Object.freeze([
-  step('docs-workboard-check-changed', 'node', 'scripts/docs-workboard-check-changed.cjs'),
+const VERIFY_CHANGED_PRE_TEST_STEPS = Object.freeze([
   step(
     'knowledge-intake-retirement-check',
     'pnpm',
@@ -125,6 +118,9 @@ const VERIFY_CHANGED_BASE_STEPS = Object.freeze([
   step('qa-artifact-check', 'pnpm', 'qa:artifact:check'),
   step('lint-md-changed', 'pnpm', 'lint:md:changed'),
   step('feature-mechanization-implementation', 'pnpm', 'docs:feature-mechanization:implementation'),
+]);
+
+const VERIFY_CHANGED_POST_TEST_STEPS = Object.freeze([
   step('check-changed', 'node', 'scripts/check-changed.cjs'),
   step('forbidden-tracked-files', 'node', 'scripts/check-forbidden-tracked-files.cjs'),
 ]);
@@ -348,13 +344,13 @@ function buildVerifyChangedPlan(files) {
   }
 
   const plan = [];
-  pushStepOnce(plan, VERIFY_CHANGED_BASE_STEPS[0]);
+  pushStepOnce(plan, VERIFY_CHANGED_PRE_TEST_STEPS[0]);
   if (hasPlanningDbChange(changedFiles)) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[0]);
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[1]);
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[2]);
   }
-  pushSteps(plan, VERIFY_CHANGED_BASE_STEPS.slice(1, 9));
+  pushSteps(plan, VERIFY_CHANGED_PRE_TEST_STEPS.slice(1));
   if (hasWebChange(changedFiles)) {
     pushSteps(plan, VERIFY_CHANGED_GROUPS.web);
   }
@@ -391,7 +387,7 @@ function buildVerifyChangedPlan(files) {
       }
     }
   }
-  pushSteps(plan, VERIFY_CHANGED_BASE_STEPS.slice(9));
+  pushSteps(plan, VERIFY_CHANGED_POST_TEST_STEPS);
 
   return plan;
 }

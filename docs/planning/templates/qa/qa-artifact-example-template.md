@@ -291,7 +291,7 @@ Every implementation or correction slice under this artifact should close with:
 
 1. touched-package or touched-route checks for the affected scope;
 2. `pnpm docs:sync` when docs structure changes;
-3. `pnpm docs:workboard:generate` when planning state changes;
+3. GitHub Issue state and evidence links updated when task state changes;
 4. evidence and risk-doc validation when governance requires them;
 5. `pnpm verify:prepush`.
 

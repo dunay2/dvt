@@ -116,6 +116,6 @@ describe('TemplatesView', () => {
     expect(viewer?.getAttribute('data-path')).toBe('load_orders.task.sql');
     expect(preview?.textContent).toContain('create or replace task load_orders');
     expect(preview?.textContent).toContain('warehouse = transforming_wh');
-    expect(preview?.textContent).toContain('call analytics.load_orders();');
+    expect(viewer?.textContent).toContain('call analytics.load_orders()\n;');
   });
 });

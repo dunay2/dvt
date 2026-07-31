@@ -12,7 +12,7 @@ qa_artifact: true
 ## Summary
 
 This artifact defines a QA execution plan for critical MVP tasks and follows
-`docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md` as baseline shape.
+`docs/planning/templates/qa/qa-artifact-example-template.md` as baseline shape.
 
 Canonical execution tracking remains in:
 
@@ -24,8 +24,8 @@ Canonical execution tracking remains in:
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md`
+- `docs/planning/templates/qa/qa-artifact-example-template.md`
+- `docs/planning/templates/qa/qa-current-task-check-prompt.md`
 
 ## Findings
 

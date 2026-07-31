@@ -56,6 +56,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Effective workspace context drift can reappear in protected web API mode](r-20260510-web-api-ewc.yaml)
 - [Empty temporal taskQueue values can re-enter provider-ref runtime state](R-20260409-PROVIDER-REF-EMPTY-STRING-PERSISTENCE.yaml)
 - [Engine and Temporal static-analysis cleanup can drift from admission and activity semantics](R-20260429-ENGINE-STATIC-ANALYSIS-CLEANUP.yaml)
+- [Engine architecture checks could regain a local task-authority dependency](R-20260731-ENGINE-GUARD-PLANNING-AUTHORITY.yaml)
 - [engine architecture fitness could drift back to source-string confidence](R-20260514-EA-20260429-06-SEMANTIC-FITNESS.yaml)
 - [Engine artifact dependency path mapping can drift from workspace dependencies](R-20260510-ENGINE-ARTIFACTS-PATHS.yaml)
 - [Engine fixture boundary fitness can drift from runtime ownership rules](R-20260512-WE-HX-6-BOUNDARY-FITNESS.yaml)

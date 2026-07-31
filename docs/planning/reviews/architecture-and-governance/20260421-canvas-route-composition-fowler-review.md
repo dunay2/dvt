@@ -24,7 +24,7 @@ This review is the canonical mailbox for the route-composition follow-up on
 - [Canvas Controller Current To Target Architecture](../../../architecture/components/web/graph/canvas-controller-current-to-target-architecture.md)
 - [Canvas Route Presentation Component](../../../architecture/components/web/graph/canvas-route-presentation-component.md)
 - [Canvas Shell Component](../../../architecture/components/web/graph/canvas-shell-component.md)
-- [Agent Lane E](../../state/agent-lane-e.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 - [Martin Fowler - GUI Architectures](https://martinfowler.com/eaaDev/uiArchs.html)
 - [VS Code source-code organization](https://github.com/microsoft/vscode/wiki/source-code-organization)
 

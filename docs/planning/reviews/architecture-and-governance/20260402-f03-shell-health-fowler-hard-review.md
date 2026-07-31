@@ -37,7 +37,7 @@ state truth, retry policy, and adjacent shell boundaries.
 - `docs/planning/state/agent-lane-e.yaml`
 - `docs/architecture/components/web/index.md`
 - `docs/planning/proposals/nice-to-have/frontend-and-ux/frontend-roadmap-20260219.md`
-- `docs/planning/state/lane-e-shell-baseline-target-guide.md`
+- `docs/architecture/components/web/appshell/shell-baseline-target-guide.md`
 - `docs/planning/archive/proposals/frontend-plan-back-alignment.md`
 - `docs/adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md`
 - `docs/adr/ADR-0039-hexagonal-port-hardening-and-solid-remediation.md`

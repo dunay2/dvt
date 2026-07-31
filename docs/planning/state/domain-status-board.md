@@ -8,12 +8,10 @@ planning_type: status
 
 # Domain Status Board
 
-Operational board by domain with explicit links to task IDs and roadmap impact.
+Status summary by domain with explicit links to roadmap impact.
 
-For full task-level tracking use `pnpm planning:db:query focus`,
-`pnpm planning:db:query next`, or `pnpm planning:db:query tasks`. The lane YAML
-files linked from [Planning Control Tower](./planning-control-tower.md) are
-bootstrap/export snapshots.
+GitHub Issues is the canonical source for current MVP tasks, priority, blockers,
+acceptance, and status. This document is a status summary, not a task registry.
 
 ## Domain Board
 

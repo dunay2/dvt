@@ -31,8 +31,8 @@ It does not replace:
 - [WorkflowEngine target architecture v1](../workflow-engine-target-architecture.v1.md)
 - [StartRun Protocol v1](../contracts/engine/StartRunProtocol.v1.md)
 - [Roadmap By Domain](../../../../planning/roadmap/roadmap-by-domain.md)
-- `docs/planning/state/agent-lane-a.yaml`
-- `docs/planning/state/agent-lane-c.yaml`
+- GitHub MVP issues and their linked pull requests
+- `docs/planning/state/planning-control-tower.md`
 
 ## Current posture
 

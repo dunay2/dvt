@@ -1,14 +1,14 @@
 ---
-title: Lane E Shell Baseline And Target Guide
+title: Frontend Shell Baseline And Target Guide
 status: Draft
 owner: Product / UX / Frontend
-last_reviewed: 2026-03-28
-planning_type: guide
+last_reviewed: 2026-07-31
+architecture_type: guide
 ---
 
-# Lane E Shell Baseline And Target Guide
+# Frontend Shell Baseline And Target Guide
 
-This document is the working guide for Lane E shell evolution.
+This document is the architecture guide for frontend shell evolution.
 It defines:
 
 1. Current state (as-is)
@@ -17,14 +17,10 @@ It defines:
 4. Component decomposition and impact scope
 5. Advantages and disadvantages
 
-Primary lane references:
-
-- [Agent Lane E YAML](./agent-lane-e.yaml)
-
 ## Scope
 
 - Shell layer in `apps/web`: navigation, top bar, workspace container, and shell-level state.
-- Migration sequence for `F-01` through `F-06`.
+- Evolution sequence for `F-01` through `F-06`.
 
 Out of scope:
 
@@ -273,7 +269,7 @@ flowchart TD
 
 ### Why
 
-- Lane E objective requires moving from prototype shell to operational UI.
+- The frontend shell objective requires moving from prototype shell to operational UI.
 - Shell clarity is prerequisite for reliable health/status visibility and run operations.
 - Data-layer separation is required before contract-driven API integration scales.
 
@@ -329,9 +325,9 @@ flowchart TD
 - `apps/web/src/app/views/*` that currently import mock data directly
 - `apps/web/src/app/data/*` (consumer migration, not removal by default)
 
-### Cross-Lane Coordination Impact
+### Cross-Component Coordination Impact
 
-- Lane A/C/D sync is required when frontend contracts are bound to real endpoints.
+- Contract-owning components must stay aligned when frontend contracts are bound to real endpoints.
 - Feature-flag policy must gate Level-C views (`Lineage`, `Cost`, `Plugins`, `Admin`).
 
 ## Advantages And Disadvantages

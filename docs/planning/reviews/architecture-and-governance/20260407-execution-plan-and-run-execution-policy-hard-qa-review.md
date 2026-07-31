@@ -25,9 +25,9 @@ The reopened defects were resolved as follows:
 - the active execution-model checklist now uses the accepted engine-boundary
   wording instead of the rejected `engine non-decision semantics` slogan.
 
-Canonical execution tracking remains in:
+Canonical execution tracking is defined by:
 
-- [agent-lane-a.yaml](../../state/agent-lane-a.yaml)
+- [GitHub MVP issue workflow](../../state/github-mvp-issue-workflow.md)
 - [ADR-0046](../../../adr/ADR-0046-execution-plan-definition-and-run-execution-policy-separation.md)
 - [20260407 execution-plan rationale](./20260407-execution-plan-and-run-execution-policy-rationale.md)
 
@@ -36,9 +36,9 @@ Canonical execution tracking remains in:
 - [governance-document-rule-inventory.md](../../status/governance-document-rule-inventory.md)
 - [AGENTS.md](../../../../AGENTS.md)
 - [ai-work-protocol.md](../../../guides/ai-work-protocol.md)
-- [QA global check prompt](../../templates/qa/TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md)
-- [QA current task check prompt](../../templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md)
-- [QA artifact example](../../templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md)
+- [QA global check prompt](../../templates/qa/qa-global-check-prompt.md)
+- [QA current task check prompt](../../templates/qa/qa-current-task-check-prompt.md)
+- [QA artifact example](../../templates/qa/qa-artifact-example-template.md)
 - [ADR-0012](../../../adr/ADR-0012-plan-integrity-ownership.md)
 - [ADR-0014](../../../adr/ADR-0014-run-driven-adapter-model.md)
 - [ADR-0042](../../../adr/ADR-0042-execution-plan-canonical-identity-unification.md)

@@ -1,21 +1,22 @@
 ---
-title: Review Status Board
-status: Active
+title: Historical Review Status Board
+status: Archived
 owner: Product / Architecture / Docs
-last_reviewed: 2026-05-09
+last_reviewed: 2026-07-31
 planning_type: review
 ---
 
-# Review Status Board
+# Historical Review Status Board
 
-Canonical board for the active review set after the 2026-04-02 review taxonomy
-cleanup.
+This document preserves the former review-board disposition as historical
+evidence. It is not an active task or lifecycle authority. Current MVP work is
+selected and updated in [GitHub Issues](https://github.com/dunay2/dvt/issues).
 
-Use this page to answer:
+Use this page only to understand the recorded 2026 review taxonomy:
 
 - which reviews remain active or reference-worthy
-- which task IDs they feed
-- what execution status and progress currently apply
+- which historical task IDs they referenced
+- what execution status was recorded at that time
 - which older reviews were moved to archive because they are superseded
 
 Sprint execution board:

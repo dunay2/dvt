@@ -15,22 +15,8 @@ function runPlanningDbOperateCli(args) {
   );
 }
 
-const importedTask = {
-  laneId: 'A',
-  taskId: 'GOV-S3',
-  sourcePath: 'docs/planning/state/agent-lane-a.yaml',
-  sourceContentSha256: 'a'.repeat(64),
-  status: 'in_progress',
-  progressPct: 25,
-  statusReason: 'Imported from lane file',
-  evidenceRefs: [
-    'docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md',
-  ],
-};
-
 module.exports = {
   assert,
   runPlanningDbOperateCli,
-  importedTask,
   ...operate,
 };

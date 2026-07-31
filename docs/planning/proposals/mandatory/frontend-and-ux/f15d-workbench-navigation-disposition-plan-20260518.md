@@ -37,7 +37,7 @@ governingSources:
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/architecture/command-query-rail-governance.md
-  - docs/planning/state/lane-e-shell-baseline-target-guide.md
+  - docs/architecture/components/web/appshell/shell-baseline-target-guide.md
   - buzon/20260516-codex-fowler-element-workbench-navigation-rail-disposition.md
 allowedImplementationSurfaces:
   - apps/web/src/app/Root.tsx

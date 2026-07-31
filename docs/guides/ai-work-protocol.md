@@ -48,24 +48,18 @@ When a task touches planning material, the agent MUST start from
 [Planning Control Tower](../planning/state/planning-control-tower.md) and update
 the document surfaces defined there in the same task.
 
-The planning DB is the canonical local operational source for task lifecycle
-writes and next-work queries; lane YAML is bootstrap/export compatibility unless
-the task explicitly changes lane taxonomy or reviewable snapshots.
+GitHub Issues is the canonical MVP task lifecycle and next-work source.
+Planning DB owns architecture and command/query mechanization, not task status.
 
 Minimum rule for every planning-affecting task:
 
-1. apply task claim, release, create, delete, status, progress, and evidence
-   changes through `pnpm planning:db:operate`, then confirm effective state with
-   `pnpm planning:db:query tasks` or `pnpm planning:db:query next`;
-2. for lane-level taxonomy, ownership, or sequencing changes outside a single
-   task row, update the relevant planning source surfaces, then run
-   `pnpm planning:db:import` and regenerate the local planning-derived views;
-3. update the relevant source surface (`proposals`, `reviews`, `closeouts`,
-   `gaps`, or `roadmap`) based on task type;
-4. if sequencing, blockers, or lane ownership changed, update
-   [Planning Control Tower](../planning/state/planning-control-tower.md),
-   the relevant roadmap surface, and linked diagrams.
-5. when creating or renaming review files, follow
+1. update task state, priority, blockers, acceptance, and evidence in the
+   governing GitHub issue;
+2. update Planning DB through existing command rails when architecture,
+   components, capabilities, relations, or command/query rails change;
+3. update a governed repository document only when the behavior or architecture
+   requires durable documentation beyond the issue;
+4. when creating or renaming review files, follow
    [Review Naming Policy](../planning/reviews/review-naming-policy.md).
 
 Do not leave planning changes only in ad hoc notes or PR text when a canonical
@@ -124,9 +118,9 @@ The required final command is:
 pnpm governance:refresh
 ```
 
-This command owns the final quadrature for docs indexes, workboard views, docs
-manifests, `system-governance-*` indexes, fingerprints, coverage, remediation
-outputs, and planning/governance query-store import/checks. It must run before
+This command owns the final quadrature for docs indexes, docs manifests,
+`system-governance-*` indexes, fingerprints, coverage, remediation outputs,
+and governance query-store import/checks. It must run before
 `pnpm ci:docs` or `pnpm verify:prepush` in affected slices, and it does not
 relax either gate.
 

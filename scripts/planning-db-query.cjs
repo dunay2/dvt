@@ -1,10 +1,9 @@
 /**
  * @file scripts/planning-db-query.cjs
- * @ownedConcern Expose DB-owned planning and governance read models through one operator query command.
- * @baseline ADR-0055: Planning DB canonical operational source
- * @decision Expose DB-owned planning and governance read models through one operator query command.
- * @consequence Planning workboard and next-task reads consume normalized DB views instead of
- *   reparsing lane YAML as the operational source.
+ * @ownedConcern Expose DB-owned architecture and governance read models through one operator query command.
+ * @baseline ADR-0061: GitHub MVP task authority and Planning DB architecture boundary
+ * @decision Keep MVP task lifecycle in GitHub Issues and expose only architecture and governance DB reads.
+ * @consequence The CLI cannot create a second local task backlog or workboard.
  * @version 1.0.0
  */
 const { Client } = require('pg');
@@ -140,13 +139,6 @@ const componentEngineeringSchemaName = 'component_engineering';
 const knownQueries = new Set([
   'summary',
   'hash-drift',
-  'tasks',
-  'open',
-  'next',
-  'dependencies',
-  'evidence',
-  'status-events',
-  'artifacts',
   'files',
   'components',
   'units',
@@ -176,12 +168,6 @@ const knownQueries = new Set([
   'feature-mechanization-validations',
   'pr-readiness',
   'docs-disposition',
-  'feature-work',
-  'task-references',
-  'task-trace',
-  'task-gaps',
-  'focus',
-  'real-work',
   'cer',
   'knowledge-documents',
   'knowledge-actions',
@@ -280,16 +266,9 @@ const governanceProjectionQueryNames = new Set([
   'canvas-component-registry-drift',
 ]);
 const taskIdCommonFilterQueryNames = new Set([
-  'tasks',
-  'open',
-  'next',
-  'task-trace',
-  'task-gaps',
   'canvas-cq-rail-drift',
   'canvas-uxdb-specification',
   'canvas-uxdb-traceability',
-  'focus',
-  'real-work',
 ]);
 const featureIdCommonFilterQueryNames = new Set([
   'feature-mechanization',
@@ -600,8 +579,6 @@ async function ensureFreshGovernanceProjection(queryName, options = {}) {
     {
       databaseUrl: options.databaseUrl || databaseUrl(),
       ifStale: true,
-      includePlanning: false,
-      includeGovernance: true,
       silent: true,
     },
     {
@@ -716,10 +693,6 @@ function parseArgs(args = process.argv.slice(2)) {
   for (let index = 0; index < rest.length; index += 1) {
     const arg = rest[index];
     if (!arg.startsWith('--')) {
-      if (queryName === 'task-trace' && !filters.taskId) {
-        filters.taskId = arg;
-        continue;
-      }
       throw new Error(`Unexpected argument "${arg}". Expected --name value flags.`);
     }
 
@@ -751,10 +724,6 @@ function parseArgs(args = process.argv.slice(2)) {
     }
     index += 1;
 
-    if (arg === '--lane') {
-      filters.laneId = value;
-      continue;
-    }
     if (arg === '--status') {
       filters.status = value;
       continue;
@@ -985,16 +954,7 @@ function parseArgs(args = process.argv.slice(2)) {
 
 function buildSummaryRows(summary) {
   return [
-    ['planning.source_authority', summary.sourceAuthority || 'database'],
-    ['planning.lanes', summary.lanes],
-    ['planning.tasks', summary.tasks],
-    ['planning.tasks.review', summary.reviewTasks],
-    ['planning.task_dependencies', summary.planningTaskDependencies],
-    ['planning.task_evidence_refs', summary.planningTaskEvidenceRefs],
-    ['planning.task_status_events', summary.planningTaskStatusEvents],
-    ['planning.artifacts', summary.planningArtifacts],
-    ['planning.real_work_items', summary.planningRealWorkItems],
-    ['planning.real_work_open_items', summary.planningRealWorkOpenItems],
+    ['architecture.source_authority', summary.sourceAuthority || 'database'],
     ['repository.commands', summary.repositoryCommands],
     ['repository.commands.unknown', summary.repositoryCommandUnknown],
     ['repository.commands.runtime_fanout', summary.repositoryCommandRuntimeFanout],
@@ -1019,8 +979,6 @@ function buildSummaryRows(summary) {
     ['governance.coverage_rows', summary.governanceCoverageRows],
     ['governance.remediation_tasks', summary.governanceRemediationTasks],
     ['governance.remediation_tasks.p0', summary.governanceRemediationP0],
-    ['planning.local_task_overlays', summary.planningLocalTaskOverlays],
-    ['planning.local_operations', summary.planningLocalOperations],
   ];
 }
 
@@ -1030,8 +988,6 @@ function buildHashDriftRows(summary) {
 
 const aiProjectContextRecommendedQueries = Object.freeze([
   'pnpm planning:db:query summary',
-  'pnpm planning:db:query focus',
-  'pnpm planning:db:query real-work',
   'pnpm planning:db:query command-query-rails --gaps true',
   'pnpm planning:db:query command-query-rails --duplicates true',
   'pnpm planning:db:query components',
@@ -1084,19 +1040,6 @@ function normalizeAiComponent(row) {
   };
 }
 
-function normalizeAiRealWork(row) {
-  return {
-    priority: row.priority ?? '-',
-    kind: row.work_kind ?? row.workKind ?? '-',
-    status: row.work_status ?? row.workStatus ?? '-',
-    workId: row.work_id ?? row.workId ?? '-',
-    scope: taskScope(row),
-    title: compactText(row.title),
-    sourcePath: row.source_path ?? row.sourcePath ?? row.document_path ?? row.documentPath ?? '-',
-    suggestedQuery: row.suggested_query ?? row.suggestedQuery ?? '-',
-  };
-}
-
 function normalizeAiRiskDebt(row) {
   return {
     priority: row.priority ?? '-',
@@ -1135,11 +1078,7 @@ function buildAiProjectContext(snapshot = {}, options = {}) {
     sourceAuthority: summary.sourceAuthority || 'database',
     generatedAt: options.generatedAt || new Date().toISOString(),
     counts: {
-      planningTasks: numericCount(summary.tasks),
-      reviewTasks: numericCount(summary.reviewTasks),
       repositoryCommands: numericCount(summary.repositoryCommands),
-      realWorkItems: numericCount(summary.planningRealWorkItems),
-      realWorkOpenItems: numericCount(summary.planningRealWorkOpenItems),
       commandQueryRails: numericCount(summary.commandQueryRails),
       commandQueryRailGaps: numericCount(summary.commandQueryRailGaps),
       commandQueryRailDuplicates: numericCount(summary.commandQueryRailDuplicates),
@@ -1151,7 +1090,6 @@ function buildAiProjectContext(snapshot = {}, options = {}) {
     samples: {
       commandQueryRails: (snapshot.commandQueryRails || []).map(normalizeAiCommandQueryRail),
       components: (snapshot.components || []).map(normalizeAiComponent),
-      realWork: (snapshot.realWork || []).map(normalizeAiRealWork),
       openIncidentsAndDebt: (snapshot.riskDebt || []).map(normalizeAiRiskDebt),
       repositoryCommands: (snapshot.commands || []).map(normalizeAiRepositoryCommand),
       prReadiness: (snapshot.prReadiness || []).map(normalizeAiPrReadiness),
@@ -1208,14 +1146,6 @@ function renderAiProjectContextMarkdown(context) {
     row.title,
     row.sourcePath,
   ]);
-  const realWorkRows = (context.samples.realWork || []).map((row) => [
-    row.priority,
-    row.kind,
-    row.status,
-    row.workId,
-    row.title,
-    row.suggestedQuery,
-  ]);
   const commandRows = (context.samples.repositoryCommands || []).map((row) => [
     row.commandType,
     row.commandName,
@@ -1260,12 +1190,6 @@ function renderAiProjectContextMarkdown(context) {
       componentRows
     ),
     '',
-    markdownSection(
-      'Current real work',
-      ['Priority', 'Kind', 'Status', 'Id', 'Title', 'Suggested query'],
-      realWorkRows
-    ),
-    '',
     markdownSection('Repository commands', ['Type', 'Name', 'Domain', 'Runtime'], commandRows),
     '',
     markdownSection(
@@ -1279,81 +1203,6 @@ function renderAiProjectContextMarkdown(context) {
     ...(context.recommendedQueries || []).map((query) => `- \`${query}\``),
     '',
   ].join('\n');
-}
-
-function normalizeProgress(value) {
-  if (value === undefined || value === null || value === '') {
-    return '-';
-  }
-
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? `${Math.round(parsed)}%` : String(value);
-}
-
-function buildTaskRows(rows) {
-  return rows.map((row) => [
-    row.lane_id ?? row.laneId,
-    row.task_id ?? row.taskId,
-    row.priority ?? '-',
-    row.status,
-    normalizeProgress(row.progress_pct ?? row.progressPct),
-    row.claimed_by ?? row.claimedBy ?? '-',
-    String(row.objective ?? '')
-      .replace(/\s+/g, ' ')
-      .trim(),
-  ]);
-}
-
-function buildNextTaskRows(rows) {
-  return rows.map((row) => [
-    row.route_source ?? row.routeSource ?? 'next',
-    row.lane_id ?? row.laneId,
-    row.task_id ?? row.taskId,
-    row.priority ?? '-',
-    row.status,
-    normalizeProgress(row.progress_pct ?? row.progressPct),
-    row.claimed_by ?? row.claimedBy ?? '-',
-    String(row.objective ?? '')
-      .replace(/\s+/g, ' ')
-      .trim(),
-  ]);
-}
-
-function buildPlanningDependencyRows(rows) {
-  return rows.map((row) => [
-    row.lane_id ?? row.laneId,
-    row.task_id ?? row.taskId,
-    row.dependency_order ?? row.dependencyOrder,
-    row.dependency_task_id ?? row.dependencyTaskId,
-    compactText(row.dependency_text ?? row.dependencyText),
-  ]);
-}
-
-function buildPlanningEvidenceRows(rows) {
-  return rows.map((row) => [
-    row.lane_id ?? row.laneId,
-    row.task_id ?? row.taskId,
-    row.evidence_order ?? row.evidenceOrder,
-    row.evidence_ref ?? row.evidenceRef,
-  ]);
-}
-
-function buildPlanningStatusEventRows(rows) {
-  return rows.map((row) => [
-    row.event_kind ?? row.eventKind,
-    row.lane_id ?? row.laneId,
-    row.task_id ?? row.taskId,
-    row.status ?? '-',
-    row.actor ?? '-',
-  ]);
-}
-
-function buildPlanningArtifactRows(rows) {
-  return rows.map((row) => [
-    row.artifact_kind ?? row.artifactKind,
-    row.artifact_path ?? row.artifactPath,
-    row.content_sha256 ?? row.contentSha256 ?? '-',
-  ]);
 }
 
 function buildRepositoryCommandRows(rows) {
@@ -1394,88 +1243,6 @@ function buildDocsDispositionRows(rows) {
     row.resolution_status ?? row.resolutionStatus ?? 'pending',
     compactText(row.reason),
   ]);
-}
-
-function buildTaskReferenceRows(rows) {
-  return rows.map((row) => [
-    row.classification,
-    row.reference_text ?? row.referenceText,
-    row.reference_prefix ?? row.referencePrefix,
-    row.document_path ?? row.documentPath,
-    row.occurrence_count ?? row.occurrenceCount ?? 0,
-  ]);
-}
-
-function buildFeatureWorkRows(rows) {
-  return rows.map((row) => [
-    row.feature_id ?? row.featureId,
-    row.document_status ?? row.documentStatus ?? '-',
-    row.planning_type ?? row.planningType ?? '-',
-    row.document_path ?? row.documentPath,
-    row.occurrence_count ?? row.occurrenceCount ?? 0,
-  ]);
-}
-
-function buildTaskTraceRows(rows) {
-  return rows.map((row) => [
-    row.lane_id ?? row.laneId ?? '-',
-    row.task_id ?? row.taskId ?? '-',
-    row.trace_kind ?? row.traceKind,
-    row.trace_ref ?? row.traceRef,
-    row.trace_status ?? row.traceStatus ?? '-',
-    compactText(row.trace_detail ?? row.traceDetail),
-  ]);
-}
-
-function buildTaskGapRows(rows) {
-  return rows.map((row) => [
-    row.severity,
-    row.gap_kind ?? row.gapKind,
-    row.task_id ?? row.taskId ?? '-',
-    row.document_path ?? row.documentPath ?? '-',
-    row.resolution_status ?? row.resolutionStatus ?? 'pending',
-    compactText(row.reason),
-  ]);
-}
-
-function buildFocusRows(rows) {
-  return rows.map((row) => [
-    row.rank_score ?? row.rankScore,
-    row.priority ?? '-',
-    row.intake_kind ?? row.intakeKind,
-    row.item_id ?? row.itemId,
-    taskScope(row),
-    row.document_path ?? row.documentPath ?? '-',
-    compactText(row.title),
-    compactText(row.reason),
-    row.suggested_query ?? row.suggestedQuery ?? '-',
-  ]);
-}
-
-function buildRealWorkRows(rows) {
-  return rows.map((row) => [
-    row.priority ?? '-',
-    row.work_kind ?? row.workKind,
-    row.work_status ?? row.workStatus,
-    row.work_id ?? row.workId,
-    taskScope(row),
-    row.source_path ?? row.sourcePath ?? row.document_path ?? row.documentPath ?? '-',
-    row.open_item_count ?? row.openItemCount ?? 0,
-    row.linked_task_count ?? row.linkedTaskCount ?? 0,
-    row.missing_dependency_count ?? row.missingDependencyCount ?? 0,
-    compactText(row.title),
-    row.suggested_query ?? row.suggestedQuery ?? '-',
-  ]);
-}
-
-function taskScope(row) {
-  const laneId = row.lane_id ?? row.laneId;
-  const taskId = row.task_id ?? row.taskId;
-  if (!laneId && !taskId) {
-    return '-';
-  }
-
-  return `${laneId || '-'}/${taskId || '-'}`;
 }
 
 function compactText(value) {
@@ -2041,124 +1808,6 @@ function appendResolutionFilter(predicates, params, value) {
   predicates.push(`resolution_status = $${params.length}`);
 }
 
-function effectiveTaskSelect() {
-  return `
-    select
-      lane_id,
-      task_id,
-      priority,
-      status,
-      progress_pct,
-      claimed_by,
-      dependency,
-      objective,
-      target
-    from ${schemaName}.planning_effective_tasks`;
-}
-
-function openTaskSelect() {
-  return `
-    select
-      lane_id,
-      task_id,
-      priority,
-      status,
-      progress_pct,
-      claimed_by,
-      dependency,
-      objective,
-      target
-    from ${schemaName}.planning_open_tasks`;
-}
-
-function nextTaskSelect() {
-  return `
-    with next_candidates as (
-      select
-        'next' as route_source,
-        lane_id,
-        task_id,
-        priority,
-        status,
-        progress_pct,
-        claimed_by,
-        dependency,
-        objective,
-        target
-      from ${schemaName}.planning_next_tasks
-      union
-      select
-        'claim_recovery' as route_source,
-        lane_id,
-        task_id,
-        priority,
-        status,
-        progress_pct,
-        claimed_by,
-        dependency,
-        objective,
-        target
-      from ${schemaName}.planning_claim_recovery_tasks
-    )
-    select
-      route_source,
-      lane_id,
-      task_id,
-      priority,
-      status,
-      progress_pct,
-      claimed_by,
-      dependency,
-      objective,
-      target
-    from next_candidates`;
-}
-
-function planningDependencySelect() {
-  return `
-    select
-      lane_id,
-      task_id,
-      dependency_order,
-      dependency_task_id,
-      dependency_text
-    from ${schemaName}.planning_task_dependencies`;
-}
-
-function planningEvidenceSelect() {
-  return `
-    select
-      lane_id,
-      task_id,
-      evidence_order,
-      evidence_ref
-    from ${schemaName}.planning_task_evidence_refs`;
-}
-
-function planningStatusEventSelect() {
-  return `
-    select
-      event_id,
-      event_kind,
-      lane_id,
-      task_id,
-      status,
-      actor,
-      occurred_at
-    from ${schemaName}.planning_task_status_events`;
-}
-
-function planningArtifactSelect() {
-  return `
-    select
-      artifact_path,
-      artifact_kind,
-      content_sha256,
-      source_content_sha256,
-      exported_at
-    from ${schemaName}.planning_artifacts`;
-}
-
 function repositoryCommandSelect() {
   return `
     select
@@ -2226,106 +1875,6 @@ function docsDispositionActionSelect() {
       target_lane_id,
       target_task_id
     from ${schemaName}.doc_disposition_action_query`;
-}
-
-function taskReferenceSelect() {
-  return `
-    select
-      reference_id,
-      document_path,
-      reference_text,
-      reference_prefix,
-      classification,
-      registered_planning_task,
-      occurrence_count,
-      sample_lines,
-      source_content_sha256,
-      raw_reference,
-      imported_at
-    from ${schemaName}.doc_task_reference_query`;
-}
-
-function taskTraceSelect() {
-  return `
-    select
-      lane_id,
-      task_id,
-      priority,
-      status,
-      progress_pct,
-      trace_kind,
-      trace_ref,
-      trace_status,
-      trace_detail,
-      document_path,
-      source_path,
-      source_content_sha256,
-      trace_order
-    from ${schemaName}.planning_task_trace_query`;
-}
-
-function taskGapSelect() {
-  return `
-    select
-      gap_kind,
-      severity,
-      lane_id,
-      task_id,
-      document_path,
-      reason,
-      source_path,
-      source_content_sha256,
-      resolution_status,
-      resolved_by,
-      resolved_at,
-      resolution_reason,
-      target_lane_id,
-      target_task_id
-    from ${schemaName}.planning_task_gap_query`;
-}
-
-function workIntakeSelect() {
-  return `
-    select
-      rank_score,
-      priority,
-      intake_kind,
-      item_id,
-      lane_id,
-      task_id,
-      document_path,
-      source_path,
-      title,
-      reason,
-      suggested_query,
-      source_view,
-      source_content_sha256
-    from ${schemaName}.planning_work_intake_query`;
-}
-
-function realWorkSelect() {
-  return `
-    select
-      rank_score,
-      priority,
-      work_kind,
-      work_id,
-      lane_id,
-      task_id,
-      document_path,
-      source_path,
-      title,
-      work_status,
-      open_item_count,
-      linked_task_count,
-      dependency_count,
-      missing_dependency_count,
-      missing_dependencies,
-      reason,
-      suggested_query,
-      source_view,
-      source_content_sha256
-    from ${schemaName}.planning_real_work_query`;
 }
 
 function governanceFileSelect() {
@@ -2855,29 +2404,10 @@ function governanceDriftSelect() {
     from ${schemaName}.governance_drift_query`;
 }
 
-function nextTaskOrderBy() {
-  return `
-     order by
-      case
-        when priority ~* '^P?[0-9]+$' then regexp_replace(priority, '^P', '', 'i')::int
-        else 9
-      end,
-      task_id`;
-}
-
 async function readSummary(client) {
   const result = await client.query(`
     select
       'database'::text as "sourceAuthority",
-      (select count(*)::int from ${schemaName}.planning_lanes) as lanes,
-      (select count(*)::int from ${schemaName}.planning_tasks) as tasks,
-      (select count(*)::int from ${schemaName}.planning_effective_tasks where status = 'review') as "reviewTasks",
-      (select count(*)::int from ${schemaName}.planning_task_dependencies) as "planningTaskDependencies",
-      (select count(*)::int from ${schemaName}.planning_task_evidence_refs) as "planningTaskEvidenceRefs",
-      (select count(*)::int from ${schemaName}.planning_task_status_events) as "planningTaskStatusEvents",
-      (select count(*)::int from ${schemaName}.planning_artifacts) as "planningArtifacts",
-      (select count(*)::int from ${schemaName}.planning_real_work_query) as "planningRealWorkItems",
-      (select coalesce(sum(open_item_count), 0)::int from ${schemaName}.planning_real_work_query) as "planningRealWorkOpenItems",
       (select count(*)::int from ${schemaName}.repository_commands) as "repositoryCommands",
       (select count(*)::int from ${schemaName}.repository_commands where domain = 'unknown') as "repositoryCommandUnknown",
       (select count(*)::int from ${schemaName}.repository_commands where runtime_fanout = true) as "repositoryCommandRuntimeFanout",
@@ -2901,9 +2431,7 @@ async function readSummary(client) {
       (select count(*)::int from ${schemaName}.governance_fingerprints) as "governanceFingerprints",
       (select count(*)::int from ${schemaName}.governance_coverage) as "governanceCoverageRows",
       (select count(*)::int from ${schemaName}.governance_remediation) as "governanceRemediationTasks",
-      (select count(*)::int from ${schemaName}.governance_remediation where priority = 'P0') as "governanceRemediationP0",
-      (select count(*)::int from ${schemaName}.planning_task_local_state) as "planningLocalTaskOverlays",
-      (select count(*)::int from ${schemaName}.planning_local_operations) as "planningLocalOperations"
+      (select count(*)::int from ${schemaName}.governance_remediation where priority = 'P0') as "governanceRemediationP0"
   `);
 
   return result.rows[0];
@@ -2916,7 +2444,6 @@ async function readAiProjectContext(client, filters = {}) {
   const summary = await readSummary(client);
   const commandQueryRails = await readCommandQueryRailRows(client, limitedFilters);
   const components = await readGovernanceComponentRows(client, limitedFilters);
-  const realWork = await readRealWorkRows(client, limitedFilters);
   const riskDebt = await readRiskDebtRows(client, {
     ...limitedFilters,
     status: filters.debtStatus || 'Open',
@@ -2932,157 +2459,10 @@ async function readAiProjectContext(client, filters = {}) {
     summary,
     commandQueryRails,
     components,
-    realWork,
     riskDebt,
     commands,
     prReadiness,
   });
-}
-
-async function readTaskRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-  appendFilter(predicates, params, 'status', filters.status);
-  appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
-  appendFilter(predicates, params, 'priority', filters.priority);
-  appendFilter(predicates, params, 'task_id', filters.taskId);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${effectiveTaskSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by lane_id, status, priority, task_id
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readOpenTaskRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-  appendFilter(predicates, params, 'status', filters.status);
-  appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
-  appendFilter(predicates, params, 'priority', filters.priority);
-  appendFilter(predicates, params, 'task_id', filters.taskId);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${openTaskSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by lane_id, status, priority, task_id
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readNextTaskRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-  appendFilter(predicates, params, 'status', filters.status);
-  appendFilter(predicates, params, 'claimed_by', filters.claimedBy);
-  appendFilter(predicates, params, 'priority', filters.priority);
-  appendFilter(predicates, params, 'task_id', filters.taskId);
-
-  const limit = parseLimit(filters.limit, 20);
-  params.push(limit);
-
-  const result = await client.query(
-    `${nextTaskSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     ${nextTaskOrderBy()}
-     limit $${params.length}`,
-    params
-  );
-
-  return buildNextTaskRows(result.rows);
-}
-
-async function readPlanningDependencyRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${planningDependencySelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by lane_id, task_id, dependency_order
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readPlanningEvidenceRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${planningEvidenceSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by lane_id, task_id, evidence_order
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readPlanningStatusEventRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-  appendFilter(predicates, params, 'status', filters.status);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${planningStatusEventSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by occurred_at desc, lane_id, task_id
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readPlanningArtifactRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'artifact_kind', filters.kind);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${planningArtifactSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by artifact_kind, artifact_path
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
 }
 
 async function readRepositoryCommandRows(client, filters = {}) {
@@ -3143,175 +2523,6 @@ async function readDocsDispositionRows(client, filters = {}) {
       action_kind,
       document_path,
       reference_text
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readTaskReferenceRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'classification', filters.kind);
-  appendFilter(predicates, params, 'reference_prefix', filters.prefix);
-  appendFilter(predicates, params, 'document_path', filters.path);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${taskReferenceSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by
-      case when classification = 'unknown_task_like_id' then 0 else 1 end,
-      occurrence_count desc,
-      reference_text,
-      document_path
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readFeatureWorkRows(client, filters = {}) {
-  const params = [];
-  const predicates = ["reference.classification = 'registered_feature_mechanization'"];
-  appendFilter(predicates, params, 'reference.reference_prefix', filters.prefix);
-  appendFilter(predicates, params, 'reference.document_path', filters.path);
-  appendFilter(predicates, params, 'document.status', filters.status);
-  appendFilter(predicates, params, 'document.planning_type', filters.kind);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `select
-       reference.reference_text as feature_id,
-       document.status as document_status,
-       document.planning_type,
-       reference.document_path,
-       reference.occurrence_count,
-       reference.imported_at
-     from ${schemaName}.doc_task_reference_query reference
-     join ${schemaName}.doc_disposition_document_query document
-       on document.document_path = reference.document_path
-     where ${predicates.join(' and ')}
-     order by
-       document.status,
-       reference.reference_text,
-       reference.document_path
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readTaskTraceRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'task_id', filters.taskId);
-  appendFilter(predicates, params, 'trace_kind', filters.kind);
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-
-  const limit = parseLimit(filters.limit, 100);
-  params.push(limit);
-
-  const result = await client.query(
-    `${taskTraceSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by
-      lane_id,
-      task_id,
-      trace_order,
-      trace_kind,
-      trace_ref
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readTaskGapRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'gap_kind', filters.kind);
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-  appendFilter(predicates, params, 'severity', filters.priority);
-  appendFilter(predicates, params, 'task_id', filters.taskId);
-  appendFilter(predicates, params, 'document_path', filters.path);
-  appendResolutionFilter(predicates, params, filters.resolution);
-
-  const limit = parseLimit(filters.limit, 100);
-  params.push(limit);
-
-  const result = await client.query(
-    `${taskGapSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by
-      case
-        when severity ~* '^P?[0-9]+$' then regexp_replace(severity, '^P', '', 'i')::int
-        else 9
-      end,
-      gap_kind,
-      coalesce(task_id, document_path)
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readFocusRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'intake_kind', filters.kind);
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-  appendFilter(predicates, params, 'priority', filters.priority);
-  appendFilter(predicates, params, 'task_id', filters.taskId);
-  appendFilter(predicates, params, 'document_path', filters.path);
-
-  const limit = parseLimit(filters.limit, 20);
-  params.push(limit);
-
-  const result = await client.query(
-    `${workIntakeSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by
-      rank_score,
-      intake_kind,
-      item_id
-     limit $${params.length}`,
-    params
-  );
-
-  return result.rows;
-}
-
-async function readRealWorkRows(client, filters = {}) {
-  const params = [];
-  const predicates = [];
-  appendFilter(predicates, params, 'work_kind', filters.kind);
-  appendFilter(predicates, params, 'lane_id', filters.laneId);
-  appendFilter(predicates, params, 'priority', filters.priority);
-  appendFilter(predicates, params, 'work_status', filters.status);
-  appendFilter(predicates, params, 'task_id', filters.taskId);
-  appendFilter(predicates, params, 'source_path', filters.path);
-
-  const limit = parseLimit(filters.limit, 50);
-  params.push(limit);
-
-  const result = await client.query(
-    `${realWorkSelect()}
-     ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
-     order by
-      rank_score,
-      priority,
-      work_kind,
-      work_id
      limit $${params.length}`,
     params
   );
@@ -4289,68 +3500,6 @@ async function runQuery(options = {}) {
       return summary;
     }
 
-    if (queryName === 'tasks') {
-      const rows = await readTaskRows(client, options.filters || {});
-      const taskRows = buildTaskRows(rows);
-      if (options.print !== false) {
-        printTaskRows(taskRows);
-      }
-      return taskRows;
-    }
-
-    if (queryName === 'open') {
-      const rows = await readOpenTaskRows(client, options.filters || {});
-      const taskRows = buildTaskRows(rows);
-      if (options.print !== false) {
-        printTaskRows(taskRows);
-      }
-      return taskRows;
-    }
-
-    if (queryName === 'next') {
-      const taskRows = await readNextTaskRows(client, options.filters || {});
-      if (options.print !== false) {
-        printTaskRows(taskRows);
-      }
-      return taskRows;
-    }
-
-    if (queryName === 'dependencies') {
-      const rows = await readPlanningDependencyRows(client, options.filters || {});
-      const dependencyRows = buildPlanningDependencyRows(rows);
-      if (options.print !== false) {
-        printTaskRows(dependencyRows);
-      }
-      return dependencyRows;
-    }
-
-    if (queryName === 'evidence') {
-      const rows = await readPlanningEvidenceRows(client, options.filters || {});
-      const evidenceRows = buildPlanningEvidenceRows(rows);
-      if (options.print !== false) {
-        printTaskRows(evidenceRows);
-      }
-      return evidenceRows;
-    }
-
-    if (queryName === 'status-events') {
-      const rows = await readPlanningStatusEventRows(client, options.filters || {});
-      const eventRows = buildPlanningStatusEventRows(rows);
-      if (options.print !== false) {
-        printTaskRows(eventRows);
-      }
-      return eventRows;
-    }
-
-    if (queryName === 'artifacts') {
-      const rows = await readPlanningArtifactRows(client, options.filters || {});
-      const artifactRows = buildPlanningArtifactRows(rows);
-      if (options.print !== false) {
-        printTaskRows(artifactRows);
-      }
-      return artifactRows;
-    }
-
     if (queryName === 'commands') {
       const rows = await readRepositoryCommandRows(client, options.filters || {});
       const commandRows = buildRepositoryCommandRows(rows);
@@ -4566,60 +3715,6 @@ async function runQuery(options = {}) {
         printTaskRows(dispositionRows);
       }
       return dispositionRows;
-    }
-
-    if (queryName === 'task-references') {
-      const rows = await readTaskReferenceRows(client, options.filters || {});
-      const referenceRows = buildTaskReferenceRows(rows);
-      if (options.print !== false) {
-        printTaskRows(referenceRows);
-      }
-      return referenceRows;
-    }
-
-    if (queryName === 'feature-work') {
-      const rows = await readFeatureWorkRows(client, options.filters || {});
-      const featureRows = buildFeatureWorkRows(rows);
-      if (options.print !== false) {
-        printTaskRows(featureRows);
-      }
-      return featureRows;
-    }
-
-    if (queryName === 'task-trace') {
-      const rows = await readTaskTraceRows(client, options.filters || {});
-      const traceRows = buildTaskTraceRows(rows);
-      if (options.print !== false) {
-        printTaskRows(traceRows);
-      }
-      return traceRows;
-    }
-
-    if (queryName === 'task-gaps') {
-      const rows = await readTaskGapRows(client, options.filters || {});
-      const gapRows = buildTaskGapRows(rows);
-      if (options.print !== false) {
-        printTaskRows(gapRows);
-      }
-      return gapRows;
-    }
-
-    if (queryName === 'focus') {
-      const rows = await readFocusRows(client, options.filters || {});
-      const focusRows = buildFocusRows(rows);
-      if (options.print !== false) {
-        printTaskRows(focusRows);
-      }
-      return focusRows;
-    }
-
-    if (queryName === 'real-work') {
-      const rows = await readRealWorkRows(client, options.filters || {});
-      const realWorkRows = buildRealWorkRows(rows);
-      if (options.print !== false) {
-        printTaskRows(realWorkRows);
-      }
-      return realWorkRows;
     }
 
     if (queryName === 'knowledge-documents') {
@@ -5190,9 +4285,6 @@ module.exports = {
   buildComponentEngineeringRuleCatalogRows,
   buildComponentEngineeringRuleEvaluationRows,
   buildDocsDispositionRows,
-  buildFeatureWorkRows,
-  buildFocusRows,
-  buildRealWorkRows,
   buildGovernanceComponentRows,
   buildGovernanceCoverageRows,
   buildGovernanceDriftRows,
@@ -5239,10 +4331,6 @@ module.exports = {
   buildCanvasUxdbSpecificationRows,
   buildCanvasUxdbTraceabilityRows,
   buildMandatoryProposalGapRows,
-  buildPlanningArtifactRows,
-  buildPlanningDependencyRows,
-  buildPlanningEvidenceRows,
-  buildPlanningStatusEventRows,
   buildPrReadinessRows,
   buildCommandQueryRailRows,
   buildCreationIntentRows,
@@ -5267,12 +4355,7 @@ module.exports = {
   buildFowlerAnalysisRows,
   buildArchitectureFitnessGapRows,
   buildRepositoryCommandRows,
-  buildNextTaskRows,
   buildSummaryRows,
-  buildTaskGapRows,
-  buildTaskRows,
-  buildTaskTraceRows,
-  buildTaskReferenceRows,
   databaseUrl,
   formatQueryError,
   parseArgs,
@@ -5282,7 +4365,6 @@ module.exports = {
   printHashDriftSummary,
   readAiProjectContext,
   readDocsDispositionRows,
-  readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
   readComponentEngineeringComponentMetadataRows,
   readComponentEngineeringComponentTreeRows,
@@ -5314,8 +4396,6 @@ module.exports = {
   readGovernanceProblemRows,
   readRailVocabularyRows,
   readSourceDriftRows,
-  readFocusRows,
-  readRealWorkRows,
   readGovernanceComponentRows,
   readGovernanceCoverageRows,
   readGovernanceDriftRows,
@@ -5342,10 +4422,6 @@ module.exports = {
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
   readMandatoryProposalGapRows,
-  readPlanningArtifactRows,
-  readPlanningDependencyRows,
-  readPlanningEvidenceRows,
-  readPlanningStatusEventRows,
   readPrReadinessRows,
   readCommandQueryRailRows,
   readCreationIntentRows,
@@ -5363,18 +4439,12 @@ module.exports = {
   readRepositoryCommandRows,
   readComponentEngineeringRuleCatalogRows,
   readComponentEngineeringRuleEvaluationRows,
-  readOpenTaskRows,
-  readTaskGapRows,
   printSummary,
   printJsonRows,
   printTaskRows,
   readComponentEngineeringRecordRows,
-  readTaskTraceRows,
-  readNextTaskRows,
   readHashDriftSummary,
   readSummary,
-  readTaskRows,
-  readTaskReferenceRows,
   resolveQueryName,
   runQuery,
   usesGovernanceProjection,

@@ -12,13 +12,13 @@ Reusable prompt templates for hard, evidence-first QA reviews.
 
 ## Index
 
-- [Global System QA Check Prompt](./TEMPLATE_QA_GLOBAL_CHECK_PROMPT.md)
-- [Current Task QA Check Prompt](./TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md)
-- [QA Artifact Example Template](./TEMPLATE_QA_ARTIFACT_EXAMPLE.md)
+- [Global System QA Check Prompt](./qa-global-check-prompt.md)
+- [Current Task QA Check Prompt](./qa-current-task-check-prompt.md)
+- [QA Artifact Example Template](./qa-artifact-example-template.md)
 
 ## Usage Rule
 
-- `TEMPLATE_QA_ARTIFACT_EXAMPLE.md` is the default artifact shape for outputs
+- `qa-artifact-example-template.md` is the default artifact shape for outputs
   produced from the QA prompt templates in this folder unless a stricter
   governed destination format overrides it.
 - QA reviews should assess tests with a global system view and decide

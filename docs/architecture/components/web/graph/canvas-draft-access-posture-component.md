@@ -64,7 +64,7 @@ Expected interpretation:
 - `docs/guides/ai-work-protocol.md`
 - `docs/architecture/command-query-rail-governance.md`
 - `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/state/agent-lane-e.yaml`
+- `docs/planning/state/github-mvp-issue-workflow.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md`
 - `docs/architecture/components/web/api-client-auth-component.md`
 - `docs/architecture/components/web/graph/canvas-execution-selection-component.md`

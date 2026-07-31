@@ -28,8 +28,8 @@ No runtime contract/API changes are planned in this slice.
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/state/agent-lane-c.yaml` (`AR-C2`)
-- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md`
+- `docs/planning/templates/qa/qa-artifact-example-template.md`
+- `docs/planning/templates/qa/qa-current-task-check-prompt.md`
 - `docs/runbooks/api-runtime-sla-canonical-20260404.md`
 - `docs/runbooks/ar-c2-sla-signal-threshold-mapping-20260404.md`
 - `docs/guides/api-control-plane-technical-manual-20260404.md`
@@ -137,7 +137,7 @@ DoD:
 
 ## QA validation artifact section
 
-This section follows `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+This section follows `docs/planning/templates/qa/qa-artifact-example-template.md`
 as the baseline action artifact shape for this slice.
 
 ## Findings

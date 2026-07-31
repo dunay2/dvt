@@ -1,7 +1,7 @@
 ---
 title: S19-F1 - Refactor de listStaleSnapshotRunsSql con run_event_heads
 status: Draft
-owner: Lane A / Anne
+owner: Engine / Anne
 last_reviewed: 2026-03-29
 ---
 

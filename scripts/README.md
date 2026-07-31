@@ -352,17 +352,6 @@ Usage:
 pnpm fix:changed
 ```
 
-### `docs-workboard-check-changed.cjs`
-
-Runs `pnpm docs:workboard:check` only when a changed file includes lane YAML
-under `docs/planning/state/agent-lane-*.yaml`.
-
-Usage:
-
-```bash
-node scripts/docs-workboard-check-changed.cjs
-```
-
 ## CI Triage Helper
 
 ### `../tools/ci/pr-check-triage.mjs`
@@ -467,7 +456,6 @@ These scripts are typically exercised through package scripts in
 
 - `pnpm verify:prepush`
 - `pnpm docs:sync`
-- `pnpm docs:workboard:generate`
 - `pnpm docs:quality:check`
 - `pnpm docs:doctor`
 - `pnpm docs:canonical:check`

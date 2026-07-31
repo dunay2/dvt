@@ -24,7 +24,7 @@ Canonical execution tracking remains in:
 - `docs/guides/ai-work-protocol.md`
 - `docs/planning/state/planning-control-tower.md`
 - `docs/planning/proposals/mandatory/frontend-and-ux/f04-frontend-data-boundary-hexagonal-convergence-plan-20260403.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
+- `docs/planning/templates/qa/qa-artifact-example-template.md`
 
 ## Findings
 

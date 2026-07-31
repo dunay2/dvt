@@ -61,7 +61,7 @@ still allowing the proposal to summarize it.
   - align the proposal manifest and governance inventory to that protocol
 - Touched files or paths:
   - `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`
-  - `docs/adr/ADR-Index.md`
+  - `docs/adr/adr-catalog.md`
   - `packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md`
   - `docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json`
   - `docs/planning/status/governance-document-rule-inventory.md`
@@ -91,7 +91,7 @@ still allowing the proposal to summarize it.
 | `docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md`                                             | Added the canonical protocol with roles, bounded review scope, rejection rule, and worked example | Create one normative place for planner public contract evolution |
 | `packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md`                                   | Added canonical-location pointer, review-scope table, and worked example in section 24            | Make the proposal operational without competing with the ADR     |
 | `docs/planning/proposals/planner-stage-1-1-canonicalization.manifest.json`                                    | Added ADR-0035 as active governance and aligned D-01/D-02/D-03 to section 24                      | Keep the structured artifact aligned with the human proposal     |
-| `docs/adr/ADR-Index.md`                                                                                       | Indexed ADR-0035                                                                                  | Keep ADR catalog rules satisfied                                 |
+| `docs/adr/adr-catalog.md`                                                                                     | Indexed ADR-0035                                                                                  | Keep ADR catalog rules satisfied                                 |
 | `docs/planning/status/governance-document-rule-inventory.md`                                                  | Added ADR-0035 to the ADR inventory                                                               | Keep repository governance entrypoint current                    |
 | `docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md` | Recorded analysis, validation plan, and worked-example rationale                                  | Satisfy workflow requirements                                    |
 
@@ -113,7 +113,7 @@ If the planner needs to add `planVersion` to `ExecutionPlanV2`, the flow is:
 - `docs/guides/ai-work-protocol.md`
 - `AGENTS.md`
 - `packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md`
-- `docs/adr/ADR-Index.md`
+- `docs/adr/adr-catalog.md`
 
 ## Docs synced
 
@@ -121,11 +121,11 @@ If the planner needs to add `planVersion` to `ExecutionPlanV2`, the flow is:
 
 ## Test evidence
 
-| Command                                                                                                                                                                                                                                                                                                                                                                                | Result |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| `pnpm docs:sync`                                                                                                                                                                                                                                                                                                                                                                       | Passed |
-| `pnpm exec markdownlint-cli2 docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md docs/adr/ADR-Index.md docs/adr/index.md packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md docs/planning/status/governance-document-rule-inventory.md docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md` | Passed |
-| `pnpm exec tsx tools/docs/validate-planner-stage-1-1-manifest.ts`                                                                                                                                                                                                                                                                                                                      | Passed |
+| Command                                                                                                                                                                                                                                                                                                                                                                                  | Result |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| `pnpm docs:sync`                                                                                                                                                                                                                                                                                                                                                                         | Passed |
+| `pnpm exec markdownlint-cli2 docs/adr/ADR-0035-planner-public-contract-evolution-protocol.md docs/adr/adr-catalog.md docs/adr/index.md packages/@dvt/planner/docs/planning/Stage-1.1-Planner-Canonicalization.md docs/planning/status/governance-document-rule-inventory.md docs/planning/closeouts/20260318-stage-1-1-planner-canonicalization-contract-evolution-protocol-closeout.md` | Passed |
+| `pnpm exec tsx tools/docs/validate-planner-stage-1-1-manifest.ts`                                                                                                                                                                                                                                                                                                                        | Passed |
 
 ## Debt introduced
 

@@ -24,8 +24,8 @@ Canonical execution tracking remains in:
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `AGENTS.md`
 - `docs/guides/ai-work-protocol.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_ARTIFACT_EXAMPLE.md`
-- `docs/planning/templates/qa/TEMPLATE_QA_CURRENT_TASK_CHECK_PROMPT.md`
+- `docs/planning/templates/qa/qa-artifact-example-template.md`
+- `docs/planning/templates/qa/qa-current-task-check-prompt.md`
 - `docs/adr/ADR-0004-event-sourcing-strategy.md`
 - `docs/adr/ADR-0005-contract-formalization-tooling.md`
 - `docs/adr/ADR-0010-run-event-envelope-split.md`

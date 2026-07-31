@@ -351,8 +351,6 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
         importCalls.push({
           databaseUrl: options.databaseUrl,
           ifStale: options.ifStale,
-          includePlanning: options.includePlanning,
-          includeGovernance: options.includeGovernance,
           silent: options.silent,
           logger: typeof deps.logger.log,
         });
@@ -364,8 +362,6 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
     {
       databaseUrl: 'postgresql://example.local/planning',
       ifStale: false,
-      includePlanning: false,
-      includeGovernance: true,
       silent: true,
       logger: 'function',
     },
