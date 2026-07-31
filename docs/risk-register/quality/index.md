@@ -70,6 +70,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [ExecutionPlan schema hard-cut can drift across generated fixtures and persisted stores](R-20260601-EXECUTION-PLAN-SCHEMA-HARDCUT.yaml)
 - [External compile SRP seams could regress into route-local policy and mixed transport-domain logic](R-20260417-MW-D1-EXTERNAL-COMPILE-BOUNDARY.yaml)
 - [F-23 web transformation flow can drift from engine run-lifecycle contracts](R-20260407-F23-ENGINE-WEB-ALIGNMENT.yaml)
+- [Finding identity could drift if canonical input ordering changes](R-20260731-PLAN-ADMISSION-FINDING-IDENTITY.yaml)
 - [Flat utility modules can drift without explicit component APIs and semantic ownership](R-20260421-UTILITY-MODULE-COMPONENTIZATION-DRIFT.yaml)
 - [Frozen custom policy namespace seam may need future reactivation](R-20260513-AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE.yaml)
 - [Future adapters may violate the validated providerRef reconciliation contract](R-20260409-PROVIDER-REF-EXACT-MATCH-ADAPTER-CONFORMANCE.yaml)

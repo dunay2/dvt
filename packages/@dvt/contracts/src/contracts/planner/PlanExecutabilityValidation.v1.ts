@@ -31,6 +31,11 @@
 
 // ── Error codes ────────────────────────────────────────────────────────────────
 
+import type {
+  PlanAdmissionFindingCollection,
+  PlanExecutabilityFinding,
+} from './PlanAdmissionFinding.v1.js';
+
 /**
  * Machine-readable rejection codes for a non-executable plan.
  *
@@ -78,6 +83,12 @@ export type ExecutabilityValidationResult =
       degradable: boolean;
       /** Human-readable explanation of the rejection. */
       reason: string;
+      /**
+       * Structured fail-fast finding produced by the executability authority.
+       * Optional only during the compatibility transition to the canonical
+       * finding contract; the validator task makes emission mandatory.
+       */
+      findings?: PlanAdmissionFindingCollection<PlanExecutabilityFinding> | undefined;
       /**
        * Specific capability name, policy kind, or step kind that caused the
        * rejection. Allows the orchestration layer to log structured diagnostics.

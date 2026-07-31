@@ -1,0 +1,18 @@
+---
+id: R-20260731-PLAN-ADMISSION-FINDING-IDENTITY
+title: Finding identity could drift if canonical input ordering changes
+status: Open
+date: 2026-07-31
+owners:
+  - '@dvt/contracts'
+severity: Medium
+probability: Low
+---
+context: >
+  Plan admission finding identifiers are deterministic artifact identities. A future producer that
+  hashes subjects or evidence in encounter order could assign different identifiers to the same
+  semantic rejection.
+mitigation: >
+  The contract owns one identity factory that sorts subjects and evidence before hashing a
+  fixed-shape payload. Contract tests prove order independence and the runtime schema rejects
+  identifiers that do not match the canonical payload.

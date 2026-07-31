@@ -281,6 +281,28 @@ export type {
   ExecutabilityRejectionCode,
   ExecutabilityValidationResult,
 } from './contracts/planner/PlanExecutabilityValidation.v1.js';
+export {
+  PLAN_ADMISSION_EVIDENCE_REFERENCE_KIND,
+  PLAN_ADMISSION_FINDING_CONTRACT_VERSION,
+  PLAN_ADMISSION_FINDING_ID_PREFIX,
+  PLAN_ADMISSION_FINDING_PHASE,
+  PLAN_ADMISSION_FINDING_SUBJECT_KIND,
+  createPlanAdmissionFindingId,
+} from './contracts/planner/PlanAdmissionFinding.v1.js';
+export type {
+  PlanAdmissionEvidence,
+  PlanAdmissionEvidenceReference,
+  PlanAdmissionEvidenceReferenceKind,
+  PlanAdmissionEvidenceValue,
+  PlanAdmissionFinding,
+  PlanAdmissionFindingCollection,
+  PlanAdmissionFindingIdentityInput,
+  PlanAdmissionFindingPhase,
+  PlanAdmissionFindingSubject,
+  PlanAdmissionFindingSubjectKind,
+  PlanExecutabilityFinding,
+  PreviewSelectionFinding,
+} from './contracts/planner/PlanAdmissionFinding.v1.js';
 export type {
   BindingRejectionCode,
   ExecutionBindingVerificationResult,

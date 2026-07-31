@@ -7,6 +7,8 @@ import type {
   ExecutionSelection,
   GenericGraphSourceV1,
   IPlanner,
+  PlanAdmissionFindingCollection,
+  PreviewSelectionFinding,
   WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
@@ -19,6 +21,8 @@ export interface ExecutableSubgraphSelectionRejection {
   readonly code: 'REJECTED';
   readonly reason: string;
   readonly cause: string;
+  /** Populated by the preview-selection finding producer in TASK-F6.2B. */
+  readonly findings?: PlanAdmissionFindingCollection<PreviewSelectionFinding> | undefined;
 }
 
 type ExecutableSubgraphResolution =

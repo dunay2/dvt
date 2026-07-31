@@ -838,18 +838,22 @@
         "Model workspace graph edits as aggregate commands instead of transport-specific patches.",
         "Persist workspace authoring as a graph-first aggregate, not as UI widget state.",
         "Publish execution-selection schemas as a focused schema pack for external validators.",
+        "Publish one versioned finding vocabulary for the existing preview-selection and stored-plan executability decisions.",
         "Publish plan-compile request and response schemas as a bounded planner contract pack",
         "Publish selected executable closure as a derived read model separate from editable authoring truth.",
-        "Re-export only the execution-selection component contracts through this local barrel."
+        "Re-export only the execution-selection component contracts through this local barrel.",
+        "Validate canonical plan-admission findings through one focused strict schema pack."
       ],
       "implemented_by": [
         "packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/index.ts",
         "packages/@dvt/contracts/src/schema-packs/execution-selection.ts",
+        "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
         "packages/@dvt/contracts/src/schema-packs/plan-compile.ts"
       ],
       "title": "ADR-0035 - Planner Public Contract Evolution Protocol"

@@ -1,6 +1,7 @@
 export * from './planner-context.js';
 export * from './planner-graph.js';
 export * from './execution-plan.js';
+export * from './plan-admission-finding.js';
 export * from './planner-build.js';
 export * from './plan-preview.js';
 export * from './plan-compile.js';
