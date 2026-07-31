@@ -28,19 +28,18 @@ export function mapPreviewPlanUseCaseResult(
   result: PreviewPlanUseCaseResult,
   parsedRequest: ParsedPreviewPlanRequest
 ): PreviewPlanRouteResultResponse {
-  if (result.kind === 'rejected') {
+  if (result.kind !== 'accepted') {
+    const rejection = result.kind === 'selection-rejected' ? result.rejection : result.validation;
     return {
       kind: 'rejected',
       response: createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
         reason: HTTP_ERROR_REASON.planRejected,
         details: {
-          code: result.validation.code,
-          adapterId: result.validation.adapterId,
-          ...(result.validation.cause === undefined
-            ? {}
-            : { cause: result.validation.cause }),
-          rejectionReason: result.validation.reason,
+          code: rejection.code,
+          ...(result.kind === 'plan-invalid' ? { adapterId: result.validation.adapterId } : {}),
+          ...(rejection.cause === undefined ? {} : { cause: rejection.cause }),
+          rejectionReason: rejection.reason,
         },
       }),
     };

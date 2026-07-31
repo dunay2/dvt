@@ -1,0 +1,164 @@
+import { parsePlanRef, type ExecutionPlan } from '@dvt/contracts';
+import { describe, expect, it, vi } from 'vitest';
+
+import { PreviewPlanUseCase } from '../../../src/application/services/PreviewPlanUseCase.js';
+
+const PLAN_REF = parsePlanRef({
+  uri: 'dvt-plan://plans/plan-1',
+  sha256: 'a'.repeat(64),
+  schemaVersion: '1.0',
+  planId: 'plan-1',
+  planVersion: 'v1',
+});
+
+const PLAN = {
+  metadata: {
+    planVersion: '1.0',
+    schemaVersion: '1.0',
+    contractVersion: '1.0.0',
+    inputHashSha256: 'b'.repeat(64),
+    planId: 'plan-1',
+    createdAtIso: '2026-07-31T00:00:00.000Z',
+    ownership: {
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+    },
+  },
+  steps: [],
+} satisfies ExecutionPlan;
+
+const CONTEXT = {
+  principal: {
+    principalId: 'principal-1',
+    principalType: 'user',
+    subjectId: 'user-1',
+    issuer: 'https://issuer.example/',
+    audience: 'dvt-api',
+    expiresAt: new Date('2026-07-31T01:00:00.000Z'),
+    rawScopes: [],
+    assertedTenantIds: [],
+    assertedProjectIds: [],
+  },
+  scope: {
+    resource: 'environment',
+    tenantId: { value: 'tenant-1' },
+    projectId: { value: 'project-1' },
+    environmentId: { value: 'env-1' },
+  },
+  action: { kind: 'command', name: 'run:start' },
+  requestId: 'request-1',
+  authorizedAt: new Date('2026-07-31T00:00:00.000Z'),
+} as never;
+
+const COMMAND = {
+  targetAdapter: 'temporal',
+  graphSource: {
+    kind: 'generic-graph-v1' as const,
+    sourceFamily: 'dbt',
+    sourceVersion: '1.0',
+    nodes: [],
+  },
+  selection: { mode: 'explicit' as const, nodeIds: [] },
+};
+
+function createUseCase(
+  overrides: {
+    previewSelectionResolver?: { execute: ReturnType<typeof vi.fn> };
+    validatePlan?: ReturnType<typeof vi.fn>;
+  } = {}
+): {
+  readonly useCase: PreviewPlanUseCase;
+  readonly planner: { readonly buildPlan: ReturnType<typeof vi.fn> };
+  readonly planStore: {
+    readonly storePlanArtifact: ReturnType<typeof vi.fn>;
+    readonly markStoredPlanArtifactValid: ReturnType<typeof vi.fn>;
+    readonly markStoredPlanArtifactInvalid: ReturnType<typeof vi.fn>;
+    readonly getStoredPlanValidationRecord: ReturnType<typeof vi.fn>;
+  };
+} {
+  const planner = {
+    buildPlan: vi.fn(async () => ({
+      plan: PLAN,
+      executionPolicy: {},
+      canonicalPlanCoreJson: '{}',
+    })),
+  };
+  const planStore = {
+    storePlanArtifact: vi.fn(async () => PLAN_REF),
+    markStoredPlanArtifactValid: vi.fn(async () => undefined),
+    markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
+    getStoredPlanValidationRecord: vi.fn(async () => null),
+  };
+  const planValidator = {
+    validatePlan:
+      overrides.validatePlan ??
+      vi.fn(async () => ({
+        status: 'OK' as const,
+        planId: PLAN_REF.planId,
+        adapterId: 'temporal',
+      })),
+  };
+  const previewSelectionResolver =
+    overrides.previewSelectionResolver ??
+    ({
+      execute: vi.fn(async () => ({
+        ok: true as const,
+        value: { graphSource: COMMAND.graphSource, nodeIds: [] },
+      })),
+    } as const);
+
+  return {
+    useCase: new PreviewPlanUseCase({
+      planner: planner as never,
+      planStore: planStore as never,
+      planValidator: planValidator as never,
+      previewSelectionResolver: previewSelectionResolver as never,
+    }),
+    planner,
+    planStore,
+  };
+}
+
+describe('PreviewPlanUseCase outcomes', () => {
+  it('returns selection-rejected without building or storing a plan', async () => {
+    const rejection = {
+      code: 'REJECTED' as const,
+      cause: 'dependency_gap',
+      reason: 'Selected closure is missing a dependency.',
+    };
+    const { useCase, planner, planStore } = createUseCase({
+      previewSelectionResolver: {
+        execute: vi.fn(async () => ({ ok: false as const, rejection })),
+      },
+    });
+
+    const result = await useCase.execute(COMMAND, CONTEXT);
+
+    expect(result).toEqual({ kind: 'selection-rejected', rejection });
+    expect(planner.buildPlan).not.toHaveBeenCalled();
+    expect(planStore.storePlanArtifact).not.toHaveBeenCalled();
+  });
+
+  it('returns plan-invalid with the exact built plan and stored planRef', async () => {
+    const validation = {
+      status: 'ERROR' as const,
+      code: 'MISSING_CAPABILITY' as const,
+      adapterId: 'temporal',
+      planId: PLAN_REF.planId,
+      degradable: false,
+      reason: 'The adapter is missing executor.dbt.',
+      cause: 'executor.dbt',
+    };
+    const { useCase, planStore } = createUseCase({
+      validatePlan: vi.fn(async () => validation),
+    });
+
+    const result = await useCase.execute(COMMAND, CONTEXT);
+
+    expect(result).toEqual({ kind: 'plan-invalid', plan: PLAN, planRef: PLAN_REF, validation });
+    expect(planStore.markStoredPlanArtifactInvalid).toHaveBeenCalledWith(
+      expect.objectContaining({ planRef: PLAN_REF, report: validation })
+    );
+  });
+});
