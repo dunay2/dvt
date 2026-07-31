@@ -13,9 +13,6 @@ const {
   buildDocsDispositionRows,
   buildComponentProfileRows,
   buildComponentEngineeringRecordRows,
-  buildFeatureWorkRows,
-  buildFocusRows,
-  buildRealWorkRows,
   buildComponentEngineeringComponentDriftRows,
   buildComponentEngineeringComponentMetadataRows,
   buildComponentRoadmapRows,
@@ -50,7 +47,6 @@ const {
   buildHashDriftRows,
   buildRiskDebtRows,
   buildAiProjectContext,
-  buildTaskGapRows,
   buildPrReadinessRows,
   buildCommandQueryRailRows,
   buildCreationIntentRows,
@@ -64,9 +60,6 @@ const {
   buildDocumentationLifecycleRows,
   buildDbSurfaceRows,
   buildSummaryRows,
-  buildTaskRows,
-  buildTaskTraceRows,
-  buildTaskReferenceRows,
   buildRepositoryCommandRows,
   buildComponentEngineeringRuleCatalogRows,
   buildComponentEngineeringRuleEvaluationRows,
@@ -78,10 +71,6 @@ const {
   readGovernanceUnitRows,
   readGovernanceRemediationRows,
   readRiskDebtRows,
-  readPlanningArtifactRows,
-  readPlanningDependencyRows,
-  readPlanningEvidenceRows,
-  readPlanningStatusEventRows,
   readPrReadinessRows,
   readAiProjectContext,
   readCommandQueryRailRows,
@@ -97,7 +86,6 @@ const {
   readDbSurfaceRows,
   readDocsDispositionRows,
   readComponentProfileRows,
-  readFeatureWorkRows,
   readComponentEngineeringComponentDriftRows,
   readComponentEngineeringComponentMetadataRows,
   readComponentRoadmapRows,
@@ -124,17 +112,9 @@ const {
   readComponentEngineeringRecordRows,
   readComponentEngineeringRuleCatalogRows,
   readComponentEngineeringRuleEvaluationRows,
-  readFocusRows,
-  readRealWorkRows,
-  readTaskGapRows,
   readRepositoryCommandRows,
-  readTaskTraceRows,
-  readTaskReferenceRows,
-  readNextTaskRows,
   readHashDriftSummary,
-  readOpenTaskRows,
   readSummary,
-  readTaskRows,
   formatQueryError,
   renderAiProjectContextMarkdown,
   resolveQueryName,
@@ -758,13 +738,6 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName(undefined), 'summary');
   assert.equal(resolveQueryName('summary'), 'summary');
   assert.equal(resolveQueryName('hash-drift'), 'hash-drift');
-  assert.equal(resolveQueryName('tasks'), 'tasks');
-  assert.equal(resolveQueryName('open'), 'open');
-  assert.equal(resolveQueryName('next'), 'next');
-  assert.equal(resolveQueryName('dependencies'), 'dependencies');
-  assert.equal(resolveQueryName('evidence'), 'evidence');
-  assert.equal(resolveQueryName('status-events'), 'status-events');
-  assert.equal(resolveQueryName('artifacts'), 'artifacts');
   assert.equal(resolveQueryName('files'), 'files');
   assert.equal(resolveQueryName('components'), 'components');
   assert.equal(resolveQueryName('units'), 'units');
@@ -793,12 +766,6 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   );
   assert.equal(resolveQueryName('pr-readiness'), 'pr-readiness');
   assert.equal(resolveQueryName('docs-disposition'), 'docs-disposition');
-  assert.equal(resolveQueryName('feature-work'), 'feature-work');
-  assert.equal(resolveQueryName('task-references'), 'task-references');
-  assert.equal(resolveQueryName('task-trace'), 'task-trace');
-  assert.equal(resolveQueryName('task-gaps'), 'task-gaps');
-  assert.equal(resolveQueryName('focus'), 'focus');
-  assert.equal(resolveQueryName('real-work'), 'real-work');
   assert.equal(resolveQueryName('cer'), 'cer');
   assert.equal(resolveQueryName('knowledge-documents'), 'knowledge-documents');
   assert.equal(resolveQueryName('knowledge-actions'), 'knowledge-actions');
@@ -850,6 +817,26 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
   assert.equal(resolveQueryName('architecture-fitness-gaps'), 'architecture-fitness-gaps');
   assert.equal(resolveQueryName('component-roadmap'), 'component-roadmap');
   assert.equal(resolveQueryName('documentation-panels'), 'documentation-panels');
+  for (const retiredQuery of [
+    'tasks',
+    'open',
+    'next',
+    'dependencies',
+    'evidence',
+    'status-events',
+    'artifacts',
+    'feature-work',
+    'task-references',
+    'task-trace',
+    'task-gaps',
+    'focus',
+    'real-work',
+  ]) {
+    assert.throws(
+      () => resolveQueryName(retiredQuery),
+      new RegExp(`Unknown planning DB query "${retiredQuery}"`)
+    );
+  }
   assert.throws(() => resolveQueryName('unknown'), /Unknown planning DB query "unknown"/);
 });
 
@@ -929,42 +916,16 @@ test('parseArgs keeps architecture fitness state filters on the DB fitness state
   });
 });
 
-test('parseArgs parses task query filters for daily DB-first planning work', () => {
-  const command = parseArgs([
-    'tasks',
-    '--lane',
-    'C',
-    '--status',
-    'review',
-    '--claimed-by',
-    'codex',
-    '--limit',
-    '10',
-  ]);
-
-  assert.deepEqual(command, {
-    queryName: 'tasks',
-    filters: {
-      laneId: 'C',
-      status: 'review',
-      claimedBy: 'codex',
-      limit: 10,
-    },
-  });
-});
-
-test('parseArgs accepts common --filter for task id planning queries', () => {
-  assert.deepEqual(parseArgs(['tasks', '--filter', 'E-PROP-DISP-1', '--limit', '10']), {
-    queryName: 'tasks',
-    filters: {
-      taskId: 'E-PROP-DISP-1',
-      limit: 10,
-    },
-  });
+test('parseArgs rejects retired local task and lane queries', () => {
+  assert.throws(() => parseArgs(['tasks', '--lane', 'C']), /Unknown planning DB query "tasks"/);
+  assert.throws(
+    () => parseArgs(['focus', '--filter', 'E-PROP-DISP-1']),
+    /Unknown planning DB query "focus"/
+  );
 });
 
 test('parseArgs rejects common --filter for queries without matching predicates', () => {
-  for (const queryName of ['feature-work', 'task-references', 'pr-readiness']) {
+  for (const queryName of ['pr-readiness']) {
     assert.throws(
       () => parseArgs([queryName, '--filter', 'E-PROP-DISP-1']),
       new RegExp(`--filter is not supported for planning DB query "${queryName}"`)
@@ -1878,13 +1839,6 @@ test('parseArgs normalizes open resolution filters to pending', () => {
       resolution: 'pending',
     },
   });
-
-  assert.deepEqual(parseArgs(['task-gaps', '--resolution', 'open']), {
-    queryName: 'task-gaps',
-    filters: {
-      resolution: 'pending',
-    },
-  });
 });
 
 test('parseArgs rejects unknown resolution filters before querying the DB', () => {
@@ -1892,102 +1846,6 @@ test('parseArgs rejects unknown resolution filters before querying the DB', () =
     () => parseArgs(['docs-disposition', '--resolution', 'stale']),
     /Invalid --resolution "stale"/
   );
-});
-
-test('parseArgs parses task provenance query filters for DB-first task triage', () => {
-  assert.deepEqual(parseArgs(['task-trace', 'F-28-C', '--limit', '20']), {
-    queryName: 'task-trace',
-    filters: {
-      taskId: 'F-28-C',
-      limit: 20,
-    },
-  });
-
-  assert.deepEqual(parseArgs(['task-trace', '--filter', 'F-28-C', '--limit', '20']), {
-    queryName: 'task-trace',
-    filters: {
-      taskId: 'F-28-C',
-      limit: 20,
-    },
-  });
-
-  assert.deepEqual(parseArgs(['task-gaps', '--kind', 'active_review_without_task_link']), {
-    queryName: 'task-gaps',
-    filters: {
-      kind: 'active_review_without_task_link',
-    },
-  });
-
-  assert.deepEqual(parseArgs(['task-gaps', '--resolution', 'resolved', '--limit', '10']), {
-    queryName: 'task-gaps',
-    filters: {
-      resolution: 'resolved',
-      limit: 10,
-    },
-  });
-});
-
-test('parseArgs parses work intake focus filters for DB-first work selection', () => {
-  const command = parseArgs([
-    'focus',
-    '--kind',
-    'task_gap',
-    '--lane',
-    'C',
-    '--priority',
-    'P1',
-    '--task',
-    'F-28-C',
-    '--path',
-    'docs/planning/reviews/example.md',
-    '--limit',
-    '10',
-  ]);
-
-  assert.deepEqual(command, {
-    queryName: 'focus',
-    filters: {
-      kind: 'task_gap',
-      laneId: 'C',
-      priority: 'P1',
-      taskId: 'F-28-C',
-      path: 'docs/planning/reviews/example.md',
-      limit: 10,
-    },
-  });
-});
-
-test('parseArgs parses real work filters for DB-first backlog triage', () => {
-  const command = parseArgs([
-    'real-work',
-    '--kind',
-    'knowledge_action',
-    '--lane',
-    'D',
-    '--priority',
-    'P1',
-    '--status',
-    'unlinked_required_action',
-    '--task',
-    'D-KNOWLEDGE-ACTION-LINKAGE-1',
-    '--path',
-    'docs/planning/proposals/example.md',
-    '--limit',
-    '10',
-  ]);
-
-  assert.deepEqual(command, {
-    queryName: 'real-work',
-    filters: {
-      kind: 'knowledge_action',
-      laneId: 'D',
-      priority: 'P1',
-      status: 'unlinked_required_action',
-      taskId: 'D-KNOWLEDGE-ACTION-LINKAGE-1',
-      path: 'docs/planning/proposals/example.md',
-      limit: 10,
-    },
-  });
 });
 
 test('parseArgs parses risk debt query filters for DB-first debt work selection', () => {
@@ -2167,7 +2025,7 @@ test('parseArgs requires explicit confirmation before query-time governance refr
     /Cannot combine --refresh and --no-refresh/
   );
   assert.throws(
-    () => parseArgs(['tasks', '--refresh', '--confirm-expensive-governance-refresh']),
+    () => parseArgs(['summary', '--refresh', '--confirm-expensive-governance-refresh']),
     /--refresh is only valid for governance projection queries/
   );
 });
@@ -2358,44 +2216,15 @@ test('runQuery refreshes stale governance projections only when explicitly reque
   ]);
 });
 
-test('runQuery does not refresh governance projections for planning-only reads', async () => {
-  const client = {
-    async query() {
-      return {
-        rows: [
-          {
-            lane_id: 'A',
-            task_id: 'A-1',
-            priority: 'P1',
-            status: 'todo',
-            progress_pct: 0,
-            claimed_by: null,
-            dependency: '',
-            objective: 'Planning task',
-            target: 'planning',
-          },
-        ],
-      };
-    },
-  };
-
-  const rows = await runQuery({
-    queryName: 'tasks',
-    client,
-    print: false,
-    runPlanningImport: async () => {
-      throw new Error('planning-only query must not import governance');
-    },
-  });
-
-  assert.equal(rows[0][1], 'A-1');
+test('runQuery rejects the retired local task surface before opening the database', async () => {
+  await assert.rejects(
+    () => runQuery({ queryName: 'tasks', print: false }),
+    /Unknown planning DB query "tasks"/
+  );
 });
 
-test('buildSummaryRows exposes planning and governance content counts without expensive hash drift', () => {
+test('buildSummaryRows exposes architecture and governance counts without local task state', () => {
   const rows = buildSummaryRows({
-    lanes: 5,
-    tasks: 250,
-    reviewTasks: 9,
     governanceFiles: 4255,
     driftFiles: 41,
     legacyFiles: 0,
@@ -2405,14 +2234,6 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     governanceCoverageRows: 128,
     governanceRemediationTasks: 43,
     governanceRemediationP0: 3,
-    planningLocalTaskOverlays: 2,
-    planningLocalOperations: 5,
-    planningTaskDependencies: 40,
-    planningTaskEvidenceRefs: 30,
-    planningTaskStatusEvents: 250,
-    planningArtifacts: 2,
-    planningRealWorkItems: 11,
-    planningRealWorkOpenItems: 27,
     repositoryCommands: 220,
     repositoryCommandUnknown: 4,
     repositoryCommandRuntimeFanout: 16,
@@ -2431,16 +2252,7 @@ test('buildSummaryRows exposes planning and governance content counts without ex
   });
 
   assert.deepEqual(rows, [
-    ['planning.source_authority', 'database'],
-    ['planning.lanes', 5],
-    ['planning.tasks', 250],
-    ['planning.tasks.review', 9],
-    ['planning.task_dependencies', 40],
-    ['planning.task_evidence_refs', 30],
-    ['planning.task_status_events', 250],
-    ['planning.artifacts', 2],
-    ['planning.real_work_items', 11],
-    ['planning.real_work_open_items', 27],
+    ['architecture.source_authority', 'database'],
     ['repository.commands', 220],
     ['repository.commands.unknown', 4],
     ['repository.commands.runtime_fanout', 16],
@@ -2465,8 +2277,6 @@ test('buildSummaryRows exposes planning and governance content counts without ex
     ['governance.coverage_rows', 128],
     ['governance.remediation_tasks', 43],
     ['governance.remediation_tasks.p0', 3],
-    ['planning.local_task_overlays', 2],
-    ['planning.local_operations', 5],
   ]);
 });
 
@@ -2479,11 +2289,7 @@ test('buildAiProjectContext aggregates DB-first project state for agent discover
     {
       summary: {
         sourceAuthority: 'database',
-        tasks: 250,
-        reviewTasks: 9,
         repositoryCommands: 220,
-        planningRealWorkItems: 11,
-        planningRealWorkOpenItems: 27,
         commandQueryRails: 80,
         commandQueryRailGaps: 12,
         commandQueryRailDuplicates: 6,
@@ -2509,16 +2315,6 @@ test('buildAiProjectContext aggregates DB-first project state for agent discover
           name: 'Web application',
           governance_state: 'current',
           file_count: 42,
-        },
-      ],
-      realWork: [
-        {
-          priority: 'P1',
-          work_kind: 'task',
-          work_status: 'open',
-          work_id: 'E-100',
-          title: 'Finish DB-first route',
-          suggested_query: 'pnpm planning:db:query task-trace E-100',
         },
       ],
       riskDebt: [
@@ -2552,11 +2348,7 @@ test('buildAiProjectContext aggregates DB-first project state for agent discover
   assert.equal(context.contextKind, 'db-first-ai-project-context');
   assert.equal(context.generatedAt, '2026-06-02T00:00:00.000Z');
   assert.deepEqual(context.counts, {
-    planningTasks: 250,
-    reviewTasks: 9,
     repositoryCommands: 220,
-    realWorkItems: 11,
-    realWorkOpenItems: 27,
     commandQueryRails: 80,
     commandQueryRailGaps: 12,
     commandQueryRailDuplicates: 6,
@@ -2617,7 +2409,7 @@ test('renderAiProjectContextMarkdown fills a reusable DB-first context template'
   assert.match(markdown, /pnpm planning:db:query command-query-rails --gaps true/);
 });
 
-test('readSummary counts review tasks from the effective task view without hash drift', async () => {
+test('readSummary excludes retired local task state while retaining architecture governance counts', async () => {
   let capturedSql = '';
   const client = {
     async query(sql) {
@@ -2625,9 +2417,6 @@ test('readSummary counts review tasks from the effective task view without hash 
       return {
         rows: [
           {
-            lanes: 5,
-            tasks: 250,
-            reviewTasks: 9,
             governanceFiles: 4255,
             driftFiles: 41,
             legacyFiles: 0,
@@ -2637,14 +2426,6 @@ test('readSummary counts review tasks from the effective task view without hash 
             governanceCoverageRows: 128,
             governanceRemediationTasks: 43,
             governanceRemediationP0: 3,
-            planningLocalTaskOverlays: 2,
-            planningLocalOperations: 5,
-            planningTaskDependencies: 40,
-            planningTaskEvidenceRefs: 30,
-            planningTaskStatusEvents: 250,
-            planningArtifacts: 2,
-            planningRealWorkItems: 11,
-            planningRealWorkOpenItems: 27,
             repositoryCommands: 220,
             repositoryCommandUnknown: 4,
             repositoryCommandRuntimeFanout: 16,
@@ -2666,12 +2447,7 @@ test('readSummary counts review tasks from the effective task view without hash 
   const summary = await readSummary(client);
 
   assert.equal(summary.governanceHashDrift, undefined);
-  assert.match(capturedSql, /planning_effective_tasks where status = 'review'/);
-  assert.match(capturedSql, /planning_task_dependencies/);
-  assert.match(capturedSql, /planning_task_evidence_refs/);
-  assert.match(capturedSql, /planning_task_status_events/);
-  assert.match(capturedSql, /planning_artifacts/);
-  assert.match(capturedSql, /planning_real_work_query/);
+  assert.doesNotMatch(capturedSql, /planning_(?:lanes|tasks|task_|real_work|artifacts)/);
   assert.match(capturedSql, /repository_commands/);
   assert.match(capturedSql, /pr_readiness_checks/);
   assert.match(capturedSql, /doc_disposition_documents/);
@@ -2692,11 +2468,7 @@ test('readAiProjectContext reads existing DB projections without introducing a p
           rows: [
             {
               sourceAuthority: 'database',
-              tasks: 250,
-              reviewTasks: 9,
               repositoryCommands: 220,
-              planningRealWorkItems: 11,
-              planningRealWorkOpenItems: 27,
               commandQueryRails: 80,
               commandQueryRailGaps: 12,
               commandQueryRailDuplicates: 6,
@@ -2732,9 +2504,6 @@ test('readAiProjectContext reads existing DB projections without introducing a p
             },
           ],
         };
-      }
-      if (sql.includes('planning_real_work_query')) {
-        return { rows: [] };
       }
       if (sql.includes('risk_debt_query')) {
         return {
@@ -2779,9 +2548,9 @@ test('readAiProjectContext reads existing DB projections without introducing a p
     capturedSql.map((entry) => entry.sql).join('\n'),
     /from planning_query_store\.governance_component_query/
   );
-  assert.match(
+  assert.doesNotMatch(
     capturedSql.map((entry) => entry.sql).join('\n'),
-    /from planning_query_store\.planning_real_work_query/
+    /planning_(?:lanes|tasks|task_|real_work|artifacts)/
   );
   assert.match(
     capturedSql.map((entry) => entry.sql).join('\n'),
@@ -2811,159 +2580,6 @@ test('readHashDriftSummary queries only the explicit hash drift projection', asy
 
   assert.equal(summary.governanceHashDrift, 0);
   assert.match(capturedSql, /governance_file_hash_drift/);
-});
-
-test('buildTaskRows formats effective task rows with claim and progress context', () => {
-  const rows = buildTaskRows([
-    {
-      lane_id: 'C',
-      task_id: 'AR-C10',
-      priority: 'P0',
-      status: 'review',
-      progress_pct: '80.00',
-      claimed_by: 'codex',
-      objective: 'Move existing task operations to DB overlays.',
-    },
-  ]);
-
-  assert.deepEqual(rows, [
-    [
-      'C',
-      'AR-C10',
-      'P0',
-      'review',
-      '80%',
-      'codex',
-      'Move existing task operations to DB overlays.',
-    ],
-  ]);
-});
-
-test('readTaskRows queries the effective task view with stable filters', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readTaskRows(client, {
-    laneId: 'C',
-    status: 'review',
-    claimedBy: 'codex',
-    taskId: 'AR-C10',
-    limit: 10,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.planning_effective_tasks/);
-  assert.match(captured.sql, /lane_id = \$1/);
-  assert.match(captured.sql, /status = \$2/);
-  assert.match(captured.sql, /claimed_by = \$3/);
-  assert.match(captured.sql, /task_id = \$4/);
-  assert.match(captured.sql, /limit \$5/);
-  assert.deepEqual(captured.params, ['C', 'review', 'codex', 'AR-C10', 10]);
-});
-
-test('readOpenTaskRows queries the DB open-task view without duplicating status logic', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readOpenTaskRows(client, {
-    laneId: 'C',
-    priority: 'P1',
-    limit: 10,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.planning_open_tasks/);
-  assert.doesNotMatch(captured.sql, /status not in/i);
-  assert.match(captured.sql, /lane_id = \$1/);
-  assert.match(captured.sql, /priority = \$2/);
-  assert.match(captured.sql, /limit \$3/);
-  assert.deepEqual(captured.params, ['C', 'P1', 10]);
-});
-
-test('readNextTaskRows labels DB next-task rows and claim-recovery rows', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return {
-        rows: [
-          {
-            lane_id: 'C',
-            task_id: 'READY-C',
-            priority: 'P1',
-            status: 'queued',
-            progress_pct: 0,
-            claimed_by: null,
-            dependency: 'DONE-A',
-            objective: 'Ready task.',
-            target: 'Start now.',
-            route_source: 'next',
-          },
-          {
-            lane_id: 'E',
-            task_id: 'RECOVER-E',
-            priority: 'P1',
-            status: 'in_progress',
-            progress_pct: 15,
-            claimed_by: null,
-            dependency: 'DONE-B',
-            objective: 'Recover stale claim.',
-            target: 'Continue now.',
-            route_source: 'claim_recovery',
-          },
-        ],
-      };
-    },
-  };
-
-  const rows = await readNextTaskRows(client, { laneId: 'C', limit: 5 });
-
-  assert.match(captured.sql, /from planning_query_store\.planning_next_tasks/);
-  assert.match(captured.sql, /from planning_query_store\.planning_claim_recovery_tasks/);
-  assert.doesNotMatch(captured.sql, /from planning_query_store\.planning_effective_tasks/);
-  assert.doesNotMatch(captured.sql, /regexp_split_to_table/);
-  assert.match(captured.sql, /lane_id = \$1/);
-  assert.match(captured.sql, /limit \$2/);
-  assert.deepEqual(captured.params, ['C', 5]);
-  assert.deepEqual(
-    rows.map((row) => `${row[0]}:${row[1]}/${row[2]}`),
-    ['next:C/READY-C', 'claim_recovery:E/RECOVER-E']
-  );
-});
-
-test('planning relation queries read normalized DB views', async () => {
-  const captured = [];
-  const client = {
-    async query(sql, params) {
-      captured.push({ sql, params });
-      return { rows: [] };
-    },
-  };
-
-  await readPlanningDependencyRows(client, { laneId: 'E', limit: 3 });
-  await readPlanningEvidenceRows(client, { laneId: 'A', limit: 4 });
-  await readPlanningStatusEventRows(client, { laneId: 'C', limit: 5 });
-  await readPlanningArtifactRows(client, { kind: 'workboard', limit: 6 });
-
-  assert.match(captured[0].sql, /from planning_query_store\.planning_task_dependencies/);
-  assert.match(captured[1].sql, /from planning_query_store\.planning_task_evidence_refs/);
-  assert.match(captured[2].sql, /from planning_query_store\.planning_task_status_events/);
-  assert.match(captured[3].sql, /from planning_query_store\.planning_artifacts/);
-  assert.deepEqual(captured[0].params, ['E', 3]);
-  assert.deepEqual(captured[1].params, ['A', 4]);
-  assert.deepEqual(captured[2].params, ['C', 5]);
-  assert.deepEqual(captured[3].params, ['workboard', 6]);
 });
 
 test('readRepositoryCommandRows queries the DB repository command catalog view', async () => {
@@ -4317,213 +3933,6 @@ test('readDocsDispositionRows can include resolved overlays explicitly', async (
   assert.deepEqual(captured.params, ['pending', 5]);
 });
 
-test('readTaskReferenceRows queries the DB-owned task-like reference view', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readTaskReferenceRows(client, {
-    kind: 'unknown_task_like_id',
-    path: 'docs/planning/status/example.md',
-    limit: 5,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.doc_task_reference_query/);
-  assert.match(captured.sql, /classification = \$1/);
-  assert.match(captured.sql, /document_path = \$2/);
-  assert.match(captured.sql, /limit \$3/);
-  assert.deepEqual(captured.params, ['unknown_task_like_id', 'docs/planning/status/example.md', 5]);
-});
-
-test('readFeatureWorkRows queries governed feature mechanization work from DB references', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readFeatureWorkRows(client, {
-    status: 'Accepted',
-    prefix: 'TF',
-    limit: 5,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.doc_task_reference_query reference/);
-  assert.match(captured.sql, /join planning_query_store\.doc_disposition_document_query document/);
-  assert.match(captured.sql, /reference\.classification = 'registered_feature_mechanization'/);
-  assert.match(captured.sql, /reference\.reference_prefix = \$1/);
-  assert.match(captured.sql, /document\.status = \$2/);
-  assert.match(captured.sql, /limit \$3/);
-  assert.deepEqual(captured.params, ['TF', 'Accepted', 5]);
-});
-
-test('readTaskTraceRows queries the DB-owned task provenance trace view', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readTaskTraceRows(client, { taskId: 'F-28-C', kind: 'proposal', limit: 10 });
-
-  assert.match(captured.sql, /from planning_query_store\.planning_task_trace_query/);
-  assert.match(captured.sql, /task_id = \$1/);
-  assert.match(captured.sql, /trace_kind = \$2/);
-  assert.match(captured.sql, /limit \$3/);
-  assert.deepEqual(captured.params, ['F-28-C', 'proposal', 10]);
-});
-
-test('readTaskGapRows queries the DB-owned task provenance gap view', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readTaskGapRows(client, {
-    kind: 'active_review_without_task_link',
-    laneId: 'C',
-    priority: 'P1',
-    limit: 5,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.planning_task_gap_query/);
-  assert.match(captured.sql, /gap_kind = \$1/);
-  assert.match(captured.sql, /lane_id = \$2/);
-  assert.match(captured.sql, /severity = \$3/);
-  assert.match(captured.sql, /resolution_status = \$4/);
-  assert.match(captured.sql, /limit \$5/);
-  assert.deepEqual(captured.params, ['active_review_without_task_link', 'C', 'P1', 'pending', 5]);
-});
-
-test('readFocusRows queries the DB-owned planning work intake view', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readFocusRows(client, {
-    kind: 'task_gap',
-    laneId: 'C',
-    priority: 'P1',
-    taskId: 'F-28-C',
-    path: 'docs/planning/reviews/example.md',
-    limit: 5,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.planning_work_intake_query/);
-  assert.match(captured.sql, /intake_kind = \$1/);
-  assert.match(captured.sql, /lane_id = \$2/);
-  assert.match(captured.sql, /priority = \$3/);
-  assert.match(captured.sql, /task_id = \$4/);
-  assert.match(captured.sql, /document_path = \$5/);
-  assert.match(captured.sql, /order by\s+rank_score,\s+intake_kind,\s+item_id/s);
-  assert.match(captured.sql, /limit \$6/);
-  assert.deepEqual(captured.params, [
-    'task_gap',
-    'C',
-    'P1',
-    'F-28-C',
-    'docs/planning/reviews/example.md',
-    5,
-  ]);
-});
-
-test('readRealWorkRows queries the DB-owned aggregated real work view', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readRealWorkRows(client, {
-    kind: 'knowledge_action',
-    laneId: 'D',
-    priority: 'P1',
-    status: 'unlinked_required_action',
-    taskId: 'D-KNOWLEDGE-ACTION-LINKAGE-1',
-    path: 'docs/planning/proposals/example.md',
-    limit: 5,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.planning_real_work_query/);
-  assert.match(captured.sql, /work_kind = \$1/);
-  assert.match(captured.sql, /lane_id = \$2/);
-  assert.match(captured.sql, /priority = \$3/);
-  assert.match(captured.sql, /work_status = \$4/);
-  assert.match(captured.sql, /task_id = \$5/);
-  assert.match(captured.sql, /source_path = \$6/);
-  assert.match(captured.sql, /order by\s+rank_score,\s+priority,\s+work_kind,\s+work_id/s);
-  assert.match(captured.sql, /limit \$7/);
-  assert.deepEqual(captured.params, [
-    'knowledge_action',
-    'D',
-    'P1',
-    'unlinked_required_action',
-    'D-KNOWLEDGE-ACTION-LINKAGE-1',
-    'docs/planning/proposals/example.md',
-    5,
-  ]);
-});
-
-test('real work row builders collapse work sources into operator output', () => {
-  assert.deepEqual(
-    buildRealWorkRows([
-      {
-        priority: 'P1',
-        work_kind: 'knowledge_action',
-        work_status: 'unlinked_required_action',
-        work_id: 'knowledge_action:docs/example.md',
-        lane_id: null,
-        task_id: null,
-        source_path: 'docs/example.md',
-        open_item_count: 7,
-        linked_task_count: 0,
-        missing_dependency_count: 0,
-        title: '7 unresolved knowledge_action items: Extract task lineage',
-        suggested_query:
-          "pnpm planning:db:query knowledge-actions --path 'docs/example.md' --limit 30",
-      },
-    ]),
-    [
-      [
-        'P1',
-        'knowledge_action',
-        'unlinked_required_action',
-        'knowledge_action:docs/example.md',
-        '-',
-        'docs/example.md',
-        7,
-        0,
-        0,
-        '7 unresolved knowledge_action items: Extract task lineage',
-        "pnpm planning:db:query knowledge-actions --path 'docs/example.md' --limit 30",
-      ],
-    ]
-  );
-});
-
 test('docs disposition row builders format cleanup queues for operator output', () => {
   assert.deepEqual(
     buildDocsDispositionRows([
@@ -4544,121 +3953,6 @@ test('docs disposition row builders format cleanup queues for operator output', 
         'WEB-123',
         'pending',
         'Task-like reference is not registered in planning lanes.',
-      ],
-    ]
-  );
-
-  assert.deepEqual(
-    buildTaskReferenceRows([
-      {
-        classification: 'unknown_task_like_id',
-        reference_text: 'WEB-123',
-        reference_prefix: 'WEB',
-        document_path: 'docs/planning/status/example.md',
-        occurrence_count: 2,
-      },
-    ]),
-    [['unknown_task_like_id', 'WEB-123', 'WEB', 'docs/planning/status/example.md', 2]]
-  );
-
-  assert.deepEqual(
-    buildFeatureWorkRows([
-      {
-        feature_id: 'TF-E2-A-IMPLEMENTATION',
-        document_status: 'Accepted',
-        planning_type: 'proposal',
-        document_path:
-          'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md',
-        occurrence_count: 1,
-      },
-    ]),
-    [
-      [
-        'TF-E2-A-IMPLEMENTATION',
-        'Accepted',
-        'proposal',
-        'docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-a-authoring-draft-hard-cut-implementation-plan-20260503.md',
-        1,
-      ],
-    ]
-  );
-});
-
-test('task provenance row builders format task trace and gap queues for operator output', () => {
-  assert.deepEqual(
-    buildTaskTraceRows([
-      {
-        lane_id: 'E',
-        task_id: 'F-28-C',
-        trace_kind: 'proposal',
-        trace_ref: 'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
-        trace_status: 'Review',
-        trace_detail: 'Stage 3 proposal',
-      },
-    ]),
-    [
-      [
-        'E',
-        'F-28-C',
-        'proposal',
-        'docs/planning/proposals/mandatory/frontend-and-ux/example.md',
-        'Review',
-        'Stage 3 proposal',
-      ],
-    ]
-  );
-
-  assert.deepEqual(
-    buildTaskGapRows([
-      {
-        gap_kind: 'done_or_review_without_evidence',
-        severity: 'P1',
-        task_id: 'AR-A12',
-        document_path: null,
-        resolution_status: 'resolved',
-        reason: 'Task is in review or done without evidence refs.',
-      },
-    ]),
-    [
-      [
-        'P1',
-        'done_or_review_without_evidence',
-        'AR-A12',
-        '-',
-        'resolved',
-        'Task is in review or done without evidence refs.',
-      ],
-    ]
-  );
-});
-
-test('buildFocusRows formats ranked work intake rows for operator output', () => {
-  assert.deepEqual(
-    buildFocusRows([
-      {
-        rank_score: 10,
-        priority: 'P1',
-        intake_kind: 'task_gap',
-        item_id: 'task_gap:F-28-C',
-        lane_id: 'C',
-        task_id: 'F-28-C',
-        document_path: null,
-        title: 'done_or_review_without_evidence',
-        reason: 'Task is in review or done without evidence refs.',
-        suggested_query: 'pnpm planning:db:query task-trace --task F-28-C --limit 30',
-      },
-    ]),
-    [
-      [
-        10,
-        'P1',
-        'task_gap',
-        'task_gap:F-28-C',
-        'C/F-28-C',
-        '-',
-        'done_or_review_without_evidence',
-        'Task is in review or done without evidence refs.',
-        'pnpm planning:db:query task-trace --task F-28-C --limit 30',
       ],
     ]
   );
