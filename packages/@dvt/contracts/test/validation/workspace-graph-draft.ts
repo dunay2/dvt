@@ -159,5 +159,99 @@ export function registerValidationWorkspaceGraphDraftSuite(): void {
       expect(response.kind).toBe('format_error');
       expect(response.auditRef.action).toBe('draft_read');
     });
+
+    it('parses the active graph-draft authority as part of the canonical read model', () => {
+      const authorityAwareDraft = {
+        ...baseDraft,
+        canvas: {
+          ...baseDraft.canvas,
+          id: 'main-canvas',
+        },
+      };
+      const response = parseWorkspaceGraphDraftReadResponse({
+        kind: 'ok',
+        capability: writableCapability,
+        auditRef: {
+          correlationId: 'corr-3',
+          decisionId: 'dec-3',
+          action: 'draft_read',
+          outcome: 'allowed',
+          recordedAt: '2026-04-16T10:02:00.000Z',
+        },
+        formatMeta: {
+          schemaVersion: 'workspace-graph-draft.v1',
+          storedSchemaVersion: 'workspace-graph-draft.v1',
+          migrationState: 'native',
+        },
+        authoringAuthority: {
+          kind: 'resolved',
+          binding: {
+            schemaVersion: 'canvas-authoring-authority-binding.v1',
+            canvasId: 'main-canvas',
+            authority: { kind: 'graph-draft' },
+          },
+        },
+        record: {
+          scope: baseScope,
+          schemaVersion: 'workspace-graph-draft.v1',
+          revision: 'rev-19',
+          draft: authorityAwareDraft,
+          updatedAt: '2026-04-16T10:02:00.000Z',
+        },
+      });
+
+      expect(response).toMatchObject({
+        kind: 'ok',
+        authoringAuthority: {
+          kind: 'resolved',
+          binding: {
+            canvasId: 'main-canvas',
+            authority: { kind: 'graph-draft' },
+          },
+        },
+      });
+    });
+
+    it('rejects an authority binding for a different active Canvas', () => {
+      expect(() =>
+        parseWorkspaceGraphDraftReadResponse({
+          kind: 'ok',
+          capability: writableCapability,
+          auditRef: {
+            correlationId: 'corr-4',
+            decisionId: 'dec-4',
+            action: 'draft_read',
+            outcome: 'allowed',
+            recordedAt: '2026-04-16T10:03:00.000Z',
+          },
+          formatMeta: {
+            schemaVersion: 'workspace-graph-draft.v1',
+            storedSchemaVersion: 'workspace-graph-draft.v1',
+            migrationState: 'native',
+          },
+          authoringAuthority: {
+            kind: 'resolved',
+            binding: {
+              schemaVersion: 'canvas-authoring-authority-binding.v1',
+              canvasId: 'other-canvas',
+              authority: { kind: 'graph-draft' },
+            },
+          },
+          record: {
+            scope: baseScope,
+            schemaVersion: 'workspace-graph-draft.v1',
+            revision: 'rev-20',
+            draft: {
+              ...baseDraft,
+              canvas: {
+                ...baseDraft.canvas,
+                id: 'main-canvas',
+              },
+            },
+            updatedAt: '2026-04-16T10:03:00.000Z',
+          },
+        })
+      ).toThrow(ContractValidationError);
+    });
   });
 }

@@ -9,6 +9,7 @@ const {
   canonicalArtifactPaths,
   canonicalStateArtifactPath,
 } = require('./planning-db-export.cjs');
+const { restoreArchitectureComponentStatusOverrides } = require('./planning-db-import.cjs');
 
 function createCanonicalStateFixture(repoRoot) {
   const runner = new PlanningDbExportRunner({
@@ -56,8 +57,15 @@ function createCanonicalStateFixture(repoRoot) {
     payload: { railName: rail.railName },
     createdAt: '2026-07-31T10:00:00.000Z',
   };
+  const architectureComponentStatusOverride = {
+    componentId: 'SYS-WEB-EXAMPLE',
+    status: 'deprecated',
+  };
   const client = {
     async query(sql) {
+      if (String(sql).includes('architecture.component')) {
+        return { rows: [architectureComponentStatusOverride] };
+      }
       if (String(sql).includes('operation.operation_id as "operationId"')) {
         return { rows: [operation] };
       }
@@ -68,7 +76,7 @@ function createCanonicalStateFixture(repoRoot) {
     },
   };
 
-  return { client, operation, rail, runner };
+  return { architectureComponentStatusOverride, client, operation, rail, runner };
 }
 
 test('planning DB export accepts canonical-state options only', () => {
@@ -82,7 +90,7 @@ test('planning DB export accepts canonical-state options only', () => {
   assert.deepEqual(canonicalArtifactPaths, [canonicalStateArtifactPath]);
 });
 
-test('planning DB export reads operated feature rails outside migration history', async () => {
+test('planning DB export reads current architecture state and operated feature rails', async () => {
   const runner = new PlanningDbExportRunner();
   const capturedSql = [];
   const client = {
@@ -98,11 +106,46 @@ test('planning DB export reads operated feature rails outside migration history'
   assert.match(capturedSql[0], /feature_mechanization_local_operations/u);
   assert.match(capturedSql[0], /source_path not like 'tools\/planning-db\/migrations\/%'/u);
   assert.match(capturedSql[1], /feature_mechanization_local_operations/u);
+  assert.match(capturedSql[2], /from architecture\.component/u);
+  assert.match(capturedSql[2], /where status = 'deprecated'/u);
+  assert.doesNotMatch(capturedSql[2], /architecture\.design_operations/u);
 });
 
-test('planning DB export writes only deterministic architecture mechanization state', async () => {
+test('planning DB component status overrides round-trip without operation history', async () => {
+  const restoredComponents = new Map();
+  const client = {
+    async query(sql, params = []) {
+      const statement = String(sql);
+      if (statement.includes('update architecture.component')) {
+        const overrides = JSON.parse(params[0]);
+        for (const override of overrides) {
+          restoredComponents.set(override.componentId, override.status);
+        }
+        return { rowCount: overrides.length };
+      }
+      if (statement.includes('from architecture.component')) {
+        return {
+          rows: [...restoredComponents].map(([componentId, status]) => ({
+            componentId,
+            status,
+          })),
+        };
+      }
+      return { rows: [] };
+    },
+  };
+  const override = { componentId: 'SYS-WEB-EXAMPLE', status: 'deprecated' };
+
+  await restoreArchitectureComponentStatusOverrides(client, [override]);
+  const snapshot = await new PlanningDbExportRunner().readCanonicalStateRows(client);
+
+  assert.deepEqual(snapshot.architectureComponentStatusOverrides, [override]);
+});
+
+test('planning DB export writes deterministic current architecture state', async () => {
   const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-canonical-state-'));
-  const { client, operation, rail, runner } = createCanonicalStateFixture('C:/repo');
+  const { architectureComponentStatusOverride, client, operation, rail, runner } =
+    createCanonicalStateFixture('C:/repo');
 
   try {
     const result = await runner.exportPlanningDerivedSurfaces({ client, outputRoot });
@@ -111,6 +154,9 @@ test('planning DB export writes only deterministic architecture mechanization st
     );
 
     assert.equal(snapshot.schemaVersion, 1);
+    assert.deepEqual(snapshot.architectureComponentStatusOverrides, [
+      architectureComponentStatusOverride,
+    ]);
     assert.deepEqual(snapshot.featureMechanizationRails, [rail]);
     assert.deepEqual(snapshot.featureMechanizationRailOperations, [operation]);
     assert.deepEqual(result.canonicalArtifactPaths, [canonicalStateArtifactPath]);

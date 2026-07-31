@@ -44,6 +44,15 @@ export const mockWorkspacePortCapabilities = {
   sourceImportAvailable: true,
 } as const;
 
+export const mockGraphDraftAuthoringAuthority = {
+  kind: 'resolved',
+  binding: {
+    schemaVersion: 'canvas-authoring-authority-binding.v1',
+    canvasId: 'main-canvas',
+    authority: { kind: 'graph-draft' },
+  },
+} as const;
+
 const mockConnections: WarehouseConnection[] = [
   { id: 'conn-1', name: 'Production Postgres', type: 'postgres', database: 'RAW' },
   { id: 'conn-2', name: 'Analytics Postgres', type: 'postgres', database: 'analytics' },
@@ -188,10 +197,12 @@ const mockRelationDefinitionsByConnectionId: Record<string, MockRelationDefiniti
 const defaultGraphSnapshot: WorkspaceGraphSnapshot = {
   nodes: [...mockNodes],
   edges: [...mockEdges],
+  authoringAuthority: mockGraphDraftAuthoringAuthority,
 };
 
 function cloneGraphSnapshot(snapshot: WorkspaceGraphSnapshot): WorkspaceGraphSnapshot {
   return {
+    authoringAuthority: snapshot.authoringAuthority,
     nodes: snapshot.nodes.map((node) => ({
       ...node,
       tags: [...node.tags],
@@ -420,6 +431,7 @@ function importMockSources(
   }
 
   state.graphSnapshot = {
+    authoringAuthority: state.graphSnapshot.authoringAuthority,
     nodes: [...state.graphSnapshot.nodes, ...importedNodes],
     edges: [...state.graphSnapshot.edges],
   };

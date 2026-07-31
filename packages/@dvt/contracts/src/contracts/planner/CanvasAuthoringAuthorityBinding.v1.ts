@@ -58,3 +58,23 @@ export const CanvasAuthoringAuthorityBindingSchema = z
   .strict();
 
 export type CanvasAuthoringAuthorityBinding = z.infer<typeof CanvasAuthoringAuthorityBindingSchema>;
+
+export const CanvasAuthoringAuthorityResolutionSchema = z.discriminatedUnion('kind', [
+  z
+    .object({
+      kind: z.literal('resolved'),
+      binding: CanvasAuthoringAuthorityBindingSchema,
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal('unresolved'),
+      reason: z.enum(['missing_authority', 'mixed_authority']),
+      canvasId: NonBlankStringSchema.nullable(),
+    })
+    .strict(),
+]);
+
+export type CanvasAuthoringAuthorityResolution = z.infer<
+  typeof CanvasAuthoringAuthorityResolutionSchema
+>;

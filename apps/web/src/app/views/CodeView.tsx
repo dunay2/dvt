@@ -128,8 +128,16 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     () => deriveCodeGraphFilePaths(graphSnapshotQuery.data),
     [graphSnapshotQuery.data]
   );
+  const graphAuthority = graphSnapshotQuery.data?.authoringAuthority;
   const fileEditPosture = resolveCodeWorkspaceFileEditPosture({
-    authority: fileScope ? 'dbt-project-files' : 'graph-draft',
+    authority: fileScope
+      ? 'dbt-project-files'
+      : graphAuthority?.kind === 'resolved' &&
+          graphAuthority.binding.authority.kind === 'graph-draft'
+        ? 'graph-draft'
+        : graphAuthority?.kind === 'unresolved' && graphAuthority.reason === 'mixed_authority'
+          ? 'mixed'
+          : 'missing',
     selectedPath: resolvedPath,
     graphOwnedPaths,
   });
@@ -369,11 +377,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
           primarySurface: (
             <div className="min-w-0 flex h-full flex-1 flex-col">
               <CodeWorkingTreeStatus
-                phase={
-                  fileEditPosture.kind === 'graph_owned_read_only'
-                    ? 'read_only'
-                    : workingTreeSync.phase
-                }
+                phase={fileEditPosture.kind !== 'editable' ? 'read_only' : workingTreeSync.phase}
                 copy={workingTreeStatusCopy}
                 onRetry={() => void retryWorkingTreeSync()}
                 onReload={() => {

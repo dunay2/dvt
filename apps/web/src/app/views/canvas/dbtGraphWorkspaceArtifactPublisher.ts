@@ -12,13 +12,7 @@ import type {
 } from '../../ports/workspace';
 import { WorkspaceFileLoadError } from '../../services/workspace/workspaceErrors';
 import type { DbtWorkspaceArtifact } from './canvasDbtWorkspaceArtifacts';
-import {
-  classifyGraphModelSqlPublication,
-  type GraphModelSqlReplacementAuthorization,
-} from './dbtGraphModelSqlPublicationPolicy';
-
-export type GraphSqlReplacementAuthorization = GraphModelSqlReplacementAuthorization &
-  Readonly<{ path: string }>;
+import { classifyGraphModelSqlPublication } from './dbtGraphModelSqlPublicationPolicy';
 
 type PreparedArtifact = Readonly<{
   artifact: DbtWorkspaceArtifact;
@@ -31,21 +25,21 @@ type ArtifactPreflight =
   | Readonly<{
       kind: 'conflict';
       path: string;
-      reason: 'invalid_managed' | 'unmarked';
-      replacementAuthorization?: GraphSqlReplacementAuthorization;
+      reason: 'invalid_marker' | 'unmarked';
     }>;
 
 export type GraphDbtWorkspaceArtifactPublicationResult =
   | Readonly<{ ok: true; writtenArtifactPaths: readonly string[] }>
   | Readonly<{
       ok: false;
-      kind: 'replacement_confirmation_required';
-      requests: readonly GraphSqlReplacementAuthorization[];
+      kind: 'authority_refused';
+      reason: 'missing_authority' | 'mixed_authority' | 'dbt_project_files_authority';
     }>
   | Readonly<{
       ok: false;
       kind: 'non_replaceable_conflict';
       conflictPath: string;
+      reason: 'invalid_marker' | 'unmarked' | 'revision_conflict';
     }>;
 
 async function readOptionalWorkspaceFile(
@@ -69,7 +63,6 @@ function observedRevision(file: FileContent | undefined): ExpectedWorkspaceFileR
 async function preflightArtifact(args: {
   artifact: DbtWorkspaceArtifact;
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
-  replacementAuthorization?: GraphSqlReplacementAuthorization;
 }): Promise<ArtifactPreflight> {
   const currentFile = await readOptionalWorkspaceFile(args.workspaceFilesQuery, args.artifact.path);
 
@@ -77,21 +70,12 @@ async function preflightArtifact(args: {
     const decision = classifyGraphModelSqlPublication({
       proposedContent: args.artifact.content,
       currentFile,
-      replacementAuthorization: args.replacementAuthorization,
     });
     if (decision.kind === 'conflict') {
       return {
         kind: 'conflict',
         path: args.artifact.path,
         reason: decision.reason,
-        ...(decision.reason === 'unmarked'
-          ? {
-              replacementAuthorization: {
-                path: args.artifact.path,
-                ...decision.replacementAuthorization,
-              },
-            }
-          : {}),
       };
     }
     return {
@@ -124,40 +108,37 @@ function assertUniqueArtifactPaths(artifacts: readonly DbtWorkspaceArtifact[]): 
   }
 }
 
-function publicationIdempotencyKey(artifacts: readonly PreparedArtifact[]): string {
+function publicationIdempotencyKey(
+  canvasId: string,
+  artifacts: readonly PreparedArtifact[]
+): string {
   return `graph-dbt:${sha256HexUtf8(
-    JSON.stringify(
-      artifacts.map(({ artifact, expectedRevision, writeRequired }) => ({
+    JSON.stringify({
+      canvasId,
+      artifacts: artifacts.map(({ artifact, expectedRevision, writeRequired }) => ({
         path: artifact.path,
         content: artifact.content,
         language: artifact.language,
         expectedRevision,
         writeRequired,
-      }))
-    )
+      })),
+    })
   )}`;
 }
 
 export async function publishGraphDbtWorkspaceArtifacts(args: {
+  canvasId: string;
   artifacts: readonly DbtWorkspaceArtifact[];
   workspaceFilesQuery: IWorkspaceFilesQueryPort;
   publicationCommand: IGraphDbtWorkspaceArtifactPublicationCommandPort;
-  replacementAuthorizations?: readonly GraphSqlReplacementAuthorization[];
 }): Promise<GraphDbtWorkspaceArtifactPublicationResult> {
   assertUniqueArtifactPaths(args.artifacts);
-  const replacementAuthorizationByPath = new Map(
-    (args.replacementAuthorizations ?? []).map((authorization) => [
-      authorization.path,
-      authorization,
-    ])
-  );
 
   const preflight = await Promise.all(
     args.artifacts.map(async (artifact) =>
       preflightArtifact({
         artifact,
         workspaceFilesQuery: args.workspaceFilesQuery,
-        replacementAuthorization: replacementAuthorizationByPath.get(artifact.path),
       })
     )
   );
@@ -165,26 +146,13 @@ export async function publishGraphDbtWorkspaceArtifacts(args: {
     (result): result is Extract<ArtifactPreflight, { kind: 'conflict' }> =>
       result.kind === 'conflict'
   );
-  const nonReplaceableConflict = conflicts.find(
-    (conflict) => conflict.reason === 'invalid_managed'
-  );
-  if (nonReplaceableConflict) {
+  const firstConflict = conflicts[0];
+  if (firstConflict) {
     return {
       ok: false,
       kind: 'non_replaceable_conflict',
-      conflictPath: nonReplaceableConflict.path,
-    };
-  }
-  if (conflicts.length > 0) {
-    return {
-      ok: false,
-      kind: 'replacement_confirmation_required',
-      requests: conflicts
-        .map((conflict) => conflict.replacementAuthorization)
-        .filter(
-          (authorization): authorization is GraphSqlReplacementAuthorization =>
-            authorization != null
-        ),
+      conflictPath: firstConflict.path,
+      reason: firstConflict.reason,
     };
   }
 
@@ -194,11 +162,8 @@ export async function publishGraphDbtWorkspaceArtifacts(args: {
     }
     return result.value;
   });
-  if (!preparedArtifacts.some((artifact) => artifact.writeRequired)) {
-    return { ok: true, writtenArtifactPaths: [] };
-  }
-
   const publication = await args.publicationCommand.publish({
+    canvasId: args.canvasId,
     artifacts: preparedArtifacts.map(({ artifact, expectedRevision, writeRequired }) => ({
       path: artifact.path,
       content: artifact.content,
@@ -206,14 +171,22 @@ export async function publishGraphDbtWorkspaceArtifacts(args: {
       expectedRevision,
       writeRequired,
     })),
-    idempotencyKey: publicationIdempotencyKey(preparedArtifacts),
+    idempotencyKey: publicationIdempotencyKey(args.canvasId, preparedArtifacts),
   });
 
+  if (publication.kind === 'authority_refused') {
+    return {
+      ok: false,
+      kind: 'authority_refused',
+      reason: publication.reason,
+    };
+  }
   if (publication.kind === 'conflict') {
     return {
       ok: false,
       kind: 'non_replaceable_conflict',
       conflictPath: publication.conflicts[0]!.path,
+      reason: 'revision_conflict',
     };
   }
 

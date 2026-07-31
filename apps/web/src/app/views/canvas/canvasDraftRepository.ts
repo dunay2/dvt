@@ -5,16 +5,10 @@ import type {
   WorkspaceGraphDraftAuthoringSaveResult,
 } from '../../ports/workspaceGraphDraftAuthoring';
 import {
-  projectWorkspaceGraphAuthoringDraftSemanticGraph,
-  type CanvasAuthoringSemanticGraph,
-} from '../../services/workspace/workspaceGraphDraftProjection';
-import {
-  createWritableCanvasAuthoringDraftReadModel,
   projectCanvasAuthoringDraftReadModel,
   type CanvasAuthoringDraftRecord,
   type CanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
-import { toCanvasAuthoringMetadata } from './canvasAuthoringMetadata';
 
 export type SaveCanvasDraftInput = {
   expectedRevision: string | null;
@@ -42,48 +36,13 @@ export interface CanvasDraftRepository {
 
 const CONFLICT_RELOAD_ERROR =
   'Workspace graph draft conflict could not reload the current remote draft.';
+const SAVED_RELOAD_ERROR =
+  'Workspace graph draft save could not confirm the canonical remote revision.';
 
 type NonRecoverableCanvasDraftSaveResult = Exclude<
   WorkspaceGraphDraftAuthoringSaveResult,
   { kind: 'saved' } | { kind: 'conflict' }
 >;
-
-function cloneSemanticGraph(
-  semanticGraph: CanvasAuthoringSemanticGraph
-): CanvasAuthoringSemanticGraph {
-  return {
-    canonicalNodes: semanticGraph.canonicalNodes.map((node) => ({
-      ...node,
-      tags: [...node.tags],
-      metadata: toCanvasAuthoringMetadata(node.metadata),
-    })),
-    canonicalEdges: semanticGraph.canonicalEdges.map((edge) => ({
-      ...edge,
-      metadata: toCanvasAuthoringMetadata(edge.metadata),
-    })),
-  };
-}
-
-function buildSavedCanvasDraftResult(args: {
-  input: SaveCanvasDraftInput;
-  revision: string;
-}): CanvasDraftSaveResult {
-  const { input, revision } = args;
-  const record = {
-    revision,
-    savedAt: new Date().toISOString(),
-    draft: input.draft,
-  };
-
-  return {
-    outcome: 'saved',
-    record,
-    remoteDraftState: createWritableCanvasAuthoringDraftReadModel(
-      record,
-      cloneSemanticGraph(projectWorkspaceGraphAuthoringDraftSemanticGraph(input.draft))
-    ),
-  };
-}
 
 async function resolveCanvasDraftConflictResult(
   readGraphDraftState: () => Promise<CanvasAuthoringDraftReadModel>
@@ -108,6 +67,23 @@ async function resolveCanvasDraftConflictResult(
   };
 }
 
+async function resolveSavedCanvasDraftResult(
+  revision: string,
+  readGraphDraftState: () => Promise<CanvasAuthoringDraftReadModel>
+): Promise<CanvasDraftSaveResult> {
+  const remoteDraftState = await readGraphDraftState();
+  const record = remoteDraftState.record;
+  if (record === null || record.revision !== revision) {
+    throw new Error(SAVED_RELOAD_ERROR);
+  }
+
+  return {
+    outcome: 'saved',
+    record,
+    remoteDraftState,
+  };
+}
+
 function throwCanvasDraftSaveFailure(result: NonRecoverableCanvasDraftSaveResult): never {
   if (result.kind === 'denied') {
     throw new Error('Workspace graph draft authoring is not writable for the current scope.');
@@ -125,17 +101,13 @@ function throwCanvasDraftSaveFailure(result: NonRecoverableCanvasDraftSaveResult
 }
 
 async function resolveCanvasDraftSaveResult(args: {
-  input: SaveCanvasDraftInput;
   result: WorkspaceGraphDraftAuthoringSaveResult;
   readGraphDraftState: () => Promise<CanvasAuthoringDraftReadModel>;
 }): Promise<CanvasDraftSaveResult> {
-  const { input, result, readGraphDraftState } = args;
+  const { result, readGraphDraftState } = args;
 
   if (result.kind === 'saved') {
-    return buildSavedCanvasDraftResult({
-      input,
-      revision: result.revision,
-    });
+    return resolveSavedCanvasDraftResult(result.revision, readGraphDraftState);
   }
 
   if (result.kind === 'conflict') {
@@ -177,7 +149,6 @@ export function createCanvasDraftRepository(
         draft: input.draft,
       });
       return resolveCanvasDraftSaveResult({
-        input,
         result,
         readGraphDraftState,
       });

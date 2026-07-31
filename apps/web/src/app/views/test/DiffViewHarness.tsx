@@ -7,6 +7,7 @@ import { act } from 'react';
 import { vi } from 'vitest';
 
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
+import { mockGraphDraftAuthoringAuthority } from '../../../testing/workspacePortDoubles';
 import { withTestQueryClient, waitForReactQuery } from '../../../testing/reactQueryHarness';
 import type {
   FileContent,
@@ -110,6 +111,7 @@ export function buildDiffViewWorkspacePorts(overrides?: DiffViewWorkspacePortOve
 } {
   const workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort = {
     getGraphSnapshot: async () => ({
+      authoringAuthority: mockGraphDraftAuthoringAuthority,
       nodes: [
         {
           id: 'fct_sales',

@@ -83,7 +83,15 @@ async function getWorkspaceGraphSnapshot(apiClient: ApiClient): Promise<Workspac
   const responseBody = await parseJsonResponse(response);
 
   if (isWorkspaceGraphDraftNotFoundResponse({ statusCode: response.status, responseBody })) {
-    return { nodes: [], edges: [] };
+    return {
+      nodes: [],
+      edges: [],
+      authoringAuthority: {
+        kind: 'unresolved',
+        reason: 'missing_authority',
+        canvasId: null,
+      },
+    };
   }
 
   if (response.status !== 200) {

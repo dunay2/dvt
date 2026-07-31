@@ -6,6 +6,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildGraphDraftSourceImportResult } from '../../testing/sourceImportTestFixtures';
+import { mockGraphDraftAuthoringAuthority } from '../../testing/workspacePortDoubles';
 import type { IRunsPort } from '../ports/runs';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import type { IPlansPort } from '../ports/plans';
@@ -183,7 +184,11 @@ describe('AppServicesProvider', () => {
 
   it('uses explicit overrides when provided', async () => {
     const workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort = {
-      getGraphSnapshot: async () => ({ nodes: [], edges: [] }),
+      getGraphSnapshot: async () => ({
+        nodes: [],
+        edges: [],
+        authoringAuthority: mockGraphDraftAuthoringAuthority,
+      }),
     };
     const workspaceDiffQuery: IWorkspaceDiffQueryPort = {
       getDiffChanges: async () => [],

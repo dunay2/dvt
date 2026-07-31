@@ -48,7 +48,7 @@ const edge: CanonicalEdge = {
 };
 
 describe('Canvas graph-draft DBT SQL authority', () => {
-  it('requires explicit replacement before publishing divergent pre-marker model SQL', async () => {
+  it('refuses divergent pre-marker model SQL without an adoption path', async () => {
     const saveFileContent = vi.fn<IWorkspaceFileContentCommandPort['saveFileContent']>(
       async (input) => ({
         kind: 'saved',
@@ -111,6 +111,7 @@ describe('Canvas graph-draft DBT SQL authority', () => {
     };
 
     const result = await executeCanvasPlanAction({
+      graphDraftCanvasId: 'orders-canvas',
       canPlan: true,
       canonicalEdges: [edge],
       canonicalNodes: [sourceNode, modelNode],
@@ -133,42 +134,10 @@ describe('Canvas graph-draft DBT SQL authority', () => {
 
     expect(result).toMatchObject({
       ok: false,
-      kind: 'graph_sql_replacement_confirmation_required',
-      replacementRequests: [{ path: 'models/orders.sql' }],
+      message: expect.stringContaining('models/orders.sql'),
     });
     expect(saveFileContent).not.toHaveBeenCalled();
     expect(publish).not.toHaveBeenCalled();
     expect(previewPlan).not.toHaveBeenCalled();
-
-    if (result.ok || result.kind !== 'graph_sql_replacement_confirmation_required') {
-      throw new Error('Expected graph SQL replacement confirmation.');
-    }
-
-    const confirmed = await executeCanvasPlanAction({
-      canPlan: true,
-      canonicalEdges: [edge],
-      canonicalNodes: [sourceNode, modelNode],
-      executionStrategy: strategy,
-      plansService: { previewPlan, importPlan: vi.fn() },
-      previewProvenanceConfig: { gitBranch: 'detached', gitSha: 'unknown' },
-      selectionIntent: { mode: 'explicit', nodeIds: [modelNode.id] },
-      sessionContext,
-      transformationValidation: validateTransformationGraph({
-        nodes: [sourceNode, modelNode],
-        edges: [edge],
-        selectedNodeIds: [modelNode.id],
-        workspaceNodeIds: [sourceNode.id, modelNode.id],
-      }),
-      workspaceNodeIds: [sourceNode.id, modelNode.id],
-      workspaceFilesQuery,
-      workspaceFileContentCommand: { saveFileContent },
-      graphDbtWorkspaceArtifactPublicationCommand: { publish },
-      graphSqlReplacementAuthorizations: result.replacementRequests,
-    });
-
-    expect(confirmed).toMatchObject({ ok: true });
-    expect(saveFileContent).not.toHaveBeenCalled();
-    expect(publish).toHaveBeenCalledTimes(1);
-    expect(previewPlan).toHaveBeenCalledTimes(1);
   });
 });

@@ -7,6 +7,7 @@ import {
   createUnknownCanvasAuthoringDraftReadModel,
   createWritableCanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
+import { buildGraphDraftAuthority } from './canvasDraftRepository.test.fixtures';
 import type { CanvasCreateCanvasDocumentCommandDto } from './canvasDraftLifecycle.types';
 
 export function buildEmptyDraft(
@@ -55,7 +56,6 @@ export type BuildCommandArgsResult = {
   draftQueryCache: {
     fetchLatestRemoteDraftState: ReturnType<typeof vi.fn>;
     fetchLatestRemoteDraft: ReturnType<typeof vi.fn>;
-    replaceRemoteDraft: ReturnType<typeof vi.fn>;
     replaceRemoteDraftState: ReturnType<typeof vi.fn>;
   };
   setDraftSession: ReturnType<typeof vi.fn>;
@@ -84,14 +84,16 @@ export function buildCommandArgs(overrides: BuildCommandOverrides = {}): BuildCo
       return {
         outcome: 'saved' as const,
         record,
-        remoteDraftState: createWritableCanvasAuthoringDraftReadModel(record),
+        remoteDraftState: createWritableCanvasAuthoringDraftReadModel(
+          record,
+          buildGraphDraftAuthority(null)
+        ),
       };
     }),
   };
   const draftQueryCache = {
     fetchLatestRemoteDraftState: vi.fn(),
     fetchLatestRemoteDraft: vi.fn(),
-    replaceRemoteDraft: vi.fn(),
     replaceRemoteDraftState: vi.fn(),
   };
   const setDraftSession = vi.fn();

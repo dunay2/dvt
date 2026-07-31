@@ -34,4 +34,14 @@ describe('Code workspace file edit posture', () => {
       })
     ).toEqual({ kind: 'editable' });
   });
+
+  it('fails closed when the canonical authoring authority is missing', () => {
+    expect(
+      resolveCodeWorkspaceFileEditPosture({
+        authority: 'missing',
+        selectedPath: 'models/orders.sql',
+        graphOwnedPaths,
+      })
+    ).toEqual({ kind: 'authority_unavailable_read_only' });
+  });
 });

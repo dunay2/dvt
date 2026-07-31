@@ -41,6 +41,7 @@ const {
   refreshComponentTreeMaterializedProjection,
   refreshComponentFileOwnershipMaterializedProjection,
   refreshComponentRuleEvaluationMaterializedProjection,
+  restoreArchitectureComponentStatusOverrides,
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
   runPlanningImport,
@@ -1630,6 +1631,7 @@ test('planning DB import reads and validates the canonical DB-authored state sna
       snapshotPath,
       JSON.stringify({
         schemaVersion: 1,
+        architectureComponentStatusOverrides: [],
         featureMechanizationRails: [rail],
         featureMechanizationRailOperations: [],
       }),
@@ -1637,6 +1639,7 @@ test('planning DB import reads and validates the canonical DB-authored state sna
     );
 
     const snapshot = readCanonicalStateSnapshot(snapshotPath);
+    assert.deepEqual(snapshot.architectureComponentStatusOverrides, []);
     assert.deepEqual(snapshot.featureMechanizationRails, [rail]);
 
     fs.writeFileSync(snapshotPath, JSON.stringify({ schemaVersion: 2 }), 'utf8');
@@ -1647,6 +1650,29 @@ test('planning DB import reads and validates the canonical DB-authored state sna
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
+});
+
+test('planning DB import restores canonical architecture component status overrides', async () => {
+  const queries = [];
+  const override = {
+    componentId: 'SYS-WEB-EXAMPLE',
+    status: 'deprecated',
+  };
+
+  await restoreArchitectureComponentStatusOverrides(
+    {
+      query: async (sql, params = []) => {
+        queries.push({ sql: String(sql), params });
+        return { rowCount: 1 };
+      },
+    },
+    [override]
+  );
+
+  assert.equal(queries.length, 1);
+  assert.match(queries[0].sql, /update architecture\.component/u);
+  assert.match(queries[0].sql, /status = override\.status/u);
+  assert.equal(queries[0].params[0], JSON.stringify([override]));
 });
 
 test('planning DB import keeps a newer local rail over an older canonical snapshot', () => {

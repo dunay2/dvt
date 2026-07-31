@@ -1,5 +1,9 @@
 /** Owned concern: project workspace graph semantic truth into DBT-shaped graph snapshots for workspace read ports. */
-import type { WorkspaceGraphAuthoringDraft, WorkspaceGraphDraftReadResponse } from '@dvt/contracts';
+import type {
+  CanvasAuthoringAuthorityResolution,
+  WorkspaceGraphAuthoringDraft,
+  WorkspaceGraphDraftReadResponse,
+} from '@dvt/contracts';
 
 import type { WorkspaceGraphSnapshot } from '../../ports/workspace';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -197,15 +201,37 @@ export function projectWorkspaceGraphAuthoringDraftSnapshot(
       target: edge.targetId,
       type: resolveDbtEdgeType(edge),
     })),
+    authoringAuthority: resolveDraftAuthoringAuthority(draft),
   };
+}
+
+function resolveDraftAuthoringAuthority(
+  draft: WorkspaceGraphAuthoringDraft
+): CanvasAuthoringAuthorityResolution {
+  const canvasId = draft.activeCanvasId ?? draft.canvas.id ?? null;
+  return canvasId === null
+    ? { kind: 'unresolved', reason: 'missing_authority', canvasId: null }
+    : {
+        kind: 'resolved',
+        binding: {
+          schemaVersion: 'canvas-authoring-authority-binding.v1',
+          canvasId,
+          authority: { kind: 'graph-draft' },
+        },
+      };
 }
 
 export function projectWorkspaceGraphDraftReadResponseSnapshot(
   response: WorkspaceGraphDraftReadResponse
 ): WorkspaceGraphSnapshot {
   switch (response.kind) {
-    case 'ok':
-      return projectWorkspaceGraphAuthoringDraftSnapshot(response.record.draft);
+    case 'ok': {
+      const snapshot = projectWorkspaceGraphAuthoringDraftSnapshot(response.record.draft);
+      return {
+        ...snapshot,
+        authoringAuthority: response.authoringAuthority,
+      };
+    }
     case 'denied':
       throw new Error(
         `Workspace graph snapshot read denied for the current scope (${response.capability.reason}).`

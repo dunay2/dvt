@@ -16,6 +16,10 @@ import {
 } from '../../utils/contractPrimitives.js';
 
 import {
+  CanvasAuthoringAuthorityResolutionSchema,
+  type CanvasAuthoringAuthorityResolution,
+} from './CanvasAuthoringAuthorityBinding.v1.js';
+import {
   WorkspaceGraphAuthoringDraftSchema,
   type WorkspaceGraphAuthoringDraft,
 } from './WorkspaceGraphAuthoringDraft.v1.js';
@@ -128,6 +132,7 @@ export interface WorkspaceGraphDraftReadSuccess {
   capability: WorkspaceGraphDraftCapabilityOutcome;
   auditRef: WorkspaceGraphDraftAuditRef;
   formatMeta: WorkspaceGraphDraftFormatMeta;
+  authoringAuthority: CanvasAuthoringAuthorityResolution;
   record: WorkspaceGraphDraftRecord;
 }
 
@@ -180,9 +185,7 @@ export interface WorkspaceGraphDraftSaveDenied {
 }
 
 export type WorkspaceGraphDraftSaveResponse =
-  | WorkspaceGraphDraftSaveSuccess
-  | WorkspaceGraphDraftSaveConflict
-  | WorkspaceGraphDraftSaveDenied;
+  WorkspaceGraphDraftSaveSuccess | WorkspaceGraphDraftSaveConflict | WorkspaceGraphDraftSaveDenied;
 
 export const WorkspaceGraphDraftScopeSchema = z
   .object({
@@ -298,9 +301,27 @@ export const WorkspaceGraphDraftReadSuccessSchema = z
     capability: WorkspaceGraphDraftCapabilityOutcomeSchema,
     auditRef: WorkspaceGraphDraftAuditRefSchema,
     formatMeta: WorkspaceGraphDraftFormatMetaSchema,
+    authoringAuthority: CanvasAuthoringAuthorityResolutionSchema,
     record: WorkspaceGraphDraftRecordSchema,
   })
-  .strict() satisfies z.ZodType<WorkspaceGraphDraftReadSuccess>;
+  .strict()
+  .superRefine((response, ctx) => {
+    if (response.authoringAuthority.kind !== 'resolved') return;
+
+    const activeCanvasId =
+      response.record.draft.activeCanvasId ?? response.record.draft.canvas.id ?? null;
+    if (
+      response.authoringAuthority.binding.authority.kind !== 'graph-draft' ||
+      response.authoringAuthority.binding.canvasId !== activeCanvasId
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['authoringAuthority'],
+        message:
+          'WorkspaceGraphDraft resolved authority must identify the active graph-draft Canvas.',
+      });
+    }
+  }) satisfies z.ZodType<WorkspaceGraphDraftReadSuccess>;
 
 export const WorkspaceGraphDraftReadFormatFailureSchema = z
   .object({

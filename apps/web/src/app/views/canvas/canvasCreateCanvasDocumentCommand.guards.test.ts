@@ -4,6 +4,7 @@ import {
   createUnknownCanvasAuthoringDraftReadModel,
   createWritableCanvasAuthoringDraftReadModel,
 } from './canvasDraftReadModel';
+import { buildGraphDraftAuthority } from './canvasDraftRepository.test.fixtures';
 import { executeCreateCanvasDocumentCommand } from './canvasCreateCanvasDocumentCommand';
 import {
   buildCommandArgs,
@@ -41,7 +42,10 @@ describe('canvasCreateCanvasDocumentCommand guards', () => {
       name: 'an authoritative draft already exists',
       overrides: {
         graphDraftQuery: {
-          data: createWritableCanvasAuthoringDraftReadModel(buildRecord()),
+          data: createWritableCanvasAuthoringDraftReadModel(
+            buildRecord(),
+            buildGraphDraftAuthority(null)
+          ),
           isPending: false,
           isError: false,
         },

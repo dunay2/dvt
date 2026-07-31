@@ -11,6 +11,11 @@ describe('canvasCreateCanvasDocumentAvailability', () => {
         graphDraftQuery: {
           data: {
             accessMode: 'unknown',
+            authoringAuthority: {
+              kind: 'unresolved',
+              reason: 'missing_authority',
+              canvasId: null,
+            },
             capabilityReason: null,
             formatError: null,
             formatMeta: null,
@@ -66,6 +71,14 @@ describe('canvasCreateCanvasDocumentAvailability', () => {
         graphDraftQuery: {
           data: {
             accessMode: 'writable',
+            authoringAuthority: {
+              kind: 'resolved',
+              binding: {
+                schemaVersion: 'canvas-authoring-authority-binding.v1',
+                canvasId: 'main-canvas',
+                authority: { kind: 'graph-draft' },
+              },
+            },
             capabilityReason: 'authorized',
             formatError: null,
             formatMeta: null,
@@ -74,6 +87,7 @@ describe('canvasCreateCanvasDocumentAvailability', () => {
               savedAt: '2026-05-19T00:00:00.000Z',
               draft: {
                 canvas: {
+                  id: 'main-canvas',
                   kind: 'transformation',
                   title: 'Transformation canvas',
                 },

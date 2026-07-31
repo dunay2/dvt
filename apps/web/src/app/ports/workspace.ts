@@ -2,6 +2,7 @@
 import {
   SOURCE_IMPORT_GROUPING,
   WAREHOUSE_CONNECTION_TYPE,
+  type CanvasAuthoringAuthorityResolution,
   type CreateWarehouseConnectionRequest,
   type ImportSourceObjectsRequestV2,
   type ImportSourceObjectsResultV2,
@@ -86,6 +87,7 @@ export type WorkspaceFileHistoryEntry = {
 export type WorkspaceGraphSnapshot = {
   nodes: DbtNode[];
   edges: DbtEdge[];
+  authoringAuthority: CanvasAuthoringAuthorityResolution;
 };
 
 export const SUPPORTED_WAREHOUSE_CONNECTION_TYPES = WAREHOUSE_CONNECTION_TYPE;

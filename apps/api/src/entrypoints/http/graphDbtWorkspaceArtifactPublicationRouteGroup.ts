@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 
 import { PublishGraphDbtWorkspaceArtifactsCommand } from '../../application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.js';
 import { LocalWorkspaceFileBatchMutationGateway } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.js';
+import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
@@ -17,6 +18,10 @@ export function registerProtectedGraphDbtWorkspaceArtifactPublicationRouteGroup(
   }>
 ): void {
   const command = new PublishGraphDbtWorkspaceArtifactsCommand(
+    options.protectedModule.canvasAuthoringAuthorityPolicy,
+    new LocalWorkspaceFileRepository({
+      root: options.protectedModule.workspaceFilesRoot,
+    }),
     new LocalWorkspaceFileBatchMutationGateway({
       root: options.protectedModule.workspaceFilesRoot,
     })

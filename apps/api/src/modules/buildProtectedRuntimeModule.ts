@@ -94,12 +94,16 @@ export async function buildProtectedRuntimeModule(
     commandAuthorizer: securityRuntime.commandAuthorizer,
     env,
     pool,
+    buildCanvasAuthoringAuthorityRuntime: ({ workspaceGraphDraftStore }) =>
+      buildCanvasAuthoringAuthorityRuntime({
+        pool,
+        schema: env.DVT_PG_SCHEMA,
+        workspaceGraphDraftStore,
+        queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+      }),
   });
-  const canvasAuthoringAuthorityRuntime = buildCanvasAuthoringAuthorityRuntime({
-    pool,
-    schema: env.DVT_PG_SCHEMA,
-    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
-  });
+  const canvasAuthoringAuthorityRuntime =
+    workspaceGraphDraftRuntime.canvasAuthoringAuthorityRuntime;
   const dbtProjectAnalyzer = new DbtCliProjectAnalyzer({
     workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
     ...(env.DVT_DBT_ANALYZER_PROFILES_DIR === undefined

@@ -3,6 +3,7 @@
 import { waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { mockGraphDraftAuthoringAuthority } from '../../testing/workspacePortDoubles';
 import {
   activateDiffViewButton,
   findDiffViewButton,
@@ -83,6 +84,7 @@ describe('DiffView catalog and filtering', () => {
     mounted = await renderDiffView({
       graph: {
         getGraphSnapshot: async () => ({
+          authoringAuthority: mockGraphDraftAuthoringAuthority,
           nodes: [
             {
               id: 'dim_store',

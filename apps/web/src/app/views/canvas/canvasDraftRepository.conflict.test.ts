@@ -45,6 +45,7 @@ function buildConflictSaveResult(): WorkspaceGraphDraftAuthoringSaveResult {
 function buildRemoteAuthoringDraft(): WorkspaceGraphAuthoringDraft {
   return {
     canvas: {
+      id: 'main-canvas',
       kind: 'transformation',
       title: 'Main canvas',
     },
@@ -126,6 +127,14 @@ function buildRemoteReadResult(): WorkspaceGraphDraftAuthoringReadResult {
       storedSchemaVersion: 'workspace-graph-draft.v1',
       migrationState: 'native',
     },
+    authoringAuthority: {
+      kind: 'resolved',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'main-canvas',
+        authority: { kind: 'graph-draft' },
+      },
+    },
     record: {
       scope: WORKSPACE_SCOPE,
       schemaVersion: 'workspace-graph-draft.v1',
@@ -151,6 +160,14 @@ function buildExpectedConflictCurrentRecord(): ConflictSaveGraphDraftResult['cur
 function buildExpectedConflictRemoteDraftState(): ConflictSaveGraphDraftResult['remoteDraftState'] {
   return {
     accessMode: 'writable' as const,
+    authoringAuthority: {
+      kind: 'resolved',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'main-canvas',
+        authority: { kind: 'graph-draft' },
+      },
+    },
     capabilityReason: 'authorized' as const,
     formatError: null,
     formatMeta: {
@@ -215,11 +232,11 @@ function buildExpectedConflictRemoteDraftState(): ConflictSaveGraphDraftResult['
 describe('canvasDraftRepository conflict handling', () => {
   it('returns the actual remote projection on conflict instead of the rejected local payload', async () => {
     const authoringPort = buildAuthoringPort({
-      saveGraphDraft: vi.fn(
-        async (): Promise<WorkspaceGraphDraftAuthoringSaveResult> => buildConflictSaveResult()
+      saveGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringSaveResult> =>
+        buildConflictSaveResult()
       ) as IWorkspaceGraphDraftAuthoringPort['saveGraphDraft'],
-      readGraphDraft: vi.fn(
-        async (): Promise<WorkspaceGraphDraftAuthoringReadResult> => buildRemoteReadResult()
+      readGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringReadResult> =>
+        buildRemoteReadResult()
       ) as IWorkspaceGraphDraftAuthoringPort['readGraphDraft'],
     });
     const repository = createCanvasDraftRepository(authoringPort);
@@ -233,12 +250,12 @@ describe('canvasDraftRepository conflict handling', () => {
 
   it('fails closed when a conflict cannot reload the actual remote draft', async () => {
     const authoringPort = buildAuthoringPort({
-      saveGraphDraft: vi.fn(
-        async (): Promise<WorkspaceGraphDraftAuthoringSaveResult> => buildConflictSaveResult()
+      saveGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringSaveResult> =>
+        buildConflictSaveResult()
       ) as IWorkspaceGraphDraftAuthoringPort['saveGraphDraft'],
-      readGraphDraft: vi.fn(
-        async (): Promise<WorkspaceGraphDraftAuthoringReadResult> => ({ kind: 'not_found' })
-      ) as IWorkspaceGraphDraftAuthoringPort['readGraphDraft'],
+      readGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringReadResult> => ({
+        kind: 'not_found',
+      })) as IWorkspaceGraphDraftAuthoringPort['readGraphDraft'],
     });
     const repository = createCanvasDraftRepository(authoringPort);
 
@@ -249,8 +266,8 @@ describe('canvasDraftRepository conflict handling', () => {
 
   it('fails closed when conflict recovery throws while reloading the remote draft', async () => {
     const authoringPort = buildAuthoringPort({
-      saveGraphDraft: vi.fn(
-        async (): Promise<WorkspaceGraphDraftAuthoringSaveResult> => buildConflictSaveResult()
+      saveGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringSaveResult> =>
+        buildConflictSaveResult()
       ) as IWorkspaceGraphDraftAuthoringPort['saveGraphDraft'],
       readGraphDraft: vi.fn(async (): Promise<WorkspaceGraphDraftAuthoringReadResult> => {
         throw new Error('reload failed');

@@ -109,6 +109,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
     } satisfies SessionContextPort;
 
     const result = await executeCanvasPlanAction({
+      graphDraftCanvasId: null,
       canPlan: true,
       canonicalEdges: [],
       canonicalNodes: [modelNode],
@@ -212,6 +213,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
     } as unknown as SessionContextPort;
 
     const result = await executeCanvasPlanAction({
+      graphDraftCanvasId: null,
       canPlan: true,
       canonicalEdges: [],
       canonicalNodes: [sourceNode, modelNode],
@@ -273,6 +275,7 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
     } as unknown as SessionContextPort;
 
     const result = await executeCanvasPlanAction({
+      graphDraftCanvasId: null,
       canPlan: true,
       canonicalEdges: [],
       canonicalNodes: [sourceNode, modelNode],

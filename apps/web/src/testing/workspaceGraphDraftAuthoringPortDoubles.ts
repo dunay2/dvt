@@ -84,12 +84,25 @@ export function createMockWorkspaceGraphDraftAuthoringPort({
       }
 
       const scope = readWorkspaceGraphDraftScope(sessionContext);
+      const canvasId =
+        store.currentRecord.draft.activeCanvasId ?? store.currentRecord.draft.canvas.id ?? null;
 
       return {
         kind: 'ok',
         capability: buildCapability(scope, 'writable', 'authorized'),
         auditRef: buildAuditRef('draft_read', 'allowed'),
         formatMeta: buildFormatMeta(),
+        authoringAuthority:
+          canvasId === null
+            ? { kind: 'unresolved', reason: 'missing_authority', canvasId: null }
+            : {
+                kind: 'resolved',
+                binding: {
+                  schemaVersion: 'canvas-authoring-authority-binding.v1',
+                  canvasId,
+                  authority: { kind: 'graph-draft' },
+                },
+              },
         record: {
           scope,
           schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,

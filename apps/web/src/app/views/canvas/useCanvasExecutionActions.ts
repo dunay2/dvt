@@ -56,6 +56,7 @@ function useCanvasExecutionDraftSignatureSync(args: {
 }
 
 export function useCanvasExecutionActions({
+  graphDraftCanvasId,
   plansService,
   runsService,
   workspaceFilesQuery,
@@ -113,6 +114,7 @@ export function useCanvasExecutionActions({
   });
 
   const planAction = useCanvasPlanActionHandler({
+    graphDraftCanvasId,
     canPlan,
     canonicalEdges,
     canonicalNodes,
@@ -159,8 +161,5 @@ export function useCanvasExecutionActions({
     planStatusSummary,
     handlePreviewExecutionPlan: planAction.handlePreviewExecutionPlan,
     handleStartRun,
-    graphSqlReplacementConfirmation: planAction.graphSqlReplacementConfirmation,
-    confirmGraphSqlReplacement: planAction.confirmGraphSqlReplacement,
-    cancelGraphSqlReplacement: planAction.cancelGraphSqlReplacement,
   };
 }

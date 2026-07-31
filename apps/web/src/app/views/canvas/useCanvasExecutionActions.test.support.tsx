@@ -42,6 +42,7 @@ type ExecutionActionsHookViewProps = Readonly<{
 }>;
 
 type ExecutionActionsHookCommonProps = Readonly<{
+  graphDraftCanvasId: string | null;
   plansService: IPlansPort;
   runsService: IRunsPort;
   onRunStarted: (runId: string) => void;
@@ -77,6 +78,7 @@ type StatefulExecutionActionsHookHostProps = Readonly<
 >;
 
 export type RenderExecutionActionsHarnessArgs = {
+  graphDraftCanvasId?: string | null;
   plansService: IPlansPort;
   runsService: IRunsPort;
   currentPlan?: PlanViewModel | null;
@@ -108,6 +110,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   | 'currentPlan'
   | 'initialPlan'
   | 'stateful'
+  | 'graphDraftCanvasId'
   | 'workspaceNodeIds'
   | 'selectionIntent'
   | 'canonicalNodes'
@@ -129,6 +132,7 @@ type ResolvedExecutionActionsHarnessArgs = Omit<
   currentPlan: PlanViewModel | null;
   initialPlan: PlanViewModel | null;
   stateful: boolean;
+  graphDraftCanvasId: string | null;
   onRunStarted: (runId: string) => void;
   sessionContext: SessionContextPort;
   shellFeedback: ShellFeedbackPort;
@@ -177,12 +181,6 @@ function ExecutionActionsHookView({
       </div>
       <div data-testid="plan-status-summary">{hook.planStatusSummary}</div>
       <div data-testid="current-plan-sha">{currentPlan?.planRef?.sha256 ?? 'none'}</div>
-      <div data-testid="graph-sql-replacement-open">
-        {String(hook.graphSqlReplacementConfirmation.open)}
-      </div>
-      <div data-testid="graph-sql-replacement-paths">
-        {hook.graphSqlReplacementConfirmation.paths.join(',') || 'none'}
-      </div>
       <button
         type="button"
         onClick={() => {
@@ -198,17 +196,6 @@ function ExecutionActionsHookView({
         }}
       >
         start-run
-      </button>
-      <button
-        type="button"
-        onClick={() => {
-          void hook.confirmGraphSqlReplacement();
-        }}
-      >
-        confirm-graph-sql-replacement
-      </button>
-      <button type="button" onClick={hook.cancelGraphSqlReplacement}>
-        cancel-graph-sql-replacement
       </button>
     </div>
   );
@@ -245,6 +232,7 @@ function resolveCommonHookProps(
   args: ResolvedExecutionActionsHarnessArgs
 ): ExecutionActionsHookCommonProps {
   return {
+    graphDraftCanvasId: args.graphDraftCanvasId,
     plansService: args.plansService,
     runsService: args.runsService,
     onRunStarted: args.onRunStarted,
@@ -291,6 +279,8 @@ function resolveHarnessArgs(
 ): ResolvedExecutionActionsHarnessArgs {
   return {
     ...args,
+    graphDraftCanvasId:
+      args.graphDraftCanvasId === undefined ? 'test-canvas' : args.graphDraftCanvasId,
     currentPlan: args.currentPlan ?? null,
     initialPlan: args.initialPlan ?? null,
     stateful: args.stateful ?? false,
@@ -570,8 +560,6 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
   rerender: (nextArgs: Partial<RenderExecutionActionsHarnessArgs>) => Promise<void>;
   clickPlan: () => Promise<void>;
   clickStartRun: () => Promise<void>;
-  clickConfirmGraphSqlReplacement: () => Promise<void>;
-  clickCancelGraphSqlReplacement: () => Promise<void>;
   text: (testId: string) => string | null;
   cleanup: () => void;
   container: HTMLDivElement;
@@ -631,16 +619,6 @@ export function renderExecutionActionsHarness(initialArgs: RenderExecutionAction
     clickStartRun: async () => {
       await act(async () => {
         queryButton(1)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      });
-    },
-    clickConfirmGraphSqlReplacement: async () => {
-      await act(async () => {
-        queryButton(2)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-      });
-    },
-    clickCancelGraphSqlReplacement: async () => {
-      await act(async () => {
-        queryButton(3)?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       });
     },
     text: (testId) => container.querySelector(`[data-testid="${testId}"]`)?.textContent ?? null,

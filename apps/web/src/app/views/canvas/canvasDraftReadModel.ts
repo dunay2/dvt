@@ -1,5 +1,6 @@
 /** Owned concern: translate protected draft-authoring outcomes into the Canvas route read model and semantic graph handoff. */
 import type {
+  CanvasAuthoringAuthorityResolution,
   WorkspaceGraphAuthoringDraft,
   WorkspaceGraphDraftCapabilityMode,
   WorkspaceGraphDraftCapabilityReason,
@@ -26,12 +27,22 @@ export type CanvasAuthoringDraftRecord = {
 
 export type CanvasAuthoringDraftReadModel = {
   accessMode: CanvasDraftAccessMode;
+  authoringAuthority: CanvasAuthoringAuthorityResolution;
   capabilityReason: WorkspaceGraphDraftCapabilityReason | null;
   formatError: WorkspaceGraphDraftFormatError | null;
   formatMeta: WorkspaceGraphDraftFormatMeta | null;
   record: CanvasAuthoringDraftRecord | null;
   semanticGraph: CanvasAuthoringSemanticGraph | null;
 };
+
+export function resolveGraphDraftAuthoringCanvasId(
+  readModel: CanvasAuthoringDraftReadModel | undefined
+): string | null {
+  const authority = readModel?.authoringAuthority;
+  return authority?.kind === 'resolved' && authority.binding.authority.kind === 'graph-draft'
+    ? authority.binding.canvasId
+    : null;
+}
 
 export function projectProtectedCanvasAuthoringDraftRecord(
   record: ProtectedWorkspaceGraphDraftRecord
@@ -48,6 +59,11 @@ export function createUnknownCanvasAuthoringDraftReadModel(
 ): CanvasAuthoringDraftReadModel {
   return {
     accessMode: 'unknown',
+    authoringAuthority: {
+      kind: 'unresolved',
+      reason: 'missing_authority',
+      canvasId: record?.draft.activeCanvasId ?? record?.draft.canvas.id ?? null,
+    },
     capabilityReason: null,
     formatError: null,
     formatMeta: null,
@@ -58,10 +74,12 @@ export function createUnknownCanvasAuthoringDraftReadModel(
 
 export function createWritableCanvasAuthoringDraftReadModel(
   record: CanvasAuthoringDraftRecord,
+  authoringAuthority: CanvasAuthoringAuthorityResolution,
   semanticGraph: CanvasAuthoringSemanticGraph | null = null
 ): CanvasAuthoringDraftReadModel {
   return {
     accessMode: 'writable',
+    authoringAuthority,
     capabilityReason: 'authorized',
     formatError: null,
     formatMeta: null,
@@ -79,6 +97,7 @@ export function projectCanvasAuthoringDraftReadModel(
     case 'ok':
       return {
         accessMode: result.capability.mode,
+        authoringAuthority: result.authoringAuthority,
         capabilityReason: result.capability.reason,
         formatError: null,
         formatMeta: result.formatMeta,
@@ -88,6 +107,11 @@ export function projectCanvasAuthoringDraftReadModel(
     case 'denied':
       return {
         accessMode: result.capability.mode,
+        authoringAuthority: {
+          kind: 'unresolved',
+          reason: 'missing_authority',
+          canvasId: null,
+        },
         capabilityReason: result.capability.reason,
         formatError: null,
         formatMeta: null,
@@ -97,6 +121,11 @@ export function projectCanvasAuthoringDraftReadModel(
     case 'format_error':
       return {
         accessMode: result.capability.mode,
+        authoringAuthority: {
+          kind: 'unresolved',
+          reason: 'missing_authority',
+          canvasId: null,
+        },
         capabilityReason: result.capability.reason,
         formatError: result.formatError,
         formatMeta: null,

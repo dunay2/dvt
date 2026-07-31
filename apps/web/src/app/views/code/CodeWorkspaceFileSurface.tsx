@@ -21,7 +21,7 @@ export function CodeWorkspaceFileSurface({
   posture,
   value,
 }: CodeWorkspaceFileSurfaceProps) {
-  if (posture.kind === 'graph_owned_read_only') {
+  if (posture.kind !== 'editable') {
     return (
       <MonacoCodeViewer
         ariaLabel={ariaLabel}

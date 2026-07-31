@@ -11,6 +11,7 @@ import type {
   WorkspaceGraphSnapshot,
 } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
+import { mockGraphDraftAuthoringAuthority } from '../../testing/workspacePortDoubles';
 import { WorkspaceFileLoadError } from '../services/workspace/workspaceErrors';
 import CodeView, { type CodeViewFileScope, type CodeViewHandle } from './CodeView';
 import { resolveCodeViewCopy } from './code/codeViewCopy';
@@ -785,6 +786,7 @@ describe('CodeView', () => {
 
   it('scopes the explorer to files that represent the active graph', async () => {
     const graphSnapshot: WorkspaceGraphSnapshot = {
+      authoringAuthority: mockGraphDraftAuthoringAuthority,
       nodes: [
         {
           id: 'orders_model',

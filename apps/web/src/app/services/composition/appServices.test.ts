@@ -6,6 +6,7 @@ import {
   buildGraphDraftSourceImportResult,
   buildSourceImportCommandInput,
 } from '../../../testing/sourceImportTestFixtures';
+import { mockGraphDraftAuthoringAuthority } from '../../../testing/workspacePortDoubles';
 import type { IPlansPort } from '../../ports/plans';
 import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { IRunsPort } from '../../ports/runs';
@@ -106,7 +107,11 @@ function buildWorkspacePortStubs(): {
 } {
   return {
     workspaceGraphSnapshotQuery: {
-      getGraphSnapshot: vi.fn(async () => ({ nodes: [], edges: [] })),
+      getGraphSnapshot: vi.fn(async () => ({
+        nodes: [],
+        edges: [],
+        authoringAuthority: mockGraphDraftAuthoringAuthority,
+      })),
     },
     workspaceFilesQuery: {
       listFiles: vi.fn(async () => []),

@@ -14,6 +14,14 @@ function buildGraphSnapshot(overrides?: {
   edges?: WorkspaceGraphSnapshot['edges'];
 }): WorkspaceGraphSnapshot {
   return {
+    authoringAuthority: {
+      kind: 'resolved',
+      binding: {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'main-canvas',
+        authority: { kind: 'graph-draft' },
+      },
+    },
     nodes: overrides?.nodes ?? [
       {
         id: 'model.fct_orders',

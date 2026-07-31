@@ -12,6 +12,7 @@ import {
   resetExecutionActionsTestDoubles,
   restoreExecutionActionsTestDoubles,
 } from './useCanvasExecutionActions.test.support';
+import { canvasViewCopy } from './copy';
 
 const nodes: readonly CanonicalNode[] = [
   {
@@ -58,7 +59,7 @@ const edges: readonly CanonicalEdge[] = [
   },
 ];
 
-describe('useCanvasExecutionActions graph SQL replacement', () => {
+describe('useCanvasExecutionActions graph SQL divergence', () => {
   let harness: ReturnType<typeof renderExecutionActionsHarness> | null = null;
 
   beforeEach(() => resetExecutionActionsTestDoubles());
@@ -69,7 +70,7 @@ describe('useCanvasExecutionActions graph SQL replacement', () => {
     restoreExecutionActionsTestDoubles();
   });
 
-  it('publishes divergent pre-marker SQL only after exact user confirmation', async () => {
+  it('refuses to replace unmarked SQL and never starts preview', async () => {
     const plansService = createPlansServiceMock();
     const graphPublicationCommand = createGraphDbtWorkspaceArtifactPublicationCommandMock();
     const workspacePorts = createWorkspaceFilePortMocks({
@@ -97,35 +98,16 @@ describe('useCanvasExecutionActions graph SQL replacement', () => {
 
     await harness.clickPlan();
 
-    expect(harness.text('graph-sql-replacement-open')).toBe('true');
-    expect(harness.text('graph-sql-replacement-paths')).toBe('models/orders_model.sql');
-    expect(workspacePorts.workspaceFileContentCommand.saveFileContent).not.toHaveBeenCalled();
+    expect(harness.shellFeedback.error).toHaveBeenCalledWith(
+      canvasViewCopy.planGraphModelSqlDivergenceMessageTemplate.replace(
+        '{path}',
+        'models/orders_model.sql'
+      )
+    );
     expect(plansService.previewPlan).not.toHaveBeenCalled();
-
-    await harness.clickCancelGraphSqlReplacement();
-
-    expect(harness.text('graph-sql-replacement-open')).toBe('false');
+    expect(graphPublicationCommand.publish).not.toHaveBeenCalled();
     expect(
       await workspacePorts.workspaceFilesQuery.getFileContent('models/orders_model.sql')
     ).toMatchObject({ content: 'select * from historical_graph_projection\n' });
-
-    await harness.clickPlan();
-    await harness.clickConfirmGraphSqlReplacement();
-
-    expect(harness.text('graph-sql-replacement-open')).toBe('false');
-    expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
-    expect(graphPublicationCommand.publish).toHaveBeenCalledTimes(1);
-    expect(graphPublicationCommand.publish).toHaveBeenCalledWith(
-      expect.objectContaining({
-        artifacts: expect.arrayContaining([
-          expect.objectContaining({
-            path: 'models/orders_model.sql',
-            content: expect.stringMatching(
-              /^-- dvt:graph-draft-content-sha256=[a-f0-9]{64}\n[\s\S]*source\('raw', 'orders'\)/
-            ),
-          }),
-        ]),
-      })
-    );
   });
 });

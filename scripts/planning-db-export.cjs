@@ -84,7 +84,11 @@ class PlanningDbExportRunner {
   }
 
   async readCanonicalStateRows(client) {
-    const [featureMechanizationRails, featureMechanizationRailOperations] = await Promise.all([
+    const [
+      featureMechanizationRails,
+      featureMechanizationRailOperations,
+      architectureComponentStatusOverrides,
+    ] = await Promise.all([
       client.query(`
         select
           rail.rail_id as "railId",
@@ -141,9 +145,18 @@ class PlanningDbExportRunner {
         )
         order by operation.created_at, operation.operation_id
       `),
+      client.query(`
+        select
+          component_id as "componentId",
+          status
+        from architecture.component
+        where status = 'deprecated'
+        order by component_id
+      `),
     ]);
 
     return {
+      architectureComponentStatusOverrides: architectureComponentStatusOverrides.rows,
       featureMechanizationRails: featureMechanizationRails.rows,
       featureMechanizationRailOperations: featureMechanizationRailOperations.rows,
     };
@@ -157,6 +170,7 @@ class PlanningDbExportRunner {
       `${JSON.stringify(
         {
           schemaVersion: 1,
+          architectureComponentStatusOverrides: snapshotRows.architectureComponentStatusOverrides,
           featureMechanizationRails: snapshotRows.featureMechanizationRails,
           featureMechanizationRailOperations: snapshotRows.featureMechanizationRailOperations,
         },
@@ -288,6 +302,8 @@ class PlanningDbExportRunner {
       }
 
       return {
+        canonicalArchitectureComponentStatusOverrides:
+          canonicalStateRows.architectureComponentStatusOverrides.length,
         canonicalFeatureMechanizationRails: canonicalStateRows.featureMechanizationRails.length,
         outputRoot,
         canonicalArtifactPaths,

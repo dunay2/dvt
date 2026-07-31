@@ -1,0 +1,38 @@
+---
+id: R-20260731-CANVAS-DBT-AUTHORING-AUTHORITY
+title: Canvas and dbt files can expose conflicting authoring authority
+status: Open
+date: 2026-07-31
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: High
+probability: Low
+context: >
+  Canvas graph drafts can publish generated dbt artifacts while imported or opened dbt projects
+  remain file-backed. Only one mode may authorize mutation for a given Canvas.
+risk: >
+  Reconstructing authority from route state, graph shape, or marker presence could allow graph
+  publication to overwrite externally authored dbt SQL or could expose plan and run actions for an
+  ambiguous Canvas.
+mitigations:
+  - 'Return one canonical CanvasAuthoringAuthorityResolution from GetWorkspaceGraphDraft.'
+  - 'Require the active canvasId on PublishGraphDbtWorkspaceArtifacts and validate persisted
+    authority plus graph membership before reading or mutating workspace files.'
+  - 'Fail closed for missing, mixed, file-backed, or mismatched authority.'
+  - 'Treat graph-managed SQL markers as divergence evidence only, never as authority grants.'
+  - 'Re-read current files and validate marker ownership server-side before the atomic
+    compare-and-swap publication.'
+  - 'Serialize Canvas identity and dbt project root authority from authorization through the
+    complete artifact publication.'
+  - 'Re-read the canonical draft authority after save before replacing the Web query cache.'
+  - 'Gate Web code editing, planning, preview, and run posture on the canonical authority.'
+  - 'Cover successful resolution, every refusal mode, marker integrity, revision conflict, and
+    zero-mutation failure behavior with contract, API, and Web tests.'
+residual_risk: >
+  A future authoring mode could reintroduce ambiguity if it bypasses the canonical resolution
+  contract. The closed union, fail-closed policy, and cross-layer tests make that change explicit
+  rather than silently compatible.
+review_after: 2026-08-31
+---

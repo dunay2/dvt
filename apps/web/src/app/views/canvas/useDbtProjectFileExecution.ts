@@ -56,6 +56,7 @@ export function useDbtProjectFileExecution(args: {
     args.store.userPermissions.canPlan && args.projection?.capabilities.canPreview === true;
   const canRun = args.store.userPermissions.canRun && args.projection?.capabilities.canRun === true;
   const actions = useCanvasExecutionActions({
+    graphDraftCanvasId: null,
     plansService,
     runsService,
     workspaceFilesQuery,

@@ -19,6 +19,7 @@ installWorkspaceScopeHarness();
 const SQL_PAYLOAD = 'select 1\n';
 
 const REQUEST: PublishGraphDbtWorkspaceArtifactsRequest = {
+  canvasId: 'orders-canvas',
   artifacts: [
     {
       path: 'dbt_project.yml',

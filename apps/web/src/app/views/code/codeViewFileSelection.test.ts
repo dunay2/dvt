@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { mockGraphDraftAuthoringAuthority } from '../../../testing/workspacePortDoubles';
 import type { WorkspaceFileEntry } from '../../ports/workspace';
 import {
   deriveCodeGraphFilePaths,
@@ -183,6 +184,7 @@ describe('codeViewFileSelection', () => {
 
   it('derives dbt model files from the current graph node name instead of the stale node id', () => {
     const filePaths = deriveCodeGraphFilePaths({
+      authoringAuthority: mockGraphDraftAuthoringAuthority,
       nodes: [
         {
           id: 'orders_model',
@@ -257,6 +259,7 @@ describe('codeViewFileSelection', () => {
     const scopedTree = resolveGraphScopedCodeWorkspaceFileTree({
       entries: tree,
       graph: {
+        authoringAuthority: mockGraphDraftAuthoringAuthority,
         nodes: [
           {
             id: 'dvt-sql-transform-1',
@@ -304,6 +307,7 @@ describe('codeViewFileSelection', () => {
     const scopedTree = resolveGraphScopedCodeWorkspaceFileTree({
       entries: tree,
       graph: {
+        authoringAuthority: mockGraphDraftAuthoringAuthority,
         nodes: [
           {
             id: 'model-orders',

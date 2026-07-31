@@ -233,7 +233,6 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     cy.contains(/^Run /, { timeout: 20_000 }).should('exist');
 
     const workingTreePath = 'models/payments_model.sql';
-    let generatedWorkingTreeContent = '';
 
     visitWithLiveWorkspaceSession('/canvas');
     cy.contains('dbt authoring live', { timeout: 20_000 }).should('be.visible');
@@ -252,35 +251,24 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
     });
     readLiveWorkspaceFile(workingTreePath).then((response) => {
       expect(response.status).to.equal(200);
-      generatedWorkingTreeContent = String((response.body as { content?: unknown }).content ?? '');
-      expect(generatedWorkingTreeContent).to.contain('select order_id, amount');
+      expect(String((response.body as { content?: unknown }).content ?? '')).to.contain(
+        'select order_id, amount'
+      );
     });
     cy.get('[data-slot="canvas-contextual-workbench-header"] button').should('be.visible').click();
     cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
 
     replaceLiveWorkspaceFile(workingTreePath, EXTERNAL_MODEL_SQL);
     clickPreviewExecutionPlanFromOperationalDrawer();
-    cy.contains(canvasViewCopy.graphSqlReplacementTitle, { timeout: 30_000 }).should('be.visible');
-    cy.contains(workingTreePath).should('be.visible');
-    cy.contains('button', canvasViewCopy.graphSqlReplacementCancelLabel).click();
+    cy.contains(
+      canvasViewCopy.planGraphModelSqlDivergenceMessageTemplate.replace('{path}', workingTreePath),
+      { timeout: 30_000 }
+    ).should('be.visible');
+    cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
     readLiveWorkspaceFile(workingTreePath).then((response) => {
       expect(response.status).to.equal(200);
       expect(String((response.body as { content?: unknown }).content ?? '')).to.equal(
         EXTERNAL_MODEL_SQL
-      );
-    });
-
-    clickPreviewExecutionPlanFromOperationalDrawer();
-    cy.contains(canvasViewCopy.graphSqlReplacementTitle, { timeout: 30_000 }).should('be.visible');
-    cy.contains('button', canvasViewCopy.graphSqlReplacementConfirmLabel).click();
-    cy.get('[data-slot="graph-sql-replacement-confirmation"]', { timeout: 30_000 }).should(
-      'not.exist'
-    );
-    cy.get('[data-testid="plan-preview-modal"]', { timeout: 30_000 }).should('be.visible');
-    readLiveWorkspaceFile(workingTreePath).then((response) => {
-      expect(response.status).to.equal(200);
-      expect(String((response.body as { content?: unknown }).content ?? '')).to.equal(
-        generatedWorkingTreeContent
       );
     });
   });

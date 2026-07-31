@@ -3,13 +3,8 @@
  */
 import { ConfirmEdgeModal, PlanPreviewModal } from '../../components/Modals';
 import type { CanvasModalHostProps } from './canvasModalHost.types';
-import { GraphSqlReplacementConfirmationDialog } from './GraphSqlReplacementConfirmationDialog';
 
-export default function CanvasModalHost({
-  planPreview,
-  edgeConfirmation,
-  graphSqlReplacement,
-}: CanvasModalHostProps) {
+export default function CanvasModalHost({ planPreview, edgeConfirmation }: CanvasModalHostProps) {
   return (
     <>
       <PlanPreviewModal
@@ -27,16 +22,6 @@ export default function CanvasModalHost({
           onClose={edgeConfirmation.onClose}
           edge={edgeConfirmation.edge}
           onConfirm={edgeConfirmation.onConfirm}
-        />
-      )}
-
-      {graphSqlReplacement == null ? null : (
-        <GraphSqlReplacementConfirmationDialog
-          open={graphSqlReplacement.open}
-          paths={graphSqlReplacement.paths}
-          busy={graphSqlReplacement.busy}
-          onCancel={graphSqlReplacement.onCancel}
-          onConfirm={graphSqlReplacement.onConfirm}
         />
       )}
     </>
