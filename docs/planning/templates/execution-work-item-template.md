@@ -2,42 +2,51 @@
 title: Execution Work Item Template
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-03-22
+last_reviewed: 2026-07-31
 planning_type: template
 ---
 
 # Execution Work Item Template
 
-Use this template when shaping the payload for
-`pnpm planning:db:operate task create` or reviewing the bootstrap/export YAML
-snapshot that the planning DB can export for Git review.
+Use this template when creating or refining a GitHub Issue for MVP delivery.
+Do not mirror the issue into a local lane, workboard, or Planning DB task row.
 
 ## Required Fields
 
-- `task_id`: stable ID used across proposals, PRs, and closeouts.
-- `objective`: one concrete business or architecture outcome.
-- `primary_source`: proposal, review, or gap source that defines the work.
-- `domain`: one of the planning domains.
-- `roadmap_lane_affected`: exact roadmap lane impacted.
-- `dependencies_or_blockers`: explicit upstream prerequisites.
-- `status`: `Queued`, `In Progress`, `Review`, `Blocked`, or `Done`.
-- `next_slice`: smallest next deliverable.
+- `title`: one concrete business or architecture outcome.
+- `source`: proposal, review, or gap source that defines the work.
+- `scope`: bounded context and affected product surface.
+- `acceptance criteria`: observable outcomes required for closure.
+- `dependencies`: linked GitHub Issues or explicit external blockers.
+- `architecture impact`: components, capabilities, rails, or contracts affected.
+- `validation`: tests and user evidence required before closure.
 
 ## Card Skeleton
 
-```yaml
-task_id: <ID>
-objective: <what success looks like>
-primary_source: <relative-doc-link>
-domain: <execution-runtime | api-and-admission | planner-and-contracts | event-lifecycle-and-retention | documentation-governance>
-roadmap_lane_affected: <lane name>
-dependencies_or_blockers: <ids or none>
-status: <Queued | In Progress | Review | Blocked | Done>
-next_slice: <smallest next shippable slice>
+```markdown
+## Outcome
+
+<What success looks like>
+
+## Scope
+
+<Bounded context and product surface>
+
+## Acceptance Criteria
+
+- [ ] <Observable result>
+
+## Architecture Impact
+
+<Components, capabilities, rails, contracts, or none>
+
+## Validation
+
+<Automated and human evidence>
 ```
 
 ## Mapping Rule
 
-If the work originates in a review, include the review source in the DB task
-payload through `pnpm planning:db:operate` and regenerate the local
-planning-derived views from the DB source.
+If the work originates in a review, link that source from the GitHub Issue.
+Update Planning DB only when the implementation changes architecture or
+mechanization records.

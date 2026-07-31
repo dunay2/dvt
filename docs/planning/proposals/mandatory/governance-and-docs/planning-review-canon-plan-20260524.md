@@ -1,12 +1,16 @@
 ---
 title: Planning Review Canon Plan
-status: Active
+status: Superseded
 owner: Product / Architecture / Docs
-last_reviewed: 2026-05-24
+last_reviewed: 2026-07-31
 planning_type: proposal
+superseded_by: ADR-0061
 ---
 
 # Planning Review Canon Plan
+
+> Historical design record. Its Planning DB task-lifecycle decision is
+> superseded by [ADR-0061](../../../../adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md).
 
 ## Owned Concern
 

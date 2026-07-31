@@ -47,7 +47,6 @@ Execution sequence derived from Fowler-hard QA findings for AR-B1.
 pnpm --filter @dvt/run-domain test
 pnpm --filter @dvt/engine test -- test/core/WorkflowEngineCoreService.test.ts
 pnpm test:engine
-pnpm docs:workboard:generate
 pnpm docs:sync
 pnpm verify:prepush
 ```
