@@ -6,12 +6,14 @@ import type { Logger } from 'pino';
 
 import type { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 import { AuthorizeWorkspaceGraphDraftCapabilityService } from '../../application/services/authorizeWorkspaceGraphDraftCapabilityService.js';
+import { GetWorkspaceGraphDraftUseCase } from '../../application/services/getWorkspaceGraphDraftUseCase.js';
 import { SaveWorkspaceGraphDraftUseCase } from '../../application/services/saveWorkspaceGraphDraftUseCase.js';
 import { getPgPool } from '../../db/pool.js';
 import type { OidcAuthenticator } from '../../infrastructure/auth/oidcAuthenticator.js';
 import { PostgresWorkspaceGraphDraftStore } from '../../infrastructure/workspaceGraphDraft/PostgresWorkspaceGraphDraftStore.js';
 import { StructuredWorkspaceGraphDraftAuditLogger } from '../../infrastructure/workspaceGraphDraft/StructuredWorkspaceGraphDraftAuditLogger.js';
 import type { Env } from '../../plugins/env.js';
+import type { CanvasAuthoringAuthorityRuntime } from '../canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
 
 type WorkspaceGraphDraftRuntimePool = ReturnType<typeof getPgPool>;
 
@@ -21,6 +23,9 @@ export type BuildWorkspaceGraphDraftRuntimeDeps = {
   readonly commandAuthorizer: AuthorizeCommandScopeService;
   readonly env: Env;
   readonly pool: WorkspaceGraphDraftRuntimePool;
+  readonly buildCanvasAuthoringAuthorityRuntime: (input: {
+    readonly workspaceGraphDraftStore: PostgresWorkspaceGraphDraftStore;
+  }) => CanvasAuthoringAuthorityRuntime;
 };
 
 export function buildWorkspaceGraphDraftRuntime(deps: BuildWorkspaceGraphDraftRuntimeDeps) {
@@ -35,6 +40,14 @@ export function buildWorkspaceGraphDraftRuntime(deps: BuildWorkspaceGraphDraftRu
     deps.commandAuthorizer,
     () => new Date()
   );
+  const canvasAuthoringAuthorityRuntime = deps.buildCanvasAuthoringAuthorityRuntime({
+    workspaceGraphDraftStore,
+  });
+  const getWorkspaceGraphDraftUseCase = new GetWorkspaceGraphDraftUseCase(
+    workspaceGraphDraftStore,
+    workspaceGraphDraftAudit,
+    canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy
+  );
   const saveWorkspaceGraphDraftUseCase = new SaveWorkspaceGraphDraftUseCase(
     workspaceGraphDraftStore,
     workspaceGraphDraftAudit,
@@ -43,8 +56,9 @@ export function buildWorkspaceGraphDraftRuntime(deps: BuildWorkspaceGraphDraftRu
 
   return {
     workspaceGraphDraftStore,
-    workspaceGraphDraftAudit,
     workspaceGraphDraftCapabilityService,
+    getWorkspaceGraphDraftUseCase,
     saveWorkspaceGraphDraftUseCase,
+    canvasAuthoringAuthorityRuntime,
   };
 }

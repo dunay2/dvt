@@ -9,7 +9,6 @@ import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
 import type { Logger } from 'pino';
 
-import { GetWorkspaceGraphDraftUseCase } from '../application/services/getWorkspaceGraphDraftUseCase.js';
 import { getPgPool } from '../db/pool.js';
 import { ConfiguredDbtExecutionTargetResolver } from '../infrastructure/dbt/ConfiguredDbtExecutionTargetResolver.js';
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
@@ -95,18 +94,16 @@ export async function buildProtectedRuntimeModule(
     commandAuthorizer: securityRuntime.commandAuthorizer,
     env,
     pool,
+    buildCanvasAuthoringAuthorityRuntime: ({ workspaceGraphDraftStore }) =>
+      buildCanvasAuthoringAuthorityRuntime({
+        pool,
+        schema: env.DVT_PG_SCHEMA,
+        workspaceGraphDraftStore,
+        queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
+      }),
   });
-  const canvasAuthoringAuthorityRuntime = buildCanvasAuthoringAuthorityRuntime({
-    pool,
-    schema: env.DVT_PG_SCHEMA,
-    workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
-    queryTimeoutMs: env.DVT_PG_QUERY_TIMEOUT_MS,
-  });
-  const getWorkspaceGraphDraftUseCase = new GetWorkspaceGraphDraftUseCase(
-    workspaceGraphDraftRuntime.workspaceGraphDraftStore,
-    workspaceGraphDraftRuntime.workspaceGraphDraftAudit,
-    canvasAuthoringAuthorityRuntime.canvasAuthoringAuthorityPolicy
-  );
+  const canvasAuthoringAuthorityRuntime =
+    workspaceGraphDraftRuntime.canvasAuthoringAuthorityRuntime;
   const dbtProjectAnalyzer = new DbtCliProjectAnalyzer({
     workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
     ...(env.DVT_DBT_ANALYZER_PROFILES_DIR === undefined
@@ -195,7 +192,7 @@ export async function buildProtectedRuntimeModule(
     workspaceFilesRoot: storageRuntime.workspaceFilesRoot,
     workspaceGraphDraftCapabilityService:
       workspaceGraphDraftRuntime.workspaceGraphDraftCapabilityService,
-    getWorkspaceGraphDraftUseCase,
+    getWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.getWorkspaceGraphDraftUseCase,
     saveWorkspaceGraphDraftUseCase: workspaceGraphDraftRuntime.saveWorkspaceGraphDraftUseCase,
     migrate: async () => {
       await securityRuntime.migrateAccessDecisionService();

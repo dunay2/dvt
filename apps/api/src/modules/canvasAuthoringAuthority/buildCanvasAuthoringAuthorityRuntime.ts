@@ -17,3 +17,7 @@ export function buildCanvasAuthoringAuthorityRuntime(input: {
   );
   return { canvasAuthoringAuthorityStore, canvasAuthoringAuthorityPolicy };
 }
+
+export type CanvasAuthoringAuthorityRuntime = ReturnType<
+  typeof buildCanvasAuthoringAuthorityRuntime
+>;
