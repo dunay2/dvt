@@ -3,7 +3,6 @@
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
-const { runMigrations } = require('./planning-db-migrate.cjs');
 const { textValue } = require('./planning-db/query-format.cjs');
 const {
   allowedDbSurfaceMigrationStates,
@@ -159,7 +158,6 @@ async function runInventoryCheck(options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
     const rows = await readDbSurfaceRows(client, { limit: options.limit || 500 });
     return validateDbSurfaceInventoryRows(rows);
   } finally {

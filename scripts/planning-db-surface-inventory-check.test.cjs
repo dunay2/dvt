@@ -254,10 +254,13 @@ test('DB surface inventory validator keeps component definition command rail DB-
 });
 
 test('package scripts expose and gate the DB surface inventory check', () => {
+  const scriptSource = fs.readFileSync(scriptPath, 'utf8');
+
   assert.equal(
     packageJson.scripts['planning:db:inventory:check'],
     'node scripts/planning-db-surface-inventory-check.cjs'
   );
+  assert.doesNotMatch(scriptSource, /planning-db-migrate|runMigrations/);
   assert.match(
     packageJson.scripts['test:planning:db'],
     /planning-db-surface-inventory-check\.test\.cjs/
