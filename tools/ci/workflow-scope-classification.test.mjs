@@ -40,7 +40,6 @@ test('classifies docs-only pull request scope', () => {
   const scope = computeBooleanScope(['docs/guides/example.md'], WORKFLOW_SCOPE_PATTERNS);
   assert.equal(scope.docs_changed, true);
   assert.equal(scope.any_code, false);
-  assert.equal(scope.lane_yaml_changed, false);
   assert.equal(scope.security_analysis_relevant, false);
 });
 
@@ -52,16 +51,6 @@ test('keeps mailbox analysis out of security analysis scope', () => {
   assert.equal(scope.any_code, false);
   assert.equal(scope.docs_changed, false);
   assert.equal(scope.security_analysis_relevant, false);
-});
-
-test('classifies lane YAML changes for workboard checks', () => {
-  const scope = computeBooleanScope(
-    ['docs/planning/state/agent-lane-a.yaml'],
-    WORKFLOW_SCOPE_PATTERNS
-  );
-  assert.equal(scope.lane_yaml_changed, true);
-  assert.equal(scope.docs_changed, true);
-  assert.equal(scope.any_code, false);
 });
 
 test('classifies structural code changes as generated-status relevant', () => {

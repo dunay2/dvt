@@ -30,7 +30,6 @@ const requiredKeys = [
         'any_code',
         'docs_changed',
         'docs_structure_changed',
-        'lane_yaml_changed',
         'generated_status_relevant',
         'generated_capability_relevant',
         'changed_file_validation_relevant',

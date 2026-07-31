@@ -235,7 +235,6 @@ test('workflow scope policy stays wired into ci and pr quality workflows', () =>
     any_code: workflowScopePolicy.any_code,
     docs_changed: workflowScopePolicy.docs_changed,
     docs_structure_changed: workflowScopePolicy.docs_structure_changed,
-    lane_yaml_changed: workflowScopePolicy.lane_yaml_changed,
     generated_status_relevant: workflowScopePolicy.generated_status_relevant,
     generated_capability_relevant: workflowScopePolicy.generated_capability_relevant,
     changed_file_validation_relevant: workflowScopePolicy.changed_file_validation_relevant,
@@ -421,7 +420,6 @@ test('main full CI prepares DB-first planning projections before the full baseli
   assert.notEqual(fullBaselineIndex, -1);
   assert.ok(prepareDbIndex < prepareDbActionIndex);
   assert.ok(prepareDbActionIndex < fullBaselineIndex);
-  assertWorkflowContains(ciWorkflow, "import-planning: 'true'");
   assertWorkflowContains(ciWorkflow, "import-governance: 'true'");
 });
 

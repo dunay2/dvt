@@ -46,26 +46,8 @@ function buildRefreshStages() {
         id: 'file-fingerprint-impact',
         script: 'docs:governance:file-fingerprint-impact',
       },
-      {
-        id: 'planning-db-import',
-        script: 'planning:db:import',
-        args: ['--', '--if-stale', '--planning-only'],
-      },
-      {
-        id: 'workboard',
-        script: 'docs:workboard:generate',
-      },
     ],
     databaseStages: [
-      {
-        id: 'planning-db-import-final',
-        script: 'planning:db:import',
-        args: ['--', '--if-stale', '--planning-only'],
-      },
-      {
-        id: 'planning-db-check',
-        script: 'planning:db:check',
-      },
       {
         id: 'planning-db-inventory-check',
         script: 'planning:db:inventory:check',

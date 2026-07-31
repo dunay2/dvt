@@ -23,5 +23,6 @@ test('bootstrap component guide separates component test coverage from governanc
   const governanceGuard = markdownSection(guide, '## Governance Drift Guard');
 
   assert.doesNotMatch(testCoverage, /planning-truth-sync\.test\.mjs/);
-  assert.match(governanceGuard, /planning-truth-sync\.test\.mjs/);
+  assert.doesNotMatch(governanceGuard, /planning-truth-sync\.test\.mjs/);
+  assert.match(governanceGuard, /web-bootstrap-docs\.test\.mjs/);
 });

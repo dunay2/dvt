@@ -82,7 +82,6 @@ function main() {
 
   const commands = [
     ['pnpm', ['verify:prepush']],
-    ['pnpm', ['docs:workboard:check']],
     ['pnpm', ['docs:sync:check']],
   ];
 

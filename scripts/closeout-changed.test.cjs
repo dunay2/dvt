@@ -17,7 +17,7 @@ const {
 test('buildCloseoutPlan delegates docs, workboard, governance hashes, and DB checks to governance refresh', () => {
   const plan = buildCloseoutPlan([
     'docs/runbooks/governed-closeout-runbook-20260506.md',
-    'docs/planning/state/agent-lane-e.yaml',
+    'docs/planning/state/planning-control-tower.md',
     'docs/planning/proposals/mandatory/frontend-and-ux/canvas-workbench-stage-1-chrome-simplification-implementation-plan-20260506.md',
   ]);
 

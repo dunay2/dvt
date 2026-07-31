@@ -38,7 +38,7 @@ const requiredRouteBaselines = [
   },
   {
     route: 'planning',
-    baseline: '`pnpm docs:workboard:generate` + `pnpm verify:prepush`',
+    baseline: 'issue/PR evidence + `pnpm verify:prepush`',
   },
   {
     route: 'contracts',
