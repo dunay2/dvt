@@ -148,12 +148,12 @@ export function useRunEventFeedQuery(runId: string | undefined, options: RunEven
         throw new RunEventFeedInvariantError('missing-run-id');
       }
 
-      const observedAt = new Date().toISOString();
+      const attemptStartedAt = new Date().toISOString();
       const current = prepareFeedForSnapshotStatus(
         queryClient.getQueryData<RunEventFeedState>(queryKey),
         runId,
         options.runStatus,
-        observedAt
+        attemptStartedAt
       );
       if (current.phase === 'complete' || current.phase === 'failed') {
         return current;
@@ -161,6 +161,7 @@ export function useRunEventFeedQuery(runId: string | undefined, options: RunEven
 
       try {
         const page = await runsService.listRunEvents(runId, readCursor(current));
+        const observedAt = new Date().toISOString();
         const transition = transitionRunEventFeed(current, {
           type: 'page-received',
           runId,
@@ -173,6 +174,7 @@ export function useRunEventFeedQuery(runId: string | undefined, options: RunEven
         }
         return transition.state;
       } catch (error) {
+        const observedAt = new Date().toISOString();
         const failure = classifyRunEventFeedFailure(error);
         const transition = failure.retryable
           ? transitionRunEventFeed(current, {

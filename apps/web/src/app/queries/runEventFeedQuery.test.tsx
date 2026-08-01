@@ -13,8 +13,13 @@ import type { IRunsPort, UiRunStatus } from '../ports/runs';
 import { ApiError } from '../services/api/createApiClient';
 import type { RunEvent } from '../types/engine';
 import { AppServicesProvider } from '../services/AppServicesContext';
+import { RUN_EVENT_LIVE_POLL_INTERVAL_MS } from '../services/runs/runEventTimelineModel';
 import { queryKeys } from './queryKeys';
-import { classifyRunEventFeedFailure, useRunEventFeedQuery } from './runEventFeedQuery';
+import {
+  classifyRunEventFeedFailure,
+  getRunEventFeedRefetchInterval,
+  useRunEventFeedQuery,
+} from './runEventFeedQuery';
 
 function makeEvent(runId: string, eventId: string, runSeq: number): RunEvent {
   return {
@@ -194,6 +199,73 @@ describe('useRunEventFeedQuery', () => {
       retryable: true,
       statusCode: 503,
     });
+  });
+
+  it('schedules only bounded recovery and terminal-drain polling', () => {
+    const retrying = {
+      phase: 'retrying',
+      runId: 'run_1',
+      events: [],
+      consecutiveFailures: 1,
+      nextRetryAt: '2026-07-10T10:00:01.000Z',
+    } as const;
+    const exhaustedStale = {
+      ...retrying,
+      phase: 'stale',
+      consecutiveFailures: 4,
+      nextRetryAt: undefined,
+    } as const;
+    const terminalDraining = {
+      ...retrying,
+      phase: 'terminal-draining',
+      consecutiveFailures: 0,
+      nextRetryAt: undefined,
+      expectedTerminalEventType: 'RunCompleted',
+      terminalDrainPages: 1,
+    } as const;
+    const complete = { ...terminalDraining, phase: 'complete' } as const;
+
+    expect(
+      getRunEventFeedRefetchInterval(retrying, 'running', Date.parse('2026-07-10T10:00:00.000Z'))
+    ).toBe(1_000);
+    expect(getRunEventFeedRefetchInterval(exhaustedStale, 'running')).toBe(false);
+    expect(getRunEventFeedRefetchInterval(terminalDraining, 'completed')).toBe(
+      RUN_EVENT_LIVE_POLL_INTERVAL_MS
+    );
+    expect(getRunEventFeedRefetchInterval(complete, 'completed')).toBe(false);
+  });
+
+  it('models a retryable first-load failure without inventing events or a cursor', async () => {
+    const listRunEvents = vi.fn<IRunsPort['listRunEvents']>().mockRejectedValue(
+      new ApiError({
+        message: 'Runtime unavailable',
+        endpoint: '/runs/run_1/events',
+        statusCode: 503,
+        category: 'server',
+      })
+    );
+    const queryClient = createTestQueryClient();
+
+    mounted = await withTestQueryClient(
+      withServices(
+        buildRunsService(listRunEvents),
+        <FeedConsumer consumerId="first-load" runId="run_1" />
+      ),
+      queryClient
+    );
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="first-load-phase"]')?.textContent ===
+        'retrying'
+    );
+
+    expect(queryClient.getQueryData(queryKeys.runs.eventFeed('run_1'))).toMatchObject({
+      phase: 'retrying',
+      events: [],
+      consecutiveFailures: 1,
+      failure: { kind: 'transport', retryable: true, statusCode: 503 },
+    });
+    expect(listRunEvents).toHaveBeenCalledWith('run_1', undefined);
   });
 
   it('retains accumulated events through intermittent failure and manual recovery', async () => {
