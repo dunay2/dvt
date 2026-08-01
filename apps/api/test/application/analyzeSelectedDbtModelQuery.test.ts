@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { DbtProjectAnalysis } from '../../src/application/ports/dbtProjectAnalysis.js';
 import { DbtProjectFileAuthorityRequiredError } from '../../src/application/ports/dbtProjectImport.js';
 import { AnalyzeSelectedDbtModelQuery } from '../../src/application/services/analyzeSelectedDbtModelQuery.js';
+import { SelectedDbtModelAnalysisResolver } from '../../src/application/services/selectedDbtModelAnalysisResolver.js';
 
 import {
   SELECTED_MODEL_ANALYSIS_SCOPE,
@@ -139,15 +140,17 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
 
   it('rejects graph-draft authority before invoking native analysis', async () => {
     const analyze = vi.fn();
-    const query = new AnalyzeSelectedDbtModelQuery({
-      analyzer: { analyze },
-      authorityPolicy: {
-        resolve: vi.fn().mockResolvedValue({
-          ...SELECTED_MODEL_FILE_AUTHORITY,
-          authority: { kind: 'graph-draft' },
-        }),
-      },
-    });
+    const query = new AnalyzeSelectedDbtModelQuery(
+      new SelectedDbtModelAnalysisResolver({
+        analyzer: { analyze },
+        authorityPolicy: {
+          resolve: vi.fn().mockResolvedValue({
+            ...SELECTED_MODEL_FILE_AUTHORITY,
+            authority: { kind: 'graph-draft' },
+          }),
+        },
+      })
+    );
 
     await expect(
       query.execute({
@@ -161,8 +164,10 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
 });
 
 function buildQuery(analysis: DbtProjectAnalysis): AnalyzeSelectedDbtModelQuery {
-  return new AnalyzeSelectedDbtModelQuery({
-    analyzer: { analyze: vi.fn().mockResolvedValue(analysis) },
-    authorityPolicy: { resolve: vi.fn().mockResolvedValue(SELECTED_MODEL_FILE_AUTHORITY) },
-  });
+  return new AnalyzeSelectedDbtModelQuery(
+    new SelectedDbtModelAnalysisResolver({
+      analyzer: { analyze: vi.fn().mockResolvedValue(analysis) },
+      authorityPolicy: { resolve: vi.fn().mockResolvedValue(SELECTED_MODEL_FILE_AUTHORITY) },
+    })
+  );
 }

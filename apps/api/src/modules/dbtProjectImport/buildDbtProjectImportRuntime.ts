@@ -9,6 +9,7 @@ import { AnalyzeSelectedDbtModelQuery } from '../../application/services/analyze
 import type { CanvasAuthoringAuthorityPolicy } from '../../application/services/canvasAuthoringAuthorityPolicy.js';
 import { ImportDbtProjectUseCase } from '../../application/services/importDbtProjectUseCase.js';
 import { ProjectDbtGraphFromFilesUseCase } from '../../application/services/projectDbtGraphFromFilesUseCase.js';
+import { SelectedDbtModelAnalysisResolver } from '../../application/services/selectedDbtModelAnalysisResolver.js';
 import { ValidateDbtProjectImportUseCase } from '../../application/services/validateDbtProjectImportUseCase.js';
 
 export type BuildDbtProjectImportRuntimeDeps = {
@@ -28,10 +29,13 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
     authorityPolicy: deps.authorityPolicy,
     executionTargetResolver: deps.executionTargetResolver,
   });
-  const selectedModelAnalysisQuery = new AnalyzeSelectedDbtModelQuery({
+  const selectedModelAnalysisResolver = new SelectedDbtModelAnalysisResolver({
     analyzer: deps.analyzer,
     authorityPolicy: deps.authorityPolicy,
   });
+  const selectedModelAnalysisQuery = new AnalyzeSelectedDbtModelQuery(
+    selectedModelAnalysisResolver
+  );
   const validateUseCase = new ValidateDbtProjectImportUseCase({
     inspector: deps.inspector,
     analyzer: deps.analyzer,
@@ -46,7 +50,13 @@ export function buildDbtProjectImportRuntime(deps: BuildDbtProjectImportRuntimeD
     operationLeaseMs: deps.operationLeaseMs,
   });
 
-  return { projectGraphUseCase, selectedModelAnalysisQuery, validateUseCase, importUseCase };
+  return {
+    projectGraphUseCase,
+    selectedModelAnalysisQuery,
+    selectedModelAnalysisResolver,
+    validateUseCase,
+    importUseCase,
+  };
 }
 
 export type DbtProjectImportRuntime = ReturnType<typeof buildDbtProjectImportRuntime>;
