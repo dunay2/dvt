@@ -297,6 +297,15 @@ export function transitionRunEventFeed(
         });
       }
 
+      if (nextRetryAt === undefined) {
+        return result('applied', {
+          ...withoutRetrySchedule(state),
+          phase: state.events.length > 0 ? 'stale' : 'failed',
+          consecutiveFailures,
+          failure: transition.failure,
+        });
+      }
+
       const phase =
         state.phase === 'stale' || isProjectionStale(state, transition.observedAt)
           ? 'stale'
@@ -307,7 +316,7 @@ export function transitionRunEventFeed(
         ...withoutRetrySchedule(state),
         phase,
         consecutiveFailures,
-        ...(nextRetryAt === undefined ? {} : { nextRetryAt }),
+        nextRetryAt,
         failure: transition.failure,
       });
     }

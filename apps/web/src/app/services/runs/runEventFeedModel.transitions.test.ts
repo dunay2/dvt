@@ -252,6 +252,76 @@ describe('runEventFeedModel transitions', () => {
     expect(state.phase === 'idle' ? undefined : state.nextRetryAt).toBeUndefined();
   });
 
+  it('does not leave a fresh buffered projection retrying after recovery is exhausted', () => {
+    let state = apply(createRunEventFeedState(), {
+      type: 'start',
+      runId: 'run_1',
+      observedAt: '2026-07-10T10:00:00.000Z',
+    });
+    state = apply(state, {
+      type: 'page-received',
+      runId: 'run_1',
+      observedAt: '2026-07-10T10:00:01.000Z',
+      page: { events: [makeEvent('evt_1', 1)], nextAfterSeq: 1 },
+    });
+
+    for (
+      let failureCount = 1;
+      failureCount <= RUN_EVENT_FEED_MAX_AUTOMATIC_RETRIES + 1;
+      failureCount += 1
+    ) {
+      state = apply(state, {
+        type: 'transient-failure',
+        runId: 'run_1',
+        observedAt: `2026-07-10T10:00:0${failureCount + 1}.000Z`,
+        failure: {
+          kind: 'transport',
+          message: 'Runtime event service is unavailable.',
+          retryable: true,
+        },
+      });
+    }
+
+    expect(state).toMatchObject({
+      phase: 'stale',
+      events: [{ eventId: 'evt_1' }],
+      consecutiveFailures: RUN_EVENT_FEED_MAX_AUTOMATIC_RETRIES + 1,
+      failure: { kind: 'transport', retryable: true },
+    });
+    expect(state.phase === 'idle' ? undefined : state.nextRetryAt).toBeUndefined();
+  });
+
+  it('fails explicitly when initial loading exhausts recovery without buffered data', () => {
+    let state = apply(createRunEventFeedState(), {
+      type: 'start',
+      runId: 'run_1',
+      observedAt: '2026-07-10T10:00:00.000Z',
+    });
+
+    for (
+      let failureCount = 1;
+      failureCount <= RUN_EVENT_FEED_MAX_AUTOMATIC_RETRIES + 1;
+      failureCount += 1
+    ) {
+      state = apply(state, {
+        type: 'transient-failure',
+        runId: 'run_1',
+        observedAt: `2026-07-10T10:00:0${failureCount}.000Z`,
+        failure: {
+          kind: 'transport',
+          message: 'Runtime event service is unavailable.',
+          retryable: true,
+        },
+      });
+    }
+
+    expect(state).toMatchObject({
+      phase: 'failed',
+      events: [],
+      failure: { kind: 'transport', retryable: true },
+    });
+  });
+
   it('completes terminal drain only after the authoritative terminal event is observed', () => {
     let state = apply(createRunEventFeedState(), {
       type: 'start',
