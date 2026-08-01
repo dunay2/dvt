@@ -9,5 +9,6 @@
  * @version 1.0.0
  */
 export * from './DbtProjectImport.v1.js';
+export * from './DbtSelectedModelAnalysis.v1.js';
 export * from './DbtYamlDescriptionEdit.v1.js';
 export * from './GraphDbtWorkspaceArtifactPublication.v1.js';
