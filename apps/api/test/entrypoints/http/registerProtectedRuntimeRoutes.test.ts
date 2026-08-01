@@ -20,6 +20,7 @@ function protectedRuntimeModule(): ProtectedRuntimeModule {
     dbtProjectImport: {
       projectGraphUseCase: {},
       selectedModelAnalysisQuery: {},
+      selectedModelAnalysisResolver: {},
       validateUseCase: {},
       importUseCase: {},
     },
@@ -105,6 +106,9 @@ describe('registerProtectedRuntimeRoutes', () => {
     expect(app.hasRoute({ method: 'GET', url: '/workspace/dbt/analysis/selected-model' })).toBe(
       true
     );
+    expect(
+      app.hasRoute({ method: 'POST', url: '/workspace/dbt/dependency-edits/applications' })
+    ).toBe(true);
     expect(
       app.hasRoute({ method: 'POST', url: '/workspace/dbt/description-edits/proposals' })
     ).toBe(true);
