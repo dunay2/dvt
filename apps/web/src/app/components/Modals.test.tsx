@@ -7,7 +7,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mockExecutionPlan } from '../../testing/fixtures/mockDbtData';
 import type { PlanViewModel } from '../types/plans';
 import { resolveCanvasViewCopy } from '../views/canvas/copy';
-import { PlanPreviewModal, RePlanRequiredModal } from './Modals';
+import { RePlanRequiredModal } from './Modals';
+import { PlanPreviewModal } from './PlanPreviewModal';
 
 const PLAN_PREVIEW_MESSAGES = resolveCanvasViewCopy('en');
 

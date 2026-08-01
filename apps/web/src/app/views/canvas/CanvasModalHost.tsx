@@ -1,7 +1,8 @@
 /**
  * Owned concern: host Canvas-owned modal overlays outside the shell layout.
  */
-import { ConfirmEdgeModal, PlanPreviewModal } from '../../components/Modals';
+import { ConfirmEdgeModal } from '../../components/Modals';
+import { PlanPreviewModal } from '../../components/PlanPreviewModal';
 import { canvasViewCopy } from './copy';
 import type { CanvasModalHostProps } from './canvasModalHost.types';
 
