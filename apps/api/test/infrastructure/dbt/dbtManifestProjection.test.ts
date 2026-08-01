@@ -19,7 +19,10 @@ describe('projectDbtManifest', () => {
           original_file_path: 'models\\orders.sql',
           patch_path: 'analytics://models/schema.yml',
           description: 'Curated customer orders',
-          depends_on: { nodes: ['source.analytics.raw.orders'] },
+          depends_on: {
+            nodes: ['source.analytics.raw.orders'],
+            macros: ['macro.analytics.normalize_order'],
+          },
           columns: {},
           tags: [],
         },
@@ -57,6 +60,16 @@ describe('projectDbtManifest', () => {
       },
       exposures: {},
       metrics: {},
+      macros: {
+        'macro.analytics.normalize_order': {
+          unique_id: 'macro.analytics.normalize_order',
+          resource_type: 'macro',
+          name: 'normalize_order',
+          package_name: 'analytics',
+          original_file_path: 'macros\\normalize_order.sql',
+          depends_on: { macros: [] },
+        },
+      },
     });
 
     expect(projection.resources.map((resource) => resource.uniqueId)).toEqual(
@@ -89,6 +102,23 @@ describe('projectDbtManifest', () => {
         relation: 'dependency',
       },
     ]);
+    expect(projection.identities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          uniqueId: 'model.analytics.orders',
+          dependencyUniqueIds: ['source.analytics.raw.orders'],
+          macroUniqueIds: ['macro.analytics.normalize_order'],
+        }),
+        expect.objectContaining({
+          uniqueId: 'macro.analytics.normalize_order',
+          resourceType: 'macro',
+          originalFilePath: 'macros/normalize_order.sql',
+        }),
+      ])
+    );
+    expect(projection.identities.map((identity) => identity.uniqueId)).toEqual(
+      [...projection.identities.map((identity) => identity.uniqueId)].sort()
+    );
     expect(projection.diagnostics).toContainEqual({
       code: 'dbt_resource_not_projected',
       severity: 'warning',

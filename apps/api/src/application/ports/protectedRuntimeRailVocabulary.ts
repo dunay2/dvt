@@ -19,6 +19,7 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   invalidDbtProjectImport: 'invalid dbt project import request',
   invalidDbtYamlDescriptionReceipt: 'invalid dbt YAML description receipt',
   invalidDbtYamlDescriptionRequest: 'invalid dbt YAML description request',
+  invalidSelectedDbtModelAnalysisRequest: 'invalid selected dbt model analysis request',
   invalidPath: 'invalid path',
   invalidPlanSource: 'invalid plan source',
   invalidPlanRef: 'invalid plan ref',
@@ -96,6 +97,9 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   workspaceDraftAuthorityQuery:
     'apps/api/test/application/services/getWorkspaceGraphDraftUseCase.authority.test.ts',
   dbtProjectGraphRoutes: 'apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts',
+  dbtSelectedModelAnalysisRoutes:
+    'apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts',
+  analyzeSelectedDbtModelQuery: 'apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts',
   graphDbtWorkspaceArtifactPublicationRoutes:
     'apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts',
   graphDbtWorkspaceArtifactPublicationCommand:
@@ -217,6 +221,15 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     adapterSurface: 'GET /workspace/dbt/graph',
     scopeAndAuthorization:
       'workspace:graph-draft:view plus workspace:files:view, tenant/project/environment scope',
+  },
+  analyzeSelectedDbtModel: {
+    name: 'AnalyzeSelectedDbtModel',
+    boundedContext: 'dbt project analysis and contextual authoring',
+    dddObject: 'DbtSelectedModelAnalysis',
+    applicationPort: 'IAnalyzeSelectedDbtModelQuery via IDbtProjectAnalyzerPort',
+    adapterSurface: 'GET /workspace/dbt/analysis/selected-model',
+    scopeAndAuthorization:
+      'workspace:graph-draft:view plus workspace:files:view, tenant/project/environment scope and dbt-project-files Canvas authority',
   },
   publishGraphDbtWorkspaceArtifacts: {
     name: 'PublishGraphDbtWorkspaceArtifacts',

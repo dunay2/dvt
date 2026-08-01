@@ -13,6 +13,7 @@ import { EnvironmentId, ProjectId, TenantId } from '../../domain/auth/types.js';
 import { authorizeExecutionScope } from './authorizeExecutionScope.js';
 import { extractBearerToken } from './extractBearerToken.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
+import type { HttpErrorReason } from './httpErrorReasonCatalog.js';
 import { httpErrorTranslation } from './httpErrorTranslation.js';
 import { badRequestIssue, type RouteParseResult } from './routeParseIssue.js';
 
@@ -28,7 +29,8 @@ export type DbtProjectFileRouteAuthDeps = Readonly<{
 }>;
 
 export function parseDbtProjectFileScope(
-  input: DbtProjectFileScopeQuery
+  input: DbtProjectFileScopeQuery,
+  invalidReason: HttpErrorReason = HTTP_ERROR_REASON.invalidDbtProjectGraphRequest
 ): RouteParseResult<ReturnType<typeof buildEnvironmentAccessScope>> {
   const tenantId = TenantId.parse(input.tenantId ?? '');
   const projectId = ProjectId.parse(input.projectId ?? '');
@@ -36,7 +38,7 @@ export function parseDbtProjectFileScope(
   if (!tenantId.ok || !projectId.ok || !environmentId.ok) {
     return {
       ok: false,
-      issue: badRequestIssue(HTTP_ERROR_REASON.invalidDbtProjectGraphRequest, {
+      issue: badRequestIssue(invalidReason, {
         target: 'query',
       }),
     };

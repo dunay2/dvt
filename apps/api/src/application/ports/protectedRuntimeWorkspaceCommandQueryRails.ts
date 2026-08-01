@@ -131,6 +131,28 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.analyzeSelectedDbtModel,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.query,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.dbtSelectedModelAnalysisRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidSelectedDbtModelAnalysisRequest,
+        PROTECTED_RUNTIME_TEST_REF.dbtSelectedModelAnalysisRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingFileAuthority,
+        PROTECTED_RUNTIME_TEST_REF.analyzeSelectedDbtModelQuery,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingWorkspaceFileReadAuthority,
+        PROTECTED_RUNTIME_TEST_REF.dbtSelectedModelAnalysisRoutes,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     ...PROTECTED_RUNTIME_WORKSPACE_RAIL.publishGraphDbtWorkspaceArtifacts,
     kind: PROTECTED_RUNTIME_RAIL_KIND.command,
     coverage: [

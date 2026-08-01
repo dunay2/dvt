@@ -1,0 +1,32 @@
+---
+id: R-20260801-SELECTED-DBT-ANALYSIS
+title: Ambiguous dbt syntax could be mistaken for a writable semantic region
+status: Open
+date: 2026-08-01
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: High
+probability: Low
+context: >
+  Selected dbt analysis combines exact project files with native manifest identities and source
+  locations so later Graph-to-Code operations can distinguish supported regions from code-only
+  content.
+risk: >
+  If dynamic Jinja, comments, statements, or source locations that do not match native manifest
+  evidence were classified as writable, a later patch could alter user-authored code without a
+  lossless semantic guarantee.
+mitigations:
+  - 'Use the installed dbt runtime and its manifest as the semantic authority.'
+  - 'Classify only literal, manifest-confirmed ref and source calls as supported regions.'
+  - 'Classify all ambiguous or unsupported syntax as code_only.'
+  - 'Bind file revisions, semantic evidence, capabilities, and selected identity into a stable
+    analysis hash.'
+  - 'Return typed unavailable or invalid outcomes instead of fabricated partial success.'
+  - 'Cover contract, application query, HTTP authorization, native analyzer, and region projection
+    boundaries with focused tests.'
+residual_risk: >
+  New dbt or Jinja syntax remains code_only until the native evidence projection explicitly supports
+  it. This reduces automatic edit coverage but preserves losslessness and fail-closed behavior.
+review_after: 2026-09-01
+---

@@ -17,6 +17,71 @@ export type DbtProjectAnalysisResource = Omit<ProjectedNode, 'visualEditability'
 
 export type DbtProjectAnalysisDependency = Omit<ProjectedEdge, 'id'>;
 
+export type DbtProjectAnalysisIdentity = Readonly<{
+  uniqueId: string;
+  resourceType: 'model' | 'source' | 'test' | 'snapshot' | 'seed' | 'macro';
+  name: string;
+  packageName: string;
+  sourceName?: string;
+  originalFilePath?: string;
+  dependencyUniqueIds: readonly string[];
+  macroUniqueIds: readonly string[];
+}>;
+
+export type DbtProjectAnalysisFile = Readonly<{
+  path: string;
+  revisionSha256: string;
+  byteLength: number;
+  kind:
+    | 'project_config'
+    | 'model'
+    | 'source'
+    | 'test'
+    | 'snapshot'
+    | 'seed'
+    | 'macro'
+    | 'schema'
+    | 'other';
+}>;
+
+export type DbtProjectSourceRange = Readonly<{ startByte: number; endByte: number }>;
+
+type DbtProjectSemanticRegionBase = Readonly<{
+  regionId: string;
+  ownerUniqueIds: readonly string[];
+  path: string;
+  kind: 'ref' | 'source' | 'jinja';
+  range: DbtProjectSourceRange;
+  sourceSha256: string;
+}>;
+
+export type DbtProjectSemanticRegion =
+  | (DbtProjectSemanticRegionBase &
+      Readonly<{ classification: 'supported'; targetUniqueId: string }>)
+  | (DbtProjectSemanticRegionBase & Readonly<{ classification: 'code_only'; reasonCode: string }>);
+
+export type DbtProjectSemanticDiagnostic = Readonly<{
+  code: 'dbt_semantic_region_code_only';
+  severity: 'warning';
+  message: string;
+  subject: Readonly<{
+    kind: 'region';
+    path: string;
+    regionId: string;
+  }>;
+  evidence: Readonly<{
+    path: string;
+    range: DbtProjectSourceRange;
+  }>;
+}>;
+
+export type DbtProjectSemanticEvidence = Readonly<{
+  files: readonly DbtProjectAnalysisFile[];
+  identities: readonly DbtProjectAnalysisIdentity[];
+  regions: readonly DbtProjectSemanticRegion[];
+  diagnostics: readonly DbtProjectSemanticDiagnostic[];
+}>;
+
 export type DbtProjectAnalysis = Readonly<{
   status: 'valid' | 'invalid' | 'unavailable';
   adapterType?: string;
@@ -32,6 +97,7 @@ export type DbtProjectAnalysis = Readonly<{
   resources: readonly DbtProjectAnalysisResource[];
   dependencies: readonly DbtProjectAnalysisDependency[];
   diagnostics: DbtProjectGraphProjection['diagnostics'];
+  semanticEvidence: DbtProjectSemanticEvidence;
 }>;
 
 export interface IDbtProjectAnalyzerPort {

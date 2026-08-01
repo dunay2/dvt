@@ -19,6 +19,7 @@ function protectedRuntimeModule(): ProtectedRuntimeModule {
     createProjectUseCase: { execute: async () => ({ kind: 'tenant_not_granted' }) },
     dbtProjectImport: {
       projectGraphUseCase: {},
+      selectedModelAnalysisQuery: {},
       validateUseCase: {},
       importUseCase: {},
     },
@@ -101,6 +102,9 @@ describe('registerProtectedRuntimeRoutes', () => {
     expect(app.hasRoute({ method: 'GET', url: '/projects' })).toBe(true);
     expect(app.hasRoute({ method: 'POST', url: '/projects' })).toBe(true);
     expect(app.hasRoute({ method: 'GET', url: '/workspace/graph/draft' })).toBe(true);
+    expect(app.hasRoute({ method: 'GET', url: '/workspace/dbt/analysis/selected-model' })).toBe(
+      true
+    );
     expect(
       app.hasRoute({ method: 'POST', url: '/workspace/dbt/description-edits/proposals' })
     ).toBe(true);

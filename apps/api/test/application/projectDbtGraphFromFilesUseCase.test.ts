@@ -81,6 +81,12 @@ function analyzerResult(status: 'valid' | 'invalid' | 'unavailable' = 'valid'): 
               message: status === 'invalid' ? 'Invalid dbt project.' : 'dbt is unavailable.',
             },
           ],
+    semanticEvidence: {
+      files: [],
+      identities: [],
+      regions: [],
+      diagnostics: [],
+    },
   };
 }
 
