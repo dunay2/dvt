@@ -18,16 +18,15 @@ evidence:
   tests:
     - pnpm --filter @dvt/contracts test
     - pnpm --filter @dvt/contracts typecheck
-    - pnpm --filter @dvt/contracts lint
     - pnpm --filter @dvt/planner test
     - pnpm --filter @dvt/planner typecheck
-    - pnpm --filter @dvt/planner lint
     - pnpm --filter dvt-api test:ci
     - pnpm --filter dvt-api typecheck
     - pnpm --filter dvt-api lint
     - pnpm --filter @dvt/web test
     - pnpm --filter @dvt/web typecheck
     - pnpm --filter @dvt/web lint
+    - pnpm lint
     - pnpm --filter @dvt/web test:e2e:selected-closure:live
     - pnpm docs:feature-mechanization:implementation
     - pnpm verify:prepush
