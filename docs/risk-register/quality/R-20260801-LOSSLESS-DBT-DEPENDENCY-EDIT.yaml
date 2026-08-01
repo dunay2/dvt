@@ -20,7 +20,9 @@ mitigations:
   - 'Accept only manifest-confirmed literal ref and source regions owned by the selected model.'
   - 'Refuse code_only, overlapping, incompatible, stale, invalid, or semantically mismatched
     candidates before publication.'
-  - 'Parse an isolated candidate with the installed dbt runtime before one atomic CAS batch.'
+  - 'Parse an isolated candidate with the installed dbt runtime before publication.'
+  - 'Revalidate the exact canonical dbt file set under a workspace-scoped lock.'
+  - 'Publish the target SQL and immutable semantic receipt in one rollback-capable atomic mutation.'
   - 'Verify that every unrelated analyzed file remains byte-identical.'
   - 'Bind one idempotency key to one request and preserve immutable applied receipts.'
   - 'Cover UTF-8 offsets, quote and whitespace preservation, Jinja, macros, YAML sources/tests,

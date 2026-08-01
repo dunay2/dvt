@@ -13,6 +13,7 @@ code_refs:
   - apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts
   - apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts
   - apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts
+  - apps/api/src/infrastructure/dbtDependencyEdit/LocalDbtDependencyEditPublicationGateway.ts
   - apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts
 evidence:
   tests:
@@ -39,7 +40,10 @@ or `source` region while preserving every unrelated project byte.
   quote style, comments, Jinja, macros, YAML sources/tests, and unrelated files.
 - An isolated candidate project must pass the installed dbt analyzer and resolve to
   the requested identity before publication.
-- Atomic CAS preflights every analyzed file and writes only the target file.
+- A workspace-scoped publication lock revalidates the exact canonical dbt file set
+  after candidate analysis, rejecting added, deleted, or changed files.
+- One rollback-capable atomic mutation publishes the target SQL and its immutable
+  semantic receipt together; neither can become visible alone.
 - Stale evidence, overlap, `code_only`, invalid dbt, semantic mismatch, CAS conflict,
   and idempotency misuse fail through typed outcomes.
 
