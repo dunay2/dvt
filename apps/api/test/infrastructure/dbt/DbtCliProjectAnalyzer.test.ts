@@ -365,6 +365,19 @@ describe('DbtCliProjectAnalyzer', () => {
     ]);
     expect(result.diagnostics[0]?.message).not.toContain(profileSecret);
     expect(result.diagnostics[0]?.message).not.toContain(projectDirectory);
+    expect(result.semanticEvidence.files).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: 'dbt_project.yml',
+          revisionSha256: expect.stringMatching(/^[a-f0-9]{64}$/u),
+        }),
+        expect.objectContaining({
+          path: 'models/orders.sql',
+          revisionSha256: expect.stringMatching(/^[a-f0-9]{64}$/u),
+        }),
+      ])
+    );
+    expect(result.semanticEvidence.identities).toEqual([]);
   });
 
   it('keeps invalid diagnostics deterministic across process output changes', async () => {
@@ -411,6 +424,13 @@ describe('DbtCliProjectAnalyzer', () => {
 
     expect(result.status).toBe('unavailable');
     expect(result.diagnostics[0]?.code).toBe('dbt_analyzer_unavailable');
+    expect(result.semanticEvidence.files).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: 'dbt_project.yml' }),
+        expect.objectContaining({ path: 'models/orders.sql' }),
+      ])
+    );
+    expect(result.semanticEvidence.identities).toEqual([]);
   });
 
   it('requires an explicit server-managed analysis profile before invoking dbt', async () => {

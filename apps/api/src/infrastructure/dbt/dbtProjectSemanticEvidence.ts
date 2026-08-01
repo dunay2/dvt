@@ -20,12 +20,7 @@ export async function buildDbtProjectSemanticEvidence(
   }>
 ): Promise<DbtProjectSemanticEvidence> {
   const identitiesByPath = groupIdentitiesByPath(input.identities);
-  const files = input.contentRevision.entries.map((entry) => ({
-    path: entry.path,
-    revisionSha256: entry.sha256,
-    byteLength: entry.bytes,
-    kind: classifyFile(entry.path, identitiesByPath.get(entry.path) ?? []),
-  }));
+  const files = projectDbtProjectFiles(input.contentRevision, input.identities);
   const contentPathSet = new Set(input.contentRevision.entries.map((entry) => entry.path));
   const semanticPaths = [...identitiesByPath.keys()]
     .filter(
@@ -51,6 +46,19 @@ export async function buildDbtProjectSemanticEvidence(
     regions: projected.regions,
     diagnostics: projected.diagnostics,
   };
+}
+
+export function projectDbtProjectFiles(
+  contentRevision: ProjectContentRevision,
+  identities: readonly DbtProjectAnalysisIdentity[]
+): readonly DbtProjectAnalysisFile[] {
+  const identitiesByPath = groupIdentitiesByPath(identities);
+  return contentRevision.entries.map((entry) => ({
+    path: entry.path,
+    revisionSha256: entry.sha256,
+    byteLength: entry.bytes,
+    kind: classifyFile(entry.path, identitiesByPath.get(entry.path) ?? []),
+  }));
 }
 
 export const EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE: DbtProjectSemanticEvidence = Object.freeze({

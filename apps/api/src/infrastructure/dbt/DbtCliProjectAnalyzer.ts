@@ -20,6 +20,7 @@ import { evaluateDbtProjectSnapshotPathPolicy } from './dbtProjectPathPolicy.js'
 import {
   buildDbtProjectSemanticEvidence,
   EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE,
+  projectDbtProjectFiles,
 } from './dbtProjectSemanticEvidence.js';
 import {
   DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
@@ -87,6 +88,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
 
     let projectDirectory: string;
     let projectRevision = unavailableRevision(`analysis:${input.projectRoot}`);
+    let snapshotSemanticEvidence = EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE;
     try {
       projectDirectory = await this.resolveProjectDirectory(input);
     } catch {
@@ -139,11 +141,17 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       }
 
       const contentSetSha256 = contentRevision.sha256;
+      snapshotSemanticEvidence = {
+        files: projectDbtProjectFiles(contentRevision, []),
+        identities: [],
+        regions: [],
+        diagnostics: [],
+      };
 
       projectRevision = this.buildRevision(input.projectRoot, contentSetSha256, analyzedAt);
       const pathPolicy = await evaluateDbtProjectSnapshotPathPolicy(snapshotDirectory);
       if (!pathPolicy.ok) {
-        return this.invalid(projectRevision, contentSetSha256);
+        return this.invalid(projectRevision, contentSetSha256, snapshotSemanticEvidence);
       }
 
       const profilesDirectory = await this.resolveProfilesDirectory();
@@ -151,7 +159,8 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
         return this.unavailable(
           projectRevision,
           'dbt_analyzer_profiles_unavailable',
-          'The server-managed dbt profiles directory is unavailable.'
+          'The server-managed dbt profiles directory is unavailable.',
+          snapshotSemanticEvidence
         );
       }
 
@@ -184,12 +193,13 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
         return this.unavailable(
           projectRevision,
           'dbt_analyzer_unavailable',
-          'The server-managed dbt analyzer process is unavailable.'
+          'The server-managed dbt analyzer process is unavailable.',
+          snapshotSemanticEvidence
         );
       }
 
       if (processResult.exitCode !== 0) {
-        return this.invalid(projectRevision, contentSetSha256);
+        return this.invalid(projectRevision, contentSetSha256, snapshotSemanticEvidence);
       }
 
       const manifest = JSON.parse(
@@ -225,7 +235,8 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       return this.unavailable(
         projectRevision,
         'dbt_analyzer_unavailable',
-        'The dbt analyzer could not produce a fresh manifest.'
+        'The dbt analyzer could not produce a fresh manifest.',
+        snapshotSemanticEvidence
       );
     } finally {
       await rm(analysisRoot, { recursive: true, force: true });
@@ -269,7 +280,8 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
   private unavailable(
     projectRevision: DbtProjectAnalysis['projectRevision'],
     code: string,
-    message: string
+    message: string,
+    semanticEvidence = EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE
   ): DbtProjectAnalysis {
     const diagnostics = [{ code, severity: 'error' as const, message }];
     return {
@@ -285,13 +297,14 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       resources: [],
       dependencies: [],
       diagnostics,
-      semanticEvidence: EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE,
+      semanticEvidence,
     };
   }
 
   private invalid(
     projectRevision: DbtProjectAnalysis['projectRevision'],
-    contentSetSha256: string
+    contentSetSha256: string,
+    semanticEvidence = EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE
   ): DbtProjectAnalysis {
     const diagnostics = [
       {
@@ -307,7 +320,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       resources: [],
       dependencies: [],
       diagnostics,
-      semanticEvidence: EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE,
+      semanticEvidence,
     };
   }
 }
