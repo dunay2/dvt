@@ -382,12 +382,14 @@ describe('RunsView', () => {
                 buildRunEvent({
                   eventId: 'evt-step-started',
                   eventType: 'StepStarted',
+                  runId: 'run_table_timeline',
                   stepId: stepId('step-load'),
                   payload: { message: 'Loading source rows' },
                 }),
                 buildRunEvent({
                   eventId: 'evt-run-started',
                   eventType: 'RunStarted',
+                  runId: 'run_table_timeline',
                   runSeq: 2,
                   emittedAt: iso('2026-05-18T10:00:01.000Z'),
                 }),

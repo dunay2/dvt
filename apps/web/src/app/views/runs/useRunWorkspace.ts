@@ -4,15 +4,17 @@
  */
 import { useMemo, useSyncExternalStore } from 'react';
 
-import type { IRunsPort, RunSummaryItem } from '../../ports/runs';
-import { useRunWorkspaceQuery, useScopedRunSummariesQuery } from '../../queries/runsQueries';
+import type { RunSummaryItem } from '../../ports/runs';
+import { useRunEventFeedQuery } from '../../queries/runEventFeedQuery';
+import { useRunSnapshotQuery, useScopedRunSummariesQuery } from '../../queries/runsQueries';
 import { classifyHttpError, extractHttpStatusCode } from '../../services/api/classifyHttpError';
-import { useRunsService, useSessionContext } from '../../services/AppServicesContext';
+import { useSessionContext } from '../../services/AppServicesContext';
 import {
-  createRunWorkspaceFacade,
-  RunWorkspaceLoadError,
+  buildRunWorkspaceViewModel,
+  classifyRunWorkspaceSnapshotError,
   type RunWorkspaceViewModel,
-} from '../../services/runs/runWorkspaceFacade';
+} from '../../services/runs/runWorkspaceModel';
+import { isRunEventStreamLiveStatus } from '../../services/runs/runEventTimelineModel';
 
 function buildWorkspaceLayoutKey(tenantId: string, projectId: string, environmentId: string) {
   return `${tenantId}::${projectId}::${environmentId}`;
@@ -26,7 +28,6 @@ type UseRunWorkspaceResult = {
   workspace: RunWorkspaceViewModel | null | undefined;
   isLoadingWorkspace: boolean;
   workspaceError: Error | null;
-  isWorkspaceLoadError: boolean;
   workspaceErrorMessage: string;
 };
 
@@ -54,9 +55,7 @@ function describeRunsListError(error: Error | null): string {
 }
 
 export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResult {
-  const runsService: IRunsPort = useRunsService();
   const sessionContext = useSessionContext();
-  const runWorkspaceFacade = useMemo(() => createRunWorkspaceFacade(runsService), [runsService]);
 
   const { tenantId, projectId, environmentId } = useSyncExternalStore(
     sessionContext.subscribeWorkspaceScope,
@@ -68,23 +67,36 @@ export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResul
   const runsQuery = useScopedRunSummariesQuery(workspaceLayoutKey);
   const runsErrorMessage = describeRunsListError(runsQuery.error);
 
-  const runWorkspaceQuery = useRunWorkspaceQuery(workspaceLayoutKey, runId, runWorkspaceFacade);
+  const snapshotQuery = useRunSnapshotQuery(workspaceLayoutKey, runId);
+  const canLoadEvents = Boolean(runId) && snapshotQuery.isFetched && snapshotQuery.data != null;
+  const eventFeedQuery = useRunEventFeedQuery(runId, {
+    enabled: canLoadEvents,
+    isLive: isRunEventStreamLiveStatus(snapshotQuery.data?.status),
+  });
+  const workspaceError = useMemo(
+    () => (snapshotQuery.error ? classifyRunWorkspaceSnapshotError(snapshotQuery.error) : null),
+    [snapshotQuery.error]
+  );
+  const workspace = useMemo(() => {
+    if (snapshotQuery.data == null) {
+      return snapshotQuery.data;
+    }
 
-  const workspaceQueryError = runWorkspaceQuery.error;
-  const isWorkspaceLoadError = workspaceQueryError instanceof RunWorkspaceLoadError;
-  const workspaceErrorMessage = isWorkspaceLoadError
-    ? workspaceQueryError.message
-    : 'Run workspace could not be loaded.';
+    return buildRunWorkspaceViewModel(
+      snapshotQuery.data,
+      eventFeedQuery.data,
+      eventFeedQuery.error
+    );
+  }, [eventFeedQuery.data, eventFeedQuery.error, snapshotQuery.data]);
 
   return {
     runs: runsQuery.data ?? [],
     isLoadingRuns: runsQuery.isLoading,
     runsError: runsQuery.error,
     runsErrorMessage,
-    workspace: runWorkspaceQuery.data,
-    isLoadingWorkspace: runWorkspaceQuery.isLoading,
-    workspaceError: runWorkspaceQuery.error,
-    isWorkspaceLoadError,
-    workspaceErrorMessage,
+    workspace,
+    isLoadingWorkspace: snapshotQuery.isLoading || (canLoadEvents && eventFeedQuery.isLoading),
+    workspaceError,
+    workspaceErrorMessage: workspaceError?.message ?? 'Run workspace could not be loaded.',
   };
 }

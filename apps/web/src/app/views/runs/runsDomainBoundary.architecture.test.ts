@@ -164,7 +164,9 @@ describe('Runs domain boundary', () => {
       'services/runs/runsApiPayloads.ts',
       'services/runs/runsApiDecoders.ts',
       'services/runs/runsApiSnapshotMapper.ts',
-      'services/runs/runWorkspaceFacade.ts',
+      'services/runs/runWorkspaceModel.ts',
+      'services/runs/runEventFeedModel.ts',
+      'queries/runEventFeedQuery.ts',
       'services/runs/runEventPresentationModel.ts',
       'services/runs/runEventPresentationCopy.ts',
       'services/runs/runEventTimelineModel.ts',
@@ -279,19 +281,22 @@ describe('Runs domain boundary', () => {
   });
 
   it('classifies snapshot load errors without leaking HTTP internals to views', () => {
-    const facadeSource = readAppSource('services/runs/runWorkspaceFacade.ts');
+    const workspaceModelSource = readAppSource('services/runs/runWorkspaceModel.ts');
     const useWorkspaceSource = readAppSource('views/runs/useRunWorkspace.ts');
 
-    expect(facadeSource).toContain('classifySnapshotError');
-    expect(facadeSource).toContain('RunWorkspaceLoadErrorKind');
-    expect(facadeSource).toContain('classifyHttpError');
+    expect(workspaceModelSource).toContain('classifyRunWorkspaceSnapshotError');
+    expect(workspaceModelSource).toContain('RunWorkspaceLoadErrorKind');
+    expect(workspaceModelSource).toContain('classifyHttpError');
     expect(useWorkspaceSource).toContain('classifyHttpError');
   });
 
-  it('converges the operational drawer log and Runs timeline consumers on one semantic event timeline model', () => {
+  it('converges Console, Runs, and DBT history on one shared run event feed query', () => {
     const timelineModelSource = readAppSource('services/runs/runEventTimelineModel.ts');
-    const facadeSource = readAppSource('services/runs/runWorkspaceFacade.ts');
+    const feedModelSource = readAppSource('services/runs/runEventFeedModel.ts');
+    const feedQuerySource = readAppSource('queries/runEventFeedQuery.ts');
     const consoleHookSource = readAppSource('components/console/useConsoleLogStream.ts');
+    const runWorkspaceHookSource = readAppSource('views/runs/useRunWorkspace.ts');
+    const dbtNodeRendererSource = readAppSource('plugins/dbt/DbtNodeRenderer.tsx');
     const operationalDrawerModelSource = readAppSource(
       'components/shell/bottomOperationalDrawerLogModel.ts'
     );
@@ -310,10 +315,16 @@ describe('Runs domain boundary', () => {
     expect(timelineModelSource).toContain('isRunEventStreamLiveStatus');
     expect(timelineModelSource).toContain('RUN_EVENT_LIVE_POLL_INTERVAL_MS');
 
-    expect(facadeSource).toContain('normalizeRunEventTimelinePage');
-    expect(consoleHookSource).toContain('mergeRunEventTimelinePage');
+    expect(feedModelSource).toContain('mergeRunEventTimelinePage');
+    expect(feedQuerySource).toContain('transitionRunEventFeed');
+    expect(feedQuerySource).toContain('runsService.listRunEvents');
+    expect(consoleHookSource).toContain('useRunEventFeedQuery');
     expect(consoleHookSource).toContain('isRunEventStreamLiveStatus');
-    expect(consoleHookSource).toContain('RUN_EVENT_LIVE_POLL_INTERVAL_MS');
+    expect(consoleHookSource).not.toContain('mergeRunEventTimelinePage');
+    expect(consoleHookSource).not.toContain('afterSeqRef');
+    expect(runWorkspaceHookSource).toContain('useRunEventFeedQuery');
+    expect(runWorkspaceHookSource).not.toContain('listRunEvents');
+    expect(dbtNodeRendererSource).toContain('useRunEventFeedQuery');
     expect(operationalDrawerModelSource).toContain('Start a run to see live run events here.');
     expect(operationalDrawerModelSource).not.toContain('not available');
     expect(operationalDrawerSource).toContain('lazy(() => import');

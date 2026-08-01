@@ -4,7 +4,7 @@
  * conditions.
  */
 import type { RunSummaryItem } from '../../ports/runs';
-import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
+import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 
 export type RunsWorkbenchState =
   | {

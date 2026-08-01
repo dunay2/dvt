@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
+import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { buildRunsWorkbenchState } from './runWorkbenchStateModel';
 
 function buildWorkspace(): RunWorkspaceViewModel {

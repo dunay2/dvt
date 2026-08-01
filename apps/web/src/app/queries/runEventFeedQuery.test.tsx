@@ -36,6 +36,15 @@ function makeEvent(runId: string, eventId: string, runSeq: number): RunEvent {
   } as RunEvent;
 }
 
+function buildRunsService(listRunEvents: IRunsPort['listRunEvents']): IRunsPort {
+  return {
+    listRunSummaries: vi.fn(async () => []),
+    getRunSnapshot: vi.fn(async () => null),
+    startRun: vi.fn(async () => ({ runId: 'run_started', accepted: true })),
+    listRunEvents,
+  };
+}
+
 function FeedConsumer({ consumerId, runId }: Readonly<{ consumerId: string; runId: string }>) {
   const query = useRunEventFeedQuery(runId, { isLive: false });
   const eventIds =
@@ -68,10 +77,7 @@ describe('useRunEventFeedQuery', () => {
         events: [makeEvent('run_1', 'evt_1', 1), makeEvent('run_1', 'evt_2', 2)],
         nextAfterSeq: 2,
       });
-    const runsService = {
-      ...createAppServicesTestOverrides().runsService,
-      listRunEvents,
-    };
+    const runsService = buildRunsService(listRunEvents);
     const queryClient = createTestQueryClient();
 
     mounted = await withTestQueryClient(
@@ -109,10 +115,7 @@ describe('useRunEventFeedQuery', () => {
       events: [makeEvent(runId, `${runId}-evt`, 1)],
       nextAfterSeq: afterSeq === undefined ? 1 : afterSeq,
     }));
-    const runsService = {
-      ...createAppServicesTestOverrides().runsService,
-      listRunEvents,
-    };
+    const runsService = buildRunsService(listRunEvents);
     const queryClient = createTestQueryClient();
 
     mounted = await withTestQueryClient(
