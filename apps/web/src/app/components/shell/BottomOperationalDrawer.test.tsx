@@ -66,6 +66,7 @@ describe('BottomOperationalDrawer', () => {
       root.unmount();
     });
     useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+    vi.restoreAllMocks();
     container.remove();
   });
 
@@ -110,6 +111,38 @@ describe('BottomOperationalDrawer', () => {
     expect(
       document.body.querySelector('[data-slot="bottom-operational-drawer-mode-badge"]')
     ).toBeNull();
+  });
+
+  it('uses one host locale for drawer chrome and feed health', async () => {
+    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
+    liveLogStreamState.runId = 'run-42';
+    liveLogStreamState.health = { state: 'degraded', events: [], canRetry: true };
+
+    await act(async () => {
+      root.render(
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
+          <BottomOperationalDrawer />
+        </AppServicesProvider>
+      );
+    });
+
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-drawer-title"]')?.textContent
+    ).toContain('Operaciones');
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-drawer-run-badge"]')?.textContent
+    ).toBe('Ejecucion run-42');
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-feed-health"]')?.textContent
+    ).toContain('La actualizacion de eventos esta degradada temporalmente.');
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-feed-retry"]')?.textContent
+    ).toBe('Reintentar eventos');
+    expect(
+      document.body
+        .querySelector('[data-slot="bottom-operational-drawer-close"]')
+        ?.getAttribute('aria-label')
+    ).toBe('Cerrar panel de operaciones');
   });
 
   it('renders the terminal when the stream is ready', async () => {

@@ -6,7 +6,7 @@ import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { useConsoleLogStream } from '../console/useConsoleLogStream';
 import { buildBottomOperationalDrawerLogModel } from './bottomOperationalDrawerLogModel';
 import { bottomOperationalDrawerClasses } from './chrome';
-import { resolveShellTopBarCopy } from './copy';
+import { detectShellTopBarLocale, resolveShellTopBarCopy } from './copy';
 import { useOperationalDrawerContributionStore } from './operationalDrawerContributionStore';
 import {
   BottomOperationalDrawerBody,
@@ -87,14 +87,15 @@ function BottomOperationalLogBody({
 }
 
 export function BottomOperationalDrawer() {
-  const copy = resolveShellTopBarCopy();
+  const locale = detectShellTopBarLocale();
+  const copy = resolveShellTopBarCopy(locale);
   const hideBottomDrawer = useUiLayoutStore((state) => state.hideBottomDrawer);
   const contribution = useOperationalDrawerContributionStore((state) => state.contribution);
   const activeOperationalTab = useOperationalDrawerContributionStore((state) => state.activeTab);
   const setActiveOperationalTab = useOperationalDrawerContributionStore(
     (state) => state.selectOperationalDrawerTab
   );
-  const feedCopy = resolveRunEventFeedHealthCopy();
+  const feedCopy = resolveRunEventFeedHealthCopy(locale);
   const { lines, runId, health, retry } = useConsoleLogStream();
   const model = buildBottomOperationalDrawerLogModel({
     title: copy.operationalDrawer,

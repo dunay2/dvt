@@ -1,7 +1,7 @@
 /** Owned concern: render the shared run-event feed health in the Runs workspace. */
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
-import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
+import type { RunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
 import type { RunEventFeedHealthModel } from '../../services/runs/runEventFeedHealthModel';
 
 const classes = {
@@ -12,19 +12,19 @@ const classes = {
 } as const;
 
 type RunEventFeedHealthViewProps = {
+  readonly copy: RunEventFeedHealthCopy;
   readonly health: RunEventFeedHealthModel;
   readonly onRetry?: () => void;
 };
 
 export function RunEventFeedHealthView({
+  copy,
   health,
   onRetry,
 }: RunEventFeedHealthViewProps): JSX.Element | null {
   if (health.state === 'idle') {
     return null;
   }
-
-  const copy = resolveRunEventFeedHealthCopy();
 
   return (
     <div

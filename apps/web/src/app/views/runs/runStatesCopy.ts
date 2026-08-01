@@ -2,6 +2,11 @@
  * Owned concern: own all user-visible copy strings for runs route states,
  * keeping presentation text out of the state model and view logic.
  */
+import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
+
+export const runStatesCopyLocale = 'en';
+export const runEventFeedHealthCopy = resolveRunEventFeedHealthCopy(runStatesCopyLocale);
+
 export const runStatesCopy = {
   runsTitle: 'Runs',
   emptyRuns: 'No runs yet.',

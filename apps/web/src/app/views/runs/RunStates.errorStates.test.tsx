@@ -3,6 +3,7 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
 import {
   RunDetailErrorState,
   RunEventFeedHealthState,
@@ -10,6 +11,8 @@ import {
   RunsErrorState,
 } from './RunStates';
 import { createRunStatesHarness } from './test/RunStatesHarness';
+
+const feedCopy = resolveRunEventFeedHealthCopy('en');
 
 describe('RunStates error states', () => {
   let harness: ReturnType<typeof createRunStatesHarness>;
@@ -20,6 +23,21 @@ describe('RunStates error states', () => {
 
   afterEach(() => {
     harness.cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it('uses copy supplied by the host instead of resolving a second browser locale', async () => {
+    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
+
+    await harness.render(
+      <RunEventFeedHealthState
+        copy={feedCopy}
+        health={{ state: 'loading', events: [], canRetry: false }}
+      />
+    );
+
+    expect(harness.container.textContent).toContain('Loading run events...');
+    expect(harness.container.textContent).not.toContain('Cargando eventos de ejecucion...');
   });
 
   it('renders list, detail and missing state failures', async () => {
@@ -42,6 +60,7 @@ describe('RunStates error states', () => {
     const onRetry = vi.fn();
     await harness.render(
       <RunEventFeedHealthState
+        copy={feedCopy}
         health={{ state: 'degraded', events: [], canRetry: true }}
         onRetry={onRetry}
       />
@@ -68,7 +87,7 @@ describe('RunStates error states', () => {
     'renders the shared %s feed state with text, not colour alone',
     async (state, label) => {
       await harness.render(
-        <RunEventFeedHealthState health={{ state, events: [], canRetry: false }} />
+        <RunEventFeedHealthState copy={feedCopy} health={{ state, events: [], canRetry: false }} />
       );
 
       const status = harness.container.querySelector('[data-slot="run-event-feed-health"]');

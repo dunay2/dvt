@@ -18,7 +18,7 @@ import type {
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { RunEventTimelineTable } from './RunEventTimelineTable';
 import { RunEventFeedHealthView } from './RunEventFeedHealthView';
-import { runStatesCopy as copy } from './runStatesCopy';
+import { runEventFeedHealthCopy, runStatesCopy as copy } from './runStatesCopy';
 import { getDetailStateBadge, isKnownRunField } from './runStatesModel';
 
 type RunWorkspaceStateProps = {
@@ -660,7 +660,11 @@ export function RunWorkspaceStateView({ workspace, onRetryEventFeed }: RunWorksp
         <Card className="border-slate-700 bg-slate-900 p-5">
           <h3 className="mb-3 text-sm font-semibold">{copy.eventTimelineTitle}</h3>
 
-          <RunEventFeedHealthView health={workspace.eventFeedHealth} onRetry={onRetryEventFeed} />
+          <RunEventFeedHealthView
+            copy={runEventFeedHealthCopy}
+            health={workspace.eventFeedHealth}
+            onRetry={onRetryEventFeed}
+          />
 
           {timeline.state === 'empty' ? (
             <p className="text-sm text-slate-400">{copy.emptyTimeline}</p>

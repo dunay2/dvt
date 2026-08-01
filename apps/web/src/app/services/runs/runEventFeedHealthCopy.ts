@@ -54,16 +54,6 @@ const COPY_ES: RunEventFeedHealthCopy = {
   retryAction: 'Reintentar eventos',
 };
 
-function detectLocale(): string {
-  if (typeof navigator !== 'undefined') {
-    return navigator.language || navigator.languages?.[0] || 'en';
-  }
-
-  return 'en';
-}
-
-export function resolveRunEventFeedHealthCopy(
-  locale: string = detectLocale()
-): RunEventFeedHealthCopy {
+export function resolveRunEventFeedHealthCopy(locale: string): RunEventFeedHealthCopy {
   return locale.trim().toLowerCase().startsWith('es') ? COPY_ES : COPY_EN;
 }
