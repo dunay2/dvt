@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-import { EXECUTABILITY_REJECTION_CODES } from '../contracts/planner/PlanExecutabilityValidation.v1.js';
+import {
+  EXECUTABILITY_REJECTION_CODES,
+  type ExecutabilityValidationResult,
+} from '../contracts/planner/PlanExecutabilityValidation.v1.js';
 import {
   PLAN_PREVIEW_PROVENANCE_KIND,
   PlanPreviewProvenanceSchema,
@@ -19,6 +22,7 @@ import {
   TransformationExecutorSchema,
 } from './common.js';
 import { ExecutionPlanSchema } from './execution-plan.js';
+import { PlanExecutabilityFindingSchema } from './plan-admission-finding.js';
 import { PreviewProfileSchema } from './plan-preview-profile.js';
 
 function addPlanPreviewResponseIssue(
@@ -183,20 +187,31 @@ const PlanPreviewSelectionRejectedOutcomeSchema = z
   })
   .strict();
 
+type ExecutabilityValidationError = Extract<
+  ExecutabilityValidationResult,
+  { readonly status: 'ERROR' }
+>;
+type ExecutabilityValidationErrorWire = Omit<ExecutabilityValidationError, 'cause'> & {
+  readonly cause?: string | undefined;
+};
+
+const ExecutabilityValidationErrorSchema: z.ZodType<ExecutabilityValidationErrorWire> = z
+  .object({
+    status: z.literal('ERROR'),
+    code: z.enum(EXECUTABILITY_REJECTION_CODES),
+    planId: NonBlankStringSchema,
+    adapterId: NonBlankStringSchema,
+    degradable: z.boolean(),
+    reason: NonBlankStringSchema,
+    findings: z.tuple([PlanExecutabilityFindingSchema]).readonly().optional(),
+    cause: NonBlankStringSchema.optional(),
+  })
+  .strict();
+
 const PlanPreviewPlanInvalidOutcomeSchema = PlanPreviewIdentityPayloadSchema.extend({
   contractVersion: z.literal(PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION),
   kind: z.literal(PLAN_PREVIEW_REJECTED_OUTCOME_KIND.planInvalid),
-  validation: z
-    .object({
-      status: z.literal('ERROR'),
-      code: z.enum(EXECUTABILITY_REJECTION_CODES),
-      planId: NonBlankStringSchema,
-      adapterId: NonBlankStringSchema,
-      degradable: z.boolean(),
-      reason: NonBlankStringSchema,
-      cause: NonBlankStringSchema.optional(),
-    })
-    .strict(),
+  validation: ExecutabilityValidationErrorSchema,
 })
   .strict()
   .superRefine(validatePlanPreviewIdentity);
