@@ -28,7 +28,6 @@ export const DBT_DEPENDENCY_EDIT_FINDING_CODE = [
   'dbt_dependency_edit_target_not_found',
   'dbt_dependency_edit_target_incompatible',
   'dbt_dependency_edit_literal_unrepresentable',
-  'dbt_dependency_edit_candidate_stale',
   'dbt_dependency_edit_validation_failed',
   'dbt_dependency_edit_semantic_mismatch',
   'dbt_dependency_edit_invariant_failed',
@@ -51,7 +50,7 @@ export const DbtDependencyEditRequestSchema = z
 
 const DbtDependencyEditFindingSubjectSchema = z
   .object({
-    kind: z.enum(['project', 'file', 'resource', 'region', 'adapter']),
+    kind: z.enum(['project', 'file', 'resource', 'region']),
     uniqueId: IdentifierSchema.optional(),
     path: PathSchema.optional(),
     regionId: IdentifierSchema.optional(),
