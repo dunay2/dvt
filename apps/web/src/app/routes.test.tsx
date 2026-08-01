@@ -515,6 +515,16 @@ describe('app routes', () => {
     });
   });
 
+  it('contains plugin route render failures below the application shell', () => {
+    const rootRoute = getRootRoute(createAppRoutes());
+    const pluginRoutes = rootRoute.children?.filter((route) =>
+      ['monitoring.runs', 'cost.dashboard'].includes(route.id ?? '')
+    );
+
+    expect(pluginRoutes).toHaveLength(2);
+    expect(pluginRoutes?.every((route) => route.errorElement != null)).toBe(true);
+  });
+
   it(
     'publishes the default redirect route through explicit route bootstrap ownership',
     async () => {

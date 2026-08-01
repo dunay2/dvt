@@ -135,4 +135,43 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
       container.querySelector('[data-slot="canvas-node-workbench-general-section"]')
     ).not.toBeNull();
   });
+
+  it('keeps healthy workbench contributions when a sibling contribution throws', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const ThrowingContribution = () => {
+      throw new Error('workbench contribution failed');
+    };
+
+    act(() => {
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={NODE}
+          nodes={[NODE]}
+          edges={[]}
+          activeRunId={null}
+          preferredTabId="general"
+          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          contributions={[
+            {
+              id: 'failing-contribution',
+              nodeId: NODE.id,
+              sectionId: 'general',
+              placement: 'after-body',
+              content: <ThrowingContribution />,
+            },
+            {
+              id: 'healthy-contribution',
+              nodeId: NODE.id,
+              sectionId: 'general',
+              placement: 'after-body',
+              content: <div data-slot="healthy-workbench-contribution">Healthy</div>,
+            },
+          ]}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    expect(container.querySelector('[data-slot="healthy-workbench-contribution"]')).not.toBeNull();
+  });
 });

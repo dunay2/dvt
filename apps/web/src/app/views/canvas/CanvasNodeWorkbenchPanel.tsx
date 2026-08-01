@@ -1,7 +1,8 @@
 /** Owned concern: render the Canvas-owned contextual node workbench panel. */
-import { Fragment, useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
 
 import { getInspectorPanels } from '../../plugins/registry';
+import { PluginContributionBoundary } from '../../plugins/PluginContributionBoundary';
 import {
   inspectorStatusDotClasses,
   inspectorVisualClasses,
@@ -176,7 +177,9 @@ function renderWorkbenchContributions(
   }
 
   return contributions.map((contribution) => (
-    <Fragment key={contribution.id}>{contribution.content}</Fragment>
+    <PluginContributionBoundary key={contribution.id} fallback={null}>
+      {contribution.content}
+    </PluginContributionBoundary>
   ));
 }
 

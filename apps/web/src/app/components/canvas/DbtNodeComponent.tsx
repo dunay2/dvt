@@ -1,6 +1,6 @@
 /** Owned concern: render canonical Canvas nodes with plugin decorations and governed node-shell gestures. */
 import type { Node, NodeProps } from '@xyflow/react';
-import { memo, type CSSProperties, type DragEvent } from 'react';
+import { memo, type DragEvent } from 'react';
 
 import type {
   BadgeContext,
@@ -9,6 +9,8 @@ import type {
   NodeRendererProps,
 } from '../../plugins/contracts/NodeRendering';
 import { getCanvasGraphNodeCardStrategies } from '../../plugins/graphStrategyRegistry';
+import { FallbackNodeRenderer } from '../../plugins/FallbackNodeRenderer';
+import { PluginContributionBoundary } from '../../plugins/PluginContributionBoundary';
 import { mapDbtTypeToKind } from '../../plugins/nodeTypeCatalog.dbt';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import { getNodeBadges, getNodeRenderer, type RuntimeCapabilities } from '../../plugins/registry';
@@ -139,23 +141,6 @@ function NodeBadgeOverlay({ badge }: Readonly<{ badge: NodeBadge }>) {
   );
 }
 
-function FallbackNodeRenderer({ node, overlayDecoration }: Readonly<NodeRendererProps>) {
-  return (
-    <div
-      className={cn(
-        'min-w-35 rounded border border-dashed border-neutral-600 bg-neutral-900 px-3 py-2 text-xs text-neutral-300',
-        overlayDecoration?.dimmed && 'opacity-30'
-      )}
-      {...(overlayDecoration?.borderColor
-        ? { style: { borderColor: overlayDecoration.borderColor } as CSSProperties }
-        : {})}
-    >
-      <div className="font-semibold">{node.name}</div>
-      <div className="text-[10px] opacity-60">{node.kind}</div>
-    </div>
-  );
-}
-
 function buildCanonicalNode(
   nodeId: string,
   data: DbtNodeData,
@@ -214,6 +199,15 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     data.canvasKind,
     data.runtimeCapabilities
   );
+  const rendererProps: NodeRendererProps = {
+    node: canonicalNode,
+    selected,
+    hovered: false,
+    overlayDecoration: data.overlayDecoration ?? null,
+    badges,
+    graphNodeCardStrategies,
+    data,
+  };
 
   const shouldShowSourceHandle = kindRegistration.allowsOutgoing;
   const shouldShowTargetHandle = kindRegistration.allowsIncoming;
@@ -296,20 +290,16 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       onDragOver={handleSchemaResourceDragOver}
       onDrop={handleSchemaResourceDrop}
     >
-      <Renderer
-        node={canonicalNode}
-        selected={selected}
-        hovered={false}
-        overlayDecoration={data.overlayDecoration ?? null}
-        badges={badges}
-        graphNodeCardStrategies={graphNodeCardStrategies}
-        data={data}
-      />
+      <PluginContributionBoundary fallback={<FallbackNodeRenderer {...rendererProps} />}>
+        <Renderer {...rendererProps} />
+      </PluginContributionBoundary>
       {badges.map((badge, index) => (
-        <NodeBadgeOverlay
+        <PluginContributionBoundary
           key={`${badge.position}-${badge.text ?? badge.tooltip ?? index}`}
-          badge={badge}
-        />
+          fallback={null}
+        >
+          <NodeBadgeOverlay badge={badge} />
+        </PluginContributionBoundary>
       ))}
     </CanvasNodeShell>
   );
