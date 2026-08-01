@@ -476,7 +476,11 @@ describe('useRunEventFeedQuery', () => {
     );
     await waitForReactQuery(
       () => mounted?.container.querySelector('[data-testid="automatic"]')?.textContent === 'evt_1',
-      { tick: () => vi.advanceTimersByTimeAsync(1) }
+      {
+        tick: async () => {
+          await vi.advanceTimersByTimeAsync(1);
+        },
+      }
     );
 
     await waitForReactQuery(
@@ -485,7 +489,9 @@ describe('useRunEventFeedQuery', () => {
         'retrying',
       {
         intervalMs: RUN_EVENT_LIVE_POLL_INTERVAL_MS,
-        tick: () => vi.advanceTimersByTimeAsync(RUN_EVENT_LIVE_POLL_INTERVAL_MS),
+        tick: async () => {
+          await vi.advanceTimersByTimeAsync(RUN_EVENT_LIVE_POLL_INTERVAL_MS);
+        },
         timeoutMs: RUN_EVENT_LIVE_POLL_INTERVAL_MS,
       }
     );
@@ -493,7 +499,13 @@ describe('useRunEventFeedQuery', () => {
       () =>
         mounted?.container.querySelector('[data-testid="automatic"]')?.textContent ===
         'evt_1,evt_2',
-      { intervalMs: 1_000, tick: () => vi.advanceTimersByTimeAsync(1_000), timeoutMs: 1_000 }
+      {
+        intervalMs: 1_000,
+        tick: async () => {
+          await vi.advanceTimersByTimeAsync(1_000);
+        },
+        timeoutMs: 1_000,
+      }
     );
 
     expect(listRunEvents).toHaveBeenNthCalledWith(1, 'run_1', undefined);
