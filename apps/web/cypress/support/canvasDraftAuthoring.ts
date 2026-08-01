@@ -50,6 +50,7 @@ export function buildCanvasAuthoringDraft({
   title,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
   const canvas = {
+    id: 'main-canvas',
     kind: canvasKind,
     title: title ?? (canvasKind === 'dbt' ? 'dbt canvas' : 'Sales canvas'),
   };

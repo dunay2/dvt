@@ -26,17 +26,18 @@ export function getVisibleCanvasNode(nodeName: string): Cypress.Chainable<JQuery
 
 function filterVisibleCanvasNodes(
   $nodes: JQuery<HTMLElement>,
-  nodeName: string
+  nodeIdentity: string
 ): JQuery<HTMLElement> {
-  const normalizedNodeName = nodeName.toLocaleLowerCase();
+  const normalizedNodeIdentity = nodeIdentity.toLocaleLowerCase();
 
   return $nodes.filter((_, element) => {
     const text = (element.textContent ?? '').toLocaleLowerCase();
+    const nodeId = element.getAttribute('data-id')?.toLocaleLowerCase();
     const rect = element.getBoundingClientRect();
     const style = getComputedStyle(element);
 
     return (
-      text.includes(normalizedNodeName) &&
+      (nodeId === normalizedNodeIdentity || text.includes(normalizedNodeIdentity)) &&
       rect.width > 0 &&
       rect.height > 0 &&
       style.visibility !== 'hidden' &&

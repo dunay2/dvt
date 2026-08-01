@@ -5,6 +5,16 @@
 import { getE2eApiCalls, stubE2eApi } from './e2eApiStub';
 
 export function stubSelectedClosurePreviewArtifacts(): void {
+  stubE2eApi('GET', '/workspace/files/pipelines%2Fsales_pipeline.yaml', () => ({
+    statusCode: 404,
+    body: {
+      error: {
+        type: 'not_found',
+        reason: 'workspace_file_not_found',
+      },
+    },
+  }));
+
   stubE2eApi('POST', '/workspace/files/pipelines%2Fsales_pipeline.yaml', (request) => {
     const body = request.body as { content?: unknown };
     expect(body.content).to.be.a('string');
@@ -21,10 +31,10 @@ export function stubSelectedClosurePreviewArtifacts(): void {
     return {
       statusCode: 200,
       body: {
+        kind: 'saved',
+        disposition: 'created',
         path: 'pipelines/sales_pipeline.yaml',
-        name: 'sales_pipeline.yaml',
-        language: 'yaml',
-        content,
+        contentSha256: 'f'.repeat(64),
         lastModified: '2026-04-08T00:00:00.000Z',
       },
     };

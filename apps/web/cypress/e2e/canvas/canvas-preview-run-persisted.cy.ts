@@ -2,6 +2,7 @@ import { canvasViewCopy } from '../../../src/app/views/canvas/canvasCopyCatalog'
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
+  getVisibleCanvasNode,
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { waitForSelectedClosurePreviewArtifacts } from '../../support/canvasPreviewArtifacts';
@@ -37,10 +38,10 @@ describe('Canvas preview-run persisted path', () => {
 
     visitCanvasWithSettledBootstrap();
 
-    cy.contains('.react-flow__node', 'src_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
-    cy.contains('.react-flow__node', 'orphan_metrics').should('be.visible');
+    getVisibleCanvasNode('src_orders').should('be.visible');
+    getVisibleCanvasNode('model_orders').should('be.visible');
+    getVisibleCanvasNode('orders_dashboard').should('be.visible');
+    getVisibleCanvasNode('orphan_metrics').should('be.visible');
 
     selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
@@ -80,9 +81,9 @@ describe('Canvas preview-run persisted path', () => {
     stubSequentialRunStart();
 
     visitCanvasWithSettledBootstrap();
-    cy.contains('.react-flow__node', 'src_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
+    getVisibleCanvasNode('src_orders').should('be.visible');
+    getVisibleCanvasNode('model_orders').should('be.visible');
+    getVisibleCanvasNode('orders_dashboard').should('be.visible');
 
     clickPreviewExecutionPlanFromOperationalDrawer();
     waitForSelectedClosurePreviewArtifacts();
@@ -149,9 +150,9 @@ describe('Canvas preview-run persisted path', () => {
     stubUnexpectedRunStart();
 
     visitCanvasWithSettledBootstrap();
-    cy.contains('.react-flow__node', 'src_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
+    getVisibleCanvasNode('src_orders').should('be.visible');
+    getVisibleCanvasNode('model_orders').should('be.visible');
+    getVisibleCanvasNode('orders_dashboard').should('be.visible');
 
     clickPreviewExecutionPlanFromOperationalDrawer();
     waitForSelectedClosurePreviewArtifacts();
