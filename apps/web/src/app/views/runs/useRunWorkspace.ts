@@ -14,7 +14,6 @@ import {
   classifyRunWorkspaceSnapshotError,
   type RunWorkspaceViewModel,
 } from '../../services/runs/runWorkspaceModel';
-import { isRunEventStreamLiveStatus } from '../../services/runs/runEventTimelineModel';
 
 function buildWorkspaceLayoutKey(tenantId: string, projectId: string, environmentId: string) {
   return `${tenantId}::${projectId}::${environmentId}`;
@@ -71,7 +70,7 @@ export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResul
   const canLoadEvents = Boolean(runId) && snapshotQuery.isFetched && snapshotQuery.data != null;
   const eventFeedQuery = useRunEventFeedQuery(runId, {
     enabled: canLoadEvents,
-    isLive: isRunEventStreamLiveStatus(snapshotQuery.data?.status),
+    runStatus: snapshotQuery.data?.status,
   });
   const workspaceError = useMemo(
     () => (snapshotQuery.error ? classifyRunWorkspaceSnapshotError(snapshotQuery.error) : null),

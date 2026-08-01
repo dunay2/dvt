@@ -318,8 +318,9 @@ describe('Runs domain boundary', () => {
     expect(feedModelSource).toContain('mergeRunEventTimelinePage');
     expect(feedQuerySource).toContain('transitionRunEventFeed');
     expect(feedQuerySource).toContain('runsService.listRunEvents');
+    expect(feedQuerySource).toContain('isRunEventStreamLiveStatus');
     expect(consoleHookSource).toContain('useRunEventFeedQuery');
-    expect(consoleHookSource).toContain('isRunEventStreamLiveStatus');
+    expect(consoleHookSource).not.toContain('isRunEventStreamLiveStatus');
     expect(consoleHookSource).not.toContain('mergeRunEventTimelinePage');
     expect(consoleHookSource).not.toContain('afterSeqRef');
     expect(runWorkspaceHookSource).toContain('useRunEventFeedQuery');

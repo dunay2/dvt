@@ -9,11 +9,12 @@ import {
   waitForReactQuery,
   withTestQueryClient,
 } from '../../testing/reactQueryHarness';
-import type { IRunsPort } from '../ports/runs';
+import type { IRunsPort, UiRunStatus } from '../ports/runs';
+import { ApiError } from '../services/api/createApiClient';
 import type { RunEvent } from '../types/engine';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { queryKeys } from './queryKeys';
-import { useRunEventFeedQuery } from './runEventFeedQuery';
+import { classifyRunEventFeedFailure, useRunEventFeedQuery } from './runEventFeedQuery';
 
 function makeEvent(runId: string, eventId: string, runSeq: number): RunEvent {
   return {
@@ -48,12 +49,31 @@ function buildRunsService(listRunEvents: IRunsPort['listRunEvents']): IRunsPort 
 function FeedConsumer({
   consumerId,
   runId,
-}: Readonly<{ consumerId: string; runId: string }>): React.JSX.Element {
-  const query = useRunEventFeedQuery(runId, { isLive: false });
+  runStatus,
+}: Readonly<{
+  consumerId: string;
+  runId: string;
+  runStatus?: UiRunStatus;
+}>): React.JSX.Element {
+  const query = useRunEventFeedQuery(runId, { runStatus });
   const eventIds =
     query.data?.phase === 'idle' ? [] : query.data?.events.map(({ eventId }) => eventId);
 
-  return <div data-testid={consumerId}>{eventIds?.join(',') ?? 'loading'}</div>;
+  return (
+    <div>
+      <div data-testid={consumerId}>{eventIds?.join(',') ?? 'loading'}</div>
+      <div data-testid={`${consumerId}-phase`}>{query.data?.phase ?? 'loading'}</div>
+      <button
+        type="button"
+        data-testid={`${consumerId}-retry`}
+        onClick={() => {
+          void query.retryNow();
+        }}
+      >
+        Retry
+      </button>
+    </div>
+  );
 }
 
 describe('useRunEventFeedQuery', () => {
@@ -138,5 +158,156 @@ describe('useRunEventFeedQuery', () => {
 
     expect(listRunEvents).toHaveBeenNthCalledWith(1, 'run_1', undefined);
     expect(listRunEvents).toHaveBeenNthCalledWith(2, 'run_2', undefined);
+  });
+
+  it('classifies retryable and fail-closed event-feed errors', () => {
+    const makeApiError = (statusCode: number, category: ApiError['category']): ApiError =>
+      new ApiError({
+        message: `HTTP ${statusCode}`,
+        endpoint: '/runs/run_1/events',
+        statusCode,
+        category,
+      });
+
+    expect(classifyRunEventFeedFailure(makeApiError(401, 'unauthorized'))).toMatchObject({
+      kind: 'authorization',
+      retryable: false,
+      statusCode: 401,
+    });
+    expect(classifyRunEventFeedFailure(makeApiError(404, 'client'))).toMatchObject({
+      kind: 'missing-run',
+      retryable: false,
+      statusCode: 404,
+    });
+    expect(classifyRunEventFeedFailure(makeApiError(422, 'client'))).toMatchObject({
+      kind: 'validation',
+      retryable: false,
+      statusCode: 422,
+    });
+    expect(classifyRunEventFeedFailure(makeApiError(429, 'client'))).toMatchObject({
+      kind: 'transport',
+      retryable: true,
+      statusCode: 429,
+    });
+    expect(classifyRunEventFeedFailure(makeApiError(503, 'server'))).toMatchObject({
+      kind: 'transport',
+      retryable: true,
+      statusCode: 503,
+    });
+  });
+
+  it('retains accumulated events through intermittent failure and manual recovery', async () => {
+    const listRunEvents = vi
+      .fn<IRunsPort['listRunEvents']>()
+      .mockResolvedValueOnce({ events: [makeEvent('run_1', 'evt_1', 1)], nextAfterSeq: 1 })
+      .mockRejectedValueOnce(
+        new ApiError({
+          message: 'Runtime unavailable',
+          endpoint: '/runs/run_1/events',
+          statusCode: 503,
+          category: 'server',
+        })
+      )
+      .mockResolvedValueOnce({ events: [makeEvent('run_1', 'evt_2', 2)], nextAfterSeq: 2 });
+    const queryClient = createTestQueryClient();
+
+    mounted = await withTestQueryClient(
+      withServices(
+        buildRunsService(listRunEvents),
+        <FeedConsumer consumerId="active" runId="run_1" />
+      ),
+      queryClient
+    );
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('[data-testid="active"]')?.textContent === 'evt_1'
+    );
+
+    await queryClient.invalidateQueries({ queryKey: queryKeys.runs.eventFeed('run_1') });
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="active-phase"]')?.textContent === 'retrying'
+    );
+    expect(mounted.container.querySelector('[data-testid="active"]')?.textContent).toBe('evt_1');
+
+    mounted.container.querySelector<HTMLButtonElement>('[data-testid="active-retry"]')?.click();
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="active"]')?.textContent === 'evt_1,evt_2'
+    );
+
+    expect(listRunEvents).toHaveBeenNthCalledWith(2, 'run_1', 1);
+    expect(listRunEvents).toHaveBeenNthCalledWith(3, 'run_1', 1);
+    expect(mounted.container.querySelector('[data-testid="active-phase"]')?.textContent).toBe(
+      'live'
+    );
+  });
+
+  it('fails closed on a non-retryable first-load error', async () => {
+    const listRunEvents = vi.fn<IRunsPort['listRunEvents']>().mockRejectedValue(
+      new ApiError({
+        message: 'Forbidden',
+        endpoint: '/runs/run_1/events',
+        statusCode: 403,
+        category: 'forbidden',
+      })
+    );
+    const queryClient = createTestQueryClient();
+
+    mounted = await withTestQueryClient(
+      withServices(
+        buildRunsService(listRunEvents),
+        <FeedConsumer consumerId="denied" runId="run_1" />
+      ),
+      queryClient
+    );
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="denied-phase"]')?.textContent === 'failed'
+    );
+
+    expect(queryClient.getQueryData(queryKeys.runs.eventFeed('run_1'))).toMatchObject({
+      phase: 'failed',
+      events: [],
+      failure: { kind: 'authorization', retryable: false, statusCode: 403 },
+    });
+    expect(listRunEvents).toHaveBeenCalledTimes(1);
+  });
+
+  it('drains a terminal run until its matching terminal event is observed', async () => {
+    const terminalEvent = {
+      ...makeEvent('run_1', 'evt_terminal', 2),
+      eventType: 'RunCompleted',
+      stepId: undefined,
+    } as RunEvent;
+    const listRunEvents = vi
+      .fn<IRunsPort['listRunEvents']>()
+      .mockResolvedValueOnce({ events: [makeEvent('run_1', 'evt_1', 1)], nextAfterSeq: 1 })
+      .mockResolvedValueOnce({ events: [terminalEvent], nextAfterSeq: 2 });
+    const queryClient = createTestQueryClient();
+
+    mounted = await withTestQueryClient(
+      withServices(
+        buildRunsService(listRunEvents),
+        <FeedConsumer consumerId="terminal" runId="run_1" runStatus="completed" />
+      ),
+      queryClient
+    );
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="terminal-phase"]')?.textContent ===
+        'terminal-draining'
+    );
+
+    await queryClient.invalidateQueries({ queryKey: queryKeys.runs.eventFeed('run_1') });
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="terminal-phase"]')?.textContent ===
+        'complete'
+    );
+
+    expect(listRunEvents).toHaveBeenNthCalledWith(2, 'run_1', 1);
+    expect(mounted.container.querySelector('[data-testid="terminal"]')?.textContent).toBe(
+      'evt_1,evt_terminal'
+    );
   });
 });

@@ -15,7 +15,6 @@ import {
   type RunEventLevel,
 } from '../../services/runs/runEventPresentationModel';
 import { resolveRunEventHeadline } from '../../services/runs/runEventPresentationCopy';
-import { isRunEventStreamLiveStatus } from '../../services/runs/runEventTimelineModel';
 import { useSessionStore } from '../../stores/sessionStore';
 import type { Run, RunEvent } from '../../types/dbt';
 import type {
@@ -348,19 +347,16 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
   const historyRunStatus = activeRunId ? runSnapshot?.status : runSummaries?.[0]?.status;
   const canLoadEvents =
     Boolean(historyRunId) && (!activeRunId || (hasRunSnapshotLoaded && runSnapshot != null));
-  const {
-    data: runEventFeed,
-    isError: isRunEventsError,
-    isLoading: isLoadingEvents,
-  } = useRunEventFeedQuery(historyRunId, {
+  const { data: runEventFeed, isLoading: isLoadingEvents } = useRunEventFeedQuery(historyRunId, {
     enabled: canLoadEvents,
-    isLive: isRunEventStreamLiveStatus(historyRunStatus),
+    runStatus: historyRunStatus,
   });
   const runEvents = runEventFeed?.phase === 'idle' ? [] : runEventFeed?.events;
   const nodeHistoryEntries = useMemo(
     () => buildDbtNodeRunHistoryEntries(historyRunId, runEvents, node.id),
     [historyRunId, node.id, runEvents]
   );
+  const hasRunEventFeedFailure = runEventFeed?.phase !== 'idle' && Boolean(runEventFeed?.failure);
 
   if (isLoading || isLoadingList || (canLoadEvents && isLoadingEvents)) {
     return (
@@ -379,7 +375,7 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
     );
   }
 
-  if (isRunEventsError && historyRunId) {
+  if (hasRunEventFeedFailure && historyRunId && nodeHistoryEntries.length === 0) {
     return (
       <div className={inspectorVisualClasses.inspectorMutedBlock}>
         <p>Runtime event detail could not be loaded for this node.</p>
