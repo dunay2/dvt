@@ -115,11 +115,18 @@ function mergeSuccessfulPage(
     page
   );
   const latestSeq = latestObservedSeq(timeline.events);
+  let nextAfterSeq = state.nextAfterSeq;
+  if (
+    timeline.nextAfterSeq !== undefined &&
+    (nextAfterSeq === undefined || timeline.nextAfterSeq > nextAfterSeq)
+  ) {
+    nextAfterSeq = timeline.nextAfterSeq;
+  }
 
   return {
     runId: state.runId,
     events: timeline.events,
-    ...(timeline.nextAfterSeq === undefined ? {} : { nextAfterSeq: timeline.nextAfterSeq }),
+    ...(nextAfterSeq === undefined ? {} : { nextAfterSeq }),
     ...(latestSeq === undefined ? {} : { latestObservedSeq: latestSeq }),
     lastSuccessfulFetchAt: observedAt,
     consecutiveFailures: 0,

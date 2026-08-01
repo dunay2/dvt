@@ -77,6 +77,29 @@ describe('runEventFeedModel guardrails', () => {
     expect(result.state).toBe(live);
   });
 
+  it('retains an advanced cursor when the next successful page omits it', () => {
+    const loading = transitionRunEventFeed(createRunEventFeedState(), {
+      type: 'start',
+      runId: 'run_1',
+    }).state;
+    const cursorOnlyPage = transitionRunEventFeed(loading, {
+      type: 'page-received',
+      runId: 'run_1',
+      observedAt: '2026-07-10T10:00:10.000Z',
+      page: { events: [], nextAfterSeq: 11 },
+    }).state;
+
+    const result = transitionRunEventFeed(cursorOnlyPage, {
+      type: 'page-received',
+      runId: 'run_1',
+      observedAt: '2026-07-10T10:00:11.000Z',
+      page: { events: [] },
+    });
+
+    expect(result.disposition).toBe('applied');
+    expect(result.state).toMatchObject({ phase: 'live', nextAfterSeq: 11 });
+  });
+
   it('rejects a page containing events from a different run', () => {
     const loading = transitionRunEventFeed(createRunEventFeedState(), {
       type: 'start',
