@@ -33,11 +33,16 @@ export class DbtCliProjectCandidateAnalyzer implements IDbtProjectCandidateAnaly
   public async analyzeCandidate(
     input: AnalyzeDbtProjectCandidateInput
   ): Promise<DbtProjectCandidateAnalysisResult> {
-    const projectDirectory = await resolveDbtProjectDirectory({
-      workspaceFilesRoot: this.options.workspaceFilesRoot,
-      scope: input.scope,
-      projectRoot: input.projectRoot,
-    });
+    let projectDirectory: string;
+    try {
+      projectDirectory = await resolveDbtProjectDirectory({
+        workspaceFilesRoot: this.options.workspaceFilesRoot,
+        scope: input.scope,
+        projectRoot: input.projectRoot,
+      });
+    } catch {
+      return projectConflict();
+    }
     const candidateWorkspaceRoot = await mkdtemp(
       path.join(tmpdir(), 'dvt-dbt-candidate-analysis-')
     );
@@ -48,17 +53,23 @@ export class DbtCliProjectCandidateAnalyzer implements IDbtProjectCandidateAnaly
         scope: input.scope,
         projectRoot: input.projectRoot,
       });
-      const revision = await snapshotDbtProjectSource({
-        projectDirectory,
-        snapshotDirectory: candidateProjectDirectory,
-        limits: {
-          maxFiles: this.options.maxProjectFiles ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxFiles,
-          maxBytes: this.options.maxProjectBytes ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxBytes,
-          maxDirectories:
-            this.options.maxProjectDirectories ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDirectories,
-          maxDepth: this.options.maxProjectDepth ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDepth,
-        },
-      });
+      let revision: Awaited<ReturnType<typeof snapshotDbtProjectSource>>;
+      try {
+        revision = await snapshotDbtProjectSource({
+          projectDirectory,
+          snapshotDirectory: candidateProjectDirectory,
+          limits: {
+            maxFiles: this.options.maxProjectFiles ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxFiles,
+            maxBytes: this.options.maxProjectBytes ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxBytes,
+            maxDirectories:
+              this.options.maxProjectDirectories ??
+              DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDirectories,
+            maxDepth: this.options.maxProjectDepth ?? DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxDepth,
+          },
+        });
+      } catch {
+        return projectConflict();
+      }
       const changedPaths = findChangedPaths(input.expectedFiles, revision.entries);
       if (revision.sha256 !== input.expectedContentSetSha256 || changedPaths.length > 0) {
         return {
@@ -95,6 +106,10 @@ export class DbtCliProjectCandidateAnalyzer implements IDbtProjectCandidateAnaly
       await rm(candidateWorkspaceRoot, { recursive: true, force: true });
     }
   }
+}
+
+function projectConflict(): DbtProjectCandidateAnalysisResult {
+  return { kind: 'conflict', reason: 'project_revision_changed', changedPaths: ['.'] };
 }
 
 function resolveCandidateProjectDirectory(

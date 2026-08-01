@@ -145,6 +145,32 @@ describe('DbtCliProjectCandidateAnalyzer', () => {
     expect(run).not.toHaveBeenCalled();
   });
 
+  it('reports a removed project as stale evidence without invoking dbt', async () => {
+    const current = await analyzeCurrent();
+    const target = file(current, 'models/orders.sql');
+    await rm(projectDirectory, { recursive: true, force: true });
+    run.mockClear();
+
+    const result = await candidateAnalyzer().analyzeCandidate({
+      scope: SCOPE,
+      projectRoot: 'analytics',
+      expectedContentSetSha256: current.projectRevision.contentSetSha256,
+      expectedFiles: current.semanticEvidence.files,
+      candidate: {
+        path: target.path,
+        expectedContentSha256: target.revisionSha256,
+        content: "select * from {{ source('raw', 'customers') }}\n",
+      },
+    });
+
+    expect(result).toEqual({
+      kind: 'conflict',
+      reason: 'project_revision_changed',
+      changedPaths: ['.'],
+    });
+    expect(run).not.toHaveBeenCalled();
+  });
+
   async function analyzeCurrent(): Promise<DbtProjectAnalysis> {
     return new DbtCliProjectAnalyzer(options()).analyze({
       scope: SCOPE,
