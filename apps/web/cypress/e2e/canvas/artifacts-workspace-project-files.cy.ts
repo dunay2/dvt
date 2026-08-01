@@ -1,4 +1,4 @@
-/** Owned concern: prove Artifacts exposes project files generated from Canvas workflows. */
+/** Owned concern: prove contextual Canvas Code exposes workflow project files without an Artifacts route. */
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
 import { stubE2eApi, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
@@ -41,7 +41,7 @@ const WORKFLOW_PROJECT_FILE_TREE = [
   },
 ];
 
-function stubArtifactsWorkbenchApis(): void {
+function stubContextualProjectCodeApis(): void {
   stubShellBootstrapApis({
     scopes: ['workspace:files:view'],
   });
@@ -79,21 +79,27 @@ function stubArtifactsWorkbenchApis(): void {
   }));
 }
 
-describe('Artifacts workspace project files', () => {
-  it('shows Canvas workflow project artifacts in the Artifacts workbench', () => {
-    stubArtifactsWorkbenchApis();
+describe('Contextual project Code workflow files', () => {
+  it('shows workflow YAML and SQL files without opening a peer Artifacts workbench', () => {
+    stubContextualProjectCodeApis();
 
-    visitWithE2eWorkspaceSession('/canvas/artifacts');
+    visitWithE2eWorkspaceSession('/canvas');
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
 
     waitForE2eApiCall('/workspace/files', 'GET');
     waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'GET');
+
+    cy.get('[data-slot="canvas-contextual-workbench"]').should('be.visible');
+    cy.get('[data-workspace-path="pipelines/sales_pipeline.yaml"]').should('be.visible');
+    cy.get('[data-workspace-path="models/analytics/model_orders.sql"]')
+      .should('be.visible')
+      .click();
     waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
 
-    cy.get('[data-slot="route-workbench-frame"]').should('be.visible');
-    cy.contains('Loaded Artifacts').should('exist');
-    cy.contains('pipelines/sales_pipeline.yaml').scrollIntoView().should('be.visible');
-    cy.contains('models/analytics/model_orders.sql').should('exist');
-    cy.contains('executionTarget').should('exist');
-    cy.contains('entrypoint').should('exist');
+    cy.contains('select *').should('exist');
+    cy.location('pathname').should('eq', '/canvas');
+    cy.get('[data-slot="canvas-workbench-tab-strip"]').should('not.exist');
   });
 });

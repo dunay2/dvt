@@ -33,16 +33,6 @@ function stubCodeWorkbenchBootstrapApis(): void {
   });
 }
 
-function stubRetiredCodeRouteApis(): void {
-  stubCodeWorkbenchBootstrapApis();
-  stubE2eJsonApi(
-    'GET',
-    '/workspace/files',
-    { error: { reason: 'retired_canvas_code_route_must_not_query_files' } },
-    { statusCode: 500 }
-  );
-}
-
 function stubContextualCodeWorkbenchApis(): void {
   stubCodeWorkbenchBootstrapApis();
   stubE2eJsonApi('GET', '/workspace/files', [
@@ -78,17 +68,19 @@ function stubContextualCodeWorkbenchApis(): void {
 }
 
 describe('Retired Canvas Code workbench routes', () => {
-  it('redirects direct Code route visits to Graph without querying workspace files', () => {
-    stubRetiredCodeRouteApis();
+  it('preserves a direct Code route intent in the contextual Canvas workbench', () => {
+    stubContextualCodeWorkbenchApis();
 
     visitWithE2eWorkspaceSession('/canvas/code');
 
+    waitForE2eApiCall('/workspace/files', 'GET');
+    waitForE2eApiCall(/\/workspace\/files\/.+/, 'GET');
     cy.location('pathname').should('eq', '/canvas');
+    cy.location('search').should('eq', '');
     cy.contains('Sales canvas').should('be.visible');
     cy.get('[data-slot="canvas-workbench-tab-strip"]').should('not.exist');
-    cy.wrap(null).should(() => {
-      expect(getE2eApiCalls('/workspace/files', 'GET')).to.have.length(0);
-    });
+    cy.get('[data-slot="canvas-contextual-workbench"]').should('be.visible');
+    cy.wrap(null).should(() => expect(getE2eApiCalls('/workspace/files', 'GET')).to.have.length(1));
   });
 
   it('synchronizes contextual project Code into the working tree without a Save action', () => {

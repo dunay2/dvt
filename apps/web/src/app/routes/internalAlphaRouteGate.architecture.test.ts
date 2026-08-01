@@ -344,7 +344,7 @@ describe('internal alpha route gate architecture', () => {
     );
   });
 
-  it('accepts Code evidence only with scoped file rails, contextual sync, and retired route proof', () => {
+  it('accepts Code evidence only with scoped file rails, contextual sync, and deep-link migration proof', () => {
     const codeStage = internalAlphaCombinedRouteFixture.stages.find(
       (stage) => stage.stage === 'Code workbench'
     );
@@ -376,7 +376,9 @@ describe('internal alpha route gate architecture', () => {
     );
     expect(codeWorkbenchCypress).toContain("visitWithE2eWorkspaceSession('/canvas/code')");
     expect(codeWorkbenchCypress).toContain("cy.location('pathname').should('eq', '/canvas')");
+    expect(codeWorkbenchCypress).toContain("cy.location('search').should('eq', '')");
     expect(codeWorkbenchCypress).toContain("getE2eApiCalls('/workspace/files', 'GET')");
+    expect(codeWorkbenchCypress).toContain('canvas-contextual-workbench');
     expect(codeWorkbenchCypress).toContain('canvas-workspace-open-project-code-command');
     expect(codeWorkbenchCypress).toContain('code-working-tree-status');
     expect(codeWorkbenchCypress).toContain("kind: 'content_sha256'");
