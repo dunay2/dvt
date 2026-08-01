@@ -70,7 +70,7 @@ function BottomOperationalLogBody({
               data-slot="bottom-operational-drawer-terminal-loading"
               className={bottomOperationalDrawerClasses.bodyMessage}
             >
-              Loading terminal...
+              {model.terminalLoadingLabel}
             </div>
           }
         >
@@ -136,7 +136,7 @@ export function BottomOperationalDrawer() {
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Close operational drawer"
+          aria-label={copy.closeOperationalDrawer}
           className={bottomOperationalDrawerClasses.closeButton}
           onClick={hideBottomDrawer}
           data-slot="bottom-operational-drawer-close"

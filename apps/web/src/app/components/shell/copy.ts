@@ -16,6 +16,7 @@ export type ShellTopBarCopy = {
   readonly gitContext: string;
   readonly viewOptions: string;
   readonly operationalDrawer: string;
+  readonly closeOperationalDrawer: string;
   readonly focusMode: string;
   readonly canvasPalette: string;
   readonly gridSize: string;
@@ -55,6 +56,10 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   gitContext: { key: 'shell.gitContext', fallback: 'Git context' },
   viewOptions: { key: 'shell.viewOptions', fallback: 'View options' },
   operationalDrawer: { key: 'shell.operationalDrawer', fallback: 'Operations' },
+  closeOperationalDrawer: {
+    key: 'shell.closeOperationalDrawer',
+    fallback: 'Close operational drawer',
+  },
   focusMode: { key: 'shell.focusMode', fallback: 'Focus Mode' },
   canvasPalette: { key: 'shell.canvasPalette', fallback: 'Canvas background' },
   gridSize: { key: 'shell.gridSize', fallback: 'Grid size' },
@@ -106,6 +111,7 @@ const COPY_ES: ShellTopBarCopy = {
   gitContext: 'Contexto Git',
   viewOptions: 'Opciones de vista',
   operationalDrawer: 'Operaciones',
+  closeOperationalDrawer: 'Cerrar panel de operaciones',
   focusMode: 'Modo foco',
   canvasPalette: 'Fondo del canvas',
   gridSize: 'Tamano de rejilla',
@@ -168,6 +174,7 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     gitContext: resolveString(COPY_BY_KEY.gitContext, locale),
     viewOptions: resolveString(COPY_BY_KEY.viewOptions, locale),
     operationalDrawer: resolveString(COPY_BY_KEY.operationalDrawer, locale),
+    closeOperationalDrawer: resolveString(COPY_BY_KEY.closeOperationalDrawer, locale),
     focusMode: resolveString(COPY_BY_KEY.focusMode, locale),
     canvasPalette: resolveString(COPY_BY_KEY.canvasPalette, locale),
     gridSize: resolveString(COPY_BY_KEY.gridSize, locale),

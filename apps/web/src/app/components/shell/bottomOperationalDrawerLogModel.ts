@@ -22,6 +22,7 @@ export type BottomOperationalDrawerLogModel =
       readonly message: string;
       readonly canRetry: boolean;
       readonly retryLabel: string;
+      readonly terminalLoadingLabel: string;
       readonly lines: readonly string[];
     });
 
@@ -54,12 +55,13 @@ export function buildBottomOperationalDrawerLogModel({
   return {
     title,
     kind: 'active',
-    runLabel: `Run ${runId}`,
+    runLabel: `${copy.runLabel} ${runId}`,
     healthState,
     statusLabel: copy.states[healthState],
     message: copy.messages[healthState],
     canRetry: health.canRetry,
     retryLabel: copy.retryAction,
+    terminalLoadingLabel: copy.terminalLoading,
     lines,
   };
 }

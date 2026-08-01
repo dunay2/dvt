@@ -12,6 +12,8 @@ describe('resolveRunEventFeedHealthCopy', () => {
         complete: 'Complete',
         failed: 'Failed',
       },
+      runLabel: 'Run',
+      terminalLoading: 'Loading terminal...',
       retryAction: 'Retry event feed',
     });
   });
@@ -25,6 +27,8 @@ describe('resolveRunEventFeedHealthCopy', () => {
         complete: 'Completo',
         failed: 'Fallido',
       },
+      runLabel: 'Ejecucion',
+      terminalLoading: 'Cargando terminal...',
       retryAction: 'Reintentar eventos',
     });
   });

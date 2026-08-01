@@ -6,6 +6,8 @@ type VisibleRunEventFeedHealthState = Exclude<RunEventFeedHealthState, 'idle'>;
 export type RunEventFeedHealthCopy = {
   readonly states: Readonly<Record<VisibleRunEventFeedHealthState, string>>;
   readonly messages: Readonly<Record<RunEventFeedHealthState, string>>;
+  readonly runLabel: string;
+  readonly terminalLoading: string;
   readonly retryAction: string;
 };
 
@@ -25,6 +27,8 @@ const COPY_EN: RunEventFeedHealthCopy = {
     complete: 'The run event feed is complete.',
     failed: 'Run events could not be loaded.',
   },
+  runLabel: 'Run',
+  terminalLoading: 'Loading terminal...',
   retryAction: 'Retry event feed',
 };
 
@@ -45,6 +49,8 @@ const COPY_ES: RunEventFeedHealthCopy = {
     complete: 'El flujo de eventos de ejecucion esta completo.',
     failed: 'No se pudieron cargar los eventos de ejecucion.',
   },
+  runLabel: 'Ejecucion',
+  terminalLoading: 'Cargando terminal...',
   retryAction: 'Reintentar eventos',
 };
 

@@ -39,6 +39,7 @@ describe('buildBottomOperationalDrawerLogModel', () => {
       message: 'Loading run events...',
       canRetry: false,
       retryLabel: 'Retry event feed',
+      terminalLoadingLabel: 'Loading terminal...',
       lines: [],
     });
   });
@@ -66,6 +67,7 @@ describe('buildBottomOperationalDrawerLogModel', () => {
       message: 'Run events are live.',
       canRetry: false,
       retryLabel: 'Retry event feed',
+      terminalLoadingLabel: 'Loading terminal...',
       lines: ['step: started', 'step: finished'],
     });
   });

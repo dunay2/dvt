@@ -57,4 +57,25 @@ describe('RunStates error states', () => {
     retryButton?.click();
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
+
+  it.each([
+    ['loading', 'Loading'],
+    ['live', 'Live'],
+    ['degraded', 'Degraded'],
+    ['complete', 'Complete'],
+    ['failed', 'Failed'],
+  ] as const)(
+    'renders the shared %s feed state with text, not colour alone',
+    async (state, label) => {
+      await harness.render(
+        <RunEventFeedHealthState health={{ state, events: [], canRetry: false }} />
+      );
+
+      const status = harness.container.querySelector('[data-slot="run-event-feed-health"]');
+      expect(status?.getAttribute('data-state')).toBe(state);
+      expect(status?.textContent).toContain(label);
+      expect(status?.getAttribute('role')).toBe('status');
+      expect(harness.container.querySelector('button')).toBeNull();
+    }
+  );
 });
