@@ -1,30 +1,23 @@
-import type { CanvasAuthoringAuthorityBinding } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { DbtProjectAnalysis } from '../../src/application/ports/dbtProjectAnalysis.js';
 import { DbtProjectFileAuthorityRequiredError } from '../../src/application/ports/dbtProjectImport.js';
 import { AnalyzeSelectedDbtModelQuery } from '../../src/application/services/analyzeSelectedDbtModelQuery.js';
 
-const SCOPE = {
-  tenantId: 'tenant-a',
-  projectId: 'project-a',
-  environmentId: 'env-a',
-} as const;
-
-const FILE_AUTHORITY: CanvasAuthoringAuthorityBinding = {
-  schemaVersion: 'canvas-authoring-authority-binding.v1',
-  canvasId: 'canvas-orders',
-  authority: { kind: 'dbt-project-files', projectRoot: 'analytics' },
-};
+import {
+  SELECTED_MODEL_ANALYSIS_SCOPE,
+  SELECTED_MODEL_FILE_AUTHORITY,
+  validSelectedModelProjectAnalysis,
+} from './analyzeSelectedDbtModelQuery.fixtures.js';
 
 describe('AnalyzeSelectedDbtModelQuery', () => {
   it('projects one deterministic selected-model analysis from native evidence', async () => {
-    const analysis = validAnalysis();
+    const analysis = validSelectedModelProjectAnalysis();
     const query = buildQuery(analysis);
 
     const first = await query.execute({
-      scope: SCOPE,
-      canvasId: FILE_AUTHORITY.canvasId,
+      scope: SELECTED_MODEL_ANALYSIS_SCOPE,
+      canvasId: SELECTED_MODEL_FILE_AUTHORITY.canvasId,
       selectedUniqueId: 'model.analytics.orders',
     });
     const second = await buildQuery({
@@ -34,8 +27,8 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
         analyzedAt: '2026-08-01T11:00:00.000Z',
       },
     }).execute({
-      scope: SCOPE,
-      canvasId: FILE_AUTHORITY.canvasId,
+      scope: SELECTED_MODEL_ANALYSIS_SCOPE,
+      canvasId: SELECTED_MODEL_FILE_AUTHORITY.canvasId,
       selectedUniqueId: 'model.analytics.orders',
     });
 
@@ -94,9 +87,9 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
   });
 
   it('refuses a missing or non-model selection with a typed diagnostic', async () => {
-    const result = await buildQuery(validAnalysis()).execute({
-      scope: SCOPE,
-      canvasId: FILE_AUTHORITY.canvasId,
+    const result = await buildQuery(validSelectedModelProjectAnalysis()).execute({
+      scope: SELECTED_MODEL_ANALYSIS_SCOPE,
+      canvasId: SELECTED_MODEL_FILE_AUTHORITY.canvasId,
       selectedUniqueId: 'model.analytics.missing',
     });
 
@@ -115,7 +108,7 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
 
   it('returns unavailable without inventing semantic evidence when native analysis is unavailable', async () => {
     const result = await buildQuery({
-      ...validAnalysis(),
+      ...validSelectedModelProjectAnalysis(),
       status: 'unavailable',
       resources: [],
       dependencies: [],
@@ -128,8 +121,8 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
         },
       ],
     }).execute({
-      scope: SCOPE,
-      canvasId: FILE_AUTHORITY.canvasId,
+      scope: SELECTED_MODEL_ANALYSIS_SCOPE,
+      canvasId: SELECTED_MODEL_FILE_AUTHORITY.canvasId,
       selectedUniqueId: 'model.analytics.orders',
     });
 
@@ -150,7 +143,7 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
       analyzer: { analyze },
       authorityPolicy: {
         resolve: vi.fn().mockResolvedValue({
-          ...FILE_AUTHORITY,
+          ...SELECTED_MODEL_FILE_AUTHORITY,
           authority: { kind: 'graph-draft' },
         }),
       },
@@ -158,8 +151,8 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
 
     await expect(
       query.execute({
-        scope: SCOPE,
-        canvasId: FILE_AUTHORITY.canvasId,
+        scope: SELECTED_MODEL_ANALYSIS_SCOPE,
+        canvasId: SELECTED_MODEL_FILE_AUTHORITY.canvasId,
         selectedUniqueId: 'model.analytics.orders',
       })
     ).rejects.toBeInstanceOf(DbtProjectFileAuthorityRequiredError);
@@ -170,132 +163,6 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
 function buildQuery(analysis: DbtProjectAnalysis): AnalyzeSelectedDbtModelQuery {
   return new AnalyzeSelectedDbtModelQuery({
     analyzer: { analyze: vi.fn().mockResolvedValue(analysis) },
-    authorityPolicy: { resolve: vi.fn().mockResolvedValue(FILE_AUTHORITY) },
+    authorityPolicy: { resolve: vi.fn().mockResolvedValue(SELECTED_MODEL_FILE_AUTHORITY) },
   });
-}
-
-function validAnalysis(): DbtProjectAnalysis {
-  const modelFileRevision = 'a'.repeat(64);
-  const sourceRegionSha = 'b'.repeat(64);
-  const dynamicRegionSha = 'c'.repeat(64);
-  return {
-    status: 'valid',
-    adapterType: 'postgres',
-    projectRevision: {
-      projectRoot: 'analytics',
-      projectName: 'analytics',
-      contentSetSha256: 'd'.repeat(64),
-      analyzedAt: '2026-08-01T10:00:00.000Z',
-      analyzerVersion: 'dvt-dbt-analyzer.v1',
-      dbtVersion: '1.10.0',
-    },
-    analysisSha256: 'e'.repeat(64),
-    resources: [],
-    dependencies: [
-      {
-        sourceUniqueId: 'source.analytics.raw.orders',
-        targetUniqueId: 'model.analytics.orders',
-        relation: 'dependency',
-      },
-      {
-        sourceUniqueId: 'model.analytics.orders',
-        targetUniqueId: 'test.analytics.not_null_orders_order_id',
-        relation: 'test_target',
-      },
-    ],
-    diagnostics: [],
-    semanticEvidence: {
-      files: [
-        {
-          path: 'dbt_project.yml',
-          revisionSha256: 'f'.repeat(64),
-          byteLength: 64,
-          kind: 'project_config',
-        },
-        {
-          path: 'models/orders.sql',
-          revisionSha256: modelFileRevision,
-          byteLength: 100,
-          kind: 'model',
-        },
-      ],
-      identities: [
-        {
-          uniqueId: 'macro.analytics.normalize_order',
-          resourceType: 'macro',
-          name: 'normalize_order',
-          packageName: 'analytics',
-          originalFilePath: 'macros/normalize_order.sql',
-          dependencyUniqueIds: [],
-          macroUniqueIds: [],
-        },
-        {
-          uniqueId: 'model.analytics.orders',
-          resourceType: 'model',
-          name: 'orders',
-          packageName: 'analytics',
-          originalFilePath: 'models/orders.sql',
-          dependencyUniqueIds: ['source.analytics.raw.orders'],
-          macroUniqueIds: ['macro.analytics.normalize_order'],
-        },
-        {
-          uniqueId: 'source.analytics.raw.orders',
-          resourceType: 'source',
-          name: 'orders',
-          sourceName: 'raw',
-          packageName: 'analytics',
-          originalFilePath: 'models/sources.yml',
-          dependencyUniqueIds: [],
-          macroUniqueIds: [],
-        },
-        {
-          uniqueId: 'test.analytics.not_null_orders_order_id',
-          resourceType: 'test',
-          name: 'not_null_orders_order_id',
-          packageName: 'analytics',
-          originalFilePath: 'models/schema.yml',
-          dependencyUniqueIds: ['model.analytics.orders'],
-          macroUniqueIds: [],
-        },
-      ],
-      regions: [
-        {
-          regionId: 'region-source-orders',
-          ownerUniqueIds: ['model.analytics.orders'],
-          path: 'models/orders.sql',
-          kind: 'source',
-          range: { startByte: 20, endByte: 50 },
-          sourceSha256: sourceRegionSha,
-          classification: 'supported',
-          targetUniqueId: 'source.analytics.raw.orders',
-        },
-        {
-          regionId: 'region-dynamic',
-          ownerUniqueIds: ['model.analytics.orders'],
-          path: 'models/orders.sql',
-          kind: 'jinja',
-          range: { startByte: 60, endByte: 80 },
-          sourceSha256: dynamicRegionSha,
-          classification: 'code_only',
-          reasonCode: 'dbt_jinja_dynamic_argument',
-        },
-      ],
-      diagnostics: [
-        {
-          code: 'dbt_semantic_region_code_only',
-          severity: 'warning',
-          message: 'The dbt region is preserved as code-only.',
-          subject: {
-            kind: 'region',
-            path: 'models/orders.sql',
-            regionId: 'region-dynamic',
-          },
-          evidence: {
-            path: 'models/orders.sql',
-            range: { startByte: 60, endByte: 80 },
-          },
-        },
-      ],
-    },
-  };
 }
