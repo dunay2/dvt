@@ -15,7 +15,12 @@ import {
   type DbtProcessRunner,
 } from './dbtAnalyzerProcess.js';
 import { projectDbtManifest } from './dbtManifestProjection.js';
+import type { ProjectContentRevision } from './dbtProjectContentRevision.js';
 import { evaluateDbtProjectSnapshotPathPolicy } from './dbtProjectPathPolicy.js';
+import {
+  buildDbtProjectSemanticEvidence,
+  EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE,
+} from './dbtProjectSemanticEvidence.js';
 import {
   DEFAULT_DBT_PROJECT_SOURCE_LIMITS,
   DbtProjectSourcePolicyError,
@@ -105,20 +110,18 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
 
     try {
       const snapshotDirectory = path.join(analysisRoot, 'project');
-      let contentSetSha256: string;
+      let contentRevision: ProjectContentRevision;
       try {
-        contentSetSha256 = (
-          await snapshotDbtProjectSource({
-            projectDirectory,
-            snapshotDirectory,
-            limits: {
-              maxFiles: this.maxProjectFiles,
-              maxBytes: this.maxProjectBytes,
-              maxDirectories: this.maxProjectDirectories,
-              maxDepth: this.maxProjectDepth,
-            },
-          })
-        ).sha256;
+        contentRevision = await snapshotDbtProjectSource({
+          projectDirectory,
+          snapshotDirectory,
+          limits: {
+            maxFiles: this.maxProjectFiles,
+            maxBytes: this.maxProjectBytes,
+            maxDirectories: this.maxProjectDirectories,
+            maxDepth: this.maxProjectDepth,
+          },
+        });
       } catch (error) {
         if (error instanceof DbtProjectSourcePolicyError) {
           const invalidRevision = this.buildRevision(
@@ -134,6 +137,8 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
           'The dbt project could not be read safely.'
         );
       }
+
+      const contentSetSha256 = contentRevision.sha256;
 
       projectRevision = this.buildRevision(input.projectRoot, contentSetSha256, analyzedAt);
       const pathPolicy = await evaluateDbtProjectSnapshotPathPolicy(snapshotDirectory);
@@ -191,6 +196,11 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
         await readFile(path.join(targetPath, 'manifest.json'), 'utf8')
       ) as unknown;
       const projection = projectDbtManifest(manifest);
+      const semanticEvidence = await buildDbtProjectSemanticEvidence({
+        snapshotDirectory,
+        contentRevision,
+        identities: projection.identities,
+      });
       return {
         status: 'valid',
         ...(projection.adapterType === undefined ? {} : { adapterType: projection.adapterType }),
@@ -209,6 +219,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
         resources: projection.resources,
         dependencies: projection.dependencies,
         diagnostics: projection.diagnostics,
+        semanticEvidence,
       };
     } catch {
       return this.unavailable(
@@ -274,6 +285,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       resources: [],
       dependencies: [],
       diagnostics,
+      semanticEvidence: EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE,
     };
   }
 
@@ -295,6 +307,7 @@ export class DbtCliProjectAnalyzer implements IDbtProjectAnalyzerPort {
       resources: [],
       dependencies: [],
       diagnostics,
+      semanticEvidence: EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE,
     };
   }
 }

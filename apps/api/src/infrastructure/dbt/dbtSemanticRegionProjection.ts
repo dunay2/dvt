@@ -1,40 +1,14 @@
 import { createHash } from 'node:crypto';
 
-import type { DbtProjectAnalysisIdentity } from '../../application/ports/dbtProjectAnalysis.js';
-
-type SourceRange = Readonly<{ startByte: number; endByte: number }>;
-
-type SemanticRegionBase = Readonly<{
-  regionId: string;
-  ownerUniqueIds: readonly string[];
-  path: string;
-  kind: 'ref' | 'source' | 'jinja';
-  range: SourceRange;
-  sourceSha256: string;
-}>;
-
-export type DbtProjectedSemanticRegion =
-  | (SemanticRegionBase & Readonly<{ classification: 'supported'; targetUniqueId: string }>)
-  | (SemanticRegionBase & Readonly<{ classification: 'code_only'; reasonCode: string }>);
-
-export type DbtSemanticRegionDiagnostic = Readonly<{
-  code: 'dbt_semantic_region_code_only';
-  severity: 'warning';
-  message: string;
-  subject: Readonly<{
-    kind: 'region';
-    path: string;
-    regionId: string;
-  }>;
-  evidence: Readonly<{
-    path: string;
-    range: SourceRange;
-  }>;
-}>;
+import type {
+  DbtProjectAnalysisIdentity,
+  DbtProjectSemanticDiagnostic,
+  DbtProjectSemanticRegion,
+} from '../../application/ports/dbtProjectAnalysis.js';
 
 type SemanticRegionProjection = Readonly<{
-  regions: readonly DbtProjectedSemanticRegion[];
-  diagnostics: readonly DbtSemanticRegionDiagnostic[];
+  regions: readonly DbtProjectSemanticRegion[];
+  diagnostics: readonly DbtProjectSemanticDiagnostic[];
 }>;
 
 type FileContent = Readonly<{ path: string; content: string }>;
@@ -52,7 +26,7 @@ export function projectDbtSemanticRegions(
 ): SemanticRegionProjection {
   const identityById = new Map(input.identities.map((identity) => [identity.uniqueId, identity]));
   const ownersByPath = groupOwnersByPath(input.identities);
-  const regions: DbtProjectedSemanticRegion[] = [];
+  const regions: DbtProjectSemanticRegion[] = [];
 
   for (const file of [...input.files].sort((left, right) => left.path.localeCompare(right.path))) {
     const owners = ownersByPath.get(file.path) ?? [];
@@ -91,7 +65,7 @@ export function projectDbtSemanticRegions(
     regions,
     diagnostics: regions
       .filter(
-        (region): region is Extract<DbtProjectedSemanticRegion, { classification: 'code_only' }> =>
+        (region): region is Extract<DbtProjectSemanticRegion, { classification: 'code_only' }> =>
           region.classification === 'code_only'
       )
       .map((region) => ({
@@ -219,10 +193,7 @@ function groupOwnersByPath(
   return grouped;
 }
 
-function compareRegions(
-  left: DbtProjectedSemanticRegion,
-  right: DbtProjectedSemanticRegion
-): number {
+function compareRegions(left: DbtProjectSemanticRegion, right: DbtProjectSemanticRegion): number {
   return (
     left.path.localeCompare(right.path) ||
     left.range.startByte - right.range.startByte ||

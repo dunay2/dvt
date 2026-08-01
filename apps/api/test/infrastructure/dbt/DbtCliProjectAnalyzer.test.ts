@@ -124,6 +124,35 @@ describe('DbtCliProjectAnalyzer', () => {
         relation: 'dependency',
       },
     ]);
+    expect(result.semanticEvidence.files).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          path: 'dbt_project.yml',
+          kind: 'project_config',
+          byteLength: expect.any(Number),
+          revisionSha256: expect.stringMatching(/^[a-f0-9]{64}$/u),
+        }),
+        expect.objectContaining({
+          path: 'models/orders.sql',
+          kind: 'model',
+        }),
+      ])
+    );
+    expect(result.semanticEvidence.identities).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ uniqueId: 'model.analytics.orders' }),
+        expect.objectContaining({ uniqueId: 'source.analytics.raw.orders' }),
+      ])
+    );
+    expect(result.semanticEvidence.regions).toEqual([
+      expect.objectContaining({
+        path: 'models/orders.sql',
+        kind: 'source',
+        classification: 'supported',
+        targetUniqueId: 'source.analytics.raw.orders',
+      }),
+    ]);
+    expect(result.semanticEvidence.diagnostics).toEqual([]);
     expect(run).toHaveBeenCalledWith(
       expect.objectContaining({
         executable: 'dbt',
