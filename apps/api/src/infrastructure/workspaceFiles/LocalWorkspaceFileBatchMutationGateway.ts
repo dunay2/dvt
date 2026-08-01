@@ -35,7 +35,10 @@ import {
   type LocalWorkspaceFileMutationCoordinator,
   sharedLocalWorkspaceFileMutationCoordinator,
 } from './LocalWorkspaceFileMutationCoordinator.js';
-import { buildWorkspaceScopeStorageKey } from './workspaceScopeStoragePath.js';
+import {
+  buildWorkspaceScopeStorageKey,
+  resolveWorkspaceScopeMutationLockKey,
+} from './workspaceScopeStoragePath.js';
 
 const MAX_BATCH_FILES = 500;
 const MAX_FILE_BYTES = 1_000_000;
@@ -83,6 +86,7 @@ export class LocalWorkspaceFileBatchMutationGateway implements IWorkspaceFileBat
     const scopeKey = buildWorkspaceScopeStorageKey(scope);
     const receiptPath = this.resolveReceiptPath(scopeKey, resolved.idempotencyKey);
     const lockPaths = [
+      resolveWorkspaceScopeMutationLockKey(this.root, scope),
       receiptPath,
       ...resolved.expectedFiles.map((file) => file.absolutePath),
       ...resolved.writes.map((file) => file.absolutePath),

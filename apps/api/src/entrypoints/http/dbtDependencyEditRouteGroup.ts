@@ -3,11 +3,8 @@ import type { FastifyInstance } from 'fastify';
 
 import { ApplySelectedDbtDependencyEditCommand } from '../../application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.js';
 import { DbtCliProjectCandidateAnalyzer } from '../../infrastructure/dbt/DbtCliProjectCandidateAnalyzer.js';
-import { DEFAULT_DBT_PROJECT_SOURCE_LIMITS } from '../../infrastructure/dbt/dbtProjectSourceSnapshot.js';
-import { WorkspaceMetadataDbtDependencyEditReceiptStore } from '../../infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.js';
-import { LocalWorkspaceFileBatchMutationGateway } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.js';
+import { LocalDbtDependencyEditPublicationGateway } from '../../infrastructure/dbtDependencyEdit/LocalDbtDependencyEditPublicationGateway.js';
 import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
-import { LocalWorkspaceMetadataFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceMetadataFileRepository.js';
 import type { ProtectedRuntimeModule } from '../../modules/types.js';
 import type { Env } from '../../plugins/env.js';
 
@@ -35,13 +32,7 @@ export function registerProtectedDbtDependencyEditRouteGroup(
     resolver: options.protectedModule.dbtProjectImport.selectedModelAnalysisResolver,
     workspaceFiles: new LocalWorkspaceFileRepository({ root: workspaceFilesRoot }),
     candidateAnalyzer: new DbtCliProjectCandidateAnalyzer(analyzerOptions),
-    batchMutation: new LocalWorkspaceFileBatchMutationGateway({
-      root: workspaceFilesRoot,
-      maxBatchFiles: DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxFiles,
-    }),
-    receipts: new WorkspaceMetadataDbtDependencyEditReceiptStore({
-      metadataFiles: new LocalWorkspaceMetadataFileRepository({ root: workspaceFilesRoot }),
-    }),
+    publication: new LocalDbtDependencyEditPublicationGateway({ root: workspaceFilesRoot }),
   });
 
   registerDbtDependencyEditRoutes(app, {

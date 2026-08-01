@@ -7,13 +7,12 @@ import {
   DbtDependencyEditReceiptInvalidError,
   type ApplySelectedDbtDependencyEditInput,
   type IApplySelectedDbtDependencyEditCommand,
-  type IDbtDependencyEditReceiptStore,
+  type IDbtDependencyEditPublicationPort,
 } from '../../ports/dbtDependencyEdit.js';
 import type { IDbtProjectCandidateAnalyzerPort } from '../../ports/dbtProjectCandidateAnalysis.js';
 import { DbtProjectFileAuthorityRequiredError } from '../../ports/dbtProjectImport.js';
 import {
   WorkspaceFileNotFoundError,
-  type IWorkspaceFileBatchMutationPort,
   type IWorkspaceFileRepository,
 } from '../../ports/workspaceFiles.js';
 import {
@@ -45,8 +44,7 @@ export class ApplySelectedDbtDependencyEditCommand implements IApplySelectedDbtD
       resolver: Pick<SelectedDbtModelAnalysisResolver, 'resolve'>;
       workspaceFiles: Pick<IWorkspaceFileRepository, 'getFileContent'>;
       candidateAnalyzer: IDbtProjectCandidateAnalyzerPort;
-      batchMutation: IWorkspaceFileBatchMutationPort;
-      receipts: IDbtDependencyEditReceiptStore;
+      publication: IDbtDependencyEditPublicationPort;
     }>
   ) {}
 
@@ -54,7 +52,7 @@ export class ApplySelectedDbtDependencyEditCommand implements IApplySelectedDbtD
     const request = parseDbtDependencyEditRequest(input);
     const requestHash = fingerprintDbtDependencyEditRequest(input, request);
     const receiptId = identifyDbtDependencyEditReceipt(input, request);
-    const existing = await this.deps.receipts.findApplied(input.scope, receiptId);
+    const existing = await this.deps.publication.findApplied(input.scope, receiptId);
     if (existing !== null) {
       if (
         existing.requestHash !== requestHash ||
@@ -239,32 +237,6 @@ export class ApplySelectedDbtDependencyEditCommand implements IApplySelectedDbtD
     });
     if (candidateInvariant !== null) return dbtDependencyEditRefusedFinding(candidateInvariant);
 
-    const batchResult = await this.deps.batchMutation.apply(input.scope, {
-      expectedFiles: resolved.nativeAnalysis.semanticEvidence.files
-        .map((entry) => ({
-          path: toDbtProjectWorkspacePath(
-            resolved.nativeAnalysis.projectRevision.projectRoot,
-            entry.path
-          ),
-          expectedContentSha256: entry.revisionSha256,
-        }))
-        .sort((left, right) => left.path.localeCompare(right.path)),
-      writes: [{ path: workspacePath, content: patch.content }],
-      deletes: [],
-      idempotencyKey: `dbt-dependency-edit:${receiptId}`,
-    });
-    if (batchResult.kind === 'conflict') return dbtDependencyEditConflict(batchResult.conflicts);
-    const write = batchResult.writes.find((entry) => entry.path === workspacePath);
-    if (write?.contentSha256 !== patch.contentSha256) {
-      return dbtDependencyEditRefused(
-        'dbt_dependency_edit_invariant_failed',
-        { kind: 'file', path: workspacePath },
-        {
-          reasonCode: 'atomic_write_receipt_mismatch',
-        }
-      );
-    }
-
     const receipt = DbtDependencyEditAppliedReceiptSchema.parse({
       schemaVersion: 'dbt-dependency-edit-applied-receipt.v1',
       receiptId,
@@ -284,13 +256,26 @@ export class ApplySelectedDbtDependencyEditCommand implements IApplySelectedDbtD
       selectedAnalysisSha256: candidateSelected.selectedAnalysisSha256,
       idempotencyKey: request.idempotencyKey,
       requestHash,
-      deduplicated: batchResult.deduplicated,
+      deduplicated: false,
     });
-    await this.deps.receipts.saveApplied(input.scope, receipt);
+    const publication = await this.deps.publication.publish(input.scope, {
+      projectRoot: resolved.nativeAnalysis.projectRevision.projectRoot,
+      expectedProjectContentSetSha256: resolved.nativeAnalysis.projectRevision.contentSetSha256,
+      expectedFiles: resolved.nativeAnalysis.semanticEvidence.files,
+      write: {
+        path: workspacePath,
+        expectedContentSha256: analyzedFile.revisionSha256,
+        content: patch.content,
+      },
+      receipt,
+    });
+    if (publication.kind === 'conflict') {
+      return dbtDependencyEditConflict(publication.conflicts);
+    }
     return parseDbtDependencyEditResult({
       schemaVersion: 'dbt-dependency-edit-result.v1',
       kind: 'applied',
-      receipt,
+      receipt: publication.receipt,
     });
   }
 }

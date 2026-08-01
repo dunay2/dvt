@@ -35,25 +35,31 @@ describe('ApplySelectedDbtDependencyEditCommand happy path', () => {
         candidate: expect.objectContaining({ path: 'models/orders.sql' }),
       })
     );
-    expect(harness.apply).toHaveBeenCalledTimes(1);
-    expect(harness.apply).toHaveBeenCalledWith(
+    expect(harness.publish).toHaveBeenCalledTimes(1);
+    expect(harness.publish).toHaveBeenCalledWith(
       request(harness).scope,
       expect.objectContaining({
+        projectRoot: 'analytics',
+        expectedProjectContentSetSha256: harness.current.projectRevision.contentSetSha256,
         expectedFiles: [
-          { path: 'analytics/dbt_project.yml', expectedContentSha256: sha('config') },
           {
-            path: 'analytics/models/orders.sql',
-            expectedContentSha256: sha("-- keep\nselect * from {{ source('raw', 'orders') }}\n"),
+            path: 'dbt_project.yml',
+            revisionSha256: sha('config'),
+            byteLength: 6,
+            kind: 'project_config',
           },
-          { path: 'analytics/models/sources.yml', expectedContentSha256: sha('sources') },
+          expect.objectContaining({ path: 'models/orders.sql' }),
+          expect.objectContaining({ path: 'models/sources.yml' }),
         ],
-        writes: [
-          {
-            path: 'analytics/models/orders.sql',
-            content: "-- keep\nselect * from {{ source('raw', 'customers') }}\n",
-          },
-        ],
-        deletes: [],
+        write: {
+          path: 'analytics/models/orders.sql',
+          expectedContentSha256: sha("-- keep\nselect * from {{ source('raw', 'orders') }}\n"),
+          content: "-- keep\nselect * from {{ source('raw', 'customers') }}\n",
+        },
+        receipt: expect.objectContaining({
+          appliedContentSha256: sha("-- keep\nselect * from {{ source('raw', 'customers') }}\n"),
+          deduplicated: false,
+        }),
       })
     );
   });
@@ -71,7 +77,7 @@ describe('ApplySelectedDbtDependencyEditCommand happy path', () => {
       })
     );
     expect(harness.analyzeCandidate).toHaveBeenCalledTimes(1);
-    expect(harness.apply).toHaveBeenCalledTimes(1);
+    expect(harness.publish).toHaveBeenCalledTimes(1);
   });
 
   it('rejects reuse of one idempotency key for a different semantic edit', async () => {
@@ -87,7 +93,7 @@ describe('ApplySelectedDbtDependencyEditCommand happy path', () => {
     ).rejects.toBeInstanceOf(DbtDependencyEditReceiptInvalidError);
 
     expect(harness.analyzeCandidate).toHaveBeenCalledTimes(1);
-    expect(harness.apply).toHaveBeenCalledTimes(1);
+    expect(harness.publish).toHaveBeenCalledTimes(1);
   });
 
   it('returns a no-op without candidate analysis or persistence', async () => {
@@ -107,6 +113,6 @@ describe('ApplySelectedDbtDependencyEditCommand happy path', () => {
       })
     );
     expect(harness.analyzeCandidate).not.toHaveBeenCalled();
-    expect(harness.apply).not.toHaveBeenCalled();
+    expect(harness.publish).not.toHaveBeenCalled();
   });
 });

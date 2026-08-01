@@ -27,12 +27,12 @@ describe('ApplySelectedDbtDependencyEditCommand conflicts', () => {
         },
       ],
     });
-    expect(harness.apply).not.toHaveBeenCalled();
+    expect(harness.publish).not.toHaveBeenCalled();
   });
 
-  it('returns atomic batch CAS conflicts', async () => {
+  it('returns atomic publication conflicts', async () => {
     const harness = createHarness();
-    harness.apply.mockResolvedValue({
+    harness.publish.mockResolvedValue({
       kind: 'conflict',
       conflicts: [{ path: 'analytics/models/orders.sql', currentContentSha256: sha('newer') }],
     });

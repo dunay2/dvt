@@ -4,6 +4,7 @@ import type {
   DbtDependencyEditResult,
 } from '@dvt/contracts';
 
+import type { DbtProjectAnalysisFile } from './dbtProjectAnalysis.js';
 import type { WorkspaceStorageScope } from './workspaceFiles.js';
 
 export type ApplySelectedDbtDependencyEditInput = Readonly<
@@ -14,15 +15,40 @@ export interface IApplySelectedDbtDependencyEditCommand {
   apply(input: ApplySelectedDbtDependencyEditInput): Promise<DbtDependencyEditResult>;
 }
 
-export interface IDbtDependencyEditReceiptStore {
+export type DbtDependencyEditPublication = Readonly<{
+  projectRoot: string;
+  expectedProjectContentSetSha256: string;
+  expectedFiles: readonly DbtProjectAnalysisFile[];
+  write: Readonly<{
+    path: string;
+    expectedContentSha256: string;
+    content: string;
+  }>;
+  receipt: DbtDependencyEditAppliedReceipt;
+}>;
+
+export type DbtDependencyEditPublicationResult =
+  | Readonly<{
+      kind: 'applied';
+      receipt: DbtDependencyEditAppliedReceipt;
+    }>
+  | Readonly<{
+      kind: 'conflict';
+      conflicts: readonly Readonly<{
+        path: string;
+        currentContentSha256: string | null;
+      }>[];
+    }>;
+
+export interface IDbtDependencyEditPublicationPort {
   findApplied(
     scope: WorkspaceStorageScope,
     receiptId: string
   ): Promise<DbtDependencyEditAppliedReceipt | null>;
-  saveApplied(
+  publish(
     scope: WorkspaceStorageScope,
-    receipt: DbtDependencyEditAppliedReceipt
-  ): Promise<void>;
+    publication: DbtDependencyEditPublication
+  ): Promise<DbtDependencyEditPublicationResult>;
 }
 
 export class DbtDependencyEditReceiptInvalidError extends Error {

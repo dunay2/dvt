@@ -246,7 +246,7 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     boundedContext: 'dbt project contextual authoring',
     dddObject: 'DbtDependencyEditAppliedReceipt',
     applicationPort:
-      'IApplySelectedDbtDependencyEditCommand via SelectedDbtModelAnalysisResolver, IDbtProjectCandidateAnalyzerPort, IWorkspaceFileBatchMutationPort, and IDbtDependencyEditReceiptStore',
+      'IApplySelectedDbtDependencyEditCommand via SelectedDbtModelAnalysisResolver, IDbtProjectCandidateAnalyzerPort, and IDbtDependencyEditPublicationPort',
     adapterSurface: 'POST /workspace/dbt/dependency-edits/applications',
     scopeAndAuthorization:
       'workspace:graph-draft:view plus workspace:files:save, tenant/project/environment scope, dbt-project-files Canvas authority, native analysis identities, and idempotency key',

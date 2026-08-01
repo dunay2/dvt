@@ -4,9 +4,11 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import {
+  hashProjectContent,
   snapshotProjectContent,
   type ProjectContentLimits,
   type ProjectContentRevision,
+  type ProjectContentSelection,
 } from './dbtProjectContentRevision.js';
 import {
   evaluateDbtProjectPathPolicy,
@@ -62,8 +64,39 @@ export async function snapshotDbtProjectSource(input: {
   readonly snapshotDirectory: string;
   readonly limits: ProjectContentLimits;
 }): Promise<ProjectContentRevision> {
-  const projectConfigPath = path.join(input.projectDirectory, 'dbt_project.yml');
-  const projectConfig = await readFile(projectConfigPath, 'utf8');
+  const sourcePolicy = await loadDbtProjectSourcePolicy(input.projectDirectory);
+  const revision = await snapshotProjectContent(
+    input.projectDirectory,
+    input.snapshotDirectory,
+    input.limits,
+    sourcePolicy.selection
+  );
+
+  await verifyDbtProjectConfigUnchanged(input.projectDirectory, sourcePolicy.projectConfig);
+  return revision;
+}
+
+export async function hashDbtProjectSource(input: {
+  readonly projectDirectory: string;
+  readonly limits: ProjectContentLimits;
+}): Promise<ProjectContentRevision> {
+  const sourcePolicy = await loadDbtProjectSourcePolicy(input.projectDirectory);
+  const revision = await hashProjectContent(
+    input.projectDirectory,
+    input.limits,
+    sourcePolicy.selection
+  );
+  await verifyDbtProjectConfigUnchanged(input.projectDirectory, sourcePolicy.projectConfig);
+  return revision;
+}
+
+async function loadDbtProjectSourcePolicy(projectDirectory: string): Promise<
+  Readonly<{
+    projectConfig: string;
+    selection: ProjectContentSelection;
+  }>
+> {
+  const projectConfig = await readFile(path.join(projectDirectory, 'dbt_project.yml'), 'utf8');
   const pathPolicy = evaluateDbtProjectPathPolicy(projectConfig);
   if (!pathPolicy.ok) {
     throw new DbtProjectSourcePolicyError(pathPolicy.reason, projectConfig);
@@ -74,26 +107,28 @@ export async function snapshotDbtProjectSource(input: {
     ...partition.sourceDirectories,
     ...partition.installedDependencyDirectories,
   ];
-  const revision = await snapshotProjectContent(
-    input.projectDirectory,
-    input.snapshotDirectory,
-    input.limits,
-    {
+  return {
+    projectConfig,
+    selection: {
       excludedDirectoryPaths: partition.generatedArtifactDirectories,
       excludedDirectoryNames: EXCLUDED_DIRECTORY_NAMES,
       shouldIncludeFile: (relativePath) =>
         isCanonicalDbtProjectSourceFile(relativePath, includedDirectories),
-    }
-  );
+    },
+  };
+}
 
-  const snapshotConfig = await readFile(
-    path.join(input.snapshotDirectory, 'dbt_project.yml'),
+async function verifyDbtProjectConfigUnchanged(
+  projectDirectory: string,
+  expectedProjectConfig: string
+): Promise<void> {
+  const currentProjectConfig = await readFile(
+    path.join(projectDirectory, 'dbt_project.yml'),
     'utf8'
   );
-  if (snapshotConfig !== projectConfig) {
-    throw new Error('The dbt project changed while its source snapshot was created.');
+  if (currentProjectConfig !== expectedProjectConfig) {
+    throw new Error('The dbt project changed while its source revision was read.');
   }
-  return revision;
 }
 
 function isCanonicalDbtProjectSourceFile(

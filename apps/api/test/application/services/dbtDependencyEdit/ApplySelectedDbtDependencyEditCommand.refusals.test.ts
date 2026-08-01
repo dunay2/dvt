@@ -31,7 +31,7 @@ describe('ApplySelectedDbtDependencyEditCommand refusals', () => {
       })
     );
     expect(harness.analyzeCandidate).not.toHaveBeenCalled();
-    expect(harness.apply).not.toHaveBeenCalled();
+    expect(harness.publish).not.toHaveBeenCalled();
   });
 
   it('refuses a code-only region before candidate analysis', async () => {
@@ -78,7 +78,7 @@ describe('ApplySelectedDbtDependencyEditCommand refusals', () => {
       })
     );
     expect(harness.analyzeCandidate).not.toHaveBeenCalled();
-    expect(harness.apply).not.toHaveBeenCalled();
+    expect(harness.publish).not.toHaveBeenCalled();
   });
 
   it('refuses overlapping semantic regions before candidate analysis', async () => {
@@ -110,7 +110,7 @@ describe('ApplySelectedDbtDependencyEditCommand refusals', () => {
       })
     );
     expect(harness.analyzeCandidate).not.toHaveBeenCalled();
-    expect(harness.apply).not.toHaveBeenCalled();
+    expect(harness.publish).not.toHaveBeenCalled();
   });
 
   it('refuses a candidate rejected by native dbt validation', async () => {
@@ -128,7 +128,7 @@ describe('ApplySelectedDbtDependencyEditCommand refusals', () => {
         finding: expect.objectContaining({ code: 'dbt_dependency_edit_validation_failed' }),
       })
     );
-    expect(harness.apply).not.toHaveBeenCalled();
+    expect(harness.publish).not.toHaveBeenCalled();
   });
 
   it('refuses a candidate that does not resolve to the requested identity', async () => {
@@ -156,6 +156,6 @@ describe('ApplySelectedDbtDependencyEditCommand refusals', () => {
         finding: expect.objectContaining({ code: 'dbt_dependency_edit_semantic_mismatch' }),
       })
     );
-    expect(harness.apply).not.toHaveBeenCalled();
+    expect(harness.publish).not.toHaveBeenCalled();
   });
 });

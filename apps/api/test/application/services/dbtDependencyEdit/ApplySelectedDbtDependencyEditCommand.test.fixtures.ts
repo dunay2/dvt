@@ -9,11 +9,10 @@ import { vi } from 'vitest';
 
 import type {
   ApplySelectedDbtDependencyEditInput,
-  IDbtDependencyEditReceiptStore,
+  IDbtDependencyEditPublicationPort,
 } from '../../../../src/application/ports/dbtDependencyEdit.js';
 import type { DbtProjectAnalysis } from '../../../../src/application/ports/dbtProjectAnalysis.js';
 import type { IDbtProjectCandidateAnalyzerPort } from '../../../../src/application/ports/dbtProjectCandidateAnalysis.js';
-import type { IWorkspaceFileBatchMutationPort } from '../../../../src/application/ports/workspaceFiles.js';
 import { ApplySelectedDbtDependencyEditCommand } from '../../../../src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.js';
 import { projectSelectedDbtModelAnalysis } from '../../../../src/application/services/selectedDbtModelAnalysisProjection.js';
 import type { SelectedDbtModelAnalysisResolver } from '../../../../src/application/services/selectedDbtModelAnalysisResolver.js';
@@ -40,7 +39,7 @@ type CandidateAnalyzerMock = ReturnType<
   typeof vi.fn<IDbtProjectCandidateAnalyzerPort['analyzeCandidate']>
 >;
 type SelectedResolverMock = ReturnType<typeof vi.fn<SelectedDbtModelAnalysisResolver['resolve']>>;
-type BatchMutationMock = ReturnType<typeof vi.fn<IWorkspaceFileBatchMutationPort['apply']>>;
+type PublicationMock = ReturnType<typeof vi.fn<IDbtDependencyEditPublicationPort['publish']>>;
 
 export type DbtDependencyEditHarness = Readonly<{
   command: ApplySelectedDbtDependencyEditCommand;
@@ -50,7 +49,7 @@ export type DbtDependencyEditHarness = Readonly<{
   candidateSelected: DbtSelectedModelAnalysis;
   analyzeCandidate: CandidateAnalyzerMock;
   resolve: SelectedResolverMock;
-  apply: BatchMutationMock;
+  publish: PublicationMock;
 }>;
 
 export function createHarness(): DbtDependencyEditHarness {
@@ -67,23 +66,16 @@ export function createHarness(): DbtDependencyEditHarness {
     selectedUniqueId: 'model.analytics.orders',
   });
   const receipts = new Map<string, DbtDependencyEditAppliedReceipt>();
-  const receiptStore: IDbtDependencyEditReceiptStore = {
+  const publish = vi.fn<IDbtDependencyEditPublicationPort['publish']>(
+    async (_scope, publication) => {
+      receipts.set(publication.receipt.receiptId, publication.receipt);
+      return { kind: 'applied', receipt: publication.receipt };
+    }
+  );
+  const publication: IDbtDependencyEditPublicationPort = {
     findApplied: vi.fn(async (_scope, receiptId) => receipts.get(receiptId) ?? null),
-    saveApplied: vi.fn(async (_scope, receipt) => {
-      receipts.set(receipt.receiptId, receipt);
-    }),
+    publish,
   };
-  const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>(async (_scope, mutation) => ({
-    kind: 'applied',
-    idempotencyKey: mutation.idempotencyKey,
-    requestHash: sha(JSON.stringify(mutation)),
-    deduplicated: false,
-    writes: mutation.writes.map((write) => ({
-      path: write.path,
-      contentSha256: sha(write.content),
-    })),
-    deletes: [],
-  }));
   const analyzeCandidate = vi.fn<IDbtProjectCandidateAnalyzerPort['analyzeCandidate']>(
     async () => ({
       kind: 'analyzed',
@@ -108,8 +100,7 @@ export function createHarness(): DbtDependencyEditHarness {
       })),
     },
     candidateAnalyzer: { analyzeCandidate },
-    batchMutation: { apply },
-    receipts: receiptStore,
+    publication,
   });
 
   return {
@@ -120,7 +111,7 @@ export function createHarness(): DbtDependencyEditHarness {
     candidateSelected,
     analyzeCandidate,
     resolve,
-    apply,
+    publish,
   };
 }
 
