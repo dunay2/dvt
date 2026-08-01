@@ -309,9 +309,18 @@ export function mapRunToCanonical(
   capabilities?: RuntimeCapabilities
 ): CanonicalRun | null {
   for (const plugin of getRuntimePlugins(capabilities)) {
-    const canonicalRun = plugin.runAdapter?.mapToCanonical(run) ?? null;
-    if (canonicalRun) {
-      return canonicalRun;
+    const runAdapter = plugin.runAdapter;
+    if (!runAdapter) {
+      continue;
+    }
+
+    try {
+      const canonicalRun = runAdapter.mapToCanonical(run);
+      if (canonicalRun) {
+        return canonicalRun;
+      }
+    } catch {
+      continue;
     }
   }
 
@@ -356,7 +365,11 @@ export function getInspectorPanels(
   const panels: InspectorPanelContribution[] = [];
   for (const plugin of getRuntimePlugins(capabilities)) {
     for (const panel of plugin.inspectorPanels ?? []) {
-      if (panel.shouldShow(node, ctx)) panels.push(panel);
+      try {
+        if (panel.shouldShow(node, ctx)) panels.push(panel);
+      } catch {
+        continue;
+      }
     }
   }
   panels.sort((a, b) => a.order - b.order);
@@ -391,8 +404,12 @@ export function getNodeBadges(
     for (const contrib of plugin.nodeBadges ?? []) {
       const applies = contrib.forKinds === 'all' || contrib.forKinds.includes(node.kind);
       if (!applies) continue;
-      const badge = contrib.getBadge(node, ctx);
-      if (badge) badges.push({ priority: contrib.priority, badge });
+      try {
+        const badge = contrib.getBadge(node, ctx);
+        if (badge) badges.push({ priority: contrib.priority, badge });
+      } catch {
+        continue;
+      }
     }
   }
   badges.sort((a, b) => b.priority - a.priority);
