@@ -42,6 +42,7 @@ describe('runEventFeedModel guardrails', () => {
     const loading = transitionRunEventFeed(createRunEventFeedState(), {
       type: 'start',
       runId: 'run_2',
+      observedAt: '2026-07-10T10:00:00.000Z',
     }).state;
 
     const result = transitionRunEventFeed(loading, {
@@ -58,6 +59,7 @@ describe('runEventFeedModel guardrails', () => {
     const loading = transitionRunEventFeed(createRunEventFeedState(), {
       type: 'start',
       runId: 'run_1',
+      observedAt: '2026-07-10T10:00:00.000Z',
     }).state;
     const live = transitionRunEventFeed(loading, {
       type: 'page-received',
@@ -81,6 +83,7 @@ describe('runEventFeedModel guardrails', () => {
     const loading = transitionRunEventFeed(createRunEventFeedState(), {
       type: 'start',
       runId: 'run_1',
+      observedAt: '2026-07-10T10:00:00.000Z',
     }).state;
     const cursorOnlyPage = transitionRunEventFeed(loading, {
       type: 'page-received',
@@ -104,6 +107,7 @@ describe('runEventFeedModel guardrails', () => {
     const loading = transitionRunEventFeed(createRunEventFeedState(), {
       type: 'start',
       runId: 'run_1',
+      observedAt: '2026-07-10T10:00:00.000Z',
     }).state;
     const foreignEvent = { ...makeEvent('evt_foreign', 1), runId: 'run_2' };
 
@@ -121,15 +125,19 @@ describe('runEventFeedModel guardrails', () => {
     const loading = transitionRunEventFeed(createRunEventFeedState(), {
       type: 'start',
       runId: 'run_1',
+      observedAt: '2026-07-10T10:00:00.000Z',
     }).state;
     const failed = transitionRunEventFeed(loading, {
       type: 'non-retryable-failure',
       runId: 'run_1',
+      failure: { kind: 'authorization', message: 'Access denied.', retryable: false },
     }).state;
 
     const result = transitionRunEventFeed(failed, {
       type: 'transient-failure',
       runId: 'run_1',
+      observedAt: '2026-07-10T10:00:01.000Z',
+      failure: { kind: 'transport', message: 'Temporary failure.', retryable: true },
     });
 
     expect(result).toEqual({ disposition: 'rejected-invalid-transition', state: failed });
@@ -139,9 +147,14 @@ describe('runEventFeedModel guardrails', () => {
     const firstRun = transitionRunEventFeed(createRunEventFeedState(), {
       type: 'start',
       runId: 'run_1',
+      observedAt: '2026-07-10T10:00:00.000Z',
     }).state;
 
-    const result = transitionRunEventFeed(firstRun, { type: 'start', runId: 'run_2' });
+    const result = transitionRunEventFeed(firstRun, {
+      type: 'start',
+      runId: 'run_2',
+      observedAt: '2026-07-10T10:00:01.000Z',
+    });
 
     expect(result).toEqual({
       disposition: 'applied',
@@ -149,6 +162,7 @@ describe('runEventFeedModel guardrails', () => {
         phase: 'initial-loading',
         runId: 'run_2',
         events: [],
+        startedAt: '2026-07-10T10:00:01.000Z',
         consecutiveFailures: 0,
       },
     });

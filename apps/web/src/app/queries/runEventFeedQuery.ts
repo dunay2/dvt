@@ -25,10 +25,15 @@ export class RunEventFeedInvariantError extends Error {
   }
 }
 
-function startFeed(state: RunEventFeedState | undefined, runId: string): RunEventFeedState {
+function startFeed(
+  state: RunEventFeedState | undefined,
+  runId: string,
+  observedAt: string
+): RunEventFeedState {
   return transitionRunEventFeed(state ?? createRunEventFeedState(), {
     type: 'start',
     runId,
+    observedAt,
   }).state;
 }
 
@@ -48,13 +53,18 @@ export function useRunEventFeedQuery(runId: string | undefined, options: RunEven
         throw new RunEventFeedInvariantError('missing-run-id');
       }
 
-      const current = startFeed(queryClient.getQueryData<RunEventFeedState>(queryKey), runId);
+      const observedAt = new Date().toISOString();
+      const current = startFeed(
+        queryClient.getQueryData<RunEventFeedState>(queryKey),
+        runId,
+        observedAt
+      );
       const page = await runsService.listRunEvents(runId, readCursor(current));
       const transition = transitionRunEventFeed(current, {
         type: 'page-received',
         runId,
         page,
-        observedAt: new Date().toISOString(),
+        observedAt,
       });
 
       if (transition.disposition.startsWith('rejected-')) {
