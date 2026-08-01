@@ -130,4 +130,30 @@ describe('PlanPreviewModal rejected outcomes', () => {
     expect(text).toContain('FUTURE_REJECTION');
     expect(text).not.toContain('future backend message');
   });
+
+  it('preserves invalid plan identity while applying safe copy to a future validator code', async () => {
+    const plan = { ...mockExecutionPlan, planRef: mockExecutionPlan.planRef! };
+
+    await renderOutcome({
+      kind: 'plan-invalid',
+      plan,
+      validation: {
+        status: 'ERROR',
+        planId: plan.planId,
+        adapterId: 'future-adapter',
+        code: 'FUTURE_VALIDATION',
+        degradable: false,
+        reason: '<unsafe>future validator message</unsafe>',
+      },
+    } as unknown as PlanPreviewOutcome);
+
+    const modal = document.querySelector('[data-testid="plan-preview-modal"]');
+    const text = modal?.textContent ?? '';
+
+    expect(text).toContain(plan.planId);
+    expect(text).toContain(plan.planRef.uri);
+    expect(text).toContain('FUTURE_VALIDATION');
+    expect(text).toContain('The Execution Preview was rejected. Review the technical code.');
+    expect(text).not.toContain('future validator message');
+  });
 });
