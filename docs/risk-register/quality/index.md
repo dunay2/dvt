@@ -14,6 +14,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [>](R-20260413-AR-A12-A-CONTRACT-PACK-RESET.yaml)
 - [>](R-20260413-TF-A1-A-PREVIEW-CONTRACT-ADOPTION-DRIFT.yaml)
 - [>](R-20260414-CONTRACT-SCHEMA-PACK-LINT-COMPAT.yaml)
+- [A dbt semantic edit could alter content outside its proven region](R-20260801-LOSSLESS-DBT-DEPENDENCY-EDIT.yaml)
 - [Access-decision vocabulary and capability-policy ownership can drift across API and contracts](R-20260423-ACCESS-DECISION-VOCABULARY-HARDENING.yaml)
 - [Active docs or consumers may continue treating RETRY_STEP as a canonical signal](R-20260407-RETRY-STEP-SIGNAL-DRIFT.yaml)
 - [Adapter breaker thresholds may need production tuning](R-20260512-AR-C5-ADAPTER-CIRCUIT-BREAKER.yaml)
