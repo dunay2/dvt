@@ -184,7 +184,7 @@ function SelectionRejectedPlanPreviewModal({
     >
       <DialogContent
         data-testid="plan-preview-modal"
-        className="min-w-0 w-[calc(100vw-2rem)] gap-0 overflow-hidden border-slate-700 bg-slate-950 p-0 text-slate-50 shadow-2xl sm:max-w-2xl"
+        className="min-w-0 max-h-[92vh] w-[calc(100vw-2rem)] gap-0 overflow-hidden border-slate-700 bg-slate-950 p-0 text-slate-50 shadow-2xl sm:max-w-2xl"
       >
         <DialogHeader className="min-w-0 border-b border-slate-800 px-4 py-4 sm:px-6 sm:py-5">
           <DialogTitle className="flex min-w-0 items-center gap-2 pr-8 text-lg text-amber-100 sm:text-xl">
@@ -195,7 +195,10 @@ function SelectionRejectedPlanPreviewModal({
             {messages.planPreviewSelectionRejectedDescription}
           </DialogDescription>
         </DialogHeader>
-        <div className="min-w-0 space-y-4 px-4 py-4 sm:px-6 sm:py-5">
+        <div
+          data-slot="plan-preview-scroll-region"
+          className="min-w-0 max-h-[70vh] space-y-4 overflow-y-auto overflow-x-hidden px-4 py-4 sm:px-6 sm:py-5"
+        >
           {startRunMessage ? (
             <div className="rounded-md border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-50">
               {startRunMessage}
