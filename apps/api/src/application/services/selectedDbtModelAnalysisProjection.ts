@@ -127,7 +127,13 @@ export function projectSelectedDbtModelAnalysis(
   const relationById = resolveRelations(selected, input.analysis.semanticEvidence.identities);
   const identities = input.analysis.semanticEvidence.identities
     .filter((identity) => relationById.has(identity.uniqueId))
-    .map((identity) => projectIdentity(identity, relationById.get(identity.uniqueId)!))
+    .map((identity) => {
+      const relation = relationById.get(identity.uniqueId);
+      if (relation === undefined) {
+        throw new Error('Selected dbt analysis relation projection is inconsistent.');
+      }
+      return projectIdentity(identity, relation);
+    })
     .sort((left, right) => left.uniqueId.localeCompare(right.uniqueId));
   const identityIds = new Set(identities.map((identity) => identity.uniqueId));
   const selectedRegions = input.analysis.semanticEvidence.regions
