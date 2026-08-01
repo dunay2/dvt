@@ -87,15 +87,17 @@ describe('PlanPreviewModal rejected outcomes', () => {
       rejection: {
         code: 'REJECTED',
         cause: 'selection.constraint'.repeat(80),
-        reason: 'Review the selected execution scope.'.repeat(160),
+        reason: 'selection-rejection-diagnostic'.repeat(160),
       },
     });
 
     const modal = document.querySelector('[data-testid="plan-preview-modal"]');
     const diagnosticBody = modal?.querySelector('[data-slot="plan-preview-scroll-region"]');
+    const reason = modal?.querySelector('[aria-label="Reason value"]');
 
     expect(modal?.className).toContain('max-h-[92vh]');
     expect(diagnosticBody?.className).toContain('overflow-y-auto');
+    expect(reason?.className).toContain('break-all');
   });
 
   it('renders an invalid plan with exact identity and a disabled Start Run command', async () => {

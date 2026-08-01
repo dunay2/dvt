@@ -129,7 +129,9 @@ function PlanPreviewRejectionPanel({
           </PlanPreviewField>
         ) : null}
         <div className="md:col-span-2">
-          <PlanPreviewField label={messages.planPreviewReasonLabel}>{safeReason}</PlanPreviewField>
+          <PlanPreviewField label={messages.planPreviewReasonLabel} long>
+            {safeReason}
+          </PlanPreviewField>
         </div>
       </div>
     </section>
