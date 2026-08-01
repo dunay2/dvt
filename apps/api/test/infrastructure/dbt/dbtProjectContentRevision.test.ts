@@ -84,6 +84,26 @@ describe('hashProjectContent', () => {
     }
   });
 
+  it('returns deterministic per-file revisions for the exact content set', async () => {
+    await mkdir(path.join(projectDirectory, 'models'));
+    await writeFile(path.join(projectDirectory, 'models', 'orders.sql'), 'select 1\n', 'utf8');
+
+    const revision = await hashProjectContent(projectDirectory, DEFAULT_LIMITS);
+
+    expect(revision.entries).toEqual([
+      {
+        path: 'dbt_project.yml',
+        sha256: '6e0f33532c1002a26af43e371b9da6d25fca642420a5d7d8bc191b1330bad694',
+        bytes: 16,
+      },
+      {
+        path: 'models/orders.sql',
+        sha256: '8903abffd68710879da59014708c6187f8e839fadc2bdf94ae73a036aa591623',
+        bytes: 9,
+      },
+    ]);
+  });
+
   it('excludes only configured runtime directories from snapshots and revisions', async () => {
     const snapshotDirectory = await mkdtemp(path.join(tmpdir(), 'dvt-dbt-project-snapshot-'));
     await mkdir(path.join(projectDirectory, 'models', 'target'), { recursive: true });

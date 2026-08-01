@@ -3,10 +3,17 @@ import { createReadStream } from 'node:fs';
 import { mkdir, open, readdir, stat, type FileHandle } from 'node:fs/promises';
 import path from 'node:path';
 
+export type ProjectContentFileRevision = Readonly<{
+  path: string;
+  sha256: string;
+  bytes: number;
+}>;
+
 export type ProjectContentRevision = Readonly<{
   sha256: string;
   files: number;
   bytes: number;
+  entries: readonly ProjectContentFileRevision[];
 }>;
 
 export type ProjectContentLimits = Readonly<{
@@ -46,7 +53,7 @@ async function collectProjectContent(
   limits: ProjectContentLimits,
   selection: ProjectContentSelection
 ): Promise<ProjectContentRevision> {
-  const entries: Array<{ path: string; sha256: string; bytes: number }> = [];
+  const entries: ProjectContentFileRevision[] = [];
   const state = { bytes: 0, directories: 1 };
   const excludedDirectoryPaths = normalizeExcludedDirectoryPaths(
     selection.excludedDirectoryPaths ?? []
@@ -74,6 +81,7 @@ async function collectProjectContent(
     sha256: createHash('sha256').update(stableJson(entries), 'utf8').digest('hex'),
     files: entries.length,
     bytes: state.bytes,
+    entries,
   };
 }
 
@@ -81,7 +89,7 @@ async function visitProjectDirectory(
   projectDirectory: string,
   currentDirectory: string,
   currentSnapshotDirectory: string | null,
-  entries: Array<{ path: string; sha256: string; bytes: number }>,
+  entries: ProjectContentFileRevision[],
   limits: ProjectContentLimits,
   state: { bytes: number; directories: number },
   excludedDirectoryPaths: ReadonlySet<string>,
