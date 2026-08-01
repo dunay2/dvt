@@ -2030,7 +2030,8 @@
       "documentationRefs": ["https://github.com/dunay2/dvt/issues/174"],
       "governingSources": [
         "https://github.com/dunay2/dvt/issues/174",
-        "docs/architecture/command-query-rail-governance.md"
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
       "allowedImplementationSurfaces": [
         "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts",
@@ -2171,7 +2172,8 @@
         ],
         "governingSources": [
           "https://github.com/dunay2/dvt/issues/174",
-          "docs/architecture/command-query-rail-governance.md"
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
         ],
         "commandQueryRails": [
           {
@@ -2196,7 +2198,7 @@
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-01T20:49:48.279Z"
     },
@@ -19563,6 +19565,79 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-01T20:49:48.279Z"
+    },
+    {
+      "operationId": "96084d96-28f9-47f2-83ae-9ef393c16e6e",
+      "idempotencyKey": "mvp-174-feature-mechanization-fowler",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-174-PLAN-DECISION-PREVIEW#command#previewplan",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/174",
+      "sourceContentSha256": "818e36ff636873e9d314f37d6ad014591dbbd04cb1183e341bdb2259ef728a62",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web test:e2e:selected-closure:live",
+        "dddOwner": "planner preview boundary",
+        "railName": "PreviewPlan",
+        "railType": "command",
+        "featureId": "MVP-174-PLAN-DECISION-PREVIEW",
+        "greenTest": "pnpm --filter @dvt/web test:e2e:selected-closure:live",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/174",
+        "unitTests": [
+          "packages/@dvt/contracts/test/planner.contract.test.ts",
+          "packages/@dvt/planner/test/unit/planner-facade.test.ts",
+          "apps/web/src/app/components/PlanExecutionDecisionView.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/174"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:selected-closure:live"
+        ],
+        "domainObjects": ["PlanExecutionDecisionV1"],
+        "fowlerSignals": [
+          "Planner owns decision semantics; Web is a read-only presentation adapter."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Persisted preview omitted PARTIAL, RUN, and SKIP decision rows for an authorized selected closure.",
+        "governingSources": [
+          "https://github.com/dunay2/dvt/issues/174",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/174"],
+        "architectureGuards": [
+          "pnpm exec vitest run packages/@dvt/contracts/test/planner.contract.test.ts packages/@dvt/planner/test/unit/planner-facade.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/174",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts#PlanExecutionDecisionV1",
+          "packages/@dvt/planner/src/domain/PlanExecutionDecisionProjector.ts#projectPlanExecutionDecisions",
+          "apps/api/src/application/services/PreviewPlanUseCase.ts#PreviewPlanUseCase",
+          "apps/web/src/app/components/PlanExecutionDecisionView.tsx#PlanExecutionDecisionView",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#PlanPreviewModal"
+        ],
+        "normalizedRailName": "previewplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "818e36ff636873e9d314f37d6ad014591dbbd04cb1183e341bdb2259ef728a62",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts",
+          "packages/@dvt/planner/src/domain/PlanExecutionDecisionProjector.ts",
+          "apps/api/src/application/services/PreviewPlanUseCase.ts",
+          "apps/web/src/app/components/PlanExecutionDecisionView.tsx",
+          "apps/web/src/app/components/PlanPreviewModal.tsx"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-01T21:27:37.429Z"
     }
   ]
 }
