@@ -169,6 +169,15 @@ export type CanvasViewCopy = {
   readonly canvasExecutionUnavailableMessage: string;
   readonly dbtExplicitSelectionRequiresExecutableResourceMessage: string;
   readonly planCreatedMessage: string;
+  readonly planPreviewSelectionRejectedTitle: string;
+  readonly planPreviewSelectionRejectedDescription: string;
+  readonly planPreviewPlanInvalidTitle: string;
+  readonly planPreviewPlanInvalidDescription: string;
+  readonly planPreviewUnknownCodeMessage: string;
+  readonly planPreviewCodeLabel: string;
+  readonly planPreviewCauseLabel: string;
+  readonly planPreviewReasonLabel: string;
+  readonly planPreviewCloseLabel: string;
   readonly runStartedMessage: string;
   readonly planStatusRunUnavailableMessage: string;
   readonly planStatusPreviewRequiredMessage: string;

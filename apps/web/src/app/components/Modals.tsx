@@ -1,6 +1,8 @@
+import { EXECUTABILITY_REJECTION_CODES } from '@dvt/contracts';
 import { XCircle, Clock, Zap, AlertTriangle, Download } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import type { PlanPreviewOutcome } from '../ports/plans';
 import type { DbtEdge } from '../types/dbt';
 import type { PlanPreviewSelectionIntentViewModel, PlanViewModel } from '../types/plans';
 
@@ -25,10 +27,24 @@ import {
   DialogTitle,
 } from './ui/dialog';
 
+export type PlanPreviewModalMessages = Readonly<{
+  planPreviewSelectionRejectedTitle: string;
+  planPreviewSelectionRejectedDescription: string;
+  planPreviewPlanInvalidTitle: string;
+  planPreviewPlanInvalidDescription: string;
+  planPreviewUnknownCodeMessage: string;
+  planPreviewCodeLabel: string;
+  planPreviewCauseLabel: string;
+  planPreviewReasonLabel: string;
+  planPreviewCloseLabel: string;
+}>;
+
 interface PlanPreviewModalProps {
   open: boolean;
   onClose: () => void;
   plan: PlanViewModel | null;
+  outcome: PlanPreviewOutcome | null;
+  messages: PlanPreviewModalMessages;
   startRunDisabled?: boolean;
   startRunMessage?: string;
   onStartRun: () => void;
@@ -91,6 +107,46 @@ function PlanPreviewField({
   );
 }
 
+type PlanPreviewRejectionDetails = Readonly<{
+  code: string;
+  cause?: string;
+  reason: string;
+  knownCode: boolean;
+}>;
+
+function PlanPreviewRejectionPanel({
+  details,
+  messages,
+}: Readonly<{
+  details: PlanPreviewRejectionDetails;
+  messages: PlanPreviewModalMessages;
+}>) {
+  const safeReason = details.knownCode ? details.reason : messages.planPreviewUnknownCodeMessage;
+  const safeCause = details.knownCode ? details.cause : undefined;
+
+  return (
+    <section
+      aria-label={messages.planPreviewReasonLabel}
+      data-testid="plan-preview-rejection"
+      className="min-w-0 rounded-lg border border-amber-400/50 bg-amber-400/10 p-4"
+    >
+      <div className="grid min-w-0 gap-3 md:grid-cols-2">
+        <PlanPreviewField label={messages.planPreviewCodeLabel} long>
+          {details.code}
+        </PlanPreviewField>
+        {safeCause ? (
+          <PlanPreviewField label={messages.planPreviewCauseLabel} long>
+            {safeCause}
+          </PlanPreviewField>
+        ) : null}
+        <div className="md:col-span-2">
+          <PlanPreviewField label={messages.planPreviewReasonLabel}>{safeReason}</PlanPreviewField>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function PlanPreviewSelectionReview({
   selectionIntent,
 }: Readonly<{ selectionIntent: PlanPreviewSelectionIntentViewModel }>) {
@@ -117,16 +173,95 @@ function PlanPreviewSelectionReview({
   );
 }
 
+function SelectionRejectedPlanPreviewModal({
+  open,
+  onClose,
+  outcome,
+  messages,
+  startRunMessage,
+}: Readonly<{
+  open: boolean;
+  onClose: () => void;
+  outcome: Extract<PlanPreviewOutcome, { kind: 'selection-rejected' }>;
+  messages: PlanPreviewModalMessages;
+  startRunMessage?: string;
+}>) {
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
+    >
+      <DialogContent
+        data-testid="plan-preview-modal"
+        className="min-w-0 w-[calc(100vw-2rem)] gap-0 overflow-hidden border-slate-700 bg-slate-950 p-0 text-slate-50 shadow-2xl sm:max-w-2xl"
+      >
+        <DialogHeader className="min-w-0 border-b border-slate-800 px-4 py-4 sm:px-6 sm:py-5">
+          <DialogTitle className="flex min-w-0 items-center gap-2 pr-8 text-lg text-amber-100 sm:text-xl">
+            <AlertTriangle className="size-5" aria-hidden="true" />
+            {messages.planPreviewSelectionRejectedTitle}
+          </DialogTitle>
+          <DialogDescription className="text-slate-200">
+            {messages.planPreviewSelectionRejectedDescription}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="min-w-0 space-y-4 px-4 py-4 sm:px-6 sm:py-5">
+          {startRunMessage ? (
+            <div className="rounded-md border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-50">
+              {startRunMessage}
+            </div>
+          ) : null}
+          <PlanPreviewRejectionPanel
+            details={{
+              code: outcome.rejection.code,
+              cause: outcome.rejection.cause,
+              reason: outcome.rejection.reason,
+              knownCode: outcome.rejection.code === 'REJECTED',
+            }}
+            messages={messages}
+          />
+        </div>
+        <DialogFooter className="border-t border-slate-800 bg-slate-950/95 px-4 py-4 sm:px-6">
+          <Button onClick={onClose}>{messages.planPreviewCloseLabel}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function PlanPreviewModal({
   open,
   onClose,
-  plan,
+  plan: providedPlan,
+  outcome,
+  messages,
   startRunDisabled = false,
   startRunMessage,
   onStartRun,
 }: PlanPreviewModalProps) {
+  if (outcome?.kind === 'selection-rejected') {
+    return (
+      <SelectionRejectedPlanPreviewModal
+        open={open}
+        onClose={onClose}
+        outcome={outcome}
+        messages={messages}
+        startRunMessage={startRunMessage}
+      />
+    );
+  }
+
+  const plan =
+    outcome?.kind === 'accepted' || outcome?.kind === 'plan-invalid' ? outcome.plan : providedPlan;
   if (!plan) return null;
 
+  const validation = outcome?.kind === 'plan-invalid' ? outcome.validation : null;
+  const validationCodeKnown =
+    validation != null &&
+    EXECUTABILITY_REJECTION_CODES.includes(
+      validation.code as (typeof EXECUTABILITY_REJECTION_CODES)[number]
+    );
   const previewSummary = plan.preview?.summary;
   const persistedPreview = plan.preview?.persisted;
   const provenance = plan.preview?.provenance;
@@ -147,13 +282,15 @@ export function PlanPreviewModal({
       >
         <DialogHeader className="min-w-0 border-b border-slate-800 px-4 py-4 sm:px-6 sm:py-5">
           <DialogTitle className="flex min-w-0 flex-wrap items-center gap-2 pr-8 text-lg text-slate-50 sm:text-xl">
-            Execution Preview
+            {validation == null ? 'Execution Preview' : messages.planPreviewPlanInvalidTitle}
             <Badge variant="outline" className="border-blue-400/50 bg-blue-500/10 text-blue-100">
               Read-only
             </Badge>
           </DialogTitle>
           <DialogDescription className="text-slate-200">
-            Review the immutable execution preview before starting a run.
+            {validation == null
+              ? 'Review the immutable execution preview before starting a run.'
+              : messages.planPreviewPlanInvalidDescription}
           </DialogDescription>
         </DialogHeader>
 
@@ -163,6 +300,18 @@ export function PlanPreviewModal({
               <div className="rounded-md border border-blue-500/40 bg-blue-500/10 px-4 py-3 text-sm text-blue-50">
                 {startRunMessage}
               </div>
+            ) : null}
+
+            {validation ? (
+              <PlanPreviewRejectionPanel
+                details={{
+                  code: validation.code,
+                  cause: validation.cause,
+                  reason: validation.reason,
+                  knownCode: validationCodeKnown,
+                }}
+                messages={messages}
+              />
             ) : null}
 
             <PlanPreviewSection
@@ -381,7 +530,7 @@ export function PlanPreviewModal({
             Export JSON
           </Button>
           <Button
-            disabled={startRunDisabled}
+            disabled={startRunDisabled || validation != null}
             onClick={() => {
               onStartRun();
             }}

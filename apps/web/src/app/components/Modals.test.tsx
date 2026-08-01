@@ -6,7 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../testing/fixtures/mockDbtData';
 import type { PlanViewModel } from '../types/plans';
+import { resolveCanvasViewCopy } from '../views/canvas/copy';
 import { PlanPreviewModal, RePlanRequiredModal } from './Modals';
+
+const PLAN_PREVIEW_MESSAGES = resolveCanvasViewCopy('en');
 
 describe('PlanPreviewModal', () => {
   let container: HTMLDivElement;
@@ -51,6 +54,8 @@ describe('PlanPreviewModal', () => {
           open={true}
           onClose={onClose}
           plan={mockExecutionPlan}
+          outcome={null}
+          messages={PLAN_PREVIEW_MESSAGES}
           startRunMessage="Execution Preview is stale. Preview execution plan again before starting."
           onStartRun={onStartRun}
         />
@@ -96,6 +101,8 @@ describe('PlanPreviewModal', () => {
           open={true}
           onClose={vi.fn()}
           plan={plan}
+          outcome={{ kind: 'accepted', plan: { ...plan, planRef: plan.planRef! } }}
+          messages={PLAN_PREVIEW_MESSAGES}
           startRunMessage="El preview actual esta listo para arrancar."
           onStartRun={vi.fn()}
         />
@@ -160,7 +167,14 @@ describe('PlanPreviewModal', () => {
 
     await act(async () => {
       root.render(
-        <PlanPreviewModal open={true} onClose={vi.fn()} plan={plan} onStartRun={vi.fn()} />
+        <PlanPreviewModal
+          open={true}
+          onClose={vi.fn()}
+          plan={plan}
+          outcome={null}
+          messages={PLAN_PREVIEW_MESSAGES}
+          onStartRun={vi.fn()}
+        />
       );
     });
 
