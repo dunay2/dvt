@@ -138,6 +138,37 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
     );
   });
 
+  it('refuses overlapping semantic evidence instead of throwing a schema error', async () => {
+    const analysis = validSelectedModelProjectAnalysis();
+    const region = analysis.semanticEvidence.regions[0];
+    if (region === undefined) throw new Error('Missing semantic region fixture');
+
+    const result = await buildQuery({
+      ...analysis,
+      semanticEvidence: {
+        ...analysis.semanticEvidence,
+        regions: [
+          region,
+          { ...region, regionId: 'region-overlap', range: { startByte: 30, endByte: 55 } },
+        ],
+      },
+    }).execute({
+      scope: SELECTED_MODEL_ANALYSIS_SCOPE,
+      canvasId: SELECTED_MODEL_FILE_AUTHORITY.canvasId,
+      selectedUniqueId: 'model.analytics.orders',
+    });
+
+    expect(result.status).toBe('refused');
+    expect(result.regions).toEqual([]);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: 'dbt_semantic_regions_overlap',
+        severity: 'error',
+        subject: { kind: 'file', path: 'models/orders.sql' },
+      }),
+    ]);
+  });
+
   it('rejects graph-draft authority before invoking native analysis', async () => {
     const analyze = vi.fn();
     const query = new AnalyzeSelectedDbtModelQuery(
