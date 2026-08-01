@@ -1,6 +1,7 @@
 import type {
   DbtProjectAnalysis,
   DbtProjectAnalysisDependency,
+  DbtProjectAnalysisIdentity,
   DbtProjectAnalysisResource,
 } from '../../application/ports/dbtProjectAnalysis.js';
 
@@ -13,12 +14,21 @@ const SUPPORTED_RESOURCE_TYPES = new Set([
   'exposure',
   'metric',
 ]);
+const SUPPORTED_ANALYSIS_IDENTITY_TYPES = new Set([
+  'model',
+  'source',
+  'test',
+  'snapshot',
+  'seed',
+  'macro',
+]);
 
 export type ManifestProjection = Readonly<{
   dbtVersion?: string;
   adapterType?: string;
   projectName: string;
   resources: readonly DbtProjectAnalysisResource[];
+  identities: readonly DbtProjectAnalysisIdentity[];
   dependencies: readonly DbtProjectAnalysisDependency[];
   diagnostics: DbtProjectAnalysis['diagnostics'];
 }>;
@@ -40,6 +50,11 @@ export function projectDbtManifest(value: unknown): ManifestProjection {
     ...collectionValues(manifest.sources),
     ...collectionValues(manifest.exposures),
     ...collectionValues(manifest.metrics),
+  ];
+  const identityCandidates = [
+    ...collectionValues(manifest.nodes),
+    ...collectionValues(manifest.sources),
+    ...collectionValues(manifest.macros),
   ];
   const diagnostics: DbtProjectAnalysis['diagnostics'][number][] = [];
   const resources: DbtProjectAnalysisResource[] = [];
@@ -69,6 +84,17 @@ export function projectDbtManifest(value: unknown): ManifestProjection {
     throw new Error('dbt parse produced a malformed graph resource.');
   }
   resources.sort((left, right) => left.uniqueId.localeCompare(right.uniqueId));
+  const identities = identityCandidates
+    .map((candidate) => {
+      const identity = projectIdentity(candidate);
+      const resourceType = stringValue(record(candidate).resource_type);
+      if (identity === null && SUPPORTED_ANALYSIS_IDENTITY_TYPES.has(resourceType ?? '')) {
+        throw new Error('dbt parse produced a malformed analysis identity.');
+      }
+      return identity;
+    })
+    .filter((identity): identity is DbtProjectAnalysisIdentity => identity !== null)
+    .sort((left, right) => left.uniqueId.localeCompare(right.uniqueId));
   const resourceIds = new Set(resources.map((resource) => resource.uniqueId));
   const resourceById = new Map(resources.map((resource) => [resource.uniqueId, resource]));
   const dependencies: DbtProjectAnalysisDependency[] = [];
@@ -100,8 +126,37 @@ export function projectDbtManifest(value: unknown): ManifestProjection {
     ...(dbtVersion === undefined ? {} : { dbtVersion }),
     ...(adapterType === undefined ? {} : { adapterType }),
     resources,
+    identities,
     dependencies: deduplicateDependencies(dependencies),
     diagnostics: diagnostics.sort((left, right) => left.message.localeCompare(right.message)),
+  };
+}
+
+function projectIdentity(value: unknown): DbtProjectAnalysisIdentity | null {
+  const resource = record(value);
+  const resourceType = stringValue(resource.resource_type);
+  if (resourceType === undefined || !SUPPORTED_ANALYSIS_IDENTITY_TYPES.has(resourceType)) {
+    return null;
+  }
+  const uniqueId = stringValue(resource.unique_id);
+  const name = stringValue(resource.name);
+  const packageName = stringValue(resource.package_name);
+  if (uniqueId === undefined || name === undefined || packageName === undefined) return null;
+
+  const originalFilePath = stringValue(resource.original_file_path);
+  const sourceName = stringValue(resource.source_name);
+  const dependencies = record(resource.depends_on);
+  return {
+    uniqueId,
+    resourceType: resourceType as DbtProjectAnalysisIdentity['resourceType'],
+    name,
+    packageName,
+    ...(sourceName === undefined ? {} : { sourceName }),
+    ...(originalFilePath === undefined
+      ? {}
+      : { originalFilePath: normalizeManifestPath(originalFilePath) }),
+    dependencyUniqueIds: [...new Set(stringArray(dependencies.nodes))].sort(),
+    macroUniqueIds: [...new Set(stringArray(dependencies.macros))].sort(),
   };
 }
 
