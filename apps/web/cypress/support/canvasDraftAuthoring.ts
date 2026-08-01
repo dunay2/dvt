@@ -200,11 +200,21 @@ export function buildCanvasAuthoringDraft({
   if (authoringGenerated) {
     return buildWorkspaceGraphAuthoringDraft({
       canvas,
-      nodeIds: ['source-1', 'dvt-sql-transform-1', 'sink-1'],
+      nodeIds: [
+        'source-1',
+        'dvt-sql-transform-1',
+        'sink-1',
+        ...(includeLooseNode ? ['orphan-transform-1'] : []),
+      ],
       nodePositions: {
         'source-1': { x: 40, y: 140 },
         'dvt-sql-transform-1': { x: 340, y: 140 },
         'sink-1': { x: 650, y: 140 },
+        ...(includeLooseNode
+          ? {
+              'orphan-transform-1': { x: 340, y: 360 },
+            }
+          : {}),
       },
       nodes: [
         {
@@ -237,6 +247,20 @@ export function buildCanvasAuthoringDraft({
           tags: ['authoring'],
           metadata: { typeLabel: 'Sink' },
         },
+        ...(includeLooseNode
+          ? [
+              {
+                id: 'orphan-transform-1',
+                name: 'Orphan transform',
+                pluginId: 'dvt',
+                kind: 'dvt:sql_transform',
+                role: 'transform' as const,
+                status: 'idle' as const,
+                tags: ['authoring', 'loose'],
+                metadata: { typeLabel: 'SQL transform' },
+              },
+            ]
+          : []),
       ],
       edges: [
         {
