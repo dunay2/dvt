@@ -2,8 +2,10 @@
  * Planner-owned explanation of which graph subjects are admitted to an
  * immutable execution plan.
  *
- * @decision Keep execution decisions in the persisted plan artifact so Web
- * renders planner truth without reconstructing selection semantics.
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Keep execution decisions in the persisted plan artifact so Web renders planner truth without reconstructing selection semantics.
+ * @consequence Planner, API, and Web share one immutable execution-decision vocabulary.
+ * @version 1.0.0
  */
 export const PLAN_EXECUTION_DECISION_STATUS = {
   run: 'RUN',

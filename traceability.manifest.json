@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-07-31",
+  "generated": "2026-08-01",
   "repo": {
     "sha": "local"
   },
@@ -835,6 +835,7 @@
       "decisions": [
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
         "Keep executable-selection intent as a canonical planner contract instead of UI-local state.",
+        "Keep execution decisions in the persisted plan artifact so Web renders planner truth without reconstructing selection semantics.",
         "Model workspace graph edits as aggregate commands instead of transport-specific patches.",
         "Persist workspace authoring as a graph-first aggregate, not as UI widget state.",
         "Publish execution-selection schemas as a focused schema pack for external validators.",
@@ -849,6 +850,7 @@
         "packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringDraft.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/index.ts",
@@ -1090,10 +1092,12 @@
         "Enforce scoped compare-and-swap before atomically replacing authoritative workspace files.",
         "Expose stable content revisions and compare-and-swap writes at the workspace-file port.",
         "Keep dbt file analysis in a versioned projection separate from execution and draft persistence.",
+        "Native dbt analysis owns semantics; this contract exposes only",
         "Publish the complete graph-derived dbt artifact set through one specific atomic command.",
         "Re-export only versioned dbt project published language",
         "Resolve authority on the server and return a discriminated outcome for the one mutated authority.",
         "Serialize mutations per scoped path and publish writes through atomic replacement.",
+        "The client names semantic identities; the server owns source patches.",
         "Use one discriminated provenance contract for transformation Git artifacts and file-authoritative dbt projects.",
         "Validation is read-only; import requires its content-addressed receipt and an unbound Canvas.",
         "Version graph-draft and dbt-project-files authority outside WorkspaceGraphAuthoringDraft.v1.",
@@ -1103,7 +1107,9 @@
         "apps/api/src/application/ports/workspaceFiles.ts",
         "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileMutationCoordinator.ts",
         "apps/api/src/infrastructure/workspaceFiles/LocalWorkspaceFileRepository.ts",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtProjectImport.v1.ts",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtYamlDescriptionEdit.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/GraphDbtWorkspaceArtifactPublication.v1.ts",
         "packages/@dvt/contracts/src/contracts/dbt-project/index.ts",
