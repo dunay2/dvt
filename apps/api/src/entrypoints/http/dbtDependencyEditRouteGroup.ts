@@ -3,6 +3,7 @@ import type { FastifyInstance } from 'fastify';
 
 import { ApplySelectedDbtDependencyEditCommand } from '../../application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.js';
 import { DbtCliProjectCandidateAnalyzer } from '../../infrastructure/dbt/DbtCliProjectCandidateAnalyzer.js';
+import { DEFAULT_DBT_PROJECT_SOURCE_LIMITS } from '../../infrastructure/dbt/dbtProjectSourceSnapshot.js';
 import { WorkspaceMetadataDbtDependencyEditReceiptStore } from '../../infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.js';
 import { LocalWorkspaceFileBatchMutationGateway } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileBatchMutationGateway.js';
 import { LocalWorkspaceFileRepository } from '../../infrastructure/workspaceFiles/LocalWorkspaceFileRepository.js';
@@ -34,7 +35,10 @@ export function registerProtectedDbtDependencyEditRouteGroup(
     resolver: options.protectedModule.dbtProjectImport.selectedModelAnalysisResolver,
     workspaceFiles: new LocalWorkspaceFileRepository({ root: workspaceFilesRoot }),
     candidateAnalyzer: new DbtCliProjectCandidateAnalyzer(analyzerOptions),
-    batchMutation: new LocalWorkspaceFileBatchMutationGateway({ root: workspaceFilesRoot }),
+    batchMutation: new LocalWorkspaceFileBatchMutationGateway({
+      root: workspaceFilesRoot,
+      maxBatchFiles: DEFAULT_DBT_PROJECT_SOURCE_LIMITS.maxFiles,
+    }),
     receipts: new WorkspaceMetadataDbtDependencyEditReceiptStore({
       metadataFiles: new LocalWorkspaceMetadataFileRepository({ root: workspaceFilesRoot }),
     }),
