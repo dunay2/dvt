@@ -35,7 +35,18 @@ type LiveMaterializationEvidence = {
 };
 
 type LiveRunEventResponse = {
-  readonly items?: Array<{ readonly eventType?: string; readonly stepId?: string }>;
+  readonly items?: Array<{
+    readonly eventId?: string;
+    readonly eventType?: string;
+    readonly runSeq?: number;
+    readonly stepId?: string;
+  }>;
+};
+
+type LiveRunEventIdentity = {
+  readonly eventId: string;
+  readonly eventType: string;
+  readonly runSeq: number;
 };
 
 function assertCompletedMaterialization(
@@ -108,6 +119,53 @@ function closeRunOperationsIfOpen(): void {
   });
 }
 
+function interruptFirstBrowserRunEventRequest(): void {
+  let requestCount = 0;
+
+  cy.intercept('GET', '**/runs/*/events*', (request) => {
+    requestCount += 1;
+    if (requestCount === 1) {
+      request.destroy();
+      return;
+    }
+
+    request.continue();
+  }).as('browserRunEvents');
+}
+
+function readAuthoritativeEventIdentity(response: LiveRunEventResponse): LiveRunEventIdentity[] {
+  return (response.items ?? []).map((event) => {
+    expect(event.eventId).to.be.a('string').and.not.to.equal('');
+    expect(event.eventType).to.be.a('string').and.not.to.equal('');
+    expect(event.runSeq).to.be.a('number');
+
+    return {
+      eventId: event.eventId!,
+      eventType: event.eventType!,
+      runSeq: event.runSeq!,
+    };
+  });
+}
+
+function assertRenderedEventSequence(authoritativeEvents: readonly LiveRunEventIdentity[]): void {
+  cy.get('[data-slot="run-event-feed-health"]', { timeout: 30_000 })
+    .should('have.attr', 'data-state', 'complete')
+    .and('have.attr', 'role', 'status');
+  cy.get('[data-slot="run-event-timeline-table"] tbody tr', { timeout: 30_000 }).should(($rows) => {
+    const renderedEvents = [...$rows].map((row) => {
+      const cells = row.querySelectorAll('td');
+      return {
+        runSeq: Number(cells.item(0).textContent),
+        eventType: cells.item(5).textContent?.trim(),
+      };
+    });
+
+    expect(renderedEvents).to.deep.equal(
+      authoritativeEvents.map(({ eventType, runSeq }) => ({ eventType, runSeq }))
+    );
+  });
+}
+
 describe('Canvas preview-run live protected runtime', () => {
   beforeEach(function () {
     if (!hasLiveProtectedRuntimeEnv()) {
@@ -157,9 +215,13 @@ describe('Canvas preview-run live protected runtime', () => {
       expect(content).to.contain('toNodeId: "sink-1"');
     });
 
+    interruptFirstBrowserRunEventRequest();
     clickButtonNatively('Start Run');
 
     cy.location('pathname', { timeout: 20_000 }).should('match', /^\/runs\/[^/]+$/);
+    cy.wait('@browserRunEvents', { timeout: 20_000 }).should(
+      (interception) => expect(interception.error).to.exist
+    );
     cy.location('pathname').then((pathname) => {
       const runId = pathname.split('/').pop();
       expect(runId).to.be.a('string').and.not.to.equal('');
@@ -170,15 +232,21 @@ describe('Canvas preview-run live protected runtime', () => {
       }).then(() => {
         readLiveRunEvents(runId!).then((eventsResponse) => {
           expect(eventsResponse.status).to.equal(200);
-          const eventTypes = ((eventsResponse.body as LiveRunEventResponse).items ?? []).map(
-            (event) => event.eventType
+          const authoritativeEvents = readAuthoritativeEventIdentity(
+            eventsResponse.body as LiveRunEventResponse
           );
+          const eventTypes = authoritativeEvents.map((event) => event.eventType);
+          const eventIds = authoritativeEvents.map((event) => event.eventId);
+          const runSequences = authoritativeEvents.map((event) => event.runSeq);
           expect(eventTypes).to.include.members([
             'RunQueued',
             'RunStarted',
             'StepCompleted',
             'RunCompleted',
           ]);
+          expect(new Set(eventIds).size).to.equal(eventIds.length);
+          expect(runSequences).to.deep.equal([...runSequences].sort((left, right) => left - right));
+          assertRenderedEventSequence(authoritativeEvents);
         });
       });
     });
