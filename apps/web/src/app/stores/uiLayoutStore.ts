@@ -9,8 +9,6 @@ import {
   type CanvasPaletteId,
 } from '../views/canvas/canvasPalette';
 
-type TabType = 'canvas' | 'run' | 'diff' | 'lineage' | 'code';
-
 interface UiLayoutState {
   leftNavCollapsed: boolean;
   inspectorPanelWidth: number;
@@ -24,14 +22,6 @@ interface UiLayoutState {
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
   canvasEmptyStateGuideVisible: boolean;
-
-  activeTabs: Array<{
-    id: string;
-    type: TabType;
-    label: string;
-    data?: unknown;
-  }>;
-  activeTabId: string | null;
 
   toggleLeftNav: () => void;
   setInspectorPanelWidth: (width: number) => void;
@@ -48,9 +38,6 @@ interface UiLayoutState {
   setCanvasGridColor: (color: CanvasPaletteId) => void;
   setCanvasSnapToGrid: (enabled: boolean) => void;
   setCanvasEmptyStateGuideVisible: (visible: boolean) => void;
-  addTab: (tab: { id: string; type: TabType; label: string; data?: unknown }) => void;
-  closeTab: (tabId: string) => void;
-  setActiveTab: (tabId: string) => void;
 }
 
 type PersistedUiLayoutState = Partial<
@@ -86,9 +73,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
       canvasSnapToGrid: false,
       canvasEmptyStateGuideVisible: true,
 
-      activeTabs: [{ id: 'main-canvas', type: 'canvas' as TabType, label: 'Main Graph' }],
-      activeTabId: 'main-canvas',
-
       toggleLeftNav: () => set((state) => ({ leftNavCollapsed: !state.leftNavCollapsed })),
       setInspectorPanelWidth: (width) => set({ inspectorPanelWidth: width }),
       setBottomDrawerHeight: (height) => set({ bottomDrawerHeight: height }),
@@ -110,21 +94,6 @@ export const useUiLayoutStore = create<UiLayoutState>()(
         set({ canvasGridColor: normalizeCanvasHexColor(color, DEFAULT_CANVAS_GRID_COLOR) }),
       setCanvasSnapToGrid: (enabled) => set({ canvasSnapToGrid: enabled }),
       setCanvasEmptyStateGuideVisible: (visible) => set({ canvasEmptyStateGuideVisible: visible }),
-
-      addTab: (tab) =>
-        set((state) => ({
-          activeTabs: [...state.activeTabs, tab],
-          activeTabId: tab.id,
-        })),
-      closeTab: (tabId) =>
-        set((state) => {
-          const newTabs = state.activeTabs.filter((t) => t.id !== tabId);
-          const nextActiveTab = newTabs.at(-1);
-          const newActiveId =
-            state.activeTabId === tabId && nextActiveTab ? nextActiveTab.id : state.activeTabId;
-          return { activeTabs: newTabs, activeTabId: newActiveId };
-        }),
-      setActiveTab: (tabId) => set({ activeTabId: tabId }),
     }),
     {
       name: 'dvt-web-ui-layout',

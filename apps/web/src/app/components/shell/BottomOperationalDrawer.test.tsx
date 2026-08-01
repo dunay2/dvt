@@ -44,8 +44,6 @@ describe('BottomOperationalDrawer', () => {
       bottomDrawerVisible: true,
       focusMode: false,
       gridSize: 20,
-      activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
-      activeTabId: 'main-canvas',
     });
     container = document.createElement('div');
     document.body.appendChild(container);

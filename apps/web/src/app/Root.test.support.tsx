@@ -21,8 +21,6 @@ export function resetRootShellStores(): void {
     focusMode: false,
     gridSize: 20,
     canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
-    activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
-    activeTabId: 'main-canvas',
   });
   usePlatformConnectionStore.setState({
     connectionStatus: { rest: 'ok', liveEvents: 'connected' },
