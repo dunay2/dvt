@@ -51,19 +51,25 @@ export class PlanAssembler {
     );
     const planCore = this.buildPlanCore(command.normalizedSteps, inputHashSha256);
 
-    const {
-      canonical: canonicalPlanCoreJson,
-      sha256: planId,
-      bytes,
-    } = await sha256CanonicalJson(planCore);
+    const { canonical: canonicalPlanCoreJson, sha256: planId } =
+      await sha256CanonicalJson(planCore);
+    const plan = this.assembleFinalPlan(
+      planCore,
+      planId,
+      command.normalizedInput,
+      command.decisions
+    );
+    const { bytes: finalPlanBytes } = await sha256CanonicalJson(plan);
 
-    if (bytes > command.maxPlanSizeBytes) {
-      throwLimitExceeded(`maxPlanSizeBytes exceeded: ${bytes} > ${command.maxPlanSizeBytes}`);
+    if (finalPlanBytes > command.maxPlanSizeBytes) {
+      throwLimitExceeded(
+        `maxPlanSizeBytes exceeded: ${finalPlanBytes} > ${command.maxPlanSizeBytes}`
+      );
     }
-    this.metrics.recordPlanSize(bytes);
+    this.metrics.recordPlanSize(finalPlanBytes);
 
     return {
-      plan: this.assembleFinalPlan(planCore, planId, command.normalizedInput, command.decisions),
+      plan,
       executionPolicy: this.buildExecutionPolicy(
         pluginCompatibilityFingerprint,
         command.requiredCapabilities

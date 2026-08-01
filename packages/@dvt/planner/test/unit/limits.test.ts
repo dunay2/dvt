@@ -31,4 +31,29 @@ describe('limits', () => {
 
     await expect(p).rejects.toMatchObject({ code: PlannerErrorCode.LIMIT_EXCEEDED });
   });
+
+  it('enforces maxPlanSizeBytes after attaching execution decisions', async () => {
+    const planner = new Planner({ limits: { maxPlanSizeBytes: 2_000 } });
+    const input = {
+      graphSource: { nodes: [{ nodeId: 'a', stepKind: 'DBT_MODEL', dependsOn: [] }] },
+      selection: { selectedNodeIds: ['a'] },
+    };
+
+    await expect(planner.buildPlan(input)).resolves.toBeDefined();
+
+    await expect(
+      planner.buildPlan({
+        ...input,
+        decisionScope: {
+          nodeIds: [
+            'a',
+            ...Array.from(
+              { length: 50 },
+              (_, index) => `excluded-decision-subject-${String(index).padStart(3, '0')}`
+            ),
+          ],
+        },
+      })
+    ).rejects.toMatchObject({ code: PlannerErrorCode.LIMIT_EXCEEDED });
+  });
 });
