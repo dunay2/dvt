@@ -9,17 +9,17 @@ describe('resolveShellViewControls', () => {
     (pathname) => {
       const controls = resolveShellViewControls(resolveShellNavigationDisposition(pathname));
 
-      expect(controls.showInspectorPanelToggle).toBe(false);
+      expect(controls).not.toHaveProperty('showInspectorPanelToggle');
       expect(controls.showBottomDrawerToggle).toBe(true);
       expect(controls.showFocusModeToggle).toBe(true);
       expect(controls.showCanvasViewContributionControls).toBe(true);
     }
   );
 
-  it('keeps the inspector toggle available on non-workbench routes', () => {
+  it('does not expose a global node workbench toggle on non-workbench routes', () => {
     const controls = resolveShellViewControls(resolveShellNavigationDisposition('/legacy'));
 
-    expect(controls.showInspectorPanelToggle).toBe(true);
+    expect(controls).not.toHaveProperty('showInspectorPanelToggle');
     expect(controls.showBottomDrawerToggle).toBe(true);
     expect(controls.showFocusModeToggle).toBe(true);
     expect(controls.showCanvasViewContributionControls).toBe(false);

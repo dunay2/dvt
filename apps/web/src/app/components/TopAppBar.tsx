@@ -38,9 +38,7 @@ export function ShellTopBar({
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const toggleFocusMode = useUiLayoutStore((state) => state.toggleFocusMode);
-  const inspectorPanelVisible = useUiLayoutStore((state) => state.inspectorPanelVisible);
   const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
-  const toggleInspectorPanel = useUiLayoutStore((state) => state.toggleInspectorPanel);
   const toggleBottomDrawer = useUiLayoutStore((state) => state.toggleBottomDrawer);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
@@ -94,7 +92,6 @@ export function ShellTopBar({
           <ShellMenu
             kind="workspace"
             viewControls={shellViewControls}
-            inspectorPanelVisible={inspectorPanelVisible}
             bottomDrawerVisible={bottomDrawerVisible}
             focusMode={focusMode}
             gridSize={gridSize}
@@ -103,7 +100,6 @@ export function ShellTopBar({
             projectIdentityBadge={projectIdentityBadge}
             gitBranch={workspaceBootstrap.gitBranch}
             gitSha={workspaceBootstrap.gitSha}
-            toggleInspectorPanel={toggleInspectorPanel}
             toggleBottomDrawer={toggleBottomDrawer}
             toggleFocusMode={toggleFocusMode}
             setGridSize={setGridSize}
@@ -114,7 +110,6 @@ export function ShellTopBar({
         <ShellMenu
           kind="view"
           viewControls={shellViewControls}
-          inspectorPanelVisible={inspectorPanelVisible}
           bottomDrawerVisible={bottomDrawerVisible}
           focusMode={focusMode}
           gridSize={gridSize}
@@ -123,7 +118,6 @@ export function ShellTopBar({
           projectIdentityBadge={projectIdentityBadge}
           gitBranch={workspaceBootstrap.gitBranch}
           gitSha={workspaceBootstrap.gitSha}
-          toggleInspectorPanel={toggleInspectorPanel}
           toggleBottomDrawer={toggleBottomDrawer}
           toggleFocusMode={toggleFocusMode}
           setGridSize={setGridSize}
