@@ -99,8 +99,7 @@ export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResul
     isLoadingWorkspace: snapshotQuery.isLoading || (canLoadEvents && eventFeedQuery.isLoading),
     workspaceError,
     workspaceErrorMessage: workspaceError?.message ?? 'Run workspace could not be loaded.',
-    canRetryEventFeed:
-      eventFeedQuery.data?.phase !== 'idle' && eventFeedQuery.data?.failure?.retryable === true,
+    canRetryEventFeed: workspace?.eventFeedHealth.canRetry ?? false,
     retryEventFeed: () => {
       void eventFeedQuery.retryNow();
     },

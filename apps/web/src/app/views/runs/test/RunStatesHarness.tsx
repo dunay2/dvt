@@ -96,6 +96,11 @@ export function buildWorkspace(
         activeStepId: 'step-transform',
       },
     },
+    eventFeedHealth: {
+      state: 'live',
+      events: timeline.events,
+      canRetry: false,
+    },
     timeline,
     detailState: 'snapshot-plus-events',
     ...overrides,

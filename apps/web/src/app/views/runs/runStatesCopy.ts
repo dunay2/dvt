@@ -19,10 +19,6 @@ export const runStatesCopy = {
   runMissingMessagePrefix: 'No data is available for run',
   runWorkspaceLoading: 'Loading run workspace...',
   runWorkspaceUnavailable: 'Run workspace unavailable',
-  runDegradedTitle: 'Timeline degraded',
-  runDegradedNote:
-    'Snapshot truth is still available for this run. Timeline detail is partial or temporarily unavailable.',
-  retryEventFeedAction: 'Retry timeline',
   runtimeSnapshotTitle: 'Runtime snapshot',
   snapshotTimelineBadge: 'snapshot+timeline',
   snapshotOnlyBadge: 'snapshot-only',

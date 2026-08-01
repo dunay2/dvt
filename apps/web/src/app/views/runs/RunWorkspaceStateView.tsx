@@ -16,8 +16,8 @@ import type {
   RunPlanExecutionSummary,
 } from '../../ports/runs';
 import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
-import { RunDegradedStateView } from './RunDetailStateViews';
 import { RunEventTimelineTable } from './RunEventTimelineTable';
+import { RunEventFeedHealthView } from './RunEventFeedHealthView';
 import { runStatesCopy as copy } from './runStatesCopy';
 import { getDetailStateBadge, isKnownRunField } from './runStatesModel';
 
@@ -660,9 +660,7 @@ export function RunWorkspaceStateView({ workspace, onRetryEventFeed }: RunWorksp
         <Card className="border-slate-700 bg-slate-900 p-5">
           <h3 className="mb-3 text-sm font-semibold">{copy.eventTimelineTitle}</h3>
 
-          {timeline.state === 'degraded' ? (
-            <RunDegradedStateView message={timeline.message} onRetry={onRetryEventFeed} />
-          ) : null}
+          <RunEventFeedHealthView health={workspace.eventFeedHealth} onRetry={onRetryEventFeed} />
 
           {timeline.state === 'empty' ? (
             <p className="text-sm text-slate-400">{copy.emptyTimeline}</p>

@@ -4,8 +4,8 @@ import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  RunDegradedState,
   RunDetailErrorState,
+  RunEventFeedHealthState,
   RunMissingState,
   RunsErrorState,
 } from './RunStates';
@@ -38,22 +38,22 @@ describe('RunStates error states', () => {
     expect(harness.container.textContent).toContain('run_missing');
   });
 
-  it('renders the explicit degraded state notice', async () => {
+  it('renders an accessible retry only for a retryable degraded feed', async () => {
     const onRetry = vi.fn();
     await harness.render(
-      <RunDegradedState
-        message="Timeline is temporarily unavailable because runtime event service is degraded."
+      <RunEventFeedHealthState
+        health={{ state: 'degraded', events: [], canRetry: true }}
         onRetry={onRetry}
       />
     );
 
-    expect(harness.container.textContent).toContain('Timeline degraded');
+    expect(harness.container.textContent).toContain('Degraded');
     expect(harness.container.textContent).toContain(
-      'Snapshot truth is still available for this run. Timeline detail is partial or temporarily unavailable.'
+      'Event updates are temporarily degraded. Previously received events remain visible.'
     );
 
     const retryButton = harness.container.querySelector<HTMLButtonElement>('button');
-    expect(retryButton?.textContent).toBe('Retry timeline');
+    expect(retryButton?.textContent).toBe('Retry event feed');
     retryButton?.click();
     expect(onRetry).toHaveBeenCalledTimes(1);
   });

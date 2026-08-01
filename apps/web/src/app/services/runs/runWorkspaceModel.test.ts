@@ -45,6 +45,7 @@ describe('runWorkspaceModel', () => {
       runId: 'run_1',
       snapshot,
       detailState: 'snapshot-plus-events',
+      eventFeedHealth: { state: 'live', events: [event], canRetry: false },
       timeline: { state: 'available', events: [event], nextAfterSeq: 1 },
     });
   });
@@ -64,11 +65,22 @@ describe('runWorkspaceModel', () => {
       },
     });
 
+    expect(workspace).toMatchObject({
+      eventFeedHealth: {
+        state: 'degraded',
+        events: [event],
+        canRetry: true,
+      },
+      timeline: {
+        state: 'available',
+        events: [event],
+        nextAfterSeq: 1,
+      },
+    });
     expect(workspace.timeline).toMatchObject({
-      state: 'degraded',
+      state: 'available',
       events: [event],
       nextAfterSeq: 1,
-      statusCode: 503,
     });
     expect(workspace.detailState).toBe('snapshot-plus-events');
   });

@@ -6,6 +6,10 @@ import type { RunSnapshot } from '../../ports/runs';
 import type { RunEvent } from '../../types/engine';
 import { classifyHttpError, extractHttpStatusCode } from '../api/classifyHttpError';
 import type { RunEventFeedState } from './runEventFeedModel';
+import {
+  buildRunEventFeedHealthModel,
+  type RunEventFeedHealthModel,
+} from './runEventFeedHealthModel';
 
 export type RunWorkspaceTimeline =
   | {
@@ -17,18 +21,12 @@ export type RunWorkspaceTimeline =
       state: 'empty';
       events: [];
       nextAfterSeq?: number;
-    }
-  | {
-      state: 'degraded';
-      events: RunEvent[];
-      nextAfterSeq?: number;
-      message: string;
-      statusCode?: number;
     };
 
 export type RunWorkspaceViewModel = {
   runId: string;
   snapshot: RunSnapshot;
+  eventFeedHealth: RunEventFeedHealthModel;
   timeline: RunWorkspaceTimeline;
   detailState: 'snapshot-only' | 'snapshot-plus-events';
 };
@@ -68,32 +66,6 @@ export function classifyRunWorkspaceSnapshotError(error: unknown): RunWorkspaceL
   }
 }
 
-function describeTimelineError(error: unknown): { message: string; statusCode?: number } {
-  const kind = classifyHttpError(error);
-  const statusCode = extractHttpStatusCode(error);
-
-  switch (kind) {
-    case 'auth-required':
-    case 'access-denied':
-      return {
-        message: 'Timeline is unavailable because access to event detail is denied.',
-        statusCode,
-      };
-    case 'service-unavailable':
-      return {
-        message: 'Timeline is temporarily unavailable because runtime event service is degraded.',
-        statusCode,
-      };
-    case 'client-error':
-      return {
-        message: `Timeline could not be loaded${statusCode ? ` (HTTP ${statusCode})` : ''}.`,
-        statusCode,
-      };
-    default:
-      return { message: 'Timeline could not be loaded due to an unexpected error.' };
-  }
-}
-
 function readFeedSnapshot(feed: RunEventFeedState | undefined): {
   events: RunEvent[];
   nextAfterSeq?: number;
@@ -115,24 +87,17 @@ export function buildRunWorkspaceViewModel(
 ): RunWorkspaceViewModel {
   const timelineSnapshot = readFeedSnapshot(feed);
   const hasEvents = timelineSnapshot.events.length > 0;
+  const projectedHealth = buildRunEventFeedHealthModel(feed);
+  const eventFeedHealth: RunEventFeedHealthModel = feedError
+    ? {
+        ...projectedHealth,
+        state: hasEvents ? 'degraded' : 'failed',
+        canRetry: false,
+      }
+    : projectedHealth;
   let timeline: RunWorkspaceTimeline;
 
-  if (feed && feed.phase !== 'idle' && feed.failure) {
-    timeline = {
-      state: 'degraded',
-      ...timelineSnapshot,
-      message: feed.failure.message,
-      ...(feed.failure.statusCode === undefined ? {} : { statusCode: feed.failure.statusCode }),
-    };
-  } else if (feedError) {
-    const error = describeTimelineError(feedError);
-    timeline = {
-      state: 'degraded',
-      ...timelineSnapshot,
-      message: error.message,
-      ...(error.statusCode === undefined ? {} : { statusCode: error.statusCode }),
-    };
-  } else if (hasEvents) {
+  if (hasEvents) {
     timeline = { state: 'available', ...timelineSnapshot };
   } else {
     timeline = {
@@ -147,6 +112,7 @@ export function buildRunWorkspaceViewModel(
   return {
     runId: snapshot.runId,
     snapshot,
+    eventFeedHealth,
     timeline,
     detailState: hasEvents ? 'snapshot-plus-events' : 'snapshot-only',
   };
