@@ -1,11 +1,11 @@
-import type { DataSourceMode } from '../../services/config/dataSource';
-
-const API_IDLE_MESSAGE = 'Start a run to see live run events here.';
-const LOADING_MESSAGE = 'Loading run events...';
+import type { RunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
+import type {
+  RunEventFeedHealthModel,
+  RunEventFeedHealthState,
+} from '../../services/runs/runEventFeedHealthModel';
 
 type BottomOperationalDrawerLogModelBase = {
   readonly title: string;
-  readonly modeLabel: string | null;
 };
 
 export type BottomOperationalDrawerLogModel =
@@ -15,58 +15,51 @@ export type BottomOperationalDrawerLogModel =
       readonly message: string;
     })
   | (BottomOperationalDrawerLogModelBase & {
-      readonly kind: 'loading';
+      readonly kind: 'active';
       readonly runLabel: string;
+      readonly healthState: Exclude<RunEventFeedHealthState, 'idle'>;
+      readonly statusLabel: string;
       readonly message: string;
-    })
-  | (BottomOperationalDrawerLogModelBase & {
-      readonly kind: 'streaming';
-      readonly runLabel: string;
+      readonly canRetry: boolean;
+      readonly retryLabel: string;
       readonly lines: readonly string[];
     });
 
 type BuildBottomOperationalDrawerLogModelInput = {
   readonly title: string;
-  readonly dataSourceMode: DataSourceMode;
   readonly runId: string | undefined;
-  readonly isLoading: boolean;
-  readonly lines: readonly string[];
+  readonly health: RunEventFeedHealthModel;
+  readonly copy: RunEventFeedHealthCopy;
+  readonly lines?: readonly string[];
 };
 
 export function buildBottomOperationalDrawerLogModel({
   title,
-  dataSourceMode: _dataSourceMode,
   runId,
-  isLoading,
-  lines,
+  health,
+  copy,
+  lines = [],
 }: BuildBottomOperationalDrawerLogModelInput): BottomOperationalDrawerLogModel {
-  const modeLabel = null;
-
   if (!runId) {
     return {
       title,
-      modeLabel,
       kind: 'idle',
       runLabel: null,
-      message: API_IDLE_MESSAGE,
+      message: copy.messages.idle,
     };
   }
 
-  if (isLoading) {
-    return {
-      title,
-      modeLabel,
-      kind: 'loading',
-      runLabel: `Run ${runId}`,
-      message: LOADING_MESSAGE,
-    };
-  }
+  const healthState = health.state === 'idle' ? 'loading' : health.state;
 
   return {
     title,
-    modeLabel,
-    kind: 'streaming',
+    kind: 'active',
     runLabel: `Run ${runId}`,
+    healthState,
+    statusLabel: copy.states[healthState],
+    message: copy.messages[healthState],
+    canRetry: health.canRetry,
+    retryLabel: copy.retryAction,
     lines,
   };
 }

@@ -6,21 +6,38 @@ import { useMemo } from 'react';
 
 import { useExecutionStore } from '../../stores/executionStore';
 import { useRunEventFeedQuery } from '../../queries/runEventFeedQuery';
+import {
+  buildRunEventFeedHealthModel,
+  type RunEventFeedHealthModel,
+} from '../../services/runs/runEventFeedHealthModel';
 import { formatRunEventAsLogLine } from './formatLogLine';
 
 export function useConsoleLogStream(): {
   lines: string[];
-  isLoading: boolean;
   runId: string | undefined;
+  health: RunEventFeedHealthModel;
+  retry: () => void;
 } {
   const currentRun = useExecutionStore((state) => state.currentRun);
   const runId = currentRun?.runId;
 
   const feedQuery = useRunEventFeedQuery(runId, { runStatus: currentRun?.status });
-  const events = feedQuery.data?.phase === 'idle' ? [] : (feedQuery.data?.events ?? []);
+  const health = useMemo<RunEventFeedHealthModel>(() => {
+    if (runId && feedQuery.isLoading && !feedQuery.data) {
+      return { state: 'loading', events: [], canRetry: false };
+    }
 
-  const lines = useMemo(() => events.map(formatRunEventAsLogLine), [events]);
-  const isLoading = Boolean(runId) && feedQuery.isLoading;
+    return buildRunEventFeedHealthModel(feedQuery.data);
+  }, [feedQuery.data, feedQuery.isLoading, runId]);
 
-  return { lines, isLoading, runId };
+  const lines = useMemo(() => health.events.map(formatRunEventAsLogLine), [health.events]);
+
+  return {
+    lines,
+    runId,
+    health,
+    retry: () => {
+      void feedQuery.retryNow();
+    },
+  };
 }

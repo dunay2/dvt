@@ -45,11 +45,16 @@ export const bottomOperationalDrawerClasses = {
   titleIcon: 'size-4 text-[var(--text-subtle)]',
   title: 'text-sm font-medium text-[var(--text-strong)]',
   runBadge: 'text-xs',
-  modeBadge: 'text-[10px] uppercase tracking-wide',
   closeButton: 'size-6 text-[var(--text-subtle)] hover:text-[var(--text-strong)]',
   closeIcon: 'size-4',
   body: 'flex min-h-0 flex-1',
   bodyMessage:
     'flex h-full w-full items-center justify-center px-4 text-center text-sm text-[var(--text-subtle)]',
-  stream: 'h-full w-full',
+  logBody: 'flex h-full min-h-0 w-full flex-col',
+  feedHealth:
+    'flex shrink-0 flex-wrap items-center gap-2 border-b border-[color:var(--border-default)] px-4 py-2 text-xs',
+  feedHealthBadge: 'shrink-0 text-[10px] uppercase',
+  feedHealthMessage: 'min-w-0 flex-1 text-[var(--text-subtle)]',
+  feedRetry: 'h-7 shrink-0',
+  stream: 'min-h-0 w-full flex-1',
 };
