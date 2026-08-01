@@ -16,11 +16,14 @@ import type {
   CanvasShellLayout,
   CanvasShellPanels,
   CanvasShellProps,
+  CanvasShellRouteIntentRequest,
+  CanvasShellWorkspaceCommands,
 } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import type { IWarehouseSourceImportPort } from '../../ports/workspace';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
+import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 
 const shellState = vi.hoisted(() => ({
   canvasViewportProps: null as null | Record<string, unknown>,
@@ -57,6 +60,8 @@ export type CanvasShellPropsOverrides = {
   graphCommands?: Partial<CanvasShellGraphCommands>;
   chromeCommands?: Partial<CanvasShellChromeCommands>;
   canvasCommands?: Partial<CanvasShellCanvasCommands>;
+  workspaceCommands?: CanvasShellWorkspaceCommands;
+  routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   onDbtProjectImported?: CanvasShellProps['onDbtProjectImported'];
 };
@@ -217,6 +222,8 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       onDeleteActiveCanvas: vi.fn(),
       ...overrides?.canvasCommands,
     },
+    workspaceCommands: overrides?.workspaceCommands,
+    routeIntentRequest: overrides?.routeIntentRequest,
     warehouseSourceImport: overrides?.warehouseSourceImport,
     onDbtProjectImported: overrides?.onDbtProjectImported,
   };
@@ -237,6 +244,10 @@ export function createCanvasShellHarness(): {
   shellState.canvasViewportProps = null;
   shellState.sourceImportWizardProps = null;
   shellState.dbtProjectImportDialogProps = null;
+  useCanvasInteractionStore.setState({
+    contextualWorkbenchId: null,
+    contextualWorkbenchOwnerKey: null,
+  });
 
   return {
     container,
@@ -257,6 +268,10 @@ export function createCanvasShellHarness(): {
         root.unmount();
       });
       useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+      useCanvasInteractionStore.setState({
+        contextualWorkbenchId: null,
+        contextualWorkbenchOwnerKey: null,
+      });
       container.remove();
       vi.clearAllMocks();
     },

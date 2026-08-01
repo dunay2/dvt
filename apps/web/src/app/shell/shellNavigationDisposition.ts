@@ -13,6 +13,10 @@ export type ShellNavigationDisposition = {
 
 const WORKBENCH_ROUTE_PREFIXES = ['/canvas', '/runs', '/templates', '/plugins', '/admin'] as const;
 
+export function isCanvasRoute(pathname: string): boolean {
+  return pathname === '/canvas' || pathname.startsWith('/canvas/');
+}
+
 export function isWorkbenchRoute(pathname: string): boolean {
   return WORKBENCH_ROUTE_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)

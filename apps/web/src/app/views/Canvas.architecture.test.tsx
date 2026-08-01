@@ -37,13 +37,4 @@ describe('Canvas route architecture', () => {
     expect(CANVAS_ROUTE_SOURCE).not.toContain('renderCanvasCenterSurface');
     expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasRecoveryBanner');
   });
-
-  it('keeps retired Canvas workbench tab resolution out of the route composer', () => {
-    expect(CANVAS_ROUTE_SOURCE).toContain('const shellProps = buildCanvasShellProps({');
-    expect(CANVAS_ROUTE_SOURCE).toContain('if (params.workbenchTab != null');
-    expect(CANVAS_ROUTE_SOURCE).toContain('<Navigate to="/canvas" replace />');
-    expect(CANVAS_ROUTE_SOURCE).not.toContain('getCanvasWorkbenchTabViews');
-    expect(CANVAS_ROUTE_SOURCE).not.toContain('CanvasWorkbenchTabStrip');
-    expect(CANVAS_ROUTE_SOURCE).not.toContain('useShellRuntime(');
-  });
 });

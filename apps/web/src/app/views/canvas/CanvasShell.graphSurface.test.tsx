@@ -7,6 +7,7 @@ import {
   createCanvasShellHarness,
   type CanvasShellPropsOverrides,
 } from './CanvasShell.testHarness';
+import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { CanvasShellGraphCommands, CanvasShellProps } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 
@@ -152,5 +153,31 @@ describe('CanvasShell graph base surface', () => {
     );
     expect(closeButton?.textContent).toBe('Cerrar');
     expect(closeButton?.getAttribute('aria-label')).toBe('Cerrar: Project code');
+  });
+
+  it('keeps an authority-owned workbench ahead of stale generic Canvas Code state', async () => {
+    useCanvasInteractionStore.setState({
+      contextualWorkbenchId: 'project-code',
+      contextualWorkbenchOwnerKey: 'dbt-contextual-canvas:sales-canvas',
+    });
+
+    await renderShell({
+      layout: {
+        contextualWorkbench: {
+          id: 'project-code',
+          title: 'Orders project code',
+          closeLabel: 'Cerrar',
+          panel: <div data-testid="dbt-project-file-code-panel" />,
+          requestClose: vi.fn(async () => undefined),
+        },
+      },
+    });
+
+    expect(container.querySelector('[data-testid="dbt-project-file-code-panel"]')).not.toBeNull();
+    expect(
+      container
+        .querySelector('[data-slot="canvas-contextual-workbench-header"] button')
+        ?.getAttribute('aria-label')
+    ).toBe('Cerrar: Orders project code');
   });
 });

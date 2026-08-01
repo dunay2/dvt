@@ -5,7 +5,7 @@ import type { DbtProjectImportResult } from '@dvt/contracts';
 import { cn } from '../../components/ui/utils';
 import { dbtProjectFileCanvasSurfaceStrategy } from '../../plugins/dbt/dbtProjectFileCanvasSurfaceStrategy';
 import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
-import type { CanvasShellProps } from './canvasShell.types';
+import type { CanvasShellProps, CanvasShellRouteIntentRequest } from './canvasShell.types';
 import CanvasShell from './CanvasShell';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { CanvasErrorStateView, CanvasLoadingStateView } from './CanvasStateViews';
@@ -116,10 +116,12 @@ export function DbtProjectFileCanvasView({
   controller,
   screenToFlowPosition,
   onDbtProjectImported,
+  routeIntentRequest,
 }: Readonly<{
   controller: DbtProjectFileCanvasController;
   screenToFlowPosition: NonNullable<CanvasShellProps['canvasContextScreenToFlowPosition']>;
   onDbtProjectImported: (result: DbtProjectImportResult) => void;
+  routeIntentRequest?: CanvasShellRouteIntentRequest;
 }>): JSX.Element {
   const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
   const copy = resolveCanvasViewCopy();
@@ -233,6 +235,7 @@ export function DbtProjectFileCanvasView({
       canOpenProjectExplorer: false,
       onOpenProjectCode: controller.openProjectCode,
     },
+    routeIntentRequest,
     canvasContextScreenToFlowPosition: screenToFlowPosition,
     onDbtProjectImported,
   };

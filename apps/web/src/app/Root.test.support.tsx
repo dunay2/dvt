@@ -3,6 +3,7 @@ import { expect } from 'vitest';
 
 import { useAppDataSourceMode } from './services/AppServicesContext';
 import { usePlatformConnectionStore } from './stores/platformConnectionStore';
+import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import { DEFAULT_CANVAS_PALETTE_ID } from './views/canvas/canvasPalette';
 
@@ -12,6 +13,10 @@ export function RootServicesProbe(): JSX.Element {
 }
 
 export function resetRootShellStores(): void {
+  useCanvasInteractionStore.setState({
+    contextualWorkbenchId: null,
+    contextualWorkbenchOwnerKey: null,
+  });
   useUiLayoutStore.setState({
     leftNavCollapsed: false,
     inspectorPanelWidth: 380,
@@ -21,8 +26,6 @@ export function resetRootShellStores(): void {
     focusMode: false,
     gridSize: 20,
     canvasPalette: DEFAULT_CANVAS_PALETTE_ID,
-    activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
-    activeTabId: 'main-canvas',
   });
   usePlatformConnectionStore.setState({
     connectionStatus: { rest: 'ok', liveEvents: 'connected' },

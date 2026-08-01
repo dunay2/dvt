@@ -19,6 +19,8 @@ describe('useCanvasInteractionStore', () => {
       inspectorNodeId: null,
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
+      contextualWorkbenchId: null,
+      contextualWorkbenchOwnerKey: null,
     });
   });
 
@@ -115,6 +117,28 @@ describe('useCanvasInteractionStore', () => {
 
     useCanvasInteractionStore.getState().setInspectorNode(null);
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
+  });
+
+  it('owns contextual project Code as transient Canvas interaction state', () => {
+    useCanvasInteractionStore
+      .getState()
+      .openContextualWorkbench('project-code', 'dbt-contextual-canvas:sales-canvas');
+
+    expect(useCanvasInteractionStore.getState().contextualWorkbenchId).toBe('project-code');
+    expect(useCanvasInteractionStore.getState().contextualWorkbenchOwnerKey).toBe(
+      'dbt-contextual-canvas:sales-canvas'
+    );
+    expect(localStorage.getItem(CANVAS_INTERACTION_STORAGE_KEY)).not.toContain(
+      'contextualWorkbenchId'
+    );
+    expect(localStorage.getItem(CANVAS_INTERACTION_STORAGE_KEY)).not.toContain(
+      'contextualWorkbenchOwnerKey'
+    );
+
+    useCanvasInteractionStore.getState().closeContextualWorkbench();
+
+    expect(useCanvasInteractionStore.getState().contextualWorkbenchId).toBeNull();
+    expect(useCanvasInteractionStore.getState().contextualWorkbenchOwnerKey).toBeNull();
   });
 
   it('toggles frozen canvas nodes per workspace without changing node positions', () => {

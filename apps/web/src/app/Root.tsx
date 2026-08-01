@@ -35,8 +35,12 @@ import {
 } from './bootstrap/routeBootstrapStartupReadiness';
 import { useActiveRouteBootstrapRegistration } from './bootstrap/useActiveRouteBootstrapRegistration';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
-import { resolveShellNavigationDisposition } from './shell/shellNavigationDisposition';
+import {
+  isCanvasRoute,
+  resolveShellNavigationDisposition,
+} from './shell/shellNavigationDisposition';
 import { buildShellRuntimeState } from './shell/shellRuntimeModel';
+import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
 import { usePlatformConnectionStore } from './stores/platformConnectionStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
 import '@xyflow/react/dist/style.css';
@@ -50,6 +54,9 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const bottomDrawerHeight = useUiLayoutStore((state) => state.bottomDrawerHeight);
   const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
+  const closeCanvasContextualWorkbench = useCanvasInteractionStore(
+    (state) => state.closeContextualWorkbench
+  );
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const setConnectionStatus = usePlatformConnectionStore((state) => state.setConnectionStatus);
   const capabilitiesQuery = useCapabilitiesQuery();
@@ -101,6 +108,12 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     () => buildShellRuntimeState(capabilitiesQuery.data).navigationModel,
     [capabilitiesQuery.data]
   );
+
+  useEffect(() => {
+    if (!isCanvasRoute(location.pathname)) {
+      closeCanvasContextualWorkbench();
+    }
+  }, [closeCanvasContextualWorkbench, location.pathname]);
 
   useEffect(() => {
     if (shellHealth.connectionState === null) {

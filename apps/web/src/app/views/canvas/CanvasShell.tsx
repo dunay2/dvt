@@ -1,7 +1,7 @@
 /**
  * Owned concern: compose the Canvas shell from route-owned presentation contracts.
  */
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getSourceImportContributions, getSourceImportOptions } from '../../plugins/registry';
 import { ResizablePanelGroup } from '../../components/ui/resizable';
 import { CanvasContextMenuLayer } from './CanvasContextMenuLayer';
@@ -16,6 +16,8 @@ import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type { CanvasShellContextualWorkbench, CanvasShellProps } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
+import { useCanvasRouteIntentHandler } from './useCanvasRouteIntentHandler';
+import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 
 export default function CanvasShell({
   layout,
@@ -26,6 +28,7 @@ export default function CanvasShell({
   chromeCommands,
   canvasCommands,
   workspaceCommands,
+  routeIntentRequest,
   canvasContextScreenToFlowPosition,
   onDbtProjectImported,
 }: CanvasShellProps): JSX.Element {
@@ -33,9 +36,30 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
-  const [contextualWorkbenchId, setContextualWorkbenchId] = useState<'project-code' | null>(null);
+  const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
+  const contextualWorkbenchOwnerKey = useCanvasInteractionStore(
+    (state) => state.contextualWorkbenchOwnerKey
+  );
+  const openContextualWorkbench = useCanvasInteractionStore(
+    (state) => state.openContextualWorkbench
+  );
+  const closeContextualWorkbench = useCanvasInteractionStore(
+    (state) => state.closeContextualWorkbench
+  );
+  const activeContextualWorkbenchOwnerKey =
+    layout.surfaceStrategy == null || panels.activeCanvasId == null
+      ? null
+      : `${layout.surfaceStrategy.id}:${panels.activeCanvasId}`;
+  const scopedContextualWorkbenchId =
+    contextualWorkbenchOwnerKey === activeContextualWorkbenchOwnerKey
+      ? contextualWorkbenchId
+      : null;
   const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
-  const openProjectCodeWorkbench = useCallback(() => setContextualWorkbenchId('project-code'), []);
+  const openProjectCodeWorkbench = useCallback(() => {
+    if (activeContextualWorkbenchOwnerKey != null) {
+      openContextualWorkbench('project-code', activeContextualWorkbenchOwnerKey);
+    }
+  }, [activeContextualWorkbenchOwnerKey, openContextualWorkbench]);
   const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
   const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
   const openCanvasSettings = useCallback(() => setCanvasSettingsOpen(true), []);
@@ -51,8 +75,13 @@ export default function CanvasShell({
   const canBrowseDataRegistry = layout.canOpenSourceImport && sourceImportContributions.length > 0;
   const canOpenDataRegistry = canBrowseDataRegistry;
   const sourceImportDialog = useCanvasSourceImportDialogState(canOpenDataRegistry);
+  useEffect(() => {
+    if (contextualWorkbenchId != null && scopedContextualWorkbenchId == null) {
+      closeContextualWorkbench();
+    }
+  }, [closeContextualWorkbench, contextualWorkbenchId, scopedContextualWorkbenchId]);
   const internalContextualWorkbench = useMemo<CanvasShellContextualWorkbench | undefined>(() => {
-    if (contextualWorkbenchId !== 'project-code') {
+    if (scopedContextualWorkbenchId !== 'project-code') {
       return undefined;
     }
 
@@ -64,7 +93,7 @@ export default function CanvasShell({
       requestClose: async () => {
         const flushed = (await codeWorkbenchRef.current?.flush()) ?? true;
         if (flushed) {
-          setContextualWorkbenchId(null);
+          closeContextualWorkbench();
         }
       },
       panel: (
@@ -75,15 +104,16 @@ export default function CanvasShell({
       ),
     };
   }, [
-    contextualWorkbenchId,
+    scopedContextualWorkbenchId,
     copy.nodeWorkbenchCloseLabel,
     copy.sqlContextWorkbenchLoadingMessage,
     copy.sqlContextWorkbenchProjectDescription,
     copy.sqlContextWorkbenchProjectTitle,
+    closeContextualWorkbench,
   ]);
   const shellLayout = useMemo(
     () =>
-      internalContextualWorkbench == null
+      layout.contextualWorkbench != null || internalContextualWorkbench == null
         ? layout
         : {
             ...layout,
@@ -92,6 +122,13 @@ export default function CanvasShell({
     [internalContextualWorkbench, layout]
   );
   const onOpenProjectCode = workspaceCommands?.onOpenProjectCode ?? openProjectCodeWorkbench;
+  useCanvasRouteIntentHandler({
+    request: routeIntentRequest ?? null,
+    columnLevelLineageEnabled: chromeState.columnLevelLineageEnabled,
+    canOpenProjectCode: activeContextualWorkbenchOwnerKey != null,
+    onOpenProjectCode,
+    onToggleColumnLevelLineage: chromeCommands.onToggleColumns,
+  });
   const onOpenProjectExplorer =
     workspaceCommands?.canOpenProjectExplorer === false ? undefined : openProjectExplorer;
   const contextMenuPresenter = useCanvasContextMenuPresenter({

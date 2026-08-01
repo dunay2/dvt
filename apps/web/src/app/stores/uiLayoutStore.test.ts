@@ -23,8 +23,6 @@ describe('useUiLayoutStore', () => {
       canvasGridColor: '#94a3b8',
       canvasSnapToGrid: false,
       canvasEmptyStateGuideVisible: true,
-      activeTabs: [{ id: 'main-canvas', type: 'canvas', label: 'Main Graph' }],
-      activeTabId: 'main-canvas',
     });
   });
 
@@ -69,6 +67,16 @@ describe('useUiLayoutStore', () => {
     expect('connectionStatus' in useUiLayoutStore.getState()).toBe(false);
     expect('setConnectionStatus' in useUiLayoutStore.getState()).toBe(false);
     expect(useUiLayoutStore.getState().gridSize).toBe(30);
+  });
+
+  it('does not own peer workbench navigation inside shell layout state', () => {
+    const state = useUiLayoutStore.getState();
+
+    expect('activeTabs' in state).toBe(false);
+    expect('activeTabId' in state).toBe(false);
+    expect('addTab' in state).toBe(false);
+    expect('closeTab' in state).toBe(false);
+    expect('setActiveTab' in state).toBe(false);
   });
 
   it('does not restore contextual node workbench visibility from persisted legacy layout', async () => {

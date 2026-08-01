@@ -68,29 +68,6 @@ export type ShellNavigationPlacement = Readonly<{
   level: 'core' | 'extended' | 'admin';
 }>;
 
-export type CanvasWorkbenchTabId =
-  | 'graph'
-  | 'logs'
-  | 'code'
-  | 'lineage'
-  | 'diff'
-  | 'artifacts'
-  | 'runs';
-
-export type CanvasWorkbenchTabScope = 'workspace' | 'canvas' | 'selection' | 'run';
-
-export type CanvasWorkbenchTabPlacement = Readonly<{
-  kind: 'workbench-tab';
-  workbench: 'canvas';
-  tabId: Exclude<CanvasWorkbenchTabId, 'graph' | 'logs'>;
-  label: LocalizableString;
-  icon: LucideIcon;
-  order: number;
-  scope: CanvasWorkbenchTabScope;
-}>;
-
-export type ViewPlacement = ShellNavigationPlacement | CanvasWorkbenchTabPlacement;
-
 export interface ViewContribution {
   pluginId: string;
   id: string;
@@ -98,7 +75,7 @@ export interface ViewContribution {
   // Lazily loaded component — plugins use React.lazy
   component: React.ComponentType;
   handle?: AppRouteHandle;
-  placement?: ViewPlacement;
+  placement?: ShellNavigationPlacement;
 }
 
 // ---------------------------------------------------------------------------

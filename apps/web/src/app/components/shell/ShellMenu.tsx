@@ -5,7 +5,6 @@ import {
   Grid2X2,
   Maximize2,
   Minimize2,
-  PanelRightClose,
   SlidersHorizontal,
 } from 'lucide-react';
 import { HexColorInput, HexColorPicker } from 'react-colorful';
@@ -48,7 +47,6 @@ const GRID_OPTIONS = [
 type ShellMenuProps = {
   readonly kind: 'workspace' | 'view';
   readonly viewControls: ShellViewControlsReadModel;
-  readonly inspectorPanelVisible: boolean;
   readonly bottomDrawerVisible: boolean;
   readonly focusMode: boolean;
   readonly gridSize: number;
@@ -57,7 +55,6 @@ type ShellMenuProps = {
   readonly projectIdentityBadge: ProjectIdentityBadge;
   readonly gitBranch: string;
   readonly gitSha: string;
-  readonly toggleInspectorPanel: () => void;
   readonly toggleBottomDrawer: () => void;
   readonly toggleFocusMode: () => void;
   readonly setGridSize: (size: number) => void;
@@ -68,7 +65,6 @@ type ShellMenuProps = {
 export function ShellMenu({
   kind,
   viewControls,
-  inspectorPanelVisible,
   bottomDrawerVisible,
   focusMode,
   gridSize,
@@ -77,7 +73,6 @@ export function ShellMenu({
   projectIdentityBadge,
   gitBranch,
   gitSha,
-  toggleInspectorPanel,
   toggleBottomDrawer,
   toggleFocusMode,
   setGridSize,
@@ -142,15 +137,6 @@ export function ShellMenu({
         ) : (
           <>
             <DropdownMenuLabel>{copy.workspacePanels}</DropdownMenuLabel>
-            {viewControls.showInspectorPanelToggle ? (
-              <DropdownMenuCheckboxItem
-                checked={inspectorPanelVisible}
-                onCheckedChange={toggleInspectorPanel}
-              >
-                <PanelRightClose className="mr-2 size-4" />
-                {copy.inspectorPanel}
-              </DropdownMenuCheckboxItem>
-            ) : null}
             {viewControls.showBottomDrawerToggle ? (
               <DropdownMenuCheckboxItem
                 checked={bottomDrawerVisible}
