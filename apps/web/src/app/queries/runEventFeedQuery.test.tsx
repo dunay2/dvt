@@ -116,6 +116,7 @@ describe('useRunEventFeedQuery', () => {
   afterEach(async () => {
     await mounted?.cleanup();
     mounted = null;
+    vi.useRealTimers();
   });
 
   function withServices(
@@ -443,6 +444,62 @@ describe('useRunEventFeedQuery', () => {
     expect(listRunEvents).toHaveBeenNthCalledWith(2, 'run_1', 1);
     expect(listRunEvents).toHaveBeenNthCalledWith(3, 'run_1', 1);
     expect(mounted.container.querySelector('[data-testid="active-phase"]')?.textContent).toBe(
+      'live'
+    );
+  });
+
+  it('automatically resumes from the observed cursor without loss, duplication, or reordering', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime('2026-07-10T10:00:00.000Z');
+    const listRunEvents = vi
+      .fn<IRunsPort['listRunEvents']>()
+      .mockResolvedValueOnce({ events: [makeEvent('run_1', 'evt_1', 1)], nextAfterSeq: 1 })
+      .mockRejectedValueOnce(
+        new ApiError({
+          message: 'Runtime unavailable',
+          endpoint: '/runs/run_1/events',
+          statusCode: 503,
+          category: 'server',
+        })
+      )
+      .mockResolvedValueOnce({
+        events: [makeEvent('run_1', 'evt_1', 1), makeEvent('run_1', 'evt_2', 2)],
+        nextAfterSeq: 2,
+      });
+
+    mounted = await withTestQueryClient(
+      withServices(
+        buildRunsService(listRunEvents),
+        <FeedConsumer consumerId="automatic" runId="run_1" runStatus="running" />
+      ),
+      createTestQueryClient()
+    );
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('[data-testid="automatic"]')?.textContent === 'evt_1',
+      { tick: () => vi.advanceTimersByTimeAsync(1) }
+    );
+
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="automatic-phase"]')?.textContent ===
+        'retrying',
+      {
+        intervalMs: RUN_EVENT_LIVE_POLL_INTERVAL_MS,
+        tick: () => vi.advanceTimersByTimeAsync(RUN_EVENT_LIVE_POLL_INTERVAL_MS),
+        timeoutMs: RUN_EVENT_LIVE_POLL_INTERVAL_MS,
+      }
+    );
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="automatic"]')?.textContent ===
+        'evt_1,evt_2',
+      { intervalMs: 1_000, tick: () => vi.advanceTimersByTimeAsync(1_000), timeoutMs: 1_000 }
+    );
+
+    expect(listRunEvents).toHaveBeenNthCalledWith(1, 'run_1', undefined);
+    expect(listRunEvents).toHaveBeenNthCalledWith(2, 'run_1', 1);
+    expect(listRunEvents).toHaveBeenNthCalledWith(3, 'run_1', 1);
+    expect(mounted.container.querySelector('[data-testid="automatic-phase"]')?.textContent).toBe(
       'live'
     );
   });
