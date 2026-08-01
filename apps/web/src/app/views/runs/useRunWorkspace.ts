@@ -85,10 +85,10 @@ export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResul
 
     return buildRunWorkspaceViewModel(
       snapshotQuery.data,
-      eventFeedQuery.data,
+      eventFeedQuery.feedState,
       eventFeedQuery.error
     );
-  }, [eventFeedQuery.data, eventFeedQuery.error, snapshotQuery.data]);
+  }, [eventFeedQuery.error, eventFeedQuery.feedState, snapshotQuery.data]);
 
   return {
     runs: runsQuery.data ?? [],
@@ -96,11 +96,10 @@ export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResul
     runsError: runsQuery.error,
     runsErrorMessage,
     workspace,
-    isLoadingWorkspace: snapshotQuery.isLoading || (canLoadEvents && eventFeedQuery.isLoading),
+    isLoadingWorkspace: snapshotQuery.isLoading,
     workspaceError,
     workspaceErrorMessage: workspaceError?.message ?? 'Run workspace could not be loaded.',
-    canRetryEventFeed:
-      eventFeedQuery.data?.phase !== 'idle' && eventFeedQuery.data?.failure?.retryable === true,
+    canRetryEventFeed: workspace?.eventFeedHealth.canRetry ?? false,
     retryEventFeed: () => {
       void eventFeedQuery.retryNow();
     },

@@ -2,7 +2,10 @@
  * Owned concern: own all user-visible copy strings for runs route states,
  * keeping presentation text out of the state model and view logic.
  */
+import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
+
 export const runStatesCopy = {
+  eventFeedHealth: resolveRunEventFeedHealthCopy('en'),
   runsTitle: 'Runs',
   emptyRuns: 'No runs yet.',
   emptyRunsTitle: 'No runs available',
@@ -19,10 +22,6 @@ export const runStatesCopy = {
   runMissingMessagePrefix: 'No data is available for run',
   runWorkspaceLoading: 'Loading run workspace...',
   runWorkspaceUnavailable: 'Run workspace unavailable',
-  runDegradedTitle: 'Timeline degraded',
-  runDegradedNote:
-    'Snapshot truth is still available for this run. Timeline detail is partial or temporarily unavailable.',
-  retryEventFeedAction: 'Retry timeline',
   runtimeSnapshotTitle: 'Runtime snapshot',
   snapshotTimelineBadge: 'snapshot+timeline',
   snapshotOnlyBadge: 'snapshot-only',

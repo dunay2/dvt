@@ -2,7 +2,7 @@
  * Owned concern: adapt the ListRunEvents query rail to one shared,
  * cursor-backed React Query projection per run.
  */
-import { useCallback, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { ContractValidationError } from '@dvt/contracts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -157,6 +157,7 @@ export function useRunEventFeedQuery(runId: string | undefined, options: RunEven
   );
   const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
   const queryKey = queryKeys.runs.eventFeed(workspaceLayoutKey, runId);
+  const isEnabled = Boolean(runId) && (options.enabled ?? true);
 
   const query = useQuery<RunEventFeedState>({
     queryKey,
@@ -212,7 +213,7 @@ export function useRunEventFeedQuery(runId: string | undefined, options: RunEven
         return transition.state;
       }
     },
-    enabled: Boolean(runId) && (options.enabled ?? true),
+    enabled: isEnabled,
     refetchInterval: ({ state }) => getRunEventFeedRefetchInterval(state.data, options.runStatus),
     refetchOnWindowFocus: false,
     retry: false,
@@ -236,5 +237,20 @@ export function useRunEventFeedQuery(runId: string | undefined, options: RunEven
     return query.refetch({ cancelRefetch: false });
   }, [query, queryClient, queryKey, runId]);
 
-  return { ...query, retryNow };
+  const feedState = useMemo<RunEventFeedState>(() => {
+    if (query.data) {
+      return query.data;
+    }
+    if (!runId || !isEnabled) {
+      return createRunEventFeedState();
+    }
+    return {
+      phase: 'initial-loading',
+      runId,
+      events: [],
+      consecutiveFailures: 0,
+    };
+  }, [isEnabled, query.data, runId]);
+
+  return { ...query, feedState, retryNow };
 }

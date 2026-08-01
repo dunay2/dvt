@@ -1,12 +1,12 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { Activity, X } from 'lucide-react';
 
-import { useAppDataSourceMode } from '../../services/AppServicesContext';
+import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { useConsoleLogStream } from '../console/useConsoleLogStream';
 import { buildBottomOperationalDrawerLogModel } from './bottomOperationalDrawerLogModel';
 import { bottomOperationalDrawerClasses } from './chrome';
-import { resolveShellTopBarCopy } from './copy';
+import { detectShellTopBarLocale, resolveShellTopBarCopy } from './copy';
 import { useOperationalDrawerContributionStore } from './operationalDrawerContributionStore';
 import {
   BottomOperationalDrawerBody,
@@ -20,8 +20,10 @@ const XtermConsole = lazy(() => import('../console/XtermConsole'));
 
 function BottomOperationalLogBody({
   model,
+  onRetry,
 }: Readonly<{
   model: ReturnType<typeof buildBottomOperationalDrawerLogModel>;
+  onRetry: () => void;
 }>): JSX.Element {
   if (model.kind === 'idle') {
     return (
@@ -34,53 +36,72 @@ function BottomOperationalLogBody({
     );
   }
 
-  if (model.kind === 'loading') {
-    return (
-      <div
-        data-slot="bottom-operational-drawer-loading"
-        className={bottomOperationalDrawerClasses.bodyMessage}
-      >
-        {model.message}
-      </div>
-    );
-  }
-
   return (
-    <Suspense
-      fallback={
-        <div
-          data-slot="bottom-operational-drawer-terminal-loading"
-          className={bottomOperationalDrawerClasses.bodyMessage}
-        >
-          Loading terminal...
-        </div>
-      }
-    >
+    <div className={bottomOperationalDrawerClasses.logBody}>
       <div
-        data-slot="bottom-operational-drawer-stream"
-        className={bottomOperationalDrawerClasses.stream}
+        role="status"
+        aria-live="polite"
+        data-slot="bottom-operational-feed-health"
+        data-state={model.healthState}
+        className={bottomOperationalDrawerClasses.feedHealth}
       >
-        <XtermConsole lines={[...model.lines]} />
+        <Badge variant="outline" className={bottomOperationalDrawerClasses.feedHealthBadge}>
+          {model.statusLabel}
+        </Badge>
+        <span className={bottomOperationalDrawerClasses.feedHealthMessage}>{model.message}</span>
+        {model.canRetry ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className={bottomOperationalDrawerClasses.feedRetry}
+            data-slot="bottom-operational-feed-retry"
+            onClick={onRetry}
+          >
+            {model.retryLabel}
+          </Button>
+        ) : null}
       </div>
-    </Suspense>
+
+      {model.lines.length > 0 ? (
+        <Suspense
+          fallback={
+            <div
+              data-slot="bottom-operational-drawer-terminal-loading"
+              className={bottomOperationalDrawerClasses.bodyMessage}
+            >
+              {model.terminalLoadingLabel}
+            </div>
+          }
+        >
+          <div
+            data-slot="bottom-operational-drawer-stream"
+            className={bottomOperationalDrawerClasses.stream}
+          >
+            <XtermConsole key={model.runLabel} lines={[...model.lines]} />
+          </div>
+        </Suspense>
+      ) : null}
+    </div>
   );
 }
 
 export function BottomOperationalDrawer() {
-  const copy = resolveShellTopBarCopy();
+  const locale = detectShellTopBarLocale();
+  const copy = resolveShellTopBarCopy(locale);
   const hideBottomDrawer = useUiLayoutStore((state) => state.hideBottomDrawer);
   const contribution = useOperationalDrawerContributionStore((state) => state.contribution);
   const activeOperationalTab = useOperationalDrawerContributionStore((state) => state.activeTab);
   const setActiveOperationalTab = useOperationalDrawerContributionStore(
     (state) => state.selectOperationalDrawerTab
   );
-  const dataSourceMode = useAppDataSourceMode();
-  const { lines, isLoading, runId } = useConsoleLogStream();
+  const feedCopy = resolveRunEventFeedHealthCopy(locale);
+  const { lines, runId, health, retry } = useConsoleLogStream();
   const model = buildBottomOperationalDrawerLogModel({
     title: copy.operationalDrawer,
-    dataSourceMode,
     runId,
-    isLoading,
+    health,
+    copy: feedCopy,
     lines,
   });
   const drawerTitle = contribution?.title ?? model.title;
@@ -112,20 +133,11 @@ export function BottomOperationalDrawer() {
               {model.runLabel}
             </Badge>
           )}
-          {model.modeLabel && (
-            <Badge
-              variant="secondary"
-              className={bottomOperationalDrawerClasses.modeBadge}
-              data-slot="bottom-operational-drawer-mode-badge"
-            >
-              {model.modeLabel}
-            </Badge>
-          )}
         </div>
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Close operational drawer"
+          aria-label={copy.closeOperationalDrawer}
           className={bottomOperationalDrawerClasses.closeButton}
           onClick={hideBottomDrawer}
           data-slot="bottom-operational-drawer-close"
@@ -149,7 +161,7 @@ export function BottomOperationalDrawer() {
         <BottomOperationalDrawerBody
           activeTab={activeOperationalTab}
           contribution={contribution}
-          logBody={<BottomOperationalLogBody model={model} />}
+          logBody={<BottomOperationalLogBody model={model} onRetry={retry} />}
         />
       </div>
     </div>

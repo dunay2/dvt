@@ -91,12 +91,12 @@ function FeedConsumer({
 }>): React.JSX.Element {
   const query = useRunEventFeedQuery(runId, { runStatus });
   const eventIds =
-    query.data?.phase === 'idle' ? [] : query.data?.events.map(({ eventId }) => eventId);
+    query.feedState.phase === 'idle' ? [] : query.feedState.events.map(({ eventId }) => eventId);
 
   return (
     <div>
       <div data-testid={consumerId}>{eventIds?.join(',') ?? 'loading'}</div>
-      <div data-testid={`${consumerId}-phase`}>{query.data?.phase ?? 'loading'}</div>
+      <div data-testid={`${consumerId}-phase`}>{query.feedState.phase}</div>
       <button
         type="button"
         data-testid={`${consumerId}-retry`}
@@ -135,6 +135,32 @@ describe('useRunEventFeedQuery', () => {
       </AppServicesProvider>
     );
   }
+
+  it('publishes the canonical initial-loading state before the first page resolves', async () => {
+    let resolvePage: ((page: { events: RunEvent[] }) => void) | undefined;
+    const listRunEvents = vi.fn<IRunsPort['listRunEvents']>(
+      () =>
+        new Promise((resolve) => {
+          resolvePage = resolve;
+        })
+    );
+
+    mounted = await withTestQueryClient(
+      withServices(
+        buildRunsService(listRunEvents),
+        <FeedConsumer consumerId="feed" runId="run_1" />
+      )
+    );
+
+    expect(mounted.container.querySelector('[data-testid="feed-phase"]')?.textContent).toBe(
+      'initial-loading'
+    );
+
+    await act(async () => {
+      resolvePage?.({ events: [] });
+      await Promise.resolve();
+    });
+  });
 
   it('shares one accumulated cursor across consumers, invalidation, and remount', async () => {
     const listRunEvents = vi

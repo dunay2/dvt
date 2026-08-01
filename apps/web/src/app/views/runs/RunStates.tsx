@@ -3,13 +3,13 @@
  * runs route renderer.
  */
 import {
-  RunDegradedStateView,
   RunDetailErrorStateView,
   RunDetailLoadingStateView,
   RunMissingStateView,
   RunsEmptyStateView,
   RunsErrorStateView,
 } from './RunDetailStateViews';
+import { RunEventFeedHealthView } from './RunEventFeedHealthView';
 import { RunListStateView } from './RunListStateView';
 import { RunWorkspaceStateView } from './RunWorkspaceStateView';
 
@@ -19,5 +19,5 @@ export const RunsErrorState = RunsErrorStateView;
 export const RunMissingState = RunMissingStateView;
 export const RunDetailLoadingState = RunDetailLoadingStateView;
 export const RunDetailErrorState = RunDetailErrorStateView;
-export const RunDegradedState = RunDegradedStateView;
+export const RunEventFeedHealthState = RunEventFeedHealthView;
 export const RunWorkspaceState = RunWorkspaceStateView;

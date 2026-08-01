@@ -45,6 +45,7 @@ describe('runWorkspaceModel', () => {
       runId: 'run_1',
       snapshot,
       detailState: 'snapshot-plus-events',
+      eventFeedHealth: { state: 'live', events: [event], canRetry: false },
       timeline: { state: 'available', events: [event], nextAfterSeq: 1 },
     });
   });
@@ -64,13 +65,69 @@ describe('runWorkspaceModel', () => {
       },
     });
 
+    expect(workspace).toMatchObject({
+      eventFeedHealth: {
+        state: 'degraded',
+        events: [event],
+        canRetry: true,
+      },
+      timeline: {
+        state: 'available',
+        events: [event],
+        nextAfterSeq: 1,
+      },
+    });
     expect(workspace.timeline).toMatchObject({
-      state: 'degraded',
+      state: 'available',
       events: [event],
       nextAfterSeq: 1,
-      statusCode: 503,
     });
     expect(workspace.detailState).toBe('snapshot-plus-events');
+  });
+
+  it.each([
+    {
+      label: 'the initial page is loading',
+      feed: {
+        phase: 'initial-loading' as const,
+        runId: 'run_1',
+        events: [],
+        consecutiveFailures: 0,
+      },
+      feedError: undefined,
+    },
+    {
+      label: 'the feed fails before a successful page',
+      feed: {
+        phase: 'failed' as const,
+        runId: 'run_1',
+        events: [],
+        consecutiveFailures: 1,
+        failure: {
+          kind: 'transport' as const,
+          message: 'Runtime unavailable',
+          retryable: true,
+        },
+      },
+      feedError: new Error('Runtime unavailable'),
+    },
+  ])('does not claim that the timeline is empty when $label', ({ feed, feedError }) => {
+    const workspace = buildRunWorkspaceViewModel(snapshot, feed, feedError);
+
+    expect(workspace.timeline).toEqual({ state: 'unresolved', events: [] });
+    expect(workspace.detailState).toBe('snapshot-only');
+  });
+
+  it('reports an empty timeline only after a successful empty page', () => {
+    const workspace = buildRunWorkspaceViewModel(snapshot, {
+      phase: 'live',
+      runId: 'run_1',
+      events: [],
+      consecutiveFailures: 0,
+      lastSuccessfulFetchAt: '2026-07-10T10:00:02.000Z',
+    });
+
+    expect(workspace.timeline).toEqual({ state: 'empty', events: [] });
   });
 
   it.each([

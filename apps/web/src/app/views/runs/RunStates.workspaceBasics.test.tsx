@@ -59,6 +59,31 @@ describe('RunStates workspace basics', () => {
     );
   });
 
+  it.each([
+    ['loading', 'Loading run events...'],
+    ['failed', 'Run events could not be loaded.'],
+  ] as const)(
+    'does not render empty-timeline copy while the feed is %s',
+    async (state, message) => {
+      await harness.render(
+        <RunWorkspaceState
+          workspace={buildWorkspace(
+            {
+              eventFeedHealth: { state, events: [], canRetry: false },
+              detailState: 'snapshot-only',
+            },
+            { state: 'unresolved', events: [] }
+          )}
+        />
+      );
+
+      expect(harness.container.textContent).toContain(message);
+      expect(harness.container.textContent).not.toContain(
+        'No runtime events are available yet for this run.'
+      );
+    }
+  );
+
   it('renders missing lifecycle evidence as unavailable instead of inventing timestamps', async () => {
     await harness.render(
       <RunWorkspaceState

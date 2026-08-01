@@ -306,4 +306,26 @@ describe('RunStates timeline trust boundaries', () => {
     expect(harness.container.textContent).toContain('Event timeline');
     expect(harness.container.textContent).toContain('step-current');
   });
+
+  it('keeps accumulated timeline evidence visible while feed health is degraded', async () => {
+    const bufferedEvent = buildStepStartedEvent({ stepId: stepId('step-buffered') });
+
+    await harness.render(
+      <RunWorkspaceState
+        workspace={buildWorkspace(
+          {
+            eventFeedHealth: {
+              state: 'degraded',
+              events: [bufferedEvent],
+              canRetry: true,
+            },
+          },
+          { state: 'available', events: [bufferedEvent] }
+        )}
+      />
+    );
+
+    expect(harness.container.textContent).toContain('Degraded');
+    expect(harness.container.textContent).toContain('step-buffered');
+  });
 });

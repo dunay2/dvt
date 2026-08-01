@@ -11,6 +11,11 @@ function buildWorkspace(): RunWorkspaceViewModel {
       status: 'running',
       startedAt: '2026-04-10T10:00:00.000Z',
     },
+    eventFeedHealth: {
+      state: 'live',
+      events: [],
+      canRetry: false,
+    },
     timeline: {
       state: 'empty',
       events: [],
