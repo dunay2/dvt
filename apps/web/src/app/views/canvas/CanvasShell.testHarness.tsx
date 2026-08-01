@@ -23,6 +23,7 @@ import { canvasViewCopy } from './copy';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import type { IWarehouseSourceImportPort } from '../../ports/workspace';
 import { dvtCanvasSurfaceStrategy } from '../../plugins/dvt/dvtCanvasSurfaceStrategy';
+import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 
 const shellState = vi.hoisted(() => ({
   canvasViewportProps: null as null | Record<string, unknown>,
@@ -243,6 +244,7 @@ export function createCanvasShellHarness(): {
   shellState.canvasViewportProps = null;
   shellState.sourceImportWizardProps = null;
   shellState.dbtProjectImportDialogProps = null;
+  useCanvasInteractionStore.setState({ contextualWorkbenchId: null });
 
   return {
     container,
@@ -263,6 +265,7 @@ export function createCanvasShellHarness(): {
         root.unmount();
       });
       useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+      useCanvasInteractionStore.setState({ contextualWorkbenchId: null });
       container.remove();
       vi.clearAllMocks();
     },

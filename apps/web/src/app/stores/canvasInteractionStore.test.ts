@@ -19,6 +19,7 @@ describe('useCanvasInteractionStore', () => {
       inspectorNodeId: null,
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
+      contextualWorkbenchId: null,
     });
   });
 
@@ -115,6 +116,19 @@ describe('useCanvasInteractionStore', () => {
 
     useCanvasInteractionStore.getState().setInspectorNode(null);
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
+  });
+
+  it('owns contextual project Code as transient Canvas interaction state', () => {
+    useCanvasInteractionStore.getState().openContextualWorkbench('project-code');
+
+    expect(useCanvasInteractionStore.getState().contextualWorkbenchId).toBe('project-code');
+    expect(localStorage.getItem(CANVAS_INTERACTION_STORAGE_KEY)).not.toContain(
+      'contextualWorkbenchId'
+    );
+
+    useCanvasInteractionStore.getState().closeContextualWorkbench();
+
+    expect(useCanvasInteractionStore.getState().contextualWorkbenchId).toBeNull();
   });
 
   it('toggles frozen canvas nodes per workspace without changing node positions', () => {

@@ -17,6 +17,7 @@ import type { CanvasShellContextualWorkbench, CanvasShellProps } from './canvasS
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { useCanvasRouteIntentHandler } from './useCanvasRouteIntentHandler';
+import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 
 export default function CanvasShell({
   layout,
@@ -35,9 +36,18 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
-  const [contextualWorkbenchId, setContextualWorkbenchId] = useState<'project-code' | null>(null);
+  const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
+  const openContextualWorkbench = useCanvasInteractionStore(
+    (state) => state.openContextualWorkbench
+  );
+  const closeContextualWorkbench = useCanvasInteractionStore(
+    (state) => state.closeContextualWorkbench
+  );
   const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
-  const openProjectCodeWorkbench = useCallback(() => setContextualWorkbenchId('project-code'), []);
+  const openProjectCodeWorkbench = useCallback(
+    () => openContextualWorkbench('project-code'),
+    [openContextualWorkbench]
+  );
   const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
   const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
   const openCanvasSettings = useCallback(() => setCanvasSettingsOpen(true), []);
@@ -66,7 +76,7 @@ export default function CanvasShell({
       requestClose: async () => {
         const flushed = (await codeWorkbenchRef.current?.flush()) ?? true;
         if (flushed) {
-          setContextualWorkbenchId(null);
+          closeContextualWorkbench();
         }
       },
       panel: (
@@ -82,6 +92,7 @@ export default function CanvasShell({
     copy.sqlContextWorkbenchLoadingMessage,
     copy.sqlContextWorkbenchProjectDescription,
     copy.sqlContextWorkbenchProjectTitle,
+    closeContextualWorkbench,
   ]);
   const shellLayout = useMemo(
     () =>
