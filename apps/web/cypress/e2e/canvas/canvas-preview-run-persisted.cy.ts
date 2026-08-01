@@ -2,6 +2,7 @@ import { canvasViewCopy } from '../../../src/app/views/canvas/canvasCopyCatalog'
 import {
   clickButtonNatively,
   clickPreviewExecutionPlanFromOperationalDrawer,
+  getVisibleCanvasNode,
   selectCanvasClosure,
 } from '../../support/canvasExecutionSelection';
 import { waitForSelectedClosurePreviewArtifacts } from '../../support/canvasPreviewArtifacts';
@@ -37,10 +38,10 @@ describe('Canvas preview-run persisted path', () => {
 
     visitCanvasWithSettledBootstrap();
 
-    cy.contains('.react-flow__node', 'src_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
-    cy.contains('.react-flow__node', 'orphan_metrics').should('be.visible');
+    getVisibleCanvasNode('src_orders').should('be.visible');
+    getVisibleCanvasNode('model_orders').should('be.visible');
+    getVisibleCanvasNode('orders_dashboard').should('be.visible');
+    getVisibleCanvasNode('orphan_metrics').should('be.visible');
 
     selectCanvasClosure(['src_orders', 'model_orders', 'orders_dashboard']);
 
@@ -80,9 +81,9 @@ describe('Canvas preview-run persisted path', () => {
     stubSequentialRunStart();
 
     visitCanvasWithSettledBootstrap();
-    cy.contains('.react-flow__node', 'src_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
+    getVisibleCanvasNode('src_orders').should('be.visible');
+    getVisibleCanvasNode('model_orders').should('be.visible');
+    getVisibleCanvasNode('orders_dashboard').should('be.visible');
 
     clickPreviewExecutionPlanFromOperationalDrawer();
     waitForSelectedClosurePreviewArtifacts();
@@ -117,6 +118,17 @@ describe('Canvas preview-run persisted path', () => {
     waitForSelectedClosurePreviewArtifacts();
     cy.wrap(null).should(() => {
       expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(2);
+      expect(
+        getE2eApiCalls('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'GET')
+      ).to.have.length(2);
+      const graphArtifactSaves = getE2eApiCalls(
+        '/workspace/files/pipelines%2Fsales_pipeline.yaml',
+        'POST'
+      );
+      expect(graphArtifactSaves).to.have.length(2);
+      expect(graphArtifactSaves[1]?.body).to.deep.include({
+        expectedRevision: { kind: 'content_sha256', value: 'f'.repeat(64) },
+      });
     });
     assertPreviewPlanRequest();
 
@@ -149,9 +161,9 @@ describe('Canvas preview-run persisted path', () => {
     stubUnexpectedRunStart();
 
     visitCanvasWithSettledBootstrap();
-    cy.contains('.react-flow__node', 'src_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
+    getVisibleCanvasNode('src_orders').should('be.visible');
+    getVisibleCanvasNode('model_orders').should('be.visible');
+    getVisibleCanvasNode('orders_dashboard').should('be.visible');
 
     clickPreviewExecutionPlanFromOperationalDrawer();
     waitForSelectedClosurePreviewArtifacts();

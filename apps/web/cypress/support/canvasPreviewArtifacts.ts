@@ -5,8 +5,35 @@
 import { getE2eApiCalls, stubE2eApi } from './e2eApiStub';
 
 export function stubSelectedClosurePreviewArtifacts(): void {
+  const graphArtifactPath = 'pipelines/sales_pipeline.yaml';
+  const graphArtifactSha256 = 'f'.repeat(64);
+  let savedGraphArtifactContent: string | null = null;
+
+  stubE2eApi('GET', '/workspace/files/pipelines%2Fsales_pipeline.yaml', () =>
+    savedGraphArtifactContent === null
+      ? {
+          statusCode: 404,
+          body: {
+            error: {
+              type: 'not_found',
+              reason: 'workspace_file_not_found',
+            },
+          },
+        }
+      : {
+          body: {
+            path: graphArtifactPath,
+            name: 'sales_pipeline.yaml',
+            language: 'yaml',
+            content: savedGraphArtifactContent,
+            contentSha256: graphArtifactSha256,
+            lastModified: '2026-04-08T00:00:00.000Z',
+          },
+        }
+  );
+
   stubE2eApi('POST', '/workspace/files/pipelines%2Fsales_pipeline.yaml', (request) => {
-    const body = request.body as { content?: unknown };
+    const body = request.body as { content?: unknown; expectedRevision?: unknown };
     expect(body.content).to.be.a('string');
     const content = String(body.content);
     expect(content).to.contain('executionTarget: "postgres"');
@@ -18,13 +45,21 @@ export function stubSelectedClosurePreviewArtifacts(): void {
     expect(content).to.contain('entrypoint: "models/analytics/model_orders.sql"');
     expect(content).not.to.contain('orphan_metrics');
 
+    const disposition = savedGraphArtifactContent === null ? 'created' : 'updated';
+    expect(body.expectedRevision).to.deep.equal(
+      disposition === 'created'
+        ? { kind: 'absent' }
+        : { kind: 'content_sha256', value: graphArtifactSha256 }
+    );
+    savedGraphArtifactContent = content;
+
     return {
       statusCode: 200,
       body: {
-        path: 'pipelines/sales_pipeline.yaml',
-        name: 'sales_pipeline.yaml',
-        language: 'yaml',
-        content,
+        kind: 'saved',
+        disposition,
+        path: graphArtifactPath,
+        contentSha256: graphArtifactSha256,
         lastModified: '2026-04-08T00:00:00.000Z',
       },
     };

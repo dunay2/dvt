@@ -1,4 +1,6 @@
-import { stubCanvasDraftRead } from '../canvasDraftAuthoring';
+import type { TransformationSqlFirstPlanPreviewPersistResponse } from '@dvt/contracts';
+
+import { stubStatefulCanvasDraftAuthoring } from '../canvasDraftAuthoring';
 import { stubSelectedClosurePreviewArtifacts } from '../canvasPreviewArtifacts';
 import { getLastE2eApiCall, stubE2eApi, stubE2eJsonApi, waitForE2eApiCall } from '../e2eApiStub';
 import {
@@ -13,6 +15,8 @@ type PlanPreviewResponseOptions = {
   planRefSha: string;
 };
 
+type PlanPreviewResponse = TransformationSqlFirstPlanPreviewPersistResponse;
+
 type CanvasRuntimeApiOptions = {
   includeLooseNode?: boolean;
   canvasKind?: 'transformation' | 'dbt';
@@ -23,10 +27,7 @@ type CanvasRuntimeApiOptions = {
 };
 
 type PlanRejectedCause =
-  | 'dependency_gap'
-  | 'selected_node_missing'
-  | 'cycle_detected'
-  | 'graph_source_selection_mismatch';
+  'dependency_gap' | 'selected_node_missing' | 'cycle_detected' | 'graph_source_selection_mismatch';
 
 type PreviewPlanRequest = {
   persist: boolean;
@@ -264,7 +265,7 @@ export function stubCanvasRuntimeApis(options: CanvasRuntimeApiOptions = {}): vo
     availableWorkspaces: [E2E_WORKSPACE_SESSION],
   });
   if (options.skipDraftRead !== true) {
-    stubCanvasDraftRead(options);
+    stubStatefulCanvasDraftAuthoring(options);
   }
 }
 
@@ -331,9 +332,21 @@ export function stubPlanPreviewResponse({
   persistedSha,
   planRefSha,
 }: PlanPreviewResponseOptions): void {
+  stubE2eJsonApi(
+    'POST',
+    '/plans/preview',
+    buildPlanPreviewResponse({ planRecordId, persistedSha, planRefSha })
+  );
+}
+
+function buildPlanPreviewResponse({
+  planRecordId,
+  persistedSha,
+  planRefSha,
+}: PlanPreviewResponseOptions): PlanPreviewResponse {
   const planId = 'b'.repeat(64);
 
-  stubE2eJsonApi('POST', '/plans/preview', {
+  return {
     previewProfile: 'transformation-sql-first-v1',
     plan: {
       metadata: {
@@ -422,6 +435,7 @@ export function stubPlanPreviewResponse({
       warnings: [],
     },
     provenance: {
+      kind: 'transformation-git-artifacts',
       graphArtifact: {
         repo: 'dunay2/dvt',
         path: 'pipelines/sales_pipeline.yaml',
@@ -437,27 +451,77 @@ export function stubPlanPreviewResponse({
         contentSha256: 'a'.repeat(64),
       },
     },
-  });
+  } as const;
 }
 
-export function stubPlanRejectedPreview(
+export function stubSelectionRejectedPreview(
   cause: Exclude<PlanRejectedCause, 'graph_source_selection_mismatch'>
-): void {
+): string {
+  const reasonByCause: Record<
+    Exclude<PlanRejectedCause, 'graph_source_selection_mismatch'>,
+    string
+  > = {
+    dependency_gap: 'Selected closure is missing required upstream dependencies.',
+    selected_node_missing: 'Selected nodes are no longer available in the authoritative draft.',
+    cycle_detected: 'Selected closure contains a cycle and cannot be executed.',
+  };
+  const reason = reasonByCause[cause];
+
   stubE2eJsonApi(
     'POST',
     '/plans/preview',
     {
       error: {
-        type: 'runtime',
+        type: 'unprocessable',
         reason: 'plan_rejected',
         details: {
-          cause,
-          rejectionReason: PLAN_REJECTION_MESSAGES[cause],
+          contractVersion: '1.0.0',
+          kind: 'selection-rejected',
+          rejection: {
+            code: 'REJECTED',
+            cause,
+            reason,
+          },
         },
       },
     },
-    { statusCode: 409 }
+    { statusCode: 422 }
   );
+
+  return reason;
+}
+
+export function stubPlanInvalidPreview(options: PlanPreviewResponseOptions): PlanPreviewResponse {
+  const preview = buildPlanPreviewResponse(options);
+  const validation = {
+    status: 'ERROR',
+    code: 'MISSING_CAPABILITY',
+    planId: preview.planRef.planId,
+    adapterId: 'temporal',
+    degradable: false,
+    cause: 'executor.dbt',
+    reason: 'The selected runtime cannot execute dbt steps.',
+  } as const;
+
+  stubE2eJsonApi(
+    'POST',
+    '/plans/preview',
+    {
+      error: {
+        type: 'unprocessable',
+        reason: 'plan_rejected',
+        details: {
+          contractVersion: '1.0.0',
+          kind: 'plan-invalid',
+          ...preview,
+          validation,
+        },
+      },
+    },
+    { statusCode: 422 }
+  );
+
+  return preview;
 }
 
 export function stubPlanRejectedStartRun(

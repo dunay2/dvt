@@ -92,7 +92,14 @@ describeIfPg('protected runtime integration', () => {
     },
     {
       name: 'rejects /runs/:runId/recover when principal lacks run:retry permission',
-      tenantActions: ['run:start', 'run:list', 'run:view', 'run:logs:view', 'run:signal', 'run:cancel'],
+      tenantActions: [
+        'run:start',
+        'run:list',
+        'run:view',
+        'run:logs:view',
+        'run:signal',
+        'run:cancel',
+      ],
       request: {
         method: 'POST' as const,
         url: '/runs/non-authorized-recover/recover',
@@ -187,10 +194,13 @@ describeIfPg('protected runtime integration', () => {
     expect(flow.previewResponse.json()).toEqual(
       httpError('unprocessable', 'plan_rejected', {
         details: {
-          code: 'REJECTED',
-          adapterId: 'temporal',
-          cause: 'dependency_gap',
-          rejectionReason: 'Selected closure is missing required upstream dependencies.',
+          contractVersion: '1.0.0',
+          kind: 'selection-rejected',
+          rejection: {
+            code: 'REJECTED',
+            cause: 'dependency_gap',
+            reason: 'Selected closure is missing required upstream dependencies.',
+          },
         },
       })
     );
@@ -204,11 +214,14 @@ describeIfPg('protected runtime integration', () => {
     expect(flow.previewResponse.json()).toEqual(
       httpError('unprocessable', 'plan_rejected', {
         details: {
-          code: 'REJECTED',
-          adapterId: 'temporal',
-          cause: 'graph_source_selection_mismatch',
-          rejectionReason:
-            'graphSource nodes must match the planner-derived executable subgraph for the selection.',
+          contractVersion: '1.0.0',
+          kind: 'selection-rejected',
+          rejection: {
+            code: 'REJECTED',
+            cause: 'graph_source_selection_mismatch',
+            reason:
+              'graphSource nodes must match the planner-derived executable subgraph for the selection.',
+          },
         },
       })
     );
@@ -312,4 +325,3 @@ describeIfPg('protected runtime integration', () => {
     );
   });
 });
-
