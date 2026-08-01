@@ -35,7 +35,7 @@ const DEFAULT_MAX_OUTPUT_BYTES = 1_000_000;
 const INVALID_PROJECT_DIAGNOSTIC_MESSAGE =
   'dbt parse rejected the project. Review it in a trusted dbt environment.';
 
-type DbtCliProjectAnalyzerOptions = Readonly<{
+export type DbtCliProjectAnalyzerOptions = Readonly<{
   workspaceFilesRoot: string;
   profilesDirectory?: string;
   dbtExecutable?: string;
