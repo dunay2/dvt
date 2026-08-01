@@ -22,6 +22,7 @@ export const runStatesCopy = {
   runDegradedTitle: 'Timeline degraded',
   runDegradedNote:
     'Snapshot truth is still available for this run. Timeline detail is partial or temporarily unavailable.',
+  retryEventFeedAction: 'Retry timeline',
   runtimeSnapshotTitle: 'Runtime snapshot',
   snapshotTimelineBadge: 'snapshot+timeline',
   snapshotOnlyBadge: 'snapshot-only',

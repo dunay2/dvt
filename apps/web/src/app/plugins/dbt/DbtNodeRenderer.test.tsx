@@ -16,6 +16,7 @@ import { DbtNodeRenderer, dbtInspectorPanels } from './DbtNodeRenderer';
 describe('DbtNodeRenderer history panel', () => {
   let container: HTMLDivElement | null = null;
   let root: Root | null = null;
+  let queryClient: QueryClient | null = null;
 
   const buildNode = (overrides: Partial<CanonicalNode> = {}): CanonicalNode => ({
     id: 'model_orders',
@@ -104,6 +105,7 @@ describe('DbtNodeRenderer history panel', () => {
     container?.remove();
     container = null;
     root = null;
+    queryClient = null;
   });
 
   async function renderHistoryPanel(args: {
@@ -121,6 +123,14 @@ describe('DbtNodeRenderer history panel', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    const currentQueryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+    queryClient = currentQueryClient;
     (
       globalThis as typeof globalThis & {
         IS_REACT_ACT_ENVIRONMENT?: boolean;
@@ -129,17 +139,7 @@ describe('DbtNodeRenderer history panel', () => {
 
     await act(async () => {
       root?.render(
-        <QueryClientProvider
-          client={
-            new QueryClient({
-              defaultOptions: {
-                queries: {
-                  retry: false,
-                },
-              },
-            })
-          }
-        >
+        <QueryClientProvider client={currentQueryClient}>
           <AppServicesProvider
             overrides={{ ...createAppServicesTestOverrides(), runsService: args.runsService }}
           >
@@ -346,13 +346,64 @@ describe('DbtNodeRenderer history panel', () => {
 
   it('shows an actionable degraded state when runtime events cannot be loaded', async () => {
     const runsService = buildRunsService({
-      listRunEvents: vi.fn(async () => {
-        throw new Error('events unavailable');
-      }),
+      listRunEvents: vi
+        .fn<IRunsPort['listRunEvents']>()
+        .mockRejectedValueOnce(new Error('events unavailable'))
+        .mockResolvedValueOnce({
+          events: [
+            buildRunEvent({
+              eventId: 'event-recovered',
+              eventType: 'StepCompleted',
+              stepId: asStepId('model_orders'),
+              runSeq: 1,
+              payload: { message: 'Recovered history' },
+            }),
+          ],
+        }),
     });
 
     await renderHistoryPanel({ runsService, activeRunId: 'run-live' });
 
     await waitForText('Runtime event detail could not be loaded for this node.');
+    const retryButton = Array.from(document.querySelectorAll('button')).find(
+      (button) => button.textContent === 'Retry history'
+    );
+    expect(retryButton).toBeDefined();
+
+    await act(async () => {
+      retryButton?.click();
+    });
+    await waitForText('Recovered history');
+    expect(runsService.listRunEvents).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows degradation alongside buffered node history', async () => {
+    const runsService = buildRunsService({
+      listRunEvents: vi
+        .fn<IRunsPort['listRunEvents']>()
+        .mockResolvedValueOnce({
+          events: [
+            buildRunEvent({
+              eventId: 'event-buffered',
+              eventType: 'StepStarted',
+              stepId: asStepId('model_orders'),
+              runSeq: 1,
+              payload: { message: 'Buffered history' },
+            }),
+          ],
+          nextAfterSeq: 1,
+        })
+        .mockRejectedValueOnce(new Error('events unavailable')),
+    });
+
+    await renderHistoryPanel({ runsService, activeRunId: 'run-live' });
+    await waitForText('Buffered history');
+
+    await act(async () => {
+      await queryClient?.invalidateQueries();
+    });
+    await waitForText('Runtime event detail could not be loaded for this node.');
+
+    expect(document.body.textContent).toContain('Buffered history');
   });
 });

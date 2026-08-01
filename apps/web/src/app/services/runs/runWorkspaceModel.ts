@@ -117,7 +117,14 @@ export function buildRunWorkspaceViewModel(
   const hasEvents = timelineSnapshot.events.length > 0;
   let timeline: RunWorkspaceTimeline;
 
-  if (feedError) {
+  if (feed && feed.phase !== 'idle' && feed.failure) {
+    timeline = {
+      state: 'degraded',
+      ...timelineSnapshot,
+      message: feed.failure.message,
+      ...(feed.failure.statusCode === undefined ? {} : { statusCode: feed.failure.statusCode }),
+    };
+  } else if (feedError) {
     const error = describeTimelineError(feedError);
     timeline = {
       state: 'degraded',

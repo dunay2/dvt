@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import React from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   RunDegradedState,
@@ -39,13 +39,22 @@ describe('RunStates error states', () => {
   });
 
   it('renders the explicit degraded state notice', async () => {
+    const onRetry = vi.fn();
     await harness.render(
-      <RunDegradedState message="Timeline is temporarily unavailable because runtime event service is degraded." />
+      <RunDegradedState
+        message="Timeline is temporarily unavailable because runtime event service is degraded."
+        onRetry={onRetry}
+      />
     );
 
     expect(harness.container.textContent).toContain('Timeline degraded');
     expect(harness.container.textContent).toContain(
       'Snapshot truth is still available for this run. Timeline detail is partial or temporarily unavailable.'
     );
+
+    const retryButton = harness.container.querySelector<HTMLButtonElement>('button');
+    expect(retryButton?.textContent).toBe('Retry timeline');
+    retryButton?.click();
+    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 });

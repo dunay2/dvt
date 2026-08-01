@@ -16,13 +16,40 @@ export type RunEventFeedPhase =
   | 'complete'
   | 'failed';
 
+export const RUN_EVENT_FEED_RETRY_DELAYS_MS = [1_000, 2_000, 4_000] as const;
+export const RUN_EVENT_FEED_MAX_AUTOMATIC_RETRIES = RUN_EVENT_FEED_RETRY_DELAYS_MS.length;
+export const RUN_EVENT_FEED_STALE_AFTER_MS = 10_000;
+export const RUN_EVENT_FEED_MAX_TERMINAL_DRAIN_PAGES = 3;
+
+export type RunEventFeedTerminalEventType = 'RunCancelled' | 'RunCompleted' | 'RunFailed';
+
+export type RunEventFeedFailureKind =
+  | 'authorization'
+  | 'invariant'
+  | 'missing-run'
+  | 'terminal-drain-incomplete'
+  | 'transport'
+  | 'validation';
+
+export type RunEventFeedFailure = {
+  readonly kind: RunEventFeedFailureKind;
+  readonly message: string;
+  readonly retryable: boolean;
+  readonly statusCode?: number;
+};
+
 type RunEventFeedSnapshot = {
   readonly runId: string;
   readonly events: readonly RunEvent[];
+  readonly startedAt?: string;
   readonly nextAfterSeq?: number;
   readonly latestObservedSeq?: number;
   readonly lastSuccessfulFetchAt?: string;
   readonly consecutiveFailures: number;
+  readonly nextRetryAt?: string;
+  readonly failure?: RunEventFeedFailure;
+  readonly expectedTerminalEventType?: RunEventFeedTerminalEventType;
+  readonly terminalDrainPages?: number;
 };
 
 type RunBoundFeedPhase = Exclude<RunEventFeedPhase, 'idle'>;
@@ -31,23 +58,30 @@ export type RunEventFeedState =
   { readonly phase: 'idle' } | (RunEventFeedSnapshot & { readonly phase: RunBoundFeedPhase });
 
 export type RunEventFeedTransition =
-  | { readonly type: 'start'; readonly runId: string }
+  | { readonly type: 'start'; readonly runId: string; readonly observedAt: string }
   | {
       readonly type: 'page-received';
       readonly runId: string;
       readonly page: RunEventTimelinePage;
       readonly observedAt: string;
     }
-  | { readonly type: 'transient-failure'; readonly runId: string }
-  | { readonly type: 'mark-stale'; readonly runId: string }
-  | { readonly type: 'terminal-observed'; readonly runId: string }
   | {
-      readonly type: 'terminal-drain-completed';
+      readonly type: 'transient-failure';
       readonly runId: string;
-      readonly page: RunEventTimelinePage;
       readonly observedAt: string;
+      readonly failure: RunEventFeedFailure;
     }
-  | { readonly type: 'non-retryable-failure'; readonly runId: string }
+  | {
+      readonly type: 'terminal-observed';
+      readonly runId: string;
+      readonly expectedEventType: RunEventFeedTerminalEventType;
+    }
+  | { readonly type: 'retry-requested'; readonly runId: string }
+  | {
+      readonly type: 'non-retryable-failure';
+      readonly runId: string;
+      readonly failure: RunEventFeedFailure;
+    }
   | { readonly type: 'reset' };
 
 export type RunEventFeedTransitionDisposition =
@@ -62,11 +96,12 @@ export type RunEventFeedTransitionResult = {
   readonly state: RunEventFeedState;
 };
 
-function initialLoadingState(runId: string): RunEventFeedState {
+function initialLoadingState(runId: string, observedAt: string): RunEventFeedState {
   return {
     phase: 'initial-loading',
     runId,
     events: [],
+    startedAt: observedAt,
     consecutiveFailures: 0,
   };
 }
@@ -107,6 +142,7 @@ function mergeSuccessfulPage(
   page: RunEventTimelinePage,
   observedAt: string
 ): RunEventFeedSnapshot {
+  const { failure: _failure, nextRetryAt: _nextRetryAt, ...retainedState } = state;
   const timeline = mergeRunEventTimelinePage(
     {
       events: [...state.events],
@@ -124,13 +160,38 @@ function mergeSuccessfulPage(
   }
 
   return {
-    runId: state.runId,
+    ...retainedState,
     events: timeline.events,
     ...(nextAfterSeq === undefined ? {} : { nextAfterSeq }),
     ...(latestSeq === undefined ? {} : { latestObservedSeq: latestSeq }),
     lastSuccessfulFetchAt: observedAt,
     consecutiveFailures: 0,
   };
+}
+
+function retryDelayMs(consecutiveFailures: number): number | undefined {
+  return RUN_EVENT_FEED_RETRY_DELAYS_MS[consecutiveFailures - 1];
+}
+
+function addMilliseconds(isoTimestamp: string, milliseconds: number): string {
+  return new Date(Date.parse(isoTimestamp) + milliseconds).toISOString();
+}
+
+function isProjectionStale(state: RunEventFeedSnapshot, observedAt: string): boolean {
+  const freshnessAnchor = state.lastSuccessfulFetchAt ?? state.startedAt ?? observedAt;
+  return Date.parse(observedAt) - Date.parse(freshnessAnchor) >= RUN_EVENT_FEED_STALE_AFTER_MS;
+}
+
+function hasExpectedTerminalEvent(state: RunEventFeedSnapshot): boolean {
+  return Boolean(
+    state.expectedTerminalEventType &&
+    state.events.some((event) => event.eventType === state.expectedTerminalEventType)
+  );
+}
+
+function withoutRetrySchedule(state: RunEventFeedSnapshot): RunEventFeedSnapshot {
+  const { nextRetryAt: _nextRetryAt, ...remaining } = state;
+  return remaining;
 }
 
 function acceptsPage(phase: RunBoundFeedPhase): boolean {
@@ -163,7 +224,7 @@ export function transitionRunEventFeed(
     if (state.phase !== 'idle' && state.runId === transition.runId) {
       return result('applied', state);
     }
-    return result('applied', initialLoadingState(transition.runId));
+    return result('applied', initialLoadingState(transition.runId, transition.observedAt));
   }
 
   if (state.phase === 'idle') {
@@ -186,9 +247,35 @@ export function transitionRunEventFeed(
         return result('ignored-stale-page', state);
       }
       const snapshot = mergeSuccessfulPage(state, transition.page, transition.observedAt);
+      if (state.phase === 'terminal-draining') {
+        if (hasExpectedTerminalEvent(snapshot)) {
+          return result('applied', { ...snapshot, phase: 'complete' });
+        }
+
+        const terminalDrainPages = (state.terminalDrainPages ?? 0) + 1;
+        if (terminalDrainPages >= RUN_EVENT_FEED_MAX_TERMINAL_DRAIN_PAGES) {
+          return result('applied', {
+            ...snapshot,
+            phase: 'failed',
+            terminalDrainPages,
+            failure: {
+              kind: 'terminal-drain-incomplete',
+              message: `Terminal event ${state.expectedTerminalEventType ?? 'unknown'} was not observed.`,
+              retryable: true,
+            },
+          });
+        }
+
+        return result('applied', {
+          ...snapshot,
+          phase: 'terminal-draining',
+          terminalDrainPages,
+        });
+      }
+
       return result('applied', {
         ...snapshot,
-        phase: state.phase === 'terminal-draining' ? 'terminal-draining' : 'live',
+        phase: 'live',
       });
     }
 
@@ -196,48 +283,74 @@ export function transitionRunEventFeed(
       if (!acceptsFailure(state.phase)) {
         return result('rejected-invalid-transition', state);
       }
+      const consecutiveFailures = state.consecutiveFailures + 1;
+      const delayMs = retryDelayMs(consecutiveFailures);
+      const nextRetryAt =
+        delayMs === undefined ? undefined : addMilliseconds(transition.observedAt, delayMs);
+
+      if (state.phase === 'terminal-draining' && nextRetryAt === undefined) {
+        return result('applied', {
+          ...withoutRetrySchedule(state),
+          phase: 'failed',
+          consecutiveFailures,
+          failure: transition.failure,
+        });
+      }
+
+      if (nextRetryAt === undefined) {
+        return result('applied', {
+          ...withoutRetrySchedule(state),
+          phase: state.events.length > 0 ? 'stale' : 'failed',
+          consecutiveFailures,
+          failure: transition.failure,
+        });
+      }
+
       const phase =
-        state.phase === 'stale' || state.phase === 'terminal-draining' ? state.phase : 'retrying';
+        state.phase === 'stale' || isProjectionStale(state, transition.observedAt)
+          ? 'stale'
+          : state.phase === 'terminal-draining'
+            ? 'terminal-draining'
+            : 'retrying';
       return result('applied', {
-        ...state,
+        ...withoutRetrySchedule(state),
         phase,
-        consecutiveFailures: state.consecutiveFailures + 1,
+        consecutiveFailures,
+        nextRetryAt,
+        failure: transition.failure,
       });
     }
-
-    case 'mark-stale':
-      return state.phase === 'retrying'
-        ? result('applied', { ...state, phase: 'stale' })
-        : result('rejected-invalid-transition', state);
 
     case 'terminal-observed':
       if (!acceptsFailure(state.phase)) {
         return result('rejected-invalid-transition', state);
       }
-      return result(
-        'applied',
-        state.phase === 'terminal-draining' ? state : { ...state, phase: 'terminal-draining' }
-      );
+      const terminalState = {
+        ...state,
+        expectedTerminalEventType: transition.expectedEventType,
+        terminalDrainPages: state.terminalDrainPages ?? 0,
+      };
+      return result('applied', {
+        ...terminalState,
+        phase: hasExpectedTerminalEvent(terminalState) ? 'complete' : 'terminal-draining',
+      });
 
-    case 'terminal-drain-completed': {
-      if (state.phase !== 'terminal-draining') {
+    case 'retry-requested':
+      if (!state.failure?.retryable) {
         return result('rejected-invalid-transition', state);
       }
-      if (containsForeignRunEvents(state, transition.page)) {
-        return result('rejected-invalid-page', state);
-      }
-      if (hasCursorRegression(state, transition.page)) {
-        return result('ignored-stale-page', state);
-      }
       return result('applied', {
-        ...mergeSuccessfulPage(state, transition.page, transition.observedAt),
-        phase: 'complete',
+        ...withoutRetrySchedule(state),
+        phase: state.expectedTerminalEventType ? 'terminal-draining' : 'retrying',
       });
-    }
 
     case 'non-retryable-failure':
       return acceptsFailure(state.phase)
-        ? result('applied', { ...state, phase: 'failed' })
+        ? result('applied', {
+            ...withoutRetrySchedule(state),
+            phase: 'failed',
+            failure: transition.failure,
+          })
         : result('rejected-invalid-transition', state);
   }
 }

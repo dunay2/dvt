@@ -64,6 +64,8 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
     isLoadingWorkspace,
     workspaceError,
     workspaceErrorMessage,
+    canRetryEventFeed,
+    retryEventFeed,
   } = useRunWorkspace(runId);
 
   const focusedRunModel = runId && workspace ? toFocusedRunModel(workspace) : null;
@@ -113,7 +115,12 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
     case 'run-missing':
       return <RunMissingState runId={state.runId} />;
     case 'run-workspace':
-      return <RunWorkspaceState workspace={state.workspace} />;
+      return (
+        <RunWorkspaceState
+          workspace={state.workspace}
+          onRetryEventFeed={canRetryEventFeed ? retryEventFeed : undefined}
+        />
+      );
   }
 }
 

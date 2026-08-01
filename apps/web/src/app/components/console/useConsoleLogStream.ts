@@ -7,7 +7,6 @@ import { useMemo } from 'react';
 import { useExecutionStore } from '../../stores/executionStore';
 import { useRunEventFeedQuery } from '../../queries/runEventFeedQuery';
 import { formatRunEventAsLogLine } from './formatLogLine';
-import { isRunEventStreamLiveStatus } from '../../services/runs/runEventTimelineModel';
 
 export function useConsoleLogStream(): {
   lines: string[];
@@ -17,8 +16,7 @@ export function useConsoleLogStream(): {
   const currentRun = useExecutionStore((state) => state.currentRun);
   const runId = currentRun?.runId;
 
-  const isLive = isRunEventStreamLiveStatus(currentRun?.status);
-  const feedQuery = useRunEventFeedQuery(runId, { isLive });
+  const feedQuery = useRunEventFeedQuery(runId, { runStatus: currentRun?.status });
   const events = feedQuery.data?.phase === 'idle' ? [] : (feedQuery.data?.events ?? []);
 
   const lines = useMemo(() => events.map(formatRunEventAsLogLine), [events]);
