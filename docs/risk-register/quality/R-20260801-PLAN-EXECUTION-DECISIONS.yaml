@@ -1,0 +1,31 @@
+---
+id: R-20260801-PLAN-EXECUTION-DECISIONS
+title: Persisted plan decisions could diverge from the authorized executable graph
+status: Open
+date: 2026-08-01
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - apps/api
+  - apps/web
+severity: High
+probability: Low
+context: >
+  Plan Preview now exposes planner-owned RUN, SKIP, and PARTIAL decisions for the authorized graph
+  and selected execution closure.
+risk: >
+  If caller-controlled or stale scope entered the planner, the persisted decision list could
+  misrepresent which subjects are authorized or intended to execute.
+mitigations:
+  - 'Derive decision scope server-side from the protected draft and dbt projection.'
+  - 'Reject duplicated subjects and subjects outside the canonical graph in contract and domain
+    validation.'
+  - 'Normalize and sort decision scope before plan hashing and projection.'
+  - 'Persist decisions in the immutable execution plan instead of deriving them in the browser.'
+  - 'Prove selected-closure PARTIAL, included RUN, and excluded SKIP outcomes through the live
+    protected Canvas flow.'
+residual_risk: >
+  Future planner graph shapes must continue to derive decision scope from the same authorized graph
+  authority. Contract and integration tests fail closed when that invariant is violated.
+review_after: 2026-09-01
+---

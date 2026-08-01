@@ -28,6 +28,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityRecord.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanExecutabilityValidation.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlannerInputEnvelopeV1.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyClassSet.v2.schema.json`
 - `packages/@dvt/contracts/src/contracts/planner/PlannerPolicyVocabulary.v2.ts`
