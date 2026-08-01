@@ -11,6 +11,7 @@ import type { PlanRef, RunContext } from '../../types/contracts.js';
 
 import type { ExecutionPlan, GenericGraphSourceV1 } from './ExecutionPlan.v1.js';
 import type { ExecutionSelection } from './ExecutionSelection.v1.js';
+import type { ExecutabilityValidationResult } from './PlanExecutabilityValidation.v1.js';
 import type {
   PlanPreviewProvenance,
   TransformationGitArtifactsProvenance,
@@ -24,6 +25,13 @@ export const PREVIEW_PROFILE = {
 } as const;
 
 export type PreviewProfile = (typeof PREVIEW_PROFILE)[keyof typeof PREVIEW_PROFILE];
+
+export const PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION = '1.0.0' as const;
+
+export const PLAN_PREVIEW_REJECTED_OUTCOME_KIND = {
+  selectionRejected: 'selection-rejected',
+  planInvalid: 'plan-invalid',
+} as const;
 
 export interface PlanPreviewRequest {
   previewProfile: PreviewProfile;
@@ -79,3 +87,27 @@ export interface TransformationSqlFirstPlanPreviewPersistResponse extends PlanPr
   };
   provenance: TransformationGitArtifactsProvenance;
 }
+
+export interface PlanPreviewSelectionRejection {
+  readonly code: 'REJECTED';
+  readonly cause?: string;
+  readonly reason: string;
+}
+
+export interface PlanPreviewSelectionRejectedOutcome {
+  readonly contractVersion: typeof PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION;
+  readonly kind: typeof PLAN_PREVIEW_REJECTED_OUTCOME_KIND.selectionRejected;
+  readonly rejection: PlanPreviewSelectionRejection;
+}
+
+export interface PlanPreviewPlanInvalidOutcome extends Omit<
+  PlanPreviewPersistResponse,
+  'validation'
+> {
+  readonly contractVersion: typeof PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION;
+  readonly kind: typeof PLAN_PREVIEW_REJECTED_OUTCOME_KIND.planInvalid;
+  readonly validation: Extract<ExecutabilityValidationResult, { readonly status: 'ERROR' }>;
+}
+
+export type PlanPreviewRejectedOutcome =
+  PlanPreviewSelectionRejectedOutcome | PlanPreviewPlanInvalidOutcome;

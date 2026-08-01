@@ -2,6 +2,12 @@
  * Owned concern: internal preview-plan use-case response mapping inside the
  * plan-route response translation component.
  */
+import {
+  PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION,
+  PLAN_PREVIEW_REJECTED_OUTCOME_KIND,
+  type PlanPreviewRejectedOutcome,
+} from '@dvt/contracts';
+
 import type { PreviewPlanUseCaseResult } from '../../application/services/PreviewPlanUseCase.js';
 
 import {
@@ -28,20 +34,14 @@ export function mapPreviewPlanUseCaseResult(
   result: PreviewPlanUseCaseResult,
   parsedRequest: ParsedPreviewPlanRequest
 ): PreviewPlanRouteResultResponse {
-  if (result.kind === 'rejected') {
+  if (result.kind !== 'accepted') {
+    const outcome = buildRejectedOutcome(result, parsedRequest);
     return {
       kind: 'rejected',
       response: createHttpErrorResponse({
         type: HTTP_ERROR_TYPE.unprocessable,
         reason: HTTP_ERROR_REASON.planRejected,
-        details: {
-          code: result.validation.code,
-          adapterId: result.validation.adapterId,
-          ...(result.validation.cause === undefined
-            ? {}
-            : { cause: result.validation.cause }),
-          rejectionReason: result.validation.reason,
-        },
+        details: { ...outcome },
       }),
     };
   }
@@ -54,6 +54,32 @@ export function mapPreviewPlanUseCaseResult(
       parsedRequest.contractRequest.provenance,
       parsedRequest.previewProfile
     ),
+  };
+}
+
+function buildRejectedOutcome(
+  result: Exclude<PreviewPlanUseCaseResult, { readonly kind: 'accepted' }>,
+  parsedRequest: ParsedPreviewPlanRequest
+): PlanPreviewRejectedOutcome {
+  if (result.kind === 'selection-rejected') {
+    return {
+      contractVersion: PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION,
+      kind: PLAN_PREVIEW_REJECTED_OUTCOME_KIND.selectionRejected,
+      rejection: result.rejection,
+    };
+  }
+
+  const { validation: _acceptedValidation, ...preview } = buildPreviewResponse(
+    result.plan,
+    normalizePlanRef(result.planRef),
+    parsedRequest.contractRequest.provenance,
+    parsedRequest.previewProfile
+  );
+  return {
+    contractVersion: PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION,
+    kind: PLAN_PREVIEW_REJECTED_OUTCOME_KIND.planInvalid,
+    ...preview,
+    validation: result.validation,
   };
 }
 

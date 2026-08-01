@@ -6,6 +6,7 @@ import type { ApiClient } from '../api/createApiClient';
 
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import { createMockPlansService } from '../../../testing/plansPortDoubles';
+import type { IPlansPort, PlanPreviewInput, PreviewedPlanViewModel } from '../../ports/plans';
 import { createPlansService } from './plansService';
 
 const VALID_TRANSFORMATION_GRAPH_SOURCE = {
@@ -315,11 +316,33 @@ function createPlanRejectedApiError(details: Record<string, unknown>): ApiError 
   });
 }
 
+function buildGenericPreviewInput(): PlanPreviewInput {
+  return {
+    previewProfile: 'planner-generic-v1',
+    graphSource: VALID_GENERIC_GRAPH_SOURCE,
+    selection: toExplicitSelection(VALID_GENERIC_SELECTION),
+    persist: true,
+    context: makeRunContext('run-1'),
+  };
+}
+
+async function previewAccepted(
+  service: IPlansPort,
+  input: PlanPreviewInput
+): Promise<PreviewedPlanViewModel> {
+  const outcome = await service.previewPlan(input);
+  expect(outcome.kind).toBe('accepted');
+  if (outcome.kind !== 'accepted') {
+    throw new Error(`Expected accepted preview, received ${outcome.kind}`);
+  }
+  return outcome.plan;
+}
+
 describe('createPlansService', () => {
   it('keeps the explicit plan-port test double contract usable', async () => {
     const service = createMockPlansService();
 
-    const plan = await service.previewPlan({
+    const plan = await previewAccepted(service, {
       previewProfile: 'transformation-sql-first-v1',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
@@ -344,7 +367,7 @@ describe('createPlansService', () => {
       })
     );
 
-    const plan = await service.previewPlan({
+    const plan = await previewAccepted(service, {
       previewProfile: 'transformation-sql-first-v1',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
@@ -414,7 +437,7 @@ describe('createPlansService', () => {
       })
     );
 
-    const plan = await service.previewPlan({
+    const plan = await previewAccepted(service, {
       previewProfile: 'transformation-sql-first-v1',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
@@ -442,7 +465,7 @@ describe('createPlansService', () => {
       })
     );
 
-    const plan = await service.previewPlan({
+    const plan = await previewAccepted(service, {
       previewProfile: 'transformation-sql-first-v1',
       graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
@@ -492,70 +515,160 @@ describe('createPlansService', () => {
 
   it.each([
     {
-      description: 'dependency_gap',
-      details: {
-        cause: 'dependency_gap',
-        rejectionReason: 'Selected closure is missing required upstream dependencies.',
-      },
-      expectedMessage:
-        'Selected closure is missing required upstream dependencies. Adjust the selection and preview execution plan again.',
+      cause: 'dependency_gap',
+      reason: 'Selected closure is missing required upstream dependencies.',
     },
     {
-      description: 'selected_node_missing',
-      details: {
-        cause: 'selected_node_missing',
-        rejectionReason: 'Selected nodes are no longer available in the authoritative draft.',
-      },
-      expectedMessage:
-        'Selected nodes are no longer available in the authoritative draft. Refresh the canvas and preview execution plan again.',
+      cause: 'selected_node_missing',
+      reason: 'Selected nodes are no longer available in the authoritative draft.',
     },
     {
-      description: 'cycle_detected',
-      details: {
-        cause: 'cycle_detected',
-        rejectionReason: 'Selected closure contains a cycle and cannot be executed.',
-      },
-      expectedMessage:
-        'Selected closure contains a cycle and cannot be executed. Remove the cycle and preview execution plan again.',
+      cause: 'cycle_detected',
+      reason: 'Selected closure contains a cycle and cannot be executed.',
     },
     {
-      description: 'graph_source_selection_mismatch',
-      details: {
-        cause: 'graph_source_selection_mismatch',
-        rejectionReason:
-          'graphSource nodes must match the planner-derived executable subgraph for the selection.',
-      },
-      expectedMessage:
-        'Selected scope no longer matches the authoritative draft. Preview execution plan again.',
+      cause: 'graph_source_selection_mismatch',
+      reason: 'graphSource nodes must match the authoritative executable subgraph.',
     },
-  ])(
-    'surfaces protected preview rejection for $description',
-    async ({ details, expectedMessage }) => {
-      const postJsonMock = vi.fn(async () => {
-        throw createPlanRejectedApiError(details);
+  ])('returns typed selection rejection for $cause', async ({ cause, reason }) => {
+    const postJsonMock = vi.fn(async () => {
+      throw createPlanRejectedApiError({
+        contractVersion: '1.0.0',
+        kind: 'selection-rejected',
+        rejection: { code: 'REJECTED', cause, reason },
       });
-      const service = createPlansService(
-        buildApiClientStub({
-          postJson: postJsonMock as ApiClient['postJson'],
-        })
-      );
+    });
+    const service = createPlansService(
+      buildApiClientStub({
+        postJson: postJsonMock as ApiClient['postJson'],
+      })
+    );
 
-      await expect(
-        service.previewPlan({
-          previewProfile: 'transformation-sql-first-v1',
-          graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
-          selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
-          persist: true,
-          context: makeRunContext('run-1', {
-            tenantId: 't1',
-            projectId: 'p1',
-            environmentId: 'e1',
-            targetAdapter: 'temporal',
-          }),
-        })
-      ).rejects.toThrow(expectedMessage);
+    await expect(
+      service.previewPlan({
+        previewProfile: 'transformation-sql-first-v1',
+        graphSource: VALID_TRANSFORMATION_GRAPH_SOURCE,
+        selection: toExplicitSelection(VALID_TRANSFORMATION_SELECTION),
+        persist: true,
+        context: makeRunContext('run-1', {
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'e1',
+          targetAdapter: 'temporal',
+        }),
+      })
+    ).resolves.toEqual({
+      kind: 'selection-rejected',
+      rejection: { code: 'REJECTED', cause, reason },
+    });
+  });
+
+  it('returns plan-invalid with exact plan identity and validation', async () => {
+    const preview = buildGenericPreviewPayload();
+    const validation = {
+      status: 'ERROR',
+      code: 'MISSING_CAPABILITY',
+      planId: buildValidPlanRef().planId,
+      adapterId: 'temporal',
+      degradable: false,
+      reason: 'The adapter is missing executor.dbt.',
+      cause: 'executor.dbt',
+    };
+    const postJsonMock = vi.fn(async () => {
+      throw createPlanRejectedApiError({
+        contractVersion: '1.0.0',
+        kind: 'plan-invalid',
+        ...preview,
+        validation,
+      });
+    });
+    const service = createPlansService(
+      buildApiClientStub({ postJson: postJsonMock as ApiClient['postJson'] })
+    );
+
+    const outcome = await service.previewPlan({
+      previewProfile: 'planner-generic-v1',
+      graphSource: VALID_GENERIC_GRAPH_SOURCE,
+      selection: toExplicitSelection(VALID_GENERIC_SELECTION),
+      persist: true,
+      context: makeRunContext('run-1'),
+    });
+
+    expect(outcome.kind).toBe('plan-invalid');
+    if (outcome.kind === 'plan-invalid') {
+      expect(outcome.plan.planRef).toEqual(buildValidPlanRef());
+      expect(outcome.validation).toEqual(validation);
     }
-  );
+  });
+
+  it('keeps malformed typed 422 responses as errors', async () => {
+    const apiError = createPlanRejectedApiError({
+      contractVersion: '1.0.0',
+      kind: 'selection-rejected',
+      rejection: { code: 'REJECTED' },
+    });
+    const service = createPlansService(
+      buildApiClientStub({
+        postJson: vi.fn(async () => {
+          throw apiError;
+        }) as ApiClient['postJson'],
+      })
+    );
+
+    await expect(service.previewPlan(buildGenericPreviewInput())).rejects.toBe(apiError);
+  });
+
+  it('keeps unknown typed rejection codes as errors', async () => {
+    const apiError = createPlanRejectedApiError({
+      contractVersion: '1.0.0',
+      kind: 'plan-invalid',
+      ...buildGenericPreviewPayload(),
+      validation: {
+        status: 'ERROR',
+        code: 'UNKNOWN_EXECUTABILITY_CODE',
+        planId: buildValidPlanRef().planId,
+        adapterId: 'temporal',
+        degradable: false,
+        reason: 'Unknown rejection.',
+      },
+    });
+    const service = createPlansService(
+      buildApiClientStub({
+        postJson: vi.fn(async () => {
+          throw apiError;
+        }) as ApiClient['postJson'],
+      })
+    );
+
+    await expect(service.previewPlan(buildGenericPreviewInput())).rejects.toBe(apiError);
+  });
+
+  it.each([
+    {
+      label: 'authentication',
+      error: new ApiError({
+        message: 'HTTP 401',
+        endpoint: '/plans/preview',
+        statusCode: 401,
+        category: 'unauthorized',
+        responseBody: { error: { type: 'unauthorized', reason: 'authentication_required' } },
+      }),
+    },
+    {
+      label: 'transport',
+      error: new Error('Network unavailable'),
+    },
+  ])('keeps $label failures outside the product outcome union', async ({ error }) => {
+    const service = createPlansService(
+      buildApiClientStub({
+        postJson: vi.fn(async () => {
+          throw error;
+        }) as ApiClient['postJson'],
+      })
+    );
+
+    await expect(service.previewPlan(buildGenericPreviewInput())).rejects.toThrow();
+  });
 
   it('maps importPlan responses from backend-owned planRef payloads', async () => {
     const postJsonMock = vi.fn(async () => ({
@@ -597,7 +710,7 @@ describe('createPlansService', () => {
       })
     );
 
-    const plan = await service.previewPlan({
+    const plan = await previewAccepted(service, {
       previewProfile: 'planner-generic-v1',
       graphSource: VALID_GENERIC_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_GENERIC_SELECTION),
@@ -631,7 +744,7 @@ describe('createPlansService', () => {
       })
     );
 
-    const plan = await service.previewPlan({
+    const plan = await previewAccepted(service, {
       previewProfile: 'planner-generic-v1',
       graphSource: VALID_GENERIC_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_GENERIC_SELECTION),
@@ -662,7 +775,7 @@ describe('createPlansService', () => {
       })
     );
 
-    const plan = await service.previewPlan({
+    const plan = await previewAccepted(service, {
       previewProfile: 'planner-generic-v1',
       graphSource: VALID_GENERIC_GRAPH_SOURCE,
       selection: toExplicitSelection(VALID_GENERIC_SELECTION),

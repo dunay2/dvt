@@ -14,6 +14,7 @@ import type {
   PlannerPolicyClassSet,
   PlannerSelection,
   PlanPreviewProvenance,
+  PlanPreviewSelectionRejection,
   ScopedPlanRef,
   StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
@@ -26,15 +27,6 @@ import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlanne
 import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
 
 type PreviewPlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
-type PreviewPlanSemanticRejection = {
-  readonly status: 'ERROR';
-  readonly planId: string;
-  readonly adapterId: string;
-  readonly code: 'REJECTED';
-  readonly degradable: false;
-  readonly reason: string;
-  readonly cause: string;
-};
 
 export interface PreviewPlanCommand {
   readonly targetAdapter: string;
@@ -48,7 +40,8 @@ export interface PreviewPlanCommand {
 
 export const PREVIEW_PLAN_RESULT_KIND = {
   accepted: 'accepted',
-  rejected: 'rejected',
+  selectionRejected: 'selection-rejected',
+  planInvalid: 'plan-invalid',
 } as const;
 
 export type PreviewPlanUseCaseResult =
@@ -58,11 +51,14 @@ export type PreviewPlanUseCaseResult =
       readonly planRef: PlanRef;
     }
   | {
-      readonly kind: typeof PREVIEW_PLAN_RESULT_KIND.rejected;
-      readonly planRef?: PlanRef;
-      readonly validation:
-        | Extract<PreviewPlanValidationResult, { readonly status: 'ERROR' }>
-        | PreviewPlanSemanticRejection;
+      readonly kind: typeof PREVIEW_PLAN_RESULT_KIND.selectionRejected;
+      readonly rejection: PlanPreviewSelectionRejection;
+    }
+  | {
+      readonly kind: typeof PREVIEW_PLAN_RESULT_KIND.planInvalid;
+      readonly plan: ExecutionPlan;
+      readonly planRef: PlanRef;
+      readonly validation: Extract<PreviewPlanValidationResult, { readonly status: 'ERROR' }>;
     };
 
 export class PreviewPlanUseCase {
@@ -90,14 +86,8 @@ export class PreviewPlanUseCase {
     );
     if (!previewSelection.ok) {
       return {
-        kind: PREVIEW_PLAN_RESULT_KIND.rejected,
-        validation: {
-          status: 'ERROR',
-          planId: 'selection',
-          adapterId: command.targetAdapter,
-          degradable: false,
-          ...previewSelection.rejection,
-        },
+        kind: PREVIEW_PLAN_RESULT_KIND.selectionRejected,
+        rejection: previewSelection.rejection,
       };
     }
 
@@ -131,7 +121,8 @@ export class PreviewPlanUseCase {
         report: validation,
       });
       return {
-        kind: PREVIEW_PLAN_RESULT_KIND.rejected,
+        kind: PREVIEW_PLAN_RESULT_KIND.planInvalid,
+        plan: buildResult.plan,
         planRef,
         validation,
       };

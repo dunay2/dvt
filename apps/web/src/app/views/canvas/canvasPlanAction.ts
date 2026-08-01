@@ -187,7 +187,7 @@ export async function executeCanvasPlanAction({
         writtenArtifactPaths.push(...publication.writtenArtifactPaths);
       }
 
-      const previewedPlan = await plansService.previewPlan({
+      const previewOutcome = await plansService.previewPlan({
         previewProfile: executionStrategy.previewProfile,
         graphSource: plannerProjection.graphSource,
         selection: plannerProjection.selection,
@@ -202,7 +202,16 @@ export async function executeCanvasPlanAction({
           : {}),
         persist: true,
       });
-      const plan = attachDbtSelectionIntent(previewedPlan, plannerProjection);
+      if (previewOutcome.kind !== 'accepted') {
+        return {
+          ok: false,
+          message:
+            previewOutcome.kind === 'selection-rejected'
+              ? previewOutcome.rejection.reason
+              : previewOutcome.validation.reason,
+        };
+      }
+      const plan = attachDbtSelectionIntent(previewOutcome.plan, plannerProjection);
 
       return {
         ok: true,
@@ -255,7 +264,7 @@ export async function executeCanvasPlanAction({
       sqlArtifact: previewProvenance.sqlArtifact,
       sqlText: previewProvenance.sqlText,
     });
-    const plan = await plansService.previewPlan({
+    const previewOutcome = await plansService.previewPlan({
       previewProfile: executionStrategy.previewProfile,
       graphSource,
       selection,
@@ -263,11 +272,20 @@ export async function executeCanvasPlanAction({
       ...(previewProvenance.provenance ? { provenance: previewProvenance.provenance } : {}),
       persist: true,
     });
+    if (previewOutcome.kind !== 'accepted') {
+      return {
+        ok: false,
+        message:
+          previewOutcome.kind === 'selection-rejected'
+            ? previewOutcome.rejection.reason
+            : previewOutcome.validation.reason,
+      };
+    }
 
     return {
       ok: true,
       draftSignature: transformationValidation.draftSignature,
-      plan,
+      plan: previewOutcome.plan,
       writtenArtifactPaths: [
         previewProvenance.sqlArtifact.path,
         ...(previewProvenance.provenance?.graphArtifact.path

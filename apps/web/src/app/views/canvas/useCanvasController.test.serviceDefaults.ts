@@ -104,7 +104,10 @@ export function buildDefaultCanvasHarnessServices(
   };
 
   const plansService: IPlansPort = {
-    previewPlan: vi.fn(async () => currentPlan),
+    previewPlan: vi.fn(async () => ({
+      kind: 'accepted' as const,
+      plan: { ...currentPlan, planRef: currentPlan.planRef! },
+    })),
     importPlan: vi.fn(async () => currentPlan),
   };
 

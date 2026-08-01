@@ -9,7 +9,7 @@ import type {
 } from '../../ports/workspace';
 import type { CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
-import { makeRunContext } from '../../testing/contractTestUtils';
+import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import { canvasViewCopy } from './copy';
 import { executeCanvasPlanAction } from './canvasPlanAction';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
@@ -47,7 +47,10 @@ const persistedPlan: PlanViewModel = {
 
 describe('executeCanvasPlanAction file-backed dbt branch', () => {
   it('previews the authoritative projection without reading or writing workspace files', async () => {
-    const previewPlan = vi.fn<IPlansPort['previewPlan']>().mockResolvedValue(persistedPlan);
+    const previewPlan = vi.fn<IPlansPort['previewPlan']>().mockResolvedValue({
+      kind: 'accepted',
+      plan: { ...persistedPlan, planRef: makePlanRef({ planId: persistedPlan.planId }) },
+    });
     const saveFileContent = vi.fn();
     const strategy: CanvasExecutionStrategy = {
       kind: 'dbt_project_file_preview',

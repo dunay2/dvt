@@ -8,7 +8,7 @@ import type {
   IWorkspaceFilesQueryPort,
 } from '../../ports/workspace';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
-import { makeRunContext } from '../../testing/contractTestUtils';
+import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { PlanViewModel } from '../../types/plans';
 import { executeCanvasPlanAction } from './canvasPlanAction';
@@ -82,7 +82,10 @@ describe('Canvas graph-draft DBT SQL authority', () => {
       capabilities: [],
       steps: [],
     };
-    const previewPlan = vi.fn<IPlansPort['previewPlan']>().mockResolvedValue(persistedPlan);
+    const previewPlan = vi.fn<IPlansPort['previewPlan']>().mockResolvedValue({
+      kind: 'accepted',
+      plan: { ...persistedPlan, planRef: makePlanRef({ planId: persistedPlan.planId }) },
+    });
     const workspaceFilesQuery: IWorkspaceFilesQueryPort = {
       listFiles: vi.fn(),
       getFileContent: vi.fn(async (path) => ({

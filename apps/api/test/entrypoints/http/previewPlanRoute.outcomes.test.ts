@@ -165,10 +165,20 @@ describe('previewPlanRoute outcomes', () => {
 
   it('returns 422 and marks the stored plan invalid when executability fails', async () => {
     const reply = createReply();
+    const plan = buildStoredPlan();
+    const validation = {
+      status: 'ERROR' as const,
+      code: 'REJECTED' as const,
+      adapterId: 'temporal',
+      planId: VALID_PLAN_REF.planId,
+      degradable: false,
+      reason: 'Adapter is not configured: temporal',
+      cause: 'adapter',
+    };
     const deps = createPreviewDeps({
       planner: {
         buildPlan: vi.fn(async () => ({
-          plan: buildStoredPlan(),
+          plan,
           executionPolicy: {},
           canonicalPlanCoreJson: '{}',
         })),
@@ -179,15 +189,7 @@ describe('previewPlanRoute outcomes', () => {
         markStoredPlanArtifactInvalid: vi.fn(async () => undefined),
       },
       planValidator: {
-        validatePlan: vi.fn(async () => ({
-          status: 'ERROR',
-          code: 'REJECTED',
-          adapterId: 'temporal',
-          planId: VALID_PLAN_REF.planId,
-          degradable: false,
-          reason: 'Adapter is not configured: temporal',
-          cause: 'adapter',
-        })),
+        validatePlan: vi.fn(async () => validation),
       },
     });
 
@@ -198,10 +200,59 @@ describe('previewPlanRoute outcomes', () => {
     );
 
     expect(reply.statusCode).toBe(422);
+    expect(reply.payload).toEqual({
+      error: {
+        type: 'unprocessable',
+        reason: 'plan_rejected',
+        details: {
+          contractVersion: '1.0.0',
+          kind: 'plan-invalid',
+          previewProfile: PREVIEW_PROFILE_GENERIC,
+          plan,
+          planRef: VALID_PLAN_REF,
+          persisted: {
+            planRecordId: VALID_PLAN_REF.planId,
+            canonicalPlanSha256: sha256HexUtf8(jcsCanonicalize(plan)),
+          },
+          validation,
+        },
+      },
+    });
     expect(deps.planStore.markStoredPlanArtifactInvalid).toHaveBeenCalledWith({
       ...SCOPED_VALID_PLAN_REF,
       report: expect.objectContaining({ status: 'ERROR', code: 'REJECTED' }),
     });
+  });
+
+  it('returns typed selection-rejected without building or storing a plan', async () => {
+    const reply = createReply();
+    const rejection = {
+      code: 'REJECTED' as const,
+      cause: 'dependency_gap',
+      reason: 'Selected closure is missing required dependencies.',
+    };
+    const deps = createPreviewDeps({
+      previewSelectionResolver: {
+        execute: vi.fn(async () => ({ ok: false as const, rejection })),
+      },
+    });
+
+    await executePreviewRequest(reply, deps, { id: 'req-preview-selection-rejected' });
+
+    expect(reply.statusCode).toBe(422);
+    expect(reply.payload).toEqual({
+      error: {
+        type: 'unprocessable',
+        reason: 'plan_rejected',
+        details: {
+          contractVersion: '1.0.0',
+          kind: 'selection-rejected',
+          rejection,
+        },
+      },
+    });
+    expect(deps.planner.buildPlan).not.toHaveBeenCalled();
+    expect(deps.planStore.storePlanArtifact).not.toHaveBeenCalled();
   });
 
   it('forwards transformation provenance into planner observability and response payload', async () => {

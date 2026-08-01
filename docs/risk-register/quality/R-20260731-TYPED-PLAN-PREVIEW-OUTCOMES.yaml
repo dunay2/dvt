@@ -1,0 +1,30 @@
+---
+id: R-20260731-TYPED-PLAN-PREVIEW-OUTCOMES
+title: Preview rejection phases can be misclassified across API and Web boundaries
+status: Open
+date: 2026-07-31
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: Medium
+probability: Low
+context: >
+  PreviewExecutionPlan can refuse an invalid selection before a plan exists or reject a concrete,
+  persisted plan after executability validation.
+risk: >
+  Treating both phases as one generic rejection can fabricate plan identity for selection errors,
+  discard the real planRef for invalid plans, or cause Web clients to mistake malformed failures for
+  governed product outcomes.
+mitigations:
+  - 'Publish a closed, versioned union for selection-rejected and plan-invalid outcomes.'
+  - 'Prohibit plan identity and persistence fields on selection-rejected payloads.'
+  - 'Preserve the exact plan, planRef, persistence evidence, and validation on plan-invalid.'
+  - 'Parse typed 422 details strictly at the Web adapter boundary and keep malformed payloads as
+    errors.'
+  - 'Cover contract, use-case, HTTP, and Web mapping boundaries with focused tests.'
+residual_risk: >
+  Future rejection phases could require a new contract variant. The closed union and strict parser
+  force that evolution to be explicit instead of silently collapsing it into an existing phase.
+review_after: 2026-08-31
+---

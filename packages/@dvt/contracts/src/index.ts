@@ -76,11 +76,19 @@ export type {
   VersionedExecutionPlan,
   VersionedPlanCore,
 } from './contracts/planner/ExecutionPlan.v1.js';
-export { PREVIEW_PROFILE } from './contracts/planner/TransformationFlowPreview.v1.js';
+export {
+  PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION,
+  PLAN_PREVIEW_REJECTED_OUTCOME_KIND,
+  PREVIEW_PROFILE,
+} from './contracts/planner/TransformationFlowPreview.v1.js';
 export type {
   PlanPreviewPersistedRecord,
   PlanPreviewPersistResponse,
+  PlanPreviewPlanInvalidOutcome,
+  PlanPreviewRejectedOutcome,
   PlanPreviewRequest,
+  PlanPreviewSelectionRejectedOutcome,
+  PlanPreviewSelectionRejection,
   PlanPreviewSummary,
   PlanPreviewValidation,
   PreviewProfile,
