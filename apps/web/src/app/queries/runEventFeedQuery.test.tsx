@@ -45,7 +45,10 @@ function buildRunsService(listRunEvents: IRunsPort['listRunEvents']): IRunsPort 
   };
 }
 
-function FeedConsumer({ consumerId, runId }: Readonly<{ consumerId: string; runId: string }>) {
+function FeedConsumer({
+  consumerId,
+  runId,
+}: Readonly<{ consumerId: string; runId: string }>): React.JSX.Element {
   const query = useRunEventFeedQuery(runId, { isLive: false });
   const eventIds =
     query.data?.phase === 'idle' ? [] : query.data?.events.map(({ eventId }) => eventId);
