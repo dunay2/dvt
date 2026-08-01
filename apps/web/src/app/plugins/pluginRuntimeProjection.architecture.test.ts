@@ -112,11 +112,11 @@ describe('plugin runtime projection architecture', () => {
     ).toBe(costDashboard);
   });
 
-  it('keeps legacy Canvas workbench tab contributions retired from runtime projection', () => {
+  it('projects one Canvas route without peer Code, Lineage, Diff, or Artifacts views', () => {
     const shellViewIds = getShellNavigationViews().map((view) => view.id);
-    const workbenchTabViews = getAllViews().filter(
-      (view) => view.placement?.kind === 'workbench-tab'
-    );
+    const canvasRoutePaths = getRouteViews()
+      .map((view) => view.path)
+      .filter((routePath) => routePath === '/canvas' || routePath.startsWith('/canvas/'));
 
     expect(shellViewIds).toContain('dbt.canvas');
     expect(shellViewIds).toContain('dvt.templates');
@@ -126,7 +126,7 @@ describe('plugin runtime projection architecture', () => {
     expect(shellViewIds).not.toContain('dbt.diff');
     expect(shellViewIds).not.toContain('dbt.artifacts');
 
-    expect(workbenchTabViews).toEqual([]);
+    expect(canvasRoutePaths).toEqual(['/canvas']);
   });
 
   it('decorates Cost overlay nodes at explicit cost-risk thresholds', () => {
