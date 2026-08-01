@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { DbtDependencyEditReceiptInvalidError } from '../../../../src/application/ports/dbtDependencyEdit.js';
+
 import {
   AUTHORITY,
   createHarness,
@@ -68,6 +70,22 @@ describe('ApplySelectedDbtDependencyEditCommand happy path', () => {
         receipt: expect.objectContaining({ deduplicated: true }),
       })
     );
+    expect(harness.analyzeCandidate).toHaveBeenCalledTimes(1);
+    expect(harness.apply).toHaveBeenCalledTimes(1);
+  });
+
+  it('rejects reuse of one idempotency key for a different semantic edit', async () => {
+    const harness = createHarness();
+    const input = request(harness);
+    await harness.command.apply(input);
+
+    await expect(
+      harness.command.apply({
+        ...input,
+        nextTargetUniqueId: 'source.analytics.raw.orders',
+      })
+    ).rejects.toBeInstanceOf(DbtDependencyEditReceiptInvalidError);
+
     expect(harness.analyzeCandidate).toHaveBeenCalledTimes(1);
     expect(harness.apply).toHaveBeenCalledTimes(1);
   });

@@ -35,6 +35,17 @@ export function fingerprintDbtDependencyEditRequest(
   return hashStable({ scope: input.scope, request });
 }
 
+export function identifyDbtDependencyEditReceipt(
+  input: ApplySelectedDbtDependencyEditInput,
+  request: ParsedDbtDependencyEditRequest
+): string {
+  return sha256(
+    `dbt-dependency-edit:${JSON.stringify(
+      sortJsonValue({ scope: input.scope, idempotencyKey: request.idempotencyKey })
+    )}`
+  );
+}
+
 export function findStaleDbtDependencyEditAnalysis(
   request: ParsedDbtDependencyEditRequest,
   resolved: Awaited<ReturnType<SelectedDbtModelAnalysisResolver['resolve']>>

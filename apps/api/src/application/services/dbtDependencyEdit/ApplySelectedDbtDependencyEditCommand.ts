@@ -31,9 +31,9 @@ import {
   findStaleDbtDependencyEditAnalysis,
   fingerprintDbtDependencyEditRequest,
   hasOverlappingDbtSemanticRegion,
+  identifyDbtDependencyEditReceipt,
   parseDbtDependencyEditRequest,
   parseDbtDependencyEditResult,
-  sha256,
   toDbtProjectWorkspacePath,
   validateDbtDependencyEditCandidate,
 } from './dbtDependencyEditDecisionModel.js';
@@ -53,7 +53,7 @@ export class ApplySelectedDbtDependencyEditCommand implements IApplySelectedDbtD
   public async apply(input: ApplySelectedDbtDependencyEditInput): Promise<DbtDependencyEditResult> {
     const request = parseDbtDependencyEditRequest(input);
     const requestHash = fingerprintDbtDependencyEditRequest(input, request);
-    const receiptId = sha256(`dbt-dependency-edit:${requestHash}`);
+    const receiptId = identifyDbtDependencyEditReceipt(input, request);
     const existing = await this.deps.receipts.findApplied(input.scope, receiptId);
     if (existing !== null) {
       if (
