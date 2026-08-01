@@ -51,6 +51,64 @@ describe('useCanvasGraphHandlers node drop', () => {
     harness.cleanup();
   });
 
+  it('fails closed before admission when the active plugin drop parser throws', async () => {
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      graphStrategy: {
+        parseDropPayload: () => {
+          throw new Error('drop parser failed');
+        },
+      },
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+
+    const dragEvent = {
+      preventDefault: vi.fn(),
+      dataTransfer: { getData: vi.fn(() => '') },
+    } as unknown as React.DragEvent<HTMLDivElement>;
+
+    act(() => {
+      harness.latest()?.handleDrop(dragEvent);
+    });
+
+    expect(toastState.error).toHaveBeenCalledWith(canvasViewCopy.nodeDropPayloadInvalidMessage);
+    expect(setNodes).not.toHaveBeenCalled();
+    expect(setDraftSession).not.toHaveBeenCalled();
+
+    harness.cleanup();
+  });
+
+  it('keeps a normal null plugin drop result as a silent no-op', async () => {
+    const setNodes = vi.fn();
+    const setDraftSession = vi.fn();
+    const harness = renderGraphHandlersHook({
+      canEditEdges: true,
+      graphStrategy: { parseDropPayload: () => null },
+      setNodes,
+      setDraftSession,
+    });
+    await harness.render();
+
+    const dragEvent = {
+      preventDefault: vi.fn(),
+      dataTransfer: { getData: vi.fn(() => '') },
+    } as unknown as React.DragEvent<HTMLDivElement>;
+
+    act(() => {
+      harness.latest()?.handleDrop(dragEvent);
+    });
+
+    expect(toastState.error).not.toHaveBeenCalled();
+    expect(setNodes).not.toHaveBeenCalled();
+    expect(setDraftSession).not.toHaveBeenCalled();
+
+    harness.cleanup();
+  });
+
   it('applies a pure node admission transaction when dropping a canonical node', async () => {
     const initialNodes: Node[] = [
       { id: 'source-node', data: { name: 'source-node' }, position: { x: 0, y: 0 } },

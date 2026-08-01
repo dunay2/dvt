@@ -151,6 +151,7 @@ export type CanvasViewCopy = {
   readonly nodeNotFoundInGraphMessage: string;
   readonly nodeAlreadyOnCanvasMessage: string;
   readonly nodeKindUnavailableForCanvasMessage: string;
+  readonly nodeDropPayloadInvalidMessage: string;
   readonly transformationConnectionOrderMessage: string;
   readonly transformationConnectionEdgeCountMessage: string;
   readonly transformationConnectionDuplicateMessage: string;
