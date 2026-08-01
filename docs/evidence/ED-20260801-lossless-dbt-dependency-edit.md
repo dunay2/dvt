@@ -18,7 +18,7 @@ evidence:
   tests:
     - pnpm --filter @dvt/contracts test
     - pnpm --filter @dvt/contracts typecheck
-    - pnpm --filter @dvt/contracts lint
+    - pnpm exec eslint packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts packages/@dvt/contracts/test/dbt-dependency-edit.contract.test.ts
     - pnpm --filter dvt-api test:ci
     - pnpm --filter dvt-api typecheck
     - pnpm --filter dvt-api lint
