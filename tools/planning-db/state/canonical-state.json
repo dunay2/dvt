@@ -3711,6 +3711,265 @@
       "createdAt": "2026-07-31T22:19:13.431Z"
     },
     {
+      "railId": "local#MVP-F6-2D-TYPED-PREVIEW-OUTCOMES#command#previewexecutionplan",
+      "featureId": "MVP-F6-2D-TYPED-PREVIEW-OUTCOMES",
+      "mechanizationStatus": "implemented",
+      "railName": "PreviewExecutionPlan",
+      "normalizedRailName": "previewexecutionplan",
+      "railType": "command",
+      "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+      "railStatus": "retired",
+      "symbolRefs": [
+        "apps/api/src/application/services/PreviewPlanUseCase.ts#PreviewPlanUseCase",
+        "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#mapPreviewPlanUseCaseResult",
+        "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts#PlanPreviewRejectedOutcome",
+        "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts#PlanPreviewRejectedOutcomeSchema",
+        "packages/@dvt/contracts/src/validation/planner.ts#parsePlanPreviewRejectedOutcome",
+        "apps/web/src/app/ports/plans.ts#PlanPreviewOutcome",
+        "apps/web/src/app/services/plans/plansService.api.ts#createApiPlansService"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/PreviewPlanUseCase.ts#PreviewPlanUseCase",
+        "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#mapPreviewPlanUseCaseResult",
+        "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts#PlanPreviewRejectedOutcome",
+        "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts#PlanPreviewRejectedOutcomeSchema",
+        "packages/@dvt/contracts/src/validation/planner.ts#parsePlanPreviewRejectedOutcome",
+        "apps/web/src/app/ports/plans.ts#PlanPreviewOutcome",
+        "apps/web/src/app/services/plans/plansService.api.ts#createApiPlansService"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260731-typed-plan-preview-outcomes.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/services/PreviewPlanUseCase.ts",
+        "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+        "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+        "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts",
+        "apps/web/src/app/ports/plans.ts",
+        "apps/web/src/app/services/plans/plansService.api.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/contracts test -- test/validation.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/contracts test",
+        "pnpm --filter dvt-api test:ci",
+        "pnpm --filter @dvt/web test",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+      "sourceContentSha256": "386df9884801309ab80234ad0e4bc70ce75333e2b2379fbd0ecb37c9e2aa6475",
+      "rawRail": {
+        "name": "PreviewExecutionPlan",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "ResolveAuthorizedPreviewSelectionService"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "PreviewPlanUseCase",
+            "path": "apps/api/src/application/services/PreviewPlanUseCase.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/preview.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+              "apps/web/src/app/services/plans/plansService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One discriminated outcome contract crosses application, HTTP and Web adapter boundaries without duplicating preview policy.",
+              "The local rail declaration is retired because PreviewExecutionPlan already has canonical ownership."
+            ],
+            "cypressCoverage": "N/A - browser rejection evidence is owned by GitHub issue 2084",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- test/validation.test.ts"
+          },
+          {
+            "name": "mapPreviewPlanUseCaseResult",
+            "path": "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/preview.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+              "apps/web/src/app/services/plans/plansService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One discriminated outcome contract crosses application, HTTP and Web adapter boundaries without duplicating preview policy.",
+              "The local rail declaration is retired because PreviewExecutionPlan already has canonical ownership."
+            ],
+            "cypressCoverage": "N/A - browser rejection evidence is owned by GitHub issue 2084",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- test/validation.test.ts"
+          },
+          {
+            "name": "PlanPreviewRejectedOutcome",
+            "path": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/preview.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+              "apps/web/src/app/services/plans/plansService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One discriminated outcome contract crosses application, HTTP and Web adapter boundaries without duplicating preview policy.",
+              "The local rail declaration is retired because PreviewExecutionPlan already has canonical ownership."
+            ],
+            "cypressCoverage": "N/A - browser rejection evidence is owned by GitHub issue 2084",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- test/validation.test.ts"
+          },
+          {
+            "name": "PlanPreviewRejectedOutcomeSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/preview.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+              "apps/web/src/app/services/plans/plansService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One discriminated outcome contract crosses application, HTTP and Web adapter boundaries without duplicating preview policy.",
+              "The local rail declaration is retired because PreviewExecutionPlan already has canonical ownership."
+            ],
+            "cypressCoverage": "N/A - browser rejection evidence is owned by GitHub issue 2084",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- test/validation.test.ts"
+          },
+          {
+            "name": "parsePlanPreviewRejectedOutcome",
+            "path": "packages/@dvt/contracts/src/validation/planner.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/preview.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+              "apps/web/src/app/services/plans/plansService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One discriminated outcome contract crosses application, HTTP and Web adapter boundaries without duplicating preview policy.",
+              "The local rail declaration is retired because PreviewExecutionPlan already has canonical ownership."
+            ],
+            "cypressCoverage": "N/A - browser rejection evidence is owned by GitHub issue 2084",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- test/validation.test.ts"
+          },
+          {
+            "name": "PlanPreviewOutcome",
+            "path": "apps/web/src/app/ports/plans.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/preview.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+              "apps/web/src/app/services/plans/plansService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One discriminated outcome contract crosses application, HTTP and Web adapter boundaries without duplicating preview policy.",
+              "The local rail declaration is retired because PreviewExecutionPlan already has canonical ownership."
+            ],
+            "cypressCoverage": "N/A - browser rejection evidence is owned by GitHub issue 2084",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- test/validation.test.ts"
+          },
+          {
+            "name": "createApiPlansService",
+            "path": "apps/web/src/app/services/plans/plansService.api.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/preview.ts",
+              "apps/api/test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+              "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+              "apps/web/src/app/services/plans/plansService.test.ts"
+            ],
+            "fowlerSignals": [
+              "One discriminated outcome contract crosses application, HTTP and Web adapter boundaries without duplicating preview policy.",
+              "The local rail declaration is retired because PreviewExecutionPlan already has canonical ownership."
+            ],
+            "cypressCoverage": "N/A - browser rejection evidence is owned by GitHub issue 2084",
+            "architectureGuard": "pnpm --filter @dvt/contracts test -- test/validation.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-F6-2D-TYPED-PREVIEW-OUTCOMES",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2079"],
+        "cypressFlows": [
+          "N/A - browser rejection evidence is owned by GitHub issue 2084"
+        ],
+        "domainObjects": ["PlanPreviewRejectedOutcome", "PlanPreviewOutcome"],
+        "fowlerSignals": [
+          "One discriminated outcome contract crosses application, HTTP and Web adapter boundaries without duplicating preview policy.",
+          "The local rail declaration is retired because PreviewExecutionPlan already has canonical ownership."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter dvt-api test:ci",
+          "pnpm --filter @dvt/web test",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "previewexecutionplan-record",
+            "redTest": "pnpm --filter dvt-api test:ci -- test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+            "greenTest": "pnpm --filter dvt-api test:ci -- test/application/services/PreviewPlanUseCase.outcomes.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/PreviewPlanUseCase.ts",
+              "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+              "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+              "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts",
+              "apps/web/src/app/ports/plans.ts",
+              "apps/web/src/app/services/plans/plansService.api.ts"
+            ],
+            "expectedFailure": "Preview rejection phases collapsed into an untyped error and Web could not distinguish valid product rejections from transport failures."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "PreviewExecutionPlan",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- test/validation.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2079",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/PreviewPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts",
+          "apps/web/src/app/ports/plans.ts",
+          "apps/web/src/app/services/plans/plansService.api.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/web/src/app/components/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-01T01:02:44.891Z"
+    },
+    {
       "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicalarchitecturestate",
       "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
       "mechanizationStatus": "implemented",
@@ -7133,6 +7392,90 @@
         ]
       },
       "createdAt": "2026-07-31T23:27:11.102Z"
+    },
+    {
+      "operationId": "06efa45a-4999-443f-a7b9-fd709e3fb630",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-F6-2D-TYPED-PREVIEW-OUTCOMES:command:previewexecutionplan:latest:d7619f24e5883b67",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2D-TYPED-PREVIEW-OUTCOMES#command#previewexecutionplan",
+      "sourcePath": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+      "sourceContentSha256": "386df9884801309ab80234ad0e4bc70ce75333e2b2379fbd0ecb37c9e2aa6475",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test:ci -- test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+        "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+        "railName": "PreviewExecutionPlan",
+        "railType": "command",
+        "featureId": "MVP-F6-2D-TYPED-PREVIEW-OUTCOMES",
+        "greenTest": "pnpm --filter dvt-api test:ci -- test/application/services/PreviewPlanUseCase.outcomes.test.ts test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+        "sourceRef": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+        "unitTests": [
+          "packages/@dvt/contracts/test/validation/preview.ts",
+          "apps/api/test/application/services/PreviewPlanUseCase.outcomes.test.ts",
+          "apps/api/test/entrypoints/http/previewPlanRoute.outcomes.test.ts",
+          "apps/web/src/app/services/plans/plansService.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2079"],
+        "cypressFlows": [
+          "N/A - browser rejection evidence is owned by GitHub issue 2084"
+        ],
+        "domainObjects": ["PlanPreviewRejectedOutcome", "PlanPreviewOutcome"],
+        "fowlerSignals": [
+          "One discriminated outcome contract crosses application, HTTP and Web adapter boundaries without duplicating preview policy.",
+          "The local rail declaration is retired because PreviewExecutionPlan already has canonical ownership."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter dvt-api test:ci",
+          "pnpm --filter @dvt/web test",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Preview rejection phases collapsed into an untyped error and Web could not distinguish valid product rejections from transport failures.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260731-typed-plan-preview-outcomes.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test -- test/validation.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2079",
+        "implementationRefs": [
+          "apps/api/src/application/services/PreviewPlanUseCase.ts#PreviewPlanUseCase",
+          "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts#mapPreviewPlanUseCaseResult",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts#PlanPreviewRejectedOutcome",
+          "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts#PlanPreviewRejectedOutcomeSchema",
+          "packages/@dvt/contracts/src/validation/planner.ts#parsePlanPreviewRejectedOutcome",
+          "apps/web/src/app/ports/plans.ts#PlanPreviewOutcome",
+          "apps/web/src/app/services/plans/plansService.api.ts#createApiPlansService"
+        ],
+        "normalizedRailName": "previewexecutionplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "386df9884801309ab80234ad0e4bc70ce75333e2b2379fbd0ecb37c9e2aa6475",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/PreviewPlanUseCase.ts",
+          "apps/api/src/entrypoints/http/previewPlanRouteResponseMapper.ts",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts",
+          "apps/web/src/app/ports/plans.ts",
+          "apps/web/src/app/services/plans/plansService.api.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/web/src/app/components/**"
+        ]
+      },
+      "createdAt": "2026-08-01T01:02:44.891Z"
     }
   ]
 }
