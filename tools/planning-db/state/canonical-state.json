@@ -4710,7 +4710,7 @@
       ],
       "architectureGuards": [
         "PlanPreviewModal renders exactly one discriminated outcome posture",
-        "Rejected diagnostics remain bounded and scrollable inside the viewport"
+        "Rejected diagnostics remain bounded scrollable and readable for unbroken values"
       ],
       "completionGate": [
         "pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/PlanPreviewModal.test.tsx src/app/components/PlanPreviewModal.outcomes.test.tsx",
@@ -4720,7 +4720,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "apps/web/src/app/components/PlanPreviewModal.tsx",
-      "sourceContentSha256": "08d288a335c20e0f6953be7edccfb962134bf95427a8fec8499229ac518077eb",
+      "sourceContentSha256": "132c9c87d2ed2a7945fa5b3cac78b9e461a5a6dcbe80fd70b2c358a4b3f696d0",
       "rawRail": {
         "name": "ObservePlanRunReadiness",
         "type": "query",
@@ -4918,7 +4918,7 @@
               "apps/web/src/app/views/canvas/CanvasModalHost.tsx",
               "apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts"
             ],
-            "expectedFailure": "Typed rejected outcomes were discarded or rendered outside the usable viewport"
+            "expectedFailure": "Typed rejected outcomes were discarded rendered outside the viewport or clipped long diagnostics"
           }
         ],
         "componentGuides": [
@@ -4939,7 +4939,7 @@
         ],
         "architectureGuards": [
           "PlanPreviewModal renders exactly one discriminated outcome posture",
-          "Rejected diagnostics remain bounded and scrollable inside the viewport"
+          "Rejected diagnostics remain bounded scrollable and readable for unbroken values"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2082",
         "mechanizationStatus": "implemented",
@@ -4949,7 +4949,7 @@
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations"]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-01T03:20:01.368Z"
     },
@@ -8897,6 +8897,90 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations"]
       },
       "createdAt": "2026-08-01T03:40:53.484Z"
+    },
+    {
+      "operationId": "89325bbb-1643-4c7d-856e-40c7b596576f",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-F6-2F-PLAN-PREVIEW-PRESENTATION:query:observeplanrunreadiness:1:0bf6a520916fa1e6",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2F-PLAN-PREVIEW-PRESENTATION#query#observeplanrunreadiness",
+      "sourcePath": "apps/web/src/app/components/PlanPreviewModal.tsx",
+      "sourceContentSha256": "132c9c87d2ed2a7945fa5b3cac78b9e461a5a6dcbe80fd70b2c358a4b3f696d0",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/PlanPreviewModal.outcomes.test.tsx",
+        "dddOwner": "CanvasExecutionReadiness",
+        "railName": "ObservePlanRunReadiness",
+        "railType": "query",
+        "featureId": "MVP-F6-2F-PLAN-PREVIEW-PRESENTATION",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/PlanPreviewModal.test.tsx src/app/components/PlanPreviewModal.outcomes.test.tsx",
+        "sourceRef": "apps/web/src/app/components/PlanPreviewModal.tsx",
+        "unitTests": [
+          "apps/web/src/app/components/PlanPreviewModal.test.tsx",
+          "apps/web/src/app/components/PlanPreviewModal.outcomes.test.tsx"
+        ],
+        "railStatus": "retired",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2082"],
+        "cypressFlows": [
+          "GitHub issue #2084 owns reduced browser evidence for preview rejection postures"
+        ],
+        "domainObjects": ["PlanPreviewOutcome"],
+        "fowlerSignals": [
+          "Separated Presentation keeps preview outcome rendering outside readiness derivation",
+          "The retired local declaration reuses the canonical readiness query without creating a parallel rail"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/components/PlanPreviewModal.tsx",
+          "apps/web/src/app/views/canvas/CanvasModalHost.tsx",
+          "apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/components/PlanPreviewModal.test.tsx src/app/components/PlanPreviewModal.outcomes.test.tsx",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Typed rejected outcomes were discarded rendered outside the viewport or clipped long diagnostics",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "PlanPreviewModal renders exactly one discriminated outcome posture",
+          "Rejected diagnostics remain bounded scrollable and readable for unbroken values"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2082",
+        "implementationRefs": [
+          "apps/web/src/app/components/PlanPreviewModal.tsx#PlanPreviewField",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#PlanPreviewModal",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#PlanPreviewModalMessages",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#PlanPreviewModalProps",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#PlanPreviewRejectionDetails",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#PlanPreviewRejectionPanel",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#PlanPreviewSection",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#PlanPreviewSelectionReview",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#SelectionRejectedPlanPreviewModal",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#formatPlanCost"
+        ],
+        "normalizedRailName": "observeplanrunreadiness",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "132c9c87d2ed2a7945fa5b3cac78b9e461a5a6dcbe80fd70b2c358a4b3f696d0",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/components/PlanPreviewModal.tsx"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations"]
+      },
+      "createdAt": "2026-08-01T03:53:39.856Z"
     }
   ]
 }
