@@ -1,3 +1,5 @@
+import type { TransformationSqlFirstPlanPreviewPersistResponse } from '@dvt/contracts';
+
 import { stubStatefulCanvasDraftAuthoring } from '../canvasDraftAuthoring';
 import { stubSelectedClosurePreviewArtifacts } from '../canvasPreviewArtifacts';
 import { getLastE2eApiCall, stubE2eApi, stubE2eJsonApi, waitForE2eApiCall } from '../e2eApiStub';
@@ -13,7 +15,7 @@ type PlanPreviewResponseOptions = {
   planRefSha: string;
 };
 
-type PlanPreviewResponse = ReturnType<typeof buildPlanPreviewResponse>;
+type PlanPreviewResponse = TransformationSqlFirstPlanPreviewPersistResponse;
 
 type CanvasRuntimeApiOptions = {
   includeLooseNode?: boolean;
@@ -341,7 +343,7 @@ function buildPlanPreviewResponse({
   planRecordId,
   persistedSha,
   planRefSha,
-}: PlanPreviewResponseOptions) {
+}: PlanPreviewResponseOptions): PlanPreviewResponse {
   const planId = 'b'.repeat(64);
 
   return {
