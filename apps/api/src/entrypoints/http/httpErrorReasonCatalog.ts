@@ -12,6 +12,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidAfterSeq: 'invalid_after_seq',
   invalidBody: 'invalid_body',
   invalidDbtProjectGraphRequest: 'invalid_dbt_project_graph_request',
+  invalidSelectedDbtModelAnalysisRequest: 'invalid_selected_dbt_model_analysis_request',
   invalidDbtProjectImportRequest: 'invalid_dbt_project_import_request',
   invalidDbtYamlDescriptionEditRequest: 'invalid_dbt_yaml_description_edit_request',
   invalidEnrichedFlag: 'invalid_enriched_flag',
