@@ -106,7 +106,7 @@ export const PROTECTED_RUNTIME_TEST_REF = {
     'apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts',
   dbtDependencyEditRoutes: 'apps/api/test/entrypoints/http/dbtDependencyEditRoutes.test.ts',
   applySelectedDbtDependencyEditCommand:
-    'apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.test.ts',
+    'apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts',
   dbtProjectCandidateAnalyzer:
     'apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts',
   analyzeSelectedDbtModelQuery: 'apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts',

@@ -5,7 +5,7 @@ import {
   DbtDependencyEditResultSchema,
 } from '../src/contracts/dbt-project/DbtDependencyEdit.v1.js';
 
-const sha = (digit: string) => digit.repeat(64);
+const sha = (digit: string): string => digit.repeat(64);
 
 const request = {
   schemaVersion: 'dbt-dependency-edit-request.v1',

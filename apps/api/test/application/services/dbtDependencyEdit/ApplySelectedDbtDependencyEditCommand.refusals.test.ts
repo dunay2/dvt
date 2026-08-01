@@ -98,11 +98,7 @@ describe('ApplySelectedDbtDependencyEditCommand refusals', () => {
       selectedAnalysis: harness.selected,
     });
 
-    const result = await harness.command.apply({
-      ...request(harness),
-      expectedAnalysisSha256: current.analysisSha256,
-      expectedSelectedAnalysisSha256: harness.selected.selectedAnalysisSha256,
-    });
+    const result = await harness.command.apply(request(harness));
 
     expect(result).toEqual(
       expect.objectContaining({
