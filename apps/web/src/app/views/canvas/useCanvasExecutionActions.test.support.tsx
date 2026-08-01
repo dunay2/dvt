@@ -180,6 +180,7 @@ function ExecutionActionsHookView({
         {hook.planRunReadiness.blockers.join(',') || 'none'}
       </div>
       <div data-testid="plan-status-summary">{hook.planStatusSummary}</div>
+      <div data-testid="latest-preview-outcome">{hook.latestPreviewOutcome?.kind ?? 'none'}</div>
       <div data-testid="current-plan-sha">{currentPlan?.planRef?.sha256 ?? 'none'}</div>
       <button
         type="button"

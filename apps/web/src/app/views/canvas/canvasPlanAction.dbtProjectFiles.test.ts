@@ -141,14 +141,17 @@ describe('executeCanvasPlanAction file-backed dbt branch', () => {
 
     expect(result).toMatchObject({
       ok: true,
-      plan: {
-        ...persistedPlan,
-        preview: {
-          selectionIntent: {
-            mode: 'explicit',
-            requestedRootNodeIds: ['test.analytics.orders_not_null'],
-            derivedDependencyNodeIds: ['model.analytics.orders'],
-            authorizedScopeNodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
+      previewOutcome: {
+        kind: 'accepted',
+        plan: {
+          ...persistedPlan,
+          preview: {
+            selectionIntent: {
+              mode: 'explicit',
+              requestedRootNodeIds: ['test.analytics.orders_not_null'],
+              derivedDependencyNodeIds: ['model.analytics.orders'],
+              authorizedScopeNodeIds: ['model.analytics.orders', 'test.analytics.orders_not_null'],
+            },
           },
         },
       },

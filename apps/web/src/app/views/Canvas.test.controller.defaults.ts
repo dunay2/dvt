@@ -77,6 +77,7 @@ type CanvasExecutionDefaultsDto = {
   canStartRun: CanvasController['canStartRun'];
   planRunReadiness: CanvasController['planRunReadiness'];
   planStatusSummary: CanvasController['planStatusSummary'];
+  latestPreviewOutcome: CanvasController['latestPreviewOutcome'];
   exclusiveOverlayMode: CanvasController['exclusiveOverlayMode'];
   canUseCostOverlay: CanvasController['canUseCostOverlay'];
   impactOverlayEnabled: CanvasController['impactOverlayEnabled'];
@@ -250,6 +251,7 @@ function buildDefaultCanvasExecutionState(): CanvasExecutionDefaultsDto {
       summary: 'Preview required before running.',
     },
     planStatusSummary: 'Preview required before running.',
+    latestPreviewOutcome: null,
     exclusiveOverlayMode: 'runtime',
     canUseCostOverlay: false,
     impactOverlayEnabled: false,

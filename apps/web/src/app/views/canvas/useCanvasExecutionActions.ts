@@ -10,6 +10,8 @@ import type {
 } from './canvasExecutionActions.types';
 import { useCanvasPlanActionHandler } from './useCanvasPlanActionHandler';
 import { useCanvasRunStartHandler } from './useCanvasRunStartHandler';
+import type { PlanPreviewOutcome } from '../../ports/plans';
+import { doesPreviewOutcomeOwnPlan } from './canvasPreviewOutcomeProjection';
 
 function normalizeExecutionEnvironmentId(
   environmentId: WorkspaceScope['environmentId'] | undefined
@@ -83,6 +85,7 @@ export function useCanvasExecutionActions({
 }: UseCanvasExecutionActionsParams): UseCanvasExecutionActionsResult {
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [lastPlannedDraftSignature, setLastPlannedDraftSignature] = useState<string | null>(null);
+  const [latestPreviewOutcome, setLatestPreviewOutcome] = useState<PlanPreviewOutcome | null>(null);
   const executionSessionContext = createCanvasExecutionSessionContext({
     sessionContext,
     executionEnvironmentId,
@@ -96,6 +99,7 @@ export function useCanvasExecutionActions({
     canonicalEdges,
     selectionIntent,
     workspaceNodeIds,
+    latestPreviewOutcome,
   });
   const {
     transformationValidation,
@@ -112,6 +116,12 @@ export function useCanvasExecutionActions({
     currentPlan,
     setLastPlannedDraftSignature,
   });
+
+  useEffect(() => {
+    setLatestPreviewOutcome((outcome) =>
+      outcome == null || doesPreviewOutcomeOwnPlan(outcome, currentPlan) ? outcome : null
+    );
+  }, [currentPlan]);
 
   const planAction = useCanvasPlanActionHandler({
     graphDraftCanvasId,
@@ -133,6 +143,7 @@ export function useCanvasExecutionActions({
     setCurrentPlan,
     setLastPlannedDraftSignature,
     setPlanModalOpen,
+    setLatestPreviewOutcome,
   });
 
   const handleStartRun = useCanvasRunStartHandler({
@@ -159,6 +170,7 @@ export function useCanvasExecutionActions({
     isCurrentPlanStale,
     planRunReadiness,
     planStatusSummary,
+    latestPreviewOutcome,
     handlePreviewExecutionPlan: planAction.handlePreviewExecutionPlan,
     handleStartRun,
   };
