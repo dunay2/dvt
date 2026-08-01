@@ -118,6 +118,17 @@ describe('Canvas preview-run persisted path', () => {
     waitForSelectedClosurePreviewArtifacts();
     cy.wrap(null).should(() => {
       expect(getE2eApiCalls('/plans/preview', 'POST')).to.have.length(2);
+      expect(
+        getE2eApiCalls('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'GET')
+      ).to.have.length(2);
+      const graphArtifactSaves = getE2eApiCalls(
+        '/workspace/files/pipelines%2Fsales_pipeline.yaml',
+        'POST'
+      );
+      expect(graphArtifactSaves).to.have.length(2);
+      expect(graphArtifactSaves[1]?.body).to.deep.include({
+        expectedRevision: { kind: 'content_sha256', value: 'f'.repeat(64) },
+      });
     });
     assertPreviewPlanRequest();
 

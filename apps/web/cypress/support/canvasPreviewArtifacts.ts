@@ -4,19 +4,37 @@
  */
 import { getE2eApiCalls, stubE2eApi } from './e2eApiStub';
 
+const GRAPH_ARTIFACT_PATH = 'pipelines/sales_pipeline.yaml';
+const GRAPH_ARTIFACT_SHA256 = 'f'.repeat(64);
+
 export function stubSelectedClosurePreviewArtifacts(): void {
-  stubE2eApi('GET', '/workspace/files/pipelines%2Fsales_pipeline.yaml', () => ({
-    statusCode: 404,
-    body: {
-      error: {
-        type: 'not_found',
-        reason: 'workspace_file_not_found',
-      },
-    },
-  }));
+  let savedGraphArtifactContent: string | null = null;
+
+  stubE2eApi('GET', '/workspace/files/pipelines%2Fsales_pipeline.yaml', () =>
+    savedGraphArtifactContent === null
+      ? {
+          statusCode: 404,
+          body: {
+            error: {
+              type: 'not_found',
+              reason: 'workspace_file_not_found',
+            },
+          },
+        }
+      : {
+          body: {
+            path: GRAPH_ARTIFACT_PATH,
+            name: 'sales_pipeline.yaml',
+            language: 'yaml',
+            content: savedGraphArtifactContent,
+            contentSha256: GRAPH_ARTIFACT_SHA256,
+            lastModified: '2026-04-08T00:00:00.000Z',
+          },
+        }
+  );
 
   stubE2eApi('POST', '/workspace/files/pipelines%2Fsales_pipeline.yaml', (request) => {
-    const body = request.body as { content?: unknown };
+    const body = request.body as { content?: unknown; expectedRevision?: unknown };
     expect(body.content).to.be.a('string');
     const content = String(body.content);
     expect(content).to.contain('executionTarget: "postgres"');
@@ -28,13 +46,21 @@ export function stubSelectedClosurePreviewArtifacts(): void {
     expect(content).to.contain('entrypoint: "models/analytics/model_orders.sql"');
     expect(content).not.to.contain('orphan_metrics');
 
+    const disposition = savedGraphArtifactContent === null ? 'created' : 'updated';
+    expect(body.expectedRevision).to.deep.equal(
+      disposition === 'created'
+        ? { kind: 'absent' }
+        : { kind: 'content_sha256', value: GRAPH_ARTIFACT_SHA256 }
+    );
+    savedGraphArtifactContent = content;
+
     return {
       statusCode: 200,
       body: {
         kind: 'saved',
-        disposition: 'created',
-        path: 'pipelines/sales_pipeline.yaml',
-        contentSha256: 'f'.repeat(64),
+        disposition,
+        path: GRAPH_ARTIFACT_PATH,
+        contentSha256: GRAPH_ARTIFACT_SHA256,
         lastModified: '2026-04-08T00:00:00.000Z',
       },
     };
