@@ -153,6 +153,40 @@ export const PROTECTED_RUNTIME_WORKSPACE_COMMAND_QUERY_RAILS = [
     ],
   }),
   defineProtectedRuntimeRail({
+    ...PROTECTED_RUNTIME_WORKSPACE_RAIL.applySelectedDbtDependencyEdit,
+    kind: PROTECTED_RUNTIME_RAIL_KIND.command,
+    coverage: [
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingToken,
+        PROTECTED_RUNTIME_TEST_REF.dbtDependencyEditRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.missingWorkspaceFileSaveAuthority,
+        PROTECTED_RUNTIME_TEST_REF.dbtDependencyEditRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtDependencyEditRequest,
+        PROTECTED_RUNTIME_TEST_REF.dbtDependencyEditRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtDependencyEditReceipt,
+        PROTECTED_RUNTIME_TEST_REF.dbtDependencyEditRoutes,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.staleDbtDependencyEditAnalysis,
+        PROTECTED_RUNTIME_TEST_REF.applySelectedDbtDependencyEditCommand,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.unsupportedDbtDependencyEditRegion,
+        PROTECTED_RUNTIME_TEST_REF.applySelectedDbtDependencyEditCommand,
+      ],
+      [
+        PROTECTED_RUNTIME_NEGATIVE_CASE.invalidDbtDependencyEditCandidate,
+        PROTECTED_RUNTIME_TEST_REF.dbtProjectCandidateAnalyzer,
+      ],
+    ],
+  }),
+  defineProtectedRuntimeRail({
     ...PROTECTED_RUNTIME_WORKSPACE_RAIL.publishGraphDbtWorkspaceArtifacts,
     kind: PROTECTED_RUNTIME_RAIL_KIND.command,
     coverage: [

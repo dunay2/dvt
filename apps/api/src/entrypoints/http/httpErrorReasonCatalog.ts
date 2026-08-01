@@ -12,6 +12,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidAfterSeq: 'invalid_after_seq',
   invalidBody: 'invalid_body',
   invalidDbtProjectGraphRequest: 'invalid_dbt_project_graph_request',
+  invalidDbtDependencyEditRequest: 'invalid_dbt_dependency_edit_request',
   invalidSelectedDbtModelAnalysisRequest: 'invalid_selected_dbt_model_analysis_request',
   invalidDbtProjectImportRequest: 'invalid_dbt_project_import_request',
   invalidDbtYamlDescriptionEditRequest: 'invalid_dbt_yaml_description_edit_request',
@@ -65,6 +66,8 @@ export const HTTP_ERROR_REASON = Object.freeze({
   dbtProjectImportInProgress: 'dbt_project_import_in_progress',
   dbtProjectImportProjectionFailed: 'dbt_project_import_projection_failed',
   dbtProjectFileAuthorityRequired: 'dbt_project_file_authority_required',
+  dbtDependencyEditIdempotencyConflict: 'dbt_dependency_edit_idempotency_conflict',
+  dbtDependencyEditReceiptInvalid: 'dbt_dependency_edit_receipt_invalid',
   graphDbtWorkspaceArtifactPublicationIdempotencyConflict:
     'graph_dbt_workspace_artifact_publication_idempotency_conflict',
   dbtYamlDescriptionDocumentInvalid: 'dbt_yaml_description_document_invalid',

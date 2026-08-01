@@ -31,6 +31,7 @@ import {
 import {
   isAllowedWorkspaceFileName,
   resolveWorkspaceFileStoragePath,
+  resolveWorkspaceScopeMutationLockKey,
   resolveWorkspaceScopeStorageRoot,
 } from './workspaceScopeStoragePath.js';
 
@@ -105,36 +106,39 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
       throw new InvalidWorkspacePathError(input.path);
     }
 
-    await mkdir(path.dirname(resolved.absolutePath), { recursive: true });
-    return this.mutationCoordinator.runExclusive(resolved.absolutePath, async () => {
-      const current = await this.readOptionalFileContent(scope, resolved.workspacePath);
-      const requestedContentSha256 = contentSha256(input.content);
-      if (!matchesExpectedRevision(input.expectedRevision, current?.contentSha256 ?? null)) {
-        return {
-          kind: 'conflict',
-          currentContentSha256: current?.contentSha256 ?? null,
-        };
-      }
-      if (current?.contentSha256 === requestedContentSha256) {
-        return {
-          kind: 'unchanged',
-          disposition: null,
-          path: current.path,
-          contentSha256: current.contentSha256,
-          lastModified: current.lastModified,
-        };
-      }
+    return this.mutationCoordinator.runExclusiveMany(
+      [resolveWorkspaceScopeMutationLockKey(this.root, scope), resolved.absolutePath],
+      async () => {
+        await mkdir(path.dirname(resolved.absolutePath), { recursive: true });
+        const current = await this.readOptionalFileContent(scope, resolved.workspacePath);
+        const requestedContentSha256 = contentSha256(input.content);
+        if (!matchesExpectedRevision(input.expectedRevision, current?.contentSha256 ?? null)) {
+          return {
+            kind: 'conflict',
+            currentContentSha256: current?.contentSha256 ?? null,
+          };
+        }
+        if (current?.contentSha256 === requestedContentSha256) {
+          return {
+            kind: 'unchanged',
+            disposition: null,
+            path: current.path,
+            contentSha256: current.contentSha256,
+            lastModified: current.lastModified,
+          };
+        }
 
-      await this.mutationCoordinator.replaceFileAtomically(resolved.absolutePath, input.content);
-      const saved = await this.getFileContent(scope, resolved.workspacePath);
-      return {
-        kind: 'saved',
-        disposition: current ? 'updated' : 'created',
-        path: saved.path,
-        contentSha256: saved.contentSha256,
-        lastModified: saved.lastModified,
-      };
-    });
+        await this.mutationCoordinator.replaceFileAtomically(resolved.absolutePath, input.content);
+        const saved = await this.getFileContent(scope, resolved.workspacePath);
+        return {
+          kind: 'saved',
+          disposition: current ? 'updated' : 'created',
+          path: saved.path,
+          contentSha256: saved.contentSha256,
+          lastModified: saved.lastModified,
+        };
+      }
+    );
   }
 
   public async deleteFileContent(
@@ -142,18 +146,21 @@ export class LocalWorkspaceFileRepository implements IWorkspaceFileRepository {
     input: DeleteWorkspaceFileContentInput
   ): Promise<WorkspaceFileDeleteResult> {
     const resolved = this.resolveWorkspacePath(scope, input.path);
-    return this.mutationCoordinator.runExclusive(resolved.absolutePath, async () => {
-      const current = await this.readOptionalFileContent(scope, resolved.workspacePath);
-      if (!current) {
-        return { kind: 'unchanged' };
-      }
-      if (current.contentSha256 !== input.expectedRevision.value) {
-        return { kind: 'conflict', currentContentSha256: current.contentSha256 };
-      }
+    return this.mutationCoordinator.runExclusiveMany(
+      [resolveWorkspaceScopeMutationLockKey(this.root, scope), resolved.absolutePath],
+      async () => {
+        const current = await this.readOptionalFileContent(scope, resolved.workspacePath);
+        if (!current) {
+          return { kind: 'unchanged' };
+        }
+        if (current.contentSha256 !== input.expectedRevision.value) {
+          return { kind: 'conflict', currentContentSha256: current.contentSha256 };
+        }
 
-      await this.mutationCoordinator.deleteFile(resolved.absolutePath);
-      return { kind: 'deleted' };
-    });
+        await this.mutationCoordinator.deleteFile(resolved.absolutePath);
+        return { kind: 'deleted' };
+      }
+    );
   }
 
   private async listDirectory(

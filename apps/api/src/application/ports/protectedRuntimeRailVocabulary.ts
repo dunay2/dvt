@@ -17,7 +17,9 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   invalidGraphDbtWorkspaceArtifactPublication: 'invalid graph dbt workspace artifact publication',
   invalidDbtProjectRoot: 'invalid dbt project root',
   invalidDbtProjectImport: 'invalid dbt project import request',
+  invalidDbtDependencyEditRequest: 'invalid dbt dependency edit request',
   invalidDbtYamlDescriptionReceipt: 'invalid dbt YAML description receipt',
+  invalidDbtDependencyEditReceipt: 'invalid dbt dependency edit receipt',
   invalidDbtYamlDescriptionRequest: 'invalid dbt YAML description request',
   invalidSelectedDbtModelAnalysisRequest: 'invalid selected dbt model analysis request',
   invalidPath: 'invalid path',
@@ -40,6 +42,9 @@ export const PROTECTED_RUNTIME_NEGATIVE_CASE = {
   staleAuthority: 'stale authority',
   staleValidationReceipt: 'stale validation receipt',
   staleDbtYamlDescriptionRevision: 'stale dbt YAML description revision',
+  staleDbtDependencyEditAnalysis: 'stale dbt dependency edit analysis',
+  unsupportedDbtDependencyEditRegion: 'unsupported dbt dependency edit region',
+  invalidDbtDependencyEditCandidate: 'invalid dbt dependency edit candidate',
   occupiedCanvas: 'occupied Canvas',
   projectionFailure: 'projection failure',
   missingFileAuthority: 'missing dbt project file authority',
@@ -99,6 +104,11 @@ export const PROTECTED_RUNTIME_TEST_REF = {
   dbtProjectGraphRoutes: 'apps/api/test/entrypoints/http/dbtProjectGraphRoutes.test.ts',
   dbtSelectedModelAnalysisRoutes:
     'apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts',
+  dbtDependencyEditRoutes: 'apps/api/test/entrypoints/http/dbtDependencyEditRoutes.test.ts',
+  applySelectedDbtDependencyEditCommand:
+    'apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts',
+  dbtProjectCandidateAnalyzer:
+    'apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts',
   analyzeSelectedDbtModelQuery: 'apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts',
   graphDbtWorkspaceArtifactPublicationRoutes:
     'apps/api/test/entrypoints/http/graphDbtWorkspaceArtifactPublicationRoutes.test.ts',
@@ -230,6 +240,16 @@ export const PROTECTED_RUNTIME_WORKSPACE_RAIL = {
     adapterSurface: 'GET /workspace/dbt/analysis/selected-model',
     scopeAndAuthorization:
       'workspace:graph-draft:view plus workspace:files:view, tenant/project/environment scope and dbt-project-files Canvas authority',
+  },
+  applySelectedDbtDependencyEdit: {
+    name: 'ApplySelectedDbtDependencyEdit',
+    boundedContext: 'dbt project contextual authoring',
+    dddObject: 'DbtDependencyEditAppliedReceipt',
+    applicationPort:
+      'IApplySelectedDbtDependencyEditCommand via SelectedDbtModelAnalysisResolver, IDbtProjectCandidateAnalyzerPort, and IDbtDependencyEditPublicationPort',
+    adapterSurface: 'POST /workspace/dbt/dependency-edits/applications',
+    scopeAndAuthorization:
+      'workspace:graph-draft:view plus workspace:files:save, tenant/project/environment scope, dbt-project-files Canvas authority, native analysis identities, and idempotency key',
   },
   publishGraphDbtWorkspaceArtifacts: {
     name: 'PublishGraphDbtWorkspaceArtifacts',

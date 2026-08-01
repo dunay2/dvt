@@ -1,0 +1,34 @@
+---
+id: R-20260801-LOSSLESS-DBT-DEPENDENCY-EDIT
+title: A dbt semantic edit could alter content outside its proven region
+status: Open
+date: 2026-08-01
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+severity: High
+probability: Low
+context: >
+  Graph-to-Code dependency edits cross native dbt semantics, workspace file revisions, and an atomic
+  publication boundary.
+risk: >
+  Incorrect source ranges, stale analysis, ambiguous Jinja, or a non-lossless rewrite could alter
+  user-authored dbt content beyond the requested dependency target.
+mitigations:
+  - 'Bind the request to project, native-analysis, selected-analysis, region, file, and target
+    identities.'
+  - 'Accept only manifest-confirmed literal ref and source regions owned by the selected model.'
+  - 'Refuse code_only, overlapping, incompatible, stale, invalid, or semantically mismatched
+    candidates before publication.'
+  - 'Parse an isolated candidate with the installed dbt runtime before publication.'
+  - 'Revalidate the exact canonical dbt file set under a workspace-scoped lock.'
+  - 'Publish the target SQL and immutable semantic receipt in one rollback-capable atomic mutation.'
+  - 'Verify that every unrelated analyzed file remains byte-identical.'
+  - 'Bind one idempotency key to one request and preserve immutable applied receipts.'
+  - 'Cover UTF-8 offsets, quote and whitespace preservation, Jinja, macros, YAML sources/tests,
+    no-op, authorization, and CAS conflicts with focused tests.'
+residual_risk: >
+  Unsupported dbt or Jinja syntax remains code_only and cannot be edited visually until native
+  semantic evidence explicitly classifies it. This limits edit coverage but preserves losslessness.
+review_after: 2026-09-01
+---

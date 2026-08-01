@@ -124,6 +124,37 @@ export function projectSelectedDbtModelAnalysis(
     });
   }
 
+  const overlappingRegions = findFirstOverlappingRegions(
+    input.analysis.semanticEvidence.regions.filter((region) =>
+      region.ownerUniqueIds.includes(selected.uniqueId)
+    )
+  );
+  if (overlappingRegions !== null) {
+    return parseOutput({
+      ...input,
+      status: 'refused',
+      capabilitySet,
+      identities: [],
+      dependencies: [],
+      regions: [],
+      diagnostics: [
+        {
+          code: 'dbt_semantic_regions_overlap',
+          severity: 'error',
+          message: 'The authoritative dbt analysis contains overlapping semantic regions.',
+          subject: {
+            kind: 'file',
+            path: overlappingRegions[1].path,
+          },
+          evidence: {
+            path: overlappingRegions[1].path,
+            range: overlappingRegions[1].range,
+          },
+        },
+      ],
+    });
+  }
+
   const relationById = resolveRelations(selected, input.analysis.semanticEvidence.identities);
   const identities = input.analysis.semanticEvidence.identities
     .filter((identity) => relationById.has(identity.uniqueId))
@@ -321,6 +352,25 @@ function compareRegions(left: DbtProjectSemanticRegion, right: DbtProjectSemanti
     left.range.endByte - right.range.endByte ||
     left.kind.localeCompare(right.kind)
   );
+}
+
+function findFirstOverlappingRegions(
+  regions: readonly DbtProjectSemanticRegion[]
+): readonly [DbtProjectSemanticRegion, DbtProjectSemanticRegion] | null {
+  const ordered = [...regions].sort(compareRegions);
+  for (let index = 1; index < ordered.length; index += 1) {
+    const previous = ordered[index - 1];
+    const current = ordered[index];
+    if (
+      previous !== undefined &&
+      current !== undefined &&
+      previous.path === current.path &&
+      current.range.startByte < previous.range.endByte
+    ) {
+      return [previous, current];
+    }
+  }
+  return null;
 }
 
 function hashStable(value: unknown): string {

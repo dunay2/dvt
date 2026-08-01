@@ -55,6 +55,13 @@ export function resolveWorkspaceScopeStorageRoot(
   return scopeRoot;
 }
 
+export function resolveWorkspaceScopeMutationLockKey(
+  namespaceRoot: string,
+  scope: WorkspaceStorageScope
+): string {
+  return resolveWorkspaceScopeStorageRoot(namespaceRoot, scope);
+}
+
 export function resolveWorkspaceFileStoragePath(
   namespaceRoot: string,
   scope: WorkspaceStorageScope,

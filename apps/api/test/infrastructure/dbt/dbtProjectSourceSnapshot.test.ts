@@ -5,7 +5,10 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { hashProjectContent } from '../../../src/infrastructure/dbt/dbtProjectContentRevision.js';
-import { snapshotDbtProjectSource } from '../../../src/infrastructure/dbt/dbtProjectSourceSnapshot.js';
+import {
+  hashDbtProjectSource,
+  snapshotDbtProjectSource,
+} from '../../../src/infrastructure/dbt/dbtProjectSourceSnapshot.js';
 
 const LIMITS = {
   maxFiles: 100,
@@ -48,6 +51,9 @@ describe('snapshotDbtProjectSource', () => {
     ).rejects.toThrow();
 
     await expect(hashProjectContent(snapshot, LIMITS)).resolves.toEqual(revision);
+    await expect(
+      hashDbtProjectSource({ projectDirectory: project, limits: LIMITS })
+    ).resolves.toEqual(revision);
   });
 });
 

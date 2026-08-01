@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { DbtProjectAnalysis } from '../../src/application/ports/dbtProjectAnalysis.js';
 import { DbtProjectFileAuthorityRequiredError } from '../../src/application/ports/dbtProjectImport.js';
 import { AnalyzeSelectedDbtModelQuery } from '../../src/application/services/analyzeSelectedDbtModelQuery.js';
+import { SelectedDbtModelAnalysisResolver } from '../../src/application/services/selectedDbtModelAnalysisResolver.js';
 
 import {
   SELECTED_MODEL_ANALYSIS_SCOPE,
@@ -137,17 +138,50 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
     );
   });
 
+  it('refuses overlapping semantic evidence instead of throwing a schema error', async () => {
+    const analysis = validSelectedModelProjectAnalysis();
+    const region = analysis.semanticEvidence.regions[0];
+    if (region === undefined) throw new Error('Missing semantic region fixture');
+
+    const result = await buildQuery({
+      ...analysis,
+      semanticEvidence: {
+        ...analysis.semanticEvidence,
+        regions: [
+          region,
+          { ...region, regionId: 'region-overlap', range: { startByte: 30, endByte: 55 } },
+        ],
+      },
+    }).execute({
+      scope: SELECTED_MODEL_ANALYSIS_SCOPE,
+      canvasId: SELECTED_MODEL_FILE_AUTHORITY.canvasId,
+      selectedUniqueId: 'model.analytics.orders',
+    });
+
+    expect(result.status).toBe('refused');
+    expect(result.regions).toEqual([]);
+    expect(result.diagnostics).toEqual([
+      expect.objectContaining({
+        code: 'dbt_semantic_regions_overlap',
+        severity: 'error',
+        subject: { kind: 'file', path: 'models/orders.sql' },
+      }),
+    ]);
+  });
+
   it('rejects graph-draft authority before invoking native analysis', async () => {
     const analyze = vi.fn();
-    const query = new AnalyzeSelectedDbtModelQuery({
-      analyzer: { analyze },
-      authorityPolicy: {
-        resolve: vi.fn().mockResolvedValue({
-          ...SELECTED_MODEL_FILE_AUTHORITY,
-          authority: { kind: 'graph-draft' },
-        }),
-      },
-    });
+    const query = new AnalyzeSelectedDbtModelQuery(
+      new SelectedDbtModelAnalysisResolver({
+        analyzer: { analyze },
+        authorityPolicy: {
+          resolve: vi.fn().mockResolvedValue({
+            ...SELECTED_MODEL_FILE_AUTHORITY,
+            authority: { kind: 'graph-draft' },
+          }),
+        },
+      })
+    );
 
     await expect(
       query.execute({
@@ -161,8 +195,10 @@ describe('AnalyzeSelectedDbtModelQuery', () => {
 });
 
 function buildQuery(analysis: DbtProjectAnalysis): AnalyzeSelectedDbtModelQuery {
-  return new AnalyzeSelectedDbtModelQuery({
-    analyzer: { analyze: vi.fn().mockResolvedValue(analysis) },
-    authorityPolicy: { resolve: vi.fn().mockResolvedValue(SELECTED_MODEL_FILE_AUTHORITY) },
-  });
+  return new AnalyzeSelectedDbtModelQuery(
+    new SelectedDbtModelAnalysisResolver({
+      analyzer: { analyze: vi.fn().mockResolvedValue(analysis) },
+      authorityPolicy: { resolve: vi.fn().mockResolvedValue(SELECTED_MODEL_FILE_AUTHORITY) },
+    })
+  );
 }
