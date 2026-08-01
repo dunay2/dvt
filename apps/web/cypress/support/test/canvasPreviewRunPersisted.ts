@@ -456,7 +456,17 @@ function buildPlanPreviewResponse({
 
 export function stubSelectionRejectedPreview(
   cause: Exclude<PlanRejectedCause, 'graph_source_selection_mismatch'>
-): void {
+): string {
+  const reasonByCause: Record<
+    Exclude<PlanRejectedCause, 'graph_source_selection_mismatch'>,
+    string
+  > = {
+    dependency_gap: 'Selected closure is missing required upstream dependencies.',
+    selected_node_missing: 'Selected nodes are no longer available in the authoritative draft.',
+    cycle_detected: 'Selected closure contains a cycle and cannot be executed.',
+  };
+  const reason = reasonByCause[cause];
+
   stubE2eJsonApi(
     'POST',
     '/plans/preview',
@@ -470,13 +480,15 @@ export function stubSelectionRejectedPreview(
           rejection: {
             code: 'REJECTED',
             cause,
-            reason: PLAN_REJECTION_MESSAGES[cause],
+            reason,
           },
         },
       },
     },
     { statusCode: 422 }
   );
+
+  return reason;
 }
 
 export function stubPlanInvalidPreview(options: PlanPreviewResponseOptions): PlanPreviewResponse {

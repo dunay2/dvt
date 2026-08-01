@@ -27,7 +27,7 @@ describe('Canvas preview-run rejection guidance', () => {
 
   it('renders a typed selection rejection without fabricated preview identity or run command', () => {
     stubCanvasRuntimeApis({ includeLooseNode: true });
-    stubSelectionRejectedPreview('dependency_gap');
+    const rejectionReason = stubSelectionRejectedPreview('dependency_gap');
     stubUnexpectedRunStart();
 
     visitCanvasWithSettledBootstrap();
@@ -46,7 +46,7 @@ describe('Canvas preview-run rejection guidance', () => {
 
       cy.get('[data-testid="plan-preview-modal"]').within(() => {
         cy.contains(copy.planPreviewSelectionRejectedTitle).should('be.visible');
-        cy.contains(PLAN_REJECTION_MESSAGES.dependency_gap).should('be.visible');
+        cy.contains(rejectionReason).should('be.visible');
         cy.contains('REJECTED').should('be.visible');
         cy.contains('dependency_gap').should('be.visible');
         cy.contains('Execution Preview identity').should('not.exist');
