@@ -17,6 +17,17 @@ export type DbtProjectAnalysisResource = Omit<ProjectedNode, 'visualEditability'
 
 export type DbtProjectAnalysisDependency = Omit<ProjectedEdge, 'id'>;
 
+export type DbtProjectAnalysisIdentity = Readonly<{
+  uniqueId: string;
+  resourceType: 'model' | 'source' | 'test' | 'snapshot' | 'seed' | 'macro';
+  name: string;
+  packageName: string;
+  sourceName?: string;
+  originalFilePath?: string;
+  dependencyUniqueIds: readonly string[];
+  macroUniqueIds: readonly string[];
+}>;
+
 export type DbtProjectAnalysis = Readonly<{
   status: 'valid' | 'invalid' | 'unavailable';
   adapterType?: string;
