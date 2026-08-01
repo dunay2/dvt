@@ -96,6 +96,10 @@ export class PreviewPlanUseCase {
       selection: {
         selectedNodeIds: previewSelection.value.nodeIds,
       } satisfies PlannerSelection,
+      decisionScope: {
+        nodeIds: previewSelection.value.decisionScopeNodeIds,
+        requestedRootNodeIds: previewSelection.value.requestedRootNodeIds,
+      },
       ...(command.policies === undefined ? {} : { policies: command.policies }),
       ...(command.environment === undefined ? {} : { environment: command.environment }),
       ...(command.observability === undefined ? {} : { observability: command.observability }),

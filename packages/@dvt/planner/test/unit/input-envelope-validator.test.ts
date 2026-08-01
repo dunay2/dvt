@@ -57,3 +57,61 @@ describe('InputEnvelopeValidator - selection shape', () => {
     ).not.toThrow();
   });
 });
+
+describe('InputEnvelopeValidator - decision scope', () => {
+  it('accepts an authorized decision scope wider than the executable graph', () => {
+    expect(() =>
+      validator.validate({
+        graphSource: BASE_GRAPH_SOURCE,
+        selection: BASE_SELECTION,
+        decisionScope: { nodeIds: ['model.a', 'model.excluded'] },
+      })
+    ).not.toThrow();
+  });
+
+  it('accepts requested roots that belong to the executable graph', () => {
+    expect(() =>
+      validator.validate({
+        graphSource: BASE_GRAPH_SOURCE,
+        selection: BASE_SELECTION,
+        decisionScope: {
+          nodeIds: ['model.a', 'model.excluded'],
+          requestedRootNodeIds: ['model.a'],
+        },
+      })
+    ).not.toThrow();
+  });
+
+  it('rejects duplicate decision subjects', () => {
+    expect(() =>
+      validator.validate({
+        graphSource: BASE_GRAPH_SOURCE,
+        selection: BASE_SELECTION,
+        decisionScope: { nodeIds: ['model.a', 'model.a'] },
+      })
+    ).toThrow(expect.objectContaining({ code: PlannerErrorCode.INVALID_INPUT }));
+  });
+
+  it('rejects a decision scope that omits an executable node', () => {
+    expect(() =>
+      validator.validate({
+        graphSource: BASE_GRAPH_SOURCE,
+        selection: BASE_SELECTION,
+        decisionScope: { nodeIds: ['model.excluded'] },
+      })
+    ).toThrow(expect.objectContaining({ code: PlannerErrorCode.INVALID_INPUT }));
+  });
+
+  it('rejects requested roots outside the executable graph', () => {
+    expect(() =>
+      validator.validate({
+        graphSource: BASE_GRAPH_SOURCE,
+        selection: BASE_SELECTION,
+        decisionScope: {
+          nodeIds: ['model.a', 'model.excluded'],
+          requestedRootNodeIds: ['model.excluded'],
+        },
+      })
+    ).toThrow(expect.objectContaining({ code: PlannerErrorCode.INVALID_INPUT }));
+  });
+});

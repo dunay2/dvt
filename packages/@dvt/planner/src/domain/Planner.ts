@@ -32,6 +32,7 @@ import { resolveLimits, type PlannerLimits, throwLimitExceeded } from './limits.
 import { NoopPlannerMetrics, type PlannerMetrics } from './metrics.js';
 import { NodeSelector, SelectNodesCommand } from './NodeSelector.js';
 import { AssemblePlanCommand, PlanAssembler } from './PlanAssembler.js';
+import { projectPlanExecutionDecisions } from './PlanExecutionDecisionProjector.js';
 import { resolvePolicies } from './policies.js';
 import { binaryCompare } from './sorting.js';
 import { dbtStepFactory } from './stepFactory/dbtStepFactory.js';
@@ -168,12 +169,23 @@ export class Planner {
         this.stepTypeRegistry,
         normalizedSteps
       );
+      const decisions =
+        normalizedInput.decisionScope === undefined
+          ? []
+          : projectPlanExecutionDecisions({
+              allNodeIds: normalizedInput.decisionScope.nodeIds,
+              selectedNodeIds: selected,
+              selectedRootNodeIds:
+                normalizedInput.decisionScope.requestedRootNodeIds ??
+                normalizedInput.selection.selectedNodeIds,
+            });
       const result = await this.assembler.execute(
         new AssemblePlanCommand(
           normalizedInput,
           normalizedSteps,
           this.limits.maxPlanSizeBytes,
-          requiredCapabilities
+          requiredCapabilities,
+          decisions
         )
       );
 
@@ -195,7 +207,23 @@ export class Planner {
         'Planner requires non-empty nodes from graphSource.'
       );
     }
-    return { ...input, nodes };
+    const decisionScope = input.decisionScope
+      ? {
+          nodeIds: [...input.decisionScope.nodeIds].sort(binaryCompare),
+          ...(input.decisionScope.requestedRootNodeIds === undefined
+            ? {}
+            : {
+                requestedRootNodeIds: [...input.decisionScope.requestedRootNodeIds].sort(
+                  binaryCompare
+                ),
+              }),
+        }
+      : undefined;
+    return {
+      ...input,
+      nodes,
+      ...(decisionScope === undefined ? {} : { decisionScope }),
+    };
   }
 
   private buildNormalizedSteps(

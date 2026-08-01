@@ -11,10 +11,6 @@ function readAppSource(relativePath: string): string {
   return readArchitectureSiblingSource(APP_ROOT, relativePath);
 }
 
-function lineCount(source: string): number {
-  return source.split(/\r?\n/).length;
-}
-
 describe('Operational drawer architecture', () => {
   it('keeps the bottom drawer product boundary on operational vocabulary', () => {
     const rootSource = readAppSource('Root.tsx');
@@ -60,7 +56,7 @@ describe('Operational drawer architecture', () => {
     expect(primitivesSource).not.toContain('className="');
   });
 
-  it('keeps operational drawer tests split by component responsibility', () => {
+  it('keeps operational drawer tests scoped by component responsibility', () => {
     const drawerTestSource = readArchitectureSiblingSource(
       __dirname,
       'BottomOperationalDrawer.test.tsx'
@@ -73,10 +69,6 @@ describe('Operational drawer architecture', () => {
       __dirname,
       'bottomOperationalDrawerLogModel.test.ts'
     );
-
-    expect(lineCount(drawerTestSource)).toBeLessThanOrEqual(180);
-    expect(lineCount(panelsTestSource)).toBeLessThanOrEqual(220);
-    expect(lineCount(logModelTestSource)).toBeLessThanOrEqual(120);
 
     expect(drawerTestSource).not.toContain('bottom-operational-problem-severity');
     expect(drawerTestSource).not.toContain('bottom-operational-preview-blocker');

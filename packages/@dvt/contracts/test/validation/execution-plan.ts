@@ -114,5 +114,53 @@ export function registerValidationExecutionPlanSuite(): void {
         })
       ).toThrow(ContractValidationError);
     });
+
+    it('parses planner-owned execution decisions from the immutable plan', () => {
+      const plan = parseExecutionPlan({
+        ...VALID_EXECUTION_PLAN_V1_FIXTURE,
+        decisions: [
+          {
+            subjectId: 'selection',
+            subjectKind: 'selection',
+            status: 'PARTIAL',
+            reasonCode: 'BOUNDED_SELECTION',
+            includedNodeIds: ['model.analytics.customers'],
+            excludedNodeIds: ['model.analytics.orders'],
+          },
+          {
+            subjectId: 'model.analytics.customers',
+            subjectKind: 'node',
+            status: 'RUN',
+            reasonCode: 'SELECTED_ROOT',
+          },
+          {
+            subjectId: 'model.analytics.orders',
+            subjectKind: 'node',
+            status: 'SKIP',
+            reasonCode: 'OUTSIDE_SELECTED_CLOSURE',
+          },
+        ],
+      });
+
+      expect(plan.decisions).toHaveLength(3);
+    });
+
+    it('rejects partial decisions without disjoint included and excluded scope', () => {
+      expect(() =>
+        parseExecutionPlan({
+          ...VALID_EXECUTION_PLAN_V1_FIXTURE,
+          decisions: [
+            {
+              subjectId: 'selection',
+              subjectKind: 'selection',
+              status: 'PARTIAL',
+              reasonCode: 'BOUNDED_SELECTION',
+              includedNodeIds: ['model.analytics.customers'],
+              excludedNodeIds: ['model.analytics.customers'],
+            },
+          ],
+        })
+      ).toThrow(ContractValidationError);
+    });
   });
 }

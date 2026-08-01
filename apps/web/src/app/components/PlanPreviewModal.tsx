@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import type { PlanPreviewOutcome } from '../ports/plans';
 import type { PlanPreviewSelectionIntentViewModel, PlanViewModel } from '../types/plans';
 
+import { PlanExecutionDecisionView } from './PlanExecutionDecisionView';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import {
@@ -26,6 +27,20 @@ export type PlanPreviewModalMessages = Readonly<{
   planPreviewCauseLabel: string;
   planPreviewReasonLabel: string;
   planPreviewCloseLabel: string;
+  planPreviewDecisionsTitle: string;
+  planPreviewDecisionsCaption: string;
+  planPreviewDecisionSubjectLabel: string;
+  planPreviewDecisionStatusLabel: string;
+  planPreviewDecisionReasonLabel: string;
+  planPreviewDecisionIncludedLabel: string;
+  planPreviewDecisionExcludedLabel: string;
+  planPreviewDecisionRunLabel: string;
+  planPreviewDecisionSkipLabel: string;
+  planPreviewDecisionPartialLabel: string;
+  planPreviewDecisionSelectedRootReason: string;
+  planPreviewDecisionSelectedClosureReason: string;
+  planPreviewDecisionOutsideClosureReason: string;
+  planPreviewDecisionBoundedSelectionReason: string;
 }>;
 
 interface PlanPreviewModalProps {
@@ -407,6 +422,28 @@ export function PlanPreviewModal({
 
             {selectionIntent ? (
               <PlanPreviewSelectionReview selectionIntent={selectionIntent} />
+            ) : null}
+
+            {plan.decisions ? (
+              <PlanExecutionDecisionView
+                decisions={plan.decisions}
+                messages={{
+                  title: messages.planPreviewDecisionsTitle,
+                  caption: messages.planPreviewDecisionsCaption,
+                  subjectLabel: messages.planPreviewDecisionSubjectLabel,
+                  statusLabel: messages.planPreviewDecisionStatusLabel,
+                  reasonLabel: messages.planPreviewDecisionReasonLabel,
+                  includedLabel: messages.planPreviewDecisionIncludedLabel,
+                  excludedLabel: messages.planPreviewDecisionExcludedLabel,
+                  statusRun: messages.planPreviewDecisionRunLabel,
+                  statusSkip: messages.planPreviewDecisionSkipLabel,
+                  statusPartial: messages.planPreviewDecisionPartialLabel,
+                  reasonSelectedRoot: messages.planPreviewDecisionSelectedRootReason,
+                  reasonSelectedClosure: messages.planPreviewDecisionSelectedClosureReason,
+                  reasonOutsideSelectedClosure: messages.planPreviewDecisionOutsideClosureReason,
+                  reasonBoundedSelection: messages.planPreviewDecisionBoundedSelectionReason,
+                }}
+              />
             ) : null}
 
             {provenance ? (

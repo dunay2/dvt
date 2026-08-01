@@ -104,7 +104,12 @@ function createUseCase(
     ({
       execute: vi.fn(async () => ({
         ok: true as const,
-        value: { graphSource: COMMAND.graphSource, nodeIds: [] },
+        value: {
+          graphSource: COMMAND.graphSource,
+          nodeIds: [],
+          decisionScopeNodeIds: ['model.analytics.orders', 'model.analytics.customers'],
+          requestedRootNodeIds: ['model.analytics.orders'],
+        },
       })),
     } as const);
 
@@ -121,6 +126,22 @@ function createUseCase(
 }
 
 describe('PreviewPlanUseCase outcomes', () => {
+  it('passes the authorized workspace decision scope to Planner without widening graphSource', async () => {
+    const { useCase, planner } = createUseCase();
+
+    await useCase.execute(COMMAND, CONTEXT);
+
+    expect(planner.buildPlan).toHaveBeenCalledWith(
+      expect.objectContaining({
+        graphSource: COMMAND.graphSource,
+        decisionScope: {
+          nodeIds: ['model.analytics.orders', 'model.analytics.customers'],
+          requestedRootNodeIds: ['model.analytics.orders'],
+        },
+      })
+    );
+  });
+
   it('returns selection-rejected without building or storing a plan', async () => {
     const rejection = {
       code: 'REJECTED' as const,

@@ -227,11 +227,14 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
 
     expect(result).toEqual({
       ok: true,
-      value: buildExecutableSubgraph({
-        selection,
-        nodeIds: ['transform-node'],
-        edgeIds: [],
-      }),
+      value: {
+        ...buildExecutableSubgraph({
+          selection,
+          nodeIds: ['transform-node'],
+          edgeIds: [],
+        }),
+        decisionScopeNodeIds: ['source-node', 'transform-node'],
+      },
     });
     expect(planner.deriveExecutableSubgraph).toHaveBeenCalledTimes(1);
   });
@@ -314,11 +317,14 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
 
     expect(result).toEqual({
       ok: true,
-      value: buildExecutableSubgraph({
-        selection,
-        nodeIds: ['transform-node'],
-        edgeIds: [],
-      }),
+      value: {
+        ...buildExecutableSubgraph({
+          selection,
+          nodeIds: ['transform-node'],
+          edgeIds: [],
+        }),
+        decisionScopeNodeIds: ['source-node', 'transform-node'],
+      },
     });
     expect(planner.deriveExecutableSubgraph).toHaveBeenCalledTimes(1);
   });
@@ -409,7 +415,10 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
 
     expect(result).toEqual({
       ok: true,
-      value: executableSubgraph,
+      value: {
+        ...executableSubgraph,
+        decisionScopeNodeIds: ['source-node', 'transform-node'],
+      },
     });
   });
 });

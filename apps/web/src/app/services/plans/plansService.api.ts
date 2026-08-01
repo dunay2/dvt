@@ -172,6 +172,19 @@ function mapContractPlanToUi(
     target,
     estimatedCost,
     capabilities: [],
+    ...(contractPlan.decisions
+      ? {
+          decisions: contractPlan.decisions.map((decision) =>
+            decision.status === 'PARTIAL'
+              ? {
+                  ...decision,
+                  includedNodeIds: [...decision.includedNodeIds],
+                  excludedNodeIds: [...decision.excludedNodeIds],
+                }
+              : { ...decision }
+          ),
+        }
+      : {}),
     ...(preview ? { preview } : {}),
     steps: contractPlan.steps.map((step: ContractExecutionPlan['steps'][number]) => {
       const stepRecord = asRecord(step);

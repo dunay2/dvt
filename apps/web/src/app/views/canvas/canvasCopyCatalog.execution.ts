@@ -119,6 +119,62 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.planPreview.closeLabel',
     fallback: 'Close',
   },
+  planPreviewDecisionsTitle: {
+    key: 'canvas.planPreview.decisionsTitle',
+    fallback: 'Execution decisions',
+  },
+  planPreviewDecisionsCaption: {
+    key: 'canvas.planPreview.decisionsCaption',
+    fallback: 'Planner-owned decisions persisted with this immutable preview.',
+  },
+  planPreviewDecisionSubjectLabel: {
+    key: 'canvas.planPreview.decisionSubjectLabel',
+    fallback: 'Subject',
+  },
+  planPreviewDecisionStatusLabel: {
+    key: 'canvas.planPreview.decisionStatusLabel',
+    fallback: 'Decision',
+  },
+  planPreviewDecisionReasonLabel: {
+    key: 'canvas.planPreview.decisionReasonLabel',
+    fallback: 'Planner reason',
+  },
+  planPreviewDecisionIncludedLabel: {
+    key: 'canvas.planPreview.decisionIncludedLabel',
+    fallback: 'Included scope',
+  },
+  planPreviewDecisionExcludedLabel: {
+    key: 'canvas.planPreview.decisionExcludedLabel',
+    fallback: 'Excluded scope',
+  },
+  planPreviewDecisionRunLabel: {
+    key: 'canvas.planPreview.decisionRunLabel',
+    fallback: 'Run',
+  },
+  planPreviewDecisionSkipLabel: {
+    key: 'canvas.planPreview.decisionSkipLabel',
+    fallback: 'Skip',
+  },
+  planPreviewDecisionPartialLabel: {
+    key: 'canvas.planPreview.decisionPartialLabel',
+    fallback: 'Partial',
+  },
+  planPreviewDecisionSelectedRootReason: {
+    key: 'canvas.planPreview.decisionSelectedRootReason',
+    fallback: 'Explicitly selected execution root.',
+  },
+  planPreviewDecisionSelectedClosureReason: {
+    key: 'canvas.planPreview.decisionSelectedClosureReason',
+    fallback: 'Dependency included by the selected execution closure.',
+  },
+  planPreviewDecisionOutsideClosureReason: {
+    key: 'canvas.planPreview.decisionOutsideClosureReason',
+    fallback: 'Outside the selected execution closure.',
+  },
+  planPreviewDecisionBoundedSelectionReason: {
+    key: 'canvas.planPreview.decisionBoundedSelectionReason',
+    fallback: 'The selected execution scope includes only part of the graph.',
+  },
   runStartedMessage: {
     key: 'canvas.run.startedMessage',
     fallback: 'Run started',

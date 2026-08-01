@@ -145,6 +145,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ED-20260731-canvas-dbt-authoring-authority.md)
 - [Summary](ED-20260731-typed-plan-preview-outcomes.md)
 - [Summary](ED-20260801-lossless-dbt-dependency-edit.md)
+- [Summary](ED-20260801-plan-execution-decisions.md)
 - [Summary](ED-20260801-selected-dbt-model-analysis.md)
 - [Summary](ed-20260423-access-decision-vocabulary-hardening.md)
 - [Summary](ed-20260423-rc-c2-turbo-ci-governance.md)

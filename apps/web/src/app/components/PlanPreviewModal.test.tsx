@@ -85,6 +85,14 @@ describe('PlanPreviewModal', () => {
         ...mockExecutionPlan.planRef!,
         uri: `dvt-plan://postgres/${longPlanId}`,
       },
+      decisions: [
+        {
+          subjectId: 'model.analytics.orders',
+          subjectKind: 'node' as const,
+          status: 'RUN' as const,
+          reasonCode: 'SELECTED_ROOT' as const,
+        },
+      ],
       preview: {
         ...mockExecutionPlan.preview!,
         persisted: {
@@ -120,6 +128,8 @@ describe('PlanPreviewModal', () => {
     expect(bodyText).toContain('Preview record');
     expect(bodyText).toContain('Canonical preview');
     expect(bodyText).toContain('Execution target');
+    expect(bodyText).toContain('Execution decisions');
+    expect(bodyText).toContain('Explicitly selected execution root.');
     expect(bodyText).toContain('Not estimated');
     expect(bodyText).not.toContain('Est. Cost:$');
     expect(bodyText).not.toContain('Plan identity');

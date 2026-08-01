@@ -59,6 +59,10 @@ export interface PlannerInputEnvelopeV1 {
     nodes: readonly GraphNode[];
   };
   selection: PlannerSelection;
+  decisionScope?: {
+    readonly nodeIds: readonly string[];
+    readonly requestedRootNodeIds?: readonly string[];
+  };
   policies?: PlannerPolicyClassSet;
   ownership?: PlanOwnership;
   observability?: ExecutionPlan['observability'];

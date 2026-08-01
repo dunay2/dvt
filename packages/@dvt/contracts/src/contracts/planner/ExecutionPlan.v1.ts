@@ -11,6 +11,7 @@
 
 import type { RunExecutionPolicy } from '../engine/RunExecutionPolicy.v1.js';
 
+import type { PlanExecutionDecision } from './PlanExecutionDecision.v1.js';
 import type { PlannerPolicyClassSet } from './PlannerPolicyVocabulary.v2.js';
 import type { SupportedPlanVersion } from './PlanVersion.v1.js';
 
@@ -155,6 +156,8 @@ export type VersionedExecutionPlan<TVersion extends SupportedPlanVersion> =
       extra?: Record<string, unknown>;
       [k: string]: unknown;
     };
+    /** Deterministic planner explanation persisted with the immutable plan. */
+    decisions?: readonly PlanExecutionDecision[];
   };
 
 export type ExecutionPlan = {
@@ -178,6 +181,15 @@ export interface PlannerInputEnvelopeV1 {
   graphSource: GenericGraphSourceV1;
 
   selection: PlannerSelection;
+  /**
+   * Authorized planner subject universe used only to explain persisted
+   * RUN/SKIP/PARTIAL decisions. It may be wider than the executable graphSource.
+   */
+  decisionScope?: {
+    readonly nodeIds: readonly string[];
+    /** Original operator-selected roots before executable-closure expansion. */
+    readonly requestedRootNodeIds?: readonly string[];
+  };
   policies?: PlannerPolicyClassSet;
   environment?: PlannerEnvironmentContext;
   ownership?: PlanOwnership;

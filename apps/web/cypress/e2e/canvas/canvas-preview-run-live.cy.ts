@@ -206,12 +206,13 @@ describe('Canvas preview-run live protected runtime', () => {
   });
 
   it('creates and completes a real SQL-first workflow from a canvas-authored graph', () => {
-    seedLiveSelectedClosureDraft({ authoringGenerated: true });
+    seedLiveSelectedClosureDraft({ authoringGenerated: true, includeLooseNode: true });
     visitWithLiveWorkspaceSession('/canvas');
 
     getVisibleCanvasNode('Source 1').should('be.visible');
     getVisibleCanvasNode('SQL transform 1').should('be.visible');
     getVisibleCanvasNode('Sink 1').should('be.visible');
+    getVisibleCanvasNode('Orphan transform').should('be.visible');
 
     selectCanvasClosure(['Source 1', 'SQL transform 1', 'Sink 1']);
 
@@ -223,6 +224,19 @@ describe('Canvas preview-run live protected runtime', () => {
     cy.contains('Persisted preview summary').scrollIntoView().should('be.visible');
     cy.contains('Source tables').parent().should('contain.text', 'public.source_1');
     cy.contains('Sink tables').parent().should('contain.text', 'public.sink_1');
+    cy.get('[data-testid="plan-execution-decisions"]')
+      .scrollIntoView()
+      .should('be.visible')
+      .within(() => {
+        cy.get('[data-decision-subject="selection"]')
+          .should('contain.text', 'Partial')
+          .and('contain.text', 'source-1')
+          .and('contain.text', 'dvt-sql-transform-1')
+          .and('contain.text', 'sink-1')
+          .and('contain.text', 'orphan-transform-1');
+        cy.get('[data-decision-subject="source-1"]').should('contain.text', 'Run');
+        cy.get('[data-decision-subject="orphan-transform-1"]').should('contain.text', 'Skip');
+      });
 
     readLiveWorkspaceFile('models/dvt-sql-transform-1.sql').then((sqlResponse) => {
       expect(sqlResponse.status).to.equal(200);

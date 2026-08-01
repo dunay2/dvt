@@ -22,10 +22,37 @@ const PlanOwnershipSchema = z
   })
   .strict();
 
+const PlannerDecisionScopeSchema = z
+  .object({
+    nodeIds: z.array(NonBlankStringSchema).min(1),
+    requestedRootNodeIds: z.array(NonBlankStringSchema).min(1).optional(),
+  })
+  .strict()
+  .superRefine((scope, ctx) => {
+    if (new Set(scope.nodeIds).size !== scope.nodeIds.length) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['nodeIds'],
+        message: 'decisionScope.nodeIds must not contain duplicates',
+      });
+    }
+    if (
+      scope.requestedRootNodeIds !== undefined &&
+      new Set(scope.requestedRootNodeIds).size !== scope.requestedRootNodeIds.length
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['requestedRootNodeIds'],
+        message: 'decisionScope.requestedRootNodeIds must not contain duplicates',
+      });
+    }
+  });
+
 export const PlannerInputEnvelopeV1Schema = z
   .object({
     graphSource: GenericGraphSourceV1Schema,
     selection: PlannerSelectionSchema,
+    decisionScope: PlannerDecisionScopeSchema.optional(),
     policies: PlannerPolicyClassSetSchema.optional(),
     environment: PlannerEnvironmentContextSchema.optional(),
     ownership: PlanOwnershipSchema.optional(),
@@ -34,7 +61,32 @@ export const PlannerInputEnvelopeV1Schema = z
     requestId: z.string().min(1).optional(),
     requestedAtIso: z.string().min(1).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((input, ctx) => {
+    if (input.decisionScope === undefined) return;
+    const decisionNodeIds = new Set<string>(input.decisionScope.nodeIds);
+    for (const [index, node] of input.graphSource.nodes.entries()) {
+      if (!decisionNodeIds.has(node.nodeId)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['decisionScope', 'nodeIds'],
+          message: `decisionScope.nodeIds must include graphSource.nodes[${index}].nodeId`,
+        });
+      }
+    }
+    if (input.decisionScope.requestedRootNodeIds === undefined) return;
+    const executableNodeIds = new Set(input.graphSource.nodes.map((node) => node.nodeId));
+    const selectedNodeIds = new Set(input.selection.selectedNodeIds);
+    for (const [index, nodeId] of input.decisionScope.requestedRootNodeIds.entries()) {
+      if (!executableNodeIds.has(nodeId) || !selectedNodeIds.has(nodeId)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['decisionScope', 'requestedRootNodeIds', index],
+          message: 'decisionScope.requestedRootNodeIds must be executable selected nodes',
+        });
+      }
+    }
+  });
 
 export const PlannerBuildResultV1Schema = z
   .object({

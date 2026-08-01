@@ -62,6 +62,69 @@ describe('PlannerFacade - canonical graph source boundary', () => {
     expect(result.plan.steps.map((step) => step.stepId)).toEqual(['x', 'y']);
   });
 
+  it('projects deterministic RUN, SKIP and PARTIAL decisions from the selected closure', async () => {
+    const facade = new PlannerFacade();
+    const result = await facade.buildPlan({
+      graphSource: {
+        ...BASE_GRAPH_SOURCE,
+        nodes: [
+          { nodeId: 'model.project.base', stepKind: 'DBT_MODEL', dependsOn: [] },
+          {
+            nodeId: 'model.project.selected',
+            stepKind: 'DBT_MODEL',
+            dependsOn: ['model.project.base'],
+          },
+        ],
+      },
+      selection: {
+        selectedNodeIds: ['model.project.base', 'model.project.selected'],
+      },
+      decisionScope: {
+        nodeIds: ['model.project.selected', 'model.project.skipped', 'model.project.base'],
+        requestedRootNodeIds: ['model.project.selected'],
+      },
+    });
+
+    expect(result.plan.decisions).toEqual([
+      {
+        subjectId: 'selection',
+        subjectKind: 'selection',
+        status: 'PARTIAL',
+        reasonCode: 'BOUNDED_SELECTION',
+        includedNodeIds: ['model.project.base', 'model.project.selected'],
+        excludedNodeIds: ['model.project.skipped'],
+      },
+      {
+        subjectId: 'model.project.base',
+        subjectKind: 'node',
+        status: 'RUN',
+        reasonCode: 'SELECTED_CLOSURE',
+      },
+      {
+        subjectId: 'model.project.selected',
+        subjectKind: 'node',
+        status: 'RUN',
+        reasonCode: 'SELECTED_ROOT',
+      },
+      {
+        subjectId: 'model.project.skipped',
+        subjectKind: 'node',
+        status: 'SKIP',
+        reasonCode: 'OUTSIDE_SELECTED_CLOSURE',
+      },
+    ]);
+  });
+
+  it('preserves legacy plan payloads when no authorized decision scope is provided', async () => {
+    const facade = new PlannerFacade();
+    const result = await facade.buildPlan({
+      graphSource: BASE_GRAPH_SOURCE,
+      selection: BASE_SELECTION,
+    });
+
+    expect(result.plan).not.toHaveProperty('decisions');
+  });
+
   it('accepts graphSource as canonical planner ingress', async () => {
     const facade = new PlannerFacade();
     const result = await facade.buildPlan({

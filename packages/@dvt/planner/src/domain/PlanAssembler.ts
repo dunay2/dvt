@@ -15,6 +15,7 @@ import {
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
   type RunExecutionPolicy,
+  type PlanExecutionDecision,
 } from '@dvt/contracts';
 
 import { sha256CanonicalJson } from './hashing.js';
@@ -29,7 +30,8 @@ export class AssemblePlanCommand {
     readonly normalizedInput: NormalizedPlannerInput,
     readonly normalizedSteps: PlanCore['steps'],
     readonly maxPlanSizeBytes: number,
-    readonly requiredCapabilities: readonly string[] = []
+    readonly requiredCapabilities: readonly string[] = [],
+    readonly decisions: readonly PlanExecutionDecision[] = []
   ) {}
 }
 
@@ -49,19 +51,25 @@ export class PlanAssembler {
     );
     const planCore = this.buildPlanCore(command.normalizedSteps, inputHashSha256);
 
-    const {
-      canonical: canonicalPlanCoreJson,
-      sha256: planId,
-      bytes,
-    } = await sha256CanonicalJson(planCore);
+    const { canonical: canonicalPlanCoreJson, sha256: planId } =
+      await sha256CanonicalJson(planCore);
+    const plan = this.assembleFinalPlan(
+      planCore,
+      planId,
+      command.normalizedInput,
+      command.decisions
+    );
+    const { bytes: finalPlanBytes } = await sha256CanonicalJson(plan);
 
-    if (bytes > command.maxPlanSizeBytes) {
-      throwLimitExceeded(`maxPlanSizeBytes exceeded: ${bytes} > ${command.maxPlanSizeBytes}`);
+    if (finalPlanBytes > command.maxPlanSizeBytes) {
+      throwLimitExceeded(
+        `maxPlanSizeBytes exceeded: ${finalPlanBytes} > ${command.maxPlanSizeBytes}`
+      );
     }
-    this.metrics.recordPlanSize(bytes);
+    this.metrics.recordPlanSize(finalPlanBytes);
 
     return {
-      plan: this.assembleFinalPlan(planCore, planId, command.normalizedInput),
+      plan,
       executionPolicy: this.buildExecutionPolicy(
         pluginCompatibilityFingerprint,
         command.requiredCapabilities
@@ -88,6 +96,7 @@ export class PlanAssembler {
           left.localeCompare(right)
         ),
       },
+      decisionScope: input.decisionScope,
       policies: input.policies,
     };
     const { sha256 } = await sha256CanonicalJson(semantic);
@@ -101,7 +110,8 @@ export class PlanAssembler {
   private assembleFinalPlan(
     planCore: PlanCore,
     planId: string,
-    input: NormalizedPlannerInput
+    input: NormalizedPlannerInput,
+    decisions: readonly PlanExecutionDecision[]
   ): ExecutionPlan {
     const planBase: ExecutionPlan = {
       ...planCore,
@@ -113,6 +123,7 @@ export class PlanAssembler {
         createdAtIso: new Date().toISOString(),
         ...(input.ownership === undefined ? {} : { ownership: input.ownership }),
       },
+      ...(decisions.length === 0 ? {} : { decisions }),
     };
 
     const plan: ExecutionPlan =
