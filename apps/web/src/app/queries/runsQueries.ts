@@ -1,10 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
-import type { RunEventTimelinePage, RunSnapshot, RunSummaryItem, UiRunStatus } from '../ports/runs';
+import type { RunSnapshot, RunSummaryItem, UiRunStatus } from '../ports/runs';
 import { useRunsService } from '../services/AppServicesContext';
-import type {
-  RunWorkspaceFacade,
-  RunWorkspaceViewModel,
-} from '../services/runs/runWorkspaceFacade';
 import { queryKeys } from './queryKeys';
 
 export const RUN_DETAIL_STATUS_REFRESH_INTERVAL_MS = 1_000;
@@ -34,12 +30,6 @@ function getRunSnapshotRefreshInterval(
   query: QueryStateReader<RunSnapshot | null>
 ): number | false {
   return getRunStatusRefreshInterval(query.state.data?.status);
-}
-
-function getRunWorkspaceRefreshInterval(
-  query: QueryStateReader<RunWorkspaceViewModel | null>
-): number | false {
-  return getRunStatusRefreshInterval(query.state.data?.snapshot.status);
 }
 
 export function useRunsListForViewQuery(viewId: string) {
@@ -78,32 +68,5 @@ export function useRunSnapshotQuery(workspaceLayoutKey: string, runId: string | 
     enabled: Boolean(runId),
     refetchInterval: getRunSnapshotRefreshInterval,
     staleTime: 5_000,
-  });
-}
-
-export function useRunEventsQuery(
-  workspaceLayoutKey: string,
-  runId: string | undefined,
-  enabled = true
-) {
-  const runsService = useRunsService();
-  return useQuery<RunEventTimelinePage>({
-    queryKey: queryKeys.runs.events(workspaceLayoutKey, runId),
-    queryFn: () => runsService.listRunEvents(runId!),
-    enabled: Boolean(runId) && enabled,
-    staleTime: 5_000,
-  });
-}
-
-export function useRunWorkspaceQuery(
-  workspaceLayoutKey: string,
-  runId: string | undefined,
-  runWorkspaceFacade: RunWorkspaceFacade
-) {
-  return useQuery<RunWorkspaceViewModel | null>({
-    queryKey: queryKeys.runs.workspace(workspaceLayoutKey, runId),
-    queryFn: () => runWorkspaceFacade.loadRunWorkspace(runId ?? ''),
-    enabled: Boolean(runId),
-    refetchInterval: getRunWorkspaceRefreshInterval,
   });
 }

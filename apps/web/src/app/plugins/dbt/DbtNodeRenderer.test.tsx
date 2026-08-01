@@ -283,7 +283,7 @@ describe('DbtNodeRenderer history panel', () => {
     expect(document.body.textContent).not.toContain(
       'Detailed node history is unavailable from the current runtime contract baseline.'
     );
-    expect(runsService.listRunEvents).toHaveBeenCalledWith('run-live');
+    expect(runsService.listRunEvents).toHaveBeenCalledWith('run-live', undefined);
   });
 
   it('matches runtime history events by canonical step id when payload node id is absent', async () => {
@@ -341,7 +341,7 @@ describe('DbtNodeRenderer history panel', () => {
     await renderHistoryPanel({ runsService, activeRunId: null });
 
     await waitForText('Latest run completed model_orders');
-    expect(runsService.listRunEvents).toHaveBeenCalledWith('run-latest');
+    expect(runsService.listRunEvents).toHaveBeenCalledWith('run-latest', undefined);
   });
 
   it('shows an actionable degraded state when runtime events cannot be loaded', async () => {

@@ -1,11 +1,11 @@
 /**
- * Owned concern: compose snapshot and timeline queries into a single workspace
- * view model with classified errors and degraded-mode resilience.
+ * Owned concern: compose an authoritative run snapshot and the canonical
+ * shared event feed into the Runs workbench read model.
  */
-import type { IRunsPort, RunSnapshot } from '../../ports/runs';
+import type { RunSnapshot } from '../../ports/runs';
 import type { RunEvent } from '../../types/engine';
 import { classifyHttpError, extractHttpStatusCode } from '../api/classifyHttpError';
-import { normalizeRunEventTimelinePage } from './runEventTimelineModel';
+import type { RunEventFeedState } from './runEventFeedModel';
 
 export type RunWorkspaceTimeline =
   | {
@@ -34,10 +34,7 @@ export type RunWorkspaceViewModel = {
 };
 
 export type RunWorkspaceLoadErrorKind =
-  | 'unauthorized'
-  | 'forbidden'
-  | 'runtime-unavailable'
-  | 'unexpected';
+  'unauthorized' | 'forbidden' | 'runtime-unavailable' | 'unexpected';
 
 export class RunWorkspaceLoadError extends Error {
   readonly kind: RunWorkspaceLoadErrorKind;
@@ -51,11 +48,7 @@ export class RunWorkspaceLoadError extends Error {
   }
 }
 
-export interface RunWorkspaceFacade {
-  loadRunWorkspace: (runId: string) => Promise<RunWorkspaceViewModel | null>;
-}
-
-function classifySnapshotError(error: unknown): RunWorkspaceLoadError {
+export function classifyRunWorkspaceSnapshotError(error: unknown): RunWorkspaceLoadError {
   const kind = classifyHttpError(error);
   const statusCode = extractHttpStatusCode(error);
 
@@ -101,53 +94,53 @@ function describeTimelineError(error: unknown): { message: string; statusCode?: 
   }
 }
 
-export function createRunWorkspaceFacade(runsService: IRunsPort): RunWorkspaceFacade {
+function readFeedSnapshot(feed: RunEventFeedState | undefined): {
+  events: RunEvent[];
+  nextAfterSeq?: number;
+} {
+  if (!feed || feed.phase === 'idle') {
+    return { events: [] };
+  }
+
   return {
-    async loadRunWorkspace(runId: string): Promise<RunWorkspaceViewModel | null> {
-      let snapshot: RunSnapshot | null;
-      try {
-        snapshot = await runsService.getRunSnapshot(runId);
-      } catch (error) {
-        throw classifySnapshotError(error);
-      }
+    events: [...feed.events],
+    ...(feed.nextAfterSeq === undefined ? {} : { nextAfterSeq: feed.nextAfterSeq }),
+  };
+}
 
-      if (snapshot === null) {
-        return null;
-      }
+export function buildRunWorkspaceViewModel(
+  snapshot: RunSnapshot,
+  feed: RunEventFeedState | undefined,
+  feedError?: unknown
+): RunWorkspaceViewModel {
+  const timelineSnapshot = readFeedSnapshot(feed);
+  const hasEvents = timelineSnapshot.events.length > 0;
+  let timeline: RunWorkspaceTimeline;
 
-      try {
-        const timelinePage = normalizeRunEventTimelinePage(await runsService.listRunEvents(runId));
-        const hasEvents = timelinePage.events.length > 0;
-        return {
-          runId: snapshot.runId,
-          snapshot,
-          timeline: hasEvents
-            ? {
-                state: 'available',
-                events: timelinePage.events,
-                nextAfterSeq: timelinePage.nextAfterSeq,
-              }
-            : {
-                state: 'empty',
-                events: [],
-                nextAfterSeq: timelinePage.nextAfterSeq,
-              },
-          detailState: hasEvents ? 'snapshot-plus-events' : 'snapshot-only',
-        };
-      } catch (error) {
-        const timelineError = describeTimelineError(error);
-        return {
-          runId: snapshot.runId,
-          snapshot,
-          timeline: {
-            state: 'degraded',
-            events: [],
-            message: timelineError.message,
-            statusCode: timelineError.statusCode,
-          },
-          detailState: 'snapshot-only',
-        };
-      }
-    },
+  if (feedError) {
+    const error = describeTimelineError(feedError);
+    timeline = {
+      state: 'degraded',
+      ...timelineSnapshot,
+      message: error.message,
+      ...(error.statusCode === undefined ? {} : { statusCode: error.statusCode }),
+    };
+  } else if (hasEvents) {
+    timeline = { state: 'available', ...timelineSnapshot };
+  } else {
+    timeline = {
+      state: 'empty',
+      events: [],
+      ...(timelineSnapshot.nextAfterSeq === undefined
+        ? {}
+        : { nextAfterSeq: timelineSnapshot.nextAfterSeq }),
+    };
+  }
+
+  return {
+    runId: snapshot.runId,
+    snapshot,
+    timeline,
+    detailState: hasEvents ? 'snapshot-plus-events' : 'snapshot-only',
   };
 }

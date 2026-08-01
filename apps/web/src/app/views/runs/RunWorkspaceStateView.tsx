@@ -15,7 +15,7 @@ import type {
   RunExecutor,
   RunPlanExecutionSummary,
 } from '../../ports/runs';
-import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
+import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { RunDegradedStateView } from './RunDetailStateViews';
 import { RunEventTimelineTable } from './RunEventTimelineTable';
 import { runStatesCopy as copy } from './runStatesCopy';

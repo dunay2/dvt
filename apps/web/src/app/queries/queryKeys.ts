@@ -56,14 +56,10 @@ export const queryKeys = {
   // -------------------------------------------------------------------------
   runs: {
     summaries: (workspaceLayoutKey: string) => ['runs', 'summaries', workspaceLayoutKey] as const,
-    workspace: (workspaceLayoutKey: string, runId: string | undefined) =>
-      ['runs', 'workspace', workspaceLayoutKey, runId] as const,
     snapshot: (workspaceLayoutKey: string, runId: string | undefined) =>
       ['runs', 'snapshot', workspaceLayoutKey, runId] as const,
-    events: (workspaceLayoutKey: string, runId: string | undefined) =>
-      ['runs', 'events', workspaceLayoutKey, runId] as const,
+    eventFeed: (runId: string | undefined) => ['runs', 'event-feed', runId] as const,
     list: (viewId: string) => ['runs', 'list', viewId] as const,
-    consoleLogStream: (runId: string | undefined) => ['runs', 'console-log-stream', runId] as const,
   },
 
   // -------------------------------------------------------------------------

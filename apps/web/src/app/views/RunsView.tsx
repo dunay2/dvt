@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useParams } from 'react-router';
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
-import type { RunWorkspaceViewModel } from '../services/runs/runWorkspaceFacade';
+import type { RunWorkspaceViewModel } from '../services/runs/runWorkspaceModel';
 import {
   RunDetailErrorState,
   RunDetailLoadingState,

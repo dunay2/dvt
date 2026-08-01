@@ -5,7 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router';
 
 import type { RunSummaryItem } from '../../../ports/runs';
-import type { RunWorkspaceViewModel } from '../../../services/runs/runWorkspaceFacade';
+import type { RunWorkspaceViewModel } from '../../../services/runs/runWorkspaceModel';
 import { iso, stepId } from '../../../testing/contractTestUtils';
 import type { RunEvent } from '../../../types/engine';
 

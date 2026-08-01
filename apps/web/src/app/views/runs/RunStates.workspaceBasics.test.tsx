@@ -3,7 +3,7 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceFacade';
+import type { RunWorkspaceViewModel } from '../../services/runs/runWorkspaceModel';
 import { RunWorkspaceState } from './RunStates';
 import { buildWorkspace, createRunStatesHarness } from './test/RunStatesHarness';
 
