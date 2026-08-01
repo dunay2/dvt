@@ -2047,8 +2047,8 @@
         "pnpm docs:feature-mechanization:implementation",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/174",
-      "sourceContentSha256": "818e36ff636873e9d314f37d6ad014591dbbd04cb1183e341bdb2259ef728a62",
+      "sourcePath": "docs/architecture/command-query-rail-governance.md",
+      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
       "rawRail": {
         "name": "PreviewPlan",
         "type": "command",
@@ -2198,7 +2198,7 @@
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-01T20:49:48.279Z"
     },
@@ -2394,8 +2394,8 @@
         "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/services/runs/runWorkspaceModel.test.ts && pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/runs/RunStates.workspaceBasics.test.tsx",
         "pnpm --filter @dvt/web test:e2e:selected-closure:live"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2076",
-      "sourceContentSha256": "9a66666ff5b333647af22c8bc61320c19b82b525abb9caceb394d3a4acc29c76",
+      "sourcePath": "docs/architecture/command-query-rail-governance.md",
+      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
       "rawRail": {
         "name": "ListRunEvents",
         "type": "query",
@@ -4208,7 +4208,7 @@
           "apps/web/src/app/components/**/runEventFeedModel.ts"
         ]
       },
-      "revision": 11,
+      "revision": 12,
       "createdBy": "codex",
       "createdAt": "2026-08-01T14:08:01.314Z"
     },
@@ -4220,7 +4220,7 @@
       "normalizedRailName": "listrunevents",
       "railType": "query",
       "dddOwner": "RunEventFeedQuery",
-      "railStatus": "implemented",
+      "railStatus": "retired",
       "symbolRefs": [
         "apps/web/src/app/queries/runEventFeedQuery.ts#RunEventFeedQueryOptions",
         "apps/web/src/app/queries/runEventFeedQuery.ts#RunEventFeedInvariantError",
@@ -4277,12 +4277,12 @@
         "pnpm docs:feature-mechanization:implementation",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2073",
-      "sourceContentSha256": "f1fbfdac60ad0a699758079e4820c9563472dde4bc75f902ffff3a8a471b2ef6",
+      "sourcePath": "docs/architecture/command-query-rail-governance.md",
+      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
       "rawRail": {
         "name": "ListRunEvents",
         "type": "query",
-        "status": "implemented",
+        "status": "retired",
         "dddOwner": "RunEventFeedQuery"
       },
       "rawManifest": {
@@ -4569,7 +4569,7 @@
           {
             "name": "ListRunEvents",
             "type": "query",
-            "status": "implemented",
+            "status": "retired",
             "dddOwner": "RunEventFeedQuery"
           }
         ],
@@ -4586,7 +4586,7 @@
         ],
         "forbiddenImplementationSurfaces": ["apps/web/src/app/stores/**"]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-01T14:58:07.346Z"
     },
@@ -9110,8 +9110,8 @@
         "pnpm docs:feature-mechanization:implementation",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2102",
-      "sourceContentSha256": "909fb5cf74c0e9804f284aa68d8d83e1dacb0cd8718d9adbfaa9368f66f9e9cc",
+      "sourcePath": "docs/architecture/command-query-rail-governance.md",
+      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
       "rawRail": {
         "name": "ResolveLegacyCanvasRouteIntent",
         "type": "query",
@@ -9644,7 +9644,7 @@
           "Global fixed Inspector or resource rail"
         ]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-01T12:12:11.979Z"
     },
@@ -19638,6 +19638,501 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-01T21:27:37.429Z"
+    },
+    {
+      "operationId": "d4e26fe7-bc63-4ccb-81b4-6b216ce80316",
+      "idempotencyKey": "mvp-174-local-source-authority",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-174-PLAN-DECISION-PREVIEW#command#previewplan",
+      "sourcePath": "docs/architecture/command-query-rail-governance.md",
+      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web test:e2e:selected-closure:live",
+        "dddOwner": "planner preview boundary",
+        "railName": "PreviewPlan",
+        "railType": "command",
+        "featureId": "MVP-174-PLAN-DECISION-PREVIEW",
+        "greenTest": "pnpm --filter @dvt/web test:e2e:selected-closure:live",
+        "sourceRef": "docs/architecture/command-query-rail-governance.md",
+        "unitTests": [
+          "packages/@dvt/contracts/test/planner.contract.test.ts",
+          "packages/@dvt/planner/test/unit/planner-facade.test.ts",
+          "apps/web/src/app/components/PlanExecutionDecisionView.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/174"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:selected-closure:live"
+        ],
+        "domainObjects": ["PlanExecutionDecisionV1"],
+        "fowlerSignals": [
+          "Planner owns decision semantics; Web is a read-only presentation adapter."
+        ],
+        "patchSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts",
+          "packages/@dvt/planner/src/domain/PlanExecutionDecisionProjector.ts",
+          "apps/api/src/application/services/PreviewPlanUseCase.ts",
+          "apps/web/src/app/components/PlanExecutionDecisionView.tsx",
+          "apps/web/src/app/components/PlanPreviewModal.tsx"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Persisted preview omitted PARTIAL, RUN, and SKIP decision rows for an authorized selected closure.",
+        "governingSources": [
+          "https://github.com/dunay2/dvt/issues/174",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/174"],
+        "architectureGuards": [
+          "pnpm exec vitest run packages/@dvt/contracts/test/planner.contract.test.ts packages/@dvt/planner/test/unit/planner-facade.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/174",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts#PlanExecutionDecisionV1",
+          "packages/@dvt/planner/src/domain/PlanExecutionDecisionProjector.ts#projectPlanExecutionDecisions",
+          "apps/api/src/application/services/PreviewPlanUseCase.ts#PreviewPlanUseCase",
+          "apps/web/src/app/components/PlanExecutionDecisionView.tsx#PlanExecutionDecisionView",
+          "apps/web/src/app/components/PlanPreviewModal.tsx#PlanPreviewModal"
+        ],
+        "normalizedRailName": "previewplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts",
+          "packages/@dvt/planner/src/domain/PlanExecutionDecisionProjector.ts",
+          "apps/api/src/application/services/PreviewPlanUseCase.ts",
+          "apps/web/src/app/components/PlanExecutionDecisionView.tsx",
+          "apps/web/src/app/components/PlanPreviewModal.tsx"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-01T21:54:39.420Z"
+    },
+    {
+      "operationId": "692f05f2-eed3-4a8e-a419-73e610475efd",
+      "idempotencyKey": "mvp-2073-retire-duplicate-rail-local-source",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2073-SHARED-RUN-EVENT-FEED#query#listrunevents",
+      "sourcePath": "docs/architecture/command-query-rail-governance.md",
+      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/runEventFeedQuery.test.tsx",
+        "dddOwner": "RunEventFeedQuery",
+        "railName": "ListRunEvents",
+        "railType": "query",
+        "featureId": "MVP-2073-SHARED-RUN-EVENT-FEED",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/runEventFeedQuery.test.tsx src/app/services/runs/runWorkspaceModel.test.ts src/app/views/RunsView.test.tsx",
+        "sourceRef": "docs/architecture/command-query-rail-governance.md",
+        "unitTests": [
+          "apps/web/src/app/queries/runEventFeedQuery.test.tsx",
+          "apps/web/src/app/services/runs/runWorkspaceModel.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2073"],
+        "cypressFlows": [
+          "N/A - shared query boundary is proven through React integration tests"
+        ],
+        "domainObjects": ["RunEventFeedQuery"],
+        "fowlerSignals": [
+          "Repository and Identity Map provide one feed projection per runId with Separated Presentation."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/queries/runEventFeedQuery.ts",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts",
+          "apps/web/src/app/components/console/useConsoleLogStream.ts",
+          "apps/web/src/app/views/runs/useRunWorkspace.ts",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web exec vitest run src/app/queries/runEventFeedQuery.test.tsx src/app/services/runs/runWorkspaceModel.test.ts src/app/views/RunsView.test.tsx",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The canonical shared RunEventFeed query adapter is absent, so consumers cannot share cursor or accumulated state.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": ["pnpm --filter @dvt/web typecheck"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2073",
+        "implementationRefs": [
+          "apps/web/src/app/queries/runEventFeedQuery.ts#RunEventFeedQueryOptions",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#RunEventFeedInvariantError",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#startFeed",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#readCursor",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#useRunEventFeedQuery",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts#RunWorkspaceTimeline",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts#RunWorkspaceViewModel",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts#RunWorkspaceLoadErrorKind",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts#RunWorkspaceLoadError",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts#classifyRunWorkspaceSnapshotError",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts#describeTimelineError",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts#readFeedSnapshot",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts#buildRunWorkspaceViewModel",
+          "apps/web/src/app/components/console/useConsoleLogStream.ts#useConsoleLogStream",
+          "apps/web/src/app/views/runs/useRunWorkspace.ts#useRunWorkspace",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx#DbtHistoryPanel"
+        ],
+        "normalizedRailName": "listrunevents",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/queries/runEventFeedQuery.ts",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts",
+          "apps/web/src/app/components/console/useConsoleLogStream.ts",
+          "apps/web/src/app/views/runs/useRunWorkspace.ts",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/web/src/app/stores/**"]
+      },
+      "createdAt": "2026-08-01T21:54:40.922Z"
+    },
+    {
+      "operationId": "365dd9d4-4cfc-4c7f-9505-e297c9a8afab",
+      "idempotencyKey": "mvp-2072-local-source-authority",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2072-RUN-EVENT-FEED#query#listrunevents",
+      "sourcePath": "docs/architecture/command-query-rail-governance.md",
+      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+      "expectedRevision": 11,
+      "previousRevision": 11,
+      "resultingRevision": 12,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/queries/runEventFeedQuery.test.tsx",
+        "dddOwner": "RunEventFeedReadModel",
+        "railName": "ListRunEvents",
+        "railType": "query",
+        "featureId": "MVP-2072-RUN-EVENT-FEED",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/queries/runEventFeedQuery.test.tsx && pnpm --filter @dvt/web test:e2e:selected-closure:live",
+        "sourceRef": "docs/architecture/command-query-rail-governance.md",
+        "unitTests": [
+          "apps/web/src/app/services/runs/runEventFeedModel.transitions.test.ts",
+          "apps/web/src/app/services/runs/runEventFeedModel.guardrails.test.ts",
+          "apps/web/src/app/queries/runEventFeedQuery.test.tsx",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx",
+          "apps/web/src/app/views/runs/RunStates.errorStates.test.tsx",
+          "apps/web/src/app/views/runs/useRunWorkspace.test.tsx",
+          "apps/web/src/app/services/runs/runWorkspaceModel.test.ts",
+          "apps/web/src/app/services/runs/runEventFeedHealthModel.test.ts",
+          "apps/web/src/app/services/runs/runEventFeedHealthCopy.test.ts",
+          "apps/web/src/app/components/shell/bottomOperationalDrawerLogModel.test.ts",
+          "apps/web/src/app/components/shell/BottomOperationalDrawer.test.tsx",
+          "apps/web/src/app/views/runs/RunStates.timelineTrust.test.tsx",
+          "apps/web/src/app/views/runs/runWorkbenchStateModel.test.ts",
+          "apps/web/src/app/views/runs/RunStates.workspaceBasics.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2076"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:selected-closure:live"
+        ],
+        "domainObjects": ["RunEventFeedReadModel", "RunEventFeedHealthModel"],
+        "fowlerSignals": [
+          "One Presentation Model projects canonical RunEventFeed state for Console and Runs without duplicating transport or lifecycle logic.",
+          "Recovery evidence reuses the ListRunEvents query rail and proves cursor continuity without a parallel transport or read model."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/queries/runEventFeedQuery.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/services/runs/runEventFeedHealthModel.test.ts src/app/services/runs/runEventFeedHealthCopy.test.ts src/app/services/runs/runWorkspaceModel.test.ts src/app/components/shell/bottomOperationalDrawerLogModel.test.ts",
+          "pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/queries/runEventFeedQuery.test.tsx src/app/components/shell/BottomOperationalDrawer.test.tsx src/app/views/runs/useRunWorkspace.test.tsx src/app/views/runs/RunStates.errorStates.test.tsx src/app/views/runs/RunStates.timelineTrust.test.tsx",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/services/runs/runWorkspaceModel.test.ts && pnpm --filter @dvt/web exec vitest run --config vitest.presentation.config.ts src/app/views/runs/RunStates.workspaceBasics.test.tsx",
+          "pnpm --filter @dvt/web test:e2e:selected-closure:live"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Automatic retry did not resume from the last cursor after an intermittent ListRunEvents failure, or the live browser feed diverged from the protected journal.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web exec vitest run --config vitest.architecture.config.ts src/app/views/runs/runsDomainBoundary.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2076",
+        "implementationRefs": [
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RunEventFeedPhase",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RUN_EVENT_FEED_RETRY_DELAYS_MS",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RUN_EVENT_FEED_MAX_AUTOMATIC_RETRIES",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RUN_EVENT_FEED_STALE_AFTER_MS",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RUN_EVENT_FEED_MAX_TERMINAL_DRAIN_PAGES",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RunEventFeedTerminalEventType",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RunEventFeedFailureKind",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RunEventFeedFailure",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RunEventFeedState",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RunEventFeedTransition",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RunEventFeedTransitionDisposition",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#RunEventFeedTransitionResult",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#initialLoadingState",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#latestObservedSeq",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#hasCursorRegression",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#containsForeignRunEvents",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#mergeSuccessfulPage",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#retryDelayMs",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#addMilliseconds",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#isProjectionStale",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#hasExpectedTerminalEvent",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#withoutRetrySchedule",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#acceptsPage",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#acceptsFailure",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#createRunEventFeedState",
+          "apps/web/src/app/services/runs/runEventFeedModel.ts#transitionRunEventFeed",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#RunEventFeedQueryOptions",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#RunEventFeedInvariantError",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#startFeed",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#readCursor",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#terminalEventTypeForStatus",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#prepareFeedForSnapshotStatus",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#classifyRunEventFeedFailure",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#getRunEventFeedRefetchInterval",
+          "apps/web/src/app/queries/runEventFeedQuery.ts#useRunEventFeedQuery",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx#DbtHistoryDegradedNotice",
+          "apps/web/src/app/views/runs/RunWorkspaceStateView.tsx#RunWorkspaceStateView",
+          "apps/web/src/app/services/runs/runEventFeedHealthModel.ts#RunEventFeedHealthState",
+          "apps/web/src/app/services/runs/runEventFeedHealthModel.ts#RunEventFeedHealthModel",
+          "apps/web/src/app/services/runs/runEventFeedHealthModel.ts#buildRunEventFeedHealthModel",
+          "apps/web/src/app/services/runs/runEventFeedHealthCopy.ts#RunEventFeedHealthCopy",
+          "apps/web/src/app/services/runs/runEventFeedHealthCopy.ts#resolveRunEventFeedHealthCopy",
+          "apps/web/src/app/components/console/useConsoleLogStream.ts#useConsoleLogStream",
+          "apps/web/src/app/components/shell/bottomOperationalDrawerLogModel.ts#buildBottomOperationalDrawerLogModel",
+          "apps/web/src/app/components/shell/BottomOperationalDrawer.tsx#BottomOperationalDrawer",
+          "apps/web/src/app/views/runs/RunEventFeedHealthView.tsx#RunEventFeedHealthView",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts#buildRunWorkspaceViewModel",
+          "apps/web/src/app/views/runs/useRunWorkspace.ts#useRunWorkspace",
+          "apps/web/src/app/services/runs/runEventFeedHealthCopy.ts#VisibleRunEventFeedHealthState",
+          "apps/web/src/app/services/runs/runEventFeedHealthCopy.ts#COPY_EN",
+          "apps/web/src/app/services/runs/runEventFeedHealthCopy.ts#COPY_ES",
+          "apps/web/src/app/services/runs/runEventFeedHealthCopy.ts#detectLocale",
+          "apps/web/src/app/services/runs/runEventFeedHealthModel.ts#projectHealthState",
+          "apps/web/src/app/views/runs/RunEventFeedHealthView.tsx#RunEventFeedHealthViewProps",
+          "apps/web/src/app/views/runs/RunEventFeedHealthView.tsx#classes",
+          "apps/web/src/app/views/runs/RunStates.tsx#RunEventFeedHealthState",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts#LiveRunEventIdentity",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts#readAuthoritativeEventIdentity",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts#assertRenderedEventSequence",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts#BrowserRunEventRecoveryProbe",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts#interruptBrowserRunEventRequestAfterCursor"
+        ],
+        "normalizedRailName": "listrunevents",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/services/runs/runEventFeedModel.ts",
+          "apps/web/src/app/queries/runEventFeedQuery.ts",
+          "apps/web/src/app/components/console/useConsoleLogStream.ts",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx",
+          "apps/web/src/app/views/runs/useRunWorkspace.ts",
+          "apps/web/src/app/services/runs/runEventFeedModel.*.test.ts",
+          "apps/web/src/app/queries/runEventFeedQuery.test.tsx",
+          "apps/web/src/app/components/workbench/state/WorkbenchStates.tsx",
+          "apps/web/src/app/plugins/dbt/DbtNodeRenderer.test.tsx",
+          "apps/web/src/app/queries/queryKeys.ts",
+          "apps/web/src/app/services/runs/runWorkspaceModel.ts",
+          "apps/web/src/app/services/runs/runWorkspaceModel.test.ts",
+          "apps/web/src/app/views/RunsView.tsx",
+          "apps/web/src/app/views/runs/RunDetailStateViews.tsx",
+          "apps/web/src/app/views/runs/RunStates.errorStates.test.tsx",
+          "apps/web/src/app/views/runs/RunWorkspaceStateView.tsx",
+          "apps/web/src/app/views/runs/runStatesCopy.ts",
+          "apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts",
+          "apps/web/src/app/views/runs/useRunWorkspace.test.tsx",
+          "apps/web/src/app/services/runs/runEventFeedHealthModel.ts",
+          "apps/web/src/app/services/runs/runEventFeedHealthCopy.ts",
+          "apps/web/src/app/components/shell/bottomOperationalDrawerLogModel.ts",
+          "apps/web/src/app/components/shell/BottomOperationalDrawer.tsx",
+          "apps/web/src/app/components/shell/copy.ts",
+          "apps/web/src/app/views/runs/RunEventFeedHealthView.tsx",
+          "apps/web/src/app/components/shell/BottomOperationalDrawer.test.tsx",
+          "apps/web/src/app/components/shell/bottomOperationalDrawerLogModel.test.ts",
+          "apps/web/src/app/components/shell/chrome.ts",
+          "apps/web/src/app/services/runs/runEventFeedHealthCopy.test.ts",
+          "apps/web/src/app/services/runs/runEventFeedHealthModel.test.ts",
+          "apps/web/src/app/views/runs/RunStates.timelineTrust.test.tsx",
+          "apps/web/src/app/views/runs/RunStates.tsx",
+          "apps/web/src/app/views/runs/runWorkbenchStateModel.test.ts",
+          "apps/web/src/app/views/runs/test/RunStatesHarness.tsx",
+          "apps/web/src/app/views/runs/RunStates.workspaceBasics.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/components/**/runEventFeedModel.ts"
+        ]
+      },
+      "createdAt": "2026-08-01T21:54:42.413Z"
+    },
+    {
+      "operationId": "9e4c2c8f-a67e-40f7-840d-af222927dfb3",
+      "idempotencyKey": "mvp-2102-local-source-authority",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2102-CONTEXTUAL-CANVAS#query#resolvelegacycanvasrouteintent",
+      "sourcePath": "docs/architecture/command-query-rail-governance.md",
+      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "Retired Canvas paths discarded resolvable contextual intent, and generic Code state survived route or authority changes.",
+        "dddOwner": "Web Canvas navigation",
+        "railName": "ResolveLegacyCanvasRouteIntent",
+        "railType": "query",
+        "featureId": "MVP-2102-CONTEXTUAL-CANVAS",
+        "greenTest": "Canonical Canvas consumes route intent once, scopes transient Code to its authority, preserves graph state, prioritizes authority-owned workbenches, and clears generic Code on route exit.",
+        "sourceRef": "docs/architecture/command-query-rail-governance.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.test.ts",
+          "apps/web/src/app/routes/CanvasLegacyWorkbenchRedirect.test.tsx",
+          "apps/web/src/app/views/canvas/useCanvasRouteIntentHandler.test.tsx",
+          "apps/web/src/app/views/Canvas.routeIntent.integration.test.tsx",
+          "apps/web/src/app/stores/canvasInteractionStore.test.ts",
+          "apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx",
+          "apps/web/src/app/Root.shellChrome.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2102"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts",
+          "apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts"
+        ],
+        "domainObjects": ["CanvasRouteIntent", "CanvasInteractionState"],
+        "fowlerSignals": [
+          "Single route authority with contextual presentation owners",
+          "Transient UI state is scoped to its Canvas authority and cleared on route exit"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/routes/CanvasLegacyWorkbenchRedirect.tsx",
+          "apps/web/src/app/routes/CanvasLegacyWorkbenchRedirect.test.tsx",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.test.ts",
+          "apps/web/src/app/views/canvas/useCanvasRouteIntentHandler.ts",
+          "apps/web/src/app/views/canvas/useCanvasRouteIntentHandler.test.tsx",
+          "apps/web/src/app/views/canvas/canvasShell.types.ts",
+          "apps/web/src/app/views/canvas/CanvasShell.tsx",
+          "apps/web/src/app/views/canvas/CanvasShell.testHarness.tsx",
+          "apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx",
+          "apps/web/src/app/views/Canvas.tsx",
+          "apps/web/src/app/views/Canvas.test.support.tsx",
+          "apps/web/src/app/views/Canvas.routeIntent.integration.test.tsx",
+          "apps/web/src/app/stores/canvasInteractionStore.ts",
+          "apps/web/src/app/stores/canvasInteractionStore.test.ts",
+          "apps/web/src/app/shell/shellNavigationDisposition.ts",
+          "apps/web/src/app/Root.tsx",
+          "apps/web/src/app/Root.test.support.tsx",
+          "apps/web/src/app/Root.shellChrome.test.tsx",
+          "apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts",
+          "apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-route-composition-component.md",
+          "docs/architecture/components/web/code-workbench-workspace-files-component.md"
+        ],
+        "expectedFailure": "Direct /canvas/code loses its contextual owner after URL replacement or stale project Code reopens after leaving Canvas and can mask file-authoritative Code.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "https://github.com/dunay2/dvt/issues/2102"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/canvas-route-composition-component.md",
+          "docs/architecture/components/web/code-workbench-workspace-files-component.md"
+        ],
+        "architectureGuards": [
+          "apps/web/src/app/views/Canvas.architecture.test.tsx",
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+          "apps/web/src/app/routes/internalAlphaRouteGate.architecture.test.ts"
+        ],
+        "implementationPlan": "Resolve retired Canvas paths into one-shot intents consumed by the canonical Canvas contextual owners and clear transient workbench state across route or authority changes.",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts#CANVAS_ROUTE_INTENT_SEARCH_PARAM",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts#CanvasRouteIntent",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts#CanvasRouteIntentToken",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts#CanvasUnavailableLegacySurfaceId",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts#LEGACY_ROUTE_INTENT_BY_PATH",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts#ROUTE_INTENT_BY_TOKEN",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts#removeCanvasRouteIntent",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts#resolveCanvasRouteIntent",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts#resolveLegacyCanvasRouteIntent",
+          "apps/web/src/app/routes/CanvasLegacyWorkbenchRedirect.tsx#CanvasLegacyWorkbenchRedirect",
+          "apps/web/src/app/views/canvas/useCanvasRouteIntentHandler.ts#CanvasRouteIntentHandlerArgs",
+          "apps/web/src/app/views/canvas/useCanvasRouteIntentHandler.ts#getCanvasRouteIntentKey",
+          "apps/web/src/app/views/canvas/useCanvasRouteIntentHandler.ts#useCanvasRouteIntentHandler",
+          "apps/web/src/app/views/canvas/canvasShell.types.ts#CanvasShellRouteIntentRequest",
+          "apps/web/src/app/views/Canvas.tsx#Canvas",
+          "apps/web/src/app/views/Canvas.test.support.tsx#currentCanvasRouteLocation",
+          "apps/web/src/app/stores/canvasInteractionStore.ts#CanvasContextualWorkbenchId",
+          "apps/web/src/app/stores/canvasInteractionStore.ts#useCanvasInteractionStore",
+          "apps/web/src/app/shell/shellNavigationDisposition.ts#isCanvasRoute",
+          "apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts#stubContextualProjectCodeApis"
+        ],
+        "normalizedRailName": "resolvelegacycanvasrouteintent",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/routes/CanvasLegacyWorkbenchRedirect.tsx",
+          "apps/web/src/app/routes/CanvasLegacyWorkbenchRedirect.test.tsx",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.ts",
+          "apps/web/src/app/views/canvas/canvasLegacyRouteIntent.test.ts",
+          "apps/web/src/app/views/canvas/useCanvasRouteIntentHandler.ts",
+          "apps/web/src/app/views/canvas/useCanvasRouteIntentHandler.test.tsx",
+          "apps/web/src/app/views/canvas/canvasShell.types.ts",
+          "apps/web/src/app/views/canvas/CanvasShell.tsx",
+          "apps/web/src/app/views/canvas/CanvasShell.testHarness.tsx",
+          "apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx",
+          "apps/web/src/app/views/Canvas.tsx",
+          "apps/web/src/app/views/Canvas.test.support.tsx",
+          "apps/web/src/app/views/Canvas.routeIntent.integration.test.tsx",
+          "apps/web/src/app/stores/canvasInteractionStore.ts",
+          "apps/web/src/app/stores/canvasInteractionStore.test.ts",
+          "apps/web/src/app/shell/shellNavigationDisposition.ts",
+          "apps/web/src/app/Root.tsx",
+          "apps/web/src/app/Root.test.support.tsx",
+          "apps/web/src/app/Root.shellChrome.test.tsx",
+          "apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts",
+          "apps/web/cypress/e2e/canvas/artifacts-workspace-project-files.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Peer Canvas workbench routes",
+          "Persistent URL state for transient contextual panels",
+          "Global fixed Inspector or resource rail"
+        ]
+      },
+      "createdAt": "2026-08-01T21:54:43.917Z"
     }
   ]
 }
