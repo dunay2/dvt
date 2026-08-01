@@ -47,6 +47,7 @@ describe('useCanvasRouteIntentHandler', () => {
               onConsumed,
             },
       columnLevelLineageEnabled: false,
+      canOpenProjectCode: true,
       onOpenProjectCode: vi.fn(),
       onToggleColumnLevelLineage: vi.fn(),
     };
@@ -68,6 +69,23 @@ describe('useCanvasRouteIntentHandler', () => {
     expect(args.onOpenProjectCode).toHaveBeenCalledTimes(1);
     expect(args.request?.onConsumed).toHaveBeenCalledTimes(1);
     expect(args.onToggleColumnLevelLineage).not.toHaveBeenCalled();
+  });
+
+  it('waits for a Canvas authority before consuming a project Code intent', async () => {
+    const args = createArgs({
+      kind: 'open-contextual-workbench',
+      workbenchId: 'project-code',
+    });
+
+    await render({ ...args, canOpenProjectCode: false });
+
+    expect(args.onOpenProjectCode).not.toHaveBeenCalled();
+    expect(args.request?.onConsumed).not.toHaveBeenCalled();
+
+    await render(args);
+
+    expect(args.onOpenProjectCode).toHaveBeenCalledTimes(1);
+    expect(args.request?.onConsumed).toHaveBeenCalledTimes(1);
   });
 
   it('enables the lineage lens only when it is not already active', async () => {

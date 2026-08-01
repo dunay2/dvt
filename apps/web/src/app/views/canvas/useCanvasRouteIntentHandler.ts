@@ -7,6 +7,7 @@ import type { CanvasShellRouteIntentRequest } from './canvasShell.types';
 export type CanvasRouteIntentHandlerArgs = Readonly<{
   request: CanvasShellRouteIntentRequest | null;
   columnLevelLineageEnabled: boolean;
+  canOpenProjectCode: boolean;
   onOpenProjectCode: () => void;
   onToggleColumnLevelLineage: () => void;
 }>;
@@ -25,6 +26,7 @@ function getCanvasRouteIntentKey(intent: CanvasRouteIntent): string {
 export function useCanvasRouteIntentHandler({
   request,
   columnLevelLineageEnabled,
+  canOpenProjectCode,
   onOpenProjectCode,
   onToggleColumnLevelLineage,
 }: CanvasRouteIntentHandlerArgs): void {
@@ -44,6 +46,9 @@ export function useCanvasRouteIntentHandler({
 
     switch (intent.kind) {
       case 'open-contextual-workbench':
+        if (!canOpenProjectCode) {
+          return;
+        }
         onOpenProjectCode();
         break;
       case 'enable-lens':
@@ -58,5 +63,11 @@ export function useCanvasRouteIntentHandler({
 
     lastHandledIntentKeyRef.current = intentKey;
     request.onConsumed();
-  }, [columnLevelLineageEnabled, request, onOpenProjectCode, onToggleColumnLevelLineage]);
+  }, [
+    canOpenProjectCode,
+    columnLevelLineageEnabled,
+    request,
+    onOpenProjectCode,
+    onToggleColumnLevelLineage,
+  ]);
 }

@@ -244,7 +244,10 @@ export function createCanvasShellHarness(): {
   shellState.canvasViewportProps = null;
   shellState.sourceImportWizardProps = null;
   shellState.dbtProjectImportDialogProps = null;
-  useCanvasInteractionStore.setState({ contextualWorkbenchId: null });
+  useCanvasInteractionStore.setState({
+    contextualWorkbenchId: null,
+    contextualWorkbenchOwnerKey: null,
+  });
 
   return {
     container,
@@ -265,7 +268,10 @@ export function createCanvasShellHarness(): {
         root.unmount();
       });
       useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
-      useCanvasInteractionStore.setState({ contextualWorkbenchId: null });
+      useCanvasInteractionStore.setState({
+        contextualWorkbenchId: null,
+        contextualWorkbenchOwnerKey: null,
+      });
       container.remove();
       vi.clearAllMocks();
     },

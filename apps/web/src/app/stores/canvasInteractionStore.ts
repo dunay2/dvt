@@ -76,6 +76,7 @@ interface CanvasInteractionState {
   inspectorPreferredTabId: string | null;
   inspectorPreferredTabRequestId: number;
   contextualWorkbenchId: CanvasContextualWorkbenchId | null;
+  contextualWorkbenchOwnerKey: string | null;
 
   setSelectedNodes: (nodes: string[]) => void;
   setExecutionSelectionIntent: (intent: CanvasExecutionSelectionIntent) => void;
@@ -85,7 +86,7 @@ interface CanvasInteractionState {
   setCanvasNodePositions: (workspaceKey: string, positions: Record<string, CanvasPosition>) => void;
   toggleFrozenCanvasNode: (workspaceKey: string, nodeId: string) => void;
   setInspectorNode: (nodeId: string | null, preferredTabId?: string | null) => void;
-  openContextualWorkbench: (workbenchId: CanvasContextualWorkbenchId) => void;
+  openContextualWorkbench: (workbenchId: CanvasContextualWorkbenchId, ownerKey: string) => void;
   closeContextualWorkbench: () => void;
 }
 
@@ -139,6 +140,7 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
       contextualWorkbenchId: null,
+      contextualWorkbenchOwnerKey: null,
 
       setSelectedNodes: (nodes) =>
         set((state) => {
@@ -225,8 +227,19 @@ export const useCanvasInteractionStore = create<CanvasInteractionState>()(
               ? state.inspectorPreferredTabRequestId + 1
               : state.inspectorPreferredTabRequestId,
         })),
-      openContextualWorkbench: (workbenchId) => set({ contextualWorkbenchId: workbenchId }),
-      closeContextualWorkbench: () => set({ contextualWorkbenchId: null }),
+      openContextualWorkbench: (workbenchId, ownerKey) =>
+        set((state) =>
+          state.contextualWorkbenchId === workbenchId &&
+          state.contextualWorkbenchOwnerKey === ownerKey
+            ? state
+            : { contextualWorkbenchId: workbenchId, contextualWorkbenchOwnerKey: ownerKey }
+        ),
+      closeContextualWorkbench: () =>
+        set((state) =>
+          state.contextualWorkbenchId == null && state.contextualWorkbenchOwnerKey == null
+            ? state
+            : { contextualWorkbenchId: null, contextualWorkbenchOwnerKey: null }
+        ),
     }),
     {
       name: 'dvt-web-canvas-interaction',

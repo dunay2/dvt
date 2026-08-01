@@ -2,6 +2,7 @@
 
 import { fireEvent, waitFor } from '@testing-library/dom';
 import { act } from 'react';
+import { Link } from 'react-router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { withTestQueryClient } from '../testing/reactQueryHarness';
@@ -21,6 +22,7 @@ import {
   waitForHealthyShellChrome,
 } from './Root.shellChrome.test.support';
 import { resetRouteBootstrapPresentation } from './bootstrap/routeBootstrapRegistry';
+import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
 
 describe('RootShell chrome', () => {
   beforeEach(() => {
@@ -87,6 +89,36 @@ describe('RootShell chrome', () => {
       expect(mounted.container.textContent).toContain('Run detail route');
       expectRootShellWorkbenchFrameChrome(mounted.container, 'Run detail route');
       expect(mounted.container.querySelector('[data-slot="left-navigation-rail"]')).toBeNull();
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
+  it('clears transient contextual Canvas workbench state after leaving Canvas', async () => {
+    useCanvasInteractionStore
+      .getState()
+      .openContextualWorkbench('project-code', 'dbt-contextual-canvas:sales-canvas');
+    const mounted = await withTestQueryClient(
+      createRootShellNode(
+        createHealthyPlatformCapability(),
+        ['/canvas'],
+        undefined,
+        <Link to="/runs">Leave Canvas</Link>
+      )
+    );
+
+    try {
+      await waitForHealthyShellChrome(mounted);
+      expect(useCanvasInteractionStore.getState().contextualWorkbenchId).toBe('project-code');
+
+      await act(async () => {
+        fireEvent.click(mounted.container.querySelector('a[href="/runs"]')!);
+      });
+
+      await waitFor(() => {
+        expect(mounted.container.textContent).toContain('Runs route');
+        expect(useCanvasInteractionStore.getState().contextualWorkbenchId).toBeNull();
+      });
     } finally {
       await mounted.cleanup();
     }
