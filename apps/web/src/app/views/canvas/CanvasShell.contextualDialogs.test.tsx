@@ -177,6 +177,17 @@ describe('CanvasShell contextual dialogs', () => {
     expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
     expect(onConsumed).toHaveBeenCalledTimes(1);
     expect(onUnavailableLegacySurface).not.toHaveBeenCalled();
+
+    const closeButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-contextual-workbench-header"] button'
+    );
+    expect(closeButton).not.toBeNull();
+
+    await act(async () => {
+      closeButton?.click();
+    });
+
+    expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).toBeNull();
   });
 
   it('routes a legacy Lineage intent through the existing Canvas lens command', async () => {

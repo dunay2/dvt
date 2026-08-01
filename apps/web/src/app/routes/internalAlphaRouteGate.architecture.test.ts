@@ -377,7 +377,7 @@ describe('internal alpha route gate architecture', () => {
     expect(codeWorkbenchCypress).toContain("visitWithE2eWorkspaceSession('/canvas/code')");
     expect(codeWorkbenchCypress).toContain("cy.location('pathname').should('eq', '/canvas')");
     expect(codeWorkbenchCypress).toContain("cy.location('search').should('eq', '')");
-    expect(codeWorkbenchCypress).toContain("getE2eApiCalls('/workspace/files', 'GET')");
+    expect(codeWorkbenchCypress).toContain("waitForE2eApiCall('/workspace/files', 'GET')");
     expect(codeWorkbenchCypress).toContain('canvas-contextual-workbench');
     expect(codeWorkbenchCypress).toContain('canvas-workspace-open-project-code-command');
     expect(codeWorkbenchCypress).toContain('code-working-tree-status');

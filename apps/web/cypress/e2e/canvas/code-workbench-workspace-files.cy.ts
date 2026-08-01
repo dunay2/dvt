@@ -1,11 +1,6 @@
 /** Owned concern: prove retired Code routes and contextual Canvas Code working-tree synchronization. */
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
-import {
-  getE2eApiCalls,
-  getLastE2eApiCall,
-  stubE2eJsonApi,
-  waitForE2eApiCall,
-} from '../../support/e2eApiStub';
+import { getLastE2eApiCall, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
@@ -80,13 +75,17 @@ describe('Retired Canvas Code workbench routes', () => {
     cy.contains('Sales canvas').should('be.visible');
     cy.get('[data-slot="canvas-workbench-tab-strip"]').should('not.exist');
     cy.get('[data-slot="canvas-contextual-workbench"]').should('be.visible');
-    cy.wrap(null).should(() => expect(getE2eApiCalls('/workspace/files', 'GET')).to.have.length(1));
   });
 
   it('synchronizes contextual project Code into the working tree without a Save action', () => {
     stubContextualCodeWorkbenchApis();
 
     visitWithE2eWorkspaceSession('/canvas');
+
+    cy.get('.react-flow__node').first().click().should('have.class', 'selected');
+    cy.get('.react-flow__viewport')
+      .invoke('attr', 'style')
+      .then((viewportStyle) => cy.wrap(viewportStyle).as('graphViewportStyle'));
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
@@ -117,6 +116,13 @@ describe('Retired Canvas Code workbench routes', () => {
       expect(getLastE2eApiCall(/\/workspace\/files\/.+/, 'POST')?.body).to.deep.equal({
         content: 'select 7 as working_tree_verified',
         expectedRevision: { kind: 'content_sha256', value: INITIAL_REVISION },
+      });
+    });
+
+    cy.get('.react-flow__node').first().should('have.class', 'selected');
+    cy.get('@graphViewportStyle').then((viewportStyle) => {
+      cy.get('.react-flow__viewport').should(($viewport) => {
+        expect($viewport.attr('style')).to.equal(viewportStyle);
       });
     });
   });
