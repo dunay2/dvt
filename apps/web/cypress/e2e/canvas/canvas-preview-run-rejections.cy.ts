@@ -16,6 +16,7 @@ import {
   stubSelectionRejectedPreview,
   stubPlanRejectedStartRun,
   stubPreviewRunShellBootstrap,
+  stubUnexpectedRunStart,
   visitCanvasWithSettledBootstrap,
 } from '../../support/test/canvasPreviewRunPersisted';
 
@@ -27,6 +28,7 @@ describe('Canvas preview-run rejection guidance', () => {
   it('renders a typed selection rejection without fabricated preview identity or run command', () => {
     stubCanvasRuntimeApis({ includeLooseNode: true });
     stubSelectionRejectedPreview('dependency_gap');
+    stubUnexpectedRunStart();
 
     visitCanvasWithSettledBootstrap();
 
@@ -52,6 +54,10 @@ describe('Canvas preview-run rejection guidance', () => {
       });
       cy.contains(copy.planUnableToCreateMessage).should('not.exist');
     });
+    cy.get('body').type('{esc}');
+    cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
+    cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+    cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
     cy.location('pathname').should('eq', '/canvas');
     cy.then(() => {
       expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
@@ -65,6 +71,7 @@ describe('Canvas preview-run rejection guidance', () => {
       persistedSha: 'd'.repeat(64),
       planRefSha: 'e'.repeat(64),
     });
+    stubUnexpectedRunStart();
 
     visitCanvasWithSettledBootstrap();
 
@@ -91,6 +98,10 @@ describe('Canvas preview-run rejection guidance', () => {
       });
       cy.contains(copy.planUnableToCreateMessage).should('not.exist');
     });
+    cy.get('body').type('{esc}');
+    cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
+    cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+    cy.get('[data-slot="canvas-toolbar-run-command"]').should('not.exist');
     cy.then(() => {
       expect(getE2eApiCalls('/runs/start', 'POST')).to.have.length(0);
     });
