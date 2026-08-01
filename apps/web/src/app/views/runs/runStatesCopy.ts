@@ -4,10 +4,8 @@
  */
 import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
 
-export const runStatesCopyLocale = 'en';
-export const runEventFeedHealthCopy = resolveRunEventFeedHealthCopy(runStatesCopyLocale);
-
 export const runStatesCopy = {
+  eventFeedHealth: resolveRunEventFeedHealthCopy('en'),
   runsTitle: 'Runs',
   emptyRuns: 'No runs yet.',
   emptyRunsTitle: 'No runs available',
