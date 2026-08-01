@@ -4,10 +4,9 @@
  */
 import { getE2eApiCalls, stubE2eApi } from './e2eApiStub';
 
-const GRAPH_ARTIFACT_PATH = 'pipelines/sales_pipeline.yaml';
-const GRAPH_ARTIFACT_SHA256 = 'f'.repeat(64);
-
 export function stubSelectedClosurePreviewArtifacts(): void {
+  const graphArtifactPath = 'pipelines/sales_pipeline.yaml';
+  const graphArtifactSha256 = 'f'.repeat(64);
   let savedGraphArtifactContent: string | null = null;
 
   stubE2eApi('GET', '/workspace/files/pipelines%2Fsales_pipeline.yaml', () =>
@@ -23,11 +22,11 @@ export function stubSelectedClosurePreviewArtifacts(): void {
         }
       : {
           body: {
-            path: GRAPH_ARTIFACT_PATH,
+            path: graphArtifactPath,
             name: 'sales_pipeline.yaml',
             language: 'yaml',
             content: savedGraphArtifactContent,
-            contentSha256: GRAPH_ARTIFACT_SHA256,
+            contentSha256: graphArtifactSha256,
             lastModified: '2026-04-08T00:00:00.000Z',
           },
         }
@@ -50,7 +49,7 @@ export function stubSelectedClosurePreviewArtifacts(): void {
     expect(body.expectedRevision).to.deep.equal(
       disposition === 'created'
         ? { kind: 'absent' }
-        : { kind: 'content_sha256', value: GRAPH_ARTIFACT_SHA256 }
+        : { kind: 'content_sha256', value: graphArtifactSha256 }
     );
     savedGraphArtifactContent = content;
 
@@ -59,8 +58,8 @@ export function stubSelectedClosurePreviewArtifacts(): void {
       body: {
         kind: 'saved',
         disposition,
-        path: GRAPH_ARTIFACT_PATH,
-        contentSha256: GRAPH_ARTIFACT_SHA256,
+        path: graphArtifactPath,
+        contentSha256: graphArtifactSha256,
         lastModified: '2026-04-08T00:00:00.000Z',
       },
     };
