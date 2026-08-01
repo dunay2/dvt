@@ -2748,6 +2748,1642 @@
       "createdAt": "2026-07-31T18:28:21.965Z"
     },
     {
+      "railId": "local#MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT#command#applyselecteddbtdependencyedit",
+      "featureId": "MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT",
+      "mechanizationStatus": "implemented",
+      "railName": "ApplySelectedDbtDependencyEdit",
+      "normalizedRailName": "applyselecteddbtdependencyedit",
+      "railType": "command",
+      "dddOwner": "DbtProjectAuthoring",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/application/ports/dbtDependencyEdit.ts#ApplySelectedDbtDependencyEditInput",
+        "apps/api/src/application/ports/dbtDependencyEdit.ts#DbtDependencyEditReceiptInvalidError",
+        "apps/api/src/application/ports/dbtDependencyEdit.ts#IApplySelectedDbtDependencyEditCommand",
+        "apps/api/src/application/ports/dbtDependencyEdit.ts#IDbtDependencyEditReceiptStore",
+        "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts#AnalyzeDbtProjectCandidateInput",
+        "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts#DbtProjectCandidateAnalysisResult",
+        "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts#IDbtProjectCandidateAnalyzerPort",
+        "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelInput",
+        "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts#ApplySelectedDbtDependencyEditCommand",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditConflict",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditFinding",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditPatchRefused",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditRefused",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditRefusedFinding",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#findStaleDbtDependencyEditAnalysis",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#fingerprintDbtDependencyEditRequest",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#hashStable",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#hasOverlappingDbtSemanticRegion",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#identifyDbtDependencyEditReceipt",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#parseDbtDependencyEditRequest",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#parseDbtDependencyEditResult",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#ParsedDbtDependencyEditRequest",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#sha256",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#sortJsonValue",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#toDbtProjectWorkspacePath",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#validateDbtDependencyEditCandidate",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#DbtSemanticRegionPatchPlan",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#DbtSemanticRegionPatchRefusal",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#isSafeLiteral",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#planDbtSemanticRegionPatch",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#projectNextLiteral",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#projectRefLiteral",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#projectSourceLiteral",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#sha256",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#findFirstOverlappingRegions",
+        "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts#ResolvedSelectedDbtModelAnalysis",
+        "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts#ResolveSelectedDbtModelAnalysisInput",
+        "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts#SelectedDbtModelAnalysisResolver",
+        "apps/api/src/entrypoints/http/dbtDependencyEditRouteGroup.ts#registerProtectedDbtDependencyEditRouteGroup",
+        "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#DbtDependencyEditRouteDeps",
+        "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#registerDbtDependencyEditRoutes",
+        "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#respondInvalidRequest",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts#DbtCliProjectAnalyzerOptions",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#assertContained",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#DbtCliProjectCandidateAnalyzer",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#findChangedPaths",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#InvalidDbtProjectCandidateError",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#projectConflict",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#resolveCandidateFilePath",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#resolveCandidateProjectDirectory",
+        "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts#RECEIPT_ROOT",
+        "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts#receiptPath",
+        "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts#WorkspaceMetadataDbtDependencyEditReceiptStore",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#addIssue",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DBT_DEPENDENCY_EDIT_FINDING_CODE",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditAppliedReceipt",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditAppliedReceiptSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditAppliedResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditConflictResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditConflictSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditFinding",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditFindingSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditFindingSubjectSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditNoChangeResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditRefusedResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditRequest",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditRequestSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditResult",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#IdentifierSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#NonBlankStringSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#PathSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#Sha256Schema"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/ports/dbtDependencyEdit.ts#ApplySelectedDbtDependencyEditInput",
+        "apps/api/src/application/ports/dbtDependencyEdit.ts#DbtDependencyEditReceiptInvalidError",
+        "apps/api/src/application/ports/dbtDependencyEdit.ts#IApplySelectedDbtDependencyEditCommand",
+        "apps/api/src/application/ports/dbtDependencyEdit.ts#IDbtDependencyEditReceiptStore",
+        "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts#AnalyzeDbtProjectCandidateInput",
+        "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts#DbtProjectCandidateAnalysisResult",
+        "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts#IDbtProjectCandidateAnalyzerPort",
+        "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelInput",
+        "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts#ApplySelectedDbtDependencyEditCommand",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditConflict",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditFinding",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditPatchRefused",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditRefused",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditRefusedFinding",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#findStaleDbtDependencyEditAnalysis",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#fingerprintDbtDependencyEditRequest",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#hashStable",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#hasOverlappingDbtSemanticRegion",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#identifyDbtDependencyEditReceipt",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#parseDbtDependencyEditRequest",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#parseDbtDependencyEditResult",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#ParsedDbtDependencyEditRequest",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#sha256",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#sortJsonValue",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#toDbtProjectWorkspacePath",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#validateDbtDependencyEditCandidate",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#DbtSemanticRegionPatchPlan",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#DbtSemanticRegionPatchRefusal",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#isSafeLiteral",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#planDbtSemanticRegionPatch",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#projectNextLiteral",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#projectRefLiteral",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#projectSourceLiteral",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#sha256",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#findFirstOverlappingRegions",
+        "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts#ResolvedSelectedDbtModelAnalysis",
+        "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts#ResolveSelectedDbtModelAnalysisInput",
+        "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts#SelectedDbtModelAnalysisResolver",
+        "apps/api/src/entrypoints/http/dbtDependencyEditRouteGroup.ts#registerProtectedDbtDependencyEditRouteGroup",
+        "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#DbtDependencyEditRouteDeps",
+        "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#registerDbtDependencyEditRoutes",
+        "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#respondInvalidRequest",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts#DbtCliProjectAnalyzerOptions",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#assertContained",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#DbtCliProjectCandidateAnalyzer",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#findChangedPaths",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#InvalidDbtProjectCandidateError",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#projectConflict",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#resolveCandidateFilePath",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#resolveCandidateProjectDirectory",
+        "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts#RECEIPT_ROOT",
+        "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts#receiptPath",
+        "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts#WorkspaceMetadataDbtDependencyEditReceiptStore",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#addIssue",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DBT_DEPENDENCY_EDIT_FINDING_CODE",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditAppliedReceipt",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditAppliedReceiptSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditAppliedResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditConflictResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditConflictSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditFinding",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditFindingSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditFindingSubjectSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditNoChangeResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditRefusedResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditRequest",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditRequestSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditResult",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditResultSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#IdentifierSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#NonBlankStringSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#PathSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#Sha256Schema"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md"
+      ],
+      "governingSources": [
+        "docs/adr/0060-dbt-project-authoring-authority.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/ports/dbtDependencyEdit.ts",
+        "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts",
+        "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+        "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+        "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
+        "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+        "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+        "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts",
+        "apps/api/src/entrypoints/http/dbtDependencyEditRouteGroup.ts",
+        "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts",
+        "apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts",
+        "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+        "apps/api/src/entrypoints/http/runtimeRoutes.constants.ts",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+        "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts",
+        "apps/api/src/modules/dbtProjectImport/buildDbtProjectImportRuntime.ts",
+        "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+        "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+        "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+        "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+        "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+        "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.test.fixtures.ts",
+        "apps/api/test/entrypoints/http/dbtDependencyEditRoutes.test.ts",
+        "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+        "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts",
+        "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts",
+        "apps/api/test/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.test.ts",
+        "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md",
+        "docs/evidence/index.md",
+        "docs/risk-register/quality/index.md",
+        "docs/risk-register/quality/R-20260801-LOSSLESS-DBT-DEPENDENCY-EDIT.yaml",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+        "packages/@dvt/contracts/src/contracts/dbt-project/index.ts",
+        "packages/@dvt/contracts/test/dbt-dependency-edit.contract.test.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter dvt-api typecheck",
+        "pnpm --filter dvt-api lint"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/contracts test",
+        "pnpm --filter dvt-api test:ci",
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md",
+      "sourceContentSha256": "778a1aaee2d6b7b72f3742300918604687c62f6bcc68ffa6b14146b79037b2d0",
+      "rawRail": {
+        "name": "ApplySelectedDbtDependencyEdit",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "DbtProjectAuthoring"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "ApplySelectedDbtDependencyEditInput",
+            "path": "apps/api/src/application/ports/dbtDependencyEdit.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditReceiptInvalidError",
+            "path": "apps/api/src/application/ports/dbtDependencyEdit.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "IApplySelectedDbtDependencyEditCommand",
+            "path": "apps/api/src/application/ports/dbtDependencyEdit.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "IDbtDependencyEditReceiptStore",
+            "path": "apps/api/src/application/ports/dbtDependencyEdit.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "AnalyzeDbtProjectCandidateInput",
+            "path": "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtProjectCandidateAnalysisResult",
+            "path": "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "IDbtProjectCandidateAnalyzerPort",
+            "path": "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "AnalyzeSelectedDbtModelInput",
+            "path": "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "ApplySelectedDbtDependencyEditCommand",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "dbtDependencyEditConflict",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "dbtDependencyEditFinding",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "dbtDependencyEditPatchRefused",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "dbtDependencyEditRefused",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "dbtDependencyEditRefusedFinding",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "findStaleDbtDependencyEditAnalysis",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "fingerprintDbtDependencyEditRequest",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "hashStable",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "hasOverlappingDbtSemanticRegion",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "identifyDbtDependencyEditReceipt",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "parseDbtDependencyEditRequest",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "parseDbtDependencyEditResult",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "ParsedDbtDependencyEditRequest",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "sha256",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "sortJsonValue",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "toDbtProjectWorkspacePath",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "validateDbtDependencyEditCandidate",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtSemanticRegionPatchPlan",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtSemanticRegionPatchRefusal",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "isSafeLiteral",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "planDbtSemanticRegionPatch",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "projectNextLiteral",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "projectRefLiteral",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "projectSourceLiteral",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "sha256",
+            "path": "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "findFirstOverlappingRegions",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "ResolvedSelectedDbtModelAnalysis",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "ResolveSelectedDbtModelAnalysisInput",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "SelectedDbtModelAnalysisResolver",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "registerProtectedDbtDependencyEditRouteGroup",
+            "path": "apps/api/src/entrypoints/http/dbtDependencyEditRouteGroup.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditRouteDeps",
+            "path": "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "registerDbtDependencyEditRoutes",
+            "path": "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "respondInvalidRequest",
+            "path": "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtCliProjectAnalyzerOptions",
+            "path": "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "assertContained",
+            "path": "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtCliProjectCandidateAnalyzer",
+            "path": "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "findChangedPaths",
+            "path": "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "InvalidDbtProjectCandidateError",
+            "path": "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "projectConflict",
+            "path": "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "resolveCandidateFilePath",
+            "path": "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "resolveCandidateProjectDirectory",
+            "path": "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "RECEIPT_ROOT",
+            "path": "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "receiptPath",
+            "path": "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "WorkspaceMetadataDbtDependencyEditReceiptStore",
+            "path": "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "addIssue",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DBT_DEPENDENCY_EDIT_FINDING_CODE",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditAppliedReceipt",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditAppliedReceiptSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditAppliedResultSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditConflictResultSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditConflictSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditFinding",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditFindingSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditFindingSubjectSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditNoChangeResultSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditRefusedResultSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditRequest",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditRequestSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditResult",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "DbtDependencyEditResultSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "IdentifierSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "NonBlankStringSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "PathSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          },
+          {
+            "name": "Sha256Schema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+            "cqRails": ["ApplySelectedDbtDependencyEdit"],
+            "dddOwner": "DbtProjectAuthoring",
+            "unitTests": [
+              "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+              "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+            ],
+            "fowlerSignals": [
+              "One command owns one lossless semantic dependency retarget operation."
+            ],
+            "cypressCoverage": "N/A - protected API command with no browser surface in this issue",
+            "architectureGuard": "pnpm --filter dvt-api typecheck"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2100"],
+        "cypressFlows": [
+          "N/A - protected API command with no browser surface in this issue"
+        ],
+        "domainObjects": ["DbtDependencyEdit", "DbtSemanticRegionPatch"],
+        "fowlerSignals": [
+          "One command owns one lossless semantic dependency retarget operation."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter dvt-api test:ci",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "applyselecteddbtdependencyedit-record",
+            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/dbtDependencyEdit",
+            "greenTest": "pnpm --filter dvt-api test:ci",
+            "patchSurfaces": [
+              "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts"
+            ],
+            "expectedFailure": "Lossless dependency retargeting was absent or unsafe candidates could reach publication."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/adr/0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ApplySelectedDbtDependencyEdit",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "DbtProjectAuthoring"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api typecheck",
+          "pnpm --filter dvt-api lint"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2100",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/dbtDependencyEdit.ts",
+          "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
+          "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+          "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRouteGroup.ts",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts",
+          "apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts",
+          "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+          "apps/api/src/entrypoints/http/runtimeRoutes.constants.ts",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+          "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts",
+          "apps/api/src/modules/dbtProjectImport/buildDbtProjectImportRuntime.ts",
+          "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+          "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.test.fixtures.ts",
+          "apps/api/test/entrypoints/http/dbtDependencyEditRoutes.test.ts",
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+          "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts",
+          "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts",
+          "apps/api/test/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.test.ts",
+          "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md",
+          "docs/evidence/index.md",
+          "docs/risk-register/quality/index.md",
+          "docs/risk-register/quality/R-20260801-LOSSLESS-DBT-DEPENDENCY-EDIT.yaml",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+          "packages/@dvt/contracts/src/contracts/dbt-project/index.ts",
+          "packages/@dvt/contracts/test/dbt-dependency-edit.contract.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/web"]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-08-01T09:56:22.971Z"
+    },
+    {
       "railId": "local#MVP-2101-SELECTED-DBT-MODEL-ANALYSIS#query#analyzeselecteddbtmodel",
       "featureId": "MVP-2101-SELECTED-DBT-MODEL-ANALYSIS",
       "mechanizationStatus": "implemented",
@@ -11103,6 +12739,346 @@
         ]
       },
       "createdAt": "2026-08-01T08:02:56.643Z"
+    },
+    {
+      "operationId": "a2c89546-322c-423e-b65c-0bce48ee49d3",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT:command:applyselecteddbtdependencyedit:latest:84ce9bdcecd9dd41",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT#command#applyselecteddbtdependencyedit",
+      "sourcePath": "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md",
+      "sourceContentSha256": "798f6e682522d724151c47f69d87a2be8d22b1a5e8a1fbf4b2e1332940ff1078",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/dbtDependencyEdit",
+        "dddOwner": "DbtProjectAuthoring",
+        "railName": "ApplySelectedDbtDependencyEdit",
+        "railType": "command",
+        "featureId": "MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md",
+        "unitTests": [
+          "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+          "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2100"],
+        "cypressFlows": [
+          "N/A - protected API command with no browser surface in this issue"
+        ],
+        "domainObjects": ["DbtDependencyEdit", "DbtSemanticRegionPatch"],
+        "fowlerSignals": [
+          "One command owns one lossless semantic dependency retarget operation."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter dvt-api test:ci",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Lossless dependency retargeting was absent or unsafe candidates could reach publication.",
+        "governingSources": [
+          "docs/adr/0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api typecheck",
+          "pnpm --filter dvt-api lint"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2100",
+        "implementationRefs": [
+          "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts#ApplySelectedDbtDependencyEditCommand",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#planDbtSemanticRegionPatch",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#DbtCliProjectCandidateAnalyzer",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#registerDbtDependencyEditRoutes"
+        ],
+        "normalizedRailName": "applyselecteddbtdependencyedit",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "798f6e682522d724151c47f69d87a2be8d22b1a5e8a1fbf4b2e1332940ff1078",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/dbtDependencyEdit",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/web"]
+      },
+      "createdAt": "2026-08-01T09:56:22.971Z"
+    },
+    {
+      "operationId": "e6a09657-3438-4d1a-bac7-a0de0ee6e65d",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT:command:applyselecteddbtdependencyedit:0:88bb24d9e8584dbd",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT#command#applyselecteddbtdependencyedit",
+      "sourcePath": "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md",
+      "sourceContentSha256": "778a1aaee2d6b7b72f3742300918604687c62f6bcc68ffa6b14146b79037b2d0",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/dbtDependencyEdit",
+        "dddOwner": "DbtProjectAuthoring",
+        "railName": "ApplySelectedDbtDependencyEdit",
+        "railType": "command",
+        "featureId": "MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md",
+        "unitTests": [
+          "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+          "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2100"],
+        "cypressFlows": [
+          "N/A - protected API command with no browser surface in this issue"
+        ],
+        "domainObjects": ["DbtDependencyEdit", "DbtSemanticRegionPatch"],
+        "fowlerSignals": [
+          "One command owns one lossless semantic dependency retarget operation."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter dvt-api test:ci",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Lossless dependency retargeting was absent or unsafe candidates could reach publication.",
+        "governingSources": [
+          "docs/adr/0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api typecheck",
+          "pnpm --filter dvt-api lint"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2100",
+        "implementationRefs": [
+          "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts#ApplySelectedDbtDependencyEditCommand",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#planDbtSemanticRegionPatch",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#DbtCliProjectCandidateAnalyzer",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#registerDbtDependencyEditRoutes"
+        ],
+        "normalizedRailName": "applyselecteddbtdependencyedit",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "778a1aaee2d6b7b72f3742300918604687c62f6bcc68ffa6b14146b79037b2d0",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/dbtDependencyEdit",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/web"]
+      },
+      "createdAt": "2026-08-01T10:12:01.498Z"
+    },
+    {
+      "operationId": "8f795cd2-8242-4dcc-8b2c-a6b2d9cce3aa",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT:command:applyselecteddbtdependencyedit:1:b4bef7ee92f40a62",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT#command#applyselecteddbtdependencyedit",
+      "sourcePath": "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md",
+      "sourceContentSha256": "778a1aaee2d6b7b72f3742300918604687c62f6bcc68ffa6b14146b79037b2d0",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/dbtDependencyEdit",
+        "dddOwner": "DbtProjectAuthoring",
+        "railName": "ApplySelectedDbtDependencyEdit",
+        "railType": "command",
+        "featureId": "MVP-2100-LOSSLESS-DBT-DEPENDENCY-EDIT",
+        "greenTest": "pnpm --filter dvt-api test:ci",
+        "sourceRef": "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md",
+        "unitTests": [
+          "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+          "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2100"],
+        "cypressFlows": [
+          "N/A - protected API command with no browser surface in this issue"
+        ],
+        "domainObjects": ["DbtDependencyEdit", "DbtSemanticRegionPatch"],
+        "fowlerSignals": [
+          "One command owns one lossless semantic dependency retarget operation."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter dvt-api test:ci",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Lossless dependency retargeting was absent or unsafe candidates could reach publication.",
+        "governingSources": [
+          "docs/adr/0060-dbt-project-authoring-authority.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api typecheck",
+          "pnpm --filter dvt-api lint"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2100",
+        "implementationRefs": [
+          "apps/api/src/application/ports/dbtDependencyEdit.ts#ApplySelectedDbtDependencyEditInput",
+          "apps/api/src/application/ports/dbtDependencyEdit.ts#DbtDependencyEditReceiptInvalidError",
+          "apps/api/src/application/ports/dbtDependencyEdit.ts#IApplySelectedDbtDependencyEditCommand",
+          "apps/api/src/application/ports/dbtDependencyEdit.ts#IDbtDependencyEditReceiptStore",
+          "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts#AnalyzeDbtProjectCandidateInput",
+          "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts#DbtProjectCandidateAnalysisResult",
+          "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts#IDbtProjectCandidateAnalyzerPort",
+          "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelInput",
+          "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts#ApplySelectedDbtDependencyEditCommand",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditConflict",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditFinding",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditPatchRefused",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditRefused",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#dbtDependencyEditRefusedFinding",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#findStaleDbtDependencyEditAnalysis",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#fingerprintDbtDependencyEditRequest",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#hashStable",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#hasOverlappingDbtSemanticRegion",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#identifyDbtDependencyEditReceipt",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#parseDbtDependencyEditRequest",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#parseDbtDependencyEditResult",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#ParsedDbtDependencyEditRequest",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#sha256",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#sortJsonValue",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#toDbtProjectWorkspacePath",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts#validateDbtDependencyEditCandidate",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#DbtSemanticRegionPatchPlan",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#DbtSemanticRegionPatchRefusal",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#isSafeLiteral",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#planDbtSemanticRegionPatch",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#projectNextLiteral",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#projectRefLiteral",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#projectSourceLiteral",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts#sha256",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#findFirstOverlappingRegions",
+          "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts#ResolvedSelectedDbtModelAnalysis",
+          "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts#ResolveSelectedDbtModelAnalysisInput",
+          "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts#SelectedDbtModelAnalysisResolver",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRouteGroup.ts#registerProtectedDbtDependencyEditRouteGroup",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#DbtDependencyEditRouteDeps",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#registerDbtDependencyEditRoutes",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts#respondInvalidRequest",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts#DbtCliProjectAnalyzerOptions",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#assertContained",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#DbtCliProjectCandidateAnalyzer",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#findChangedPaths",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#InvalidDbtProjectCandidateError",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#projectConflict",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#resolveCandidateFilePath",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts#resolveCandidateProjectDirectory",
+          "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts#RECEIPT_ROOT",
+          "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts#receiptPath",
+          "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts#WorkspaceMetadataDbtDependencyEditReceiptStore",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#addIssue",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DBT_DEPENDENCY_EDIT_FINDING_CODE",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditAppliedReceipt",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditAppliedReceiptSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditAppliedResultSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditConflictResultSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditConflictSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditFinding",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditFindingSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditFindingSubjectSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditNoChangeResultSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditRefusedResultSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditRequest",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditRequestSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditResult",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#DbtDependencyEditResultSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#IdentifierSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#NonBlankStringSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#PathSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts#Sha256Schema"
+        ],
+        "normalizedRailName": "applyselecteddbtdependencyedit",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "778a1aaee2d6b7b72f3742300918604687c62f6bcc68ffa6b14146b79037b2d0",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/dbtDependencyEdit.ts",
+          "apps/api/src/application/ports/dbtProjectCandidateAnalysis.ts",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+          "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
+          "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
+          "apps/api/src/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.ts",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtDependencyEditDecisionModel.ts",
+          "apps/api/src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.ts",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+          "apps/api/src/application/services/selectedDbtModelAnalysisResolver.ts",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRouteGroup.ts",
+          "apps/api/src/entrypoints/http/dbtDependencyEditRoutes.ts",
+          "apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts",
+          "apps/api/src/entrypoints/http/registerProtectedRuntimeRoutes.ts",
+          "apps/api/src/entrypoints/http/runtimeRoutes.constants.ts",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.ts",
+          "apps/api/src/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.ts",
+          "apps/api/src/modules/dbtProjectImport/buildDbtProjectImportRuntime.ts",
+          "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+          "apps/api/test/application/dbtSemanticRegionPatchPlanner.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.conflicts.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.happyPath.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.refusals.test.ts",
+          "apps/api/test/application/services/dbtDependencyEdit/ApplySelectedDbtDependencyEditCommand.test.fixtures.ts",
+          "apps/api/test/entrypoints/http/dbtDependencyEditRoutes.test.ts",
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+          "apps/api/test/entrypoints/http/registerProtectedRuntimeRoutes.test.ts",
+          "apps/api/test/infrastructure/dbt/DbtCliProjectCandidateAnalyzer.test.ts",
+          "apps/api/test/infrastructure/dbtDependencyEdit/WorkspaceMetadataDbtDependencyEditReceiptStore.test.ts",
+          "docs/evidence/ED-20260801-lossless-dbt-dependency-edit.md",
+          "docs/evidence/index.md",
+          "docs/risk-register/quality/index.md",
+          "docs/risk-register/quality/R-20260801-LOSSLESS-DBT-DEPENDENCY-EDIT.yaml",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtDependencyEdit.v1.ts",
+          "packages/@dvt/contracts/src/contracts/dbt-project/index.ts",
+          "packages/@dvt/contracts/test/dbt-dependency-edit.contract.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/web"]
+      },
+      "createdAt": "2026-08-01T10:18:47.229Z"
     }
   ]
 }
