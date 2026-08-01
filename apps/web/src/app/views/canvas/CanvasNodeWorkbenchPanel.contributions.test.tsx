@@ -138,7 +138,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
 
   it('keeps healthy workbench contributions when a sibling contribution throws', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
-    const ThrowingContribution = () => {
+    const ThrowingContribution = (): never => {
       throw new Error('workbench contribution failed');
     };
 
