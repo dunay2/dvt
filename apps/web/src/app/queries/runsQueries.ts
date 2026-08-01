@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { RunEventTimelinePage, RunSnapshot, RunSummaryItem, UiRunStatus } from '../ports/runs';
+import type { RunSnapshot, RunSummaryItem, UiRunStatus } from '../ports/runs';
 import { useRunsService } from '../services/AppServicesContext';
 import type {
   RunWorkspaceFacade,
@@ -77,20 +77,6 @@ export function useRunSnapshotQuery(workspaceLayoutKey: string, runId: string | 
     queryFn: () => runsService.getRunSnapshot(runId!),
     enabled: Boolean(runId),
     refetchInterval: getRunSnapshotRefreshInterval,
-    staleTime: 5_000,
-  });
-}
-
-export function useRunEventsQuery(
-  workspaceLayoutKey: string,
-  runId: string | undefined,
-  enabled = true
-) {
-  const runsService = useRunsService();
-  return useQuery<RunEventTimelinePage>({
-    queryKey: queryKeys.runs.events(workspaceLayoutKey, runId),
-    queryFn: () => runsService.listRunEvents(runId!),
-    enabled: Boolean(runId) && enabled,
     staleTime: 5_000,
   });
 }

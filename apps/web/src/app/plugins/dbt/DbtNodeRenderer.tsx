@@ -6,15 +6,16 @@ import type { LucideIcon } from 'lucide-react';
 import { Badge } from '../../components/ui/badge';
 import { Card } from '../../components/ui/card';
 import {
-  useRunEventsQuery,
   useRunSnapshotQuery,
   useScopedRunSummariesQueryForHistory,
 } from '../../queries/runsQueries';
+import { useRunEventFeedQuery } from '../../queries/runEventFeedQuery';
 import {
   buildRunEventPresentationModel,
   type RunEventLevel,
 } from '../../services/runs/runEventPresentationModel';
 import { resolveRunEventHeadline } from '../../services/runs/runEventPresentationCopy';
+import { isRunEventStreamLiveStatus } from '../../services/runs/runEventTimelineModel';
 import { useSessionStore } from '../../stores/sessionStore';
 import type { Run, RunEvent } from '../../types/dbt';
 import type {
@@ -344,16 +345,21 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
   );
   const fallbackRunId = !activeRunId ? runSummaries?.[0]?.runId : undefined;
   const historyRunId = activeRunIdOrUndefined ?? fallbackRunId;
+  const historyRunStatus = activeRunId ? runSnapshot?.status : runSummaries?.[0]?.status;
   const canLoadEvents =
     Boolean(historyRunId) && (!activeRunId || (hasRunSnapshotLoaded && runSnapshot != null));
   const {
-    data: runEventsPage,
+    data: runEventFeed,
     isError: isRunEventsError,
     isLoading: isLoadingEvents,
-  } = useRunEventsQuery(workspaceLayoutKey, historyRunId, canLoadEvents);
+  } = useRunEventFeedQuery(historyRunId, {
+    enabled: canLoadEvents,
+    isLive: isRunEventStreamLiveStatus(historyRunStatus),
+  });
+  const runEvents = runEventFeed?.phase === 'idle' ? [] : runEventFeed?.events;
   const nodeHistoryEntries = useMemo(
-    () => buildDbtNodeRunHistoryEntries(historyRunId, runEventsPage?.events, node.id),
-    [historyRunId, node.id, runEventsPage?.events]
+    () => buildDbtNodeRunHistoryEntries(historyRunId, runEvents, node.id),
+    [historyRunId, node.id, runEvents]
   );
 
   if (isLoading || isLoadingList || (canLoadEvents && isLoadingEvents)) {
