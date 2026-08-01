@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 
+import { ContractValidationError } from '@dvt/contracts';
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -198,6 +199,17 @@ describe('useRunEventFeedQuery', () => {
       kind: 'transport',
       retryable: true,
       statusCode: 503,
+    });
+    expect(
+      classifyRunEventFeedFailure(
+        new ContractValidationError([
+          { path: 'events.0.runSeq', code: 'invalid_type', message: 'Expected number' },
+        ])
+      )
+    ).toMatchObject({
+      kind: 'validation',
+      retryable: false,
+      statusCode: 400,
     });
   });
 

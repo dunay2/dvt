@@ -3,6 +3,7 @@
  * cursor-backed React Query projection per run.
  */
 import { useCallback } from 'react';
+import { ContractValidationError } from '@dvt/contracts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { UiRunStatus } from '../ports/runs';
@@ -87,6 +88,15 @@ function prepareFeedForSnapshotStatus(
 export function classifyRunEventFeedFailure(error: unknown): RunEventFeedFailure {
   if (error instanceof RunEventFeedInvariantError) {
     return { kind: 'invariant', message: error.message, retryable: false };
+  }
+
+  if (error instanceof ContractValidationError) {
+    return {
+      kind: 'validation',
+      message: error.message,
+      retryable: false,
+      statusCode: error.statusCode,
+    };
   }
 
   if (!(error instanceof ApiError)) {

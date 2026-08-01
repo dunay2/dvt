@@ -50,22 +50,19 @@ describe('runWorkspaceModel', () => {
   });
 
   it('keeps cached events visible when the shared feed becomes degraded', () => {
-    const workspace = buildRunWorkspaceViewModel(
-      snapshot,
-      {
-        phase: 'live',
-        runId: 'run_1',
-        events: [event],
-        nextAfterSeq: 1,
-        consecutiveFailures: 0,
-      },
-      new ApiError({
+    const workspace = buildRunWorkspaceViewModel(snapshot, {
+      phase: 'stale',
+      runId: 'run_1',
+      events: [event],
+      nextAfterSeq: 1,
+      consecutiveFailures: 4,
+      failure: {
+        kind: 'transport',
         message: 'Runtime unavailable',
-        endpoint: '/runs/run_1/events',
         statusCode: 503,
-        category: 'server',
-      })
-    );
+        retryable: true,
+      },
+    });
 
     expect(workspace.timeline).toMatchObject({
       state: 'degraded',
