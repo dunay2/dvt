@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { DbtSelectedModelAnalysis } from '../src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.js';
 import { DbtSelectedModelAnalysisSchema } from '../src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.js';
 
 const SHA_A = 'a'.repeat(64);
@@ -7,7 +8,7 @@ const SHA_B = 'b'.repeat(64);
 const SHA_C = 'c'.repeat(64);
 const SHA_D = 'd'.repeat(64);
 
-const readyAnalysis = () => {
+const readyAnalysis = (): DbtSelectedModelAnalysis => {
   return {
     schemaVersion: 'dbt-selected-model-analysis.v1',
     status: 'ready',
