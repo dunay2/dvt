@@ -300,6 +300,7 @@ describe('Runs domain boundary', () => {
     const operationalDrawerModelSource = readAppSource(
       'components/shell/bottomOperationalDrawerLogModel.ts'
     );
+    const feedHealthCopySource = readAppSource('services/runs/runEventFeedHealthCopy.ts');
     const operationalDrawerSource = readAppSource('components/shell/BottomOperationalDrawer.tsx');
     const xtermConsoleSource = readAppSource('components/console/XtermConsole.tsx');
     const workspaceSource = readAppSource('views/runs/RunWorkspaceStateView.tsx');
@@ -326,8 +327,10 @@ describe('Runs domain boundary', () => {
     expect(runWorkspaceHookSource).toContain('useRunEventFeedQuery');
     expect(runWorkspaceHookSource).not.toContain('listRunEvents');
     expect(dbtNodeRendererSource).toContain('useRunEventFeedQuery');
-    expect(operationalDrawerModelSource).toContain('Start a run to see live run events here.');
+    expect(operationalDrawerModelSource).toContain('RunEventFeedHealthCopy');
+    expect(operationalDrawerModelSource).toContain('copy.messages.idle');
     expect(operationalDrawerModelSource).not.toContain('not available');
+    expect(feedHealthCopySource).toContain('Start a run to see live run events here.');
     expect(operationalDrawerSource).toContain('lazy(() => import');
     expect(operationalDrawerSource).toContain('../console/XtermConsole');
     expect(xtermConsoleSource).toContain('@xterm/xterm');
