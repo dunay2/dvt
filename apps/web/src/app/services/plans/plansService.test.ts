@@ -316,6 +316,16 @@ function createPlanRejectedApiError(details: Record<string, unknown>): ApiError 
   });
 }
 
+function buildGenericPreviewInput(): PlanPreviewInput {
+  return {
+    previewProfile: 'planner-generic-v1',
+    graphSource: VALID_GENERIC_GRAPH_SOURCE,
+    selection: toExplicitSelection(VALID_GENERIC_SELECTION),
+    persist: true,
+    context: makeRunContext('run-1'),
+  };
+}
+
 async function previewAccepted(
   service: IPlansPort,
   input: PlanPreviewInput
@@ -605,15 +615,59 @@ describe('createPlansService', () => {
       })
     );
 
-    await expect(
-      service.previewPlan({
-        previewProfile: 'planner-generic-v1',
-        graphSource: VALID_GENERIC_GRAPH_SOURCE,
-        selection: toExplicitSelection(VALID_GENERIC_SELECTION),
-        persist: true,
-        context: makeRunContext('run-1'),
+    await expect(service.previewPlan(buildGenericPreviewInput())).rejects.toBe(apiError);
+  });
+
+  it('keeps unknown typed rejection codes as errors', async () => {
+    const apiError = createPlanRejectedApiError({
+      contractVersion: '1.0.0',
+      kind: 'plan-invalid',
+      ...buildGenericPreviewPayload(),
+      validation: {
+        status: 'ERROR',
+        code: 'UNKNOWN_EXECUTABILITY_CODE',
+        planId: buildValidPlanRef().planId,
+        adapterId: 'temporal',
+        degradable: false,
+        reason: 'Unknown rejection.',
+      },
+    });
+    const service = createPlansService(
+      buildApiClientStub({
+        postJson: vi.fn(async () => {
+          throw apiError;
+        }) as ApiClient['postJson'],
       })
-    ).rejects.toBe(apiError);
+    );
+
+    await expect(service.previewPlan(buildGenericPreviewInput())).rejects.toBe(apiError);
+  });
+
+  it.each([
+    {
+      label: 'authentication',
+      error: new ApiError({
+        message: 'HTTP 401',
+        endpoint: '/plans/preview',
+        statusCode: 401,
+        category: 'unauthorized',
+        responseBody: { error: { type: 'unauthorized', reason: 'authentication_required' } },
+      }),
+    },
+    {
+      label: 'transport',
+      error: new Error('Network unavailable'),
+    },
+  ])('keeps $label failures outside the product outcome union', async ({ error }) => {
+    const service = createPlansService(
+      buildApiClientStub({
+        postJson: vi.fn(async () => {
+          throw error;
+        }) as ApiClient['postJson'],
+      })
+    );
+
+    await expect(service.previewPlan(buildGenericPreviewInput())).rejects.toThrow();
   });
 
   it('maps importPlan responses from backend-owned planRef payloads', async () => {
