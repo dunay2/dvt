@@ -29,6 +29,7 @@ function HookHost({ runId }: Readonly<{ runId?: string }>): React.JSX.Element {
       <div data-testid="workspace-environment">
         {workspace.workspace?.snapshot.environment ?? ''}
       </div>
+      <div data-testid="event-feed-health">{workspace.workspace?.eventFeedHealth.state ?? ''}</div>
     </div>
   );
 }
@@ -207,6 +208,54 @@ describe('useRunWorkspace', () => {
 
     expect(runsService.listRunSummaries).toHaveBeenCalledTimes(2);
     expect(runsService.getRunSnapshot).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps the authoritative snapshot visible while the event feed initially loads', async () => {
+    const { sessionContext } = createReactiveSessionContext({
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'env-a',
+      targetAdapter: 'temporal',
+    });
+    const runsService = buildRunsService(sessionContext);
+    runsService.listRunEvents = vi.fn<IRunsPort['listRunEvents']>(
+      () => new Promise(() => undefined)
+    );
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & {
+        IS_REACT_ACT_ENVIRONMENT?: boolean;
+      }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+
+    await act(async () => {
+      root?.render(
+        <QueryClientProvider
+          client={new QueryClient({ defaultOptions: { queries: { retry: false } } })}
+        >
+          <AppServicesProvider
+            overrides={{ ...createAppServicesTestOverrides(), runsService, sessionContext }}
+          >
+            <HookHost runId="run-detail" />
+          </AppServicesProvider>
+        </QueryClientProvider>
+      );
+    });
+
+    await waitForRunWorkspace(
+      () =>
+        container?.querySelector('[data-testid="workspace-environment"]')?.textContent === 'env-a'
+    );
+
+    expect(container?.querySelector('[data-testid="workspace-loading"]')?.textContent).toBe(
+      'false'
+    );
+    expect(container?.querySelector('[data-testid="event-feed-health"]')?.textContent).toBe(
+      'loading'
+    );
   });
 
   it('refreshes active run status and stops refreshing terminal status', () => {

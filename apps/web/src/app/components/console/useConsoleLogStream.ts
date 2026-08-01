@@ -22,13 +22,10 @@ export function useConsoleLogStream(): {
   const runId = currentRun?.runId;
 
   const feedQuery = useRunEventFeedQuery(runId, { runStatus: currentRun?.status });
-  const health = useMemo<RunEventFeedHealthModel>(() => {
-    if (runId && feedQuery.isLoading && !feedQuery.data) {
-      return { state: 'loading', events: [], canRetry: false };
-    }
-
-    return buildRunEventFeedHealthModel(feedQuery.data);
-  }, [feedQuery.data, feedQuery.isLoading, runId]);
+  const health = useMemo<RunEventFeedHealthModel>(
+    () => buildRunEventFeedHealthModel(feedQuery.feedState),
+    [feedQuery.feedState]
+  );
 
   const lines = useMemo(() => health.events.map(formatRunEventAsLogLine), [health.events]);
 

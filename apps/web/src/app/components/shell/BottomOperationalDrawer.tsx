@@ -78,7 +78,7 @@ function BottomOperationalLogBody({
             data-slot="bottom-operational-drawer-stream"
             className={bottomOperationalDrawerClasses.stream}
           >
-            <XtermConsole lines={[...model.lines]} />
+            <XtermConsole key={model.runLabel} lines={[...model.lines]} />
           </div>
         </Suspense>
       ) : null}
