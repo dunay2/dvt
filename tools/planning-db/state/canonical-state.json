@@ -4571,7 +4571,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "apps/api/src/application/ports/protectedRuntimeWorkspaceCommandQueryRails.ts",
-      "sourceContentSha256": "6198e2622f2029484cd42b41e630ed073cd66bc3c9e9dffeee778eb90cadab82",
+      "sourceContentSha256": "f65ebacf07d75cf7d1eef93b050af835a9bc4aa97b7bccc4fb026e21ec3880ae",
       "rawRail": {
         "name": "AnalyzeSelectedDbtModel",
         "type": "query",
