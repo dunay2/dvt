@@ -3798,7 +3798,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
-      "sourceContentSha256": "386df9884801309ab80234ad0e4bc70ce75333e2b2379fbd0ecb37c9e2aa6475",
+      "sourceContentSha256": "e3e6074a630a264b71cfa56c10eaa824fb2559e2eba89b45d7a3fe8b629c3f2a",
       "rawRail": {
         "name": "PreviewExecutionPlan",
         "type": "command",
@@ -4328,6 +4328,341 @@
       "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-01T01:02:44.891Z"
+    },
+    {
+      "railId": "local#MVP-F6-2E-PREVIEW-READINESS-MAPPING#query#observeplanrunreadiness",
+      "featureId": "MVP-F6-2E-PREVIEW-READINESS-MAPPING",
+      "mechanizationStatus": "implemented",
+      "railName": "ObservePlanRunReadiness",
+      "normalizedRailName": "observeplanrunreadiness",
+      "railType": "query",
+      "dddOwner": "CanvasExecutionReadiness",
+      "railStatus": "retired",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#CAPABILITY_REJECTION_CODES",
+        "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#CanvasPreviewOutcomeDiagnostic",
+        "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#CanvasPreviewOutcomeProjection",
+        "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#projectCanvasPreviewOutcome",
+        "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#doesPreviewOutcomeOwnPlan",
+        "apps/web/src/app/views/canvas/canvasPlanAction.ts#attachDbtSelectionIntentToOutcome",
+        "apps/web/src/app/views/canvas/canvasPlanAction.ts#executeCanvasPlanAction",
+        "apps/web/src/app/views/canvas/canvasExecutionState.ts#forceReadinessBlocker",
+        "apps/web/src/app/views/canvas/canvasExecutionState.ts#deriveCanvasExecutionState",
+        "apps/web/src/app/views/canvas/useCanvasExecutionActions.ts#useCanvasExecutionActions",
+        "apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts#useCanvasPlanActionHandler",
+        "apps/web/src/app/views/canvas/canvasControllerViewModel.ts#buildCanvasControllerViewModel"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#CAPABILITY_REJECTION_CODES",
+        "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#CanvasPreviewOutcomeDiagnostic",
+        "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#CanvasPreviewOutcomeProjection",
+        "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#projectCanvasPreviewOutcome",
+        "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#doesPreviewOutcomeOwnPlan",
+        "apps/web/src/app/views/canvas/canvasPlanAction.ts#attachDbtSelectionIntentToOutcome",
+        "apps/web/src/app/views/canvas/canvasPlanAction.ts#executeCanvasPlanAction",
+        "apps/web/src/app/views/canvas/canvasExecutionState.ts#forceReadinessBlocker",
+        "apps/web/src/app/views/canvas/canvasExecutionState.ts#deriveCanvasExecutionState",
+        "apps/web/src/app/views/canvas/useCanvasExecutionActions.ts#useCanvasExecutionActions",
+        "apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts#useCanvasPlanActionHandler",
+        "apps/web/src/app/views/canvas/canvasControllerViewModel.ts#buildCanvasControllerViewModel"
+      ],
+      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2081"],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
+      ],
+      "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+      "architectureGuards": [
+        "Only accepted outcomes may follow existing runnable checks",
+        "Unknown outcome kinds and codes fail closed",
+        "canStartRun remains owned by deriveCanvasExecutionState"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm --filter @dvt/web lint",
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+      "sourceContentSha256": "0224261f81d2567c097d739292a4e5550b7ccbc46746e068b24be90cf24e38e8",
+      "rawRail": {
+        "name": "ObservePlanRunReadiness",
+        "type": "query",
+        "status": "retired",
+        "dddOwner": "CanvasExecutionReadiness"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "CAPABILITY_REJECTION_CODES",
+            "path": "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "CanvasPreviewOutcomeDiagnostic",
+            "path": "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "CanvasPreviewOutcomeProjection",
+            "path": "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "projectCanvasPreviewOutcome",
+            "path": "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "doesPreviewOutcomeOwnPlan",
+            "path": "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "attachDbtSelectionIntentToOutcome",
+            "path": "apps/web/src/app/views/canvas/canvasPlanAction.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "executeCanvasPlanAction",
+            "path": "apps/web/src/app/views/canvas/canvasPlanAction.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "forceReadinessBlocker",
+            "path": "apps/web/src/app/views/canvas/canvasExecutionState.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "deriveCanvasExecutionState",
+            "path": "apps/web/src/app/views/canvas/canvasExecutionState.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "useCanvasExecutionActions",
+            "path": "apps/web/src/app/views/canvas/useCanvasExecutionActions.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "useCanvasPlanActionHandler",
+            "path": "apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          },
+          {
+            "name": "buildCanvasControllerViewModel",
+            "path": "apps/web/src/app/views/canvas/canvasControllerViewModel.ts",
+            "cqRails": ["ObservePlanRunReadiness"],
+            "dddOwner": "CanvasExecutionReadiness",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+              "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+            ],
+            "fowlerSignals": [
+              "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+              "Single readiness owner prevents parallel run gates"
+            ],
+            "cypressCoverage": "Not required: TASK-F6.2E introduces no browser-visible presentation",
+            "architectureGuard": "Only accepted outcomes may follow existing runnable checks"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-F6-2E-PREVIEW-READINESS-MAPPING",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2081"],
+        "cypressFlows": [
+          "Not required: TASK-F6.2E introduces no browser-visible presentation"
+        ],
+        "domainObjects": ["PlanPreviewOutcome", "PlanRunReadinessReadModel"],
+        "fowlerSignals": [
+          "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+          "Single readiness owner prevents parallel run gates"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "observeplanrunreadiness-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts src/app/views/canvas/canvasPlanAction.dbtProjectFiles.test.ts src/app/views/canvas/canvasPlanReadiness.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+              "apps/web/src/app/views/canvas/canvasExecutionState.ts",
+              "apps/web/src/app/views/canvas/useCanvasExecutionActions.ts"
+            ],
+            "expectedFailure": "canvasPreviewOutcomeProjection did not exist and authoritative rejected outcomes were collapsed into operational failures"
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ObservePlanRunReadiness",
+            "type": "query",
+            "status": "retired",
+            "dddOwner": "CanvasExecutionReadiness"
+          }
+        ],
+        "architectureGuards": [
+          "Only accepted outcomes may follow existing runnable checks",
+          "Unknown outcome kinds and codes fail closed",
+          "canStartRun remains owned by deriveCanvasExecutionState"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2081",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations",
+          "packages/@dvt/contracts",
+          "apps/api"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-01T02:02:51.491Z"
     },
     {
       "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicalarchitecturestate",
@@ -7938,6 +8273,174 @@
         ]
       },
       "createdAt": "2026-08-01T01:05:21.278Z"
+    },
+    {
+      "operationId": "31f22819-788f-429d-a408-aaf76be1707f",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-F6-2E-PREVIEW-READINESS-MAPPING:query:observeplanrunreadiness:latest:85817dcb827cef64",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2E-PREVIEW-READINESS-MAPPING#query#observeplanrunreadiness",
+      "sourcePath": "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+      "sourceContentSha256": "0224261f81d2567c097d739292a4e5550b7ccbc46746e068b24be90cf24e38e8",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+        "dddOwner": "CanvasExecutionReadiness",
+        "railName": "ObservePlanRunReadiness",
+        "railType": "query",
+        "featureId": "MVP-F6-2E-PREVIEW-READINESS-MAPPING",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts src/app/views/canvas/canvasPlanAction.dbtProjectFiles.test.ts src/app/views/canvas/canvasPlanReadiness.test.ts",
+        "sourceRef": "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+          "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2081"],
+        "cypressFlows": [
+          "Not required: TASK-F6.2E introduces no browser-visible presentation"
+        ],
+        "domainObjects": ["PlanPreviewOutcome", "PlanRunReadinessReadModel"],
+        "fowlerSignals": [
+          "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+          "Single readiness owner prevents parallel run gates"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+          "apps/web/src/app/views/canvas/canvasExecutionState.ts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "canvasPreviewOutcomeProjection did not exist and authoritative rejected outcomes were collapsed into operational failures",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2081"],
+        "architectureGuards": [
+          "Only accepted outcomes may follow existing runnable checks",
+          "Unknown outcome kinds and codes fail closed",
+          "canStartRun remains owned by deriveCanvasExecutionState"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2081",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#projectCanvasPreviewOutcome",
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#doesPreviewOutcomeOwnPlan",
+          "apps/web/src/app/views/canvas/canvasPlanAction.ts#executeCanvasPlanAction",
+          "apps/web/src/app/views/canvas/canvasExecutionState.ts#deriveCanvasExecutionState",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.ts#useCanvasExecutionActions",
+          "apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts#useCanvasPlanActionHandler",
+          "apps/web/src/app/views/canvas/canvasControllerViewModel.ts#buildCanvasControllerViewModel"
+        ],
+        "normalizedRailName": "observeplanrunreadiness",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "0224261f81d2567c097d739292a4e5550b7ccbc46746e068b24be90cf24e38e8",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations",
+          "packages/@dvt/contracts",
+          "apps/api"
+        ]
+      },
+      "createdAt": "2026-08-01T02:02:51.491Z"
+    },
+    {
+      "operationId": "9beadd96-77bb-42aa-bd16-fe34d55d20a2",
+      "idempotencyKey": "mvp-2081-symbol-coverage-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2E-PREVIEW-READINESS-MAPPING#query#observeplanrunreadiness",
+      "sourcePath": "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+      "sourceContentSha256": "0224261f81d2567c097d739292a4e5550b7ccbc46746e068b24be90cf24e38e8",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+        "dddOwner": "CanvasExecutionReadiness",
+        "railName": "ObservePlanRunReadiness",
+        "railType": "query",
+        "featureId": "MVP-F6-2E-PREVIEW-READINESS-MAPPING",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.unit.config.ts src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts src/app/views/canvas/canvasPlanAction.dbtProjectFiles.test.ts src/app/views/canvas/canvasPlanReadiness.test.ts",
+        "sourceRef": "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.test.ts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.planPreview.outcomes.test.tsx",
+          "apps/web/src/app/views/canvas/canvasPlanReadiness.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2081"],
+        "cypressFlows": [
+          "Not required: TASK-F6.2E introduces no browser-visible presentation"
+        ],
+        "domainObjects": ["PlanPreviewOutcome", "PlanRunReadinessReadModel"],
+        "fowlerSignals": [
+          "Data Mapper isolates authoritative preview outcomes from Canvas readiness",
+          "Single readiness owner prevents parallel run gates"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts",
+          "apps/web/src/app/views/canvas/canvasExecutionState.ts",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "canvasPreviewOutcomeProjection did not exist and authoritative rejected outcomes were collapsed into operational failures",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2081"],
+        "architectureGuards": [
+          "Only accepted outcomes may follow existing runnable checks",
+          "Unknown outcome kinds and codes fail closed",
+          "canStartRun remains owned by deriveCanvasExecutionState"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2081",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#CAPABILITY_REJECTION_CODES",
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#CanvasPreviewOutcomeDiagnostic",
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#CanvasPreviewOutcomeProjection",
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#projectCanvasPreviewOutcome",
+          "apps/web/src/app/views/canvas/canvasPreviewOutcomeProjection.ts#doesPreviewOutcomeOwnPlan",
+          "apps/web/src/app/views/canvas/canvasPlanAction.ts#attachDbtSelectionIntentToOutcome",
+          "apps/web/src/app/views/canvas/canvasPlanAction.ts#executeCanvasPlanAction",
+          "apps/web/src/app/views/canvas/canvasExecutionState.ts#forceReadinessBlocker",
+          "apps/web/src/app/views/canvas/canvasExecutionState.ts#deriveCanvasExecutionState",
+          "apps/web/src/app/views/canvas/useCanvasExecutionActions.ts#useCanvasExecutionActions",
+          "apps/web/src/app/views/canvas/useCanvasPlanActionHandler.ts#useCanvasPlanActionHandler",
+          "apps/web/src/app/views/canvas/canvasControllerViewModel.ts#buildCanvasControllerViewModel"
+        ],
+        "normalizedRailName": "observeplanrunreadiness",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "0224261f81d2567c097d739292a4e5550b7ccbc46746e068b24be90cf24e38e8",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations",
+          "packages/@dvt/contracts",
+          "apps/api"
+        ]
+      },
+      "createdAt": "2026-08-01T02:13:08.458Z"
     }
   ]
 }

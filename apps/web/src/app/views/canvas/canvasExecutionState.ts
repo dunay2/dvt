@@ -16,6 +16,8 @@ import { formatTransformationGraphValidationSummary } from './canvasCopyFormatti
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import { isDbtProjectFilePreviewProvenanceCurrent } from './dbtProjectFileExecutionStrategy';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
+import type { PlanPreviewOutcome } from '../../ports/plans';
+import { projectCanvasPreviewOutcome } from './canvasPreviewOutcomeProjection';
 
 type DeriveCanvasExecutionStateArgs = {
   canRun: boolean;
@@ -26,6 +28,7 @@ type DeriveCanvasExecutionStateArgs = {
   canonicalEdges: CanonicalEdge[];
   selectionIntent: CanvasExecutionSelectionIntent;
   workspaceNodeIds: string[];
+  latestPreviewOutcome: PlanPreviewOutcome | null;
 };
 
 export type CanvasExecutionState = {
@@ -40,13 +43,14 @@ export type CanvasExecutionState = {
   planStatusSummary: string;
 };
 
-function forcePlanIntegrityBlocker(
+function forceReadinessBlocker(
   readiness: PlanRunReadinessReadModel,
+  blocker: PlanRunReadinessBlocker,
   summary: string
 ): PlanRunReadinessReadModel {
-  const blockers: readonly PlanRunReadinessBlocker[] = readiness.blockers.includes('plan_integrity')
+  const blockers: readonly PlanRunReadinessBlocker[] = readiness.blockers.includes(blocker)
     ? readiness.blockers
-    : [...readiness.blockers, 'plan_integrity'];
+    : [...readiness.blockers, blocker];
 
   return {
     ...readiness,
@@ -65,7 +69,10 @@ export function deriveCanvasExecutionState({
   canonicalEdges,
   selectionIntent,
   workspaceNodeIds,
+  latestPreviewOutcome,
 }: DeriveCanvasExecutionStateArgs): CanvasExecutionState {
+  const previewOutcomeProjection =
+    latestPreviewOutcome == null ? null : projectCanvasPreviewOutcome(latestPreviewOutcome);
   const hasPersistedPlanForRun = hasPersistedPreviewProof(currentPlan);
   const persistedPlanIdentityMismatch = hasPersistedPreviewIdentityMismatch(currentPlan);
   const transformationValidation = validateTransformationGraph({
@@ -119,7 +126,8 @@ export function deriveCanvasExecutionState({
     currentPlan != null &&
     hasPersistedPlanForRun &&
     isExecutableGraphReady &&
-    !isCurrentPlanStale;
+    !isCurrentPlanStale &&
+    previewOutcomeProjection?.readinessBlocker == null;
   const executableGraphFailureMessage =
     executionStrategy != null &&
     executionStrategy.kind !== 'not_executable' &&
@@ -137,10 +145,21 @@ export function deriveCanvasExecutionState({
     hasPersistedPlanForRun,
     capabilityMismatch: executionStrategy == null || executionStrategy.kind === 'not_executable',
   });
+  const authoritativePreviewReason = previewOutcomeProjection?.diagnostic?.reason;
   const planRunReadiness =
-    executableGraphFailureMessage != null
-      ? forcePlanIntegrityBlocker(planRunReadinessSource, executableGraphFailureMessage)
-      : planRunReadinessSource;
+    previewOutcomeProjection?.readinessBlocker != null
+      ? forceReadinessBlocker(
+          planRunReadinessSource,
+          previewOutcomeProjection.readinessBlocker,
+          authoritativePreviewReason ?? planRunReadinessSource.summary
+        )
+      : executableGraphFailureMessage != null
+        ? forceReadinessBlocker(
+            planRunReadinessSource,
+            'plan_integrity',
+            executableGraphFailureMessage
+          )
+        : planRunReadinessSource;
 
   return {
     transformationValidation,

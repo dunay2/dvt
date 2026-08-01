@@ -10,6 +10,8 @@ import type {
   UseCanvasExecutionActionsParams,
 } from './canvasExecutionActions.types';
 import { executeCanvasPlanAction } from './canvasPlanAction';
+import { projectCanvasPreviewOutcome } from './canvasPreviewOutcomeProjection';
+import type { PlanPreviewOutcome } from '../../ports/plans';
 import type { CanvasExecutionState } from './canvasExecutionState';
 import { validateTransformationGraph } from './transformationGraphValidation';
 
@@ -35,6 +37,7 @@ type UseCanvasPlanActionHandlerArgs = Pick<
   transformationValidation: CanvasExecutionState['transformationValidation'];
   setLastPlannedDraftSignature: SetLastPlannedDraftSignature;
   setPlanModalOpen: SetPlanModalOpen;
+  setLatestPreviewOutcome: (outcome: PlanPreviewOutcome | null) => void;
 };
 
 export function useCanvasPlanActionHandler({
@@ -57,6 +60,7 @@ export function useCanvasPlanActionHandler({
   setCurrentPlan,
   setLastPlannedDraftSignature,
   setPlanModalOpen,
+  setLatestPreviewOutcome,
 }: UseCanvasPlanActionHandlerArgs): Readonly<{
   handlePreviewExecutionPlan: () => Promise<void>;
 }> {
@@ -127,10 +131,19 @@ export function useCanvasPlanActionHandler({
       });
     }
 
-    setCurrentPlan(result.plan);
-    setLastPlannedDraftSignature(result.draftSignature);
-    setPlanModalOpen(true);
-    shellFeedback.success(canvasViewCopy.planCreatedMessage);
+    const projection = projectCanvasPreviewOutcome(result.previewOutcome);
+    setLatestPreviewOutcome(result.previewOutcome);
+    setCurrentPlan(projection.currentPlan);
+    setLastPlannedDraftSignature(projection.currentPlan == null ? null : result.draftSignature);
+
+    if (result.previewOutcome.kind === 'accepted') {
+      setPlanModalOpen(true);
+      shellFeedback.success(canvasViewCopy.planCreatedMessage);
+      return;
+    }
+
+    setPlanModalOpen(false);
+    shellFeedback.error(projection.diagnostic?.reason ?? canvasViewCopy.planUnableToCreateMessage);
   }, [
     graphDraftCanvasId,
     canPlan,
@@ -152,6 +165,7 @@ export function useCanvasPlanActionHandler({
     setCurrentPlan,
     setLastPlannedDraftSignature,
     setPlanModalOpen,
+    setLatestPreviewOutcome,
   ]);
 
   return {

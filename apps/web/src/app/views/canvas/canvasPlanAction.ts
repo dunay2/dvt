@@ -2,7 +2,7 @@
  * Owned concern: orchestrate Canvas plan-preview persistence before run start
  * without creating authoritative runtime execution identity.
  */
-import type { IPlansPort } from '../../ports/plans';
+import type { IPlansPort, PlanPreviewOutcome, PreviewedPlanViewModel } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -12,8 +12,6 @@ import type {
 } from '../../ports/workspace';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
-import type { PlanViewModel } from '../../types/plans';
-
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import { buildDbtProjectFilePreviewProvenance } from './dbtProjectFileExecutionStrategy';
@@ -38,21 +36,21 @@ type CanvasPlanActionFailure = {
 type CanvasPlanActionSuccess = {
   ok: true;
   draftSignature: string;
-  plan: PlanViewModel;
+  previewOutcome: PlanPreviewOutcome;
   writtenArtifactPaths: readonly string[];
 };
 
 export type CanvasPlanActionResult = CanvasPlanActionFailure | CanvasPlanActionSuccess;
 
 function attachDbtSelectionIntent(
-  plan: PlanViewModel,
+  plan: PreviewedPlanViewModel,
   selection: {
     readonly selectionMode: 'explicit' | 'workspace';
     readonly requestedRootNodeIds: readonly string[];
     readonly derivedDependencyNodeIds: readonly string[];
     readonly scopedNodeIds: readonly string[];
   }
-): PlanViewModel {
+): PreviewedPlanViewModel {
   return {
     ...plan,
     preview: {
@@ -64,6 +62,20 @@ function attachDbtSelectionIntent(
         authorizedScopeNodeIds: [...selection.scopedNodeIds],
       },
     },
+  };
+}
+
+function attachDbtSelectionIntentToOutcome(
+  outcome: PlanPreviewOutcome,
+  selection: Parameters<typeof attachDbtSelectionIntent>[1]
+): PlanPreviewOutcome {
+  if (outcome.kind === 'selection-rejected') {
+    return outcome;
+  }
+
+  return {
+    ...outcome,
+    plan: attachDbtSelectionIntent(outcome.plan, selection),
   };
 }
 
@@ -202,21 +214,10 @@ export async function executeCanvasPlanAction({
           : {}),
         persist: true,
       });
-      if (previewOutcome.kind !== 'accepted') {
-        return {
-          ok: false,
-          message:
-            previewOutcome.kind === 'selection-rejected'
-              ? previewOutcome.rejection.reason
-              : previewOutcome.validation.reason,
-        };
-      }
-      const plan = attachDbtSelectionIntent(previewOutcome.plan, plannerProjection);
-
       return {
         ok: true,
         draftSignature: plannerProjection.draftSignature,
-        plan,
+        previewOutcome: attachDbtSelectionIntentToOutcome(previewOutcome, plannerProjection),
         writtenArtifactPaths,
       };
     } catch (error) {
@@ -272,20 +273,10 @@ export async function executeCanvasPlanAction({
       ...(previewProvenance.provenance ? { provenance: previewProvenance.provenance } : {}),
       persist: true,
     });
-    if (previewOutcome.kind !== 'accepted') {
-      return {
-        ok: false,
-        message:
-          previewOutcome.kind === 'selection-rejected'
-            ? previewOutcome.rejection.reason
-            : previewOutcome.validation.reason,
-      };
-    }
-
     return {
       ok: true,
       draftSignature: transformationValidation.draftSignature,
-      plan: previewOutcome.plan,
+      previewOutcome,
       writtenArtifactPaths: [
         previewProvenance.sqlArtifact.path,
         ...(previewProvenance.provenance?.graphArtifact.path

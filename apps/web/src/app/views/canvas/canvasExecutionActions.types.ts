@@ -1,7 +1,7 @@
 /** Owned concern: define Canvas execution-action dependencies and results. */
 import type { Dispatch, SetStateAction } from 'react';
 
-import type { IPlansPort } from '../../ports/plans';
+import type { IPlansPort, PlanPreviewOutcome } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort, WorkspaceScope } from '../../ports/sessionContext';
@@ -67,6 +67,7 @@ export type UseCanvasExecutionActionsResult = {
   isCurrentPlanStale: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
   planStatusSummary: string;
+  latestPreviewOutcome: PlanPreviewOutcome | null;
   handlePreviewExecutionPlan: () => Promise<void>;
   handleStartRun: () => Promise<void>;
 };

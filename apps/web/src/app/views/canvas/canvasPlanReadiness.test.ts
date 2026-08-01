@@ -176,6 +176,7 @@ describe('canvasPlanReadiness', () => {
       canonicalEdges: [],
       selectionIntent: { mode: 'workspace', nodeIds: [] },
       workspaceNodeIds: ['transform_1'],
+      latestPreviewOutcome: null,
     });
 
     expect(executionState.canStartRun).toBe(false);
@@ -265,6 +266,7 @@ describe('canvasPlanReadiness', () => {
       canonicalEdges: [],
       selectionIntent: { mode: 'explicit', nodeIds: ['model.analytics.orders'] },
       workspaceNodeIds: ['model.analytics.orders'],
+      latestPreviewOutcome: null,
     });
 
     expect(executionState.persistedPreviewIdentityMismatch).toBe(true);
@@ -326,6 +328,7 @@ describe('canvasPlanReadiness', () => {
         nodeIds: ['source.analytics.raw.orders'],
       },
       workspaceNodeIds: ['source.analytics.raw.orders', 'model.analytics.orders'],
+      latestPreviewOutcome: null,
     });
 
     expect(executionState.canPlanGraph).toBe(false);
