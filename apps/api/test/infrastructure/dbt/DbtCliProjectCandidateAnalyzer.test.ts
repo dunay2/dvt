@@ -8,6 +8,7 @@ import type {
   DbtProjectAnalysis,
   DbtProjectAnalysisFile,
 } from '../../../src/application/ports/dbtProjectAnalysis.js';
+import { planDbtSemanticRegionPatch } from '../../../src/application/services/dbtDependencyEdit/dbtSemanticRegionPatchPlanner.js';
 import type { DbtProcessRunner } from '../../../src/infrastructure/dbt/dbtAnalyzerProcess.js';
 import {
   DbtCliProjectAnalyzer,
@@ -36,7 +37,10 @@ describe('DbtCliProjectCandidateAnalyzer', () => {
       resolveWorkspaceScopeStorageRoot(workspaceFilesRoot, SCOPE),
       'analytics'
     );
-    await mkdir(path.join(projectDirectory, 'models'), { recursive: true });
+    await Promise.all([
+      mkdir(path.join(projectDirectory, 'models'), { recursive: true }),
+      mkdir(path.join(projectDirectory, 'macros'), { recursive: true }),
+    ]);
     await writeFile(
       path.join(projectDirectory, 'dbt_project.yml'),
       'name: analytics\nversion: 1.0.0\nprofile: analytics\nmodel-paths: [models]\n',
@@ -49,7 +53,7 @@ describe('DbtCliProjectCandidateAnalyzer', () => {
     );
     await writeFile(
       path.join(projectDirectory, 'models', 'orders.sql'),
-      "-- retained\nselect * from {{ source('raw', 'orders') }}\n",
+      "-- retained\nselect {{ normalize_order('id') }} from {{ source('raw', 'orders') }}\n",
       'utf8'
     );
     await writeFile(
@@ -57,13 +61,29 @@ describe('DbtCliProjectCandidateAnalyzer', () => {
       'version: 2\nsources:\n  - name: raw\n    tables:\n      - name: orders\n      - name: customers\n',
       'utf8'
     );
+    await writeFile(
+      path.join(projectDirectory, 'models', 'schema.yml'),
+      'version: 2\nmodels:\n  - name: orders\n    columns:\n      - name: id\n        tests: [not_null]\n',
+      'utf8'
+    );
+    await writeFile(
+      path.join(projectDirectory, 'macros', 'normalize_order.sql'),
+      '{% macro normalize_order(value) %}upper({{ value }}){% endmacro %}\n',
+      'utf8'
+    );
     run = vi.fn<DbtProcessRunner['run']>(async (input) => {
       const projectPath = readFlag(input.args, '--project-dir');
       const sql = await readFile(path.join(projectPath, 'models', 'orders.sql'), 'utf8');
       const sources = await readFile(path.join(projectPath, 'models', 'sources.yml'), 'utf8');
+      const tests = await readFile(path.join(projectPath, 'models', 'schema.yml'), 'utf8');
+      const macro = await readFile(path.join(projectPath, 'macros', 'normalize_order.sql'), 'utf8');
       expect(sources).toBe(
         'version: 2\nsources:\n  - name: raw\n    tables:\n      - name: orders\n      - name: customers\n'
       );
+      expect(tests).toBe(
+        'version: 2\nmodels:\n  - name: orders\n    columns:\n      - name: id\n        tests: [not_null]\n'
+      );
+      expect(macro).toBe('{% macro normalize_order(value) %}upper({{ value }}){% endmacro %}\n');
       const targetPath = readFlag(input.args, '--target-path');
       await mkdir(targetPath, { recursive: true });
       await writeFile(
@@ -87,6 +107,25 @@ describe('DbtCliProjectCandidateAnalyzer', () => {
     const current = await analyzeCurrent();
     run.mockClear();
     const target = file(current, 'models/orders.sql');
+    const region = current.semanticEvidence.regions.find(
+      (candidate) => candidate.classification === 'supported' && candidate.kind === 'source'
+    );
+    const codeOnlyRegion = current.semanticEvidence.regions.find(
+      (candidate) => candidate.classification === 'code_only'
+    );
+    const nextTarget = current.semanticEvidence.identities.find(
+      (identity) => identity.uniqueId === 'source.analytics.raw.customers'
+    );
+    if (region === undefined || codeOnlyRegion === undefined || nextTarget === undefined) {
+      throw new Error('Missing semantic patch fixture evidence');
+    }
+    const currentSql = await readFile(path.join(projectDirectory, target.path), 'utf8');
+    const patch = planDbtSemanticRegionPatch({
+      content: currentSql,
+      region,
+      nextTarget,
+    });
+    if (patch.kind !== 'patched') throw new Error('Expected a supported semantic patch');
 
     const result = await candidateAnalyzer().analyzeCandidate({
       scope: SCOPE,
@@ -96,22 +135,35 @@ describe('DbtCliProjectCandidateAnalyzer', () => {
       candidate: {
         path: target.path,
         expectedContentSha256: target.revisionSha256,
-        content: "-- retained\nselect * from {{ source('raw', 'customers') }}\n",
+        content: patch.content,
       },
     });
 
     expect(result.kind).toBe('analyzed');
     if (result.kind !== 'analyzed') return;
     expect(result.analysis.status).toBe('valid');
-    expect(result.analysis.semanticEvidence.regions).toEqual([
-      expect.objectContaining({
-        classification: 'supported',
-        targetUniqueId: 'source.analytics.raw.customers',
-      }),
-    ]);
+    expect(result.analysis.semanticEvidence.regions).toHaveLength(
+      current.semanticEvidence.regions.length
+    );
+    expect(result.analysis.semanticEvidence.regions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          classification: 'supported',
+          targetUniqueId: 'source.analytics.raw.customers',
+        }),
+        expect.objectContaining({
+          classification: 'code_only',
+          sourceSha256: codeOnlyRegion.sourceSha256,
+          range: codeOnlyRegion.range,
+        }),
+      ])
+    );
     expect(run).toHaveBeenCalledTimes(1);
     await expect(readFile(path.join(projectDirectory, target.path), 'utf8')).resolves.toContain(
       "source('raw', 'orders')"
+    );
+    await expect(readFile(path.join(projectDirectory, target.path), 'utf8')).resolves.toContain(
+      "normalize_order('id')"
     );
   });
 
