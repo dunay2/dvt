@@ -78,6 +78,28 @@ export interface PlanPreviewViewModel {
   selectionIntent?: PlanPreviewSelectionIntentViewModel;
 }
 
+export type PlanExecutionDecisionViewModel =
+  | Readonly<{
+      subjectId: string;
+      subjectKind: 'node';
+      status: 'RUN';
+      reasonCode: 'SELECTED_ROOT' | 'SELECTED_CLOSURE';
+    }>
+  | Readonly<{
+      subjectId: string;
+      subjectKind: 'node';
+      status: 'SKIP';
+      reasonCode: 'OUTSIDE_SELECTED_CLOSURE';
+    }>
+  | Readonly<{
+      subjectId: 'selection';
+      subjectKind: 'selection';
+      status: 'PARTIAL';
+      reasonCode: 'BOUNDED_SELECTION';
+      includedNodeIds: string[];
+      excludedNodeIds: string[];
+    }>;
+
 export interface PlanViewModel {
   planId: string;
   planVersion: string;
@@ -88,5 +110,6 @@ export interface PlanViewModel {
   steps: PlanStepViewModel[];
   estimatedCost?: number;
   capabilities: string[];
+  decisions?: PlanExecutionDecisionViewModel[];
   preview?: PlanPreviewViewModel;
 }

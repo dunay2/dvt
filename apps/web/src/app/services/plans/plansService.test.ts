@@ -110,6 +110,26 @@ function buildValidTransformationPlan(): Readonly<Record<string, unknown>> {
         stepTypeConfig: VALID_TRANSFORMATION_GRAPH_SOURCE.nodes[2].stepTypeConfig,
       },
     ],
+    decisions: [
+      {
+        subjectId: 'sink-node',
+        subjectKind: 'node',
+        status: 'RUN',
+        reasonCode: 'SELECTED_ROOT',
+      },
+      {
+        subjectId: 'source-node',
+        subjectKind: 'node',
+        status: 'RUN',
+        reasonCode: 'SELECTED_ROOT',
+      },
+      {
+        subjectId: 'transform-node',
+        subjectKind: 'node',
+        status: 'RUN',
+        reasonCode: 'SELECTED_CLOSURE',
+      },
+    ],
     observability: {
       tags: {
         adapter: 'temporal',
@@ -385,6 +405,26 @@ describe('createPlansService', () => {
       'PREPARE_POSTGRES_TRANSFORM',
       'POSTGRES_SQL_TRANSFORM',
       'CAPTURE_MATERIALIZATION_EVIDENCE',
+    ]);
+    expect(plan.decisions).toEqual([
+      {
+        subjectId: 'sink-node',
+        subjectKind: 'node',
+        status: 'RUN',
+        reasonCode: 'SELECTED_ROOT',
+      },
+      {
+        subjectId: 'source-node',
+        subjectKind: 'node',
+        status: 'RUN',
+        reasonCode: 'SELECTED_ROOT',
+      },
+      {
+        subjectId: 'transform-node',
+        subjectKind: 'node',
+        status: 'RUN',
+        reasonCode: 'SELECTED_CLOSURE',
+      },
     ]);
     expect(plan.preview).toMatchObject({
       summary: {
