@@ -14,6 +14,7 @@ import type {
   PlannerPolicyClassSet,
   PlannerSelection,
   PlanPreviewProvenance,
+  PlanPreviewSelectionRejection,
   ScopedPlanRef,
   StartRunPlannerEnvironmentInput,
 } from '@dvt/contracts';
@@ -26,11 +27,6 @@ import { resolveAuthorizedPlannerInputEnvelope } from './resolveAuthorizedPlanne
 import { ResolveAuthorizedPreviewSelectionService } from './resolveAuthorizedPreviewSelection.js';
 
 type PreviewPlanValidationResult = Awaited<ReturnType<IPlanExecutabilityValidator['validatePlan']>>;
-type PreviewPlanSelectionRejection = {
-  readonly code: 'REJECTED';
-  readonly reason: string;
-  readonly cause?: string;
-};
 
 export interface PreviewPlanCommand {
   readonly targetAdapter: string;
@@ -56,7 +52,7 @@ export type PreviewPlanUseCaseResult =
     }
   | {
       readonly kind: typeof PREVIEW_PLAN_RESULT_KIND.selectionRejected;
-      readonly rejection: PreviewPlanSelectionRejection;
+      readonly rejection: PlanPreviewSelectionRejection;
     }
   | {
       readonly kind: typeof PREVIEW_PLAN_RESULT_KIND.planInvalid;
