@@ -35,7 +35,25 @@ type LiveMaterializationEvidence = {
 };
 
 type LiveRunEventResponse = {
-  readonly items?: Array<{ readonly eventType?: string; readonly stepId?: string }>;
+  readonly nextCursor?: number | null;
+  readonly items?: Array<{
+    readonly eventId?: string;
+    readonly eventType?: string;
+    readonly runSeq?: number;
+    readonly stepId?: string;
+  }>;
+};
+
+type LiveRunEventIdentity = {
+  readonly eventId: string;
+  readonly eventType: string;
+  readonly runSeq: number;
+};
+
+type BrowserRunEventRecoveryProbe = {
+  acceptedCursor?: number;
+  interruptedCursor?: number;
+  recoveredCursor?: number;
 };
 
 function assertCompletedMaterialization(
@@ -108,6 +126,77 @@ function closeRunOperationsIfOpen(): void {
   });
 }
 
+function interruptBrowserRunEventRequestAfterCursor(): BrowserRunEventRecoveryProbe {
+  const probe: BrowserRunEventRecoveryProbe = {};
+
+  cy.intercept('GET', '**/runs/*/events*', (request) => {
+    const requestUrl = new URL(request.url);
+    const afterSeq = requestUrl.searchParams.get('afterSeq');
+    const requestedCursor = afterSeq === null ? undefined : Number(afterSeq);
+
+    if (probe.acceptedCursor === undefined) {
+      requestUrl.searchParams.set('limit', '1');
+      request.url = requestUrl.toString();
+      request.alias = 'browserRunEventsInitial';
+      request.continue((response) => {
+        const nextCursor = (response.body as LiveRunEventResponse).nextCursor;
+        if (response.statusCode === 200 && typeof nextCursor === 'number') {
+          probe.acceptedCursor = nextCursor;
+        }
+      });
+      return;
+    }
+
+    if (probe.interruptedCursor === undefined) {
+      probe.interruptedCursor = requestedCursor;
+      request.alias = 'browserRunEventsInterrupted';
+      request.destroy();
+      return;
+    }
+
+    if (probe.recoveredCursor === undefined) {
+      probe.recoveredCursor = requestedCursor;
+      request.alias = 'browserRunEventsRecovery';
+    }
+    request.continue();
+  });
+
+  return probe;
+}
+
+function readAuthoritativeEventIdentity(response: LiveRunEventResponse): LiveRunEventIdentity[] {
+  return (response.items ?? []).map((event) => {
+    expect(event.eventId).to.be.a('string').and.not.to.equal('');
+    expect(event.eventType).to.be.a('string').and.not.to.equal('');
+    expect(event.runSeq).to.be.a('number');
+
+    return {
+      eventId: event.eventId!,
+      eventType: event.eventType!,
+      runSeq: event.runSeq!,
+    };
+  });
+}
+
+function assertRenderedEventSequence(authoritativeEvents: readonly LiveRunEventIdentity[]): void {
+  cy.get('[data-slot="run-event-feed-health"]', { timeout: 30_000 })
+    .should('have.attr', 'data-state', 'complete')
+    .and('have.attr', 'role', 'status');
+  cy.get('[data-slot="run-event-timeline-table"] tbody tr', { timeout: 30_000 }).should(($rows) => {
+    const renderedEvents = [...$rows].map((row) => {
+      const cells = row.querySelectorAll('td');
+      return {
+        runSeq: Number(cells.item(0).textContent),
+        eventType: cells.item(5).textContent?.trim(),
+      };
+    });
+
+    expect(renderedEvents).to.deep.equal(
+      authoritativeEvents.map(({ eventType, runSeq }) => ({ eventType, runSeq }))
+    );
+  });
+}
+
 describe('Canvas preview-run live protected runtime', () => {
   beforeEach(function () {
     if (!hasLiveProtectedRuntimeEnv()) {
@@ -157,9 +246,22 @@ describe('Canvas preview-run live protected runtime', () => {
       expect(content).to.contain('toNodeId: "sink-1"');
     });
 
+    const recoveryProbe = interruptBrowserRunEventRequestAfterCursor();
     clickButtonNatively('Start Run');
 
     cy.location('pathname', { timeout: 20_000 }).should('match', /^\/runs\/[^/]+$/);
+    cy.wait('@browserRunEventsInitial', { timeout: 20_000 })
+      .its('response.statusCode')
+      .should('equal', 200);
+    cy.wait('@browserRunEventsInterrupted', { timeout: 20_000 }).should((interception) => {
+      expect(interception.error).to.exist;
+      expect(recoveryProbe.acceptedCursor).to.be.a('number').and.to.be.greaterThan(0);
+      expect(recoveryProbe.interruptedCursor).to.equal(recoveryProbe.acceptedCursor);
+    });
+    cy.wait('@browserRunEventsRecovery', { timeout: 20_000 }).should((interception) => {
+      expect(interception.response?.statusCode).to.equal(200);
+      expect(recoveryProbe.recoveredCursor).to.equal(recoveryProbe.acceptedCursor);
+    });
     cy.location('pathname').then((pathname) => {
       const runId = pathname.split('/').pop();
       expect(runId).to.be.a('string').and.not.to.equal('');
@@ -170,15 +272,21 @@ describe('Canvas preview-run live protected runtime', () => {
       }).then(() => {
         readLiveRunEvents(runId!).then((eventsResponse) => {
           expect(eventsResponse.status).to.equal(200);
-          const eventTypes = ((eventsResponse.body as LiveRunEventResponse).items ?? []).map(
-            (event) => event.eventType
+          const authoritativeEvents = readAuthoritativeEventIdentity(
+            eventsResponse.body as LiveRunEventResponse
           );
+          const eventTypes = authoritativeEvents.map((event) => event.eventType);
+          const eventIds = authoritativeEvents.map((event) => event.eventId);
+          const runSequences = authoritativeEvents.map((event) => event.runSeq);
           expect(eventTypes).to.include.members([
             'RunQueued',
             'RunStarted',
             'StepCompleted',
             'RunCompleted',
           ]);
+          expect(new Set(eventIds).size).to.equal(eventIds.length);
+          expect(runSequences).to.deep.equal([...runSequences].sort((left, right) => left - right));
+          assertRenderedEventSequence(authoritativeEvents);
         });
       });
     });
