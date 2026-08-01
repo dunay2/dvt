@@ -76,6 +76,7 @@ export function DbtProjectFileCanvas({
         planPreview={{
           open: controller.execution.planModalOpen,
           plan: controller.currentPlan,
+          outcome: controller.execution.latestPreviewOutcome,
           canStartRun: controller.execution.canStartRun,
           planStatusSummary: controller.execution.planStatusSummary,
           onClose: () => controller.execution.setPlanModalOpen(false),

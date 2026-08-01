@@ -1,7 +1,9 @@
 /**
  * Owned concern: host Canvas-owned modal overlays outside the shell layout.
  */
-import { ConfirmEdgeModal, PlanPreviewModal } from '../../components/Modals';
+import { ConfirmEdgeModal } from '../../components/Modals';
+import { PlanPreviewModal } from '../../components/PlanPreviewModal';
+import { canvasViewCopy } from './copy';
 import type { CanvasModalHostProps } from './canvasModalHost.types';
 
 export default function CanvasModalHost({ planPreview, edgeConfirmation }: CanvasModalHostProps) {
@@ -11,6 +13,8 @@ export default function CanvasModalHost({ planPreview, edgeConfirmation }: Canva
         open={planPreview.open}
         onClose={planPreview.onClose}
         plan={planPreview.plan}
+        outcome={planPreview.outcome}
+        messages={canvasViewCopy}
         startRunDisabled={!planPreview.canStartRun}
         startRunMessage={planPreview.planStatusSummary}
         onStartRun={planPreview.onStartRun}

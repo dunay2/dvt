@@ -101,10 +101,27 @@ describe('projectCanvasPreviewOutcome', () => {
       },
     } as unknown as PlanPreviewOutcome;
 
-    expect(projectCanvasPreviewOutcome(outcome)).toMatchObject({
+    expect(projectCanvasPreviewOutcome(outcome)).toEqual({
       currentPlan: previewedPlan,
       readinessBlocker: 'plan_integrity',
       diagnostic: { code: 'FUTURE_REJECTION' },
+    });
+  });
+
+  it('drops untrusted diagnostics when a future selection code reaches the mapper', () => {
+    const outcome = {
+      kind: 'selection-rejected',
+      rejection: {
+        code: 'FUTURE_SELECTION_REJECTION',
+        cause: '<unsafe>future selection cause</unsafe>',
+        reason: '<unsafe>future selection reason</unsafe>',
+      },
+    } as unknown as PlanPreviewOutcome;
+
+    expect(projectCanvasPreviewOutcome(outcome)).toEqual({
+      currentPlan: null,
+      readinessBlocker: 'plan_integrity',
+      diagnostic: { code: 'FUTURE_SELECTION_REJECTION' },
     });
   });
 

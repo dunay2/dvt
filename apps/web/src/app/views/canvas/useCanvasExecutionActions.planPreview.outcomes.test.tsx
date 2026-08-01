@@ -47,6 +47,7 @@ describe('useCanvasExecutionActions authoritative preview outcomes', () => {
     await harness.clickPlan();
 
     expect(harness.text('latest-preview-outcome')).toBe('selection-rejected');
+    expect(harness.text('plan-modal-state')).toBe('true');
     expect(harness.text('current-plan-sha')).toBe('none');
     expect(harness.text('can-start-run')).toBe('false');
     expect(harness.text('plan-run-readiness-blockers')).toContain('plan_integrity');
@@ -81,6 +82,7 @@ describe('useCanvasExecutionActions authoritative preview outcomes', () => {
     await harness.clickPlan();
 
     expect(harness.text('latest-preview-outcome')).toBe('plan-invalid');
+    expect(harness.text('plan-modal-state')).toBe('true');
     expect(harness.text('current-plan-sha')).toBe(invalidPlan.planRef?.sha256);
     expect(harness.text('can-start-run')).toBe('false');
     expect(harness.text('plan-run-readiness-blockers')).toContain('capability_mismatch');

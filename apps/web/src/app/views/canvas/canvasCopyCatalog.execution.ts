@@ -83,6 +83,42 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.plan.createdMessage',
     fallback: 'Execution Preview created',
   },
+  planPreviewSelectionRejectedTitle: {
+    key: 'canvas.planPreview.selectionRejectedTitle',
+    fallback: 'Execution Preview rejected',
+  },
+  planPreviewSelectionRejectedDescription: {
+    key: 'canvas.planPreview.selectionRejectedDescription',
+    fallback: 'The current execution selection was not admitted.',
+  },
+  planPreviewPlanInvalidTitle: {
+    key: 'canvas.planPreview.planInvalidTitle',
+    fallback: 'Execution Preview is not executable',
+  },
+  planPreviewPlanInvalidDescription: {
+    key: 'canvas.planPreview.planInvalidDescription',
+    fallback: 'The persisted preview failed runtime executability validation.',
+  },
+  planPreviewUnknownCodeMessage: {
+    key: 'canvas.planPreview.unknownCodeMessage',
+    fallback: 'The Execution Preview was rejected. Review the technical code.',
+  },
+  planPreviewCodeLabel: {
+    key: 'canvas.planPreview.codeLabel',
+    fallback: 'Technical code',
+  },
+  planPreviewCauseLabel: {
+    key: 'canvas.planPreview.causeLabel',
+    fallback: 'Cause',
+  },
+  planPreviewReasonLabel: {
+    key: 'canvas.planPreview.reasonLabel',
+    fallback: 'Reason',
+  },
+  planPreviewCloseLabel: {
+    key: 'canvas.planPreview.closeLabel',
+    fallback: 'Close',
+  },
   runStartedMessage: {
     key: 'canvas.run.startedMessage',
     fallback: 'Run started',

@@ -31,6 +31,17 @@ export const canvasViewExecutionCopyEs = {
   dbtExplicitSelectionRequiresExecutableResourceMessage:
     'La seleccion contiene recursos no disponibles o no ejecutables. Resuelve la seleccion explicita en Operaciones antes del Preview.',
   planCreatedMessage: 'Execution Preview creado',
+  planPreviewSelectionRejectedTitle: 'Execution Preview rechazado',
+  planPreviewSelectionRejectedDescription: 'La selección de ejecución actual no ha sido admitida.',
+  planPreviewPlanInvalidTitle: 'Execution Preview no ejecutable',
+  planPreviewPlanInvalidDescription:
+    'El preview persistido no ha superado la validación de ejecutabilidad del runtime.',
+  planPreviewUnknownCodeMessage:
+    'El Execution Preview ha sido rechazado. Revisa el código técnico.',
+  planPreviewCodeLabel: 'Código técnico',
+  planPreviewCauseLabel: 'Causa',
+  planPreviewReasonLabel: 'Motivo',
+  planPreviewCloseLabel: 'Cerrar',
   runStartedMessage: 'Run arrancado',
   planStatusRunUnavailableMessage: 'El arranque de runs no esta disponible en este contexto.',
   planStatusPreviewRequiredMessage: 'Se requiere un preview antes de arrancar.',

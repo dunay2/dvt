@@ -142,8 +142,7 @@ export function useCanvasPlanActionHandler({
       return;
     }
 
-    setPlanModalOpen(false);
-    shellFeedback.error(projection.diagnostic?.reason ?? canvasViewCopy.planUnableToCreateMessage);
+    setPlanModalOpen(true);
   }, [
     graphDraftCanvasId,
     canPlan,
