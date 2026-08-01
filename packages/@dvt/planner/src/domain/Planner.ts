@@ -169,11 +169,14 @@ export class Planner {
         this.stepTypeRegistry,
         normalizedSteps
       );
-      const decisions = projectPlanExecutionDecisions({
-        allNodeIds: normalizedInput.decisionScope?.nodeIds ?? graph.nodeIdsSorted,
-        selectedNodeIds: selected,
-        selectedRootNodeIds: normalizedInput.selection.selectedNodeIds,
-      });
+      const decisions =
+        normalizedInput.decisionScope === undefined
+          ? []
+          : projectPlanExecutionDecisions({
+              allNodeIds: normalizedInput.decisionScope.nodeIds,
+              selectedNodeIds: selected,
+              selectedRootNodeIds: normalizedInput.selection.selectedNodeIds,
+            });
       const result = await this.assembler.execute(
         new AssemblePlanCommand(
           normalizedInput,

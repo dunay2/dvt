@@ -112,6 +112,16 @@ describe('PlannerFacade - canonical graph source boundary', () => {
     ]);
   });
 
+  it('preserves legacy plan payloads when no authorized decision scope is provided', async () => {
+    const facade = new PlannerFacade();
+    const result = await facade.buildPlan({
+      graphSource: BASE_GRAPH_SOURCE,
+      selection: BASE_SELECTION,
+    });
+
+    expect(result.plan).not.toHaveProperty('decisions');
+  });
+
   it('accepts graphSource as canonical planner ingress', async () => {
     const facade = new PlannerFacade();
     const result = await facade.buildPlan({
