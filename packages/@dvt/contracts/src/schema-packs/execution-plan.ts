@@ -6,6 +6,10 @@ import {
   type ExecutionPlan,
   type PlanCore,
 } from '../contracts/planner/ExecutionPlan.v1.js';
+import {
+  PLAN_EXECUTION_DECISION_REASON,
+  PLAN_EXECUTION_DECISION_STATUS,
+} from '../contracts/planner/PlanExecutionDecision.v1.js';
 import { MAX_RETRY_POLICY_ATTEMPTS } from '../contracts/planner/PlannerPolicyVocabulary.v2.js';
 import {
   CURRENT_EXECUTION_PLAN_VERSION,
@@ -66,6 +70,96 @@ const PlanOwnershipSchema = z
   })
   .strict();
 
+const OrderedNodeIdsSchema = z
+  .array(NonBlankStringSchema)
+  .min(1)
+  .superRefine((nodeIds, ctx) => {
+    for (let index = 1; index < nodeIds.length; index += 1) {
+      if ((nodeIds[index - 1] ?? '') >= (nodeIds[index] ?? '')) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [index],
+          message: 'node ids must be unique and ordered.',
+        });
+      }
+    }
+  });
+
+const PlanExecutionRunDecisionSchema = z
+  .object({
+    subjectId: NonBlankStringSchema,
+    subjectKind: z.literal('node'),
+    status: z.literal(PLAN_EXECUTION_DECISION_STATUS.run),
+    reasonCode: z.enum([
+      PLAN_EXECUTION_DECISION_REASON.selectedRoot,
+      PLAN_EXECUTION_DECISION_REASON.selectedClosure,
+    ]),
+  })
+  .strict();
+
+const PlanExecutionSkipDecisionSchema = z
+  .object({
+    subjectId: NonBlankStringSchema,
+    subjectKind: z.literal('node'),
+    status: z.literal(PLAN_EXECUTION_DECISION_STATUS.skip),
+    reasonCode: z.literal(PLAN_EXECUTION_DECISION_REASON.outsideSelectedClosure),
+  })
+  .strict();
+
+const PlanExecutionPartialDecisionSchema = z
+  .object({
+    subjectId: z.literal('selection'),
+    subjectKind: z.literal('selection'),
+    status: z.literal(PLAN_EXECUTION_DECISION_STATUS.partial),
+    reasonCode: z.literal(PLAN_EXECUTION_DECISION_REASON.boundedSelection),
+    includedNodeIds: OrderedNodeIdsSchema,
+    excludedNodeIds: OrderedNodeIdsSchema,
+  })
+  .strict()
+  .superRefine((decision, ctx) => {
+    const included = new Set(decision.includedNodeIds);
+    const overlap = decision.excludedNodeIds.find((nodeId) => included.has(nodeId));
+    if (overlap !== undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['excludedNodeIds'],
+        message: `included and excluded scope must be disjoint; found ${overlap}.`,
+      });
+    }
+  });
+
+const PlanExecutionDecisionSchema = z.discriminatedUnion('status', [
+  PlanExecutionRunDecisionSchema,
+  PlanExecutionSkipDecisionSchema,
+  PlanExecutionPartialDecisionSchema,
+]);
+
+const PlanExecutionDecisionsSchema = z
+  .array(PlanExecutionDecisionSchema)
+  .min(1)
+  .superRefine((decisions, ctx) => {
+    const partialIndexes = decisions.flatMap((decision, index) =>
+      decision.status === PLAN_EXECUTION_DECISION_STATUS.partial ? [index] : []
+    );
+    if (partialIndexes.length > 1 || (partialIndexes.length === 1 && partialIndexes[0] !== 0)) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'the optional PARTIAL selection decision must be the first and only one.',
+      });
+    }
+
+    const nodeDecisions = decisions.filter((decision) => decision.subjectKind === 'node');
+    for (let index = 1; index < nodeDecisions.length; index += 1) {
+      if ((nodeDecisions[index - 1]?.subjectId ?? '') >= (nodeDecisions[index]?.subjectId ?? '')) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'node decisions must have unique subjects in deterministic order.',
+        });
+        break;
+      }
+    }
+  });
+
 const CurrentPlanCoreSchema = z
   .object({
     metadata: z
@@ -93,6 +187,7 @@ const CurrentExecutionPlanV1Schema = CurrentPlanCoreSchema.extend({
     })
     .strict(),
   observability: PlannerObservabilitySchema,
+  decisions: PlanExecutionDecisionsSchema.optional(),
 }).strict();
 
 export const PLAN_CORE_VERSIONED_SCHEMAS = {

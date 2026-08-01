@@ -11,6 +11,7 @@
 
 import type { RunExecutionPolicy } from '../engine/RunExecutionPolicy.v1.js';
 
+import type { PlanExecutionDecision } from './PlanExecutionDecision.v1.js';
 import type { PlannerPolicyClassSet } from './PlannerPolicyVocabulary.v2.js';
 import type { SupportedPlanVersion } from './PlanVersion.v1.js';
 
@@ -155,6 +156,8 @@ export type VersionedExecutionPlan<TVersion extends SupportedPlanVersion> =
       extra?: Record<string, unknown>;
       [k: string]: unknown;
     };
+    /** Deterministic planner explanation persisted with the immutable plan. */
+    decisions?: readonly PlanExecutionDecision[];
   };
 
 export type ExecutionPlan = {

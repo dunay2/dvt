@@ -15,6 +15,7 @@ import {
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
   type RunExecutionPolicy,
+  type PlanExecutionDecision,
 } from '@dvt/contracts';
 
 import { sha256CanonicalJson } from './hashing.js';
@@ -29,7 +30,8 @@ export class AssemblePlanCommand {
     readonly normalizedInput: NormalizedPlannerInput,
     readonly normalizedSteps: PlanCore['steps'],
     readonly maxPlanSizeBytes: number,
-    readonly requiredCapabilities: readonly string[] = []
+    readonly requiredCapabilities: readonly string[] = [],
+    readonly decisions: readonly PlanExecutionDecision[] = []
   ) {}
 }
 
@@ -61,7 +63,7 @@ export class PlanAssembler {
     this.metrics.recordPlanSize(bytes);
 
     return {
-      plan: this.assembleFinalPlan(planCore, planId, command.normalizedInput),
+      plan: this.assembleFinalPlan(planCore, planId, command.normalizedInput, command.decisions),
       executionPolicy: this.buildExecutionPolicy(
         pluginCompatibilityFingerprint,
         command.requiredCapabilities
@@ -101,7 +103,8 @@ export class PlanAssembler {
   private assembleFinalPlan(
     planCore: PlanCore,
     planId: string,
-    input: NormalizedPlannerInput
+    input: NormalizedPlannerInput,
+    decisions: readonly PlanExecutionDecision[]
   ): ExecutionPlan {
     const planBase: ExecutionPlan = {
       ...planCore,
@@ -113,6 +116,7 @@ export class PlanAssembler {
         createdAtIso: new Date().toISOString(),
         ...(input.ownership === undefined ? {} : { ownership: input.ownership }),
       },
+      ...(decisions.length === 0 ? {} : { decisions }),
     };
 
     const plan: ExecutionPlan =

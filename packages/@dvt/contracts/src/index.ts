@@ -77,6 +77,16 @@ export type {
   VersionedPlanCore,
 } from './contracts/planner/ExecutionPlan.v1.js';
 export {
+  PLAN_EXECUTION_DECISION_REASON,
+  PLAN_EXECUTION_DECISION_STATUS,
+} from './contracts/planner/PlanExecutionDecision.v1.js';
+export type {
+  PlanExecutionDecision,
+  PlanExecutionPartialDecision,
+  PlanExecutionRunDecision,
+  PlanExecutionSkipDecision,
+} from './contracts/planner/PlanExecutionDecision.v1.js';
+export {
   PLAN_PREVIEW_REJECTED_OUTCOME_CONTRACT_VERSION,
   PLAN_PREVIEW_REJECTED_OUTCOME_KIND,
   PREVIEW_PROFILE,

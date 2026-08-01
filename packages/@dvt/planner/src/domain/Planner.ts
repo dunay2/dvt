@@ -32,6 +32,7 @@ import { resolveLimits, type PlannerLimits, throwLimitExceeded } from './limits.
 import { NoopPlannerMetrics, type PlannerMetrics } from './metrics.js';
 import { NodeSelector, SelectNodesCommand } from './NodeSelector.js';
 import { AssemblePlanCommand, PlanAssembler } from './PlanAssembler.js';
+import { projectPlanExecutionDecisions } from './PlanExecutionDecisionProjector.js';
 import { resolvePolicies } from './policies.js';
 import { binaryCompare } from './sorting.js';
 import { dbtStepFactory } from './stepFactory/dbtStepFactory.js';
@@ -168,12 +169,18 @@ export class Planner {
         this.stepTypeRegistry,
         normalizedSteps
       );
+      const decisions = projectPlanExecutionDecisions({
+        allNodeIds: graph.nodeIdsSorted,
+        selectedNodeIds: selected,
+        selectedRootNodeIds: normalizedInput.selection.selectedNodeIds,
+      });
       const result = await this.assembler.execute(
         new AssemblePlanCommand(
           normalizedInput,
           normalizedSteps,
           this.limits.maxPlanSizeBytes,
-          requiredCapabilities
+          requiredCapabilities,
+          decisions
         )
       );
 
