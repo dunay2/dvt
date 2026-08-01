@@ -18,6 +18,10 @@ export type RunWorkspaceTimeline =
       nextAfterSeq?: number;
     }
   | {
+      state: 'unresolved';
+      events: [];
+    }
+  | {
       state: 'empty';
       events: [];
       nextAfterSeq?: number;
@@ -87,6 +91,8 @@ export function buildRunWorkspaceViewModel(
 ): RunWorkspaceViewModel {
   const timelineSnapshot = readFeedSnapshot(feed);
   const hasEvents = timelineSnapshot.events.length > 0;
+  const hasSuccessfulFeedResponse =
+    feed !== undefined && feed.phase !== 'idle' && feed.lastSuccessfulFetchAt !== undefined;
   const projectedHealth = buildRunEventFeedHealthModel(feed);
   const eventFeedHealth: RunEventFeedHealthModel = feedError
     ? {
@@ -99,7 +105,7 @@ export function buildRunWorkspaceViewModel(
 
   if (hasEvents) {
     timeline = { state: 'available', ...timelineSnapshot };
-  } else {
+  } else if (hasSuccessfulFeedResponse) {
     timeline = {
       state: 'empty',
       events: [],
@@ -107,6 +113,8 @@ export function buildRunWorkspaceViewModel(
         ? {}
         : { nextAfterSeq: timelineSnapshot.nextAfterSeq }),
     };
+  } else {
+    timeline = { state: 'unresolved', events: [] };
   }
 
   return {
