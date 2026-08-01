@@ -2757,22 +2757,154 @@
       "dddOwner": "DbtSelectedModelAnalysisReadModel",
       "railStatus": "implemented",
       "symbolRefs": [
-        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelAnalysisSchema",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisFile",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisIdentity",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticDiagnostic",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticEvidence",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticRegion",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticRegionBase",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSourceRange",
+        "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts#PROTECTED_RUNTIME_RAIL_VOCABULARY",
+        "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelInput",
         "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelQuery",
+        "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#IAnalyzeSelectedDbtModelQuery",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#buildCapabilitySet",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#compareRegions",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#dependencyKey",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#hashStable",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#OutputDependency",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#parseOutput",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#projectDependencies",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#projectIdentity",
         "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#projectSelectedDbtModelAnalysis",
-        "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts#DbtCliProjectAnalyzer",
-        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#projectDbtSemanticRegions",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#RawCapabilitySet",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#RawDiagnostic",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#RawRegion",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#resolveRelations",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#sortJsonValue",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#SUPPORTED_REGION_KINDS",
+        "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRouteGroup.ts#registerProtectedDbtSelectedModelAnalysisRouteGroup",
+        "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRouteGroup.ts#RuntimeAuth",
+        "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#parseSelectedModelAnalysisQuery",
         "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#registerDbtSelectedModelAnalysisRoutes",
-        "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts#PROTECTED_RUNTIME_RAIL_VOCABULARY"
+        "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#SelectedModelAnalysisQuery",
+        "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#SelectedModelAnalysisRouteDeps",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts#DbtCliProjectAnalyzer",
+        "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts#projectIdentity",
+        "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts#SUPPORTED_ANALYSIS_IDENTITY_TYPES",
+        "apps/api/src/infrastructure/dbt/dbtProjectContentRevision.ts#ProjectContentFileRevision",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#buildDbtProjectSemanticEvidence",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#classifyFile",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#groupIdentitiesByPath",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#JINJA_SOURCE_EXTENSIONS",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#projectDbtProjectFiles",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#compareRegions",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#dependencyCandidates",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#FileContent",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#groupOwnersByPath",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#JINJA_REGION_PATTERN",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#projectDbtSemanticRegions",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#REF_LITERAL_PATTERN",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#resolveCandidates",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#resolveRegion",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#SemanticRegionProjection",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#sha256",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#SOURCE_LITERAL_PATTERN",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#addIssue",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalysisCapabilitySetSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalysisDiagnosticSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalysisDiagnosticSubjectSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalyzedFileSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedDependencySchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedIdentitySchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelAnalysis",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelAnalysisSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelIdentity",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelSemanticRegion",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSemanticRegionBaseSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSemanticRegionSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSourceByteRangeSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#NonBlankStringSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#NonNegativeIntegerSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#pad",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#requireSortedUnique",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#Sha256Schema"
       ],
       "implementationRefs": [
-        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelAnalysisSchema",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisFile",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisIdentity",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticDiagnostic",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticEvidence",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticRegion",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticRegionBase",
+        "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSourceRange",
+        "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts#PROTECTED_RUNTIME_RAIL_VOCABULARY",
+        "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelInput",
         "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelQuery",
+        "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#IAnalyzeSelectedDbtModelQuery",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#buildCapabilitySet",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#compareRegions",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#dependencyKey",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#hashStable",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#OutputDependency",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#parseOutput",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#projectDependencies",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#projectIdentity",
         "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#projectSelectedDbtModelAnalysis",
-        "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts#DbtCliProjectAnalyzer",
-        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#projectDbtSemanticRegions",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#RawCapabilitySet",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#RawDiagnostic",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#RawRegion",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#resolveRelations",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#sortJsonValue",
+        "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#SUPPORTED_REGION_KINDS",
+        "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRouteGroup.ts#registerProtectedDbtSelectedModelAnalysisRouteGroup",
+        "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRouteGroup.ts#RuntimeAuth",
+        "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#parseSelectedModelAnalysisQuery",
         "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#registerDbtSelectedModelAnalysisRoutes",
-        "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts#PROTECTED_RUNTIME_RAIL_VOCABULARY"
+        "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#SelectedModelAnalysisQuery",
+        "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#SelectedModelAnalysisRouteDeps",
+        "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts#DbtCliProjectAnalyzer",
+        "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts#projectIdentity",
+        "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts#SUPPORTED_ANALYSIS_IDENTITY_TYPES",
+        "apps/api/src/infrastructure/dbt/dbtProjectContentRevision.ts#ProjectContentFileRevision",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#buildDbtProjectSemanticEvidence",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#classifyFile",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#groupIdentitiesByPath",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#JINJA_SOURCE_EXTENSIONS",
+        "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#projectDbtProjectFiles",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#compareRegions",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#dependencyCandidates",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#FileContent",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#groupOwnersByPath",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#JINJA_REGION_PATTERN",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#projectDbtSemanticRegions",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#REF_LITERAL_PATTERN",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#resolveCandidates",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#resolveRegion",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#SemanticRegionProjection",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#sha256",
+        "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#SOURCE_LITERAL_PATTERN",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#addIssue",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalysisCapabilitySetSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalysisDiagnosticSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalysisDiagnosticSubjectSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalyzedFileSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedDependencySchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedIdentitySchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelAnalysis",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelAnalysisSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelIdentity",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelSemanticRegion",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSemanticRegionBaseSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSemanticRegionSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSourceByteRangeSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#NonBlankStringSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#NonNegativeIntegerSchema",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#pad",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#requireSortedUnique",
+        "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#Sha256Schema"
       ],
       "documentationRefs": [
         "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
@@ -2813,8 +2945,152 @@
       "rawManifest": {
         "symbols": [
           {
-            "name": "DbtSelectedModelAnalysisSchema",
-            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "name": "DbtProjectAnalysisFile",
+            "path": "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtProjectAnalysisIdentity",
+            "path": "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtProjectSemanticDiagnostic",
+            "path": "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtProjectSemanticEvidence",
+            "path": "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtProjectSemanticRegion",
+            "path": "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtProjectSemanticRegionBase",
+            "path": "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtProjectSourceRange",
+            "path": "apps/api/src/application/ports/dbtProjectAnalysis.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "PROTECTED_RUNTIME_RAIL_VOCABULARY",
+            "path": "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "AnalyzeSelectedDbtModelInput",
+            "path": "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
             "cqRails": ["AnalyzeSelectedDbtModel"],
             "dddOwner": "DbtSelectedModelAnalysisReadModel",
             "unitTests": [
@@ -2849,6 +3125,168 @@
             "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
           },
           {
+            "name": "IAnalyzeSelectedDbtModelQuery",
+            "path": "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "buildCapabilitySet",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "compareRegions",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "dependencyKey",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "hashStable",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "OutputDependency",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "parseOutput",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "projectDependencies",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "projectIdentity",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
             "name": "projectSelectedDbtModelAnalysis",
             "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
             "cqRails": ["AnalyzeSelectedDbtModel"],
@@ -2867,8 +3305,8 @@
             "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
           },
           {
-            "name": "DbtCliProjectAnalyzer",
-            "path": "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts",
+            "name": "RawCapabilitySet",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
             "cqRails": ["AnalyzeSelectedDbtModel"],
             "dddOwner": "DbtSelectedModelAnalysisReadModel",
             "unitTests": [
@@ -2885,8 +3323,134 @@
             "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
           },
           {
-            "name": "projectDbtSemanticRegions",
-            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "name": "RawDiagnostic",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "RawRegion",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "resolveRelations",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "sortJsonValue",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "SUPPORTED_REGION_KINDS",
+            "path": "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "registerProtectedDbtSelectedModelAnalysisRouteGroup",
+            "path": "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRouteGroup.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "RuntimeAuth",
+            "path": "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRouteGroup.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "parseSelectedModelAnalysisQuery",
+            "path": "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts",
             "cqRails": ["AnalyzeSelectedDbtModel"],
             "dddOwner": "DbtSelectedModelAnalysisReadModel",
             "unitTests": [
@@ -2921,8 +3485,764 @@
             "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
           },
           {
-            "name": "PROTECTED_RUNTIME_RAIL_VOCABULARY",
-            "path": "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts",
+            "name": "SelectedModelAnalysisQuery",
+            "path": "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "SelectedModelAnalysisRouteDeps",
+            "path": "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtCliProjectAnalyzer",
+            "path": "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "projectIdentity",
+            "path": "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "SUPPORTED_ANALYSIS_IDENTITY_TYPES",
+            "path": "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "ProjectContentFileRevision",
+            "path": "apps/api/src/infrastructure/dbt/dbtProjectContentRevision.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "buildDbtProjectSemanticEvidence",
+            "path": "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "classifyFile",
+            "path": "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE",
+            "path": "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "groupIdentitiesByPath",
+            "path": "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "JINJA_SOURCE_EXTENSIONS",
+            "path": "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "projectDbtProjectFiles",
+            "path": "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "compareRegions",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "dependencyCandidates",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "FileContent",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "groupOwnersByPath",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "JINJA_REGION_PATTERN",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "projectDbtSemanticRegions",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "REF_LITERAL_PATTERN",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "resolveCandidates",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "resolveRegion",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "SemanticRegionProjection",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "sha256",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "SOURCE_LITERAL_PATTERN",
+            "path": "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "addIssue",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtAnalysisCapabilitySetSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtAnalysisDiagnosticSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtAnalysisDiagnosticSubjectSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtAnalyzedFileSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtSelectedDependencySchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtSelectedIdentitySchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtSelectedModelAnalysis",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtSelectedModelAnalysisSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtSelectedModelIdentity",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtSelectedModelSemanticRegion",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtSemanticRegionBaseSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtSemanticRegionSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "DbtSourceByteRangeSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "NonBlankStringSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "NonNegativeIntegerSchema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "pad",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "requireSortedUnique",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+            "cqRails": ["AnalyzeSelectedDbtModel"],
+            "dddOwner": "DbtSelectedModelAnalysisReadModel",
+            "unitTests": [
+              "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+              "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+              "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+              "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+              "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+            ],
+            "cypressCoverage": "N/A - server analysis query introduces no browser behavior in GH-2101.",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+          },
+          {
+            "name": "Sha256Schema",
+            "path": "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
             "cqRails": ["AnalyzeSelectedDbtModel"],
             "dddOwner": "DbtSelectedModelAnalysisReadModel",
             "unitTests": [
@@ -3015,7 +4335,7 @@
           "tools/planning-db/migrations"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-01T07:23:00.279Z"
     },
@@ -9465,6 +10785,165 @@
         ]
       },
       "createdAt": "2026-08-01T07:23:00.279Z"
+    },
+    {
+      "operationId": "64ae94c6-511f-4999-9237-1d51e3281f70",
+      "idempotencyKey": "codex-mvp-2101-symbol-exhaustiveness",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2101-SELECTED-DBT-MODEL-ANALYSIS#query#analyzeselecteddbtmodel",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2101",
+      "sourceContentSha256": "b737f7ff9fc52ee90b614620e62aece6e11651ad147e9d239b62115778d7eaed",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts",
+        "dddOwner": "DbtSelectedModelAnalysisReadModel",
+        "railName": "AnalyzeSelectedDbtModel",
+        "railType": "query",
+        "featureId": "MVP-2101-SELECTED-DBT-MODEL-ANALYSIS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2101",
+        "unitTests": [
+          "packages/@dvt/contracts/test/dbt-selected-model-analysis.contract.test.ts",
+          "apps/api/test/application/analyzeSelectedDbtModelQuery.test.ts",
+          "apps/api/test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts",
+          "apps/api/test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts",
+          "apps/api/test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2101"],
+        "cypressFlows": [
+          "N/A - server analysis query introduces no browser behavior in GH-2101."
+        ],
+        "domainObjects": [
+          "DbtSelectedModelAnalysisReadModel",
+          "CanvasAuthoringAuthorityPolicy"
+        ],
+        "fowlerSignals": [
+          "Bounded query projection removes route-owned semantics and prevents a second dependency graph."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test -- dbt-selected-model-analysis.contract.test.ts",
+          "pnpm --filter dvt-api exec tsc --noEmit -p tsconfig.json",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "expectedFailure": "Selected analysis contract, native semantic evidence, conservative code-only regions, authority refusal and protected HTTP query were absent.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "documentationRefs": [
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/application/analyzeSelectedDbtModelQuery.test.ts test/entrypoints/http/dbtSelectedModelAnalysisRoutes.test.ts test/infrastructure/dbt/DbtCliProjectAnalyzer.test.ts test/infrastructure/dbt/dbtSemanticRegionProjection.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2101",
+        "implementationRefs": [
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisFile",
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectAnalysisIdentity",
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticDiagnostic",
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticEvidence",
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticRegion",
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSemanticRegionBase",
+          "apps/api/src/application/ports/dbtProjectAnalysis.ts#DbtProjectSourceRange",
+          "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts#PROTECTED_RUNTIME_RAIL_VOCABULARY",
+          "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelInput",
+          "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#AnalyzeSelectedDbtModelQuery",
+          "apps/api/src/application/services/analyzeSelectedDbtModelQuery.ts#IAnalyzeSelectedDbtModelQuery",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#buildCapabilitySet",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#compareRegions",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#dependencyKey",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#hashStable",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#OutputDependency",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#parseOutput",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#projectDependencies",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#projectIdentity",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#projectSelectedDbtModelAnalysis",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#RawCapabilitySet",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#RawDiagnostic",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#RawRegion",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#resolveRelations",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#sortJsonValue",
+          "apps/api/src/application/services/selectedDbtModelAnalysisProjection.ts#SUPPORTED_REGION_KINDS",
+          "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRouteGroup.ts#registerProtectedDbtSelectedModelAnalysisRouteGroup",
+          "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRouteGroup.ts#RuntimeAuth",
+          "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#parseSelectedModelAnalysisQuery",
+          "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#registerDbtSelectedModelAnalysisRoutes",
+          "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#SelectedModelAnalysisQuery",
+          "apps/api/src/entrypoints/http/dbtSelectedModelAnalysisRoutes.ts#SelectedModelAnalysisRouteDeps",
+          "apps/api/src/infrastructure/dbt/DbtCliProjectAnalyzer.ts#DbtCliProjectAnalyzer",
+          "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts#projectIdentity",
+          "apps/api/src/infrastructure/dbt/dbtManifestProjection.ts#SUPPORTED_ANALYSIS_IDENTITY_TYPES",
+          "apps/api/src/infrastructure/dbt/dbtProjectContentRevision.ts#ProjectContentFileRevision",
+          "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#buildDbtProjectSemanticEvidence",
+          "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#classifyFile",
+          "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#EMPTY_DBT_PROJECT_SEMANTIC_EVIDENCE",
+          "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#groupIdentitiesByPath",
+          "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#JINJA_SOURCE_EXTENSIONS",
+          "apps/api/src/infrastructure/dbt/dbtProjectSemanticEvidence.ts#projectDbtProjectFiles",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#compareRegions",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#dependencyCandidates",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#FileContent",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#groupOwnersByPath",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#JINJA_REGION_PATTERN",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#projectDbtSemanticRegions",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#REF_LITERAL_PATTERN",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#resolveCandidates",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#resolveRegion",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#SemanticRegionProjection",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#sha256",
+          "apps/api/src/infrastructure/dbt/dbtSemanticRegionProjection.ts#SOURCE_LITERAL_PATTERN",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#addIssue",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalysisCapabilitySetSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalysisDiagnosticSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalysisDiagnosticSubjectSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtAnalyzedFileSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedDependencySchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedIdentitySchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelAnalysis",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelAnalysisSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelIdentity",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSelectedModelSemanticRegion",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSemanticRegionBaseSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSemanticRegionSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#DbtSourceByteRangeSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#NonBlankStringSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#NonNegativeIntegerSchema",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#pad",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#requireSortedUnique",
+          "packages/@dvt/contracts/src/contracts/dbt-project/DbtSelectedModelAnalysis.v1.ts#Sha256Schema"
+        ],
+        "normalizedRailName": "analyzeselecteddbtmodel",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "b737f7ff9fc52ee90b614620e62aece6e11651ad147e9d239b62115778d7eaed",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/dbt-project",
+          "packages/@dvt/contracts/test",
+          "apps/api/src/application/ports",
+          "apps/api/src/application/services",
+          "apps/api/src/infrastructure/dbt",
+          "apps/api/src/entrypoints/http",
+          "apps/api/src/modules/dbtProjectImport",
+          "apps/api/test"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web",
+          "packages/@dvt/planner",
+          "tools/planning-db/migrations"
+        ]
+      },
+      "createdAt": "2026-08-01T07:53:10.878Z"
     }
   ]
 }
