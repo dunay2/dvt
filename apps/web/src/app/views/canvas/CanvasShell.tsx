@@ -16,6 +16,7 @@ import { useCanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type { CanvasShellContextualWorkbench, CanvasShellProps } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
+import { useCanvasRouteIntentHandler } from './useCanvasRouteIntentHandler';
 
 export default function CanvasShell({
   layout,
@@ -26,6 +27,7 @@ export default function CanvasShell({
   chromeCommands,
   canvasCommands,
   workspaceCommands,
+  routeIntentRequest,
   canvasContextScreenToFlowPosition,
   onDbtProjectImported,
 }: CanvasShellProps): JSX.Element {
@@ -92,6 +94,12 @@ export default function CanvasShell({
     [internalContextualWorkbench, layout]
   );
   const onOpenProjectCode = workspaceCommands?.onOpenProjectCode ?? openProjectCodeWorkbench;
+  useCanvasRouteIntentHandler({
+    request: routeIntentRequest ?? null,
+    columnLevelLineageEnabled: chromeState.columnLevelLineageEnabled,
+    onOpenProjectCode,
+    onToggleColumnLevelLineage: chromeCommands.onToggleColumns,
+  });
   const onOpenProjectExplorer =
     workspaceCommands?.canOpenProjectExplorer === false ? undefined : openProjectExplorer;
   const contextMenuPresenter = useCanvasContextMenuPresenter({

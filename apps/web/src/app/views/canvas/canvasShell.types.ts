@@ -30,6 +30,10 @@ import type {
   CanvasExecutionSelectionRecoveryCommands,
   CanvasExecutionSelectionRecoveryReadModel,
 } from '../../types/canvasExecutionSelectionRecovery';
+import type {
+  CanvasRouteIntent,
+  CanvasUnavailableLegacySurfaceId,
+} from './canvasLegacyRouteIntent';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -170,6 +174,12 @@ export type CanvasShellWorkspaceCommands = Readonly<{
   onOpenProjectCode?: () => void;
 }>;
 
+export type CanvasShellRouteIntentRequest = Readonly<{
+  intent: CanvasRouteIntent;
+  onUnavailableLegacySurface: (surfaceId: CanvasUnavailableLegacySurfaceId) => void;
+  onConsumed: () => void;
+}>;
+
 export type CanvasShellProps = Readonly<{
   layout: CanvasShellLayout;
   panels: CanvasShellPanels;
@@ -179,6 +189,7 @@ export type CanvasShellProps = Readonly<{
   chromeCommands: CanvasShellChromeCommands;
   canvasCommands: CanvasShellCanvasCommands;
   workspaceCommands?: CanvasShellWorkspaceCommands;
+  routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   canvasContextScreenToFlowPosition?: (
     screenPosition: CanvasContextMenuPosition

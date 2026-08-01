@@ -16,6 +16,7 @@ import { CanvasErrorStateView } from './CanvasStateViews';
 import CanvasModalHost from './CanvasModalHost';
 import { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
 import type { DbtProjectImportResult } from '@dvt/contracts';
+import type { CanvasShellRouteIntentRequest } from './canvasShell.types';
 
 export function InvalidCanvasAuthority({ message }: Readonly<{ message: string }>): JSX.Element {
   const bootstrapPresentation = useMemo(
@@ -30,9 +31,11 @@ export function InvalidCanvasAuthority({ message }: Readonly<{ message: string }
 export function DbtProjectFileCanvas({
   authorityBinding,
   onDbtProjectImported,
+  routeIntentRequest,
 }: Readonly<{
   authorityBinding: DbtProjectFilesAuthorityBinding;
   onDbtProjectImported: (result: DbtProjectImportResult) => void;
+  routeIntentRequest?: CanvasShellRouteIntentRequest;
 }>): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const controller = useDbtProjectFileCanvasController(authorityBinding);
@@ -71,6 +74,7 @@ export function DbtProjectFileCanvas({
         controller={controller}
         screenToFlowPosition={(screenPosition) => reactFlow.screenToFlowPosition(screenPosition)}
         onDbtProjectImported={onDbtProjectImported}
+        routeIntentRequest={routeIntentRequest}
       />
       <CanvasModalHost
         planPreview={{

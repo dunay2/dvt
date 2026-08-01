@@ -2,6 +2,8 @@
 
 export const CANVAS_ROUTE_INTENT_SEARCH_PARAM = 'canvasIntent';
 
+export type CanvasUnavailableLegacySurfaceId = 'diff' | 'artifacts' | 'unknown';
+
 type CanvasRouteIntentToken =
   | 'project-code'
   | 'column-lineage'
@@ -14,7 +16,7 @@ export type CanvasRouteIntent =
   | Readonly<{ kind: 'enable-lens'; lensId: 'column-lineage' }>
   | Readonly<{
       kind: 'unavailable-legacy-surface';
-      surfaceId: 'diff' | 'artifacts' | 'unknown';
+      surfaceId: CanvasUnavailableLegacySurfaceId;
     }>;
 
 const LEGACY_ROUTE_INTENT_BY_PATH: Readonly<Record<string, CanvasRouteIntentToken>> = {

@@ -3,7 +3,7 @@
  */
 import { ReactFlowProvider, useReactFlow, type Edge, type Node } from '@xyflow/react';
 import { useCallback, useMemo } from 'react';
-import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import type { DbtProjectImportResult } from '@dvt/contracts';
 
 import CanvasModalHost from './canvas/CanvasModalHost';
@@ -18,12 +18,21 @@ import {
 import { DbtProjectFileCanvas, InvalidCanvasAuthority } from './canvas/DbtProjectFileCanvas';
 import { useCanvasRoutePresentationSync } from './canvas/useCanvasRoutePresentationSync';
 import { useCanvasController } from './canvas/useCanvasController';
-import { useWarehouseSourceImportPort } from '../services/AppServicesContext';
+import { useShellFeedback, useWarehouseSourceImportPort } from '../services/AppServicesContext';
+import {
+  removeCanvasRouteIntent,
+  resolveCanvasRouteIntent,
+  type CanvasUnavailableLegacySurfaceId,
+} from './canvas/canvasLegacyRouteIntent';
+import { resolveCanvasViewCopy } from './canvas/canvasCopyCatalog';
+import type { CanvasShellRouteIntentRequest } from './canvas/canvasShell.types';
 
 function GraphDraftCanvasContent({
   onDbtProjectImported,
+  routeIntentRequest,
 }: Readonly<{
   onDbtProjectImported: (result: DbtProjectImportResult) => void;
+  routeIntentRequest?: CanvasShellRouteIntentRequest;
 }>): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const warehouseSourceImport = useWarehouseSourceImportPort();
@@ -48,6 +57,7 @@ function GraphDraftCanvasContent({
           reactFlow.screenToFlowPosition(screenPosition)
         }
         onDbtProjectImported={onDbtProjectImported}
+        routeIntentRequest={routeIntentRequest}
       />
       <CanvasModalHost {...modalHostProps} />
     </>
@@ -55,9 +65,10 @@ function GraphDraftCanvasContent({
 }
 
 function CanvasContent(): JSX.Element {
-  const params = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const feedback = useShellFeedback();
+  const copy = resolveCanvasViewCopy();
   const authorityResolution = useMemo(
     () => resolveCanvasRouteAuthority(searchParams),
     [searchParams]
@@ -68,19 +79,53 @@ function CanvasContent(): JSX.Element {
     },
     [navigate]
   );
-
-  if (params.workbenchTab != null && params.workbenchTab.trim() !== '') {
-    return <Navigate to="/canvas" replace />;
-  }
+  const routeIntent = useMemo(() => resolveCanvasRouteIntent(searchParams), [searchParams]);
+  const onUnavailableLegacySurface = useCallback(
+    (surfaceId: CanvasUnavailableLegacySurfaceId) => {
+      const message =
+        surfaceId === 'diff'
+          ? copy.retiredDiffSurfaceMessage
+          : surfaceId === 'artifacts'
+            ? copy.retiredArtifactsSurfaceMessage
+            : copy.retiredUnknownSurfaceMessage;
+      feedback.error(message);
+    },
+    [
+      copy.retiredArtifactsSurfaceMessage,
+      copy.retiredDiffSurfaceMessage,
+      copy.retiredUnknownSurfaceMessage,
+      feedback,
+    ]
+  );
+  const onRouteIntentConsumed = useCallback(() => {
+    setSearchParams(removeCanvasRouteIntent(searchParams), { replace: true });
+  }, [searchParams, setSearchParams]);
+  const routeIntentRequest = useMemo<CanvasShellRouteIntentRequest | undefined>(
+    () =>
+      routeIntent == null
+        ? undefined
+        : {
+            intent: routeIntent,
+            onUnavailableLegacySurface,
+            onConsumed: onRouteIntentConsumed,
+          },
+    [onRouteIntentConsumed, onUnavailableLegacySurface, routeIntent]
+  );
 
   switch (authorityResolution.kind) {
     case 'graph-draft':
-      return <GraphDraftCanvasContent onDbtProjectImported={onDbtProjectImported} />;
+      return (
+        <GraphDraftCanvasContent
+          onDbtProjectImported={onDbtProjectImported}
+          routeIntentRequest={routeIntentRequest}
+        />
+      );
     case 'dbt-project-files':
       return (
         <DbtProjectFileCanvas
           authorityBinding={authorityResolution.binding}
           onDbtProjectImported={onDbtProjectImported}
+          routeIntentRequest={routeIntentRequest}
         />
       );
     case 'invalid':

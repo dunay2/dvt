@@ -16,6 +16,8 @@ import type {
   CanvasShellLayout,
   CanvasShellPanels,
   CanvasShellProps,
+  CanvasShellRouteIntentRequest,
+  CanvasShellWorkspaceCommands,
 } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
@@ -57,6 +59,8 @@ export type CanvasShellPropsOverrides = {
   graphCommands?: Partial<CanvasShellGraphCommands>;
   chromeCommands?: Partial<CanvasShellChromeCommands>;
   canvasCommands?: Partial<CanvasShellCanvasCommands>;
+  workspaceCommands?: CanvasShellWorkspaceCommands;
+  routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   onDbtProjectImported?: CanvasShellProps['onDbtProjectImported'];
 };
@@ -217,6 +221,8 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       onDeleteActiveCanvas: vi.fn(),
       ...overrides?.canvasCommands,
     },
+    workspaceCommands: overrides?.workspaceCommands,
+    routeIntentRequest: overrides?.routeIntentRequest,
     warehouseSourceImport: overrides?.warehouseSourceImport,
     onDbtProjectImported: overrides?.onDbtProjectImported,
   };

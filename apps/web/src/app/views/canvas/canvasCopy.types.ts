@@ -20,6 +20,9 @@ export type CanvasViewCopy = {
   readonly routeErrorTitle: string;
   readonly routeErrorFallbackMessage: string;
   readonly routeErrorMessage: string;
+  readonly retiredDiffSurfaceMessage: string;
+  readonly retiredArtifactsSurfaceMessage: string;
+  readonly retiredUnknownSurfaceMessage: string;
   readonly unsupportedCanvasKindMessagePrefix: string;
   readonly unsupportedCanvasKindMessageSuffix: string;
   readonly disabledCanvasPluginMessagePrefix: string;
