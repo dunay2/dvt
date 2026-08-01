@@ -28,7 +28,9 @@ export interface ExecutableSubgraphSelectionRejection {
 type ExecutableSubgraphResolution =
   | {
       readonly ok: true;
-      readonly value: ExecutableSubgraph;
+      readonly value: ExecutableSubgraph & {
+        readonly decisionScopeNodeIds: readonly string[];
+      };
     }
   | {
       readonly ok: false;
@@ -78,8 +80,9 @@ export class ResolveAuthorizedExecutableSubgraphService {
     }
 
     let executableSubgraph: ExecutableSubgraph;
+    let draft: WorkspaceGraphAuthoringDraft;
     try {
-      const draft = projectExecutionDependencyDraft(
+      draft = projectExecutionDependencyDraft(
         WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload)
       );
       executableSubgraph = this.deps.planner.deriveExecutableSubgraph({
@@ -120,7 +123,15 @@ export class ResolveAuthorizedExecutableSubgraphService {
       }
     }
 
-    return { ok: true, value: executableSubgraph };
+    return {
+      ok: true,
+      value: {
+        ...executableSubgraph,
+        decisionScopeNodeIds: draft.nodes
+          .map((node) => node.id)
+          .sort((left, right) => left.localeCompare(right)),
+      },
+    };
   }
 }
 

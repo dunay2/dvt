@@ -30,6 +30,7 @@ type PreviewSelectionResolution =
       readonly value: {
         readonly graphSource: GenericGraphSourceV1;
         readonly nodeIds: readonly string[];
+        readonly decisionScopeNodeIds: readonly string[];
       };
     }
   | PreviewSelectionRejection;
@@ -66,6 +67,7 @@ export class ResolveAuthorizedPreviewSelectionService {
             value: {
               graphSource: input.graphSource,
               nodeIds: graphDraftResult.value.nodeIds,
+              decisionScopeNodeIds: graphDraftResult.value.decisionScopeNodeIds,
             },
           }
         : graphDraftResult;
@@ -138,6 +140,10 @@ export class ResolveAuthorizedPreviewSelectionService {
       value: {
         graphSource: canonicalGraph.value,
         nodeIds: [...provenance.selectedUniqueIds],
+        decisionScopeNodeIds: projection.nodes
+          .filter((node) => node.resourceType in EXECUTABLE_RESOURCE)
+          .map((node) => node.uniqueId)
+          .sort(compareStrings),
       },
     };
   }

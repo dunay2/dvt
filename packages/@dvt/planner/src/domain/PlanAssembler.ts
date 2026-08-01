@@ -90,6 +90,7 @@ export class PlanAssembler {
           left.localeCompare(right)
         ),
       },
+      decisionScope: input.decisionScope,
       policies: input.policies,
     };
     const { sha256 } = await sha256CanonicalJson(semantic);

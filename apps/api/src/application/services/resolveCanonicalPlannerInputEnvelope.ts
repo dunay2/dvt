@@ -9,6 +9,7 @@ import type {
 export interface CanonicalPlannerInputEnvelopeInput {
   readonly graphSource: GenericGraphSourceV1;
   readonly selection: PlannerInputEnvelopeV1['selection'];
+  readonly decisionScope?: PlannerInputEnvelopeV1['decisionScope'] | undefined;
   readonly policies?: PlannerPolicyClassSet | undefined;
   readonly environment?: StartRunPlannerEnvironmentInput | undefined;
   readonly ownership?: PlannerInputEnvelopeV1['ownership'] | undefined;
@@ -24,6 +25,7 @@ export function resolveCanonicalPlannerInputEnvelope(
   return {
     graphSource: input.graphSource,
     selection: input.selection,
+    ...(input.decisionScope === undefined ? {} : { decisionScope: input.decisionScope }),
     ...(input.policies === undefined ? {} : { policies: input.policies }),
     ...(input.environment === undefined
       ? {}

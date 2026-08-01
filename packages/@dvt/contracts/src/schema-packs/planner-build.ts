@@ -22,10 +22,26 @@ const PlanOwnershipSchema = z
   })
   .strict();
 
+const PlannerDecisionScopeSchema = z
+  .object({
+    nodeIds: z.array(NonBlankStringSchema).min(1),
+  })
+  .strict()
+  .superRefine((scope, ctx) => {
+    if (new Set(scope.nodeIds).size !== scope.nodeIds.length) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['nodeIds'],
+        message: 'decisionScope.nodeIds must not contain duplicates',
+      });
+    }
+  });
+
 export const PlannerInputEnvelopeV1Schema = z
   .object({
     graphSource: GenericGraphSourceV1Schema,
     selection: PlannerSelectionSchema,
+    decisionScope: PlannerDecisionScopeSchema.optional(),
     policies: PlannerPolicyClassSetSchema.optional(),
     environment: PlannerEnvironmentContextSchema.optional(),
     ownership: PlanOwnershipSchema.optional(),
@@ -34,7 +50,20 @@ export const PlannerInputEnvelopeV1Schema = z
     requestId: z.string().min(1).optional(),
     requestedAtIso: z.string().min(1).optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((input, ctx) => {
+    if (input.decisionScope === undefined) return;
+    const decisionNodeIds = new Set<string>(input.decisionScope.nodeIds);
+    for (const [index, node] of input.graphSource.nodes.entries()) {
+      if (!decisionNodeIds.has(node.nodeId)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['decisionScope', 'nodeIds'],
+          message: `decisionScope.nodeIds must include graphSource.nodes[${index}].nodeId`,
+        });
+      }
+    }
+  });
 
 export const PlannerBuildResultV1Schema = z
   .object({

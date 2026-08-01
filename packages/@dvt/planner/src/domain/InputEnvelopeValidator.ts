@@ -10,6 +10,40 @@ export class InputEnvelopeValidator {
   validate(input: PlannerInputEnvelopeV1): void {
     this.assertEnvelopeShape(input);
     this.assertSelectionShape(input.selection);
+    this.assertDecisionScopeShape(input.decisionScope, input.graphSource.nodes);
+  }
+
+  private assertDecisionScopeShape(
+    decisionScope: PlannerInputEnvelopeV1['decisionScope'],
+    graphNodes: PlannerInputEnvelopeV1['graphSource']['nodes']
+  ): void {
+    if (decisionScope === undefined) return;
+    if (!Array.isArray(decisionScope.nodeIds) || decisionScope.nodeIds.length === 0) {
+      throw new PlannerError(
+        PlannerErrorCode.INVALID_INPUT,
+        'decisionScope.nodeIds must be a non-empty array.'
+      );
+    }
+    if (decisionScope.nodeIds.some((nodeId) => typeof nodeId !== 'string' || nodeId.length === 0)) {
+      throw new PlannerError(
+        PlannerErrorCode.INVALID_INPUT,
+        'decisionScope.nodeIds must contain only non-empty strings.'
+      );
+    }
+    if (new Set(decisionScope.nodeIds).size !== decisionScope.nodeIds.length) {
+      throw new PlannerError(
+        PlannerErrorCode.INVALID_INPUT,
+        'decisionScope.nodeIds must not contain duplicates.'
+      );
+    }
+    const decisionNodeIds = new Set(decisionScope.nodeIds);
+    const missingNodeId = graphNodes.find((node) => !decisionNodeIds.has(node.nodeId))?.nodeId;
+    if (missingNodeId !== undefined) {
+      throw new PlannerError(
+        PlannerErrorCode.INVALID_INPUT,
+        `decisionScope must include executable graph node ${missingNodeId}.`
+      );
+    }
   }
 
   private assertEnvelopeShape(input: PlannerInputEnvelopeV1): void {

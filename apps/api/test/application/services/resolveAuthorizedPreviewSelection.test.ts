@@ -163,7 +163,11 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
       )
     ).resolves.toEqual({
       ok: true,
-      value: { graphSource: GRAPH_SOURCE, nodeIds: [MODEL_ID] },
+      value: {
+        graphSource: GRAPH_SOURCE,
+        nodeIds: [MODEL_ID],
+        decisionScopeNodeIds: [MODEL_ID],
+      },
     });
     expect(projectGraph.execute).toHaveBeenCalledWith({
       canvasId: 'analytics-canvas',
@@ -247,6 +251,7 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
       value: {
         selection: parseExecutionSelection({ mode: 'explicit', nodeIds: ['transform'] }),
         nodeIds: ['transform'],
+        decisionScopeNodeIds: ['transform'],
         edgeIds: [],
         executable: true,
         diagnostics: [],
@@ -269,7 +274,11 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
 
     await expect(service.execute(input, buildContext())).resolves.toEqual({
       ok: true,
-      value: { graphSource: input.graphSource, nodeIds: ['transform'] },
+      value: {
+        graphSource: input.graphSource,
+        nodeIds: ['transform'],
+        decisionScopeNodeIds: ['transform'],
+      },
     });
     expect(graphDraftResolver.execute).toHaveBeenCalledWith(input, buildContext());
   });

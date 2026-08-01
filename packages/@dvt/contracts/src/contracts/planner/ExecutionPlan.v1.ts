@@ -181,6 +181,13 @@ export interface PlannerInputEnvelopeV1 {
   graphSource: GenericGraphSourceV1;
 
   selection: PlannerSelection;
+  /**
+   * Authorized planner subject universe used only to explain persisted
+   * RUN/SKIP/PARTIAL decisions. It may be wider than the executable graphSource.
+   */
+  decisionScope?: {
+    readonly nodeIds: readonly string[];
+  };
   policies?: PlannerPolicyClassSet;
   environment?: PlannerEnvironmentContext;
   ownership?: PlanOwnership;

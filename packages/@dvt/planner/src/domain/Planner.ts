@@ -170,7 +170,7 @@ export class Planner {
         normalizedSteps
       );
       const decisions = projectPlanExecutionDecisions({
-        allNodeIds: graph.nodeIdsSorted,
+        allNodeIds: normalizedInput.decisionScope?.nodeIds ?? graph.nodeIdsSorted,
         selectedNodeIds: selected,
         selectedRootNodeIds: normalizedInput.selection.selectedNodeIds,
       });
@@ -202,7 +202,14 @@ export class Planner {
         'Planner requires non-empty nodes from graphSource.'
       );
     }
-    return { ...input, nodes };
+    const decisionScope = input.decisionScope
+      ? { nodeIds: [...input.decisionScope.nodeIds].sort(binaryCompare) }
+      : undefined;
+    return {
+      ...input,
+      nodes,
+      ...(decisionScope === undefined ? {} : { decisionScope }),
+    };
   }
 
   private buildNormalizedSteps(

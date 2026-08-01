@@ -3,9 +3,7 @@ import type { PlannerInputEnvelopeV1 } from '@dvt/contracts';
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
 import type { PlanRoutePlannerInputPolicy } from './planRoutePolicyCatalog.js';
-import {
-  resolveCanonicalPlannerInputEnvelope,
-} from './resolveCanonicalPlannerInputEnvelope.js';
+import { resolveCanonicalPlannerInputEnvelope } from './resolveCanonicalPlannerInputEnvelope.js';
 
 type OptionalPropertyInput<T> = T | undefined;
 
@@ -28,6 +26,7 @@ interface PlannerInputEnvironmentInput {
 export interface AuthorizedPlannerInputSeed {
   readonly graphSource: PlannerInputEnvelopeV1['graphSource'];
   readonly selection: PlannerInputEnvelopeV1['selection'];
+  readonly decisionScope?: OptionalPropertyInput<PlannerInputEnvelopeV1['decisionScope']>;
   readonly policies?: OptionalPropertyInput<PlannerInputPolicies>;
   readonly environment?: OptionalPropertyInput<PlannerInputEnvironmentInput>;
   readonly ownership?: OptionalPropertyInput<PlannerInputOwnership>;
@@ -44,6 +43,7 @@ export function resolveAuthorizedPlannerInputEnvelope(
   return resolveCanonicalPlannerInputEnvelope({
     graphSource: seed.graphSource,
     selection: seed.selection,
+    ...(seed.decisionScope === undefined ? {} : { decisionScope: seed.decisionScope }),
     ...(seed.policies === undefined ? {} : { policies: seed.policies }),
     ...(seed.environment === undefined
       ? {}
@@ -74,7 +74,9 @@ function resolvePlannerInputOwnership(
 function resolvePlannerInputRequestMetadata(
   context: AuthorizedCommandExecutionContext,
   policy: PlanRoutePlannerInputPolicy
-): Pick<PlannerInputEnvelopeV1, 'requestedBy' | 'requestId' | 'requestedAtIso'> | Record<string, never> {
+):
+  | Pick<PlannerInputEnvelopeV1, 'requestedBy' | 'requestId' | 'requestedAtIso'>
+  | Record<string, never> {
   switch (policy.requestMetadataSource) {
     case 'authorized-context':
       return {

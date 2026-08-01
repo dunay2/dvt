@@ -74,10 +74,12 @@ describe('PlannerFacade - canonical graph source boundary', () => {
             stepKind: 'DBT_MODEL',
             dependsOn: ['model.project.base'],
           },
-          { nodeId: 'model.project.skipped', stepKind: 'DBT_MODEL', dependsOn: [] },
         ],
       },
       selection: { selectedNodeIds: ['model.project.selected'], includeUpstream: true },
+      decisionScope: {
+        nodeIds: ['model.project.selected', 'model.project.skipped', 'model.project.base'],
+      },
     });
 
     expect(result.plan.decisions).toEqual([

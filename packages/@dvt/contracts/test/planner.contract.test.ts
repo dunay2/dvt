@@ -130,6 +130,41 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
     expect(result.success).toBe(false);
   });
 
+  it('acepta un alcance de decisiones autorizado más amplio que el subgrafo ejecutable', () => {
+    const result = PlannerInputEnvelopeV1Schema.safeParse({
+      ...VALID_PLANNER_INPUT_FIXTURE,
+      decisionScope: {
+        nodeIds: [
+          ...VALID_PLANNER_INPUT_FIXTURE.graphSource.nodes.map((node) => node.nodeId),
+          'model.analytics.excluded',
+        ],
+      },
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it('rechaza identificadores duplicados en el alcance de decisiones', () => {
+    const nodeId = VALID_PLANNER_INPUT_FIXTURE.graphSource.nodes[0]?.nodeId;
+    const result = PlannerInputEnvelopeV1Schema.safeParse({
+      ...VALID_PLANNER_INPUT_FIXTURE,
+      decisionScope: { nodeIds: [nodeId, nodeId] },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza un alcance de decisiones que omite nodos del subgrafo ejecutable', () => {
+    const result = PlannerInputEnvelopeV1Schema.safeParse({
+      ...VALID_PLANNER_INPUT_FIXTURE,
+      decisionScope: {
+        nodeIds: [VALID_PLANNER_INPUT_FIXTURE.graphSource.nodes[0]?.nodeId],
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
   it('valida schema del ExecutionPlan canónico versionado', () => {
     const plan = ExecutionPlanSchema.parse(VALID_EXECUTION_PLAN_V1_FIXTURE);
     expect(plan.metadata.planVersion).toBe(CURRENT_EXECUTION_PLAN_VERSION);
