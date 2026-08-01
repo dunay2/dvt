@@ -1,7 +1,6 @@
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { buildDraftSaveSavedResponse } from '../../services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import {
   buildRemoteDraftRecord,
   createHarnessWithDraft,
@@ -88,20 +87,10 @@ describe('useCanvasController canvas document contract', () => {
     );
   });
 
-  it('promotes a saved first canvas from the session baseline before the draft query publishes it', async () => {
+  it('adopts a saved first canvas after the canonical reread confirms its authority', async () => {
     harness.cleanup();
     harness = await createRenderedHarness();
     harness.state.queryClient.setQueryData = vi.fn();
-    harness.state.services.workspaceGraphDraftAuthoringPort.saveGraphDraft = vi.fn(async () =>
-      buildDraftSaveSavedResponse(
-        {
-          tenantId: 'tenant-a',
-          projectId: 'project-a',
-          environmentId: 'dev',
-        },
-        { revision: 'rev-created-canvas' }
-      )
-    );
 
     await act(async () => {
       await harness.getLatestResult()?.handleCreateCanvasDocument({

@@ -108,6 +108,11 @@ describe('workspace ports api graph snapshot', () => {
     await expect(workspaceGraphSnapshotQuery.getGraphSnapshot()).resolves.toEqual({
       nodes: [],
       edges: [],
+      authoringAuthority: {
+        kind: 'unresolved',
+        canvasId: null,
+        reason: 'missing_authority',
+      },
     });
     expect(getJson).not.toHaveBeenCalled();
   });
