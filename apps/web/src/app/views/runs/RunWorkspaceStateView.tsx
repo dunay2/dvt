@@ -23,6 +23,7 @@ import { getDetailStateBadge, isKnownRunField } from './runStatesModel';
 
 type RunWorkspaceStateProps = {
   workspace: RunWorkspaceViewModel;
+  onRetryEventFeed?: () => void;
 };
 
 type ProvenanceArtifact = {
@@ -358,7 +359,7 @@ function RunDiagnosticsCard({
   );
 }
 
-export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
+export function RunWorkspaceStateView({ workspace, onRetryEventFeed }: RunWorkspaceStateProps) {
   const { snapshot, timeline, detailState } = workspace;
   const executor = deriveExecutor(workspace);
   const failureDiagnostics = deriveFailureDiagnostics(workspace);
@@ -660,7 +661,7 @@ export function RunWorkspaceStateView({ workspace }: RunWorkspaceStateProps) {
           <h3 className="mb-3 text-sm font-semibold">{copy.eventTimelineTitle}</h3>
 
           {timeline.state === 'degraded' ? (
-            <RunDegradedStateView message={timeline.message} />
+            <RunDegradedStateView message={timeline.message} onRetry={onRetryEventFeed} />
           ) : null}
 
           {timeline.state === 'empty' ? (

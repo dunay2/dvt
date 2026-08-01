@@ -196,6 +196,7 @@ type WorkbenchDegradedStateProps = {
   title: string;
   message: ReactNode;
   note?: ReactNode;
+  action?: ReactNode;
   dataSlot?: string;
 };
 
@@ -203,6 +204,7 @@ export function WorkbenchDegradedState({
   title,
   message,
   note,
+  action,
   dataSlot = 'workbench-degraded-state',
 }: WorkbenchDegradedStateProps) {
   return (
@@ -212,6 +214,7 @@ export function WorkbenchDegradedState({
       </div>
       <div className="mt-1 text-[var(--text-default)]">{message}</div>
       {note ? <div className={cn('mt-1', routeWorkbenchMutedTextClassName)}>{note}</div> : null}
+      {action ? <div className="mt-3">{action}</div> : null}
     </WorkbenchStateCard>
   );
 }

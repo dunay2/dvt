@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { ContractValidationError } from '@dvt/contracts';
-import React from 'react';
+import React, { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
@@ -10,7 +10,9 @@ import {
   waitForReactQuery,
   withTestQueryClient,
 } from '../../testing/reactQueryHarness';
+import { makeRunContext } from '../testing/contractTestUtils';
 import type { IRunsPort, UiRunStatus } from '../ports/runs';
+import type { SessionContextPort, WorkspaceScope } from '../ports/sessionContext';
 import { ApiError } from '../services/api/createApiClient';
 import type { RunEvent } from '../types/engine';
 import { AppServicesProvider } from '../services/AppServicesContext';
@@ -21,6 +23,8 @@ import {
   getRunEventFeedRefetchInterval,
   useRunEventFeedQuery,
 } from './runEventFeedQuery';
+
+const TEST_WORKSPACE_LAYOUT_KEY = 'tenant-1::project-1::env-1';
 
 function makeEvent(runId: string, eventId: string, runSeq: number): RunEvent {
   return {
@@ -49,6 +53,30 @@ function buildRunsService(listRunEvents: IRunsPort['listRunEvents']): IRunsPort 
     getRunSnapshot: vi.fn(async () => null),
     startRun: vi.fn(async () => ({ runId: 'run_started', accepted: true })),
     listRunEvents,
+  };
+}
+
+function createReactiveSessionContext(initialScope: WorkspaceScope): {
+  sessionContext: SessionContextPort;
+  setWorkspaceScope: (scope: WorkspaceScope) => void;
+} {
+  let workspaceScope = initialScope;
+  const listeners = new Set<() => void>();
+
+  return {
+    sessionContext: {
+      getWorkspaceScope: () => workspaceScope,
+      getWorkspaceScopeSnapshot: () => workspaceScope,
+      subscribeWorkspaceScope: (onStoreChange) => {
+        listeners.add(onStoreChange);
+        return () => listeners.delete(onStoreChange);
+      },
+      buildRunContext: (runId) => makeRunContext(runId, workspaceScope),
+    },
+    setWorkspaceScope: (scope) => {
+      workspaceScope = scope;
+      listeners.forEach((listener) => listener());
+    },
   };
 }
 
@@ -90,9 +118,19 @@ describe('useRunEventFeedQuery', () => {
     mounted = null;
   });
 
-  function withServices(runsService: IRunsPort, consumers: React.ReactNode): React.ReactNode {
+  function withServices(
+    runsService: IRunsPort,
+    consumers: React.ReactNode,
+    sessionContext?: SessionContextPort
+  ): React.ReactNode {
     return (
-      <AppServicesProvider overrides={{ ...createAppServicesTestOverrides(), runsService }}>
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          runsService,
+          ...(sessionContext ? { sessionContext } : {}),
+        }}
+      >
         {consumers}
       </AppServicesProvider>
     );
@@ -124,7 +162,9 @@ describe('useRunEventFeedQuery', () => {
     );
     expect(listRunEvents).toHaveBeenCalledTimes(1);
 
-    await queryClient.invalidateQueries({ queryKey: queryKeys.runs.eventFeed('run_1') });
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.runs.eventFeed(TEST_WORKSPACE_LAYOUT_KEY, 'run_1'),
+    });
     await waitForReactQuery(
       () => mounted?.container.querySelector('[data-testid="runs"]')?.textContent === 'evt_1,evt_2'
     );
@@ -164,6 +204,57 @@ describe('useRunEventFeedQuery', () => {
 
     expect(listRunEvents).toHaveBeenNthCalledWith(1, 'run_1', undefined);
     expect(listRunEvents).toHaveBeenNthCalledWith(2, 'run_2', undefined);
+  });
+
+  it('isolates terminal feed caches when the workspace scope changes', async () => {
+    const { sessionContext, setWorkspaceScope } = createReactiveSessionContext({
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'env-a',
+      targetAdapter: 'temporal',
+    });
+    const listRunEvents = vi.fn<IRunsPort['listRunEvents']>(async (runId) => {
+      const tenantId = sessionContext.getWorkspaceScope().tenantId;
+      return {
+        events: [
+          {
+            ...makeEvent(runId, `${tenantId}-terminal`, 1),
+            eventType: 'RunCompleted',
+          },
+        ],
+        nextAfterSeq: 1,
+      };
+    });
+
+    mounted = await withTestQueryClient(
+      withServices(
+        buildRunsService(listRunEvents),
+        <FeedConsumer consumerId="scoped" runId="shared-run" runStatus="completed" />,
+        sessionContext
+      ),
+      createTestQueryClient()
+    );
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="scoped"]')?.textContent ===
+        'tenant-a-terminal'
+    );
+
+    await act(async () => {
+      setWorkspaceScope({
+        tenantId: 'tenant-b',
+        projectId: 'project-b',
+        environmentId: 'env-b',
+        targetAdapter: 'temporal',
+      });
+    });
+    await waitForReactQuery(
+      () =>
+        mounted?.container.querySelector('[data-testid="scoped"]')?.textContent ===
+        'tenant-b-terminal'
+    );
+
+    expect(listRunEvents).toHaveBeenCalledTimes(2);
   });
 
   it('classifies retryable and fail-closed event-feed errors', () => {
@@ -271,7 +362,9 @@ describe('useRunEventFeedQuery', () => {
         'retrying'
     );
 
-    expect(queryClient.getQueryData(queryKeys.runs.eventFeed('run_1'))).toMatchObject({
+    expect(
+      queryClient.getQueryData(queryKeys.runs.eventFeed(TEST_WORKSPACE_LAYOUT_KEY, 'run_1'))
+    ).toMatchObject({
       phase: 'retrying',
       events: [],
       consecutiveFailures: 1,
@@ -306,7 +399,9 @@ describe('useRunEventFeedQuery', () => {
       () => mounted?.container.querySelector('[data-testid="active"]')?.textContent === 'evt_1'
     );
 
-    await queryClient.invalidateQueries({ queryKey: queryKeys.runs.eventFeed('run_1') });
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.runs.eventFeed(TEST_WORKSPACE_LAYOUT_KEY, 'run_1'),
+    });
     await waitForReactQuery(
       () =>
         mounted?.container.querySelector('[data-testid="active-phase"]')?.textContent === 'retrying'
@@ -349,7 +444,9 @@ describe('useRunEventFeedQuery', () => {
         mounted?.container.querySelector('[data-testid="denied-phase"]')?.textContent === 'failed'
     );
 
-    expect(queryClient.getQueryData(queryKeys.runs.eventFeed('run_1'))).toMatchObject({
+    expect(
+      queryClient.getQueryData(queryKeys.runs.eventFeed(TEST_WORKSPACE_LAYOUT_KEY, 'run_1'))
+    ).toMatchObject({
       phase: 'failed',
       events: [],
       failure: { kind: 'authorization', retryable: false, statusCode: 403 },
@@ -382,7 +479,9 @@ describe('useRunEventFeedQuery', () => {
         'terminal-draining'
     );
 
-    await queryClient.invalidateQueries({ queryKey: queryKeys.runs.eventFeed('run_1') });
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.runs.eventFeed(TEST_WORKSPACE_LAYOUT_KEY, 'run_1'),
+    });
     await waitForReactQuery(
       () =>
         mounted?.container.querySelector('[data-testid="terminal-phase"]')?.textContent ===

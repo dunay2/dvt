@@ -2,13 +2,13 @@
  * Owned concern: adapt the ListRunEvents query rail to one shared,
  * cursor-backed React Query projection per run.
  */
-import { useCallback } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 import { ContractValidationError } from '@dvt/contracts';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import type { UiRunStatus } from '../ports/runs';
 import { ApiError } from '../services/api/createApiClient';
-import { useRunsService } from '../services/AppServicesContext';
+import { useRunsService, useSessionContext } from '../services/AppServicesContext';
 import {
   createRunEventFeedState,
   transitionRunEventFeed,
@@ -148,8 +148,15 @@ export function getRunEventFeedRefetchInterval(
 
 export function useRunEventFeedQuery(runId: string | undefined, options: RunEventFeedQueryOptions) {
   const runsService = useRunsService();
+  const sessionContext = useSessionContext();
   const queryClient = useQueryClient();
-  const queryKey = queryKeys.runs.eventFeed(runId);
+  const { tenantId, projectId, environmentId } = useSyncExternalStore(
+    sessionContext.subscribeWorkspaceScope,
+    sessionContext.getWorkspaceScopeSnapshot,
+    sessionContext.getWorkspaceScopeSnapshot
+  );
+  const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
+  const queryKey = queryKeys.runs.eventFeed(workspaceLayoutKey, runId);
 
   const query = useQuery<RunEventFeedState>({
     queryKey,

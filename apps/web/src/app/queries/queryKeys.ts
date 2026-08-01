@@ -58,7 +58,8 @@ export const queryKeys = {
     summaries: (workspaceLayoutKey: string) => ['runs', 'summaries', workspaceLayoutKey] as const,
     snapshot: (workspaceLayoutKey: string, runId: string | undefined) =>
       ['runs', 'snapshot', workspaceLayoutKey, runId] as const,
-    eventFeed: (runId: string | undefined) => ['runs', 'event-feed', runId] as const,
+    eventFeed: (workspaceLayoutKey: string, runId: string | undefined) =>
+      ['runs', 'event-feed', workspaceLayoutKey, runId] as const,
     list: (viewId: string) => ['runs', 'list', viewId] as const,
   },
 

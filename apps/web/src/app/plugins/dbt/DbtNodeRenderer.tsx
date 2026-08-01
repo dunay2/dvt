@@ -4,6 +4,7 @@ import { Clock, Code, Info, Loader2, Settings, Table } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { Badge } from '../../components/ui/badge';
+import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
 import {
   useRunSnapshotQuery,
@@ -326,6 +327,19 @@ function DbtColumnsPanel({ node }: InspectorPanelProps) {
   );
 }
 
+function DbtHistoryDegradedNotice({ onRetry }: Readonly<{ onRetry?: () => void }>) {
+  return (
+    <div className={inspectorVisualClasses.inspectorMutedBlock}>
+      <p>Runtime event detail could not be loaded for this node.</p>
+      {onRetry ? (
+        <Button type="button" size="sm" variant="outline" className="mt-3" onClick={onRetry}>
+          Retry history
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
   const tenantId = useSessionStore((state) => state.tenantId);
   const projectId = useSessionStore((state) => state.projectId);
@@ -347,7 +361,11 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
   const historyRunStatus = activeRunId ? runSnapshot?.status : runSummaries?.[0]?.status;
   const canLoadEvents =
     Boolean(historyRunId) && (!activeRunId || (hasRunSnapshotLoaded && runSnapshot != null));
-  const { data: runEventFeed, isLoading: isLoadingEvents } = useRunEventFeedQuery(historyRunId, {
+  const {
+    data: runEventFeed,
+    isLoading: isLoadingEvents,
+    retryNow,
+  } = useRunEventFeedQuery(historyRunId, {
     enabled: canLoadEvents,
     runStatus: historyRunStatus,
   });
@@ -357,6 +375,12 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
     [historyRunId, node.id, runEvents]
   );
   const hasRunEventFeedFailure = runEventFeed?.phase !== 'idle' && Boolean(runEventFeed?.failure);
+  const retryHistory =
+    runEventFeed?.phase !== 'idle' && runEventFeed?.failure?.retryable
+      ? () => {
+          void retryNow();
+        }
+      : undefined;
 
   if (isLoading || isLoadingList || (canLoadEvents && isLoadingEvents)) {
     return (
@@ -376,16 +400,13 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
   }
 
   if (hasRunEventFeedFailure && historyRunId && nodeHistoryEntries.length === 0) {
-    return (
-      <div className={inspectorVisualClasses.inspectorMutedBlock}>
-        <p>Runtime event detail could not be loaded for this node.</p>
-      </div>
-    );
+    return <DbtHistoryDegradedNotice onRetry={retryHistory} />;
   }
 
   if (nodeHistoryEntries.length > 0) {
     return (
       <div className="space-y-2">
+        {hasRunEventFeedFailure ? <DbtHistoryDegradedNotice onRetry={retryHistory} /> : null}
         {nodeHistoryEntries.map((entry) => (
           <Card key={entry.eventId} className={inspectorVisualClasses.inspectorCard}>
             <div className="flex items-start justify-between gap-3">

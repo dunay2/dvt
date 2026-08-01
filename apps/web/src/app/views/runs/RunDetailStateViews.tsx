@@ -10,6 +10,7 @@ import {
   WorkbenchErrorState,
   WorkbenchLoadingState,
 } from '../../components/workbench/state/WorkbenchStates';
+import { Button } from '../../components/ui/button';
 import { runStatesCopy as copy } from './runStatesCopy';
 
 type RunsEmptyStateProps = {
@@ -104,15 +105,23 @@ export function RunDetailErrorStateView({ runId, message }: RunDetailErrorStateP
 
 type RunDegradedStateProps = {
   message: string;
+  onRetry?: () => void;
 };
 
-export function RunDegradedStateView({ message }: RunDegradedStateProps) {
+export function RunDegradedStateView({ message, onRetry }: RunDegradedStateProps) {
   return (
     <WorkbenchDegradedState
       dataSlot="run-degraded-state"
       title={copy.runDegradedTitle}
       message={message}
       note={copy.runDegradedNote}
+      action={
+        onRetry ? (
+          <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+            {copy.retryEventFeedAction}
+          </Button>
+        ) : undefined
+      }
     />
   );
 }

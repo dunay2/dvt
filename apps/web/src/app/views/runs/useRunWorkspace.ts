@@ -28,6 +28,8 @@ type UseRunWorkspaceResult = {
   isLoadingWorkspace: boolean;
   workspaceError: Error | null;
   workspaceErrorMessage: string;
+  canRetryEventFeed: boolean;
+  retryEventFeed: () => void;
 };
 
 function describeRunsListError(error: Error | null): string {
@@ -97,5 +99,10 @@ export function useRunWorkspace(runId: string | undefined): UseRunWorkspaceResul
     isLoadingWorkspace: snapshotQuery.isLoading || (canLoadEvents && eventFeedQuery.isLoading),
     workspaceError,
     workspaceErrorMessage: workspaceError?.message ?? 'Run workspace could not be loaded.',
+    canRetryEventFeed:
+      eventFeedQuery.data?.phase !== 'idle' && eventFeedQuery.data?.failure?.retryable === true,
+    retryEventFeed: () => {
+      void eventFeedQuery.retryNow();
+    },
   };
 }
