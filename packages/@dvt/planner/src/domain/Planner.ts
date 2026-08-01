@@ -175,7 +175,9 @@ export class Planner {
           : projectPlanExecutionDecisions({
               allNodeIds: normalizedInput.decisionScope.nodeIds,
               selectedNodeIds: selected,
-              selectedRootNodeIds: normalizedInput.selection.selectedNodeIds,
+              selectedRootNodeIds:
+                normalizedInput.decisionScope.requestedRootNodeIds ??
+                normalizedInput.selection.selectedNodeIds,
             });
       const result = await this.assembler.execute(
         new AssemblePlanCommand(
@@ -206,7 +208,16 @@ export class Planner {
       );
     }
     const decisionScope = input.decisionScope
-      ? { nodeIds: [...input.decisionScope.nodeIds].sort(binaryCompare) }
+      ? {
+          nodeIds: [...input.decisionScope.nodeIds].sort(binaryCompare),
+          ...(input.decisionScope.requestedRootNodeIds === undefined
+            ? {}
+            : {
+                requestedRootNodeIds: [...input.decisionScope.requestedRootNodeIds].sort(
+                  binaryCompare
+                ),
+              }),
+        }
       : undefined;
     return {
       ...input,

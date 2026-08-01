@@ -108,6 +108,7 @@ function createUseCase(
           graphSource: COMMAND.graphSource,
           nodeIds: [],
           decisionScopeNodeIds: ['model.analytics.orders', 'model.analytics.customers'],
+          requestedRootNodeIds: ['model.analytics.orders'],
         },
       })),
     } as const);
@@ -135,6 +136,7 @@ describe('PreviewPlanUseCase outcomes', () => {
         graphSource: COMMAND.graphSource,
         decisionScope: {
           nodeIds: ['model.analytics.orders', 'model.analytics.customers'],
+          requestedRootNodeIds: ['model.analytics.orders'],
         },
       })
     );

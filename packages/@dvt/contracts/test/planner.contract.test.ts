@@ -138,6 +138,7 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
           ...VALID_PLANNER_INPUT_FIXTURE.graphSource.nodes.map((node) => node.nodeId),
           'model.analytics.excluded',
         ],
+        requestedRootNodeIds: [VALID_PLANNER_INPUT_FIXTURE.graphSource.nodes[1]?.nodeId],
       },
     });
 
@@ -159,6 +160,21 @@ describe('contracts: planner normative contract (GAP-P0-02)', () => {
       ...VALID_PLANNER_INPUT_FIXTURE,
       decisionScope: {
         nodeIds: [VALID_PLANNER_INPUT_FIXTURE.graphSource.nodes[0]?.nodeId],
+      },
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it('rechaza una raiz solicitada fuera del subgrafo ejecutable', () => {
+    const result = PlannerInputEnvelopeV1Schema.safeParse({
+      ...VALID_PLANNER_INPUT_FIXTURE,
+      decisionScope: {
+        nodeIds: [
+          ...VALID_PLANNER_INPUT_FIXTURE.graphSource.nodes.map((node) => node.nodeId),
+          'model.analytics.excluded',
+        ],
+        requestedRootNodeIds: ['model.analytics.excluded'],
       },
     });
 

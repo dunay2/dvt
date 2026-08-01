@@ -76,9 +76,12 @@ describe('PlannerFacade - canonical graph source boundary', () => {
           },
         ],
       },
-      selection: { selectedNodeIds: ['model.project.selected'], includeUpstream: true },
+      selection: {
+        selectedNodeIds: ['model.project.base', 'model.project.selected'],
+      },
       decisionScope: {
         nodeIds: ['model.project.selected', 'model.project.skipped', 'model.project.base'],
+        requestedRootNodeIds: ['model.project.selected'],
       },
     });
 

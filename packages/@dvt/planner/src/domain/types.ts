@@ -61,6 +61,7 @@ export interface PlannerInputEnvelopeV1 {
   selection: PlannerSelection;
   decisionScope?: {
     readonly nodeIds: readonly string[];
+    readonly requestedRootNodeIds?: readonly string[];
   };
   policies?: PlannerPolicyClassSet;
   ownership?: PlanOwnership;

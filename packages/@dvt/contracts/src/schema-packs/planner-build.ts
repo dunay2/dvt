@@ -25,6 +25,7 @@ const PlanOwnershipSchema = z
 const PlannerDecisionScopeSchema = z
   .object({
     nodeIds: z.array(NonBlankStringSchema).min(1),
+    requestedRootNodeIds: z.array(NonBlankStringSchema).min(1).optional(),
   })
   .strict()
   .superRefine((scope, ctx) => {
@@ -33,6 +34,16 @@ const PlannerDecisionScopeSchema = z
         code: 'custom',
         path: ['nodeIds'],
         message: 'decisionScope.nodeIds must not contain duplicates',
+      });
+    }
+    if (
+      scope.requestedRootNodeIds !== undefined &&
+      new Set(scope.requestedRootNodeIds).size !== scope.requestedRootNodeIds.length
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['requestedRootNodeIds'],
+        message: 'decisionScope.requestedRootNodeIds must not contain duplicates',
       });
     }
   });
@@ -60,6 +71,18 @@ export const PlannerInputEnvelopeV1Schema = z
           code: 'custom',
           path: ['decisionScope', 'nodeIds'],
           message: `decisionScope.nodeIds must include graphSource.nodes[${index}].nodeId`,
+        });
+      }
+    }
+    if (input.decisionScope.requestedRootNodeIds === undefined) return;
+    const executableNodeIds = new Set(input.graphSource.nodes.map((node) => node.nodeId));
+    const selectedNodeIds = new Set(input.selection.selectedNodeIds);
+    for (const [index, nodeId] of input.decisionScope.requestedRootNodeIds.entries()) {
+      if (!executableNodeIds.has(nodeId) || !selectedNodeIds.has(nodeId)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['decisionScope', 'requestedRootNodeIds', index],
+          message: 'decisionScope.requestedRootNodeIds must be executable selected nodes',
         });
       }
     }

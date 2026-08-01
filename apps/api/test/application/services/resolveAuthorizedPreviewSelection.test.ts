@@ -167,6 +167,7 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
         graphSource: GRAPH_SOURCE,
         nodeIds: [MODEL_ID],
         decisionScopeNodeIds: [MODEL_ID],
+        requestedRootNodeIds: [MODEL_ID],
       },
     });
     expect(projectGraph.execute).toHaveBeenCalledWith({
@@ -278,6 +279,7 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
         graphSource: input.graphSource,
         nodeIds: ['transform'],
         decisionScopeNodeIds: ['transform'],
+        requestedRootNodeIds: ['transform'],
       },
     });
     expect(graphDraftResolver.execute).toHaveBeenCalledWith(input, buildContext());

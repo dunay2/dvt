@@ -187,6 +187,8 @@ export interface PlannerInputEnvelopeV1 {
    */
   decisionScope?: {
     readonly nodeIds: readonly string[];
+    /** Original operator-selected roots before executable-closure expansion. */
+    readonly requestedRootNodeIds?: readonly string[];
   };
   policies?: PlannerPolicyClassSet;
   environment?: PlannerEnvironmentContext;
