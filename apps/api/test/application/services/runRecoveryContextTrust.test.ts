@@ -1,9 +1,10 @@
+import type { CanonicalRunStatus } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { resolveRunRecoveryContextTrust } from '../../../src/application/services/runRecoveryContextTrust.js';
 
 const metadata = { tenantId: 'tenant-a', runId: 'run-source-1' };
-const statusFor = (status: 'FAILED' | 'CANCELLED' | 'COMPLETED') => ({
+const statusFor = (status: CanonicalRunStatus['status']): CanonicalRunStatus => ({
   runId: metadata.runId,
   status,
 });
