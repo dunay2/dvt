@@ -76,9 +76,11 @@ stacks, payloads, SQL, paths, user-authored content, plugin metadata, or server
 business outcomes. Repeated renders and equal refetches do not produce repeated
 events; a new occurrence or coarse-state transition is required.
 
-This boundary is an outbound operational event port, not a command/query rail.
-The existing product query rails retain authority over bootstrap readiness,
-source-object catalogs, and platform-health presentation.
+The outbound port implements the `RecordFrontendOperabilityEvent` operational
+command rail. That rail owns only best-effort recording of a closed browser
+event; it cannot change product state or delivery outcomes. The existing
+product query rails retain authority over bootstrap readiness, source-object
+catalogs, and platform-health presentation.
 
 ## UX Rules
 
