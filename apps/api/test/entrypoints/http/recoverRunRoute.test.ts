@@ -34,7 +34,6 @@ function createDeps(): {
   authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
   authorizer: { authorize: ReturnType<typeof vi.fn> };
   useCase: { execute: ReturnType<typeof vi.fn> };
-  runIdGenerator: ReturnType<typeof vi.fn>;
 } {
   return {
     authenticator: {
@@ -66,14 +65,12 @@ function createDeps(): {
       }),
     },
     useCase: {
-      execute: vi.fn().mockResolvedValue({
+      execute: vi.fn(async (command: { sourceRunId: string; recoveryRunId: string }) => ({
         contractVersion: 'v1',
-        sourceRunId: 'source-run-1',
-        recoveryRunId: 'recovery-run-1',
+        ...command,
         accepted: true,
-      }),
+      })),
     },
-    runIdGenerator: vi.fn().mockReturnValue('recovery-run-1'),
   };
 }
 
@@ -85,7 +82,7 @@ describe('recoverRunRoute', () => {
     await recoverRunRoute(
       {
         id: 'req-1',
-        headers: {},
+        headers: { 'idempotency-key': 'recover-source-1' },
         params: { runId: 'source-run-1' },
         body: {
           tenantId: 'tenant-a',
@@ -105,12 +102,28 @@ describe('recoverRunRoute', () => {
     expect(deps.useCase.execute).toHaveBeenCalledWith(
       {
         sourceRunId: 'source-run-1',
-        recoveryRunId: 'recovery-run-1',
+        recoveryRunId: expect.stringMatching(/^run_recovery_[a-f0-9]{40}$/),
       },
       expect.anything()
     );
-    expect(deps.runIdGenerator).toHaveBeenCalledTimes(1);
     expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
+  });
+
+  it('reuses the server-owned recovery identity for repeated deliveries', async () => {
+    const deps = createDeps();
+    const request = {
+      id: 'req-repeat',
+      headers: { 'idempotency-key': 'recover-source-1' },
+      params: { runId: 'source-run-1' },
+      body: { tenantId: 'tenant-a' },
+    } as never;
+
+    await recoverRunRoute(request, createReply() as never, deps as never);
+    await recoverRunRoute(request, createReply() as never, deps as never);
+
+    expect(deps.useCase.execute.mock.calls[0]?.[0]).toEqual(
+      deps.useCase.execute.mock.calls[1]?.[0]
+    );
   });
 
   it('returns 400 for invalid request payload', async () => {
@@ -120,7 +133,7 @@ describe('recoverRunRoute', () => {
     await recoverRunRoute(
       {
         id: 'req-2',
-        headers: {},
+        headers: { 'idempotency-key': 'recover-source-1' },
         params: { runId: 'source-run-1' },
         body: {
           tenantId: 'tenant-a',

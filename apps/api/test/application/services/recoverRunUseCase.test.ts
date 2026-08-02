@@ -76,7 +76,9 @@ function createDependencies(): TestDependencies {
       }),
     },
     stateStore: {
-      getRunMetadataByRunId: vi.fn().mockResolvedValue(sourceMetadata),
+      getRunMetadataByRunId: vi.fn(async (_tenantId: string, runId: string) =>
+        runId === sourceMetadata.runId ? sourceMetadata : null
+      ),
     },
     planStore: {
       getStoredPlanRef: vi.fn().mockResolvedValue(storedPlanRef),
@@ -161,6 +163,37 @@ describe('RecoverRunUseCase', () => {
         commandContext
       )
     ).rejects.toBeInstanceOf(RunRecoveryUnavailableError);
+    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
+  });
+
+  it('returns the original receipt without dispatching a repeated recovery command', async () => {
+    const dependencies = createDependencies();
+    dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
+      async (_tenantId: string, runId: string) =>
+        runId === 'run-recovery-1'
+          ? {
+              ...sourceMetadata,
+              runId,
+              logicalAttemptId: 2,
+              parentRunId: sourceMetadata.runId,
+              originRunId: sourceMetadata.runId,
+            }
+          : sourceMetadata
+    );
+    const useCase = new RecoverRunUseCase(dependencies as never);
+
+    await expect(
+      useCase.execute(
+        { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
+        commandContext
+      )
+    ).resolves.toEqual({
+      contractVersion: 'v1',
+      sourceRunId: 'run-source-1',
+      recoveryRunId: 'run-recovery-1',
+      accepted: true,
+    });
+    expect(dependencies.engine.getRunStatus).not.toHaveBeenCalled();
     expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
   });
 

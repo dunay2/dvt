@@ -16,6 +16,7 @@ import type { SessionContextPort } from '../../ports/sessionContext';
 import type { RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { normalizeProtectedRuntimeRejection } from '../api/protectedRuntimeRejection';
+import { createBrowserIdempotencyKey } from '../idempotency/createBrowserIdempotencyKey';
 import { createSessionContextPort } from '../session/sessionContextPort';
 import { parseCancelRunReceipt, parseRecoverRunReceipt } from './runsApiControlReceipts';
 import {
@@ -77,6 +78,7 @@ export function createApiRunsService(
   apiClient: ApiClient,
   sessionContext: SessionContextPort = createSessionContextPort()
 ): IRunsPort {
+  const recoveryIdempotencyKeys = new Map<string, string>();
   async function getRunSnapshotById(runId: string): Promise<RunSnapshot | null> {
     try {
       const scopeQuery = buildTenantScopeQuery(sessionContext, false);
@@ -114,14 +116,22 @@ export function createApiRunsService(
     },
     recoverRun: async (runId) => {
       const { tenantId } = sessionContext.getWorkspaceScope();
+      const idempotencyKey =
+        recoveryIdempotencyKeys.get(runId) ?? createBrowserIdempotencyKey('recover-run');
+      recoveryIdempotencyKeys.set(runId, idempotencyKey);
       try {
         const payload = await apiClient.postJson<{ tenantId: string }, unknown>(
           `/runs/${runId}/recover`,
-          { tenantId }
+          { tenantId },
+          { headers: { 'Idempotency-Key': idempotencyKey } }
         );
-        return parseRecoverRunReceipt(payload);
+        const receipt = parseRecoverRunReceipt(payload);
+        recoveryIdempotencyKeys.delete(runId);
+        return receipt;
       } catch (error) {
-        throw normalizeProtectedRuntimeRejection(error) ?? error;
+        const rejection = normalizeProtectedRuntimeRejection(error);
+        if (rejection !== null) recoveryIdempotencyKeys.delete(runId);
+        throw rejection ?? error;
       }
     },
     startRun: async (input: StartRunInput) => {

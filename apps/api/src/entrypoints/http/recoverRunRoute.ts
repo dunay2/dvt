@@ -6,7 +6,6 @@ import { AuthorizeCommandScopeService } from '../../application/services/authori
 
 import { parseRecoverRunRequest } from './recoverRunRouteParser.js';
 import { executeAuthorizedRunCommandRoute } from './runCommandRouteExecutor.js';
-import { generatePlatformRunId } from './startRunIdentity.js';
 
 export async function recoverRunRoute(
   request: FastifyRequest<{ Params: { runId?: string }; Body: unknown }>,
@@ -15,10 +14,8 @@ export async function recoverRunRoute(
     authenticator: IAuthenticator;
     authorizer: AuthorizeCommandScopeService;
     useCase: IRecoverRunUseCase;
-    runIdGenerator?: () => string;
   }
 ): Promise<void> {
-  const recoveryRunId = (deps.runIdGenerator ?? generatePlatformRunId)();
   await executeAuthorizedRunCommandRoute(
     request,
     reply,
@@ -29,7 +26,7 @@ export async function recoverRunRoute(
     },
     parseRecoverRunRequest({
       sourceRunId: request.params.runId,
-      recoveryRunId,
+      idempotencyKey: request.headers['idempotency-key'],
       body: request.body,
     })
   );

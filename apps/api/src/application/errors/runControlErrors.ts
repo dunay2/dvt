@@ -15,7 +15,8 @@ export class RunControlUnavailableError extends Error {
   }
 }
 
-export type RunRecoveryUnavailableReason = 'source_plan_unavailable' | 'source_context_untrusted';
+export type RunRecoveryUnavailableReason =
+  'recovery_identity_conflict' | 'source_plan_unavailable' | 'source_context_untrusted';
 
 export class RunRecoveryUnavailableError extends Error {
   public readonly name = 'RunRecoveryUnavailableError';

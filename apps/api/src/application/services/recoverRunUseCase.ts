@@ -47,6 +47,16 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     if (!source) {
       throw new RunMetadataNotFoundError(command.sourceRunId);
     }
+    const repeatedRecovery = await this.dependencies.stateStore.getRunMetadataByRunId(
+      tenantId,
+      command.recoveryRunId
+    );
+    if (repeatedRecovery !== null) {
+      if (!isRecoveryChildOf(repeatedRecovery, source)) {
+        throw new RunRecoveryUnavailableError(command.sourceRunId, 'recovery_identity_conflict');
+      }
+      return acceptedRecovery(command);
+    }
 
     const status = await this.dependencies.engine.getRunStatus(runMetadataToEngineRunRef(source));
     const recoveryDecision = decideRecoverRun(status);
@@ -82,13 +92,28 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       )
     );
 
-    return {
-      contractVersion: RUN_CONTROL_RESULT_CONTRACT_VERSION,
-      sourceRunId: command.sourceRunId,
-      recoveryRunId: command.recoveryRunId,
-      accepted: true,
-    };
+    return acceptedRecovery(command);
   }
+}
+
+function isRecoveryChildOf(candidate: RunMetadata, source: RunMetadata): boolean {
+  return (
+    candidate.parentRunId === source.runId &&
+    candidate.originRunId === (source.originRunId ?? source.runId) &&
+    candidate.projectId === source.projectId &&
+    candidate.environmentId === source.environmentId &&
+    candidate.planId === source.planId &&
+    candidate.planVersion === source.planVersion
+  );
+}
+
+function acceptedRecovery(command: RecoverRunCommand): RecoverRunResult {
+  return {
+    contractVersion: RUN_CONTROL_RESULT_CONTRACT_VERSION,
+    sourceRunId: command.sourceRunId,
+    recoveryRunId: command.recoveryRunId,
+    accepted: true,
+  };
 }
 
 function toEngineRunContext(

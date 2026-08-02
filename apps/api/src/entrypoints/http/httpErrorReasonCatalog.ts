@@ -37,6 +37,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   invalidTenantId: 'invalid_tenant_id',
   limitOutOfRange: 'limit_out_of_range',
   missingEnvironmentId: 'missing_environment_id',
+  missingIdempotencyKey: 'missing_idempotency_key',
   missingProjectId: 'missing_project_id',
   missingTenantId: 'missing_tenant_id',
   missingTenantScope: 'missing_tenant_scope',

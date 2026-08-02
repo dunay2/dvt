@@ -233,9 +233,36 @@ describe('runsService runtime contract', () => {
     expect(apiClient.postJson).toHaveBeenNthCalledWith(1, '/runs/run_abc/cancel', {
       tenantId: 'tenant-1',
     });
-    expect(apiClient.postJson).toHaveBeenNthCalledWith(2, '/runs/run_failed/recover', {
-      tenantId: 'tenant-1',
+    expect(apiClient.postJson).toHaveBeenNthCalledWith(
+      2,
+      '/runs/run_failed/recover',
+      { tenantId: 'tenant-1' },
+      {
+        headers: { 'Idempotency-Key': expect.stringMatching(/^recover-run:/) },
+      }
+    );
+  });
+
+  it('reuses the recovery command identity after a lost response', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.postJson)
+      .mockRejectedValueOnce(new Error('connection reset after dispatch'))
+      .mockResolvedValueOnce({
+        contractVersion: 'v1',
+        sourceRunId: 'run_failed',
+        recoveryRunId: 'run_recovery',
+        accepted: true,
+      });
+    const service = createRunsService(apiClient);
+
+    await expect(service.recoverRun('run_failed')).rejects.toThrow('connection reset');
+    await expect(service.recoverRun('run_failed')).resolves.toMatchObject({
+      recoveryRunId: 'run_recovery',
     });
+
+    expect(vi.mocked(apiClient.postJson).mock.calls[0]?.[2]).toEqual(
+      vi.mocked(apiClient.postJson).mock.calls[1]?.[2]
+    );
   });
 
   it('rejects malformed run-control receipts', async () => {
