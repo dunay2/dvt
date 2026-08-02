@@ -33,29 +33,55 @@ export class CancelRunUseCase implements ICancelRunUseCase {
 
     const runRef = runMetadataToEngineRunRef(metadata);
     const status = await this.engine.getRunStatus(runRef);
-    const decision = decideCancelRun(status);
-
-    if (decision.kind === 'settled') {
-      return {
-        contractVersion: RUN_CONTROL_RESULT_CONTRACT_VERSION,
-        runId: command.runId,
-        signalType: 'CANCEL',
-        accepted: true,
-        disposition: decision.disposition,
-      };
-    }
-    if (decision.kind === 'reject') {
-      throw new RunControlUnavailableError('cancel', status.status, decision.reason);
+    const settledResult = resolveCancelDecision(command, status);
+    if (settledResult !== undefined) {
+      return settledResult;
     }
 
-    await this.engine.cancelRun(runRef);
+    try {
+      await this.engine.cancelRun(runRef);
+    } catch (providerFailure) {
+      let reconciledStatus: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>;
+      try {
+        reconciledStatus = await this.engine.getRunStatus(runRef);
+      } catch {
+        throw providerFailure;
+      }
 
-    return {
-      contractVersion: RUN_CONTROL_RESULT_CONTRACT_VERSION,
-      runId: command.runId,
-      signalType: 'CANCEL',
-      accepted: true,
-      disposition: decision.disposition,
-    };
+      const reconciledResult = resolveCancelDecision(command, reconciledStatus);
+      if (reconciledResult !== undefined) {
+        return reconciledResult;
+      }
+      throw providerFailure;
+    }
+
+    return acceptedCancellation(command, 'requested');
   }
+}
+
+function resolveCancelDecision(
+  command: CancelRunCommand,
+  status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
+): CancelRunResult | undefined {
+  const decision = decideCancelRun(status);
+  if (decision.kind === 'dispatch') {
+    return undefined;
+  }
+  if (decision.kind === 'reject') {
+    throw new RunControlUnavailableError('cancel', status.status, decision.reason);
+  }
+  return acceptedCancellation(command, decision.disposition);
+}
+
+function acceptedCancellation(
+  command: CancelRunCommand,
+  disposition: CancelRunResult['disposition']
+): CancelRunResult {
+  return {
+    contractVersion: RUN_CONTROL_RESULT_CONTRACT_VERSION,
+    runId: command.runId,
+    signalType: 'CANCEL',
+    accepted: true,
+    disposition,
+  };
 }

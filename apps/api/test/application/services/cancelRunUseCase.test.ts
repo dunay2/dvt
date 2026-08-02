@@ -122,6 +122,113 @@ describe('CancelRunUseCase', () => {
     }
   );
 
+  it('reconciles a terminal race when the provider rejects cancellation', async () => {
+    const providerFailure = new Error('workflow is already closed');
+    const engine = {
+      cancelRun: vi.fn().mockRejectedValue(providerFailure),
+      getRunStatus: vi
+        .fn()
+        .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
+        .mockResolvedValueOnce({ runId: 'run-1', status: 'COMPLETED' }),
+    };
+    const stateStore = {
+      getRunMetadataByRunId: vi.fn().mockResolvedValue({
+        tenantId: 'tenant-a',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        runId: 'run-1',
+        planId: 'plan-1',
+        planVersion: '1.0',
+        logicalAttemptId: 1,
+        providerRef: {
+          provider: 'temporal',
+          tenantId: 'tenant-a',
+          namespace: 'default',
+          workflowId: 'wf-1',
+          runId: 'provider-run-1',
+        },
+      }),
+    };
+    const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+
+    await expect(
+      useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
+    ).rejects.toMatchObject({
+      name: 'RunControlUnavailableError',
+      action: 'cancel',
+      status: 'COMPLETED',
+      reason: 'run_terminal',
+    });
+    expect(engine.getRunStatus).toHaveBeenCalledTimes(2);
+  });
+
+  it('returns the settled receipt when cancellation wins the provider race', async () => {
+    const engine = {
+      cancelRun: vi.fn().mockRejectedValue(new Error('workflow is already closed')),
+      getRunStatus: vi
+        .fn()
+        .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
+        .mockResolvedValueOnce({ runId: 'run-1', status: 'CANCELLED' }),
+    };
+    const stateStore = {
+      getRunMetadataByRunId: vi.fn().mockResolvedValue({
+        tenantId: 'tenant-a',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        runId: 'run-1',
+        planId: 'plan-1',
+        planVersion: '1.0',
+        logicalAttemptId: 1,
+        providerRef: {
+          provider: 'temporal',
+          tenantId: 'tenant-a',
+          namespace: 'default',
+          workflowId: 'wf-1',
+          runId: 'provider-run-1',
+        },
+      }),
+    };
+    const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+
+    await expect(
+      useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
+    ).resolves.toMatchObject({ accepted: true, disposition: 'already_cancelled' });
+  });
+
+  it('preserves the provider failure when canonical state remains cancellable', async () => {
+    const providerFailure = new Error('temporal transport unavailable');
+    const engine = {
+      cancelRun: vi.fn().mockRejectedValue(providerFailure),
+      getRunStatus: vi
+        .fn()
+        .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
+        .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' }),
+    };
+    const stateStore = {
+      getRunMetadataByRunId: vi.fn().mockResolvedValue({
+        tenantId: 'tenant-a',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        runId: 'run-1',
+        planId: 'plan-1',
+        planVersion: '1.0',
+        logicalAttemptId: 1,
+        providerRef: {
+          provider: 'temporal',
+          tenantId: 'tenant-a',
+          namespace: 'default',
+          workflowId: 'wf-1',
+          runId: 'provider-run-1',
+        },
+      }),
+    };
+    const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+
+    await expect(
+      useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
+    ).rejects.toBe(providerFailure);
+  });
+
   it.each([
     ['PENDING', 'dispatch_pending'],
     ['COMPLETED', 'run_terminal'],
