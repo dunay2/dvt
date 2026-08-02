@@ -58,7 +58,7 @@ export class ResolveAuthorizedExecutableSubgraphService {
         context.requestId,
         'authorized_scope_incomplete',
         'Authorized scope is missing projectId or environmentId.',
-        input.selection.nodeIds
+        []
       );
     }
 

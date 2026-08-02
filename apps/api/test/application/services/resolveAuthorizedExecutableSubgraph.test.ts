@@ -129,6 +129,9 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
         ],
       },
     });
+    expect(result).toMatchObject({
+      rejection: { findings: [{ subjects: [{ kind: 'request', id: 'req-1' }] }] },
+    });
     expect(read).not.toHaveBeenCalled();
   });
 

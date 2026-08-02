@@ -93,7 +93,7 @@ export class ResolveAuthorizedPreviewSelectionService {
         context.requestId,
         'authorized_scope_incomplete',
         'Authorized scope is missing projectId or environmentId.',
-        input.selection.nodeIds
+        []
       );
     }
     if (input.selection.mode !== 'explicit') {

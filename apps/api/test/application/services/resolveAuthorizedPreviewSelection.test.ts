@@ -333,7 +333,12 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
       ok: false,
       rejection: {
         cause: 'authorized_scope_incomplete',
-        findings: [{ remediationCode: 'REQUEST_AUTHORIZED_SCOPE' }],
+        findings: [
+          {
+            remediationCode: 'REQUEST_AUTHORIZED_SCOPE',
+            subjects: [{ kind: 'request', id: 'req-1' }],
+          },
+        ],
       },
     });
     expect(projectGraph.execute).not.toHaveBeenCalled();
