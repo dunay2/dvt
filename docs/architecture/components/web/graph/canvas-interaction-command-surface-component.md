@@ -112,6 +112,16 @@ Related command seams:
 
 - Background right-click opens app-owned contextual actions, not the browser
   default menu.
+- The focused background surface opens the same contextual model through the
+  Context Menu key or `Shift+F10` at a deterministic point inside the surface.
+- Opening a custom Canvas menu captures its opener and focuses the first
+  visible menu item after the menu model renders or changes.
+- `ArrowUp` and `ArrowDown` wrap through visible menu items; `Home` and `End`
+  move to the first and last item. Native button `Enter` and Space activation
+  remains unchanged.
+- Escape and ordinary outside-pointer close restore focus to the opener. An
+  action that transfers focus ownership to a Radix dialog closes without
+  overriding Radix focus management.
 - Edge right-click opens an edge-specific menu; it does not show node creation
   actions.
 - Node right-click opens node-specific actions; it does not show background
@@ -148,9 +158,12 @@ Related command seams:
 stateDiagram-v2
   [*] --> Idle
   Idle --> PaneMenu: right-click pane
+  Idle --> PaneMenu: Context Menu key / Shift+F10
   Idle --> EdgeMenu: right-click edge
   Idle --> NodeMenu: right-click node
   PaneMenu --> CreateNode: choose node kind
+  PaneMenu --> NodeCatalog: choose Add
+  NodeCatalog --> NodeCatalog: keyboard traversal
   CreateNode --> NodeAdmission: CreateCanvasAuthoringNode
   NodeAdmission --> DraftGraph: canvasGraphLifecycle.node.admitExplicit
   EdgeMenu --> RemoveEdge: choose delete
