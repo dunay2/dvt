@@ -95,6 +95,12 @@ describe('AppShellFrame', () => {
     expect(mainLandmarks[0]).toBe(outlet);
     expect(mainLandmarks[0]?.id).toBe('app-shell-main-content');
     expect(mainLandmarks[0]?.tabIndex).toBe(-1);
+
+    skipLinks[0]?.focus();
+    await act(async () => {
+      skipLinks[0]?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
+    expect(document.activeElement).toBe(mainLandmarks[0]);
   });
 
   it('hides navigation and bottom drawer in focus mode while keeping top bar and outlet', async () => {

@@ -31,6 +31,9 @@ export function AppShellFrame({
 }: AppShellFrameProps) {
   const showLeftNavigation = !focusMode && navigationDisposition.railMode === 'visible';
   const showOperationalDrawer = !focusMode && showBottomDrawer;
+  const focusMainContent = (): void => {
+    document.getElementById(APP_SHELL_MAIN_CONTENT_ID)?.focus({ preventScroll: true });
+  };
 
   return (
     <div
@@ -40,6 +43,16 @@ export function AppShellFrame({
       <a
         data-slot="app-shell-skip-link"
         href={`#${APP_SHELL_MAIN_CONTENT_ID}`}
+        onClick={(event) => {
+          event.preventDefault();
+          focusMainContent();
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            focusMainContent();
+          }
+        }}
         className="sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-[var(--surface-elevated)] focus:px-3 focus:py-2 focus:text-sm focus:text-[var(--text-strong)] focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]"
       >
         {skipToMainContentLabel}

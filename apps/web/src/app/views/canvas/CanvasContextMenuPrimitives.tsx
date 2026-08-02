@@ -16,6 +16,16 @@ type CanvasContextMenuSurfaceProps = Readonly<{
 }>;
 
 function focusMenuItemForKey(event: KeyboardEvent<HTMLDivElement>): void {
+  if (event.key === 'Enter' || event.key === ' ') {
+    const activeItem = document.activeElement;
+    if (activeItem instanceof HTMLButtonElement && activeItem.getAttribute('role') === 'menuitem') {
+      event.preventDefault();
+      event.stopPropagation();
+      activeItem.click();
+    }
+    return;
+  }
+
   if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
     return;
   }

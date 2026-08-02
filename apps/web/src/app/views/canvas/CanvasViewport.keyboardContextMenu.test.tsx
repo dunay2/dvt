@@ -94,11 +94,12 @@ describe('CanvasViewport keyboard context menu', () => {
     }
   );
 
-  it('wraps arrow navigation and supports Home and End without intercepting native activation', async () => {
+  it('wraps arrow navigation and activates the focused item with Enter or Space', async () => {
+    const onOpenCanvasSettings = vi.fn();
     await renderViewport({
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
       canOpenCanvasSettings: true,
-      onOpenCanvasSettings: vi.fn(),
+      onOpenCanvasSettings,
     });
     await openFromKeyboard();
 
@@ -114,8 +115,20 @@ describe('CanvasViewport keyboard context menu', () => {
     expect(document.activeElement).toBe(lastItem);
     fireEvent.keyDown(lastItem, { key: 'Home' });
     expect(document.activeElement).toBe(firstItem);
-    expect(fireEvent.keyDown(firstItem, { key: 'Enter' })).toBe(true);
-    expect(fireEvent.keyDown(firstItem, { key: ' ' })).toBe(true);
+
+    fireEvent.keyDown(firstItem, { key: 'End' });
+    await act(async () => {
+      expect(fireEvent.keyDown(lastItem, { key: 'Enter' })).toBe(false);
+    });
+    expect(onOpenCanvasSettings).toHaveBeenCalledTimes(1);
+
+    await openFromKeyboard();
+    const reopenedLastItem = menuItems().at(-1)!;
+    reopenedLastItem.focus();
+    await act(async () => {
+      expect(fireEvent.keyDown(reopenedLastItem, { key: ' ' })).toBe(false);
+    });
+    expect(onOpenCanvasSettings).toHaveBeenCalledTimes(2);
   });
 
   it('focuses the first catalog item when Add changes the menu model', async () => {
