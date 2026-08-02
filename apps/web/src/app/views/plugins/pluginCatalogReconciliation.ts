@@ -7,13 +7,39 @@ export type PluginFrontendPresence = 'registered' | 'not-registered';
 export type PluginRuntimeShape =
   'frontend-only' | 'frontend-and-backend' | 'backend-only' | 'unbound';
 
-export type PluginCatalogReconciliation = Readonly<{
+type PluginCatalogReconciliationBase = Readonly<{
   catalog: Plugin;
-  localContribution: PluginContributions | null;
-  frontendPresence: PluginFrontendPresence;
-  backendPluginId?: string;
-  runtimeShape: PluginRuntimeShape;
 }>;
+
+export type PluginCatalogReconciliation =
+  | (PluginCatalogReconciliationBase &
+      Readonly<{
+        localContribution: PluginContributions;
+        frontendPresence: 'registered';
+        backendPluginId?: never;
+        runtimeShape: 'frontend-only';
+      }>)
+  | (PluginCatalogReconciliationBase &
+      Readonly<{
+        localContribution: PluginContributions;
+        frontendPresence: 'registered';
+        backendPluginId: string;
+        runtimeShape: 'frontend-and-backend';
+      }>)
+  | (PluginCatalogReconciliationBase &
+      Readonly<{
+        localContribution: null;
+        frontendPresence: 'not-registered';
+        backendPluginId: string;
+        runtimeShape: 'backend-only';
+      }>)
+  | (PluginCatalogReconciliationBase &
+      Readonly<{
+        localContribution: null;
+        frontendPresence: 'not-registered';
+        backendPluginId?: never;
+        runtimeShape: 'unbound';
+      }>);
 
 export type PluginCatalogReconciliationResult = Readonly<{
   entries: readonly PluginCatalogReconciliation[];
@@ -24,22 +50,6 @@ type ReconcilePluginCatalogInput = Readonly<{
   catalog: readonly Plugin[];
   localContributions: readonly PluginContributions[];
 }>;
-
-function resolveRuntimeShape(
-  hasFrontendContribution: boolean,
-  hasBackendBinding: boolean
-): PluginRuntimeShape {
-  if (hasFrontendContribution && hasBackendBinding) {
-    return 'frontend-and-backend';
-  }
-  if (hasFrontendContribution) {
-    return 'frontend-only';
-  }
-  if (hasBackendBinding) {
-    return 'backend-only';
-  }
-  return 'unbound';
-}
 
 export function reconcilePluginCatalog({
   catalog,
@@ -53,15 +63,38 @@ export function reconcilePluginCatalog({
   const entries = catalog.map((catalogPlugin): PluginCatalogReconciliation => {
     const localContribution = localById.get(catalogPlugin.id) ?? null;
     const backendPluginId = catalogPlugin.backendPluginId ?? localContribution?.backendPluginId;
-    const hasFrontendContribution = localContribution != null;
-    const hasBackendBinding = backendPluginId != null;
 
+    if (localContribution && backendPluginId) {
+      return {
+        catalog: catalogPlugin,
+        localContribution,
+        frontendPresence: 'registered',
+        backendPluginId,
+        runtimeShape: 'frontend-and-backend',
+      };
+    }
+    if (localContribution) {
+      return {
+        catalog: catalogPlugin,
+        localContribution,
+        frontendPresence: 'registered',
+        runtimeShape: 'frontend-only',
+      };
+    }
+    if (backendPluginId) {
+      return {
+        catalog: catalogPlugin,
+        localContribution: null,
+        frontendPresence: 'not-registered',
+        backendPluginId,
+        runtimeShape: 'backend-only',
+      };
+    }
     return {
       catalog: catalogPlugin,
-      localContribution,
-      frontendPresence: hasFrontendContribution ? 'registered' : 'not-registered',
-      ...(backendPluginId ? { backendPluginId } : {}),
-      runtimeShape: resolveRuntimeShape(hasFrontendContribution, hasBackendBinding),
+      localContribution: null,
+      frontendPresence: 'not-registered',
+      runtimeShape: 'unbound',
     };
   });
 

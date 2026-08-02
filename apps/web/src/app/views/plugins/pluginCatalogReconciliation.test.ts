@@ -23,7 +23,7 @@ function localContribution(id: string, backendPluginId?: string): PluginContribu
     id,
     displayName: `Local ${id}`,
     version: '9.9.9',
-    capabilities: ['local.capability'],
+    capabilities: ['canvas.render'],
     ...(backendPluginId ? { backendPluginId } : {}),
   };
 }

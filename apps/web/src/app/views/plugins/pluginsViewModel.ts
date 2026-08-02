@@ -1,7 +1,23 @@
-/** Owned concern: model Plugins route readiness copy and capability-derived state. */
-import { type PluginContributions } from '../../plugins/registry';
+/** Owned concern: project Plugins route capability state into truthful readiness semantics. */
+import type {
+  PluginCatalogReconciliation,
+  PluginFrontendPresence,
+  PluginRuntimeShape,
+} from './pluginCatalogReconciliation';
+import { resolvePluginsViewCopy, type PluginsViewCopy } from './pluginsViewCopy';
 
 export type PluginSurfaceState = 'ok' | 'degraded' | 'warning' | 'error';
+
+export type PluginBackendState =
+  | 'available'
+  | 'unavailable'
+  | 'unknown'
+  | 'pending'
+  | 'probe-unavailable'
+  | 'not-required'
+  | 'not-bound';
+
+export type PluginOperationalState = 'ready' | 'blocked' | 'degraded' | 'pending' | 'unbound';
 
 export type PluginReadinessItem = {
   readonly key: 'declared' | 'frontend' | 'backend' | 'executable';
@@ -12,6 +28,10 @@ export type PluginReadinessItem = {
 };
 
 export type PluginReadiness = {
+  readonly frontendPresence: PluginFrontendPresence;
+  readonly backendState: PluginBackendState;
+  readonly runtimeShape: PluginRuntimeShape;
+  readonly operationalState: PluginOperationalState;
   readonly summary: {
     readonly state: PluginSurfaceState;
     readonly label: string;
@@ -32,241 +52,254 @@ export type PluginProbeStatus = {
   readonly description: string;
 };
 
-export const pluginsViewCopy = {
-  title: 'Plugins',
-  subtitle: 'Inspect registered plugin surfaces, backend probe state, and execution readiness.',
-  registeredCount: 'Registered',
-  catalogCount: 'Catalog',
-  apiVersion: 'API',
-  minFrontendVersion: 'Min frontend',
-  capabilityProbeTitle: 'Backend capability probe',
-  capabilityProbeReady:
-    'Backend capabilities responded and the route can evaluate live availability.',
-  capabilityProbeLoading: 'Checking backend capability availability.',
-  capabilityProbeError:
-    'Capability probe unavailable. Backend availability is being derived from frontend declarations only.',
-  pluginCatalogLoadingTitle: 'Loading plugin catalog',
-  pluginCatalogLoadingDescription:
-    'Loading the DB-backed workspace plugin catalog before rendering plugin readiness.',
-  pluginCatalogErrorTitle: 'Plugin catalog unavailable',
-  pluginCatalogErrorDescription:
-    'The DB-backed plugin catalog did not respond, so the Plugins route cannot prove catalog completeness.',
-  noPluginsTitle: 'No plugins declared',
-  noPluginsDescription:
-    'The current runtime does not expose any enabled plugin contributions to the workbench.',
-  declaredTitle: 'Declared',
-  frontendTitle: 'Frontend runtime',
-  backendTitle: 'Backend',
-  executableTitle: 'Executable',
-  capabilitiesTitle: 'Capabilities',
-  nodeKindsTitle: 'Node kinds',
-  noCapabilities: 'No explicit capability declarations.',
-  noNodeKinds: 'No node-kind registrations.',
-  searchPlaceholder: 'Search plugins, capabilities, node kinds',
-  backendFilterAll: 'All backend states',
-  backendFilterAvailable: 'Backend available',
-  backendFilterBlocked: 'Backend blocked',
-  backendFilterDegraded: 'Backend degraded',
-  backendFilterPending: 'Backend pending',
-  backendFilterNotRequired: 'Backend not required',
-  pluginColumn: 'Plugin',
-  backendColumn: 'Backend',
-  executableColumn: 'Executable',
-  routesColumn: 'Routes',
-  noPluginMatches: 'No plugin contributions match the current filters.',
-} as const;
-
 function formatEnvFlagValue(value: string | boolean | undefined): string {
-  if (value == null) {
-    return 'unset';
-  }
-
-  return String(value);
+  return value == null ? 'unset' : String(value);
 }
 
 export function resolveProbeStatus(
   capabilitiesLoading: boolean,
   capabilitiesError: unknown,
-  capabilitiesAvailable: boolean
+  capabilitiesAvailable: boolean,
+  copy: PluginsViewCopy = resolvePluginsViewCopy()
 ): PluginProbeStatus {
   if (capabilitiesLoading) {
     return {
       state: 'warning',
-      label: 'Checking',
-      description: pluginsViewCopy.capabilityProbeLoading,
+      label: copy.checkingLabel,
+      description: copy.capabilityProbeLoading,
     };
   }
 
   if (capabilitiesError) {
     return {
       state: 'degraded',
-      label: 'Probe unavailable',
-      description: pluginsViewCopy.capabilityProbeError,
+      label: copy.probeUnavailableLabel,
+      description: copy.capabilityProbeError,
     };
   }
 
   if (capabilitiesAvailable) {
     return {
       state: 'ok',
-      label: 'Available',
-      description: pluginsViewCopy.capabilityProbeReady,
+      label: copy.availableLabel,
+      description: copy.capabilityProbeReady,
     };
   }
 
   return {
     state: 'degraded',
-    label: 'Unavailable',
-    description: pluginsViewCopy.capabilityProbeError,
+    label: copy.unavailableLabel,
+    description: copy.capabilityProbeError,
+  };
+}
+
+function resolveFrontendItem(
+  entry: PluginCatalogReconciliation,
+  copy: PluginsViewCopy
+): PluginReadinessItem {
+  const contribution = entry.localContribution;
+  if (!contribution) {
+    return {
+      key: 'frontend',
+      title: copy.frontendTitle,
+      state: entry.runtimeShape === 'unbound' ? 'error' : 'warning',
+      label: copy.notRegisteredLabel,
+      detail: copy.frontendNotRegisteredDetail,
+    };
+  }
+
+  const envFlagValue = contribution.envFlag
+    ? (import.meta.env as Record<string, string | boolean | undefined>)[contribution.envFlag]
+    : undefined;
+
+  return {
+    key: 'frontend',
+    title: copy.frontendTitle,
+    state: 'ok',
+    label: copy.loadedLabel,
+    detail: copy.frontendLoadedDetail(
+      contribution.envFlag,
+      contribution.envFlag ? formatEnvFlagValue(envFlagValue) : undefined
+    ),
+  };
+}
+
+function readinessResult(
+  entry: PluginCatalogReconciliation,
+  backendState: PluginBackendState,
+  operationalState: PluginOperationalState,
+  catalog: PluginReadinessItem,
+  frontend: PluginReadinessItem,
+  backend: PluginReadinessItem,
+  operational: PluginReadinessItem
+): PluginReadiness {
+  return {
+    frontendPresence: entry.frontendPresence,
+    backendState,
+    runtimeShape: entry.runtimeShape,
+    operationalState,
+    summary: {
+      state: operational.state,
+      label: operational.label,
+      detail: operational.detail,
+    },
+    items: [catalog, frontend, backend, operational],
   };
 }
 
 export function resolvePluginReadiness(
-  plugin: PluginContributions,
+  entry: PluginCatalogReconciliation,
   capabilities: Pick<PluginCapabilitiesSnapshot, 'plugins'> | undefined,
   capabilitiesLoading: boolean,
-  capabilitiesError: unknown
+  capabilitiesError: unknown,
+  copy: PluginsViewCopy = resolvePluginsViewCopy()
 ): PluginReadiness {
-  const envFlagValue = plugin.envFlag
-    ? (import.meta.env as Record<string, string | boolean | undefined>)[plugin.envFlag]
-    : undefined;
-
-  const declared: PluginReadinessItem = {
+  const catalog: PluginReadinessItem = {
     key: 'declared',
-    title: pluginsViewCopy.declaredTitle,
+    title: copy.catalogTitle,
     state: 'ok',
-    label: 'Registered',
-    detail: `Static plugin contribution "${plugin.id}" is present in the runtime registry.`,
+    label: copy.cataloguedLabel,
+    detail: copy.catalogEntryDetail(entry.catalog.id),
   };
+  const frontend = resolveFrontendItem(entry, copy);
 
-  const frontend: PluginReadinessItem = {
-    key: 'frontend',
-    title: pluginsViewCopy.frontendTitle,
-    state: 'ok',
-    label: 'Loaded',
-    detail: plugin.envFlag
-      ? `This view only lists plugins loaded into the current frontend runtime. Runtime gate ${plugin.envFlag} = ${formatEnvFlagValue(envFlagValue)}.`
-      : 'This view only lists plugins loaded into the current frontend runtime.',
-  };
-
-  if (!plugin.backendPluginId) {
+  if (entry.runtimeShape === 'unbound') {
     const backend: PluginReadinessItem = {
       key: 'backend',
-      title: pluginsViewCopy.backendTitle,
-      state: 'ok',
-      label: 'Not required',
-      detail: 'This plugin does not declare a backend capability handshake.',
+      title: copy.backendTitle,
+      state: 'error',
+      label: copy.notBoundLabel,
+      detail: copy.unboundBackendDetail,
     };
-    const executable: PluginReadinessItem = {
+    const operational: PluginReadinessItem = {
       key: 'executable',
-      title: pluginsViewCopy.executableTitle,
-      state: 'ok',
-      label: 'Ready',
-      detail: 'Frontend registration is sufficient for this plugin surface to execute.',
+      title: copy.operationalTitle,
+      state: 'error',
+      label: copy.unboundLabel,
+      detail: copy.unboundOperationalDetail,
     };
 
-    return {
-      summary: {
-        state: executable.state,
-        label: executable.label,
-        detail: executable.detail,
-      },
-      items: [declared, frontend, backend, executable],
-    };
+    return readinessResult(entry, 'not-bound', 'unbound', catalog, frontend, backend, operational);
   }
 
-  const backendInfo = capabilities?.plugins?.[plugin.backendPluginId];
+  if (entry.runtimeShape === 'frontend-only') {
+    const backend: PluginReadinessItem = {
+      key: 'backend',
+      title: copy.backendTitle,
+      state: 'ok',
+      label: copy.notRequiredLabel,
+      detail: copy.backendNotRequiredDetail,
+    };
+    const operational: PluginReadinessItem = {
+      key: 'executable',
+      title: copy.operationalTitle,
+      state: 'ok',
+      label: copy.readyLabel,
+      detail: copy.frontendOnlyReadyDetail,
+    };
 
-  let backend: PluginReadinessItem;
-  let executable: PluginReadinessItem;
+    return readinessResult(entry, 'not-required', 'ready', catalog, frontend, backend, operational);
+  }
+
+  const backendPluginId = entry.backendPluginId;
+  const backendInfo = capabilities?.plugins?.[backendPluginId];
 
   if (capabilitiesLoading) {
-    backend = {
+    const backend: PluginReadinessItem = {
       key: 'backend',
-      title: pluginsViewCopy.backendTitle,
+      title: copy.backendTitle,
       state: 'warning',
-      label: 'Checking',
-      detail: 'Waiting on /api/capabilities before backend availability can be confirmed.',
+      label: copy.checkingLabel,
+      detail: copy.backendCheckingDetail,
     };
-    executable = {
+    const operational: PluginReadinessItem = {
       key: 'executable',
-      title: pluginsViewCopy.executableTitle,
+      title: copy.operationalTitle,
       state: 'warning',
-      label: 'Pending',
-      detail: 'Execution readiness depends on the backend capability probe.',
+      label: copy.pendingLabel,
+      detail: copy.backendPendingDetail,
     };
-  } else if (capabilitiesError) {
-    backend = {
-      key: 'backend',
-      title: pluginsViewCopy.backendTitle,
-      state: 'degraded',
-      label: 'Probe unavailable',
-      detail: 'Capability probe did not respond, so backend availability is currently unknown.',
-    };
-    executable = {
-      key: 'executable',
-      title: pluginsViewCopy.executableTitle,
-      state: 'degraded',
-      label: 'Degraded',
-      detail: 'The plugin is declared, but backend execution readiness is not confirmed.',
-    };
-  } else if (!backendInfo) {
-    backend = {
-      key: 'backend',
-      title: pluginsViewCopy.backendTitle,
-      state: 'degraded',
-      label: 'Unknown',
-      detail: `No capability entry was reported for backend plugin "${plugin.backendPluginId}".`,
-    };
-    executable = {
-      key: 'executable',
-      title: pluginsViewCopy.executableTitle,
-      state: 'degraded',
-      label: 'Degraded',
-      detail:
-        'The plugin is declared, but the backend did not publish a matching readiness signal.',
-    };
-  } else if (backendInfo.available) {
-    backend = {
-      key: 'backend',
-      title: pluginsViewCopy.backendTitle,
-      state: 'ok',
-      label: 'Available',
-      detail:
-        backendInfo.reason ??
-        `Backend plugin "${plugin.backendPluginId}" reported that it is available.`,
-    };
-    executable = {
-      key: 'executable',
-      title: pluginsViewCopy.executableTitle,
-      state: 'ok',
-      label: 'Ready',
-      detail: 'Frontend and backend signals both permit this plugin surface to execute.',
-    };
-  } else {
-    backend = {
-      key: 'backend',
-      title: pluginsViewCopy.backendTitle,
-      state: 'error',
-      label: 'Blocked',
-      detail:
-        backendInfo.reason ??
-        `Backend plugin "${plugin.backendPluginId}" reported that it is unavailable.`,
-    };
-    executable = {
-      key: 'executable',
-      title: pluginsViewCopy.executableTitle,
-      state: 'error',
-      label: 'Blocked',
-      detail: 'Backend availability currently blocks execution for this plugin surface.',
-    };
+    return readinessResult(entry, 'pending', 'pending', catalog, frontend, backend, operational);
   }
 
-  return {
-    summary: {
-      state: executable.state,
-      label: executable.label,
-      detail: executable.detail,
-    },
-    items: [declared, frontend, backend, executable],
+  if (capabilitiesError) {
+    const backend: PluginReadinessItem = {
+      key: 'backend',
+      title: copy.backendTitle,
+      state: 'degraded',
+      label: copy.probeUnavailableLabel,
+      detail: copy.backendProbeUnavailableDetail,
+    };
+    const operational: PluginReadinessItem = {
+      key: 'executable',
+      title: copy.operationalTitle,
+      state: 'degraded',
+      label: copy.degradedLabel,
+      detail: copy.operationalProbeUnavailableDetail,
+    };
+    return readinessResult(
+      entry,
+      'probe-unavailable',
+      'degraded',
+      catalog,
+      frontend,
+      backend,
+      operational
+    );
+  }
+
+  if (!backendInfo) {
+    const backend: PluginReadinessItem = {
+      key: 'backend',
+      title: copy.backendTitle,
+      state: 'degraded',
+      label: copy.unknownLabel,
+      detail: copy.backendUnknownDetail(backendPluginId),
+    };
+    const operational: PluginReadinessItem = {
+      key: 'executable',
+      title: copy.operationalTitle,
+      state: 'degraded',
+      label: copy.degradedLabel,
+      detail: copy.operationalUnknownDetail,
+    };
+    return readinessResult(entry, 'unknown', 'degraded', catalog, frontend, backend, operational);
+  }
+
+  if (backendInfo.available) {
+    const backend: PluginReadinessItem = {
+      key: 'backend',
+      title: copy.backendTitle,
+      state: 'ok',
+      label: copy.availableLabel,
+      detail: backendInfo.reason ?? copy.backendAvailableDetail(backendPluginId),
+    };
+    const operational: PluginReadinessItem = {
+      key: 'executable',
+      title: copy.operationalTitle,
+      state: 'ok',
+      label: copy.readyLabel,
+      detail:
+        entry.runtimeShape === 'backend-only'
+          ? copy.backendOnlyReadyDetail
+          : copy.operationalReadyDetail,
+    };
+    return readinessResult(entry, 'available', 'ready', catalog, frontend, backend, operational);
+  }
+
+  const backend: PluginReadinessItem = {
+    key: 'backend',
+    title: copy.backendTitle,
+    state: 'error',
+    label: copy.blockedLabel,
+    detail: backendInfo.reason ?? copy.backendUnavailableDetail(backendPluginId),
   };
+  const operational: PluginReadinessItem = {
+    key: 'executable',
+    title: copy.operationalTitle,
+    state: 'error',
+    label: copy.blockedLabel,
+    detail: copy.operationalBlockedDetail,
+  };
+  return readinessResult(entry, 'unavailable', 'blocked', catalog, frontend, backend, operational);
 }
