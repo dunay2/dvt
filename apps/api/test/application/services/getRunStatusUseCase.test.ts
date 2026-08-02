@@ -1581,4 +1581,41 @@ describe('GetRunStatusUseCase', () => {
       snapshotStaleness: 'FRESH',
     });
   });
+
+  it('does not advertise recovery when the stored source plan is unavailable', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({
+        runId: 'provider-run-1',
+        status: 'FAILED' as const,
+      }),
+      getRunEnrichment: vi.fn(),
+    };
+    const planStore = {
+      getPlanRecord: vi.fn().mockResolvedValue(undefined),
+      getStoredPlanRef: vi.fn().mockResolvedValue(undefined),
+    };
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      { isSnapshotStale: vi.fn().mockResolvedValue(false) } as never,
+      undefined,
+      planStore
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      status: 'FAILED',
+      controls: {
+        recover: { available: false, reason: 'source_plan_unavailable' },
+      },
+    });
+    expect(planStore.getStoredPlanRef).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planId: 'plan-1',
+    });
+  });
 });

@@ -93,6 +93,21 @@ describe('RunControlActions', () => {
     ).toContain('cannot be verified');
   });
 
+  it('explains when the original execution plan is unavailable', async () => {
+    await renderActions({
+      availability: {
+        cancel: { available: false, reason: 'run_terminal' },
+        recover: { available: false, reason: 'source_plan_unavailable' },
+      },
+    });
+
+    expect(
+      container
+        ?.querySelector<HTMLButtonElement>('[data-slot="run-recover-action"]')
+        ?.getAttribute('aria-description')
+    ).toContain('execution plan is no longer available');
+  });
+
   it('explains when cancellation is waiting for authoritative runtime dispatch', async () => {
     await renderActions({
       availability: {

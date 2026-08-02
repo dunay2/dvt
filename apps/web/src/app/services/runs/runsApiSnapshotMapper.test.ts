@@ -22,7 +22,7 @@ describe('runsApiSnapshotMapper operational truth', () => {
       errorReason: 'SINK_WRITE_FAILED',
       controls: {
         cancel: { available: false, reason: 'run_terminal' },
-        recover: { available: false, reason: 'source_context_untrusted' },
+        recover: { available: false, reason: 'source_plan_unavailable' },
       },
     });
 
@@ -49,7 +49,7 @@ describe('runsApiSnapshotMapper operational truth', () => {
       errorReason: 'SINK_WRITE_FAILED',
       controls: {
         cancel: { available: false, reason: 'run_terminal' },
-        recover: { available: false, reason: 'source_context_untrusted' },
+        recover: { available: false, reason: 'source_plan_unavailable' },
       },
     });
   });

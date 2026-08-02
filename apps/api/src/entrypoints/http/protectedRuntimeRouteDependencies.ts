@@ -94,7 +94,8 @@ export function buildProtectedRuntimeRouteDependencies(
       protectedModule.stateStore.read,
       protectedModule.engine,
       protectedModule.runExecutionContextReferenceReader,
-      executionContextRequirementResolver
+      executionContextRequirementResolver,
+      protectedModule.planStore
     ),
     previewPlanUseCase,
     recoverRunUseCase: new RecoverRunUseCase({

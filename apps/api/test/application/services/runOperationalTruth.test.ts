@@ -128,6 +128,22 @@ describe('projectRunOperationalTruth', () => {
     }
   );
 
+  it('does not advertise recovery when the source plan is unavailable', () => {
+    const truth = projectRunOperationalTruth({
+      metadata,
+      status: {
+        runId: 'run-provider',
+        status: 'FAILED',
+      },
+      recoveryPlanAvailable: false,
+    });
+
+    expect(truth.controls.recover).toEqual({
+      available: false,
+      reason: 'source_plan_unavailable',
+    });
+  });
+
   it('uses enriched failure evidence only when canonical evidence is incomplete', () => {
     expect(
       projectRunOperationalTruth({

@@ -28,6 +28,7 @@ import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth, sanitizeCanonicalRunStatus } from './runOperationalTruth.js';
 import { deriveRunReadEvidenceModel } from './runReadEvidenceModel.js';
 import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
+import { resolveRunRecoveryPlanAvailability } from './runRecoveryPlanAvailability.js';
 
 type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
 
@@ -38,6 +39,7 @@ interface SnapshotStalenessResolution {
 
 interface PlanRecordReader {
   getPlanRecord(input: ScopedPlanId): Promise<PlanRecord | undefined>;
+  getStoredPlanRef?: import('@dvt/artifacts').IStoredPlanRefReader['getStoredPlanRef'];
 }
 
 type CanonicalRunSnapshot = Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>;
@@ -128,16 +130,21 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       runtimeAdapter: metadata.providerRef.provider,
       ...(planRecord === undefined ? {} : { planRecord }),
     });
-    const operationalTruth = projectRunOperationalTruth({
-      metadata,
-      status: snapshot,
-      evidence: evidenceModel,
-      recoveryContextTrusted: await resolveRunRecoveryContextTrust(
+    const [recoveryContextTrusted, recoveryPlanAvailable] = await Promise.all([
+      resolveRunRecoveryContextTrust(
         this.executionContextReader,
         this.executionContextRequirementResolver,
         metadata,
         snapshot
       ),
+      resolveRunRecoveryPlanAvailability(this.planStore, metadata, snapshot),
+    ]);
+    const operationalTruth = projectRunOperationalTruth({
+      metadata,
+      status: snapshot,
+      evidence: evidenceModel,
+      recoveryContextTrusted,
+      recoveryPlanAvailable,
     });
 
     return {

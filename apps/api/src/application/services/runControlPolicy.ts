@@ -47,7 +47,8 @@ export function decideRecoverRun(status: CanonicalRunStatus): RecoverRunDecision
 
 export function projectRunControlAvailability(
   status: CanonicalRunStatus,
-  recoveryContextTrusted = true
+  recoveryContextTrusted = true,
+  recoveryPlanAvailable = true
 ): RunControlAvailabilityDto {
   const cancelDecision = decideCancelRun(status);
   const cancel: RunControlAvailabilityDto['cancel'] =
@@ -67,9 +68,11 @@ export function projectRunControlAvailability(
   if (recoverDecision.kind === 'dispatch') {
     return {
       cancel,
-      recover: recoveryContextTrusted
-        ? { available: true }
-        : { available: false, reason: 'source_context_untrusted' },
+      recover: !recoveryPlanAvailable
+        ? { available: false, reason: 'source_plan_unavailable' }
+        : recoveryContextTrusted
+          ? { available: true }
+          : { available: false, reason: 'source_context_untrusted' },
     };
   }
 

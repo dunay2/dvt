@@ -102,7 +102,9 @@ describe('ListRunsUseCase', () => {
     const useCase = new ListRunsUseCase(
       stateStore as never,
       engine as never,
-      executionContextReader as never
+      executionContextReader as never,
+      undefined,
+      { getStoredPlanRef: vi.fn().mockResolvedValue({}) } as never
     );
 
     await expect(useCase.execute({ limit: 25 }, queryContext as never)).resolves.toEqual({
@@ -182,5 +184,50 @@ describe('ListRunsUseCase', () => {
 
     expect(maximumActiveReads).toBeLessThanOrEqual(8);
     expect(result.items.map((item) => item.runId)).toEqual(metadata.map((item) => item.runId));
+  });
+
+  it('fails closed when a recoverable run has no stored source plan', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const planStore = { getStoredPlanRef: vi.fn().mockResolvedValue(undefined) };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'CANCELLED',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      planStore as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.recover).toEqual({
+      available: false,
+      reason: 'source_plan_unavailable',
+    });
+    expect(planStore.getStoredPlanRef).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planId: 'plan-1',
+    });
   });
 });

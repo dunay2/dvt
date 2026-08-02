@@ -1,3 +1,4 @@
+import type { IStoredPlanRefReader } from '@dvt/artifacts';
 import type { TenantId as ContractTenantId } from '@dvt/contracts';
 import type { IRunStateStoreRead, IWorkflowEngine, RunMetadata } from '@dvt/engine';
 
@@ -14,6 +15,7 @@ import type {
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth } from './runOperationalTruth.js';
 import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
+import { resolveRunRecoveryPlanAvailability } from './runRecoveryPlanAvailability.js';
 
 const RUN_STATUS_READ_CONCURRENCY = 8;
 
@@ -22,7 +24,8 @@ export class ListRunsUseCase implements IListRunsUseCase {
     private readonly stateStore: IRunStateStoreRead,
     private readonly engine: Pick<IWorkflowEngine, 'getRunStatus'>,
     private readonly executionContextReader?: IRunExecutionContextReferenceReader,
-    private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver
+    private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver,
+    private readonly planStore?: IStoredPlanRefReader
   ) {}
 
   public async execute(
@@ -60,15 +63,21 @@ export class ListRunsUseCase implements IListRunsUseCase {
     item: RunMetadata,
     status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
   ): Promise<RunListItemDto> {
-    return projectRunOperationalTruth({
-      metadata: item,
-      status,
-      recoveryContextTrusted: await resolveRunRecoveryContextTrust(
+    const [recoveryContextTrusted, recoveryPlanAvailable] = await Promise.all([
+      resolveRunRecoveryContextTrust(
         this.executionContextReader,
         this.executionContextRequirementResolver,
         item,
         status
       ),
+      resolveRunRecoveryPlanAvailability(this.planStore, item, status),
+    ]);
+
+    return projectRunOperationalTruth({
+      metadata: item,
+      status,
+      recoveryContextTrusted,
+      recoveryPlanAvailable,
     });
   }
 
