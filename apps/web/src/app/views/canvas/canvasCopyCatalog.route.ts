@@ -21,6 +21,14 @@ export const canvasViewRouteCopyByKey = {
     fallback:
       'Canvas is waiting for the backend readiness checks to settle before loading the authoring surface.',
   },
+  canvasViewportContextSurfaceLabel: {
+    key: 'canvas.viewport.contextSurfaceLabel',
+    fallback: 'Canvas graph background',
+  },
+  canvasContextMenuLabel: {
+    key: 'canvas.contextMenu.label',
+    fallback: 'Canvas actions',
+  },
   routeNeedsCanvasTitle: {
     key: 'canvas.route.needsCanvasTitle',
     fallback: 'Create canvas in this workspace',

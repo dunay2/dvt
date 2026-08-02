@@ -1,5 +1,5 @@
 /** Owned concern: provide reusable Canvas context-menu presentation primitives. */
-import type { CSSProperties, ReactNode, RefObject } from 'react';
+import type { CSSProperties, KeyboardEvent, ReactNode, RefObject } from 'react';
 
 const CANVAS_CONTEXT_MENU_SURFACE_CLASS_NAME =
   'pointer-events-auto fixed z-50 w-72 max-w-[calc(100vw-1.5rem)] overflow-y-auto rounded-md border border-(--border-default) bg-(--surface-panel) p-1 shadow-xl';
@@ -11,22 +11,55 @@ const CANVAS_CONTEXT_MENU_ITEM_CLASS_NAME =
 type CanvasContextMenuSurfaceProps = Readonly<{
   menuRef: RefObject<HTMLDivElement>;
   style: CSSProperties;
+  ariaLabel: string;
   children: ReactNode;
 }>;
+
+function focusMenuItemForKey(event: KeyboardEvent<HTMLDivElement>): void {
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) {
+    return;
+  }
+
+  const items = Array.from(
+    event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)')
+  );
+  if (items.length === 0) {
+    return;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  const activeIndex = items.findIndex((item) => item === document.activeElement);
+  let nextIndex: number;
+  if (event.key === 'Home') {
+    nextIndex = 0;
+  } else if (event.key === 'End') {
+    nextIndex = items.length - 1;
+  } else if (event.key === 'ArrowUp') {
+    nextIndex = activeIndex <= 0 ? items.length - 1 : activeIndex - 1;
+  } else {
+    nextIndex = activeIndex < 0 || activeIndex === items.length - 1 ? 0 : activeIndex + 1;
+  }
+
+  items[nextIndex]?.focus({ preventScroll: true });
+}
 
 export function CanvasContextMenuSurface({
   menuRef,
   style,
+  ariaLabel,
   children,
 }: CanvasContextMenuSurfaceProps): JSX.Element {
   return (
     <div
       ref={menuRef}
       role="menu"
+      aria-label={ariaLabel}
       data-slot="canvas-context-menu"
       className={CANVAS_CONTEXT_MENU_SURFACE_CLASS_NAME}
       style={style}
       onContextMenu={(event) => event.preventDefault()}
+      onKeyDown={focusMenuItemForKey}
     >
       {children}
     </div>

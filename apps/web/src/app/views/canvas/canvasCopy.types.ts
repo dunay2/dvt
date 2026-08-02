@@ -6,6 +6,8 @@ export type CanvasViewCopy = {
   readonly routeLoadingMessage: string;
   readonly backendLoadingTitle: string;
   readonly backendLoadingMessage: string;
+  readonly canvasViewportContextSurfaceLabel: string;
+  readonly canvasContextMenuLabel: string;
   readonly routeNeedsCanvasTitle: string;
   readonly routeNeedsCanvasMessage: string;
   readonly routeNeedsCanvasHelper: string;

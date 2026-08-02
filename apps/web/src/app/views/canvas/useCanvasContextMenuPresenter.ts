@@ -21,6 +21,7 @@ import {
   useCanvasContextSurfaceContextMenu,
 } from './useCanvasContextMenuLifecycle';
 import type {
+  ContextMenuKeyboardEvent,
   UseCanvasContextMenuPresenterArgs,
   UseCanvasContextMenuPresenterResult,
 } from './canvasContextMenuPresenter.types';
@@ -43,10 +44,18 @@ export function useCanvasContextMenuPresenter({
     useCanvasContextMenuLifecycle({ model, setModel });
 
   const openCanvasContextMenu = useCallback(
-    (screenPosition: CanvasContextMenuPosition) => {
+    (
+      screenPosition: CanvasContextMenuPosition,
+      options: Readonly<{ opener?: HTMLElement; suppressPointerEcho?: boolean }> = {}
+    ) => {
       const flowPosition = screenToFlowPosition(screenPosition);
 
-      markContextMenuOpened('pane', screenPosition);
+      markContextMenuOpened({
+        targetKind: 'pane',
+        screenPosition,
+        opener: options.opener,
+        suppressPointerEcho: options.suppressPointerEcho,
+      });
       flushSync(() => {
         setModel(
           buildCanvasContextMenuModel({
@@ -84,7 +93,7 @@ export function useCanvasContextMenuPresenter({
 
       event.preventDefault();
       event.stopPropagation();
-      openCanvasContextMenu(contextMenuPosition);
+      openCanvasContextMenu(contextMenuPosition, { suppressPointerEcho: true });
     },
     [openCanvasContextMenu]
   );
@@ -96,6 +105,28 @@ export function useCanvasContextMenuPresenter({
     [handleViewportContextMenuEvent]
   );
 
+  const handleViewportContextMenuKeyDown = useCallback(
+    (event: ContextMenuKeyboardEvent) => {
+      const opensContextMenu =
+        event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey);
+      if (!opensContextMenu) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      const bounds = event.currentTarget.getBoundingClientRect();
+      openCanvasContextMenu(
+        {
+          x: bounds.left + Math.max(bounds.width, 1) / 2,
+          y: bounds.top + Math.max(bounds.height, 1) / 2,
+        },
+        { opener: event.currentTarget }
+      );
+    },
+    [openCanvasContextMenu]
+  );
+
   useCanvasContextSurfaceContextMenu({
     contextSurfaceRef,
     onContextSurfaceContextMenu: handleViewportContextMenuEvent,
@@ -105,7 +136,10 @@ export function useCanvasContextMenuPresenter({
     useCallback(
       (event) => {
         event.preventDefault();
-        openCanvasContextMenu({ x: event.clientX, y: event.clientY });
+        openCanvasContextMenu(
+          { x: event.clientX, y: event.clientY },
+          { suppressPointerEcho: true }
+        );
       },
       [openCanvasContextMenu]
     );
@@ -114,7 +148,7 @@ export function useCanvasContextMenuPresenter({
     useCallback(
       (event, edge) => {
         event.preventDefault();
-        markContextMenuOpened('edge');
+        markContextMenuOpened({ targetKind: 'edge' });
         flushSync(() => {
           setModel(
             buildCanvasContextMenuModel({
@@ -151,7 +185,10 @@ export function useCanvasContextMenuPresenter({
         onOpenCanvasSettings?.();
       }
 
-      closeContextMenu({ force: true });
+      closeContextMenu({
+        restoreFocus:
+          action.action !== 'open-source-import' && action.action !== 'open-canvas-settings',
+      });
     },
     [
       authoringNodeKinds,
@@ -170,7 +207,7 @@ export function useCanvasContextMenuPresenter({
         onCreateAuthoringNode(action.registration, model.flowPosition);
       }
 
-      closeContextMenu({ force: true });
+      closeContextMenu();
     },
     [closeContextMenu, model?.flowPosition, onCreateAuthoringNode]
   );
@@ -181,7 +218,7 @@ export function useCanvasContextMenuPresenter({
         onEdgesChange([buildCanvasEdgeContextRemovalChange({ id: model.edgeId })]);
       }
 
-      closeContextMenu({ force: true });
+      closeContextMenu();
     },
     [closeContextMenu, model?.edgeId, onEdgesChange]
   );
@@ -193,6 +230,7 @@ export function useCanvasContextMenuPresenter({
     closeContextMenu,
     handlePaneClick,
     handleViewportContextMenu,
+    handleViewportContextMenuKeyDown,
     handlePaneContextMenu,
     handleEdgeContextMenu,
     handleCanvasAction,

@@ -18,6 +18,13 @@ const CONTEXT_MENU_PANE_CLICK_ECHO_TOLERANCE_PX = 2;
 
 type ContextMenuOpenTargetKind = CanvasContextMenuModel['kind'];
 
+type CanvasContextMenuOpenRequest = Readonly<{
+  targetKind: ContextMenuOpenTargetKind;
+  screenPosition?: CanvasContextMenuPosition;
+  opener?: HTMLElement;
+  suppressPointerEcho?: boolean;
+}>;
+
 type UseCanvasContextMenuLifecycleArgs = Readonly<{
   model: CanvasContextMenuModel | null;
   setModel: Dispatch<SetStateAction<CanvasContextMenuModel | null>>;
@@ -26,10 +33,7 @@ type UseCanvasContextMenuLifecycleArgs = Readonly<{
 type UseCanvasContextMenuLifecycleResult = Readonly<{
   menuRef: RefObject<HTMLDivElement>;
   contextSurfaceRef: RefObject<HTMLDivElement>;
-  markContextMenuOpened: (
-    targetKind: ContextMenuOpenTargetKind,
-    screenPosition?: CanvasContextMenuPosition
-  ) => void;
+  markContextMenuOpened: (request: CanvasContextMenuOpenRequest) => void;
   closeContextMenu: (options?: CloseCanvasContextMenuOptions) => void;
   handlePaneClick: (event: PaneClickEvent) => void;
 }>;
@@ -56,6 +60,8 @@ export function useCanvasContextMenuLifecycle({
   const lastPaneContextMenuScreenPositionRef = useRef<CanvasContextMenuPosition | null>(null);
   const pendingPaneClickEchoRef = useRef(false);
   const pendingDocumentPointerEchoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const openerRef = useRef<HTMLElement | null>(null);
+  const restoreFocusAfterCloseRef = useRef(false);
 
   const clearPendingDocumentPointerEchoTimeout = useCallback(() => {
     if (pendingDocumentPointerEchoTimeoutRef.current == null) {
@@ -72,27 +78,53 @@ export function useCanvasContextMenuLifecycle({
   }, [clearPendingDocumentPointerEchoTimeout]);
 
   const markContextMenuOpened = useCallback(
-    (targetKind: ContextMenuOpenTargetKind, screenPosition?: CanvasContextMenuPosition) => {
+    ({
+      targetKind,
+      screenPosition,
+      opener,
+      suppressPointerEcho = false,
+    }: CanvasContextMenuOpenRequest) => {
       lastContextMenuOpenedAtRef.current = Date.now();
       lastContextMenuOpenedTargetKindRef.current = targetKind;
-      pendingPaneClickEchoRef.current = targetKind === 'pane';
+      pendingPaneClickEchoRef.current = targetKind === 'pane' && suppressPointerEcho;
       lastPaneContextMenuScreenPositionRef.current =
         targetKind === 'pane' ? (screenPosition ?? null) : null;
+      openerRef.current = opener ?? null;
+      restoreFocusAfterCloseRef.current = false;
     },
     []
   );
 
   const closeContextMenu = useCallback(
-    (_options?: CloseCanvasContextMenuOptions) => {
+    (options?: CloseCanvasContextMenuOptions) => {
       clearPendingDocumentPointerEchoTimeout();
       pendingPaneClickEchoRef.current = false;
       lastPaneContextMenuScreenPositionRef.current = null;
+      restoreFocusAfterCloseRef.current = options?.restoreFocus !== false;
       setModel(null);
     },
     [clearPendingDocumentPointerEchoTimeout, setModel]
   );
 
   useEffect(() => clearPendingDocumentPointerEchoTimeout, [clearPendingDocumentPointerEchoTimeout]);
+
+  useLayoutEffect(() => {
+    if (model != null) {
+      menuRef.current
+        ?.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)')
+        ?.focus({ preventScroll: true });
+      return;
+    }
+
+    if (restoreFocusAfterCloseRef.current) {
+      const opener = openerRef.current;
+      restoreFocusAfterCloseRef.current = false;
+      openerRef.current = null;
+      if (opener?.isConnected) {
+        opener.focus({ preventScroll: true });
+      }
+    }
+  }, [model]);
 
   const handlePaneClick = useCallback(
     (event: PaneClickEvent) => {
@@ -116,7 +148,7 @@ export function useCanvasContextMenuLifecycle({
         return;
       }
 
-      closeContextMenu({ force: true });
+      closeContextMenu();
     },
     [closeContextMenu, consumePendingPaneClickEcho]
   );
@@ -185,7 +217,7 @@ export function useCanvasContextMenuLifecycle({
     };
     const handleDocumentKeyDown = (event: KeyboardEvent): void => {
       if (event.key === 'Escape') {
-        closeContextMenu({ force: true });
+        closeContextMenu();
       }
     };
 
