@@ -21,6 +21,7 @@ const EN_COPY: RunControlCopy = {
   failure: (message) => `Run command failed: ${message}`,
   unavailableReason: {
     cancellation_pending: 'Cancellation is already pending.',
+    dispatch_pending: 'Cancellation is available after runtime dispatch completes.',
     run_active: 'Recovery is available only after a run fails or is cancelled.',
     run_cancelled: 'The run is already cancelled.',
     run_completed: 'Completed runs cannot be cancelled or recovered.',
@@ -40,6 +41,7 @@ const ES_COPY: RunControlCopy = {
   failure: (message) => `El comando de ejecucion ha fallado: ${message}`,
   unavailableReason: {
     cancellation_pending: 'La cancelacion ya esta pendiente.',
+    dispatch_pending: 'La cancelacion estara disponible al finalizar el envio al runtime.',
     run_active: 'La recuperacion solo esta disponible tras un fallo o cancelacion.',
     run_cancelled: 'La ejecucion ya esta cancelada.',
     run_completed: 'Las ejecuciones completadas no se pueden cancelar ni recuperar.',

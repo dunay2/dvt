@@ -92,4 +92,19 @@ describe('RunControlActions', () => {
         ?.getAttribute('aria-description')
     ).toContain('cannot be verified');
   });
+
+  it('explains when cancellation is waiting for authoritative runtime dispatch', async () => {
+    await renderActions({
+      availability: {
+        cancel: { available: false, reason: 'dispatch_pending' },
+        recover: { available: false, reason: 'run_active' },
+      },
+    });
+
+    expect(
+      container
+        ?.querySelector<HTMLButtonElement>('[data-slot="run-cancel-action"]')
+        ?.getAttribute('aria-description')
+    ).toContain('after runtime dispatch completes');
+  });
 });

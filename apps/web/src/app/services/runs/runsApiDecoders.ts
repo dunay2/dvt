@@ -23,6 +23,7 @@ import type {
 
 const RUN_CONTROL_UNAVAILABLE_REASONS = new Set<RunControlUnavailableReason>([
   'cancellation_pending',
+  'dispatch_pending',
   'run_active',
   'run_cancelled',
   'run_completed',

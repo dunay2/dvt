@@ -28,6 +28,7 @@ export type RunExecutor = 'postgres' | 'dbt';
 
 export type RunControlUnavailableReason =
   | 'cancellation_pending'
+  | 'dispatch_pending'
   | 'run_active'
   | 'run_cancelled'
   | 'run_completed'

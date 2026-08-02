@@ -20,6 +20,9 @@ export type RecoverRunDecision =
   | Readonly<{ kind: 'reject'; reason: RunControlUnavailableReason }>;
 
 export function decideCancelRun(status: CanonicalRunStatus): CancelRunDecision {
+  if (status.status === 'PENDING') {
+    return { kind: 'reject', reason: 'dispatch_pending' };
+  }
   if (status.status === 'CANCELLED') {
     return { kind: 'settled', disposition: 'already_cancelled' };
   }

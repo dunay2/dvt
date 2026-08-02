@@ -89,7 +89,7 @@ describe('projectRunOperationalTruth', () => {
       createdAt: '2026-07-19T10:00:00.000Z',
       status: 'PENDING',
       controls: {
-        cancel: { available: true },
+        cancel: { available: false, reason: 'dispatch_pending' },
         recover: { available: false, reason: 'run_active' },
       },
     });

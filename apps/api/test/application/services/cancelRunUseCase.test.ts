@@ -122,9 +122,13 @@ describe('CancelRunUseCase', () => {
     }
   );
 
-  it.each(['COMPLETED', 'FAILED'] as const)(
-    'rejects cancellation for terminal %s runs without dispatch',
-    async (status) => {
+  it.each([
+    ['PENDING', 'dispatch_pending'],
+    ['COMPLETED', 'run_terminal'],
+    ['FAILED', 'run_terminal'],
+  ] as const)(
+    'rejects cancellation for unavailable %s runs without dispatch',
+    async (status, reason) => {
       const engine = {
         cancelRun: vi.fn(),
         getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status }),
@@ -155,6 +159,7 @@ describe('CancelRunUseCase', () => {
         name: 'RunControlUnavailableError',
         action: 'cancel',
         status,
+        reason,
       });
       expect(engine.cancelRun).not.toHaveBeenCalled();
     }
