@@ -2,6 +2,7 @@
 import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { ICostAttributionSummaryPort } from '../../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
+import type { FrontendOperabilitySink } from '../../ports/frontendOperability';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -27,6 +28,7 @@ import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
 import { setRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { createApiCostAttributionSummaryPort } from '../cost/costService.api';
 import { createToastShellFeedbackPort } from '../feedback/shellFeedbackPort';
+import { createConsoleFrontendOperabilitySink } from '../operability/consoleFrontendOperabilitySink';
 import { createPlansService } from '../plans/plansService';
 import { createRunsService } from '../runs/runsService';
 import { createSessionContextPort } from '../session/sessionContextPort';
@@ -62,6 +64,7 @@ export interface AppServices {
   readonly sessionContext: SessionContextPort;
   readonly workspaceScopeSelection: WorkspaceScopeSelectionPort;
   readonly shellFeedback: ShellFeedbackPort;
+  readonly frontendOperabilitySink: FrontendOperabilitySink;
 }
 
 export interface AppServicesOverrides {
@@ -86,6 +89,7 @@ export interface AppServicesOverrides {
   readonly sessionContext?: SessionContextPort;
   readonly workspaceScopeSelection?: WorkspaceScopeSelectionPort;
   readonly shellFeedback?: ShellFeedbackPort;
+  readonly frontendOperabilitySink?: FrontendOperabilitySink;
 }
 
 export function buildAppServices(overrides: AppServicesOverrides = {}): AppServices {
@@ -146,5 +150,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     sessionContext,
     workspaceScopeSelection,
     shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),
+    frontendOperabilitySink:
+      overrides.frontendOperabilitySink ?? createConsoleFrontendOperabilitySink(),
   };
 }
