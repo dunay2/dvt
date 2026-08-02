@@ -151,6 +151,9 @@ describe('Run controls live protected runtime', () => {
             .click();
           cy.wait('@recoverRun', { timeout: 20_000 }).then((interception) => {
             expect(interception.response?.statusCode).to.equal(202);
+            expect(interception.request.headers['idempotency-key'])
+              .to.be.a('string')
+              .and.match(/^recover-run:/);
             expect(interception.response?.body).to.include({
               contractVersion: 'v1',
               sourceRunId,
@@ -179,7 +182,39 @@ describe('Run controls live protected runtime', () => {
               cy.get('[data-slot="run-cancel-action"]', { timeout: 20_000 })
                 .should('be.enabled')
                 .click();
-              waitForRunStatus(recoveryRunId!, 'cancelled');
+              waitForRunStatus(recoveryRunId!, 'cancelled').then(() => {
+                cy.intercept('POST', '**/runs/*/recover').as('recoverDescendant');
+                cy.get('[data-slot="run-recover-action"]', { timeout: 20_000 })
+                  .should('be.enabled')
+                  .click();
+                cy.wait('@recoverDescendant', { timeout: 20_000 }).then((interception) => {
+                  expect(interception.response?.statusCode).to.equal(202);
+                  expect(interception.response?.body).to.include({
+                    contractVersion: 'v1',
+                    sourceRunId: recoveryRunId,
+                    accepted: true,
+                  });
+                });
+
+                cy.location('pathname', { timeout: 20_000 })
+                  .should('match', /^\/runs\/[^/]+$/)
+                  .and('not.equal', recoveryPathname)
+                  .then((descendantPathname) => {
+                    const descendantRunId = descendantPathname.split('/').pop();
+                    expect(descendantRunId).to.be.a('string').and.not.to.equal(recoveryRunId);
+
+                    readLiveRunSnapshot(descendantRunId!).then((response) => {
+                      expect(response.status).to.equal(200);
+                      expect((response.body as LiveRunSnapshot).planId).to.equal(
+                        sourceBeforeCancellation.planId
+                      );
+                    });
+                    cy.get('[data-slot="run-cancel-action"]', { timeout: 20_000 })
+                      .should('be.enabled')
+                      .click();
+                    waitForRunStatus(descendantRunId!, 'cancelled');
+                  });
+              });
             });
         });
       });
