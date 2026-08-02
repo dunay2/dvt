@@ -13565,6 +13565,357 @@
       "createdAt": "2026-07-31T22:19:13.431Z"
     },
     {
+      "railId": "local#MVP-F6-2B-PREVIEW-SELECTION-FINDINGS#command#previewexecutionplan",
+      "featureId": "MVP-F6-2B-PREVIEW-SELECTION-FINDINGS",
+      "mechanizationStatus": "implemented",
+      "railName": "PreviewExecutionPlan",
+      "normalizedRailName": "previewexecutionplan",
+      "railType": "command",
+      "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+      "railStatus": "retired",
+      "symbolRefs": [
+        "apps/api/src/application/services/previewSelectionFinding.ts#buildPreviewSelectionRejection",
+        "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts#ResolveAuthorizedPreviewSelectionService",
+        "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#ResolveAuthorizedExecutableSubgraphService",
+        "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts#PlanPreviewSelectionRejection",
+        "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts#PlanPreviewSelectionRejectedOutcomeSchema",
+        "apps/api/src/application/services/previewSelectionFinding.ts#ExecutableSubgraphSelectionRejection",
+        "apps/api/src/application/services/previewSelectionFinding.ts#BuildPreviewSelectionRejectionInput",
+        "apps/api/src/application/services/previewSelectionFinding.ts#RETRY_CAUSES",
+        "apps/api/src/application/services/previewSelectionFinding.ts#REGENERATE_CAUSES",
+        "apps/api/src/application/services/previewSelectionFinding.ts#resolveRemediationCode",
+        "apps/api/src/application/services/previewSelectionFinding.ts#canonicalizeValues",
+        "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts#ProvenanceMismatch",
+        "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#reject"
+      ],
+      "implementationRefs": [
+        "apps/api/src/application/services/previewSelectionFinding.ts#buildPreviewSelectionRejection",
+        "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts#ResolveAuthorizedPreviewSelectionService",
+        "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#ResolveAuthorizedExecutableSubgraphService",
+        "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts#PlanPreviewSelectionRejection",
+        "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts#PlanPreviewSelectionRejectedOutcomeSchema",
+        "apps/api/src/application/services/previewSelectionFinding.ts#ExecutableSubgraphSelectionRejection",
+        "apps/api/src/application/services/previewSelectionFinding.ts#BuildPreviewSelectionRejectionInput",
+        "apps/api/src/application/services/previewSelectionFinding.ts#RETRY_CAUSES",
+        "apps/api/src/application/services/previewSelectionFinding.ts#REGENERATE_CAUSES",
+        "apps/api/src/application/services/previewSelectionFinding.ts#resolveRemediationCode",
+        "apps/api/src/application/services/previewSelectionFinding.ts#canonicalizeValues",
+        "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts#ProvenanceMismatch",
+        "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#reject"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260731-plan-admission-findings.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/application/services/previewSelectionFinding.ts",
+        "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts",
+        "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
+        "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+        "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter dvt-api test:ci -- test/application/services/previewSelectionFinding.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts test/application/services/resolveAuthorizedPreviewSelection.test.ts",
+        "pnpm --filter @dvt/contracts test -- test/validation.test.ts test/plan-admission-finding.contract.test.ts",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "apps/api/src/application/services/previewSelectionFinding.ts",
+      "sourceContentSha256": "b746513a36456179accdda1bc69b43ddcb52a1b148815835c61a96de5f541219",
+      "rawRail": {
+        "name": "PreviewExecutionPlan",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "ResolveAuthorizedPreviewSelectionService"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "buildPreviewSelectionRejection",
+            "path": "apps/api/src/application/services/previewSelectionFinding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "ResolveAuthorizedPreviewSelectionService",
+            "path": "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "ResolveAuthorizedExecutableSubgraphService",
+            "path": "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "PlanPreviewSelectionRejection",
+            "path": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "PlanPreviewSelectionRejectedOutcomeSchema",
+            "path": "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "ExecutableSubgraphSelectionRejection",
+            "path": "apps/api/src/application/services/previewSelectionFinding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "BuildPreviewSelectionRejectionInput",
+            "path": "apps/api/src/application/services/previewSelectionFinding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "RETRY_CAUSES",
+            "path": "apps/api/src/application/services/previewSelectionFinding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "REGENERATE_CAUSES",
+            "path": "apps/api/src/application/services/previewSelectionFinding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "resolveRemediationCode",
+            "path": "apps/api/src/application/services/previewSelectionFinding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "canonicalizeValues",
+            "path": "apps/api/src/application/services/previewSelectionFinding.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "ProvenanceMismatch",
+            "path": "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          },
+          {
+            "name": "reject",
+            "path": "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
+            "cqRails": ["PreviewExecutionPlan"],
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+            "unitTests": [
+              "apps/api/test/application/services/previewSelectionFinding.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+              "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+            ],
+            "cypressCoverage": "N/A - application pre-plan behavior with no UI changes",
+            "architectureGuard": "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-F6-2B-PREVIEW-SELECTION-FINDINGS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2078"],
+        "cypressFlows": [
+          "N/A - application pre-plan behavior with no UI changes"
+        ],
+        "domainObjects": [
+          "PreviewSelectionFinding",
+          "ExecutableSubgraphSelectionRejection"
+        ],
+        "fowlerSignals": [
+          "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test:ci -- test/application/services/previewSelectionFinding.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts test/application/services/resolveAuthorizedPreviewSelection.test.ts",
+          "pnpm --filter @dvt/contracts test -- test/validation.test.ts test/plan-admission-finding.contract.test.ts",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "previewexecutionplan-record",
+            "redTest": "pnpm --filter dvt-api test:ci -- test/application/services/previewSelectionFinding.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts test/application/services/resolveAuthorizedPreviewSelection.test.ts",
+            "greenTest": "pnpm --filter dvt-api test:ci -- test/application/services/previewSelectionFinding.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts test/application/services/resolveAuthorizedPreviewSelection.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/previewSelectionFinding.ts",
+              "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts",
+              "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
+              "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+              "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts"
+            ],
+            "expectedFailure": "Preview selection rejections expose only code, cause and reason; no canonical finding producer exists."
+          }
+        ],
+        "componentGuides": [
+          "apps/api/docs/executable-subgraph-resolution-component.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "PreviewExecutionPlan",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "ResolveAuthorizedPreviewSelectionService"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2078",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/previewSelectionFinding.ts",
+          "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/web/**",
+          "apps/api/src/entrypoints/http/**"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-02T10:25:26.661Z"
+    },
+    {
       "railId": "local#MVP-F6-2D-TYPED-PREVIEW-OUTCOMES#command#previewexecutionplan",
       "featureId": "MVP-F6-2D-TYPED-PREVIEW-OUTCOMES",
       "mechanizationStatus": "implemented",
@@ -13652,7 +14003,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
-      "sourceContentSha256": "e3e6074a630a264b71cfa56c10eaa824fb2559e2eba89b45d7a3fe8b629c3f2a",
+      "sourceContentSha256": "ad002929b9065dc3c9c8fcdb54998a3c1caf420491487750c90ae5cbe39e2261",
       "rawRail": {
         "name": "PreviewExecutionPlan",
         "type": "command",
@@ -24748,6 +25099,184 @@
         ]
       },
       "createdAt": "2026-08-02T09:41:35.786Z"
+    },
+    {
+      "operationId": "25fad347-6ba7-43fc-a839-c6f81e2b9367",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-F6-2B-PREVIEW-SELECTION-FINDINGS:command:previewexecutionplan:latest:357d6b6efccd68f9",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2B-PREVIEW-SELECTION-FINDINGS#command#previewexecutionplan",
+      "sourcePath": "apps/api/src/application/services/previewSelectionFinding.ts",
+      "sourceContentSha256": "b746513a36456179accdda1bc69b43ddcb52a1b148815835c61a96de5f541219",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test:ci -- test/application/services/previewSelectionFinding.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts test/application/services/resolveAuthorizedPreviewSelection.test.ts",
+        "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+        "railName": "PreviewExecutionPlan",
+        "railType": "command",
+        "featureId": "MVP-F6-2B-PREVIEW-SELECTION-FINDINGS",
+        "greenTest": "pnpm --filter dvt-api test:ci -- test/application/services/previewSelectionFinding.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts test/application/services/resolveAuthorizedPreviewSelection.test.ts",
+        "sourceRef": "apps/api/src/application/services/previewSelectionFinding.ts",
+        "unitTests": [
+          "apps/api/test/application/services/previewSelectionFinding.test.ts",
+          "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+          "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2078"],
+        "cypressFlows": [
+          "N/A - application pre-plan behavior with no UI changes"
+        ],
+        "domainObjects": [
+          "PreviewSelectionFinding",
+          "ExecutableSubgraphSelectionRejection"
+        ],
+        "fowlerSignals": [
+          "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter dvt-api test:ci -- test/application/services/previewSelectionFinding.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts test/application/services/resolveAuthorizedPreviewSelection.test.ts",
+          "pnpm --filter @dvt/contracts test -- test/validation.test.ts test/plan-admission-finding.contract.test.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "apps/api/docs/executable-subgraph-resolution-component.md"
+        ],
+        "expectedFailure": "Preview selection rejections expose only code, cause and reason; no canonical finding producer exists.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260731-plan-admission-findings.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2078",
+        "implementationRefs": [
+          "apps/api/src/application/services/previewSelectionFinding.ts#buildPreviewSelectionRejection",
+          "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts#ResolveAuthorizedPreviewSelectionService",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#ResolveAuthorizedExecutableSubgraphService",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts#PlanPreviewSelectionRejection",
+          "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts#PlanPreviewSelectionRejectedOutcomeSchema"
+        ],
+        "normalizedRailName": "previewexecutionplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "b746513a36456179accdda1bc69b43ddcb52a1b148815835c61a96de5f541219",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/previewSelectionFinding.ts",
+          "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/web/**",
+          "apps/api/src/entrypoints/http/**"
+        ]
+      },
+      "createdAt": "2026-08-02T10:25:26.661Z"
+    },
+    {
+      "operationId": "07446be3-9d5e-4e6e-b980-62f3dfc84858",
+      "idempotencyKey": "mvp-2078-preview-selection-findings-complete-symbol-map",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-F6-2B-PREVIEW-SELECTION-FINDINGS#command#previewexecutionplan",
+      "sourcePath": "apps/api/src/application/services/previewSelectionFinding.ts",
+      "sourceContentSha256": "b746513a36456179accdda1bc69b43ddcb52a1b148815835c61a96de5f541219",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test:ci -- test/application/services/previewSelectionFinding.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts test/application/services/resolveAuthorizedPreviewSelection.test.ts",
+        "dddOwner": "ResolveAuthorizedPreviewSelectionService",
+        "railName": "PreviewExecutionPlan",
+        "railType": "command",
+        "featureId": "MVP-F6-2B-PREVIEW-SELECTION-FINDINGS",
+        "greenTest": "pnpm --filter dvt-api test:ci -- test/application/services/previewSelectionFinding.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts test/application/services/resolveAuthorizedPreviewSelection.test.ts",
+        "sourceRef": "apps/api/src/application/services/previewSelectionFinding.ts",
+        "unitTests": [
+          "apps/api/test/application/services/previewSelectionFinding.test.ts",
+          "apps/api/test/application/services/resolveAuthorizedExecutableSubgraph.test.ts",
+          "apps/api/test/application/services/resolveAuthorizedPreviewSelection.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2078"],
+        "cypressFlows": [
+          "N/A - application pre-plan behavior with no UI changes"
+        ],
+        "domainObjects": [
+          "PreviewSelectionFinding",
+          "ExecutableSubgraphSelectionRejection"
+        ],
+        "fowlerSignals": [
+          "Preview selection authorities describe existing fail-fast decisions through one pure deterministic producer and do not reevaluate policy."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/services/previewSelectionFinding.ts",
+          "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test:ci -- test/application/services/previewSelectionFinding.test.ts test/application/services/resolveAuthorizedExecutableSubgraph.test.ts test/application/services/resolveAuthorizedPreviewSelection.test.ts",
+          "pnpm --filter @dvt/contracts test -- test/validation.test.ts test/plan-admission-finding.contract.test.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "apps/api/docs/executable-subgraph-resolution-component.md"
+        ],
+        "expectedFailure": "Preview selection rejections expose only code, cause and reason; no canonical finding producer exists.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260731-plan-admission-findings.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test:ci -- test/application/services/executableSubgraphResolutionComponent.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2078",
+        "implementationRefs": [
+          "apps/api/src/application/services/previewSelectionFinding.ts#ExecutableSubgraphSelectionRejection",
+          "apps/api/src/application/services/previewSelectionFinding.ts#BuildPreviewSelectionRejectionInput",
+          "apps/api/src/application/services/previewSelectionFinding.ts#RETRY_CAUSES",
+          "apps/api/src/application/services/previewSelectionFinding.ts#REGENERATE_CAUSES",
+          "apps/api/src/application/services/previewSelectionFinding.ts#buildPreviewSelectionRejection",
+          "apps/api/src/application/services/previewSelectionFinding.ts#resolveRemediationCode",
+          "apps/api/src/application/services/previewSelectionFinding.ts#canonicalizeValues",
+          "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts#ResolveAuthorizedPreviewSelectionService",
+          "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts#ProvenanceMismatch",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#ResolveAuthorizedExecutableSubgraphService",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts#reject",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts#PlanPreviewSelectionRejection",
+          "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts#PlanPreviewSelectionRejectedOutcomeSchema"
+        ],
+        "normalizedRailName": "previewexecutionplan",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "b746513a36456179accdda1bc69b43ddcb52a1b148815835c61a96de5f541219",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/previewSelectionFinding.ts",
+          "apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts",
+          "apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts",
+          "packages/@dvt/contracts/src/contracts/planner/TransformationFlowPreview.v1.ts",
+          "packages/@dvt/contracts/src/schema-packs/plan-preview-response.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "tools/planning-db/migrations/**",
+          "apps/web/**",
+          "apps/api/src/entrypoints/http/**"
+        ]
+      },
+      "createdAt": "2026-08-02T10:35:43.079Z"
     }
   ]
 }
