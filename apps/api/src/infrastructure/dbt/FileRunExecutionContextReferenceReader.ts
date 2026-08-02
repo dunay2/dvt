@@ -1,4 +1,5 @@
 /** Owned concern: reload immutable references for server-persisted run contexts. */
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
@@ -48,6 +49,13 @@ export class FileRunExecutionContextReferenceReader implements IRunExecutionCont
     }
     if (ref.uri !== pathToFileURL(artifactPath).href) {
       return { kind: 'untrusted', reason: 'reference_mismatch' };
+    }
+    const contextBytes = await readOptionalFile(artifactPath);
+    if (contextBytes === undefined) {
+      return { kind: 'untrusted', reason: 'context_missing' };
+    }
+    if (createHash('sha256').update(contextBytes).digest('hex') !== ref.sha256) {
+      return { kind: 'untrusted', reason: 'digest_mismatch' };
     }
     return { kind: 'trusted', ref };
   }

@@ -11,7 +11,12 @@ export type RunExecutionContextReferenceReadResult =
   | Readonly<{ kind: 'trusted'; ref: RunExecutionContextRef }>
   | Readonly<{
       kind: 'untrusted';
-      reason: 'reference_missing' | 'reference_invalid' | 'reference_mismatch';
+      reason:
+        | 'reference_missing'
+        | 'reference_invalid'
+        | 'reference_mismatch'
+        | 'context_missing'
+        | 'digest_mismatch';
     }>;
 
 export interface IRunExecutionContextReferenceReader {
