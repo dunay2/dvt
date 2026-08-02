@@ -27,7 +27,14 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:list'
   authorizedAt: new Date('2026-03-19T00:00:00Z'),
 };
 
-function createPlanStoreReader(getStoredPlanRef: ReturnType<typeof vi.fn>) {
+type PlanStoreReaderDouble = Readonly<{
+  getStoredPlanRef: ReturnType<typeof vi.fn>;
+  getStoredPlanValidationRecord: ReturnType<typeof vi.fn>;
+  fetchStoredPlanArtifact: ReturnType<typeof vi.fn>;
+  fetchStoredPlanArtifactForValidation: ReturnType<typeof vi.fn>;
+}>;
+
+function createPlanStoreReader(getStoredPlanRef: ReturnType<typeof vi.fn>): PlanStoreReaderDouble {
   return {
     getStoredPlanRef,
     getStoredPlanValidationRecord: vi.fn(),
