@@ -371,7 +371,14 @@
       "dddOwner": "CanvasViewportSurfaceView",
       "railStatus": "implemented",
       "symbolRefs": [
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts#CANVAS_NODE_EMBEDDED_CONTROL_ATTRIBUTE",
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts#canvasNodeEmbeddedControlProps",
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts#CANVAS_NODE_EMBEDDED_CONTROL_SELECTOR",
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts#isCanvasNodeEmbeddedControlTarget",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportReactFlowSurface",
         "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportSurfaceView",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportSurfaceViewProps",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#resolveMiniMapNodeColor",
         "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext",
         "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildNodeDecorations",
         "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts#useCanvasOverlayModel",
@@ -379,6 +386,19 @@
         "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeWorkspaceGraphAuthoringDraft"
       ],
       "implementationRefs": [
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+        "apps/web/src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts",
+        "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+        "apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts",
+        "apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx",
+        "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+        "apps/web/src/app/views/canvas/useCanvasControllerReadModel.test.tsx",
+        "apps/web/src/app/views/canvas/useCanvasViewportGraphModel.nodeData.test.tsx",
+        "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+        "scripts/planning-db-migrate.test.cjs",
         "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportSurfaceView",
         "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext",
         "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildNodeDecorations",
@@ -387,15 +407,33 @@
         "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeWorkspaceGraphAuthoringDraft"
       ],
       "documentationRefs": [
+        "planning-db:component/web.component.canvas.CanvasViewport",
+        "planning-db:task/E-CANVAS-UXDB-COMPONENT-SLICES-1",
         "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
         "docs/architecture/components/web/frontend-component-inventory.md"
       ],
       "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/guides/ai-work-protocol.md",
         "docs/architecture/command-query-rail-governance.md",
-        "docs/architecture/fowler-opportunity-planning-governance.md"
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "buzon/TAREA.TXT"
       ],
       "allowedImplementationSurfaces": [
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+        "apps/web/src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts",
+        "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+        "apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts",
+        "apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx",
+        "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
         "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+        "apps/web/src/app/views/canvas/useCanvasControllerReadModel.test.tsx",
+        "apps/web/src/app/views/canvas/useCanvasViewportGraphModel.nodeData.test.tsx",
+        "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+        "scripts/planning-db-migrate.test.cjs",
         "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
         "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
         "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
@@ -404,9 +442,16 @@
         "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
       ],
       "architectureGuards": [
+        "CanvasViewport.architecture.test.ts",
+        "canvasInteractionCommandSurface.architecture.test.ts",
         "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
       ],
       "completionGate": [
+        "pnpm --filter @dvt/web test:canvas-architecture:run -- src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts src/app/views/canvas/useCanvasViewportGraphModel.architecture.test.ts",
+        "pnpm --filter @dvt/web test:canvas-presentation:run -- src/app/views/canvas/CanvasViewport.test.tsx src/app/views/canvas/CanvasViewport.contextMenu.test.tsx",
+        "node --test --test-name-pattern \"Canvas viewport component slice boundaries\" scripts/planning-db-migrate.test.cjs",
+        "pnpm planning:db:query frontend-component-files --limit 160",
+        "pnpm planning:db:query frontend-component-rails --limit 160",
         "pnpm docs:feature-mechanization:implementation",
         "pnpm verify:prepush"
       ],
@@ -415,25 +460,184 @@
       "rawRail": {
         "name": "RenderCanvasContextualGraphSurface",
         "type": "query",
+        "owner": "CanvasViewportSurfaceView",
         "status": "implemented",
-        "dddOwner": "CanvasViewportSurfaceView"
+        "purpose": "Render the graph-first React Flow surface from a named presentation component.",
+        "dddOwner": "CanvasViewportSurfaceView",
+        "componentId": "web.component.canvas.CanvasViewport"
       },
       "rawManifest": {
         "symbols": [
+          {
+            "name": "CANVAS_NODE_EMBEDDED_CONTROL_ATTRIBUTE",
+            "path": "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasNodeInteractionBoundary",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "separated presentation interaction policy",
+              "embedded control boundary"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+          },
+          {
+            "name": "canvasNodeEmbeddedControlProps",
+            "path": "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasNodeInteractionBoundary",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "separated presentation interaction policy",
+              "embedded control boundary"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+          },
+          {
+            "name": "CANVAS_NODE_EMBEDDED_CONTROL_SELECTOR",
+            "path": "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasNodeInteractionBoundary",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "separated presentation interaction policy",
+              "embedded control boundary"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+          },
+          {
+            "name": "isCanvasNodeEmbeddedControlTarget",
+            "path": "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasNodeInteractionBoundary",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "separated presentation interaction policy",
+              "embedded control boundary"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+          },
+          {
+            "name": "applyCanvasViewportStyle",
+            "path": "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["side_effect_boundary"],
+            "cypressCoverage": "not-required: style side effect is covered by viewport DOM assertions",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "resolveCanvasViewportStyle",
+            "path": "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["read_model"],
+            "cypressCoverage": "not-required: style model is covered by jsdom style assertions",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportReactFlowSurface",
+            "path": "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": [
+              "CanvasViewport.test.tsx",
+              "CanvasViewport.contextMenu.test.tsx"
+            ],
+            "fowlerSignals": ["template_method"],
+            "cypressCoverage": "not-required: no browser behavior changed in this component boundary slice",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
           {
             "name": "CanvasViewportSurfaceView",
             "path": "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
             "cqRails": ["RenderCanvasContextualGraphSurface"],
             "dddOwner": "CanvasViewportSurfaceView",
             "unitTests": [
+              "CanvasViewport.test.tsx",
+              "CanvasViewport.contextMenu.test.tsx",
               "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
               "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
             ],
             "fowlerSignals": [
+              "presentation_logic_mixing",
               "One canonical Canvas projection owns impact traversal and its large-graph evidence."
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
             "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportSurfaceViewProps",
+            "path": "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["explicit_interface"],
+            "cypressCoverage": "not-required: exported view props are verified through presentation tests",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "resolveMiniMapNodeColor",
+            "path": "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["presentation_projection"],
+            "cypressCoverage": "not-required: minimap color is a deterministic view projection",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportLifecycleArgs",
+            "path": "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["explicit_interface"],
+            "cypressCoverage": "not-required: type boundary only",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportPosition",
+            "path": "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["value_object"],
+            "cypressCoverage": "not-required: type boundary only",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportReactFlowApi",
+            "path": "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["port_interface"],
+            "cypressCoverage": "not-required: type boundary only",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "useCanvasViewportLifecycle",
+            "path": "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["lifecycle_boundary"],
+            "cypressCoverage": "not-required: lifecycle effects are covered by persisted viewport and imported-node focus tests",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
           },
           {
             "name": "buildOverlayContext",
@@ -513,23 +717,63 @@
         ],
         "version": 1,
         "featureId": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
-        "userStories": ["https://github.com/dunay2/dvt/issues/188"],
+        "userStories": [
+          "As a frontend maintainer, I can change Canvas viewport presentation without editing viewport lifecycle effects.",
+          "As a product engineer, I can evolve graph-first Canvas presentation through a named React Flow template instead of route-level JSX.",
+          "https://github.com/dunay2/dvt/issues/188"
+        ],
         "cypressFlows": [
+          "not-required: this slice preserves existing viewport behavior and does not claim DVT/DBT P0 browser flow completion",
           "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
         ],
         "domainObjects": [
+          "CanvasViewport",
           "CanvasViewportSurfaceView",
+          "CanvasViewportStyle",
+          "CanvasViewportLifecycle",
           "CanvasImpactProjection",
           "WorkspaceGraphDraftFixture"
         ],
         "fowlerSignals": [
+          "responsibility_overload",
+          "presentation_logic_mixing",
           "One canonical Canvas projection owns impact traversal and its large-graph evidence."
         ],
+        "patchSurfaces": [
+          "CanvasViewport orchestrator",
+          "CanvasViewportSurfaceView template",
+          "Canvas viewport style model",
+          "Canvas viewport lifecycle hook"
+        ],
         "completionGate": [
-          "pnpm docs:feature-mechanization:implementation",
-          "pnpm verify:prepush"
+          "pnpm --filter @dvt/web test:canvas-architecture:run -- src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts src/app/views/canvas/useCanvasViewportGraphModel.architecture.test.ts",
+          "pnpm --filter @dvt/web test:canvas-presentation:run -- src/app/views/canvas/CanvasViewport.test.tsx src/app/views/canvas/CanvasViewport.contextMenu.test.tsx",
+          "node --test --test-name-pattern \"Canvas viewport component slice boundaries\" scripts/planning-db-migrate.test.cjs",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
         ],
         "redGreenCycles": [
+          {
+            "id": "CV-VIEWPORT-ARCH-001",
+            "redTest": "pnpm --filter @dvt/web test:canvas-architecture:run -- src/app/views/canvas/CanvasViewport.architecture.test.ts",
+            "greenTest": "pnpm --filter @dvt/web test:canvas-architecture:run -- src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts src/app/views/canvas/useCanvasViewportGraphModel.architecture.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+              "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+              "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts"
+            ],
+            "expectedFailure": "CanvasViewportSurfaceView.tsx did not exist and CanvasViewport still owned React Flow presentation."
+          },
+          {
+            "id": "CV-VIEWPORT-DB-001",
+            "redTest": "node --test --test-name-pattern \"Canvas viewport component slice boundaries\" scripts/planning-db-migrate.test.cjs",
+            "greenTest": "node --test --test-name-pattern \"Canvas viewport component slice boundaries\" scripts/planning-db-migrate.test.cjs",
+            "patchSurfaces": ["scripts/planning-db-migrate.test.cjs"],
+            "expectedFailure": "Migration 297 was absent, so DB-owned component files and rails were not registered."
+          },
           {
             "id": "rendercanvascontextualgraphsurface-record",
             "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
@@ -546,28 +790,65 @@
           }
         ],
         "componentGuides": [
+          "planning-db:component/web.component.canvas.CanvasViewport",
           "docs/architecture/components/web/graph/canvas-fowler-canon-component.md"
         ],
         "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/guides/ai-work-protocol.md",
           "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "buzon/TAREA.TXT"
         ],
         "commandQueryRails": [
           {
             "name": "RenderCanvasContextualGraphSurface",
             "type": "query",
+            "owner": "CanvasViewportSurfaceView",
             "status": "implemented",
-            "dddOwner": "CanvasViewportSurfaceView"
+            "purpose": "Render the graph-first React Flow surface from a named presentation component.",
+            "dddOwner": "CanvasViewportSurfaceView",
+            "componentId": "web.component.canvas.CanvasViewport"
+          },
+          {
+            "name": "GetCanvasLayout",
+            "type": "query",
+            "dddOwner": "web.component.canvas.CanvasViewport"
           }
         ],
         "architectureGuards": [
+          "CanvasViewport.architecture.test.ts",
+          "canvasInteractionCommandSurface.architecture.test.ts",
           "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/188",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
+        "recordedColumnsVisibility": {
+          "rail": "RenderCanvasContextualGraphSurface",
+          "tests": [
+            "apps/web/src/app/views/canvas/useCanvasViewportGraphModel.nodeData.test.tsx",
+            "apps/web/src/app/views/canvas/useCanvasControllerReadModel.test.tsx"
+          ],
+          "mapper": "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+          "componentId": "web.component.canvas.CanvasViewport",
+          "lineageOverlayDoesNotHideRecordedColumns": true
+        },
+        "embeddedNodeControlBoundary": {
+          "componentId": "web.component.canvas.CanvasNodeInteractionBoundary",
+          "noParallelRail": true,
+          "emptySelectionPreservesOpenedSurface": true,
+          "differentNodeSelectionClosesOpenedSurface": true
+        },
         "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
           "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+          "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+          "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts",
+          "scripts/planning-db-migrate.test.cjs",
           "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
           "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
           "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
@@ -576,13 +857,26 @@
           "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
         ],
         "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx",
+          "apps/web/src/app/components/InspectorPanel.tsx",
+          "apps/web/src/app/components/sourceImportWizard/**",
           "apps/web/src/app/views/canvas/canvasImpactOverlay.ts",
           "tools/planning-db/migrations/**"
-        ]
+        ],
+        "canvasViewportNodeSurfaceLifecycleTests": {
+          "rail": "RenderCanvasContextualGraphSurface",
+          "status": "implemented",
+          "componentId": "web.component.canvas.CanvasViewport",
+          "hostedComponents": [
+            "web.component.canvas.NodeFloatingToolbar",
+            "web.component.canvas.GraphNodeHealthPopover"
+          ],
+          "noOrphanedNodeSurfaces": true
+        }
       },
       "revision": 6,
       "createdBy": "codex",
-      "createdAt": "2026-07-30T21:37:21.767Z"
+      "createdAt": "2026-08-02T09:29:37.877Z"
     },
     {
       "railId": "local#E-WEB-DBT-ATOMIC-PUBLICATION-1#command#publishgraphdbtworkspaceartifacts",
@@ -1958,7 +2252,7 @@
       },
       "revision": 3,
       "createdBy": "codex",
-      "createdAt": "2026-07-30T21:41:49.879Z"
+      "createdAt": "2026-08-02T09:32:31.263Z"
     },
     {
       "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
@@ -14559,7 +14853,7 @@
       },
       "revision": 1,
       "createdBy": "codex",
-      "createdAt": "2026-07-30T21:37:21.767Z"
+      "createdAt": "2026-08-02T09:29:37.877Z"
     },
     {
       "railId": "local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties",
@@ -14682,7 +14976,7 @@
       },
       "revision": 8,
       "createdBy": "codex",
-      "createdAt": "2026-07-30T21:37:21.767Z"
+      "createdAt": "2026-08-02T09:29:37.877Z"
     }
   ],
   "featureMechanizationRailOperations": [

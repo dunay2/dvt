@@ -3611,6 +3611,20 @@ function planDbSurfaceUpsertOperation({ command, existingSurface, operationId, n
   return { surface, audit };
 }
 
+function normalizeFeatureMechanizationList(value) {
+  const normalized = normalizeExistingPayload(value);
+  if (Array.isArray(normalized)) {
+    return normalized;
+  }
+  if (normalized && typeof normalized === 'object') {
+    return Object.values(normalized)
+      .filter(Array.isArray)
+      .flat()
+      .filter((item) => typeof item === 'string');
+  }
+  return [];
+}
+
 function normalizeFeatureMechanizationRail(row) {
   if (!row) {
     return null;
@@ -3620,21 +3634,25 @@ function normalizeFeatureMechanizationRail(row) {
     railId: row.rail_id ?? row.railId,
     revision: Number(row.revision ?? 0),
     createdAt: row.created_at ?? row.createdAt,
-    symbolRefs: normalizeExistingPayload(row.symbol_refs ?? row.symbolRefs ?? []),
-    implementationRefs: normalizeExistingPayload(
+    symbolRefs: normalizeFeatureMechanizationList(row.symbol_refs ?? row.symbolRefs ?? []),
+    implementationRefs: normalizeFeatureMechanizationList(
       row.implementation_refs ?? row.implementationRefs ?? []
     ),
-    documentationRefs: normalizeExistingPayload(
+    documentationRefs: normalizeFeatureMechanizationList(
       row.documentation_refs ?? row.documentationRefs ?? []
     ),
-    governingSources: normalizeExistingPayload(row.governing_sources ?? row.governingSources ?? []),
-    allowedImplementationSurfaces: normalizeExistingPayload(
+    governingSources: normalizeFeatureMechanizationList(
+      row.governing_sources ?? row.governingSources ?? []
+    ),
+    allowedImplementationSurfaces: normalizeFeatureMechanizationList(
       row.allowed_implementation_surfaces ?? row.allowedImplementationSurfaces ?? []
     ),
-    architectureGuards: normalizeExistingPayload(
+    architectureGuards: normalizeFeatureMechanizationList(
       row.architecture_guards ?? row.architectureGuards ?? []
     ),
-    completionGate: normalizeExistingPayload(row.completion_gate ?? row.completionGate ?? []),
+    completionGate: normalizeFeatureMechanizationList(
+      row.completion_gate ?? row.completionGate ?? []
+    ),
     rawRail: normalizeExistingPayload(row.raw_rail ?? row.rawRail ?? {}),
     rawManifest: normalizeExistingPayload(row.raw_manifest ?? row.rawManifest ?? {}),
   };
@@ -3705,9 +3723,31 @@ function excludesFeatureMechanizationSurface(reference, patterns) {
   return patterns.some((pattern) => surfaceMatchesPattern(surface, pattern));
 }
 
+function pruneForbiddenFeatureMechanizationReferences(value, patterns) {
+  if (typeof value === 'string') {
+    return excludesFeatureMechanizationSurface(value, patterns) ? undefined : value;
+  }
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => pruneForbiddenFeatureMechanizationReferences(item, patterns))
+      .filter((item) => item !== undefined);
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([key, item]) => [key, pruneForbiddenFeatureMechanizationReferences(item, patterns)])
+        .filter(([, item]) => item !== undefined)
+    );
+  }
+  return value;
+}
+
 function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, command) {
   const existing = existingManifest || {};
-  const merged = mergeFeatureMechanizationValue(existing, incomingManifest);
+  const merged = pruneForbiddenFeatureMechanizationReferences(
+    mergeFeatureMechanizationValue(existing, incomingManifest),
+    command.forbiddenImplementationSurfaces
+  );
   const retainedForbidden = (existing.forbiddenImplementationSurfaces || []).filter(
     (pattern) =>
       !command.allowedImplementationSurfaces.some((surface) =>
@@ -3730,7 +3770,7 @@ function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, c
     (symbol) => `${symbol.path}#${symbol.name}`
   );
 
-  return {
+  const reconciled = {
     ...merged,
     allowedImplementationSurfaces: mergeUniqueValues(
       existing.allowedImplementationSurfaces || [],
@@ -3751,6 +3791,13 @@ function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, c
       (cycle) => cycle.id
     ),
     symbols,
+  };
+  return {
+    ...pruneForbiddenFeatureMechanizationReferences(
+      reconciled,
+      command.forbiddenImplementationSurfaces
+    ),
+    forbiddenImplementationSurfaces,
   };
 }
 

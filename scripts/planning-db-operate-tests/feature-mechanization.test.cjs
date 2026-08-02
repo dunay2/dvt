@@ -195,11 +195,23 @@ test('feature mechanization rail planner extends existing evidence without resto
       'apps/web/src/retiredProjection.ts',
     ],
     architecture_guards: ['existing architecture guard'],
-    completion_gate: ['existing completion gate'],
+    completion_gate: {
+      tests: ['existing completion gate'],
+      dbQueries: ['existing DB evidence query'],
+    },
     raw_rail: { purpose: 'Existing rail purpose' },
     raw_manifest: {
-      recordedColumnsVisibility: { status: 'implemented' },
+      recordedColumnsVisibility: {
+        status: 'implemented',
+        decorator: 'apps/web/src/retiredProjection.ts',
+      },
       forbiddenImplementationSurfaces: ['apps/web/cypress/e2e/canvas/**'],
+      redGreenCycles: [
+        {
+          id: 'existing-cycle',
+          patchSurfaces: ['apps/web/src/retiredProjection.ts'],
+        },
+      ],
       symbols: [
         {
           name: 'buildExistingProjection',
@@ -236,6 +248,7 @@ test('feature mechanization rail planner extends existing evidence without resto
   assert.ok(
     planned.rail.allowedImplementationSurfaces.includes('apps/web/src/existingProjection.ts')
   );
+  assert.ok(planned.rail.completionGate.includes('existing completion gate'));
   assert.ok(
     planned.rail.allowedImplementationSurfaces.includes(
       'apps/web/cypress/e2e/canvas/new-flow.cy.ts'
@@ -251,6 +264,7 @@ test('feature mechanization rail planner extends existing evidence without resto
     ),
     false
   );
+  assert.deepEqual(planned.rail.rawManifest.redGreenCycles[0].patchSurfaces, []);
 });
 
 test('feature mechanization rail writer stores local rails without mutating imports', async () => {
