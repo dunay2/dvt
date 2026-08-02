@@ -17,6 +17,7 @@ import type { RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { normalizeProtectedRuntimeRejection } from '../api/protectedRuntimeRejection';
 import { createSessionContextPort } from '../session/sessionContextPort';
+import { parseCancelRunReceipt, parseRecoverRunReceipt } from './runsApiControlReceipts';
 import {
   extractEventsPayload,
   extractRunListPayload,
@@ -99,6 +100,30 @@ export function createApiRunsService(
         .map(mapSnapshotToSummary);
     },
     getRunSnapshot: getRunSnapshotById,
+    cancelRun: async (runId) => {
+      const { tenantId } = sessionContext.getWorkspaceScope();
+      try {
+        const payload = await apiClient.postJson<{ tenantId: string }, unknown>(
+          `/runs/${runId}/cancel`,
+          { tenantId }
+        );
+        return parseCancelRunReceipt(payload);
+      } catch (error) {
+        throw normalizeProtectedRuntimeRejection(error) ?? error;
+      }
+    },
+    recoverRun: async (runId) => {
+      const { tenantId } = sessionContext.getWorkspaceScope();
+      try {
+        const payload = await apiClient.postJson<{ tenantId: string }, unknown>(
+          `/runs/${runId}/recover`,
+          { tenantId }
+        );
+        return parseRecoverRunReceipt(payload);
+      } catch (error) {
+        throw normalizeProtectedRuntimeRejection(error) ?? error;
+      }
+    },
     startRun: async (input: StartRunInput) => {
       try {
         const payload = await apiClient.postJson<StartRunApiRequest, unknown>('/runs/start', {

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
+import { createMockRunsService } from '../../../testing/runsPortDoubles';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -89,6 +90,7 @@ function buildRunSnapshot(runId: string, environmentId: string): RunSnapshot {
 
 function buildRunsService(sessionContext: SessionContextPort): IRunsPort {
   return {
+    ...createMockRunsService(sessionContext),
     listRunSummaries: vi.fn(async () => {
       const { environmentId } = sessionContext.getWorkspaceScope();
       return [buildRunSummary(environmentId)];

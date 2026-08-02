@@ -6,6 +6,9 @@ import type { RunStatus as ContractRunStatus } from '@dvt/contracts';
 
 import type {
   MaterializationEvidence,
+  RunControlActionAvailability,
+  RunControlAvailability,
+  RunControlUnavailableReason,
   RunDiagnosticPointer,
   RunDiagnostics,
   RunAuthoringProvenance,
@@ -17,6 +20,14 @@ import type {
   RunProvenanceChain,
   UiRunStatus,
 } from '../../ports/runs';
+
+const RUN_CONTROL_UNAVAILABLE_REASONS = new Set<RunControlUnavailableReason>([
+  'cancellation_pending',
+  'run_active',
+  'run_cancelled',
+  'run_completed',
+  'run_terminal',
+]);
 
 export function asString(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
@@ -32,6 +43,31 @@ export function asFiniteInteger(value: unknown): number | undefined {
 
 export function asFiniteNumber(value: unknown): number | undefined {
   return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function parseRunControlAction(value: unknown): RunControlActionAvailability | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const candidate = value as Record<string, unknown>;
+  if (candidate.available === true) return { available: true };
+  if (
+    candidate.available === false &&
+    typeof candidate.reason === 'string' &&
+    RUN_CONTROL_UNAVAILABLE_REASONS.has(candidate.reason as RunControlUnavailableReason)
+  ) {
+    return {
+      available: false,
+      reason: candidate.reason as RunControlUnavailableReason,
+    };
+  }
+  return undefined;
+}
+
+export function parseRunControlAvailability(value: unknown): RunControlAvailability | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const candidate = value as Record<string, unknown>;
+  const cancel = parseRunControlAction(candidate.cancel);
+  const recover = parseRunControlAction(candidate.recover);
+  return cancel === undefined || recover === undefined ? undefined : { cancel, recover };
 }
 
 export function parseRunExecutor(value: unknown): RunExecutor | undefined {

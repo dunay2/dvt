@@ -1,4 +1,5 @@
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
+import { createMockRunsService } from '../../../testing/runsPortDoubles';
 import { describe, expect, it, vi } from 'vitest';
 import type { WorkspaceGraphAuthoringDraft } from '@dvt/contracts';
 
@@ -170,6 +171,7 @@ function buildWorkspacePortStubs(): {
 
 function buildRunsPortStub(): IRunsPort {
   return {
+    ...createMockRunsService(),
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
     startRun: vi.fn(async () => ({ runId: 'run-override', accepted: true })),

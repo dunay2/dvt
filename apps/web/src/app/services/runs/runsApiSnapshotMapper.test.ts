@@ -20,6 +20,10 @@ describe('runsApiSnapshotMapper operational truth', () => {
       durationMs: 9_000,
       failedStepId: 'step-load',
       errorReason: 'SINK_WRITE_FAILED',
+      controls: {
+        cancel: { available: false, reason: 'run_terminal' },
+        recover: { available: true },
+      },
     });
 
     expect(snapshot).not.toBeNull();
@@ -43,6 +47,10 @@ describe('runsApiSnapshotMapper operational truth', () => {
       durationMs: 9_000,
       failedStepId: 'step-load',
       errorReason: 'SINK_WRITE_FAILED',
+      controls: {
+        cancel: { available: false, reason: 'run_terminal' },
+        recover: { available: true },
+      },
     });
   });
 
@@ -51,6 +59,10 @@ describe('runsApiSnapshotMapper operational truth', () => {
       runId: 'run-1',
       createdAt: '2026-07-19T09:59:55.000Z',
       durationMs: -1,
+      controls: {
+        cancel: { available: false, reason: 'run_active' },
+        recover: { available: false, reason: 'run_active' },
+      },
     });
 
     expect(snapshot).toMatchObject({
@@ -60,5 +72,9 @@ describe('runsApiSnapshotMapper operational truth', () => {
       startedAt: undefined,
       durationMs: undefined,
     });
+  });
+
+  it('rejects detail snapshots without authoritative run controls', () => {
+    expect(mapUnknownRecordToSnapshot({ runId: 'run-1', status: 'RUNNING' })).toBeNull();
   });
 });

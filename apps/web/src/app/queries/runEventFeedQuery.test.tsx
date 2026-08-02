@@ -5,6 +5,7 @@ import React, { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
+import { createMockRunsService } from '../../testing/runsPortDoubles';
 import {
   createTestQueryClient,
   waitForReactQuery,
@@ -49,6 +50,7 @@ function makeEvent(runId: string, eventId: string, runSeq: number): RunEvent {
 
 function buildRunsService(listRunEvents: IRunsPort['listRunEvents']): IRunsPort {
   return {
+    ...createMockRunsService(),
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
     startRun: vi.fn(async () => ({ runId: 'run_started', accepted: true })),

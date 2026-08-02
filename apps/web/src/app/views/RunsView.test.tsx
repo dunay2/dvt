@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
+import { createMockRunsService } from '../../testing/runsPortDoubles';
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router';
@@ -40,6 +41,7 @@ function buildSessionContext(): SessionContextPort {
 
 function buildRunsService(overrides?: Partial<IRunsPort>): IRunsPort {
   return {
+    ...createMockRunsService(),
     listRunSummaries: async () => [],
     getRunSnapshot: async () => null,
     startRun: async () => {

@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
+import { createMockRunsService } from '../../testing/runsPortDoubles';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -300,6 +301,7 @@ describe('AppServicesProvider', () => {
       }),
     };
     const runsService = {
+      ...createMockRunsService(),
       listRunSummaries: async () => [],
       getRunSnapshot: async () => null,
       startRun: async () => ({
