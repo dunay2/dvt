@@ -12,14 +12,18 @@ import {
 } from './frontendOperabilityRecorder';
 
 describe('frontendOperabilityRecorder', () => {
-  it('records only closed privacy-safe event shapes', () => {
+  it('projects only closed privacy-safe event shapes', () => {
     const record = vi.fn<FrontendOperabilitySink['record']>();
     const sink: FrontendOperabilitySink = { record };
+    const bootstrapCandidate = {
+      type: 'frontend.bootstrap.failed',
+      phase: 'capabilities',
+      reasonCode: 'capabilities-query-failed',
+      tenantId: 'private-tenant',
+      rawError: 'private upstream detail',
+    } as const;
 
-    recordFrontendOperabilityEvent(
-      sink,
-      createBootstrapFailureEvent('capabilities', 'capabilities-query-failed')
-    );
+    recordFrontendOperabilityEvent(sink, bootstrapCandidate);
     recordFrontendOperabilityEvent(
       sink,
       createRouteFailureEvent(
@@ -66,6 +70,18 @@ describe('frontendOperabilityRecorder', () => {
         reasonCode: 'platform-health-state-transition',
       },
     ]);
+  });
+
+  it('rejects unsupported runtime literals before they reach the sink', () => {
+    const record = vi.fn<FrontendOperabilitySink['record']>();
+
+    recordFrontendOperabilityEvent({ record }, {
+      type: 'frontend.bootstrap.failed',
+      phase: 'capabilities',
+      reasonCode: 'private-server-message',
+    } as unknown as Parameters<typeof recordFrontendOperabilityEvent>[1]);
+
+    expect(record).not.toHaveBeenCalled();
   });
 
   it('contains sink failures', () => {

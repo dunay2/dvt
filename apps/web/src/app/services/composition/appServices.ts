@@ -68,7 +68,6 @@ export interface AppServices {
   readonly sessionContext: SessionContextPort;
   readonly workspaceScopeSelection: WorkspaceScopeSelectionPort;
   readonly shellFeedback: ShellFeedbackPort;
-  readonly frontendOperabilitySink: FrontendOperabilitySink;
   readonly frontendOperabilityTransitionRecorder: FrontendOperabilityTransitionRecorder;
 }
 
@@ -159,7 +158,6 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     sessionContext,
     workspaceScopeSelection,
     shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),
-    frontendOperabilitySink,
     frontendOperabilityTransitionRecorder,
   };
 }

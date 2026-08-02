@@ -7,6 +7,13 @@ import type {
 
 const STABLE_ROUTE_ID_PATTERN = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
 const MAX_STABLE_ROUTE_ID_LENGTH = 80;
+const BOOTSTRAP_PHASES = ['capabilities', 'health', 'route', 'unknown'] as const;
+const BOOTSTRAP_REASON_CODES = [
+  'capabilities-query-failed',
+  'health-probe-unavailable',
+  'route-boundary-activated',
+] as const;
+const SURFACE_STATES = ['stale', 'probe-unavailable', 'partial'] as const;
 
 export type FrontendOperabilityTransitionChannel =
   'root.bootstrap' | 'root.platform-health' | 'route.bootstrap' | 'route.boundary';
@@ -73,10 +80,76 @@ export function getFrontendOperabilityEventKey(event: FrontendOperabilityEvent):
   }
 }
 
+function isRecord(candidate: unknown): candidate is Readonly<Record<string, unknown>> {
+  return typeof candidate === 'object' && candidate !== null;
+}
+
+function isAllowedLiteral<T extends string>(
+  candidate: unknown,
+  allowedValues: readonly T[]
+): candidate is T {
+  return typeof candidate === 'string' && allowedValues.includes(candidate as T);
+}
+
+function parseFrontendOperabilityEvent(candidate: unknown): FrontendOperabilityEvent | null {
+  if (!isRecord(candidate)) {
+    return null;
+  }
+
+  switch (candidate.type) {
+    case 'frontend.bootstrap.failed':
+      return isAllowedLiteral(candidate.phase, BOOTSTRAP_PHASES) &&
+        isAllowedLiteral(candidate.reasonCode, BOOTSTRAP_REASON_CODES)
+        ? {
+            type: candidate.type,
+            phase: candidate.phase,
+            reasonCode: candidate.reasonCode,
+          }
+        : null;
+    case 'frontend.route.failed':
+      return candidate.reasonCode === 'route-boundary-activated'
+        ? {
+            type: candidate.type,
+            routeId: normalizeFrontendOperabilityRouteId(
+              typeof candidate.routeId === 'string' ? candidate.routeId : undefined
+            ),
+            reasonCode: candidate.reasonCode,
+          }
+        : null;
+    case 'frontend.contract.failed':
+      return candidate.operation === 'ListWarehouseConnectionSourceObjects' &&
+        candidate.reasonCode === 'response-contract-rejected'
+        ? {
+            type: candidate.type,
+            operation: candidate.operation,
+            reasonCode: candidate.reasonCode,
+          }
+        : null;
+    case 'frontend.surface.degraded':
+      return candidate.surface === 'shell.platform-health' &&
+        isAllowedLiteral(candidate.state, SURFACE_STATES) &&
+        candidate.reasonCode === 'platform-health-state-transition'
+        ? {
+            type: candidate.type,
+            surface: candidate.surface,
+            state: candidate.state,
+            reasonCode: candidate.reasonCode,
+          }
+        : null;
+    default:
+      return null;
+  }
+}
+
 export function recordFrontendOperabilityEvent(
   sink: FrontendOperabilitySink,
-  event: FrontendOperabilityEvent
+  candidate: unknown
 ): void {
+  const event = parseFrontendOperabilityEvent(candidate);
+  if (event === null) {
+    return;
+  }
+
   try {
     sink.record(event);
   } catch {

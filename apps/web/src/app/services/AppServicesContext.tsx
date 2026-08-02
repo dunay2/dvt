@@ -4,7 +4,6 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import type { ICostAttributionSummaryPort } from '../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../ports/graphDbtWorkspaceArtifactPublication';
-import type { FrontendOperabilitySink } from '../ports/frontendOperability';
 import type { IPlansPort } from '../ports/plans';
 import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
@@ -166,10 +165,6 @@ export function useWorkspaceScopeSelection(): WorkspaceScopeSelectionPort {
 
 export function useShellFeedback(): ShellFeedbackPort {
   return useRequiredAppServicesContext().shellFeedback;
-}
-
-export function useFrontendOperabilitySink(): FrontendOperabilitySink {
-  return useRequiredAppServicesContext().frontendOperabilitySink;
 }
 
 export function useFrontendOperabilityTransitionRecorder(): AppServices['frontendOperabilityTransitionRecorder'] {
