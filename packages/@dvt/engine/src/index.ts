@@ -50,6 +50,7 @@ export * from './ports/IStartRunIntentStore.js';
 export * from './ports/IProjector.js';
 export * from './ports/IRunExecutionContextResolver.js';
 export * from './ports/IRunExecutionContextBindingPolicy.js';
+export * from './services/startRun/runExecutionContextRequirements.js';
 export type { IAuthorizer } from './ports/IAuthorizer.js';
 export type { IRunAccessPolicy } from './ports/IRunAccessPolicy.js';
 export * from './adapters/IProviderAdapter.js';

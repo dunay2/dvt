@@ -2,6 +2,7 @@ import type { TenantId as ContractTenantId } from '@dvt/contracts';
 import type { IRunStateStoreRead, IWorkflowEngine, RunMetadata } from '@dvt/engine';
 
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
+import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
   AuthorizedQueryExecutionContext,
   IListRunsUseCase,
@@ -20,7 +21,8 @@ export class ListRunsUseCase implements IListRunsUseCase {
   public constructor(
     private readonly stateStore: IRunStateStoreRead,
     private readonly engine: Pick<IWorkflowEngine, 'getRunStatus'>,
-    private readonly executionContextReader?: IRunExecutionContextReferenceReader
+    private readonly executionContextReader?: IRunExecutionContextReferenceReader,
+    private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver
   ) {}
 
   public async execute(
@@ -63,6 +65,7 @@ export class ListRunsUseCase implements IListRunsUseCase {
       status,
       recoveryContextTrusted: await resolveRunRecoveryContextTrust(
         this.executionContextReader,
+        this.executionContextRequirementResolver,
         item,
         status
       ),

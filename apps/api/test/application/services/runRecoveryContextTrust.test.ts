@@ -3,7 +3,13 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { resolveRunRecoveryContextTrust } from '../../../src/application/services/runRecoveryContextTrust.js';
 
-const metadata = { tenantId: 'tenant-a', runId: 'run-source-1' };
+const metadata = {
+  tenantId: 'tenant-a',
+  projectId: 'project-a',
+  environmentId: 'env-a',
+  planId: 'plan-a',
+  runId: 'run-source-1',
+};
 const statusFor = (status: CanonicalRunStatus['status']): CanonicalRunStatus => ({
   runId: metadata.runId,
   status,
@@ -16,23 +22,43 @@ describe('resolveRunRecoveryContextTrust', () => {
     };
 
     await expect(
-      resolveRunRecoveryContextTrust(reader as never, metadata, statusFor('FAILED'))
+      resolveRunRecoveryContextTrust(reader as never, undefined, metadata, statusFor('FAILED'))
     ).resolves.toBe(false);
   });
 
-  it('does not require a context reference when no context artifact exists', async () => {
+  it('allows an absent context only when the stored plan does not require one', async () => {
     const reader = { read: vi.fn().mockResolvedValue({ kind: 'absent' }) };
+    const requirements = { resolve: vi.fn().mockResolvedValue('not_required') };
 
     await expect(
-      resolveRunRecoveryContextTrust(reader as never, metadata, statusFor('CANCELLED'))
+      resolveRunRecoveryContextTrust(
+        reader as never,
+        requirements as never,
+        metadata,
+        statusFor('CANCELLED')
+      )
     ).resolves.toBe(true);
+  });
+
+  it('fails closed when a plugin-bearing plan has lost its required context artifact', async () => {
+    const reader = { read: vi.fn().mockResolvedValue({ kind: 'absent' }) };
+    const requirements = { resolve: vi.fn().mockResolvedValue('required') };
+
+    await expect(
+      resolveRunRecoveryContextTrust(
+        reader as never,
+        requirements as never,
+        metadata,
+        statusFor('FAILED')
+      )
+    ).resolves.toBe(false);
   });
 
   it('keeps run queries available and fails recovery closed when context storage fails', async () => {
     const reader = { read: vi.fn().mockRejectedValue(new Error('EACCES')) };
 
     await expect(
-      resolveRunRecoveryContextTrust(reader as never, metadata, statusFor('FAILED'))
+      resolveRunRecoveryContextTrust(reader as never, undefined, metadata, statusFor('FAILED'))
     ).resolves.toBe(false);
   });
 
@@ -40,7 +66,7 @@ describe('resolveRunRecoveryContextTrust', () => {
     const reader = { read: vi.fn() };
 
     await expect(
-      resolveRunRecoveryContextTrust(reader as never, metadata, statusFor('COMPLETED'))
+      resolveRunRecoveryContextTrust(reader as never, undefined, metadata, statusFor('COMPLETED'))
     ).resolves.toBe(true);
     expect(reader.read).not.toHaveBeenCalled();
   });

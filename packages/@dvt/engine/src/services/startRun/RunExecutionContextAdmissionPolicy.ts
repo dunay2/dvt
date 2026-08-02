@@ -18,6 +18,8 @@ import type {
 import type { IRunExecutionContextResolver } from '../../ports/IRunExecutionContextResolver.js';
 import { toErrorMessage } from '../../utils/errorUtils.js';
 
+import { selectRunExecutionContextPluginRequirements } from './runExecutionContextRequirements.js';
+
 export type RunExecutionContextAdmissionRequest = Readonly<{
   plan: ExecutionPlan;
   planRef: PlanRef;
@@ -39,7 +41,10 @@ export class RunExecutionContextAdmissionPolicy {
     executionPolicy,
     context,
   }: RunExecutionContextAdmissionRequest): Promise<void> {
-    const pluginRequirements = this.resolvePluginRequirements(plan);
+    const pluginRequirements = selectRunExecutionContextPluginRequirements(
+      plan,
+      this.deps.bindingPolicy
+    );
     const ref = context.runExecutionContextRef;
     if (ref === undefined) {
       if (pluginRequirements.length > 0) {
@@ -101,25 +106,6 @@ export class RunExecutionContextAdmissionPolicy {
       ref,
       resolved.pluginCompatibilityFingerprint
     );
-  }
-
-  private resolvePluginRequirements(
-    plan: ExecutionPlan
-  ): readonly RunExecutionContextPluginRequirement[] {
-    const stepKinds = new Set(plan.steps.map((step) => step.kind));
-    const requirements = this.deps.bindingPolicy?.pluginRequirements ?? [];
-    const selected = new Map<string, RunExecutionContextPluginRequirement>();
-
-    for (const requirement of requirements) {
-      if (requirement.stepKinds.some((kind) => stepKinds.has(kind))) {
-        selected.set(
-          `${requirement.pluginId}:${requirement.contextKey ?? requirement.pluginId}`,
-          requirement
-        );
-      }
-    }
-
-    return [...selected.values()];
   }
 
   private async assertPluginContextsAllowed(

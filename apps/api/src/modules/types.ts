@@ -11,6 +11,7 @@ import type {
   IRunHealthService,
   IWorkflowEngine,
 } from '@dvt/engine';
+import type { IRunExecutionContextBindingPolicy } from '@dvt/engine';
 import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
@@ -54,6 +55,7 @@ export interface ProtectedRuntimeModule {
   runExecutionContextReferenceReader: IRunExecutionContextReferenceReader;
   runExecutionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
   runRecoveryCommandCoordinator: IRunRecoveryCommandCoordinator;
+  runExecutionContextBindingPolicy: IRunExecutionContextBindingPolicy;
   planValidator: IPlanExecutabilityValidator;
   executablePlanResolver: {
     fetch(input: {

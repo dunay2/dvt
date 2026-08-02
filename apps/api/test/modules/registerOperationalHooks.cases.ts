@@ -119,6 +119,7 @@ function createProtectedRuntimeModuleHarness(): {
           return operation();
         },
       },
+      runExecutionContextBindingPolicy: { pluginRequirements: [] },
       planValidator: {} as never,
       executablePlanResolver: { fetch: async () => ({}) } as never,
       workspaceContextQuery: {

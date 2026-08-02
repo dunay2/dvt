@@ -13,6 +13,7 @@ import {
 } from '@dvt/engine';
 
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
+import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
   AuthorizedQueryExecutionContext,
   GetRunStatusQuery,
@@ -60,7 +61,8 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     private readonly stalenessReader?: IRunSnapshotStalenessReader,
     private readonly stalenessTelemetry?: IRunStatusStalenessTelemetry,
     private readonly planStore?: PlanRecordReader,
-    private readonly executionContextReader?: IRunExecutionContextReferenceReader
+    private readonly executionContextReader?: IRunExecutionContextReferenceReader,
+    private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver
   ) {}
 
   public async execute(
@@ -132,6 +134,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       evidence: evidenceModel,
       recoveryContextTrusted: await resolveRunRecoveryContextTrust(
         this.executionContextReader,
+        this.executionContextRequirementResolver,
         metadata,
         snapshot
       ),

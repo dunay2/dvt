@@ -68,6 +68,7 @@ interface TestDependencies {
       operation: () => Promise<T>
     ): Promise<T>;
   };
+  readonly executionContextRequirementResolver: { resolve: ReturnType<typeof vi.fn> };
 }
 
 function createSerialCoordinator(): TestDependencies['commandCoordinator'] {
@@ -134,6 +135,9 @@ function createDependencies(): TestDependencies {
       }),
     },
     commandCoordinator: createSerialCoordinator(),
+    executionContextRequirementResolver: {
+      resolve: vi.fn().mockResolvedValue('required'),
+    },
   };
 }
 
@@ -312,6 +316,40 @@ describe('RecoverRunUseCase', () => {
     ).rejects.toMatchObject({ reason: 'source_context_untrusted' });
     expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
     expect(dependencies.executionContextInheritanceWriter.inherit).not.toHaveBeenCalled();
+  });
+
+  it('rejects an absent context when the persisted plan requires plugin binding', async () => {
+    const dependencies = createDependencies();
+    dependencies.executionContextReader.read.mockResolvedValue({ kind: 'absent' });
+    dependencies.executionContextRequirementResolver.resolve.mockResolvedValue('required');
+    const useCase = new RecoverRunUseCase(dependencies as never);
+
+    await expect(
+      useCase.execute(
+        { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
+        commandContext
+      )
+    ).rejects.toMatchObject({ reason: 'source_context_untrusted' });
+    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
+  });
+
+  it('recovers a plan that does not require an execution context when none was stored', async () => {
+    const dependencies = createDependencies();
+    dependencies.executionContextReader.read.mockResolvedValue({ kind: 'absent' });
+    dependencies.executionContextRequirementResolver.resolve.mockResolvedValue('not_required');
+    const useCase = new RecoverRunUseCase(dependencies as never);
+
+    await expect(
+      useCase.execute(
+        { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
+        commandContext
+      )
+    ).resolves.toMatchObject({ accepted: true });
+    expect(dependencies.engine.recoverRun).toHaveBeenCalledWith(
+      'run-source-1',
+      storedPlanRef,
+      expect.not.objectContaining({ runExecutionContextRef: expect.anything() })
+    );
   });
 
   it('throws run-not-found when source metadata does not exist', async () => {

@@ -194,6 +194,7 @@ export async function buildProtectedRuntimeModule(
       storageRuntime.dbtBundleStore
     ),
     runRecoveryCommandCoordinator,
+    runExecutionContextBindingPolicy: storageRuntime.runExecutionContextBindingPolicy,
     planValidator: startRunRuntime.planValidator,
     executablePlanResolver: storageRuntime.executablePlanResolver,
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,

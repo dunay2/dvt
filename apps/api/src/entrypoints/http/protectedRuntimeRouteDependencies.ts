@@ -17,6 +17,7 @@ import { RecoverRunUseCase } from '../../application/services/recoverRunUseCase.
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
 import { ResolveAuthorizedPreviewSelectionService } from '../../application/services/resolveAuthorizedPreviewSelection.js';
 import { SignalRunUseCase } from '../../application/services/signalRunUseCase.js';
+import { StoredPlanRunExecutionContextRequirementResolver } from '../../application/services/StoredPlanRunExecutionContextRequirementResolver.js';
 import { ObservabilityRunStatusStalenessTelemetry } from '../../infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
 import { ObservabilityWorkspaceGraphDraftTelemetry } from '../../infrastructure/telemetry/ObservabilityWorkspaceGraphDraftTelemetry.js';
 import { SafeRunSnapshotStalenessReader } from '../../infrastructure/telemetry/SafeRunSnapshotStalenessReader.js';
@@ -44,6 +45,10 @@ export function buildProtectedRuntimeRouteDependencies(
     authenticator: protectedModule.authenticator,
     authorizer: protectedModule.authorizer,
   };
+  const executionContextRequirementResolver = new StoredPlanRunExecutionContextRequirementResolver(
+    protectedModule.planStore,
+    protectedModule.runExecutionContextBindingPolicy
+  );
   const getRunStatusUseCase = new GetRunStatusUseCase(
     protectedModule.engine,
     protectedModule.runEnrichmentService,
@@ -51,7 +56,8 @@ export function buildProtectedRuntimeRouteDependencies(
     new SafeRunSnapshotStalenessReader(protectedModule.stateStore.snapshotStaleness, observability),
     new ObservabilityRunStatusStalenessTelemetry({ observability }),
     protectedModule.planStore,
-    protectedModule.runExecutionContextReferenceReader
+    protectedModule.runExecutionContextReferenceReader,
+    executionContextRequirementResolver
   );
   const previewPlanUseCase = new PreviewPlanUseCase({
     planner: {
@@ -87,7 +93,8 @@ export function buildProtectedRuntimeRouteDependencies(
     listRunsUseCase: new ListRunsUseCase(
       protectedModule.stateStore.read,
       protectedModule.engine,
-      protectedModule.runExecutionContextReferenceReader
+      protectedModule.runExecutionContextReferenceReader,
+      executionContextRequirementResolver
     ),
     previewPlanUseCase,
     recoverRunUseCase: new RecoverRunUseCase({
@@ -97,6 +104,7 @@ export function buildProtectedRuntimeRouteDependencies(
       executionContextReader: protectedModule.runExecutionContextReferenceReader,
       executionContextInheritanceWriter: protectedModule.runExecutionContextInheritanceWriter,
       commandCoordinator: protectedModule.runRecoveryCommandCoordinator,
+      executionContextRequirementResolver,
     }),
     runtimeAuth,
     signalRunUseCase: new SignalRunUseCase(protectedModule.engine, protectedModule.stateStore.read),

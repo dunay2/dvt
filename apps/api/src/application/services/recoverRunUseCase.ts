@@ -16,6 +16,7 @@ import {
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
 import type { IRunExecutionContextInheritanceWriter } from '../ports/runExecutionContextInheritanceWriter.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
+import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type { IRunRecoveryCommandCoordinator } from '../ports/runRecoveryCommandCoordinator.js';
 import {
   RUN_CONTROL_RESULT_CONTRACT_VERSION,
@@ -34,6 +35,7 @@ export interface RecoverRunUseCaseDependencies {
   readonly executionContextReader: IRunExecutionContextReferenceReader;
   readonly executionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
   readonly commandCoordinator: IRunRecoveryCommandCoordinator;
+  readonly executionContextRequirementResolver: IRunExecutionContextRequirementResolver;
 }
 
 export class RecoverRunUseCase implements IRecoverRunUseCase {
@@ -93,7 +95,12 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       tenantId,
       runId: command.sourceRunId,
     });
-    if (runExecutionContext.kind === 'untrusted') {
+    if (
+      runExecutionContext.kind === 'untrusted' ||
+      (runExecutionContext.kind === 'absent' &&
+        (await this.dependencies.executionContextRequirementResolver.resolve(source)) !==
+          'not_required')
+    ) {
       throw new RunRecoveryUnavailableError(command.sourceRunId, 'source_context_untrusted');
     }
     const recoveryExecutionContextRef =
