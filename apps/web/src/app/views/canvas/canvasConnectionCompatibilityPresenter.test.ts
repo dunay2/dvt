@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
+import { buildLargeWorkspaceGraphAuthoringDraft } from '../../services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
 import { buildCanvasConnectionCompatibilityByNodeId } from './canvasConnectionCompatibilityPresenter';
 
 function node(
@@ -22,6 +23,31 @@ function node(
 }
 
 describe('canvasConnectionCompatibilityPresenter', () => {
+  it('keeps compatibility projection bounded on the canonical large graph', () => {
+    const draft = buildLargeWorkspaceGraphAuthoringDraft();
+    const canonicalNodes = draft.nodes.map((draftNode): CanonicalNode => ({
+      ...draftNode,
+      kind: `dvt:${draftNode.kind}`,
+    }));
+    const canonicalNodesById = new Map(
+      canonicalNodes.map((candidate) => [candidate.id, candidate])
+    );
+
+    const startedAt = performance.now();
+    const compatibilityByNodeId = buildCanvasConnectionCompatibilityByNodeId({
+      visibleNodeIds: draft.nodeIds,
+      visibleEdges: draft.edges,
+      canonicalNodesById,
+      pluginPortMap: getPluginPortMap(),
+    });
+    const durationMs = performance.now() - startedAt;
+
+    expect(compatibilityByNodeId.size).toBe(1_000);
+    expect(compatibilityByNodeId.get('large-node-00-00')?.source.state).toBe('available');
+    expect(compatibilityByNodeId.get('large-node-24-00')?.source.state).toBe('unavailable');
+    expect(durationMs).toBeLessThan(10_000);
+  }, 15_000);
+
   it('projects compatible outgoing and incoming node names from the governed edge rail', () => {
     const source = {
       ...node('warehouse-source', 'dvt:source', 'input', 'dvt.warehouse-source'),

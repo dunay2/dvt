@@ -195,6 +195,34 @@ export function evaluateCrossPluginBridge(
 export type PluginPortMap = ReadonlyMap<string, PluginPortDescriptor>;
 
 /**
+ * Evaluates plugin and cross-plugin policy after graph topology invariants have
+ * already been checked by the caller.
+ */
+export function evaluateConnectionPolicy(
+  source: CanonicalNode,
+  target: CanonicalNode,
+  pluginPorts: PluginPortMap
+): ConnectionRuleResult {
+  if (source.pluginId === target.pluginId) {
+    const plugin = pluginPorts.get(source.pluginId);
+    if (!plugin || plugin.connectionRules.length === 0) {
+      return { allowed: false, reasonCode: 'plugin_policy_missing', pluginId: source.pluginId };
+    }
+
+    return evaluatePluginConnectionRules(source, target, plugin.connectionRules);
+  }
+
+  const sourcePlugin = pluginPorts.get(source.pluginId);
+  const targetPlugin = pluginPorts.get(target.pluginId);
+  return evaluateCrossPluginBridge(
+    source,
+    target,
+    sourcePlugin?.produces ?? [],
+    targetPlugin?.consumes ?? []
+  );
+}
+
+/**
  * Full connection evaluation pipeline:
  *
  *   1. SHELL-002: no self-connections
@@ -229,26 +257,5 @@ export function evaluateConnection(
     return { allowed: false, reasonCode: 'cycle_detected' };
   }
 
-  // Intra-plugin
-  if (source.pluginId === target.pluginId) {
-    const plugin = pluginPorts.get(source.pluginId);
-    if (!plugin) {
-      return { allowed: false, reasonCode: 'plugin_policy_missing', pluginId: source.pluginId };
-    }
-    if (plugin.connectionRules.length === 0) {
-      return { allowed: false, reasonCode: 'plugin_policy_missing', pluginId: source.pluginId };
-    }
-
-    return evaluatePluginConnectionRules(source, target, plugin.connectionRules);
-  }
-
-  // Cross-plugin bridge
-  const sourcePlugin = pluginPorts.get(source.pluginId);
-  const targetPlugin = pluginPorts.get(target.pluginId);
-  return evaluateCrossPluginBridge(
-    source,
-    target,
-    sourcePlugin?.produces ?? [],
-    targetPlugin?.consumes ?? []
-  );
+  return evaluateConnectionPolicy(source, target, pluginPorts);
 }

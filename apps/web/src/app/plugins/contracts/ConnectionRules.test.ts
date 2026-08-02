@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import { getPluginPortMap } from '../registry';
-import { evaluateConnection, type PluginPortMap } from './ConnectionRules';
+import {
+  evaluateConnection,
+  evaluateConnectionPolicy,
+  type PluginPortMap,
+} from './ConnectionRules';
 
 function buildNode(
   pluginId: CanonicalNode['pluginId'],
@@ -21,6 +25,18 @@ function buildNode(
 }
 
 describe('evaluateConnection', () => {
+  it('evaluates plugin policy independently after topology admission', () => {
+    const pluginPortMap = getPluginPortMap();
+
+    const connection = evaluateConnectionPolicy(
+      buildNode('dvt.warehouse-source', 'dvt:source', 'input'),
+      buildNode('dvt', 'dvt:sql_transform', 'transform'),
+      pluginPortMap
+    );
+
+    expect(connection).toEqual({ allowed: true });
+  });
+
   it('allows the dbt source -> dvt sql_transform -> dvt sink authoring path', () => {
     const pluginPortMap = getPluginPortMap();
 

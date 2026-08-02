@@ -1,7 +1,7 @@
 import { addEdge, reconnectEdge, type Connection, type Edge } from '@xyflow/react';
 
 import {
-  evaluateConnection,
+  evaluateConnectionPolicy,
   hasDuplicateEdge,
   wouldCreateCycle,
   type ConnectionRuleResult,
@@ -139,12 +139,7 @@ export function proposeConnection({
     return { outcome: 'rejected', rejection: endpointDirectionRejection };
   }
 
-  const connectionResult = evaluateConnection(
-    sourceNode,
-    targetNode,
-    canonicalEdges,
-    pluginPortMap
-  );
+  const connectionResult = evaluateConnectionPolicy(sourceNode, targetNode, pluginPortMap);
   if (!connectionResult.allowed) {
     return {
       outcome: 'rejected',
