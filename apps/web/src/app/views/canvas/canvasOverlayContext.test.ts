@@ -114,7 +114,7 @@ describe('canvas overlay projection', () => {
   it('invokes every active decorator once per node', () => {
     const nodes = [node, { ...node, id: 'node-2' }, { ...node, id: 'node-3' }];
     let invocationCount = 0;
-    const countInvocation = () => {
+    const countInvocation = (): null => {
       invocationCount += 1;
       return null;
     };
