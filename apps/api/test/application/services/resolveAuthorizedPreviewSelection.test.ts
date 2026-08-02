@@ -11,6 +11,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   AUTHORIZATION_ACTION,
   buildEnvironmentAccessScope,
+  buildTenantAccessScope,
 } from '../../../src/application/ports/accessDecision.js';
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/authContract.js';
 import { ResolveAuthorizedPreviewSelectionService } from '../../../src/application/services/resolveAuthorizedPreviewSelection.js';
@@ -218,6 +219,126 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
     });
   });
 
+  it('rejects unsupported dbt selection modes with selection evidence', async () => {
+    const { service, projectGraph } = buildService();
+
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({ mode: 'upstream', nodeIds: [MODEL_ID] }),
+        graphSource: GRAPH_SOURCE,
+        provenance: PROVENANCE,
+      },
+      buildContext()
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      rejection: {
+        cause: 'dbt_project_selection_mode_unsupported',
+        findings: [
+          {
+            remediationCode: 'REDUCE_OR_REPAIR_SELECTION',
+            evidence: expect.arrayContaining([
+              expect.objectContaining({ evidenceCode: 'selection_mode' }),
+            ]),
+          },
+        ],
+      },
+    });
+    expect(projectGraph.execute).not.toHaveBeenCalled();
+  });
+
+  it('rejects selection provenance mismatches with both resource subjects', async () => {
+    const { service, projectGraph } = buildService();
+
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({
+          mode: 'explicit',
+          nodeIds: ['model.analytics.other'],
+        }),
+        graphSource: GRAPH_SOURCE,
+        provenance: PROVENANCE,
+      },
+      buildContext()
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      rejection: {
+        cause: 'dbt_project_selection_provenance_mismatch',
+        findings: [
+          {
+            remediationCode: 'REGENERATE_PREVIEW',
+            subjects: expect.arrayContaining([
+              { kind: 'selection', id: MODEL_ID },
+              { kind: 'selection', id: 'model.analytics.other' },
+            ]),
+          },
+        ],
+      },
+    });
+    expect(projectGraph.execute).not.toHaveBeenCalled();
+  });
+
+  it('reports transient project projection failure without fabricating plan identity', async () => {
+    const { service, projectGraph } = buildService();
+    projectGraph.execute.mockRejectedValueOnce(new Error('catalog unavailable'));
+
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({ mode: 'explicit', nodeIds: [MODEL_ID] }),
+        graphSource: GRAPH_SOURCE,
+        provenance: PROVENANCE,
+      },
+      buildContext()
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      rejection: {
+        cause: 'dbt_project_preview_projection_unavailable',
+        findings: [
+          {
+            remediationCode: 'RETRY_PREVIEW',
+            evidence: expect.arrayContaining([
+              expect.objectContaining({
+                evidenceCode: 'authoritative_project_projection_available',
+              }),
+            ]),
+          },
+        ],
+      },
+    });
+    expect(JSON.stringify(result)).not.toMatch(/plan(Id|Version|Ref)/u);
+  });
+
+  it('rejects incomplete authorized scope without querying project authority', async () => {
+    const { service, projectGraph } = buildService();
+    const context = {
+      ...buildContext(),
+      scope: buildTenantAccessScope(TenantId.unsafe('tenant-a')),
+    };
+
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({ mode: 'explicit', nodeIds: [MODEL_ID] }),
+        graphSource: GRAPH_SOURCE,
+        provenance: PROVENANCE,
+      },
+      context
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      rejection: {
+        cause: 'authorized_scope_incomplete',
+        findings: [{ remediationCode: 'REQUEST_AUTHORIZED_SCOPE' }],
+      },
+    });
+    expect(projectGraph.execute).not.toHaveBeenCalled();
+  });
+
   it('reports target mismatch without exposing credential references', async () => {
     const { service } = buildService(
       buildProjection({
@@ -278,7 +399,19 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
       )
     ).resolves.toMatchObject({
       ok: false,
-      rejection: { cause: 'dbt_project_graph_source_mismatch' },
+      rejection: {
+        cause: 'dbt_project_graph_source_mismatch',
+        findings: [
+          {
+            remediationCode: 'REGENERATE_PREVIEW',
+            evidence: expect.arrayContaining([
+              expect.objectContaining({
+                evidenceCode: 'browser_graph_matches_authoritative_projection',
+              }),
+            ]),
+          },
+        ],
+      },
     });
   });
 
@@ -297,7 +430,73 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
       )
     ).resolves.toMatchObject({
       ok: false,
-      rejection: { cause: 'dbt_project_selected_resource_not_executable' },
+      rejection: {
+        cause: 'dbt_project_selected_resource_not_executable',
+        findings: [
+          {
+            remediationCode: 'REDUCE_OR_REPAIR_SELECTION',
+            subjects: expect.arrayContaining([{ kind: 'resource', id: sourceId }]),
+          },
+        ],
+      },
+    });
+  });
+
+  it('identifies the exact missing executable dependency', async () => {
+    const parentId = 'model.analytics.parent';
+    const baseProjection = buildProjection();
+    const { service } = buildService(
+      buildProjection({
+        nodes: [
+          ...baseProjection.nodes,
+          {
+            uniqueId: parentId,
+            resourceType: 'model',
+            name: 'parent',
+            packageName: 'analytics',
+            originalFilePath: 'models/parent.sql',
+            materialized: 'view',
+            columns: [],
+            tags: [],
+            visualEditability: { status: 'code_only', reasons: ['dbt-project-files'] },
+          },
+        ],
+        edges: [
+          ...baseProjection.edges,
+          {
+            id: 'parent-to-model',
+            sourceUniqueId: parentId,
+            targetUniqueId: MODEL_ID,
+            relation: 'dependency',
+          },
+        ],
+        capabilities: { canPreview: true, canRun: true, codeOnlyResourceCount: 3 },
+      })
+    );
+
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({ mode: 'explicit', nodeIds: [MODEL_ID] }),
+        graphSource: GRAPH_SOURCE,
+        provenance: PROVENANCE,
+      },
+      buildContext()
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      rejection: {
+        cause: 'dbt_project_dependency_gap',
+        findings: [
+          {
+            remediationCode: 'REDUCE_OR_REPAIR_SELECTION',
+            subjects: expect.arrayContaining([
+              { kind: 'resource', id: MODEL_ID },
+              { kind: 'resource', id: parentId },
+            ]),
+          },
+        ],
+      },
     });
   });
 

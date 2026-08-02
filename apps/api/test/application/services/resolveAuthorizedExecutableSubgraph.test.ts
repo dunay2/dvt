@@ -132,6 +132,52 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
     expect(read).not.toHaveBeenCalled();
   });
 
+  it.each([
+    {
+      name: 'missing protected draft',
+      stored: null,
+      cause: 'workspace_graph_draft_not_found',
+    },
+    {
+      name: 'unsupported protected draft schema',
+      stored: { schemaVersion: 'workspace-graph-authoring-draft.v0', draftPayload: {} },
+      cause: 'workspace_graph_draft_unsupported_schema_version',
+    },
+    {
+      name: 'corrupt protected draft payload',
+      stored: { schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION, draftPayload: {} },
+      cause: 'workspace_graph_draft_corrupt_payload',
+    },
+  ])('emits a canonical finding for $name', async ({ stored, cause }) => {
+    const planner = { deriveExecutableSubgraph: vi.fn() };
+    const service = new ResolveAuthorizedExecutableSubgraphService({
+      planner: planner as never,
+      workspaceGraphDraftStore: { read: vi.fn(async () => stored) } as never,
+    });
+
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({ mode: 'explicit', nodeIds: ['source-node'] }),
+      },
+      buildContext()
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      rejection: {
+        cause,
+        findings: [
+          {
+            phase: 'preview-selection',
+            requestId: 'req-1',
+            remediationCode: 'REGENERATE_PREVIEW',
+          },
+        ],
+      },
+    });
+    expect(planner.deriveExecutableSubgraph).not.toHaveBeenCalled();
+  });
+
   it('rejects non-executable planner diagnostics instead of widening to the whole draft', async () => {
     const planner = {
       deriveExecutableSubgraph: vi.fn(() =>
