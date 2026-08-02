@@ -195,6 +195,7 @@ export async function buildProtectedRuntimeModule(
     adapters: executionRuntime.adapters,
     startRunTargetAdapterRegistry: executionRuntime.startRunTargetAdapterRegistry,
     stateStore: storageRuntime.stateStoreRoles,
+    startRunIntentStore: storageRuntime.intentStore,
     planner: startRunRuntime.planner,
     planCompilePlanner: startRunRuntime.planCompilePlanner,
     planStore: storageRuntime.planStore,

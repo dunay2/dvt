@@ -3,6 +3,7 @@
  * module without registering HTTP routes.
  */
 import { TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY } from '@dvt/contracts';
+import { IdempotencyKeyBuilder } from '@dvt/engine/runtime';
 import type { IObservability } from '@dvt/observability';
 
 import { CancelRunUseCase } from '../../application/services/cancelRunUseCase.js';
@@ -108,6 +109,8 @@ export function buildProtectedRuntimeRouteDependencies(
       executionContextInheritanceWriter: protectedModule.runExecutionContextInheritanceWriter,
       commandCoordinator: protectedModule.runRecoveryCommandCoordinator,
       executionContextRequirementResolver,
+      startRunIntentStore: protectedModule.startRunIntentStore,
+      idempotency: new IdempotencyKeyBuilder(),
     }),
     runtimeAuth,
     signalRunUseCase: new SignalRunUseCase(protectedModule.engine, protectedModule.stateStore.read),

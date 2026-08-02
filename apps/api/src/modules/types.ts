@@ -10,6 +10,7 @@ import type {
   IProviderAdapter,
   IRunEnrichmentService,
   IRunHealthService,
+  IStartRunIntentQueryStore,
   IWorkflowEngine,
 } from '@dvt/engine';
 import type { IRunExecutionContextBindingPolicy } from '@dvt/engine';
@@ -51,6 +52,7 @@ export interface ProtectedRuntimeModule {
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   startRunTargetAdapterRegistry: IStartRunTargetAdapterRegistry;
   stateStore: StateStoreRoleBindings;
+  startRunIntentStore: IStartRunIntentQueryStore;
   planner: IPlanner;
   planCompilePlanner: IPlanner;
   planStore: IStoredPlanArtifactStore & IStoredPlanRefReader & IPlanStoreReader;

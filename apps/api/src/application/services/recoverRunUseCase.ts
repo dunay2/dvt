@@ -3,6 +3,7 @@ import type { IStoredPlanRefReader } from '@dvt/artifacts';
 import { asNonBlankString } from '@dvt/contracts';
 import {
   RunMetadataNotFoundError,
+  type IStartRunIntentQueryStore,
   type IRunStateStoreRead,
   type IWorkflowEngine,
   type RunContext,
@@ -36,6 +37,15 @@ export interface RecoverRunUseCaseDependencies {
   readonly executionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
   readonly commandCoordinator: IRunRecoveryCommandCoordinator;
   readonly executionContextRequirementResolver: IRunExecutionContextRequirementResolver;
+  readonly startRunIntentStore: IStartRunIntentQueryStore;
+  readonly idempotency: {
+    startRunIntentId(
+      tenantId: string,
+      runId: string,
+      logicalAttemptId: number,
+      targetAdapter: RunMetadata['providerRef']['provider']
+    ): string;
+  };
 }
 
 export class RecoverRunUseCase implements IRecoverRunUseCase {
@@ -72,6 +82,7 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       if (!isRecoveryChildOf(repeatedRecovery, source)) {
         throw new RunRecoveryUnavailableError(command.sourceRunId, 'recovery_identity_conflict');
       }
+      await this.assertRecoveryDispatchConfirmed(repeatedRecovery, tenantId, command.sourceRunId);
       return acceptedRecovery(command);
     }
 
@@ -119,6 +130,26 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     );
 
     return acceptedRecovery(command);
+  }
+
+  private async assertRecoveryDispatchConfirmed(
+    recovery: RunMetadata,
+    tenantId: string,
+    sourceRunId: string
+  ): Promise<void> {
+    const intentId = this.dependencies.idempotency.startRunIntentId(
+      tenantId,
+      recovery.runId,
+      recovery.logicalAttemptId,
+      recovery.providerRef.provider
+    );
+    const intent = await this.dependencies.startRunIntentStore.getIntent({ tenantId, intentId });
+    if (
+      intent?.engineRunRef === undefined ||
+      (intent.status !== 'DISPATCHED' && intent.status !== 'RESOLVED')
+    ) {
+      throw new RunRecoveryUnavailableError(sourceRunId, 'recovery_dispatch_unconfirmed');
+    }
   }
 }
 

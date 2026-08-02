@@ -69,6 +69,8 @@ interface TestDependencies {
     ): Promise<T>;
   };
   readonly executionContextRequirementResolver: { resolve: ReturnType<typeof vi.fn> };
+  readonly startRunIntentStore: { getIntent: ReturnType<typeof vi.fn> };
+  readonly idempotency: { startRunIntentId: ReturnType<typeof vi.fn> };
 }
 
 function createSerialCoordinator(): TestDependencies['commandCoordinator'] {
@@ -137,6 +139,21 @@ function createDependencies(): TestDependencies {
     commandCoordinator: createSerialCoordinator(),
     executionContextRequirementResolver: {
       resolve: vi.fn().mockResolvedValue('required'),
+    },
+    startRunIntentStore: {
+      getIntent: vi.fn().mockResolvedValue({
+        status: 'RESOLVED',
+        engineRunRef: {
+          provider: 'temporal',
+          tenantId: 'tenant-a',
+          namespace: 'default',
+          workflowId: 'wf-recovery-1',
+          runId: 'run-recovery-1',
+        },
+      }),
+    },
+    idempotency: {
+      startRunIntentId: vi.fn().mockReturnValue('intent-recovery-1'),
     },
   };
 }
@@ -252,6 +269,42 @@ describe('RecoverRunUseCase', () => {
     expect(dependencies.engine.getRunStatus).not.toHaveBeenCalled();
     expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
     expect(dependencies.executionContextInheritanceWriter.inherit).not.toHaveBeenCalled();
+    expect(dependencies.idempotency.startRunIntentId).toHaveBeenCalledWith(
+      'tenant-a',
+      'run-recovery-1',
+      2,
+      'temporal'
+    );
+    expect(dependencies.startRunIntentStore.getIntent).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      intentId: 'intent-recovery-1',
+    });
+  });
+
+  it('rejects replay when child metadata exists without confirmed provider dispatch', async () => {
+    const dependencies = createDependencies();
+    dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
+      async (_tenantId: string, runId: string) =>
+        runId === 'run-recovery-1'
+          ? {
+              ...sourceMetadata,
+              runId,
+              logicalAttemptId: 2,
+              parentRunId: sourceMetadata.runId,
+              originRunId: sourceMetadata.runId,
+            }
+          : sourceMetadata
+    );
+    dependencies.startRunIntentStore.getIntent.mockResolvedValue({ status: 'PENDING' });
+    const useCase = new RecoverRunUseCase(dependencies as never);
+
+    await expect(
+      useCase.execute(
+        { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
+        commandContext
+      )
+    ).rejects.toMatchObject({ reason: 'recovery_dispatch_unconfirmed' });
+    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
   });
 
   it('serializes concurrent delivery of one recovery identity without consuming another attempt', async () => {

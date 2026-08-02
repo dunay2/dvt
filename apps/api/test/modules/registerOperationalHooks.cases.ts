@@ -102,6 +102,14 @@ function createProtectedRuntimeModuleHarness(): {
         },
       },
       stateStore: bindStateStoreRoles(createStateStoreRoleSource()),
+      startRunIntentStore: {
+        async listOrphaned() {
+          return [];
+        },
+        async getIntent() {
+          return null;
+        },
+      },
       planner: {} as never,
       planCompilePlanner: {} as never,
       planStore: {} as never,
