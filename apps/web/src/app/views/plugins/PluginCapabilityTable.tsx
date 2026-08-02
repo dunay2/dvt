@@ -1,4 +1,4 @@
-/** Owned concern: render the Plugins route capability catalog table and selected detail. */
+/** Owned concern: render reconciled plugin catalog rows and selected detail. */
 import { useMemo, useState } from 'react';
 
 import { CheckCircle2, Info, Radio, Search, XCircle } from 'lucide-react';
@@ -15,115 +15,121 @@ import {
   routeWorkbenchSectionTitleClassName,
   routeWorkbenchSubtleTextClassName,
 } from '../../components/workbench/RouteWorkbenchFrame';
-import { resolveString } from '../../plugins/contracts/PluginManifest';
-import { type PluginContributions } from '../../plugins/registry';
 
+import type { PluginCatalogReconciliation } from './pluginCatalogReconciliation';
+import type { PluginsViewCopy } from './pluginsViewCopy';
 import {
+  type PluginBackendState,
   type PluginCapabilitiesSnapshot,
   type PluginReadiness,
   type PluginReadinessItem,
   type PluginSurfaceState,
-  pluginsViewCopy,
   resolvePluginReadiness,
 } from './pluginsViewModel';
 
 type BackendFilter = 'all' | 'available' | 'blocked' | 'degraded' | 'pending' | 'not-required';
+type FrontendFilter = 'all' | 'registered' | 'not-registered' | 'unbound';
 
 type PluginCapabilityTableProps = Readonly<{
   capabilities: PluginCapabilitiesSnapshot | undefined;
   capabilitiesError: unknown;
   capabilitiesLoading: boolean;
-  plugins: readonly PluginContributions[];
+  copy: PluginsViewCopy;
+  entries: readonly PluginCatalogReconciliation[];
 }>;
 
 type PluginCapabilityRow = Readonly<{
-  plugin: PluginContributions;
+  entry: PluginCatalogReconciliation;
   readiness: PluginReadiness;
+  frontend: PluginReadinessItem;
   backend: PluginReadinessItem;
-  executable: PluginReadinessItem;
+  operational: PluginReadinessItem;
 }>;
 
 function resolveStatusIcon(state: PluginSurfaceState) {
-  if (state === 'ok') {
-    return <CheckCircle2 className="size-3" />;
-  }
-  if (state === 'warning') {
-    return <Radio className="size-3" />;
-  }
-  if (state === 'error') {
-    return <XCircle className="size-3" />;
-  }
+  if (state === 'ok') return <CheckCircle2 className="size-3" />;
+  if (state === 'warning') return <Radio className="size-3" />;
+  if (state === 'error') return <XCircle className="size-3" />;
   return <Info className="size-3" />;
 }
 
-function resolveBackendFilter(row: PluginCapabilityRow): BackendFilter {
-  if (row.backend.label === 'Not required') {
-    return 'not-required';
-  }
-  if (row.backend.state === 'ok') {
-    return 'available';
-  }
-  if (row.backend.state === 'error') {
-    return 'blocked';
-  }
-  if (row.backend.state === 'warning') {
-    return 'pending';
-  }
+function resolveBackendFilter(state: PluginBackendState): BackendFilter {
+  if (state === 'available') return 'available';
+  if (state === 'unavailable' || state === 'not-bound') return 'blocked';
+  if (state === 'pending') return 'pending';
+  if (state === 'not-required') return 'not-required';
   return 'degraded';
+}
+
+function requiredReadinessItem(
+  readiness: PluginReadiness,
+  key: PluginReadinessItem['key']
+): PluginReadinessItem {
+  const item = readiness.items.find((candidate) => candidate.key === key);
+  if (!item) {
+    throw new Error(`Plugin readiness projection is missing ${key} state.`);
+  }
+  return item;
 }
 
 function createCapabilityRows({
   capabilities,
   capabilitiesError,
   capabilitiesLoading,
-  plugins,
+  copy,
+  entries,
 }: PluginCapabilityTableProps): PluginCapabilityRow[] {
-  return plugins.map((plugin) => {
+  return entries.map((entry) => {
     const readiness = resolvePluginReadiness(
-      plugin,
+      entry,
       capabilities,
       capabilitiesLoading,
-      capabilitiesError
+      capabilitiesError,
+      copy
     );
-    const backend = readiness.items.find((item) => item.key === 'backend');
-    const executable = readiness.items.find((item) => item.key === 'executable');
-
-    if (!backend || !executable) {
-      throw new Error(`Plugin readiness projection is missing backend or executable state.`);
-    }
-
     return {
-      plugin,
+      entry,
       readiness,
-      backend,
-      executable,
+      frontend: requiredReadinessItem(readiness, 'frontend'),
+      backend: requiredReadinessItem(readiness, 'backend'),
+      operational: requiredReadinessItem(readiness, 'executable'),
     };
   });
+}
+
+function matchesFrontendFilter(row: PluginCapabilityRow, filter: FrontendFilter): boolean {
+  if (filter === 'all') return true;
+  if (filter === 'unbound') return row.readiness.runtimeShape === 'unbound';
+  return row.readiness.frontendPresence === filter;
 }
 
 function filterCapabilityRows(
   rows: readonly PluginCapabilityRow[],
   searchText: string,
-  backendFilter: BackendFilter
+  backendFilter: BackendFilter,
+  frontendFilter: FrontendFilter
 ): PluginCapabilityRow[] {
   const normalizedSearch = searchText.trim().toLowerCase();
 
   return rows.filter((row) => {
+    const { catalog, localContribution } = row.entry;
     const searchable = [
-      row.plugin.id,
-      resolveString(row.plugin.displayName),
-      row.plugin.backendPluginId,
-      ...(row.plugin.capabilities ?? []),
-      ...(row.plugin.nodeKinds?.map((kind) => kind.kind) ?? []),
+      catalog.id,
+      catalog.name,
+      catalog.backendPluginId,
+      ...(catalog.capabilities ?? []),
+      ...(localContribution?.nodeKinds?.map((kind) => kind.kind) ?? []),
     ]
       .filter((value): value is string => value != null)
       .join(' ')
       .toLowerCase();
 
-    const matchesSearch = normalizedSearch.length === 0 || searchable.includes(normalizedSearch);
-    const matchesBackend = backendFilter === 'all' || resolveBackendFilter(row) === backendFilter;
-
-    return matchesSearch && matchesBackend;
+    return (
+      (normalizedSearch.length === 0 || searchable.includes(normalizedSearch)) &&
+      (backendFilter === 'all' ||
+        resolveBackendFilter(row.readiness.backendState) === backendFilter) &&
+      matchesFrontendFilter(row, frontendFilter)
+    );
   });
 }
 
@@ -160,33 +166,51 @@ function PluginTaxonomy({
   );
 }
 
-function PluginCapabilityDetail({ row }: Readonly<{ row: PluginCapabilityRow | undefined }>) {
+function runtimeShapeLabel(row: PluginCapabilityRow, copy: PluginsViewCopy): string {
+  const labels = {
+    'frontend-only': copy.runtimeShapeFrontendOnly,
+    'frontend-and-backend': copy.runtimeShapeFrontendAndBackend,
+    'backend-only': copy.runtimeShapeBackendOnly,
+    unbound: copy.runtimeShapeUnbound,
+  } as const;
+  return labels[row.readiness.runtimeShape];
+}
+
+function PluginCapabilityDetail({
+  copy,
+  row,
+}: Readonly<{ copy: PluginsViewCopy; row: PluginCapabilityRow | undefined }>) {
   if (!row) {
     return (
       <Card
         data-slot="plugin-capability-detail"
         className={cn(routeWorkbenchPanelClassName, 'p-5')}
       >
-        <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>
-          {pluginsViewCopy.noPluginMatches}
-        </p>
+        <p className={cn('text-sm', routeWorkbenchMutedTextClassName)}>{copy.noPluginMatches}</p>
       </Card>
     );
   }
 
-  const { plugin, readiness } = row;
+  const { catalog, localContribution } = row.entry;
+  const { readiness } = row;
 
   return (
     <Card data-slot="plugin-capability-detail" className={cn(routeWorkbenchPanelClassName, 'p-5')}>
       <div className="space-y-5">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
-            <h2 className="font-semibold text-(--text-strong)">
-              {resolveString(plugin.displayName)}
-            </h2>
+            <h2 className="font-semibold text-(--text-strong)">{catalog.name}</h2>
             <p className={cn('font-mono text-xs', routeWorkbenchSubtleTextClassName)}>
-              {plugin.id}
+              {catalog.id}
             </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
+                {copy.versionLabel}: {catalog.version}
+              </Badge>
+              <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
+                {runtimeShapeLabel(row, copy)}
+              </Badge>
+            </div>
           </div>
           <StatusIndicator
             state={readiness.summary.state}
@@ -219,15 +243,15 @@ function PluginCapabilityDetail({ row }: Readonly<{ row: PluginCapabilityRow | u
 
         <div className="grid gap-4 lg:grid-cols-2">
           <PluginTaxonomy
-            title={pluginsViewCopy.capabilitiesTitle}
-            emptyCopy={pluginsViewCopy.noCapabilities}
-            values={plugin.capabilities}
+            title={copy.capabilitiesTitle}
+            emptyCopy={copy.noCapabilities}
+            values={catalog.capabilities}
           />
           <PluginTaxonomy
-            title={pluginsViewCopy.nodeKindsTitle}
-            emptyCopy={pluginsViewCopy.noNodeKinds}
+            title={copy.nodeKindsTitle}
+            emptyCopy={copy.noNodeKinds}
             valueClassName="font-mono text-[10px]"
-            values={plugin.nodeKinds?.map((kind) => kind.kind)}
+            values={localContribution?.nodeKinds?.map((kind) => kind.kind)}
           />
         </div>
       </div>
@@ -238,17 +262,18 @@ function PluginCapabilityDetail({ row }: Readonly<{ row: PluginCapabilityRow | u
 export function PluginCapabilityTable(props: PluginCapabilityTableProps) {
   const [searchText, setSearchText] = useState('');
   const [backendFilter, setBackendFilter] = useState<BackendFilter>('all');
+  const [frontendFilter, setFrontendFilter] = useState<FrontendFilter>('all');
   const [selectedPluginId, setSelectedPluginId] = useState<string | null>(
-    props.plugins[0]?.id ?? null
+    props.entries[0]?.catalog.id ?? null
   );
 
   const rows = useMemo(() => createCapabilityRows(props), [props]);
   const visibleRows = useMemo(
-    () => filterCapabilityRows(rows, searchText, backendFilter),
-    [backendFilter, rows, searchText]
+    () => filterCapabilityRows(rows, searchText, backendFilter, frontendFilter),
+    [backendFilter, frontendFilter, rows, searchText]
   );
   const selectedRow =
-    visibleRows.find((row) => row.plugin.id === selectedPluginId) ?? visibleRows[0];
+    visibleRows.find((row) => row.entry.catalog.id === selectedPluginId) ?? visibleRows[0];
 
   return (
     <div
@@ -267,57 +292,63 @@ export function PluginCapabilityTable(props: PluginCapabilityTableProps) {
             <Input
               data-slot="plugin-catalog-search"
               value={searchText}
-              onChange={(event) => {
-                setSearchText(event.currentTarget.value);
-              }}
-              placeholder={pluginsViewCopy.searchPlaceholder}
+              onChange={(event) => setSearchText(event.currentTarget.value)}
+              placeholder={props.copy.searchPlaceholder}
               className={cn(routeWorkbenchFieldClassName, 'pl-9')}
             />
           </label>
           <select
-            data-slot="plugin-backend-state-filter"
-            value={backendFilter}
-            onChange={(event) => {
-              setBackendFilter(event.currentTarget.value as BackendFilter);
-            }}
+            data-slot="plugin-frontend-state-filter"
+            value={frontendFilter}
+            onChange={(event) => setFrontendFilter(event.currentTarget.value as FrontendFilter)}
             className={cn(routeWorkbenchFieldClassName, 'h-9 rounded-md px-3 text-sm')}
           >
-            <option value="all">{pluginsViewCopy.backendFilterAll}</option>
-            <option value="available">{pluginsViewCopy.backendFilterAvailable}</option>
-            <option value="blocked">{pluginsViewCopy.backendFilterBlocked}</option>
-            <option value="degraded">{pluginsViewCopy.backendFilterDegraded}</option>
-            <option value="pending">{pluginsViewCopy.backendFilterPending}</option>
-            <option value="not-required">{pluginsViewCopy.backendFilterNotRequired}</option>
+            <option value="all">{props.copy.frontendFilterAll}</option>
+            <option value="registered">{props.copy.frontendFilterRegistered}</option>
+            <option value="not-registered">{props.copy.frontendFilterNotRegistered}</option>
+            <option value="unbound">{props.copy.frontendFilterUnbound}</option>
+          </select>
+          <select
+            data-slot="plugin-backend-state-filter"
+            value={backendFilter}
+            onChange={(event) => setBackendFilter(event.currentTarget.value as BackendFilter)}
+            className={cn(routeWorkbenchFieldClassName, 'h-9 rounded-md px-3 text-sm')}
+          >
+            <option value="all">{props.copy.backendFilterAll}</option>
+            <option value="available">{props.copy.backendFilterAvailable}</option>
+            <option value="blocked">{props.copy.backendFilterBlocked}</option>
+            <option value="degraded">{props.copy.backendFilterDegraded}</option>
+            <option value="pending">{props.copy.backendFilterPending}</option>
+            <option value="not-required">{props.copy.backendFilterNotRequired}</option>
           </select>
         </div>
 
-        <div className="mt-4 overflow-hidden rounded-lg border border-(--border-default)">
-          <div className="grid grid-cols-[minmax(12rem,1.4fr)_7rem_7rem_7rem] gap-3 bg-(--surface-app) px-3 py-2 text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
-            <span>{pluginsViewCopy.pluginColumn}</span>
-            <span>{pluginsViewCopy.backendColumn}</span>
-            <span>{pluginsViewCopy.executableColumn}</span>
-            <span>{pluginsViewCopy.routesColumn}</span>
+        <div className="mt-4 overflow-x-auto rounded-lg border border-(--border-default)">
+          <div className="grid min-w-[45rem] grid-cols-[minmax(12rem,1.4fr)_7rem_7rem_7rem_5rem] gap-3 bg-(--surface-app) px-3 py-2 text-xs font-semibold uppercase text-(--text-muted)">
+            <span>{props.copy.pluginColumn}</span>
+            <span>{props.copy.frontendColumn}</span>
+            <span>{props.copy.backendColumn}</span>
+            <span>{props.copy.operationalColumn}</span>
+            <span>{props.copy.routesColumn}</span>
           </div>
           {visibleRows.length > 0 ? (
             visibleRows.map((row) => (
               <button
                 type="button"
-                key={row.plugin.id}
+                key={row.entry.catalog.id}
                 data-slot="plugin-capability-row"
-                data-plugin-id={row.plugin.id}
-                onClick={() => {
-                  setSelectedPluginId(row.plugin.id);
-                }}
+                data-plugin-id={row.entry.catalog.id}
+                onClick={() => setSelectedPluginId(row.entry.catalog.id)}
                 className={cn(
-                  'grid w-full grid-cols-[minmax(12rem,1.4fr)_7rem_7rem_7rem] gap-3 border-t border-(--border-default) px-3 py-3 text-left text-sm',
-                  selectedRow?.plugin.id === row.plugin.id
+                  'grid min-w-[45rem] w-full grid-cols-[minmax(12rem,1.4fr)_7rem_7rem_7rem_5rem] gap-3 border-t border-(--border-default) px-3 py-3 text-left text-sm',
+                  selectedRow?.entry.catalog.id === row.entry.catalog.id
                     ? 'bg-(--surface-elevated)'
                     : 'bg-(--surface-panel) hover:bg-(--surface-app)'
                 )}
               >
                 <span className="min-w-0">
                   <span className="block truncate font-medium text-(--text-strong)">
-                    {resolveString(row.plugin.displayName)}
+                    {row.entry.catalog.name}
                   </span>
                   <span
                     className={cn(
@@ -325,12 +356,13 @@ export function PluginCapabilityTable(props: PluginCapabilityTableProps) {
                       routeWorkbenchSubtleTextClassName
                     )}
                   >
-                    {row.plugin.id}
+                    {row.entry.catalog.id}
                   </span>
                 </span>
+                <span>{row.frontend.label}</span>
                 <span>{row.backend.label}</span>
-                <span>{row.executable.label}</span>
-                <span>{row.plugin.views?.length ?? 0}</span>
+                <span>{row.operational.label}</span>
+                <span>{row.entry.localContribution?.views?.length ?? 0}</span>
               </button>
             ))
           ) : (
@@ -340,13 +372,13 @@ export function PluginCapabilityTable(props: PluginCapabilityTableProps) {
                 routeWorkbenchMutedTextClassName
               )}
             >
-              {pluginsViewCopy.noPluginMatches}
+              {props.copy.noPluginMatches}
             </div>
           )}
         </div>
       </Card>
 
-      <PluginCapabilityDetail row={selectedRow} />
+      <PluginCapabilityDetail copy={props.copy} row={selectedRow} />
     </div>
   );
 }
