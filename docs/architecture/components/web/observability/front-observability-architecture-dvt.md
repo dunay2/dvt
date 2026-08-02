@@ -76,6 +76,12 @@ stacks, payloads, SQL, paths, user-authored content, plugin metadata, or server
 business outcomes. Repeated renders and equal refetches do not produce repeated
 events; a new occurrence or coarse-state transition is required.
 
+Bootstrap-family events are valid only while the initial application startup is
+active. Runtime health failures after startup belong to the degraded-surface
+family. A mounted presenter owns its transition channel for one occurrence and
+must release that channel when it unmounts so a later occurrence can be
+recorded.
+
 The outbound port implements the `RecordFrontendOperabilityEvent` operational
 command rail. That rail owns only best-effort recording of a closed browser
 event; it cannot change product state or delivery outcomes. The existing
