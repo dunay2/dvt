@@ -15922,7 +15922,11 @@
         "apps/web/src/app/ports/runs.ts#RecoverRunReceipt",
         "apps/web/src/app/services/runs/runsApiControlReceipts.ts#parseRecoverRunReceipt",
         "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts#buildPlanRefFromStoredRow",
-        "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts#IStoredPlanRefReader"
+        "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts#IStoredPlanRefReader",
+        "apps/api/src/application/services/runControlPolicy.ts#RecoverRunDecision",
+        "apps/api/src/application/services/runControlPolicy.ts#decideRecoverRun",
+        "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts#FileDbtRunExecutionContextWriter",
+        "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextReferenceArtifactPath"
       ],
       "implementationRefs": [
         "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableError",
@@ -15938,7 +15942,11 @@
         "apps/web/src/app/ports/runs.ts#RecoverRunReceipt",
         "apps/web/src/app/services/runs/runsApiControlReceipts.ts#parseRecoverRunReceipt",
         "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts#buildPlanRefFromStoredRow",
-        "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts#IStoredPlanRefReader"
+        "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts#IStoredPlanRefReader",
+        "apps/api/src/application/services/runControlPolicy.ts#RecoverRunDecision",
+        "apps/api/src/application/services/runControlPolicy.ts#decideRecoverRun",
+        "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts#FileDbtRunExecutionContextWriter",
+        "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextReferenceArtifactPath"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
@@ -15957,10 +15965,16 @@
         "apps/web/src/app/ports/runs.ts",
         "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
         "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
-        "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts"
+        "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts",
+        "apps/api/src/application/services/runControlPolicy.ts",
+        "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts",
+        "apps/api/test/application/services/recoverRunUseCase.test.ts",
+        "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+        "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
       ],
       "architectureGuards": [
-        "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
+        "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts",
+        "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation",
@@ -15983,7 +15997,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -15997,7 +16013,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16011,7 +16029,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16025,7 +16045,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16039,7 +16061,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16053,7 +16077,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16067,7 +16093,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16081,7 +16109,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16095,7 +16125,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16109,7 +16141,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16123,7 +16157,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16137,7 +16173,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16151,7 +16189,9 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16165,7 +16205,73 @@
             "cqRails": ["RecoverRun"],
             "dddOwner": "RunRecoveryApplicationService",
             "unitTests": [
-              "apps/api/test/application/services/recoverRunUseCase.test.ts"
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
+          },
+          {
+            "name": "RecoverRunDecision",
+            "path": "apps/api/src/application/services/runControlPolicy.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
+          },
+          {
+            "name": "decideRecoverRun",
+            "path": "apps/api/src/application/services/runControlPolicy.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
+          },
+          {
+            "name": "FileDbtRunExecutionContextWriter",
+            "path": "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
+          },
+          {
+            "name": "resolveRunExecutionContextReferenceArtifactPath",
+            "path": "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
@@ -16202,9 +16308,14 @@
               "apps/web/src/app/ports/runs.ts",
               "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
               "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
-              "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts"
+              "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts",
+              "apps/api/src/application/services/runControlPolicy.ts",
+              "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts",
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
             ],
-            "expectedFailure": "Recovery trusts browser-owned execution inputs or reconstructs an invalid PlanRef."
+            "expectedFailure": "Recovery trusts modified context bytes, accepts an ineligible completed source, or loses its immutable reference."
           }
         ],
         "componentGuides": [
@@ -16223,7 +16334,8 @@
           }
         ],
         "architectureGuards": [
-          "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
+          "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts",
+          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
         "mechanizationStatus": "implemented",
@@ -16238,11 +16350,16 @@
           "apps/web/src/app/ports/runs.ts",
           "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
           "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
-          "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts"
+          "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts",
+          "apps/api/src/application/services/runControlPolicy.ts",
+          "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts",
+          "apps/api/test/application/services/recoverRunUseCase.test.ts",
+          "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+          "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:24.648Z"
     },
@@ -27139,6 +27256,103 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-02T14:52:39.413Z"
+    },
+    {
+      "operationId": "5ab2d187-c96d-4939-a468-2cd2c18077e0",
+      "idempotencyKey": "codex-us-f4-3-recover-run-review-integrity-v2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#recoverrun",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts",
+        "dddOwner": "RunRecoveryApplicationService",
+        "railName": "RecoverRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "unitTests": [
+          "apps/api/test/application/services/recoverRunUseCase.test.ts",
+          "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+          "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
+        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "domainObjects": ["RunRecoveryIntent"],
+        "fowlerSignals": [
+          "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Recovery trusts modified context bytes, accepts an ineligible completed source, or loses its immutable reference.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        ],
+        "architectureGuards": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts",
+          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationRefs": [
+          "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableError",
+          "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableReason",
+          "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#IRunExecutionContextReferenceReader",
+          "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#RunExecutionContextReferenceQuery",
+          "apps/api/src/application/services/recoverRunUseCase.ts#RecoverRunUseCaseDependencies",
+          "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#RECOVER_RUN_BODY_FIELDS",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#FileRunExecutionContextReferenceReader",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#isNotFoundError",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#readOptionalFile",
+          "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextArtifactPath",
+          "apps/web/src/app/ports/runs.ts#RecoverRunReceipt",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts#parseRecoverRunReceipt",
+          "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts#buildPlanRefFromStoredRow",
+          "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts#IStoredPlanRefReader",
+          "apps/api/src/application/services/runControlPolicy.ts#RecoverRunDecision",
+          "apps/api/src/application/services/runControlPolicy.ts#decideRecoverRun",
+          "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts#FileDbtRunExecutionContextWriter",
+          "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextReferenceArtifactPath"
+        ],
+        "normalizedRailName": "recoverrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/errors/runControlErrors.ts",
+          "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
+          "apps/api/src/application/services/recoverRunUseCase.ts",
+          "apps/api/src/entrypoints/http/recoverRunRouteParser.ts",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
+          "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts",
+          "apps/web/src/app/ports/runs.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
+          "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
+          "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts",
+          "apps/api/src/application/services/runControlPolicy.ts",
+          "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts",
+          "apps/api/test/application/services/recoverRunUseCase.test.ts",
+          "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
+          "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T15:36:57.318Z"
     }
   ]
 }
