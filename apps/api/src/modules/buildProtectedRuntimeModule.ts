@@ -7,6 +7,7 @@ import { randomUUID } from 'node:crypto';
 
 import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
+import { Pool } from 'pg';
 import type { Logger } from 'pino';
 
 import { getPgPool } from '../db/pool.js';
@@ -31,6 +32,7 @@ import type { ProtectedRuntimeModule } from './types.js';
 import { buildWorkspaceGraphDraftRuntime } from './workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.js';
 
 const MINIMUM_DBT_PROJECT_IMPORT_OPERATION_LEASE_MS = 300_000;
+const RUN_RECOVERY_LOCK_POOL_SIZE = 2;
 
 async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
   const results = await Promise.allSettled(closers.map((closer) => closer()));
@@ -54,7 +56,6 @@ export async function buildProtectedRuntimeModule(
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
   const pool = getPgPool(databaseUrl);
-  const runRecoveryCommandCoordinator = new PostgresRunRecoveryCommandCoordinator(pool);
   const appLogger = app.log as unknown as Logger;
 
   const adapterMod = await import('@dvt/adapter-postgres');
@@ -169,6 +170,15 @@ export async function buildProtectedRuntimeModule(
     dbtBundleStore: storageRuntime.dbtBundleStore,
     dbtExecutionTargetResolver,
   });
+  const runRecoveryLockPool = new Pool({
+    connectionString: databaseUrl,
+    max: RUN_RECOVERY_LOCK_POOL_SIZE,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+  });
+  const runRecoveryCommandCoordinator = new PostgresRunRecoveryCommandCoordinator(
+    runRecoveryLockPool
+  );
 
   return {
     facade: startRunRuntime.facade,
@@ -228,6 +238,7 @@ export async function buildProtectedRuntimeModule(
         () => dbtProjectImportProcessStore.close(),
         () => storageRuntime.stateStore.close(),
         () => storageRuntime.intentStore.close(),
+        () => runRecoveryLockPool.end(),
         () => pool.end(),
       ]);
     },
