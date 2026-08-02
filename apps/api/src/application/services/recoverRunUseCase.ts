@@ -1,11 +1,10 @@
 /** Owned concern: recover a run from server-owned source lineage and immutable artifacts. */
-import type { IPlanStoreReader } from '@dvt/artifacts';
-import { asNonBlankString, type PlanRecord } from '@dvt/contracts';
+import type { IStoredPlanRefReader } from '@dvt/artifacts';
+import { asNonBlankString } from '@dvt/contracts';
 import {
   RunMetadataNotFoundError,
   type IRunStateStoreRead,
   type IWorkflowEngine,
-  type PlanRef,
   type RunContext,
   type RunMetadata,
 } from '@dvt/engine';
@@ -23,7 +22,7 @@ import {
 export interface RecoverRunUseCaseDependencies {
   readonly engine: IWorkflowEngine;
   readonly stateStore: IRunStateStoreRead;
-  readonly planStore: Pick<IPlanStoreReader, 'getPlanRecord'>;
+  readonly planStore: IStoredPlanRefReader;
   readonly executionContextReader: IRunExecutionContextReferenceReader;
 }
 
@@ -43,13 +42,13 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       throw new RunMetadataNotFoundError(command.sourceRunId);
     }
 
-    const planRecord = await this.dependencies.planStore.getPlanRecord({
+    const planRef = await this.dependencies.planStore.getStoredPlanRef({
       tenantId,
       projectId: source.projectId,
       environmentId: source.environmentId,
       planId: source.planId,
     });
-    if (!planRecord) {
+    if (!planRef) {
       throw new RunRecoveryUnavailableError(command.sourceRunId, 'source_plan_unavailable');
     }
 
@@ -59,7 +58,7 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     });
     await this.dependencies.engine.recoverRun(
       command.sourceRunId,
-      toEnginePlanRef(planRecord),
+      planRef,
       toEngineRunContext(command, source, tenantId, runExecutionContextRef)
     );
 
@@ -70,16 +69,6 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       accepted: true,
     };
   }
-}
-
-function toEnginePlanRef(record: PlanRecord): PlanRef {
-  return {
-    uri: asNonBlankString(record.sourceRef),
-    sha256: asNonBlankString(record.canonicalHash),
-    schemaVersion: asNonBlankString(record.schemaVersion),
-    planId: asNonBlankString(record.planId),
-    planVersion: asNonBlankString(record.planVersion),
-  };
 }
 
 function toEngineRunContext(

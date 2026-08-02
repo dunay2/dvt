@@ -228,7 +228,12 @@ export function buildPlanRef(input: {
   });
 }
 
-export function buildPlanRefFromStoredRow(row: StoredPlanRow): PlanRefSchemaT {
+export function buildPlanRefFromStoredRow(
+  row: Pick<
+    StoredPlanRow,
+    'plan_id' | 'plan_version' | 'plan_uri' | 'plan_sha256' | 'schema_version' | 'size_bytes'
+  >
+): PlanRefSchemaT {
   return parsePlanRef({
     uri: row.plan_uri,
     sha256: row.plan_sha256,

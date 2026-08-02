@@ -6,6 +6,7 @@ import type {
   IPlanStoreReader,
   IPlanStoreWriter,
   IStoredPlanArtifactStore,
+  IStoredPlanRefReader,
   MarkPlanSupersededInput,
   MarkStoredPlanArtifactInvalidInput,
   ScopedPlanExecutabilityQuery,
@@ -64,7 +65,7 @@ export interface PostgresPlanStoreConfig {
 const PLAN_URI_SCHEME = 'dvt-plan';
 
 export class PostgresPlanStore
-  implements IStoredPlanArtifactStore, IPlanStoreWriter, IPlanStoreReader
+  implements IStoredPlanArtifactStore, IStoredPlanRefReader, IPlanStoreWriter, IPlanStoreReader
 {
   private readonly pool: Pool;
   private readonly ownsPool: boolean;
@@ -280,6 +281,17 @@ export class PostgresPlanStore
           }
         : {}),
     };
+  }
+
+  public async getStoredPlanRef(input: ScopedPlanId): Promise<PlanRefSchemaT | undefined> {
+    return this.withClient(async (client) => {
+      const record = await this.planRecordRepository.get(client, input);
+      if (!record) {
+        return undefined;
+      }
+      const row = await this.executableBlobRepository.getStoredPlanRefRow(client, input.planId);
+      return row ? buildPlanRefFromStoredRow(row) : undefined;
+    });
   }
 
   public async fetchStoredPlanArtifact(input: ScopedPlanRef): Promise<StoredPlanArtifact> {

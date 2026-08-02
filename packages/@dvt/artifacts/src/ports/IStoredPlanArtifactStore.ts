@@ -40,4 +40,8 @@ export interface IStoredPlanArtifactReader {
   fetchStoredPlanArtifactForValidation(input: ScopedPlanRef): Promise<StoredPlanArtifact>;
 }
 
+export interface IStoredPlanRefReader {
+  getStoredPlanRef(input: ScopedPlanId): Promise<PlanRefSchemaT | undefined>;
+}
+
 export type IStoredPlanArtifactStore = IStoredPlanArtifactWriter & IStoredPlanArtifactReader;

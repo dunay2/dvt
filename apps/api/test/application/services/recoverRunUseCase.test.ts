@@ -41,26 +41,19 @@ const sourceMetadata = {
   },
 };
 
-const planRecord = {
-  tenantId: 'tenant-a',
-  projectId: 'project-a',
-  environmentId: 'env-a',
+const storedPlanRef = {
+  uri: 'dvt-plan://postgres/plan-a',
+  sha256: 'c'.repeat(64),
   planId: 'plan-a',
-  canonicalPlanJson: '{}',
-  canonicalHash: 'a'.repeat(64),
   planVersion: '1.0.0',
   schemaVersion: 'v1.0',
-  contractVersion: 'v1.0',
-  sourceRef: 'https://plans.example/plan.json',
-  createdAtIso: '2026-04-08T00:00:00.000Z',
-  updatedAtIso: '2026-04-08T00:00:00.000Z',
-  state: 'ACTIVE' as const,
+  sizeBytes: 4096,
 };
 
 interface TestDependencies {
   readonly engine: { recoverRun: ReturnType<typeof vi.fn> };
   readonly stateStore: { getRunMetadataByRunId: ReturnType<typeof vi.fn> };
-  readonly planStore: { getPlanRecord: ReturnType<typeof vi.fn> };
+  readonly planStore: { getStoredPlanRef: ReturnType<typeof vi.fn> };
   readonly executionContextReader: { read: ReturnType<typeof vi.fn> };
 }
 
@@ -79,7 +72,7 @@ function createDependencies(): TestDependencies {
       getRunMetadataByRunId: vi.fn().mockResolvedValue(sourceMetadata),
     },
     planStore: {
-      getPlanRecord: vi.fn().mockResolvedValue(planRecord),
+      getStoredPlanRef: vi.fn().mockResolvedValue(storedPlanRef),
     },
     executionContextReader: {
       read: vi.fn().mockResolvedValue({
@@ -110,7 +103,7 @@ describe('RecoverRunUseCase', () => {
       accepted: true,
     });
 
-    expect(dependencies.planStore.getPlanRecord).toHaveBeenCalledWith({
+    expect(dependencies.planStore.getStoredPlanRef).toHaveBeenCalledWith({
       tenantId: 'tenant-a',
       projectId: 'project-a',
       environmentId: 'env-a',
@@ -123,11 +116,12 @@ describe('RecoverRunUseCase', () => {
     expect(dependencies.engine.recoverRun).toHaveBeenCalledWith(
       'run-source-1',
       {
-        uri: 'https://plans.example/plan.json',
-        sha256: 'a'.repeat(64),
+        uri: 'dvt-plan://postgres/plan-a',
+        sha256: 'c'.repeat(64),
         schemaVersion: 'v1.0',
         planId: 'plan-a',
         planVersion: '1.0.0',
+        sizeBytes: 4096,
       },
       {
         tenantId: 'tenant-a',
@@ -148,7 +142,7 @@ describe('RecoverRunUseCase', () => {
 
   it('rejects recovery when the persisted source plan is unavailable', async () => {
     const dependencies = createDependencies();
-    dependencies.planStore.getPlanRecord.mockResolvedValue(undefined);
+    dependencies.planStore.getStoredPlanRef.mockResolvedValue(undefined);
     const useCase = new RecoverRunUseCase(dependencies as never);
 
     await expect(

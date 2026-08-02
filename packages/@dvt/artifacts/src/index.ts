@@ -19,6 +19,7 @@ export type {
   IStoredPlanArtifactReader,
   IStoredPlanArtifactStore,
   IStoredPlanArtifactWriter,
+  IStoredPlanRefReader,
   MarkStoredPlanArtifactInvalidInput,
   StoredPlanArtifact,
   StorePlanArtifactInput,

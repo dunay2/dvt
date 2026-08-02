@@ -48,6 +48,22 @@ describeIfPg('PostgresPlanStore records core integration', () => {
     }
   }
 
+  test('returns the exact stored plan reference only inside its owning scope', () =>
+    withIsolatedStore(async (store) => {
+      const planRef = await storePlanArtifact(store, PLAN_ID.r4_9);
+
+      await expect(
+        store.getStoredPlanRef({ ...PLAN_STORE_SCOPE, planId: PLAN_ID.r4_9 })
+      ).resolves.toEqual(planRef);
+      await expect(
+        store.getStoredPlanRef({
+          ...PLAN_STORE_SCOPE,
+          tenantId: 'another-tenant',
+          planId: PLAN_ID.r4_9,
+        })
+      ).resolves.toBeUndefined();
+    }));
+
   test('persists and reads three-part model', () =>
     withIsolatedStore(async (store) => {
       const planRef = await storePlanArtifact(store, PLAN_ID.r4_9);

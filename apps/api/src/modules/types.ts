@@ -1,4 +1,8 @@
-import type { IPlanStoreReader, IStoredPlanArtifactStore } from '@dvt/artifacts';
+import type {
+  IPlanStoreReader,
+  IStoredPlanArtifactStore,
+  IStoredPlanRefReader,
+} from '@dvt/artifacts';
 import type { ExecutionPlan, IPlanner, PlanRef } from '@dvt/contracts';
 import type {
   EngineRunRef,
@@ -44,7 +48,7 @@ export interface ProtectedRuntimeModule {
   stateStore: StateStoreRoleBindings;
   planner: IPlanner;
   planCompilePlanner: IPlanner;
-  planStore: IStoredPlanArtifactStore & IPlanStoreReader;
+  planStore: IStoredPlanArtifactStore & IStoredPlanRefReader & IPlanStoreReader;
   runExecutionContextReferenceReader: IRunExecutionContextReferenceReader;
   planValidator: IPlanExecutabilityValidator;
   executablePlanResolver: {
