@@ -168,15 +168,20 @@ describe('CancelRunUseCase', () => {
   );
 
   it.each([
-    ['PENDING', 'dispatch_pending'],
-    ['COMPLETED', 'run_terminal'],
-    ['FAILED', 'run_terminal'],
+    ['PENDING', undefined, 'dispatch_pending'],
+    ['COMPLETED', undefined, 'run_terminal'],
+    ['FAILED', undefined, 'run_terminal'],
+    ['FAILED', 'CANCELLING', 'run_terminal'],
   ] as const)(
-    'rejects cancellation for unavailable %s runs without dispatch',
-    async (status, reason) => {
+    'rejects cancellation for unavailable %s/%s runs without dispatch',
+    async (status, substatus, reason) => {
       const engine = {
         cancelRun: vi.fn(),
-        getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status }),
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'run-1',
+          status,
+          ...(substatus === undefined ? {} : { substatus }),
+        }),
       };
       const stateStore = createStateStore();
       const useCase = new CancelRunUseCase(engine as never, stateStore as never);

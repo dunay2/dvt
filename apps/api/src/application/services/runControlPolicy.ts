@@ -26,11 +26,11 @@ export function decideCancelRun(status: CanonicalRunStatus): CancelRunDecision {
   if (status.status === 'CANCELLED') {
     return { kind: 'settled', disposition: 'already_cancelled' };
   }
-  if (status.substatus === 'CANCELLING') {
-    return { kind: 'settled', disposition: 'already_requested' };
-  }
   if (status.status === 'COMPLETED' || status.status === 'FAILED') {
     return { kind: 'reject', reason: 'run_terminal' };
+  }
+  if (status.substatus === 'CANCELLING') {
+    return { kind: 'settled', disposition: 'already_requested' };
   }
   return { kind: 'dispatch', disposition: 'requested' };
 }

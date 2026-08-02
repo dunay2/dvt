@@ -101,6 +101,7 @@ describe('projectRunOperationalTruth', () => {
     ['PAUSED', undefined, true, undefined, false, 'run_active'],
     ['COMPLETED', undefined, false, 'run_terminal', false, 'run_completed'],
     ['FAILED', undefined, false, 'run_terminal', true, undefined],
+    ['FAILED', 'CANCELLING', false, 'run_terminal', true, undefined],
     ['CANCELLED', undefined, false, 'run_cancelled', true, undefined],
   ] as const)(
     'projects server-owned controls for %s/%s',
