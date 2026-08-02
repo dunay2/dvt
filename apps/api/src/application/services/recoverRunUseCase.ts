@@ -14,6 +14,7 @@ import {
   RunRecoveryUnavailableError,
 } from '../errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
+import type { IRunExecutionContextInheritanceWriter } from '../ports/runExecutionContextInheritanceWriter.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import {
   RUN_CONTROL_RESULT_CONTRACT_VERSION,
@@ -30,6 +31,7 @@ export interface RecoverRunUseCaseDependencies {
   readonly stateStore: IRunStateStoreRead;
   readonly planStore: IStoredPlanRefReader;
   readonly executionContextReader: IRunExecutionContextReferenceReader;
+  readonly executionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
 }
 
 export class RecoverRunUseCase implements IRecoverRunUseCase {
@@ -81,15 +83,19 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     if (runExecutionContext.kind === 'untrusted') {
       throw new RunRecoveryUnavailableError(command.sourceRunId, 'source_context_untrusted');
     }
+    const recoveryExecutionContextRef =
+      runExecutionContext.kind === 'trusted'
+        ? await this.dependencies.executionContextInheritanceWriter.inherit({
+            tenantId,
+            sourceRunId: command.sourceRunId,
+            recoveryRunId: command.recoveryRunId,
+            sourceRef: runExecutionContext.ref,
+          })
+        : undefined;
     await this.dependencies.engine.recoverRun(
       command.sourceRunId,
       planRef,
-      toEngineRunContext(
-        command,
-        source,
-        tenantId,
-        runExecutionContext.kind === 'trusted' ? runExecutionContext.ref : undefined
-      )
+      toEngineRunContext(command, source, tenantId, recoveryExecutionContextRef)
     );
 
     return acceptedRecovery(command);

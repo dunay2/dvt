@@ -61,6 +61,7 @@ interface TestDependencies {
   readonly stateStore: { getRunMetadataByRunId: ReturnType<typeof vi.fn> };
   readonly planStore: { getStoredPlanRef: ReturnType<typeof vi.fn> };
   readonly executionContextReader: { read: ReturnType<typeof vi.fn> };
+  readonly executionContextInheritanceWriter: { inherit: ReturnType<typeof vi.fn> };
 }
 
 function createDependencies(): TestDependencies {
@@ -95,6 +96,15 @@ function createDependencies(): TestDependencies {
         },
       }),
     },
+    executionContextInheritanceWriter: {
+      inherit: vi.fn().mockResolvedValue({
+        uri: 'file:///run-contexts/recovery.json',
+        sha256: 'b'.repeat(64),
+        schemaVersion: 'v1.0',
+        planId: 'plan-a',
+        planVersion: '1.0.0',
+      }),
+    },
   };
 }
 
@@ -125,6 +135,18 @@ describe('RecoverRunUseCase', () => {
       tenantId: 'tenant-a',
       runId: 'run-source-1',
     });
+    expect(dependencies.executionContextInheritanceWriter.inherit).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      sourceRunId: 'run-source-1',
+      recoveryRunId: 'run-recovery-1',
+      sourceRef: {
+        uri: 'file:///run-contexts/source.json',
+        sha256: 'b'.repeat(64),
+        schemaVersion: 'v1.0',
+        planId: 'plan-a',
+        planVersion: '1.0.0',
+      },
+    });
     expect(dependencies.engine.recoverRun).toHaveBeenCalledWith(
       'run-source-1',
       {
@@ -142,7 +164,7 @@ describe('RecoverRunUseCase', () => {
         runId: 'run-recovery-1',
         targetAdapter: 'temporal',
         runExecutionContextRef: {
-          uri: 'file:///run-contexts/source.json',
+          uri: 'file:///run-contexts/recovery.json',
           sha256: 'b'.repeat(64),
           schemaVersion: 'v1.0',
           planId: 'plan-a',
@@ -164,6 +186,7 @@ describe('RecoverRunUseCase', () => {
       )
     ).rejects.toBeInstanceOf(RunRecoveryUnavailableError);
     expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
+    expect(dependencies.executionContextInheritanceWriter.inherit).not.toHaveBeenCalled();
   });
 
   it('returns the original receipt without dispatching a repeated recovery command', async () => {
@@ -195,6 +218,7 @@ describe('RecoverRunUseCase', () => {
     });
     expect(dependencies.engine.getRunStatus).not.toHaveBeenCalled();
     expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
+    expect(dependencies.executionContextInheritanceWriter.inherit).not.toHaveBeenCalled();
   });
 
   it('rejects recovery when the source context has no original trusted reference', async () => {
@@ -212,6 +236,7 @@ describe('RecoverRunUseCase', () => {
       )
     ).rejects.toMatchObject({ reason: 'source_context_untrusted' });
     expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
+    expect(dependencies.executionContextInheritanceWriter.inherit).not.toHaveBeenCalled();
   });
 
   it('throws run-not-found when source metadata does not exist', async () => {

@@ -16,6 +16,7 @@ import type { IPlanExecutabilityValidator } from '@dvt/planner';
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { ICanvasAuthoringAuthorityStore } from '../application/ports/canvasAuthoringAuthority.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
+import type { IRunExecutionContextInheritanceWriter } from '../application/ports/runExecutionContextInheritanceWriter.js';
 import type { IRunExecutionContextReferenceReader } from '../application/ports/runExecutionContextReferenceReader.js';
 import type { IWorkspaceContextQuery } from '../application/ports/workspaceContext.js';
 import type { IWorkspaceGraphDraftStore } from '../application/ports/workspaceGraphDraft.js';
@@ -50,6 +51,7 @@ export interface ProtectedRuntimeModule {
   planCompilePlanner: IPlanner;
   planStore: IStoredPlanArtifactStore & IStoredPlanRefReader & IPlanStoreReader;
   runExecutionContextReferenceReader: IRunExecutionContextReferenceReader;
+  runExecutionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
   planValidator: IPlanExecutabilityValidator;
   executablePlanResolver: {
     fetch(input: {

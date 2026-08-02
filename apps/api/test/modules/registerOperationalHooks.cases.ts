@@ -109,6 +109,11 @@ function createProtectedRuntimeModuleHarness(): {
           return { kind: 'absent' as const };
         },
       },
+      runExecutionContextInheritanceWriter: {
+        async inherit(command) {
+          return command.sourceRef;
+        },
+      },
       planValidator: {} as never,
       executablePlanResolver: { fetch: async () => ({}) } as never,
       workspaceContextQuery: {

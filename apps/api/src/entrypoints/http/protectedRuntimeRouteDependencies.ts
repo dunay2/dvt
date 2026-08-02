@@ -95,6 +95,7 @@ export function buildProtectedRuntimeRouteDependencies(
       stateStore: protectedModule.stateStore.read,
       planStore: protectedModule.planStore,
       executionContextReader: protectedModule.runExecutionContextReferenceReader,
+      executionContextInheritanceWriter: protectedModule.runExecutionContextInheritanceWriter,
     }),
     runtimeAuth,
     signalRunUseCase: new SignalRunUseCase(protectedModule.engine, protectedModule.stateStore.read),

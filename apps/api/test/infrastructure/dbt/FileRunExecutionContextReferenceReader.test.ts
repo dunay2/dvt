@@ -7,6 +7,7 @@ import { parseRunExecutionContext } from '@dvt/contracts';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { FileDbtRunExecutionContextWriter } from '../../../src/infrastructure/dbt/FileDbtRunExecutionContextWriter.js';
+import { FileRunExecutionContextInheritanceWriter } from '../../../src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.js';
 import { FileRunExecutionContextReferenceReader } from '../../../src/infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
 import { resolveRunExecutionContextArtifactPath } from '../../../src/infrastructure/dbt/runExecutionContextArtifactPath.js';
 
@@ -83,6 +84,14 @@ describe('FileRunExecutionContextReferenceReader', () => {
       kind: 'trusted',
       ref: written.ref,
     });
+    await expect(
+      new FileRunExecutionContextInheritanceWriter(store).inherit({
+        tenantId: 'tenant-1',
+        sourceRunId: 'run-source-1',
+        recoveryRunId: 'run-recovery-1',
+        sourceRef: written.ref,
+      })
+    ).rejects.toThrow('digest verification');
   });
 
   it('marks pre-reference context artifacts as untrusted instead of minting a digest', async () => {
@@ -100,5 +109,48 @@ describe('FileRunExecutionContextReferenceReader', () => {
       kind: 'untrusted',
       reason: 'reference_missing',
     });
+  });
+
+  it('copies verified context bytes into a trusted recovery descendant artifact', async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'dvt-run-context-reader-'));
+    const store = { kind: 'file' as const, rootPath: root };
+    const context = parseRunExecutionContext({
+      schemaVersion: 'v1.0',
+      planId: 'a'.repeat(64),
+      planVersion: '1.0',
+      planSha256: 'b'.repeat(64),
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+      createdAtIso: '2026-07-15T00:00:00.000Z',
+      createdBy: 'principal-1',
+      pluginContexts: {},
+    });
+    const original = await new FileDbtRunExecutionContextWriter(store).write({
+      runId: 'run-source-1',
+      context,
+    });
+    if (!original.ok) throw new Error('Expected an immutable run-context reference.');
+
+    const inherited = await new FileRunExecutionContextInheritanceWriter(store).inherit({
+      tenantId: 'tenant-1',
+      sourceRunId: 'run-source-1',
+      recoveryRunId: 'run-recovery-1',
+      sourceRef: original.ref,
+    });
+
+    await expect(
+      new FileRunExecutionContextReferenceReader(store).read({
+        tenantId: 'tenant-1',
+        runId: 'run-recovery-1',
+      })
+    ).resolves.toEqual({ kind: 'trusted', ref: inherited });
+    expect(inherited).toMatchObject({
+      sha256: original.ref.sha256,
+      planId: original.ref.planId,
+      planVersion: original.ref.planVersion,
+    });
+    expect(inherited.uri).not.toBe(original.ref.uri);
   });
 });
