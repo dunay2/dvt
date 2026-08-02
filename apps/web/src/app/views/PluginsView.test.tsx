@@ -197,6 +197,38 @@ describe('PluginsView', () => {
     }
   });
 
+  it('keeps catalog-dependent header counts unknown while the DB query is pending', async () => {
+    const capabilitiesPort: CapabilitiesPort = {
+      loadCapabilities: vi.fn().mockResolvedValue(buildCapabilitiesPayload()),
+    };
+    const workspacePluginCatalogQuery: IWorkspacePluginCatalogQueryPort = {
+      getPlugins: vi.fn(() => new Promise<Plugin[]>(() => {})),
+    };
+
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          capabilitiesPort,
+          workspacePluginCatalogQuery,
+        }}
+      >
+        <PluginsView />
+      </AppServicesProvider>
+    );
+
+    for (const slot of [
+      'plugin-catalog-count',
+      'plugin-registered-count',
+      'plugin-local-only-count',
+    ]) {
+      const count = mounted.container.querySelector(`[data-slot="${slot}"]`);
+      expect(count?.getAttribute('data-authority-state')).toBe('unknown');
+      expect(count?.textContent).toContain('Unknown');
+      expect(count?.textContent).not.toContain(': 0');
+    }
+  });
+
   it('renders degraded readiness when a backend capability entry is missing', async () => {
     const backendPlugin = PLUGIN_REGISTRY.find((plugin) => plugin.backendPluginId);
 
