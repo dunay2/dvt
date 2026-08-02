@@ -2,7 +2,7 @@
 title: Canvas Authoring Draft Boundary Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-05-03
+last_reviewed: 2026-08-02
 planning_type: architecture
 task_id: TF-E2-A
 ---
@@ -267,8 +267,8 @@ The implementation must add or update a semantic architecture test that proves:
 - `canvasDraftRepository.ts` saves `WorkspaceGraphAuthoringDraft` directly;
 - `canvasDraftAuthoring.ts` does not compile or validate `DesignGraphDraft`;
 - `DesignGraphDraft` imports remain confined to preview/run projection modules;
-- the component guide, implementation plan, and Lane E status all name the same
-  command/query rails.
+- the component guide, Planning DB architecture record, and GitHub issue all
+  name the same command/query rails without duplicating task lifecycle.
 
 ## Extension Rules
 

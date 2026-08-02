@@ -2,7 +2,7 @@
 title: Marquez Public-Data Visual System Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-05-22
+last_reviewed: 2026-08-02
 planning_type: architecture
 ---
 
@@ -84,7 +84,7 @@ stateDiagram-v2
 | `library-and-open-source-reference-stack.md`  | Classifies Marquez as a design reference, not a dependency        |
 | `screen-manuals-and-user-stories.md`          | Names F-19 as the public-data acceptance direction                |
 | `publicDataVisualSystem.architecture.test.ts` | Guards semantic separation and documentation completeness         |
-| Lane E planning state                         | Tracks F-19 closure evidence                                      |
+| GitHub issue and PR evidence                  | Owns backlog state, review, and closure evidence                  |
 
 ## Component Topology
 
