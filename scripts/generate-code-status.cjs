@@ -5,7 +5,6 @@ const path = require('node:path');
 const { Client } = require('pg');
 
 const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
-const { runPlanningImport } = require('./planning-db-import.cjs');
 const { schemaName } = require('./planning-db-migrate.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 
@@ -472,13 +471,7 @@ async function main() {
       : `[docs:status:generate] ${relFromRepo(codeStateOutputPath)} already up to date.`
   );
 
-  const url = databaseUrl();
-  await runPlanningImport(
-    { databaseUrl: url, ifStale: true, silent: true },
-    { logger: { log() {} } }
-  );
-
-  const client = new Client({ connectionString: url });
+  const client = new Client({ connectionString: databaseUrl() });
   await client.connect();
   try {
     const facts = await readRepositoryArchitectureFacts(client);
