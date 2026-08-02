@@ -57,7 +57,8 @@ export function buildProtectedRuntimeRouteDependencies(
     new ObservabilityRunStatusStalenessTelemetry({ observability }),
     protectedModule.planStore,
     protectedModule.runExecutionContextReferenceReader,
-    executionContextRequirementResolver
+    executionContextRequirementResolver,
+    protectedModule.planIntegrityValidator
   );
   const previewPlanUseCase = new PreviewPlanUseCase({
     planner: {
@@ -95,7 +96,8 @@ export function buildProtectedRuntimeRouteDependencies(
       protectedModule.engine,
       protectedModule.runExecutionContextReferenceReader,
       executionContextRequirementResolver,
-      protectedModule.planStore
+      protectedModule.planStore,
+      protectedModule.planIntegrityValidator
     ),
     previewPlanUseCase,
     recoverRunUseCase: new RecoverRunUseCase({

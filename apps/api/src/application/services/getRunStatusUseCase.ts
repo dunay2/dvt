@@ -1,4 +1,4 @@
-import type { IStoredPlanRefReader } from '@dvt/artifacts';
+import type { IStoredPlanArtifactReader, IStoredPlanRefReader } from '@dvt/artifacts';
 import type {
   EventEnvelope,
   PlanRecord,
@@ -8,6 +8,7 @@ import type {
 } from '@dvt/contracts';
 import {
   RunMetadataNotFoundError,
+  type IPlanIntegrityValidator,
   type IRunEnrichmentService,
   type IRunStateStoreRead,
   type IWorkflowEngine,
@@ -38,7 +39,7 @@ interface SnapshotStalenessResolution {
   fallbackReason?: SnapshotStalenessFallbackReason;
 }
 
-interface RunPlanReader extends Partial<Pick<IStoredPlanRefReader, 'getStoredPlanRef'>> {
+interface RunPlanReader extends Partial<IStoredPlanRefReader>, Partial<IStoredPlanArtifactReader> {
   getPlanRecord(input: ScopedPlanId): Promise<PlanRecord | undefined>;
 }
 
@@ -64,7 +65,8 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     private readonly stalenessTelemetry?: IRunStatusStalenessTelemetry,
     private readonly planStore?: RunPlanReader,
     private readonly executionContextReader?: IRunExecutionContextReferenceReader,
-    private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver
+    private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver,
+    private readonly planIntegrityValidator?: IPlanIntegrityValidator
   ) {}
 
   public async execute(
@@ -137,7 +139,12 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
         metadata,
         snapshot
       ),
-      resolveRunRecoveryPlanAvailability(this.planStore, metadata, snapshot),
+      resolveRunRecoveryPlanAvailability(
+        this.planStore,
+        this.planIntegrityValidator,
+        metadata,
+        snapshot
+      ),
     ]);
     const operationalTruth = projectRunOperationalTruth({
       metadata,

@@ -31,9 +31,7 @@ function requireTemporalRuntimeConfiguration(env: Env): void {
   }
 }
 
-export async function buildProtectedExecutionRuntime(
-  deps: BuildProtectedExecutionRuntimeDeps
-) {
+export async function buildProtectedExecutionRuntime(deps: BuildProtectedExecutionRuntimeDeps) {
   requireTemporalRuntimeConfiguration(deps.env);
 
   const { adapters, close: closeAdapters } = await buildProviderAdapters(
@@ -56,30 +54,32 @@ export async function buildProtectedExecutionRuntime(
   }
 
   const tenantAuthorizer = new ProtectedRuntimeTenantAuthorizer();
-  const { engine, runEnrichmentService, runHealthService } = buildWorkflowEngine({
-    security: {
-      authorizer: tenantAuthorizer,
-      planRefAllowedSchemes: ['https', 's3', 'gs', 'azure', 'dvt-plan'],
-    },
-    persistence: {
-      stateStoreRead: deps.storageRuntime.stateStoreRoles.read,
-      stateStoreWrite: deps.storageRuntime.stateStoreRoles.write,
-      intentStore: deps.storageRuntime.intentStore,
-      planFetcher: deps.storageRuntime.planStore,
-      runExecutionContextResolver: deps.storageRuntime.runExecutionContextResolver,
-      runExecutionContextBindingPolicy: deps.storageRuntime.runExecutionContextBindingPolicy,
-    },
-    runtime: { adapters },
-    infrastructure: {
-      clock: deps.storageRuntime.systemClock,
-      observability: deps.observability,
-    },
-  });
+  const { engine, planIntegrityValidator, runEnrichmentService, runHealthService } =
+    buildWorkflowEngine({
+      security: {
+        authorizer: tenantAuthorizer,
+        planRefAllowedSchemes: ['https', 's3', 'gs', 'azure', 'dvt-plan'],
+      },
+      persistence: {
+        stateStoreRead: deps.storageRuntime.stateStoreRoles.read,
+        stateStoreWrite: deps.storageRuntime.stateStoreRoles.write,
+        intentStore: deps.storageRuntime.intentStore,
+        planFetcher: deps.storageRuntime.planStore,
+        runExecutionContextResolver: deps.storageRuntime.runExecutionContextResolver,
+        runExecutionContextBindingPolicy: deps.storageRuntime.runExecutionContextBindingPolicy,
+      },
+      runtime: { adapters },
+      infrastructure: {
+        clock: deps.storageRuntime.systemClock,
+        observability: deps.observability,
+      },
+    });
 
   return {
     adapters,
     closeAdapters,
     engine: protectWorkflowEngineWithTenantScope(engine, tenantAuthorizer),
+    planIntegrityValidator,
     runEnrichmentService: protectRunEnrichmentServiceWithTenantScope(
       runEnrichmentService,
       tenantAuthorizer

@@ -27,6 +27,15 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:list'
   authorizedAt: new Date('2026-03-19T00:00:00Z'),
 };
 
+function createPlanStoreReader(getStoredPlanRef: ReturnType<typeof vi.fn>) {
+  return {
+    getStoredPlanRef,
+    getStoredPlanValidationRecord: vi.fn(),
+    fetchStoredPlanArtifact: vi.fn(),
+    fetchStoredPlanArtifactForValidation: vi.fn(),
+  };
+}
+
 describe('ListRunsUseCase', () => {
   it('filters by authorized scope and projects the same canonical operational truth as detail', async () => {
     const stateStore = {
@@ -104,7 +113,8 @@ describe('ListRunsUseCase', () => {
       engine as never,
       executionContextReader as never,
       undefined,
-      { getStoredPlanRef: vi.fn().mockResolvedValue({}) } as never
+      createPlanStoreReader(vi.fn().mockResolvedValue({})) as never,
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never
     );
 
     await expect(useCase.execute({ limit: 25 }, queryContext as never)).resolves.toEqual({
@@ -203,7 +213,7 @@ describe('ListRunsUseCase', () => {
         runId: 'provider-run-1',
       },
     };
-    const planStore = { getStoredPlanRef: vi.fn().mockResolvedValue(undefined) };
+    const planStore = createPlanStoreReader(vi.fn().mockResolvedValue(undefined));
     const useCase = new ListRunsUseCase(
       { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
       {
@@ -214,7 +224,8 @@ describe('ListRunsUseCase', () => {
       } as never,
       undefined,
       undefined,
-      planStore as never
+      planStore as never,
+      { fetchAndValidate: vi.fn() } as never
     );
 
     const result = await useCase.execute({ limit: 25 }, queryContext as never);
@@ -229,5 +240,58 @@ describe('ListRunsUseCase', () => {
       environmentId: 'env-1',
       planId: 'plan-1',
     });
+  });
+
+  it('fails closed when the stored source plan fails canonical integrity validation', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const planRef = { planId: 'plan-1' };
+    const planStore = createPlanStoreReader(vi.fn().mockResolvedValue(planRef));
+    const planIntegrityValidator = {
+      fetchAndValidate: vi.fn().mockRejectedValue(new Error('PLAN_INTEGRITY_VALIDATION_FAILED')),
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'FAILED',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      planStore as never,
+      planIntegrityValidator as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.recover).toEqual({
+      available: false,
+      reason: 'source_plan_unavailable',
+    });
+    expect(planIntegrityValidator.fetchAndValidate).toHaveBeenCalledWith(
+      {
+        tenantId: 'tenant-a',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        planRef,
+      },
+      planStore
+    );
   });
 });

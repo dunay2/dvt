@@ -1582,7 +1582,7 @@ describe('GetRunStatusUseCase', () => {
     });
   });
 
-  it('does not advertise recovery when the stored source plan is unavailable', async () => {
+  it('does not advertise recovery when the stored source plan fails integrity validation', async () => {
     const engine = {
       getRunStatus: vi.fn().mockResolvedValue({
         runId: 'provider-run-1',
@@ -1590,9 +1590,16 @@ describe('GetRunStatusUseCase', () => {
       }),
       getRunEnrichment: vi.fn(),
     };
+    const planRef = { planId: 'plan-1' };
     const planStore = {
       getPlanRecord: vi.fn().mockResolvedValue(undefined),
-      getStoredPlanRef: vi.fn().mockResolvedValue(undefined),
+      getStoredPlanRef: vi.fn().mockResolvedValue(planRef),
+      getStoredPlanValidationRecord: vi.fn(),
+      fetchStoredPlanArtifact: vi.fn(),
+      fetchStoredPlanArtifactForValidation: vi.fn(),
+    };
+    const planIntegrityValidator = {
+      fetchAndValidate: vi.fn().mockRejectedValue(new Error('PLAN_INTEGRITY_VALIDATION_FAILED')),
     };
     const useCase = new GetRunStatusUseCase(
       engine as never,
@@ -1600,7 +1607,10 @@ describe('GetRunStatusUseCase', () => {
       createStateStore() as never,
       { isSnapshotStale: vi.fn().mockResolvedValue(false) } as never,
       undefined,
-      planStore
+      planStore as never,
+      undefined,
+      undefined,
+      planIntegrityValidator as never
     );
 
     await expect(
@@ -1617,5 +1627,14 @@ describe('GetRunStatusUseCase', () => {
       environmentId: 'env-1',
       planId: 'plan-1',
     });
+    expect(planIntegrityValidator.fetchAndValidate).toHaveBeenCalledWith(
+      {
+        tenantId: 'tenant-a',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        planRef,
+      },
+      planStore
+    );
   });
 });

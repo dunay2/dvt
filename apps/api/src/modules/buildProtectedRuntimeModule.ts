@@ -189,6 +189,7 @@ export async function buildProtectedRuntimeModule(
     createProjectUseCase: securityRuntime.createProjectUseCase,
     listWorkspacePluginsUseCase: securityRuntime.listWorkspacePluginsUseCase,
     engine: executionRuntime.engine,
+    planIntegrityValidator: executionRuntime.planIntegrityValidator,
     runEnrichmentService: executionRuntime.runEnrichmentService,
     runHealthService: executionRuntime.runHealthService,
     adapters: executionRuntime.adapters,

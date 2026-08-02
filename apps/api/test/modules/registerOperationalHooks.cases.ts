@@ -89,6 +89,7 @@ function createProtectedRuntimeModuleHarness(): {
       authenticator: {} as never,
       authorizer: {} as never,
       engine: {} as never,
+      planIntegrityValidator: {} as never,
       runEnrichmentService: {} as never,
       runHealthService: {} as never,
       adapters: new Map(),

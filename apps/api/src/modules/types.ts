@@ -6,6 +6,7 @@ import type {
 import type { ExecutionPlan, IPlanner, PlanRef } from '@dvt/contracts';
 import type {
   EngineRunRef,
+  IPlanIntegrityValidator,
   IProviderAdapter,
   IRunEnrichmentService,
   IRunHealthService,
@@ -44,6 +45,7 @@ export interface ProtectedRuntimeModule {
   createProjectUseCase: CreateProjectUseCase;
   listWorkspacePluginsUseCase: ListWorkspacePluginsUseCase;
   engine: IWorkflowEngine;
+  planIntegrityValidator: IPlanIntegrityValidator;
   runEnrichmentService: IRunEnrichmentService;
   runHealthService: IRunHealthService;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;

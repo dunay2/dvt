@@ -1,6 +1,11 @@
-import type { IStoredPlanRefReader } from '@dvt/artifacts';
+import type { IStoredPlanArtifactReader, IStoredPlanRefReader } from '@dvt/artifacts';
 import type { TenantId as ContractTenantId } from '@dvt/contracts';
-import type { IRunStateStoreRead, IWorkflowEngine, RunMetadata } from '@dvt/engine';
+import type {
+  IPlanIntegrityValidator,
+  IRunStateStoreRead,
+  IWorkflowEngine,
+  RunMetadata,
+} from '@dvt/engine';
 
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
@@ -18,6 +23,7 @@ import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
 import { resolveRunRecoveryPlanAvailability } from './runRecoveryPlanAvailability.js';
 
 const RUN_STATUS_READ_CONCURRENCY = 8;
+type RecoveryPlanReader = IStoredPlanRefReader & IStoredPlanArtifactReader;
 
 export class ListRunsUseCase implements IListRunsUseCase {
   public constructor(
@@ -25,7 +31,8 @@ export class ListRunsUseCase implements IListRunsUseCase {
     private readonly engine: Pick<IWorkflowEngine, 'getRunStatus'>,
     private readonly executionContextReader?: IRunExecutionContextReferenceReader,
     private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver,
-    private readonly planStore?: IStoredPlanRefReader
+    private readonly planStore?: RecoveryPlanReader,
+    private readonly planIntegrityValidator?: IPlanIntegrityValidator
   ) {}
 
   public async execute(
@@ -70,7 +77,7 @@ export class ListRunsUseCase implements IListRunsUseCase {
         item,
         status
       ),
-      resolveRunRecoveryPlanAvailability(this.planStore, item, status),
+      resolveRunRecoveryPlanAvailability(this.planStore, this.planIntegrityValidator, item, status),
     ]);
 
     return projectRunOperationalTruth({
