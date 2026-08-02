@@ -16,6 +16,7 @@ import {
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
 import type { IRunExecutionContextInheritanceWriter } from '../ports/runExecutionContextInheritanceWriter.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
+import type { IRunRecoveryCommandCoordinator } from '../ports/runRecoveryCommandCoordinator.js';
 import {
   RUN_CONTROL_RESULT_CONTRACT_VERSION,
   type IRecoverRunUseCase,
@@ -32,6 +33,7 @@ export interface RecoverRunUseCaseDependencies {
   readonly planStore: IStoredPlanRefReader;
   readonly executionContextReader: IRunExecutionContextReferenceReader;
   readonly executionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
+  readonly commandCoordinator: IRunRecoveryCommandCoordinator;
 }
 
 export class RecoverRunUseCase implements IRecoverRunUseCase {
@@ -42,6 +44,17 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     context: AuthorizedCommandExecutionContext
   ): Promise<RecoverRunResult> {
     const tenantId = context.scope.tenantId.value;
+    return this.dependencies.commandCoordinator.executeExclusive(
+      { tenantId, recoveryRunId: command.recoveryRunId },
+      () => this.executeExclusive(command, context, tenantId)
+    );
+  }
+
+  private async executeExclusive(
+    command: RecoverRunCommand,
+    context: AuthorizedCommandExecutionContext,
+    tenantId: string
+  ): Promise<RecoverRunResult> {
     const source = await this.dependencies.stateStore.getRunMetadataByRunId(
       tenantId,
       command.sourceRunId

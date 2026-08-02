@@ -62,6 +62,34 @@ interface TestDependencies {
   readonly planStore: { getStoredPlanRef: ReturnType<typeof vi.fn> };
   readonly executionContextReader: { read: ReturnType<typeof vi.fn> };
   readonly executionContextInheritanceWriter: { inherit: ReturnType<typeof vi.fn> };
+  readonly commandCoordinator: {
+    executeExclusive<T>(
+      key: { readonly tenantId: string; readonly recoveryRunId: string },
+      operation: () => Promise<T>
+    ): Promise<T>;
+  };
+}
+
+function createSerialCoordinator(): TestDependencies['commandCoordinator'] {
+  const tails = new Map<string, Promise<void>>();
+  return {
+    async executeExclusive(key, operation) {
+      const lockKey = `${key.tenantId}:${key.recoveryRunId}`;
+      const previous = tails.get(lockKey) ?? Promise.resolve();
+      let release!: () => void;
+      const current = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      tails.set(lockKey, current);
+      await previous;
+      try {
+        return await operation();
+      } finally {
+        release();
+        if (tails.get(lockKey) === current) tails.delete(lockKey);
+      }
+    },
+  };
 }
 
 function createDependencies(): TestDependencies {
@@ -105,6 +133,7 @@ function createDependencies(): TestDependencies {
         planVersion: '1.0.0',
       }),
     },
+    commandCoordinator: createSerialCoordinator(),
   };
 }
 
@@ -219,6 +248,52 @@ describe('RecoverRunUseCase', () => {
     expect(dependencies.engine.getRunStatus).not.toHaveBeenCalled();
     expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
     expect(dependencies.executionContextInheritanceWriter.inherit).not.toHaveBeenCalled();
+  });
+
+  it('serializes concurrent delivery of one recovery identity without consuming another attempt', async () => {
+    const dependencies = createDependencies();
+    let recoveryMetadata:
+      | typeof sourceMetadata
+      | (typeof sourceMetadata & {
+          logicalAttemptId: number;
+          parentRunId: string;
+          originRunId: string;
+        }) = sourceMetadata;
+    dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
+      async (_tenantId: string, runId: string) => {
+        if (runId === sourceMetadata.runId) return sourceMetadata;
+        return runId === 'run-recovery-1' && recoveryMetadata.runId === 'run-recovery-1'
+          ? recoveryMetadata
+          : null;
+      }
+    );
+    dependencies.engine.recoverRun.mockImplementation(async () => {
+      recoveryMetadata = {
+        ...sourceMetadata,
+        runId: 'run-recovery-1',
+        logicalAttemptId: 2,
+        parentRunId: sourceMetadata.runId,
+        originRunId: sourceMetadata.runId,
+      };
+      return {
+        provider: 'temporal',
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-recovery-1',
+        runId: 'run-recovery-1',
+      };
+    });
+    const useCase = new RecoverRunUseCase(dependencies as never);
+    const command = { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' };
+
+    const results = await Promise.all([
+      useCase.execute(command, commandContext),
+      useCase.execute(command, commandContext),
+    ]);
+
+    expect(results[0]).toEqual(results[1]);
+    expect(dependencies.engine.recoverRun).toHaveBeenCalledTimes(1);
+    expect(dependencies.executionContextInheritanceWriter.inherit).toHaveBeenCalledTimes(1);
   });
 
   it('rejects recovery when the source context has no original trusted reference', async () => {

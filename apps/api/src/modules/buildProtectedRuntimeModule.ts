@@ -16,6 +16,7 @@ import { FileRunExecutionContextInheritanceWriter } from '../infrastructure/dbt/
 import { FileRunExecutionContextReferenceReader } from '../infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
 import { PostgresDbtProjectImportProcessStore } from '../infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
+import { PostgresRunRecoveryCommandCoordinator } from '../infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
@@ -53,6 +54,7 @@ export async function buildProtectedRuntimeModule(
 ): Promise<ProtectedRuntimeModule> {
   const databaseUrl = requireDatabaseUrl(env);
   const pool = getPgPool(databaseUrl);
+  const runRecoveryCommandCoordinator = new PostgresRunRecoveryCommandCoordinator(pool);
   const appLogger = app.log as unknown as Logger;
 
   const adapterMod = await import('@dvt/adapter-postgres');
@@ -191,6 +193,7 @@ export async function buildProtectedRuntimeModule(
     runExecutionContextInheritanceWriter: new FileRunExecutionContextInheritanceWriter(
       storageRuntime.dbtBundleStore
     ),
+    runRecoveryCommandCoordinator,
     planValidator: startRunRuntime.planValidator,
     executablePlanResolver: storageRuntime.executablePlanResolver,
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,

@@ -114,6 +114,11 @@ function createProtectedRuntimeModuleHarness(): {
           return command.sourceRef;
         },
       },
+      runRecoveryCommandCoordinator: {
+        async executeExclusive(_key, operation) {
+          return operation();
+        },
+      },
       planValidator: {} as never,
       executablePlanResolver: { fetch: async () => ({}) } as never,
       workspaceContextQuery: {
