@@ -3,10 +3,11 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { RunSummaryItem } from '../../ports/runs';
 import { RunListStateView } from './RunListStateView';
+import type { RunControlCommandController } from './useRunControlCommands';
 
 function buildSummary(overrides: Partial<RunSummaryItem>): RunSummaryItem {
   return {
@@ -99,5 +100,42 @@ describe('RunListStateView', () => {
 
     expect(container.textContent).toContain('Loading runs...');
     expect(container.textContent).not.toContain('No runs match the current filters.');
+  });
+
+  it('routes an available cancellation through the supplied command controller', async () => {
+    const cancelRun = vi.fn();
+    const runControls: RunControlCommandController = {
+      cancelRun,
+      recoverRun: vi.fn(),
+      activity: null,
+      outcome: null,
+      failure: null,
+      resetFeedback: vi.fn(),
+    };
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter initialEntries={['/runs']}>
+          <RunListStateView
+            runs={[
+              buildSummary({
+                runId: 'run_active',
+                controls: {
+                  cancel: { available: true },
+                  recover: { available: false, reason: 'run_active' },
+                },
+              }),
+            ]}
+            runControls={runControls}
+          />
+        </MemoryRouter>
+      );
+    });
+
+    act(() => {
+      container.querySelector<HTMLButtonElement>('[aria-label="Cancel run"]')?.click();
+    });
+
+    expect(cancelRun).toHaveBeenCalledWith('run_active');
   });
 });

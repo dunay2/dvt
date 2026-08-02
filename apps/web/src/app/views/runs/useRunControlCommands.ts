@@ -60,3 +60,5 @@ export function useRunControlCommands(options: UseRunControlCommandsOptions = {}
     resetFeedback: mutation.reset,
   };
 }
+
+export type RunControlCommandController = ReturnType<typeof useRunControlCommands>;

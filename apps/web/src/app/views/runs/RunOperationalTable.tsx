@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
+import { RunControlActions } from '../../components/runs/RunControlActions';
 import {
   Table,
   TableBody,
@@ -27,6 +28,7 @@ import {
   type RunOperationalTableSort,
 } from './runOperationalTableModel';
 import { runStatesCopy as copy } from './runStatesCopy';
+import type { RunControlCommandController } from './useRunControlCommands';
 
 type RunOperationalTableProps = {
   rows: RunOperationalRow[];
@@ -35,6 +37,7 @@ type RunOperationalTableProps = {
   onFiltersChange: (filters: RunOperationalTableFilters) => void;
   onSortChange: (sort: RunOperationalTableSort) => void;
   onOpenRun: (runId: string) => void;
+  runControls?: RunControlCommandController;
   isLoading?: boolean;
 };
 
@@ -56,6 +59,7 @@ export function RunOperationalTable({
   onFiltersChange,
   onSortChange,
   onOpenRun,
+  runControls,
   isLoading,
 }: RunOperationalTableProps) {
   const columns = useMemo<ColumnDef<RunOperationalRow>[]>(
@@ -103,13 +107,26 @@ export function RunOperationalTable({
         id: 'action',
         header: '',
         cell: ({ row }) => (
-          <Button variant="outline" size="sm" onClick={() => onOpenRun(row.original.runId)}>
-            {copy.viewDetails}
-          </Button>
+          <div className="flex items-center justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => onOpenRun(row.original.runId)}>
+              {copy.viewDetails}
+            </Button>
+            {runControls ? (
+              <RunControlActions
+                runId={row.original.runId}
+                availability={row.original.controls}
+                activity={runControls.activity}
+                outcome={runControls.outcome}
+                failure={runControls.failure}
+                onCancel={() => runControls.cancelRun(row.original.runId)}
+                onRecover={() => runControls.recoverRun(row.original.runId)}
+              />
+            ) : null}
+          </div>
         ),
       },
     ],
-    [onOpenRun]
+    [onOpenRun, runControls]
   );
   const table = useReactTable({
     data: rows,

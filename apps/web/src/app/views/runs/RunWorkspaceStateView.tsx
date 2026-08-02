@@ -8,6 +8,7 @@ import { Link } from 'react-router';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Card } from '../../components/ui/card';
+import { RunControlActions } from '../../components/runs/RunControlActions';
 import { WorkbenchStateFrame } from '../../components/workbench/state/WorkbenchStates';
 import type {
   MaterializationEvidence,
@@ -20,10 +21,12 @@ import { RunEventTimelineTable } from './RunEventTimelineTable';
 import { RunEventFeedHealthView } from './RunEventFeedHealthView';
 import { runStatesCopy as copy } from './runStatesCopy';
 import { getDetailStateBadge, isKnownRunField } from './runStatesModel';
+import type { RunControlCommandController } from './useRunControlCommands';
 
 type RunWorkspaceStateProps = {
   workspace: RunWorkspaceViewModel;
   onRetryEventFeed?: () => void;
+  runControls?: RunControlCommandController;
 };
 
 type ProvenanceArtifact = {
@@ -213,10 +216,12 @@ function RunItineraryCard({
   workspace,
   executor,
   materializationEvidence,
+  runControls,
 }: Readonly<{
   workspace: RunWorkspaceViewModel;
   executor: RunExecutor | undefined;
   materializationEvidence: MaterializationEvidence | undefined;
+  runControls?: RunControlCommandController;
 }>) {
   const { snapshot } = workspace;
   const planSummary: RunPlanExecutionSummary | undefined = snapshot.planSummary;
@@ -248,6 +253,18 @@ function RunItineraryCard({
               {copy.allRunsAction}
             </Link>
           </Button>
+          {runControls ? (
+            <RunControlActions
+              runId={snapshot.runId}
+              availability={snapshot.controls}
+              activity={runControls.activity}
+              outcome={runControls.outcome}
+              failure={runControls.failure}
+              onCancel={() => runControls.cancelRun(snapshot.runId)}
+              onRecover={() => runControls.recoverRun(snapshot.runId)}
+              compact={false}
+            />
+          ) : null}
         </div>
       </div>
 
@@ -359,7 +376,11 @@ function RunDiagnosticsCard({
   );
 }
 
-export function RunWorkspaceStateView({ workspace, onRetryEventFeed }: RunWorkspaceStateProps) {
+export function RunWorkspaceStateView({
+  workspace,
+  onRetryEventFeed,
+  runControls,
+}: RunWorkspaceStateProps) {
   const { snapshot, timeline, detailState } = workspace;
   const executor = deriveExecutor(workspace);
   const failureDiagnostics = deriveFailureDiagnostics(workspace);
@@ -376,6 +397,7 @@ export function RunWorkspaceStateView({ workspace, onRetryEventFeed }: RunWorksp
           workspace={workspace}
           executor={executor}
           materializationEvidence={materializationEvidence}
+          runControls={runControls}
         />
 
         <Card className="border-slate-700 bg-slate-900 p-5">

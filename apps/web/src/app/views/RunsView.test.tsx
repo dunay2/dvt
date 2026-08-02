@@ -5,7 +5,7 @@ import { createMockRunsService } from '../../testing/runsPortDoubles';
 import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { IRunsPort } from '../ports/runs';
 import type { SessionContextPort } from '../ports/sessionContext';
@@ -454,5 +454,54 @@ describe('RunsView', () => {
 
     expect(mounted.container.textContent).toContain('Run list unavailable');
     expect(mounted.container.textContent).toContain('Runtime service is unavailable');
+  });
+
+  it('recovers a failed run and navigates to the server-created run identity', async () => {
+    const recoverRun = vi.fn<IRunsPort['recoverRun']>(async (sourceRunId) => ({
+      contractVersion: 'v1',
+      sourceRunId,
+      recoveryRunId: 'run_recovery',
+      accepted: true,
+    }));
+    mounted = await withTestQueryClient(
+      <AppServicesProvider
+        overrides={{
+          ...createAppServicesTestOverrides(),
+          runsService: buildRunsService({
+            getRunSnapshot: async () => ({
+              runId: 'run_failed',
+              status: 'failed',
+              controls: {
+                cancel: { available: false, reason: 'run_terminal' },
+                recover: { available: true },
+              },
+            }),
+            recoverRun,
+          }),
+          sessionContext: buildSessionContext(),
+        }}
+      >
+        <MemoryRouter initialEntries={['/runs/run_failed']}>
+          <Routes>
+            <Route path="/runs/run_recovery" element={<div>Recovery run route</div>} />
+            <Route path="/runs/:runId" element={<RunsView />} />
+          </Routes>
+        </MemoryRouter>
+      </AppServicesProvider>
+    );
+
+    await waitForReactQuery(
+      () => mounted?.container.querySelector('[aria-label="Recover run"]') != null,
+      { description: 'recover control in run detail' }
+    );
+    await act(async () => {
+      fireEvent.click(mounted!.container.querySelector('[aria-label="Recover run"]')!);
+    });
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('Recovery run route') ?? false,
+      { description: 'server-created recovery run route' }
+    );
+    expect(recoverRun).toHaveBeenCalledWith('run_failed');
   });
 });
