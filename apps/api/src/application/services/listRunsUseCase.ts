@@ -23,6 +23,7 @@ import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
 import { resolveRunRecoveryPlanAvailability } from './runRecoveryPlanAvailability.js';
 
 const RUN_STATUS_READ_CONCURRENCY = 8;
+const RUN_RECOVERY_PROJECTION_CONCURRENCY = 4;
 type RecoveryPlanReader = IStoredPlanRefReader & IStoredPlanArtifactReader;
 
 export class ListRunsUseCase implements IListRunsUseCase {
@@ -59,11 +60,27 @@ export class ListRunsUseCase implements IListRunsUseCase {
     const statuses = await this.readCanonicalStatuses(filtered);
 
     return {
-      items: await Promise.all(
-        filtered.map((item, index) => this.toListItem(item, statuses[index]!))
-      ),
+      items: await this.projectListItems(filtered, statuses),
       nextCursor: this.buildNextCursor(filtered, query.limit),
     };
+  }
+
+  private async projectListItems(
+    items: ReadonlyArray<RunMetadata>,
+    statuses: ReadonlyArray<Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>>
+  ): Promise<RunListItemDto[]> {
+    const projected: RunListItemDto[] = [];
+
+    for (let offset = 0; offset < items.length; offset += RUN_RECOVERY_PROJECTION_CONCURRENCY) {
+      const batch = items.slice(offset, offset + RUN_RECOVERY_PROJECTION_CONCURRENCY);
+      projected.push(
+        ...(await Promise.all(
+          batch.map((item, index) => this.toListItem(item, statuses[offset + index]!))
+        ))
+      );
+    }
+
+    return projected;
   }
 
   private async toListItem(

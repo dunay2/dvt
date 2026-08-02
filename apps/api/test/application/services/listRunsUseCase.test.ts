@@ -203,6 +203,56 @@ describe('ListRunsUseCase', () => {
     expect(result.items.map((item) => item.runId)).toEqual(metadata.map((item) => item.runId));
   });
 
+  it('bounds recovery plan validation while preserving list order', async () => {
+    const metadata = Array.from({ length: 10 }, (_, index) => ({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: `run-${index}`,
+      planId: `plan-${index}`,
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: `wf-${index}`,
+        runId: `provider-run-${index}`,
+      },
+    }));
+    let activeValidations = 0;
+    let maximumActiveValidations = 0;
+    const planIntegrityValidator = {
+      async fetchAndValidate() {
+        activeValidations += 1;
+        maximumActiveValidations = Math.max(maximumActiveValidations, activeValidations);
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        activeValidations -= 1;
+        return {};
+      },
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue(metadata) } as never,
+      {
+        getRunStatus: vi.fn().mockImplementation(async ({ runId }: { runId: string }) => ({
+          runId,
+          status: 'CANCELLED' as const,
+        })),
+      } as never,
+      undefined,
+      undefined,
+      createPlanStoreReader(
+        vi.fn().mockImplementation(async ({ planId }: { planId: string }) => ({ planId }))
+      ) as never,
+      planIntegrityValidator as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(maximumActiveValidations).toBeLessThanOrEqual(4);
+    expect(result.items.map((item) => item.runId)).toEqual(metadata.map((item) => item.runId));
+  });
+
   it('fails closed when a recoverable run has no stored source plan', async () => {
     const metadata = {
       tenantId: 'tenant-a',
