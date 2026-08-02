@@ -14,6 +14,10 @@ export async function resolveRunRecoveryContextTrust(
     return true;
   }
 
-  const result = await reader.read({ tenantId: metadata.tenantId, runId: metadata.runId });
-  return result.kind !== 'untrusted';
+  try {
+    const result = await reader.read({ tenantId: metadata.tenantId, runId: metadata.runId });
+    return result.kind !== 'untrusted';
+  } catch {
+    return false;
+  }
 }

@@ -28,6 +28,14 @@ describe('resolveRunRecoveryContextTrust', () => {
     ).resolves.toBe(true);
   });
 
+  it('keeps run queries available and fails recovery closed when context storage fails', async () => {
+    const reader = { read: vi.fn().mockRejectedValue(new Error('EACCES')) };
+
+    await expect(
+      resolveRunRecoveryContextTrust(reader as never, metadata, statusFor('FAILED'))
+    ).resolves.toBe(false);
+  });
+
   it('does not query context integrity for non-recoverable runs', async () => {
     const reader = { read: vi.fn() };
 
