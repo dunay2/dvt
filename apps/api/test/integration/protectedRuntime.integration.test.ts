@@ -270,9 +270,11 @@ describeIfPg('protected runtime integration', () => {
     expect(flow.startResponse.statusCode).toBe(202);
     expect(flow.cancelResponse.statusCode).toBe(202);
     expect(flow.cancelResponse.json()).toEqual({
+      contractVersion: 'v1',
       runId: flow.actualRunId,
       signalType: 'CANCEL',
       accepted: true,
+      disposition: 'requested',
     });
   });
 
