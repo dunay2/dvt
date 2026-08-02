@@ -38,12 +38,9 @@ const DialogOverlay = React.forwardRef<
 ));
 DialogOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
-type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> &
-  Readonly<{ closeLabel?: string }>;
-
 const DialogContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  DialogContentProps
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & Readonly<{ closeLabel?: string }>
 >(({ className, children, closeLabel = 'Close', ...props }, ref) => (
   <DialogPortal data-slot="dialog-portal">
     <DialogOverlay />
