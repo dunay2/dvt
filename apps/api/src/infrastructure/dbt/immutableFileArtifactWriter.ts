@@ -1,5 +1,6 @@
 /** Owned concern: create immutable file artifacts idempotently and reject content drift. */
-import { mkdir, open, readFile, unlink, type FileHandle } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { link, mkdir, open, readFile, unlink, type FileHandle } from 'node:fs/promises';
 import path from 'node:path';
 
 export async function writeImmutableFileArtifact(
@@ -7,39 +8,62 @@ export async function writeImmutableFileArtifact(
   bytes: Buffer,
   io: ImmutableFileArtifactIo = DEFAULT_IO
 ): Promise<void> {
-  await io.mkdir(path.dirname(artifactPath), { recursive: true });
+  const artifactDirectory = path.dirname(artifactPath);
+  await io.mkdir(artifactDirectory, { recursive: true });
+  const temporaryPath = path.join(
+    artifactDirectory,
+    `.${path.basename(artifactPath)}.${randomUUID()}.tmp`
+  );
   let handle: FileHandle | null = null;
+  let temporaryArtifactCreated = false;
+  let operationFailed = false;
+  let operationError: unknown;
   try {
-    handle = await io.open(artifactPath, 'wx');
+    handle = await io.open(temporaryPath, 'wx');
+    temporaryArtifactCreated = true;
     await writeAll(handle, bytes);
+    await handle.sync();
+    await handle.close();
+    handle = null;
+    await publishArtifact(io, temporaryPath, artifactPath, bytes);
   } catch (error) {
-    if (!isAlreadyExistsError(error)) {
-      if (handle !== null) {
-        await handle.close();
-        handle = null;
-        await removeCreatedArtifact(io, artifactPath, error);
-      }
-      throw error;
+    operationFailed = true;
+    operationError = error;
+  }
+
+  const cleanupErrors = await cleanupTemporaryArtifact(
+    io,
+    temporaryPath,
+    handle,
+    temporaryArtifactCreated
+  );
+  if (operationFailed) {
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [operationError, ...cleanupErrors],
+        'Immutable artifact operation failed and its temporary file could not be removed.',
+        { cause: operationError }
+      );
     }
-    const existing = await io.readFile(artifactPath);
-    if (!existing.equals(bytes)) {
-      throw new Error('The immutable artifact already exists with different content.', {
-        cause: error,
-      });
-    }
-  } finally {
-    await handle?.close();
+    throw operationError;
+  }
+  if (cleanupErrors.length > 0) {
+    throw new AggregateError(
+      cleanupErrors,
+      'Immutable artifact temporary file could not be removed.'
+    );
   }
 }
 
 export interface ImmutableFileArtifactIo {
+  readonly link: typeof link;
   readonly mkdir: typeof mkdir;
   readonly open: typeof open;
   readonly readFile: typeof readFile;
   readonly unlink: typeof unlink;
 }
 
-const DEFAULT_IO: ImmutableFileArtifactIo = { mkdir, open, readFile, unlink };
+const DEFAULT_IO: ImmutableFileArtifactIo = { link, mkdir, open, readFile, unlink };
 
 async function writeAll(handle: FileHandle, bytes: Buffer): Promise<void> {
   let offset = 0;
@@ -54,21 +78,47 @@ function isAlreadyExistsError(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && 'code' in error && error.code === 'EEXIST';
 }
 
-async function removeCreatedArtifact(
+async function publishArtifact(
   io: ImmutableFileArtifactIo,
+  temporaryPath: string,
   artifactPath: string,
-  writeError: unknown
+  bytes: Buffer
 ): Promise<void> {
   try {
-    await io.unlink(artifactPath);
-  } catch (cleanupError) {
-    if (isMissingFileError(cleanupError)) return;
-    throw new AggregateError(
-      [writeError, cleanupError],
-      'Immutable artifact write failed and its incomplete file could not be removed.',
-      { cause: cleanupError }
-    );
+    await io.link(temporaryPath, artifactPath);
+  } catch (error) {
+    if (!isAlreadyExistsError(error)) throw error;
+    const existing = await io.readFile(artifactPath);
+    if (!existing.equals(bytes)) {
+      throw new Error('The immutable artifact already exists with different content.', {
+        cause: error,
+      });
+    }
   }
+}
+
+async function cleanupTemporaryArtifact(
+  io: ImmutableFileArtifactIo,
+  temporaryPath: string,
+  handle: FileHandle | null,
+  temporaryArtifactCreated: boolean
+): Promise<unknown[]> {
+  const errors: unknown[] = [];
+  if (handle !== null) {
+    try {
+      await handle.close();
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+  if (temporaryArtifactCreated) {
+    try {
+      await io.unlink(temporaryPath);
+    } catch (error) {
+      if (!isMissingFileError(error)) errors.push(error);
+    }
+  }
+  return errors;
 }
 
 function isMissingFileError(error: unknown): error is NodeJS.ErrnoException {
