@@ -44,7 +44,7 @@ export type CloseCanvasContextMenuOptions = Readonly<{
 
 export type ContextMenuKeyboardEvent = Pick<
   ReactKeyboardEvent<HTMLDivElement>,
-  'currentTarget' | 'key' | 'preventDefault' | 'shiftKey' | 'stopPropagation'
+  'currentTarget' | 'key' | 'preventDefault' | 'shiftKey' | 'stopPropagation' | 'target'
 >;
 
 export type UseCanvasContextMenuPresenterResult = Readonly<{

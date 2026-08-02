@@ -115,7 +115,7 @@ export function useCanvasContextMenuPresenter({
     (event: ContextMenuKeyboardEvent) => {
       const opensContextMenu =
         event.key === 'ContextMenu' || (event.key === 'F10' && event.shiftKey);
-      if (!opensContextMenu) {
+      if (!opensContextMenu || event.target !== event.currentTarget) {
         return;
       }
 

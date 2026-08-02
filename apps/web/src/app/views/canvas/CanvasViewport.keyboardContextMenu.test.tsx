@@ -147,6 +147,22 @@ describe('CanvasViewport keyboard context menu', () => {
     expect(document.activeElement).toBe(menuItems()[0]);
   });
 
+  it('leaves descendant node context-menu keys to the node interaction surface', async () => {
+    await renderViewport({
+      authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
+    });
+    const node = document.createElement('button');
+    node.className = 'react-flow__node';
+    contextSurface().appendChild(node);
+    node.focus();
+
+    const eventWasNotCancelled = fireEvent.keyDown(node, { key: 'F10', shiftKey: true });
+
+    expect(eventWasNotCancelled).toBe(true);
+    expect(container.querySelector('[data-slot="canvas-context-menu"]')).toBeNull();
+    expect(document.activeElement).toBe(node);
+  });
+
   it('restores the focused Canvas opener after Escape and outside-pointer close', async () => {
     await renderViewport({
       authoringNodeKinds: [buildTestNodeKind('dvt:source', 'Source')],
