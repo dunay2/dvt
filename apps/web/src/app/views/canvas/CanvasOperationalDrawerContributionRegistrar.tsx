@@ -6,12 +6,14 @@ import { useOperationalDrawerContributionStore } from '../../components/shell/op
 import type { PlanRunReadinessBlocker } from './canvasPlanReadiness';
 import type { CanvasShellPanels, CanvasShellChromeState } from './canvasShell.types';
 import type { CanvasExecutionSelectionRecoveryCommands } from '../../types/canvasExecutionSelectionRecovery';
+import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import { buildCanvasOperationalDrawerContribution } from './canvasOperationalDrawerContribution';
 
 type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
   policy: CanvasOperationalDrawerSurfacePolicy;
   panels: CanvasShellPanels;
   chromeState: CanvasShellChromeState;
+  runControls: OperationalDrawerRunControls | null;
   onPreviewExecutionPlan: () => void;
   onStartRun: () => void;
   selectionRecoveryCommands: CanvasExecutionSelectionRecoveryCommands | null;
@@ -22,6 +24,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
   onStartRun,
   panels,
   policy,
+  runControls,
   chromeState,
   selectionRecoveryCommands,
 }: CanvasOperationalDrawerContributionRegistrarProps): null {
@@ -44,6 +47,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
         },
         canPlan: panels.userPermissions.canPlan,
         activeRunId: panels.activeRunId ?? null,
+        runControls,
         canPlanGraph: chromeState.canPlanGraph,
         canStartRun: chromeState.canStartRun,
         planRunReadiness: {
@@ -74,6 +78,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
       policy.placement,
       previewTab,
       problemsTab,
+      runControls,
       runsTab,
       selectionRecoveryCommands,
     ]

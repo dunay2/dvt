@@ -12,6 +12,7 @@ import { CanvasErrorStateView, CanvasLoadingStateView } from './CanvasStateViews
 import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
 import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { buildDbtYamlDescriptionWorkbenchContributions } from './dbtYamlDescriptionWorkbenchContribution';
+import { useCanvasRunControlSurface } from './useCanvasRunControlSurface';
 import type { useDbtProjectFileCanvasController } from './useDbtProjectFileCanvasController';
 
 type DbtProjectFileCanvasController = ReturnType<typeof useDbtProjectFileCanvasController>;
@@ -124,6 +125,10 @@ export function DbtProjectFileCanvasView({
   routeIntentRequest?: CanvasShellRouteIntentRequest;
 }>): JSX.Element {
   const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
+  const runControls = useCanvasRunControlSurface(
+    controller.workspaceLayoutKey,
+    controller.activeRunId
+  );
   const copy = resolveCanvasViewCopy();
   const projectRoot = controller.authorityBinding.authority.projectRoot;
   const projectTitle = resolveProjectTitle(projectRoot);
@@ -231,6 +236,7 @@ export function DbtProjectFileCanvasView({
     graphCommands: controller.graphCommands,
     chromeCommands: controller.chromeCommands,
     canvasCommands: controller.canvasCommands,
+    runControls,
     workspaceCommands: {
       canOpenProjectExplorer: false,
       onOpenProjectCode: controller.openProjectCode,

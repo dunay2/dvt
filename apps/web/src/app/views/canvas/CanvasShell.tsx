@@ -27,6 +27,7 @@ export default function CanvasShell({
   graphCommands,
   chromeCommands,
   canvasCommands,
+  runControls,
   workspaceCommands,
   routeIntentRequest,
   canvasContextScreenToFlowPosition,
@@ -162,6 +163,7 @@ export default function CanvasShell({
           policy={layout.surfaceStrategy.operationalDrawer}
           panels={panels}
           chromeState={chromeState}
+          runControls={runControls}
           onPreviewExecutionPlan={chromeCommands.onPreviewExecutionPlan}
           onStartRun={chromeCommands.onRun}
           selectionRecoveryCommands={chromeCommands.executionSelectionRecovery}

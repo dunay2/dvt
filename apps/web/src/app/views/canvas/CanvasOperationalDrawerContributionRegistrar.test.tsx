@@ -43,6 +43,7 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
             blockers: [...shell.chromeState.planRunReadiness.blockers],
           },
         }}
+        runControls={shell.runControls}
         onPreviewExecutionPlan={onPreviewExecutionPlan}
         onStartRun={vi.fn()}
         selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}

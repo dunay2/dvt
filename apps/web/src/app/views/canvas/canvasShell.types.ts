@@ -34,6 +34,7 @@ import type {
   CanvasRouteIntent,
   CanvasUnavailableLegacySurfaceId,
 } from './canvasLegacyRouteIntent';
+import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 
 export type UserPermissions = {
   canPlan: boolean;
@@ -188,6 +189,7 @@ export type CanvasShellProps = Readonly<{
   graphCommands: CanvasShellGraphCommands;
   chromeCommands: CanvasShellChromeCommands;
   canvasCommands: CanvasShellCanvasCommands;
+  runControls: OperationalDrawerRunControls | null;
   workspaceCommands?: CanvasShellWorkspaceCommands;
   routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;

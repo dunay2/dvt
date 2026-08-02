@@ -1,5 +1,6 @@
 /** Owned concern: adapt run-control UI intents to authoritative Runs command rails. */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useCallback, useMemo } from 'react';
 
 import { useRunsService } from '../../services/AppServicesContext';
 import type {
@@ -51,14 +52,34 @@ export function useRunControlCommands(options: UseRunControlCommandsOptions = {}
         }
       : null;
 
-  return {
-    cancelRun: (runId: string) => mutation.mutate({ action: 'cancel', runId }),
-    recoverRun: (runId: string) => mutation.mutate({ action: 'recover', runId }),
-    activity: mutation.isPending ? (mutation.variables ?? null) : null,
-    outcome: mutation.data ?? null,
-    failure,
-    resetFeedback: mutation.reset,
-  };
+  const cancelRun = useCallback(
+    (runId: string) => mutation.mutate({ action: 'cancel', runId }),
+    [mutation.mutate]
+  );
+  const recoverRun = useCallback(
+    (runId: string) => mutation.mutate({ action: 'recover', runId }),
+    [mutation.mutate]
+  );
+
+  return useMemo(
+    () => ({
+      cancelRun,
+      recoverRun,
+      activity: mutation.isPending ? (mutation.variables ?? null) : null,
+      outcome: mutation.data ?? null,
+      failure,
+      resetFeedback: mutation.reset,
+    }),
+    [
+      cancelRun,
+      failure,
+      mutation.data,
+      mutation.isPending,
+      mutation.reset,
+      mutation.variables,
+      recoverRun,
+    ]
+  );
 }
 
 export type RunControlCommandController = ReturnType<typeof useRunControlCommands>;

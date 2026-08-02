@@ -205,6 +205,7 @@ export function buildCanvasShellProps(args: CanvasShellRouteComposerArgs): Canva
     chromeState: buildCanvasShellChromeState(buildCanvasShellChromeStateArgs(args)),
     graphCommands: buildCanvasShellGraphCommands(buildCanvasShellGraphCommandsArgs(args)),
     chromeCommands: buildCanvasShellChromeCommands(buildCanvasShellChromeCommandsArgs(args)),
+    runControls: args.runControls,
     canvasCommands: {
       onSelectCanvas: (canvasId) => {
         void args.controller.handleSelectCanvasDocument(canvasId);
