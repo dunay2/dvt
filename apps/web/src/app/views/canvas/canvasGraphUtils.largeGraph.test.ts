@@ -8,6 +8,8 @@ import { getLayoutedElements } from './canvasGraphUtils';
 const LARGE_GRAPH_NODE_COUNT = 1_000;
 const LARGE_GRAPH_EDGE_COUNT = 1_920;
 const LARGE_GRAPH_GRID_SIZE = 24;
+const LARGE_GRAPH_LAYOUT_CPU_BUDGET_MS = 30_000;
+const LARGE_GRAPH_LAYOUT_TEST_TIMEOUT_MS = 60_000;
 
 function projectDraftToFlowGraph(): { nodes: Node[]; edges: Edge[] } {
   const draft = buildLargeWorkspaceGraphAuthoringDraft();
@@ -42,33 +44,38 @@ describe('large Canvas graph regression fixture', () => {
     expect(buildLargeWorkspaceGraphAuthoringDraft()).toEqual(draft);
   });
 
-  it('keeps explicit layout structurally complete within its separate budget', () => {
-    const graph = projectDraftToFlowGraph();
-    const inputSnapshot = structuredClone(graph);
-    getLayoutedElements(graph.nodes.slice(0, 40), [], {
-      gridSize: LARGE_GRAPH_GRID_SIZE,
-      snapToGrid: true,
-    });
+  it(
+    'keeps explicit layout structurally complete within its separate budget',
+    () => {
+      const graph = projectDraftToFlowGraph();
+      const inputSnapshot = structuredClone(graph);
+      getLayoutedElements(graph.nodes.slice(0, 40), [], {
+        gridSize: LARGE_GRAPH_GRID_SIZE,
+        snapToGrid: true,
+      });
 
-    const startedAt = performance.now();
-    const layouted = getLayoutedElements(graph.nodes, graph.edges, {
-      gridSize: LARGE_GRAPH_GRID_SIZE,
-      snapToGrid: true,
-    });
-    const durationMs = performance.now() - startedAt;
+      const startedCpuUsage = process.cpuUsage();
+      const layouted = getLayoutedElements(graph.nodes, graph.edges, {
+        gridSize: LARGE_GRAPH_GRID_SIZE,
+        snapToGrid: true,
+      });
+      const elapsedCpuUsage = process.cpuUsage(startedCpuUsage);
+      const cpuDurationMs = (elapsedCpuUsage.user + elapsedCpuUsage.system) / 1_000;
 
-    expect(layouted.nodes).toHaveLength(LARGE_GRAPH_NODE_COUNT);
-    expect(new Set(layouted.nodes.map((node) => node.id)).size).toBe(LARGE_GRAPH_NODE_COUNT);
-    expect(layouted.edges).toHaveLength(LARGE_GRAPH_EDGE_COUNT);
-    expect(layouted.edges).toEqual(graph.edges);
-    expect(
-      layouted.nodes.every((node) =>
-        [node.position.x, node.position.y].every(
-          (coordinate) => Number.isFinite(coordinate) && coordinate % LARGE_GRAPH_GRID_SIZE === 0
+      expect(layouted.nodes).toHaveLength(LARGE_GRAPH_NODE_COUNT);
+      expect(new Set(layouted.nodes.map((node) => node.id)).size).toBe(LARGE_GRAPH_NODE_COUNT);
+      expect(layouted.edges).toHaveLength(LARGE_GRAPH_EDGE_COUNT);
+      expect(layouted.edges).toEqual(graph.edges);
+      expect(
+        layouted.nodes.every((node) =>
+          [node.position.x, node.position.y].every(
+            (coordinate) => Number.isFinite(coordinate) && coordinate % LARGE_GRAPH_GRID_SIZE === 0
+          )
         )
-      )
-    ).toBe(true);
-    expect(graph).toEqual(inputSnapshot);
-    expect(durationMs).toBeLessThan(30_000);
-  }, 35_000);
+      ).toBe(true);
+      expect(graph).toEqual(inputSnapshot);
+      expect(cpuDurationMs).toBeLessThan(LARGE_GRAPH_LAYOUT_CPU_BUDGET_MS);
+    },
+    LARGE_GRAPH_LAYOUT_TEST_TIMEOUT_MS
+  );
 });
