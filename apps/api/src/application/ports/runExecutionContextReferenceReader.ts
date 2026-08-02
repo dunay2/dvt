@@ -6,6 +6,14 @@ export interface RunExecutionContextReferenceQuery {
   readonly runId: string;
 }
 
+export type RunExecutionContextReferenceReadResult =
+  | Readonly<{ kind: 'absent' }>
+  | Readonly<{ kind: 'trusted'; ref: RunExecutionContextRef }>
+  | Readonly<{
+      kind: 'untrusted';
+      reason: 'reference_missing' | 'reference_invalid' | 'reference_mismatch';
+    }>;
+
 export interface IRunExecutionContextReferenceReader {
-  read(query: RunExecutionContextReferenceQuery): Promise<RunExecutionContextRef | undefined>;
+  read(query: RunExecutionContextReferenceQuery): Promise<RunExecutionContextReferenceReadResult>;
 }

@@ -64,14 +64,22 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       throw new RunRecoveryUnavailableError(command.sourceRunId, 'source_plan_unavailable');
     }
 
-    const runExecutionContextRef = await this.dependencies.executionContextReader.read({
+    const runExecutionContext = await this.dependencies.executionContextReader.read({
       tenantId,
       runId: command.sourceRunId,
     });
+    if (runExecutionContext.kind === 'untrusted') {
+      throw new RunRecoveryUnavailableError(command.sourceRunId, 'source_context_untrusted');
+    }
     await this.dependencies.engine.recoverRun(
       command.sourceRunId,
       planRef,
-      toEngineRunContext(command, source, tenantId, runExecutionContextRef)
+      toEngineRunContext(
+        command,
+        source,
+        tenantId,
+        runExecutionContext.kind === 'trusted' ? runExecutionContext.ref : undefined
+      )
     );
 
     return {

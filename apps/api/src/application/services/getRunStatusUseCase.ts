@@ -12,6 +12,7 @@ import {
   type IWorkflowEngine,
 } from '@dvt/engine';
 
+import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type {
   AuthorizedQueryExecutionContext,
   GetRunStatusQuery,
@@ -25,6 +26,7 @@ import type {
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth, sanitizeCanonicalRunStatus } from './runOperationalTruth.js';
 import { deriveRunReadEvidenceModel } from './runReadEvidenceModel.js';
+import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
 
 type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
 
@@ -57,7 +59,8 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     private readonly stateStore: IRunStateStoreRead,
     private readonly stalenessReader?: IRunSnapshotStalenessReader,
     private readonly stalenessTelemetry?: IRunStatusStalenessTelemetry,
-    private readonly planStore?: PlanRecordReader
+    private readonly planStore?: PlanRecordReader,
+    private readonly executionContextReader?: IRunExecutionContextReferenceReader
   ) {}
 
   public async execute(
@@ -127,6 +130,11 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       metadata,
       status: snapshot,
       evidence: evidenceModel,
+      recoveryContextTrusted: await resolveRunRecoveryContextTrust(
+        this.executionContextReader,
+        metadata,
+        snapshot
+      ),
     });
 
     return {

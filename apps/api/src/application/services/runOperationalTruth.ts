@@ -14,6 +14,7 @@ export interface ProjectRunOperationalTruthInput {
   readonly metadata: RunMetadata;
   readonly status: CanonicalRunStatus;
   readonly evidence?: RunOperationalTruthEvidence;
+  readonly recoveryContextTrusted?: boolean;
 }
 
 export function projectRunOperationalTruth(
@@ -47,7 +48,7 @@ export function projectRunOperationalTruth(
     ...(currentStepId === undefined ? {} : { currentStepId }),
     ...(failedStepId === undefined ? {} : { failedStepId }),
     ...(errorReason === undefined ? {} : { errorReason }),
-    controls: projectRunControlAvailability(status),
+    controls: projectRunControlAvailability(status, input.recoveryContextTrusted ?? true),
   };
 }
 

@@ -113,7 +113,12 @@ export interface RunOperationalTruthDto {
 }
 
 export type RunControlUnavailableReason =
-  'cancellation_pending' | 'run_active' | 'run_cancelled' | 'run_completed' | 'run_terminal';
+  | 'cancellation_pending'
+  | 'run_active'
+  | 'run_cancelled'
+  | 'run_completed'
+  | 'run_terminal'
+  | 'source_context_untrusted';
 
 export type RunControlActionAvailabilityDto =
   | Readonly<{ available: true }>

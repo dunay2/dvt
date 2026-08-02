@@ -8,6 +8,7 @@ import { parseRunExecutionContextRef, type RunExecutionContextRef } from '@dvt/c
 import type {
   IRunExecutionContextReferenceReader,
   RunExecutionContextReferenceQuery,
+  RunExecutionContextReferenceReadResult,
 } from '../../application/ports/runExecutionContextReferenceReader.js';
 
 import {
@@ -20,8 +21,8 @@ export class FileRunExecutionContextReferenceReader implements IRunExecutionCont
 
   public async read(
     query: RunExecutionContextReferenceQuery
-  ): Promise<RunExecutionContextRef | undefined> {
-    if (this.store?.kind !== 'file') return undefined;
+  ): Promise<RunExecutionContextReferenceReadResult> {
+    if (this.store?.kind !== 'file') return { kind: 'absent' };
 
     const artifactPath = resolveRunExecutionContextArtifactPath({
       rootPath: this.store.rootPath,
@@ -34,13 +35,29 @@ export class FileRunExecutionContextReferenceReader implements IRunExecutionCont
       runId: query.runId,
     });
     const bytes = await readOptionalFile(referenceArtifactPath);
-    if (bytes === undefined) return undefined;
-
-    const ref = parseRunExecutionContextRef(JSON.parse(bytes.toString('utf8')));
-    if (ref.uri !== pathToFileURL(artifactPath).href) {
-      throw new Error('Stored run-context reference does not match the authorized source run.');
+    if (bytes === undefined) {
+      const contextBytes = await readOptionalFile(artifactPath);
+      return contextBytes === undefined
+        ? { kind: 'absent' }
+        : { kind: 'untrusted', reason: 'reference_missing' };
     }
-    return ref;
+
+    const ref = parseStoredReference(bytes);
+    if (ref === undefined) {
+      return { kind: 'untrusted', reason: 'reference_invalid' };
+    }
+    if (ref.uri !== pathToFileURL(artifactPath).href) {
+      return { kind: 'untrusted', reason: 'reference_mismatch' };
+    }
+    return { kind: 'trusted', ref };
+  }
+}
+
+function parseStoredReference(bytes: Buffer): RunExecutionContextRef | undefined {
+  try {
+    return parseRunExecutionContextRef(JSON.parse(bytes.toString('utf8')));
+  } catch {
+    return undefined;
   }
 }
 

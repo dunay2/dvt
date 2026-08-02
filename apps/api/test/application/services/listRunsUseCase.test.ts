@@ -93,7 +93,17 @@ describe('ListRunsUseCase', () => {
       })),
     };
 
-    const useCase = new ListRunsUseCase(stateStore as never, engine as never);
+    const executionContextReader = {
+      read: vi.fn().mockResolvedValue({
+        kind: 'untrusted',
+        reason: 'reference_missing',
+      }),
+    };
+    const useCase = new ListRunsUseCase(
+      stateStore as never,
+      engine as never,
+      executionContextReader as never
+    );
 
     await expect(useCase.execute({ limit: 25 }, queryContext as never)).resolves.toEqual({
       items: [
@@ -110,7 +120,7 @@ describe('ListRunsUseCase', () => {
           status: 'FAILED',
           controls: {
             cancel: { available: false, reason: 'run_terminal' },
-            recover: { available: true },
+            recover: { available: false, reason: 'source_context_untrusted' },
           },
           startedAt: '2026-03-19T00:00:05Z',
           completedAt: '2026-03-19T00:00:20Z',
@@ -129,6 +139,10 @@ describe('ListRunsUseCase', () => {
       nextCursor: null,
     });
     expect(engine.getRunStatus).toHaveBeenCalledOnce();
+    expect(executionContextReader.read).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      runId: 'run-1',
+    });
   });
 
   it('bounds canonical status reads while preserving list order', async () => {

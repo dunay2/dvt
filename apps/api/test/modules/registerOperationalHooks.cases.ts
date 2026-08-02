@@ -106,7 +106,7 @@ function createProtectedRuntimeModuleHarness(): {
       planStore: {} as never,
       runExecutionContextReferenceReader: {
         async read() {
-          return undefined;
+          return { kind: 'absent' as const };
         },
       },
       planValidator: {} as never,

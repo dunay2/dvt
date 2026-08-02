@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { URL } from 'node:url';
@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 
 import { FileDbtRunExecutionContextWriter } from '../../../src/infrastructure/dbt/FileDbtRunExecutionContextWriter.js';
 import { FileRunExecutionContextReferenceReader } from '../../../src/infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
+import { resolveRunExecutionContextArtifactPath } from '../../../src/infrastructure/dbt/runExecutionContextArtifactPath.js';
 
 let root: string | undefined;
 
@@ -39,7 +40,7 @@ describe('FileRunExecutionContextReferenceReader', () => {
     const written = await writer.write({ runId: 'run-source-1', context });
 
     await expect(reader.read({ tenantId: 'tenant-1', runId: 'run-source-1' })).resolves.toEqual(
-      written.ok ? written.ref : undefined
+      written.ok ? { kind: 'trusted', ref: written.ref } : { kind: 'absent' }
     );
   });
 
@@ -47,9 +48,9 @@ describe('FileRunExecutionContextReferenceReader', () => {
     root = await mkdtemp(path.join(tmpdir(), 'dvt-run-context-reader-'));
     const reader = new FileRunExecutionContextReferenceReader({ kind: 'file', rootPath: root });
 
-    await expect(
-      reader.read({ tenantId: 'tenant-1', runId: 'missing-run' })
-    ).resolves.toBeUndefined();
+    await expect(reader.read({ tenantId: 'tenant-1', runId: 'missing-run' })).resolves.toEqual({
+      kind: 'absent',
+    });
   });
 
   it('returns the original reference when persisted context bytes are later modified', async () => {
@@ -78,8 +79,26 @@ describe('FileRunExecutionContextReferenceReader', () => {
       JSON.stringify({ ...context, createdBy: 'modified' })
     );
 
-    await expect(reader.read({ tenantId: 'tenant-1', runId: 'run-source-1' })).resolves.toEqual(
-      written.ref
-    );
+    await expect(reader.read({ tenantId: 'tenant-1', runId: 'run-source-1' })).resolves.toEqual({
+      kind: 'trusted',
+      ref: written.ref,
+    });
+  });
+
+  it('marks pre-reference context artifacts as untrusted instead of minting a digest', async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'dvt-run-context-reader-'));
+    const artifactPath = resolveRunExecutionContextArtifactPath({
+      rootPath: root,
+      tenantId: 'tenant-1',
+      runId: 'run-source-1',
+    });
+    await mkdir(path.dirname(artifactPath), { recursive: true });
+    await writeFile(artifactPath, JSON.stringify({ schemaVersion: 'v1.0' }));
+    const reader = new FileRunExecutionContextReferenceReader({ kind: 'file', rootPath: root });
+
+    await expect(reader.read({ tenantId: 'tenant-1', runId: 'run-source-1' })).resolves.toEqual({
+      kind: 'untrusted',
+      reason: 'reference_missing',
+    });
   });
 });

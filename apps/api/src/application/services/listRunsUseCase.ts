@@ -1,6 +1,7 @@
 import type { TenantId as ContractTenantId } from '@dvt/contracts';
 import type { IRunStateStoreRead, IWorkflowEngine, RunMetadata } from '@dvt/engine';
 
+import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type {
   AuthorizedQueryExecutionContext,
   IListRunsUseCase,
@@ -11,13 +12,15 @@ import type {
 
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth } from './runOperationalTruth.js';
+import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
 
 const RUN_STATUS_READ_CONCURRENCY = 8;
 
 export class ListRunsUseCase implements IListRunsUseCase {
   public constructor(
     private readonly stateStore: IRunStateStoreRead,
-    private readonly engine: Pick<IWorkflowEngine, 'getRunStatus'>
+    private readonly engine: Pick<IWorkflowEngine, 'getRunStatus'>,
+    private readonly executionContextReader?: IRunExecutionContextReferenceReader
   ) {}
 
   public async execute(
@@ -44,16 +47,26 @@ export class ListRunsUseCase implements IListRunsUseCase {
     const statuses = await this.readCanonicalStatuses(filtered);
 
     return {
-      items: filtered.map((item, index) => this.toListItem(item, statuses[index]!)),
+      items: await Promise.all(
+        filtered.map((item, index) => this.toListItem(item, statuses[index]!))
+      ),
       nextCursor: this.buildNextCursor(filtered, query.limit),
     };
   }
 
-  private toListItem(
+  private async toListItem(
     item: RunMetadata,
     status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
-  ): RunListItemDto {
-    return projectRunOperationalTruth({ metadata: item, status });
+  ): Promise<RunListItemDto> {
+    return projectRunOperationalTruth({
+      metadata: item,
+      status,
+      recoveryContextTrusted: await resolveRunRecoveryContextTrust(
+        this.executionContextReader,
+        item,
+        status
+      ),
+    });
   }
 
   private async readCanonicalStatuses(items: ReadonlyArray<RunMetadata>) {

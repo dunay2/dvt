@@ -83,11 +83,14 @@ function createDependencies(): TestDependencies {
     },
     executionContextReader: {
       read: vi.fn().mockResolvedValue({
-        uri: 'file:///run-contexts/source.json',
-        sha256: 'b'.repeat(64),
-        schemaVersion: 'v1.0',
-        planId: 'plan-a',
-        planVersion: '1.0.0',
+        kind: 'trusted',
+        ref: {
+          uri: 'file:///run-contexts/source.json',
+          sha256: 'b'.repeat(64),
+          schemaVersion: 'v1.0',
+          planId: 'plan-a',
+          planVersion: '1.0.0',
+        },
       }),
     },
   };
@@ -158,6 +161,23 @@ describe('RecoverRunUseCase', () => {
         commandContext
       )
     ).rejects.toBeInstanceOf(RunRecoveryUnavailableError);
+    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
+  });
+
+  it('rejects recovery when the source context has no original trusted reference', async () => {
+    const dependencies = createDependencies();
+    dependencies.executionContextReader.read.mockResolvedValue({
+      kind: 'untrusted',
+      reason: 'reference_missing',
+    });
+    const useCase = new RecoverRunUseCase(dependencies as never);
+
+    await expect(
+      useCase.execute(
+        { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
+        commandContext
+      )
+    ).rejects.toMatchObject({ reason: 'source_context_untrusted' });
     expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
   });
 
