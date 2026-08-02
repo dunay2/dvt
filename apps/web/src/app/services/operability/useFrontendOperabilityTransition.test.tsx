@@ -109,4 +109,29 @@ describe('useFrontendOperabilityTransition', () => {
     expect(record).toHaveBeenCalledTimes(2);
     await act(async () => root.unmount());
   });
+
+  it('records a later occurrence after the previous presenter unmounts', async () => {
+    const container = document.createElement('div');
+    const record = vi.fn<FrontendOperabilitySink['record']>();
+    const recorder = createFrontendOperabilityTransitionRecorder({ record });
+    const degraded = createSurfaceDegradedEvent(
+      'shell.platform-health',
+      'partial',
+      'platform-health-state-transition'
+    );
+    const firstRoot = createRoot(container);
+
+    await act(async () => {
+      firstRoot.render(<TransitionProbe event={degraded} recorder={recorder} />);
+    });
+    await act(async () => firstRoot.unmount());
+
+    const secondRoot = createRoot(container);
+    await act(async () => {
+      secondRoot.render(<TransitionProbe event={degraded} recorder={recorder} />);
+    });
+
+    expect(record).toHaveBeenCalledTimes(2);
+    await act(async () => secondRoot.unmount());
+  });
 });

@@ -18,4 +18,11 @@ export function useFrontendOperabilityTransition(
     }
     recorder.recordTransition(channel, event);
   }, [channel, event, recorder]);
+
+  useEffect(
+    () => () => {
+      recorder.recordTransition(channel, null);
+    },
+    [channel, recorder]
+  );
 }
