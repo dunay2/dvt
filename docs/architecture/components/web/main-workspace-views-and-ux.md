@@ -1,11 +1,15 @@
 ---
 title: Main Workspace Views And UX
-status: Active
+status: Superseded
 owner: Frontend / Architecture
-last_reviewed: 2026-04-07
+last_reviewed: 2026-08-02
 ---
 
 # Main Workspace Views And UX
+
+This peer-route workbench inventory is retired. The active Process Map and
+contextual-surface contract is
+[Screen Manuals And User Stories](./screen-manuals-and-user-stories.md).
 
 This page documents the real DVT frontend workbench as it exists today in
 `apps/web`, plus the next missing route-level slice that should become a

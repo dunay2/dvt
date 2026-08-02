@@ -2,7 +2,7 @@
 title: Graph Route Bootstrap Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-21
+last_reviewed: 2026-08-02
 ---
 
 # Graph Route Bootstrap Architecture
@@ -122,19 +122,17 @@ Reading rule:
 
 ## Route Matrix
 
-| Route id                      | Path           | Mode        | Owner family                    |
-| ----------------------------- | -------------- | ----------- | ------------------------------- |
-| `dbt.canvas`                  | `/canvas`      | `published` | Canvas draft presentation state |
-| `dbt.lineage`                 | `/lineage`     | `published` | Lineage route bootstrap         |
-| `dbt.code`                    | `/code`        | `published` | Code route bootstrap            |
-| `dbt.diff`                    | `/diff`        | `published` | Diff route bootstrap            |
-| `dbt.artifacts`               | `/artifacts`   | `published` | Artifacts route bootstrap       |
-| `monitoring.runs`             | `/runs`        | `published` | Runs route bootstrap            |
-| `monitoring.run-detail`       | `/runs/:runId` | `published` | Runs route bootstrap            |
-| `cost.dashboard`              | `/cost`        | `published` | Cost route bootstrap            |
-| `shell.default-core-redirect` | `/`            | `published` | Redirect posture handoff        |
-| `shell.plugins`               | `/plugins`     | `static`    | Static shell route              |
-| `shell.admin`                 | `/admin`       | `static`    | Static shell route              |
+| Route id                                | Path           | Mode        | Owner family                    |
+| --------------------------------------- | -------------- | ----------- | ------------------------------- |
+| `dbt.canvas`                            | `/canvas`      | `published` | Canvas draft presentation state |
+| `dvt.templates`                         | `/templates`   | `published` | Governed source generation      |
+| `monitoring.runs`                       | `/runs`        | `published` | Runs route bootstrap            |
+| `monitoring.run-detail`                 | `/runs/:runId` | `published` | Runs route bootstrap            |
+| `cost.dashboard`                        | `/cost`        | `published` | Cost route bootstrap            |
+| `shell.default-core-redirect`           | `/`            | `published` | Redirect posture handoff        |
+| `dbt.canvas.retired-workbench-redirect` | `/canvas/*`    | `static`    | One-shot retired-surface intent |
+| `shell.plugins`                         | `/plugins`     | `static`    | Static shell route              |
+| `shell.admin`                           | `/admin`       | `static`    | Static shell route              |
 
 Special case:
 
@@ -154,10 +152,13 @@ Special case:
 
 ## Current State
 
-As of 2026-04-21:
+As of 2026-08-02:
 
 - SRP split is implemented and validated
-- Canvas and graph-adjacent routes use explicit startup handles
+- Canvas, Templates, Runs, Run Detail, and Cost use explicit startup handles
+- Code and Lineage are contextual Canvas surfaces, not peer routes
+- retired `/canvas/*` workbench URLs publish one-shot intent through a static
+  redirect rather than restoring obsolete route ownership
 - static settlement exists only through the explicit static boundary
 - bootstrap errors are typed and locale-resolved
 - fallback behavior remains restricted to test runtime

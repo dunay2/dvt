@@ -1,12 +1,16 @@
 ---
 title: Workbench UI Contract And Component Inventory
-status: Active
+status: Superseded
 owner: Frontend / Architecture
-last_reviewed: 2026-04-11
+last_reviewed: 2026-08-02
 planning_type: architecture
 ---
 
 # Workbench UI Contract And Component Inventory
+
+This peer-route component inventory is retired. Current product placement is
+governed by [Screen Manuals And User Stories](./screen-manuals-and-user-stories.md),
+while component ownership and relationships live in Planning DB.
 
 ## Purpose
 

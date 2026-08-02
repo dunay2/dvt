@@ -17,12 +17,12 @@ template generation.
 
 ## Public API
 
-| API                       | Path                                                                     | Role                           |
-| ------------------------- | ------------------------------------------------------------------------ | ------------------------------ |
-| `resolveWebManualChunk()` | `apps/web/vite.manualChunks.ts`                                          | Pure Vite chunk-name resolver. |
-| `vite.config.ts`          | `apps/web/vite.config.ts`                                                | Build configuration consumer.  |
-| Monaco lazy gateways      | `apps/web/src/app/components/monaco/*Viewer.tsx`, `MonacoCodeEditor.tsx` | Route-safe lazy entry points.  |
-| Monaco local workers      | `apps/web/src/app/components/monaco/monacoLocalWorkers.ts`               | Local worker configuration.    |
+| API                       | Path                                                                     | Role                            |
+| ------------------------- | ------------------------------------------------------------------------ | ------------------------------- |
+| `resolveWebManualChunk()` | `apps/web/vite.manualChunks.ts`                                          | Pure Vite chunk-name resolver.  |
+| `vite.config.ts`          | `apps/web/vite.config.ts`                                                | Build configuration consumer.   |
+| Monaco lazy gateways      | `apps/web/src/app/components/monaco/*Viewer.tsx`, `MonacoCodeEditor.tsx` | Surface-safe lazy entry points. |
+| Monaco local workers      | `apps/web/src/app/components/monaco/monacoLocalWorkers.ts`               | Local worker configuration.     |
 
 ## Invariants
 
@@ -30,7 +30,7 @@ template generation.
 - Terminal vendor dependencies continue to resolve to `terminal-vendor`.
 - The resolver returns `undefined` for non-owned dependencies so Rollup can keep
   its default chunking behavior.
-- Route modules consume lazy gateways, not `@monaco-editor/react`.
+- Consumer modules use lazy gateways, not `@monaco-editor/react`.
 - `@monaco-editor/react` imports are limited to `MonacoCodeSurface` and
   `MonacoDiffSurface`.
 - `apps/web` declares `monaco-editor` directly because local worker bundling
@@ -54,24 +54,24 @@ flowchart LR
 
 ## Transitions
 
-| Change                         | Required update                                               |
-| ------------------------------ | ------------------------------------------------------------- |
-| Add another Monaco surface     | Keep third-party import inside the surface module.            |
-| Add another Monaco route panel | Use an existing lazy gateway or create a route-local adapter. |
-| Change Vite chunk naming       | Update `resolveWebManualChunk()` tests and this guide.        |
-| Change worker loading          | Update `monacoLocalWorkers.ts`, tests, and this guide.        |
-| Add another heavy vendor       | Add a named resolver branch with an architecture test.        |
+| Change                     | Required update                                           |
+| -------------------------- | --------------------------------------------------------- |
+| Add another Monaco surface | Keep third-party import inside the surface module.        |
+| Add another Monaco panel   | Use an existing lazy gateway or create a context adapter. |
+| Change Vite chunk naming   | Update `resolveWebManualChunk()` tests and this guide.    |
+| Change worker loading      | Update `monacoLocalWorkers.ts`, tests, and this guide.    |
+| Add another heavy vendor   | Add a named resolver branch with an architecture test.    |
 
 ## Consumers
 
-| Consumer     | Consumption posture                                            |
-| ------------ | -------------------------------------------------------------- |
-| Code         | Editable local buffer through `MonacoCodeEditor`.              |
-| Diff         | Read-only comparison through `MonacoDiffViewer`.               |
-| Artifacts    | Read-only payload inspection through `MonacoCodeViewer`.       |
-| Templates    | Read-only generated-source preview through `MonacoCodeViewer`. |
-| Vite build   | Calls `resolveWebManualChunk()` inside `manualChunks`.         |
-| Test routing | Monaco focus suite owns the isolation guard.                   |
+| Consumer            | Consumption posture                                            |
+| ------------------- | -------------------------------------------------------------- |
+| Contextual Code     | Editable local buffer through `MonacoCodeEditor`.              |
+| Internal comparison | Read-only comparison through `MonacoDiffViewer`.               |
+| Artifact readers    | Read-only payload inspection through `MonacoCodeViewer`.       |
+| Templates route     | Read-only generated-source preview through `MonacoCodeViewer`. |
+| Vite build          | Calls `resolveWebManualChunk()` inside `manualChunks`.         |
+| Test routing        | Monaco focus suite owns the isolation guard.                   |
 
 ## Non-Goals
 

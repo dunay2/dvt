@@ -2,7 +2,7 @@
 title: Frontend Artifacts
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-11
+last_reviewed: 2026-08-02
 category: frontend-architecture
 ---
 
@@ -15,26 +15,27 @@ today and the mature implementation direction for each one.
 
 ## Active Artifacts
 
-| Artifact                   | Current implementation                                                            | Current maturity           |
-| -------------------------- | --------------------------------------------------------------------------------- | -------------------------- |
-| App Shell                  | `App.tsx`, `Root.tsx`, `TopAppBar.tsx`, `LeftNavigation.tsx`                      | Real and active            |
-| Workspace / Main workbench | route outlet plus Canvas, Runs, Lineage, Diff, and Artifacts views                | Real and active            |
-| Graph workbench            | `Canvas.tsx`, `CanvasShell.tsx`, `useCanvasController.ts`                         | Most mature route          |
-| Inspector                  | `InspectorPanel.tsx` plus plugin tabs                                             | Real, node-centric         |
-| Runs workbench             | `RunsView.tsx` and tabbed run detail                                              | Real, growing              |
-| Lineage surface            | `LineageView.tsx`                                                                 | Real, read-only            |
-| Diff surface               | `DiffView.tsx`                                                                    | Real, still early          |
-| Artifact browser           | `ArtifactsView.tsx`, `artifactsWorkbenchStateModel.ts`, `ArtifactsStateViews.tsx` | Real, state model explicit |
-| Observability              | shell health plus Runs metrics                                                    | Real but distributed       |
+| Artifact                   | Current implementation                                                 | Current maturity             |
+| -------------------------- | ---------------------------------------------------------------------- | ---------------------------- |
+| App Shell                  | `App.tsx`, `Root.tsx`, `TopAppBar.tsx`                                 | Real and active              |
+| Process Map                | `Canvas.tsx`, `CanvasShell.tsx`, `useCanvasController.ts`              | Primary product route        |
+| Contextual Code            | Canvas Code workbench and revision-guarded workspace-file rails        | Real and editable            |
+| Lineage lens               | Canvas impact and column-lineage overlays                              | Real and read-only           |
+| Source Import              | contextual wizard plus warehouse connection and catalog API rails      | Real and API-backed          |
+| Operational drawer         | Log, Problems, Runs, and typed Preview outcome panels                  | Real and contextual          |
+| Runs workbench             | `RunsView.tsx` and tabbed run detail                                   | Real and growing             |
+| Internal review primitives | Monaco code/diff viewers and artifact state models without peer routes | Retained implementation APIs |
+| Observability              | shell health, node metrics, and Runs evidence                          | Real but distributed         |
 
 ## Route State Contract
 
-`Artifacts` is a governed read-only workbench.
+Artifact payload readers are governed internal presentation primitives. Raven
+does not expose an Artifacts peer route.
 
-Its route contract is:
+Their presentation contract is:
 
-- `loading`: preserve the route frame while workspace artifacts resolve;
-- `empty`: explain that no artifacts are loaded yet and keep local import available;
+- `loading`: preserve the owning contextual surface while payloads resolve;
+- `empty`: explain that no artifact payload is available;
 - `error`: explain that workspace artifact loading failed without fabricating fallback payloads;
 - `invalid import`: explain why a local `manifest.json` was rejected;
 - `ready`: show only real imported or workspace-backed artifacts and previews.
@@ -62,5 +63,5 @@ Truthfulness rules:
 ## Related Pages
 
 - [Frontend Architecture](../index.md)
-- [Main Workspace Views And UX](../main-workspace-views-and-ux.md)
+- [Screen Manuals And User Stories](../screen-manuals-and-user-stories.md)
 - [UX Implementation Guide](../ux-implementation-guide.md)

@@ -1,12 +1,16 @@
 ---
 title: Screen Layout And Cross-Surface Behavior Rules
-status: Active
+status: Superseded
 owner: Frontend / Architecture
-last_reviewed: 2026-04-07
+last_reviewed: 2026-08-02
 planning_type: architecture
 ---
 
 # Screen Layout And Cross-Surface Behavior Rules
+
+This peer-route layout contract is retired. The active Process Map and
+contextual-surface rules are maintained in
+[Screen Manuals And User Stories](./screen-manuals-and-user-stories.md).
 
 ## Purpose
 
