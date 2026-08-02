@@ -164,6 +164,51 @@ test('feature mechanization rail planner emits a local rail and audit row', () =
   );
 });
 
+test('feature mechanization rail planner promotes an imported manifest as local revision zero', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      implementationRefs: ['scripts/new-writer-helper.cjs#mergeImportedEvidence'],
+    })
+  );
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail: {
+      rail_id: 'docs/source.md#FM-DB-FIRST-WRITER#command#recordfeaturemechanizationrail',
+      revision: null,
+      rail_source: 'imported',
+      symbol_refs: [
+        {
+          path: 'scripts/existing-writer.cjs',
+          name: 'recordExistingEvidence',
+        },
+      ],
+      implementation_refs: [
+        {
+          path: 'scripts/existing-writer.cjs',
+          name: 'recordExistingEvidence',
+        },
+      ],
+      raw_manifest: {
+        symbols: [
+          {
+            path: 'scripts/existing-writer.cjs',
+            name: 'recordExistingEvidence',
+          },
+        ],
+      },
+    },
+    operationId: 'op-feature-mechanization-promote-import',
+    now: new Date('2026-06-05T18:00:00.000Z'),
+  });
+
+  assert.equal(planned.rail.revision, 0);
+  assert.deepEqual(planned.rail.symbolRefs, [
+    'scripts/existing-writer.cjs#recordExistingEvidence',
+    'scripts/new-writer-helper.cjs#mergeImportedEvidence',
+  ]);
+  assert.equal(planned.rail.rawManifest.symbols.length, 2);
+});
+
 test('feature mechanization rail planner extends existing evidence without restoring forbidden surfaces', () => {
   const command = parseArgs(
     featureMechanizationRecordArgs({

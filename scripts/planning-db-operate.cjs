@@ -3625,6 +3625,20 @@ function normalizeFeatureMechanizationList(value) {
   return [];
 }
 
+function normalizeFeatureMechanizationReferences(value) {
+  return normalizeFeatureMechanizationList(value)
+    .map((reference) => {
+      if (typeof reference === 'string') {
+        return reference;
+      }
+      if (reference && typeof reference.path === 'string' && typeof reference.name === 'string') {
+        return `${reference.path}#${reference.name}`;
+      }
+      return null;
+    })
+    .filter(Boolean);
+}
+
 function normalizeFeatureMechanizationRail(row) {
   if (!row) {
     return null;
@@ -3632,10 +3646,10 @@ function normalizeFeatureMechanizationRail(row) {
 
   return {
     railId: row.rail_id ?? row.railId,
-    revision: Number(row.revision ?? 0),
-    createdAt: row.created_at ?? row.createdAt,
-    symbolRefs: normalizeFeatureMechanizationList(row.symbol_refs ?? row.symbolRefs ?? []),
-    implementationRefs: normalizeFeatureMechanizationList(
+    revision: row.revision === null || row.revision === undefined ? null : Number(row.revision),
+    createdAt: row.created_at ?? row.createdAt ?? row.imported_at ?? row.importedAt,
+    symbolRefs: normalizeFeatureMechanizationReferences(row.symbol_refs ?? row.symbolRefs ?? []),
+    implementationRefs: normalizeFeatureMechanizationReferences(
       row.implementation_refs ?? row.implementationRefs ?? []
     ),
     documentationRefs: normalizeFeatureMechanizationList(
@@ -4199,7 +4213,7 @@ async function readExistingFowlerAnalysisOperation(client, idempotencyKey) {
   return result.rows[0] || null;
 }
 
-async function readLocalFeatureMechanizationRail(client, railId, lock = false) {
+async function readLocalFeatureMechanizationRail(client, railId, lock = false, identity = null) {
   const result = await client.query(
     `select *
      from ${schemaName}.feature_mechanization_local_rails
@@ -4208,7 +4222,21 @@ async function readLocalFeatureMechanizationRail(client, railId, lock = false) {
     [railId]
   );
 
-  return result.rows[0] || null;
+  if (result.rows[0] || !identity) {
+    return result.rows[0] || null;
+  }
+
+  const effectiveResult = await client.query(
+    `select *
+     from ${schemaName}.command_query_rail_manifest_query
+     where feature_id = $1
+       and rail_type = $2
+       and normalized_rail_name = $3
+     limit 1`,
+    [identity.featureId, identity.railType, identity.normalizedRailName]
+  );
+
+  return effectiveResult.rows[0] || null;
 }
 
 async function readExistingArchitectureDesignOperation(client, idempotencyKey) {
@@ -5904,7 +5932,12 @@ async function applyFeatureMechanizationRailRecordOperation(command, options = {
       return { idempotent: true, audit: existing };
     }
 
-    const existingRail = await readLocalFeatureMechanizationRail(client, command.railId, true);
+    const existingRail = await readLocalFeatureMechanizationRail(
+      client,
+      command.railId,
+      true,
+      command
+    );
     const planned = planFeatureMechanizationRailRecordOperation({
       command,
       existingRail,

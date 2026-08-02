@@ -2255,6 +2255,632 @@
       "createdAt": "2026-08-02T09:32:31.263Z"
     },
     {
+      "railId": "local#FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605#command#recordfeaturemechanizationrail",
+      "featureId": "FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605",
+      "mechanizationStatus": "implemented",
+      "railName": "RecordFeatureMechanizationRail",
+      "normalizedRailName": "recordfeaturemechanizationrail",
+      "railType": "command",
+      "dddOwner": "Planning DB governance writer",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationStatuses",
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationRailTypes",
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationRailStatuses",
+        "scripts/planning-db-operate.cjs#featureMechanizationListOptionKeys",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationStatus",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRailType",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRailStatus",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationFeatureId",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationRailName",
+        "scripts/planning-db-operate.cjs#assertFeatureMechanizationRailIdempotentReplayMatches",
+        "scripts/planning-db-operate.cjs#featureMechanizationRailId",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRecordCommand",
+        "scripts/planning-db-operate.cjs#parseFeatureMechanizationCommand",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationRail",
+        "scripts/planning-db-operate.cjs#buildFeatureMechanizationSymbols",
+        "scripts/planning-db-operate.cjs#planFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.cjs#readExistingFeatureMechanizationOperation",
+        "scripts/planning-db-operate.cjs#readLocalFeatureMechanizationRail",
+        "scripts/planning-db-operate.cjs#writePlannedFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.cjs#applyFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.test.cjs#featureMechanizationRecordArgs",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationList",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationReferences",
+        "scripts/planning-db-operate.cjs#mergeUniqueValues",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationValue",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationObjectsByKey",
+        "scripts/planning-db-operate.cjs#surfaceMatchesPattern",
+        "scripts/planning-db-operate.cjs#excludesFeatureMechanizationSurface",
+        "scripts/planning-db-operate.cjs#pruneForbiddenFeatureMechanizationReferences",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationManifest"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationRailStatuses",
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationRailTypes",
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationStatuses",
+        "scripts/planning-db-operate.cjs#applyFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.cjs#assertFeatureMechanizationRailIdempotentReplayMatches",
+        "scripts/planning-db-operate.cjs#buildFeatureMechanizationSymbols",
+        "scripts/planning-db-operate.cjs#featureMechanizationListOptionKeys",
+        "scripts/planning-db-operate.cjs#featureMechanizationRailId",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationRail",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationRailName",
+        "scripts/planning-db-operate.cjs#parseFeatureMechanizationCommand",
+        "scripts/planning-db-operate.cjs#planFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.cjs#readExistingFeatureMechanizationOperation",
+        "scripts/planning-db-operate.cjs#readLocalFeatureMechanizationRail",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationFeatureId",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRailStatus",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRailType",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRecordCommand",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationStatus",
+        "scripts/planning-db-operate.cjs#writePlannedFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.test.cjs#featureMechanizationRecordArgs",
+        "scripts/planning-db-operate.cjs#RecordFeatureMechanizationRail",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationList",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationReferences",
+        "scripts/planning-db-operate.cjs#mergeUniqueValues",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationValue",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationObjectsByKey",
+        "scripts/planning-db-operate.cjs#surfaceMatchesPattern",
+        "scripts/planning-db-operate.cjs#excludesFeatureMechanizationSurface",
+        "scripts/planning-db-operate.cjs#pruneForbiddenFeatureMechanizationReferences",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationManifest"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+        "docs/guides/ai-work-protocol.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "docs/planning/status/db-surface-inventory.md",
+        "scripts/planning-db-operate.cjs",
+        "scripts/planning-db-operate.test.cjs",
+        "scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "scripts/check-feature-mechanization.cjs",
+        "scripts/check-feature-mechanization.test.cjs",
+        "scripts/planning-db-migrate.test.cjs"
+      ],
+      "architectureGuards": [
+        "node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+        "node --test scripts/planning-db-operate.test.cjs"
+      ],
+      "completionGate": [
+        "node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+        "pnpm planning:db:migrate",
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush",
+        "node --test scripts/planning-db-operate.test.cjs"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+      "sourceContentSha256": "095876e4e10e9cc690b065448b206f75e30a4af54bd72596b4611cbf47e7278c",
+      "rawRail": {
+        "name": "RecordFeatureMechanizationRail",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Planning DB governance writer"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "allowedFeatureMechanizationStatuses",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Writer command validates lifecycle states before DB writes."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "allowedFeatureMechanizationRailTypes",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Writer command rejects non-command/query rail types at the boundary."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "allowedFeatureMechanizationRailStatuses",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Writer command preserves gap and implementation rail statuses."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "featureMechanizationListOptionKeys",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Repeated manifest fields stay explicit at the command boundary."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "validateFeatureMechanizationStatus",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Feature status validation happens before DB mutation."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "validateFeatureMechanizationRailType",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Rail type validation keeps the command/query catalog normalized."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "validateFeatureMechanizationRailStatus",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Rail status validation protects gap and duplicate queries."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "validateFeatureMechanizationFeatureId",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Stable feature ids keep local records replayable."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "normalizeFeatureMechanizationRailName",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Normalized names give duplicate detection a deterministic key."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "assertFeatureMechanizationRailIdempotentReplayMatches",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Idempotency replays cannot silently rewrite rail payloads."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "featureMechanizationRailId",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Rail identity is deterministic across command replays."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "validateFeatureMechanizationRecordCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "The writer rejects incomplete manifests before persistence."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "parseFeatureMechanizationCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "CLI input is normalized into a single command shape."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "normalizeFeatureMechanizationRail",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Existing local rows are normalized before revision checks."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "buildFeatureMechanizationSymbols",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "The writer projects implementation refs into manifest symbols for existing gates."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "planFeatureMechanizationRailRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Planning separates command validation from DB mutation."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "readExistingFeatureMechanizationOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Durable operation history owns idempotency replay checks."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "readLocalFeatureMechanizationRail",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Local rail revision checks happen against the DB row, not Markdown."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "writePlannedFeatureMechanizationRailRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Persistence writes local rails and local operations without mutating imported rails."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "applyFeatureMechanizationRailRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Runtime command application wraps migration, transaction, idempotency, and write."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "featureMechanizationRecordArgs",
+            "path": "scripts/planning-db-operate.test.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer tests",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Tests reuse a full command contract fixture instead of narrow ad-hoc argument lists."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "normalizeFeatureMechanizationList",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "normalizeFeatureMechanizationReferences",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "mergeUniqueValues",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "mergeFeatureMechanizationValue",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "mergeFeatureMechanizationObjectsByKey",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "surfaceMatchesPattern",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "excludesFeatureMechanizationSurface",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "pruneForbiddenFeatureMechanizationReferences",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "mergeFeatureMechanizationManifest",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605",
+        "userStories": [
+          "docs/architecture/components/ci-governance/component-engineering-record-user-stories.md"
+        ],
+        "cypressFlows": ["N/A - repository governance CLI gate"],
+        "domainObjects": [
+          {
+            "name": "FeatureMechanizationLocalRail",
+            "type": "aggregate row",
+            "owner": "Planning DB governance writer"
+          },
+          {
+            "name": "FeatureMechanizationLocalOperation",
+            "type": "audit row",
+            "owner": "Planning DB governance writer"
+          },
+          {
+            "name": "FeatureMechanizationEffectiveRailProjection",
+            "type": "read model",
+            "owner": "Planning DB governance read model"
+          },
+          "FeatureMechanizationLocalRail",
+          "FeatureMechanizationEffectiveRailProjection"
+        ],
+        "fowlerSignals": [
+          "Markdown import was the only rail declaration writer even after DB-first posture.",
+          "Implementation validation read the imported table and ignored local DB-authored rails.",
+          "A local rail writer can produce invalid raw manifests unless the command owns the complete manifest projection contract.",
+          "Rail updates extend effective evidence instead of replacing accumulated manifests."
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+          "pnpm planning:db:migrate",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush",
+          "node --test scripts/planning-db-operate.test.cjs"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "feature-mechanization-writer-records-valid-local-rails",
+            "redTest": "node --test scripts/planning-db-operate.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-operate.cjs",
+              "scripts/planning-db-operate.test.cjs",
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "expectedFailure": "feature-mechanization record is an unknown operation or emits an invalid local manifest projection."
+          },
+          {
+            "id": "implementation-gate-reads-effective-rail-projection",
+            "redTest": "node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+            "greenTest": "node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+            "patchSurfaces": [
+              "scripts/check-feature-mechanization.cjs",
+              "scripts/check-feature-mechanization.test.cjs",
+              "scripts/planning-db-migrate.test.cjs"
+            ],
+            "expectedFailure": "implementation manifests are read from command_query_rails instead of the DB manifest projection."
+          },
+          {
+            "id": "recordfeaturemechanizationrail-record",
+            "redTest": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-operate.cjs",
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "expectedFailure": "Updating an existing or imported rail discards accumulated symbols, validation evidence, and specialized manifest fields."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordFeatureMechanizationRail",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Planning DB governance writer"
+          },
+          {
+            "name": "ListFeatureMechanizationRails",
+            "type": "query",
+            "dddOwner": "Planning DB governance read model"
+          },
+          {
+            "name": "ValidateFeatureMechanizationImplementation",
+            "type": "command",
+            "dddOwner": "CI governance implementation gate"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+          "node --test scripts/planning-db-operate.test.cjs"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+          "docs/planning/status/db-surface-inventory.md",
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate.test.cjs",
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+          "scripts/check-feature-mechanization.cjs",
+          "scripts/check-feature-mechanization.test.cjs",
+          "scripts/planning-db-migrate.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "specs/contracts/**",
+          "docs/archive/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-02T09:32:58.301Z"
+    },
+    {
       "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
       "featureId": "GD-REV-PLANNING-CANON",
       "mechanizationStatus": "implemented",
@@ -24033,6 +24659,95 @@
         ]
       },
       "createdAt": "2026-08-02T09:00:04.401Z"
+    },
+    {
+      "operationId": "668a65f2-d22c-4a3c-9417-c322dd00aad2",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605:command:recordfeaturemechanizationrail:latest:3433d55a1e29b904",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605#command#recordfeaturemechanizationrail",
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+      "sourceContentSha256": "095876e4e10e9cc690b065448b206f75e30a4af54bd72596b4611cbf47e7278c",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "dddOwner": "Planning DB governance writer",
+        "railName": "RecordFeatureMechanizationRail",
+        "railType": "command",
+        "featureId": "FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605",
+        "greenTest": "node --test scripts/planning-db-operate.test.cjs",
+        "sourceRef": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/architecture/components/ci-governance/component-engineering-record-user-stories.md"
+        ],
+        "cypressFlows": ["N/A - repository governance CLI gate"],
+        "domainObjects": [
+          "FeatureMechanizationLocalRail",
+          "FeatureMechanizationEffectiveRailProjection"
+        ],
+        "fowlerSignals": [
+          "Rail updates extend effective evidence instead of replacing accumulated manifests."
+        ],
+        "patchSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate.test.cjs",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Updating an existing or imported rail discards accumulated symbols, validation evidence, and specialized manifest fields.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationList",
+          "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationReferences",
+          "scripts/planning-db-operate.cjs#mergeUniqueValues",
+          "scripts/planning-db-operate.cjs#mergeFeatureMechanizationValue",
+          "scripts/planning-db-operate.cjs#mergeFeatureMechanizationObjectsByKey",
+          "scripts/planning-db-operate.cjs#surfaceMatchesPattern",
+          "scripts/planning-db-operate.cjs#excludesFeatureMechanizationSurface",
+          "scripts/planning-db-operate.cjs#pruneForbiddenFeatureMechanizationReferences",
+          "scripts/planning-db-operate.cjs#mergeFeatureMechanizationManifest"
+        ],
+        "normalizedRailName": "recordfeaturemechanizationrail",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "095876e4e10e9cc690b065448b206f75e30a4af54bd72596b4611cbf47e7278c",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "specs/contracts/**",
+          "docs/archive/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-02T09:41:35.786Z"
     }
   ]
 }
