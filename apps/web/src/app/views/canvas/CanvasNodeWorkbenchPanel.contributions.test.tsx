@@ -19,6 +19,12 @@ const NODE: CanonicalNode = {
   tags: [],
 };
 
+const SECOND_NODE: CanonicalNode = {
+  ...NODE,
+  id: 'model.analytics.customers',
+  name: 'customers',
+};
+
 describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
   let container: HTMLDivElement;
   let root: Root;
@@ -173,5 +179,62 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     });
 
     expect(container.querySelector('[data-slot="healthy-workbench-contribution"]')).not.toBeNull();
+  });
+
+  it('recovers a contribution boundary when the selected node changes', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const ThrowingContribution = (): never => {
+      throw new Error('workbench contribution failed');
+    };
+
+    act(() => {
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={NODE}
+          nodes={[NODE, SECOND_NODE]}
+          edges={[]}
+          activeRunId={null}
+          preferredTabId="general"
+          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          contributions={[
+            {
+              id: 'shared-contribution',
+              nodeId: NODE.id,
+              sectionId: 'general',
+              placement: 'after-body',
+              content: <ThrowingContribution />,
+            },
+          ]}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    act(() => {
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={SECOND_NODE}
+          nodes={[NODE, SECOND_NODE]}
+          edges={[]}
+          activeRunId={null}
+          preferredTabId="general"
+          authoring={{ canEditNode: false, onApplyNodeDraft: vi.fn() }}
+          contributions={[
+            {
+              id: 'shared-contribution',
+              nodeId: SECOND_NODE.id,
+              sectionId: 'general',
+              placement: 'after-body',
+              content: <div data-slot="recovered-workbench-contribution">Recovered</div>,
+            },
+          ]}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    expect(
+      container.querySelector('[data-slot="recovered-workbench-contribution"]')
+    ).not.toBeNull();
   });
 });

@@ -290,12 +290,16 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       onDragOver={handleSchemaResourceDragOver}
       onDrop={handleSchemaResourceDrop}
     >
-      <PluginContributionBoundary fallback={<FallbackNodeRenderer {...rendererProps} />}>
+      <PluginContributionBoundary
+        resetKey={`${id}:renderer:${canonicalNode.pluginId}:${canonicalNode.kind}`}
+        fallback={<FallbackNodeRenderer {...rendererProps} />}
+      >
         <Renderer {...rendererProps} />
       </PluginContributionBoundary>
       {badges.map((badge, index) => (
         <PluginContributionBoundary
           key={`${badge.position}-${badge.text ?? badge.tooltip ?? index}`}
+          resetKey={`${id}:badge:${badge.position}:${badge.text ?? badge.tooltip ?? index}`}
           fallback={null}
         >
           <NodeBadgeOverlay badge={badge} />

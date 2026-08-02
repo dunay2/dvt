@@ -170,14 +170,19 @@ function buildNodeWorkbenchReadModel({
 }
 
 function renderWorkbenchContributions(
-  contributions: readonly CanvasNodeWorkbenchContribution[] | undefined
+  contributions: readonly CanvasNodeWorkbenchContribution[] | undefined,
+  nodeId: string
 ): ReactNode {
   if (contributions == null || contributions.length === 0) {
     return null;
   }
 
   return contributions.map((contribution) => (
-    <PluginContributionBoundary key={contribution.id} fallback={null}>
+    <PluginContributionBoundary
+      key={contribution.id}
+      resetKey={`${nodeId}:${contribution.id}`}
+      fallback={null}
+    >
       {contribution.content}
     </PluginContributionBoundary>
   ));
@@ -187,12 +192,13 @@ function buildContributionChildrenBySection(
   contributionsBySection: ReadonlyMap<
     NodePropertySectionId,
     readonly CanvasNodeWorkbenchContribution[]
-  >
+  >,
+  nodeId: string
 ): Partial<Record<NodePropertySectionId, ReactNode>> {
   return Object.fromEntries(
     Array.from(contributionsBySection, ([sectionId, contributions]) => [
       sectionId,
-      renderWorkbenchContributions(contributions),
+      renderWorkbenchContributions(contributions, nodeId),
     ])
   );
 }
@@ -259,10 +265,12 @@ export function CanvasNodeWorkbenchPanel({
     </div>
   );
   const sectionBeforeChildren = buildContributionChildrenBySection(
-    contributionModel.beforeBodyBySection
+    contributionModel.beforeBodyBySection,
+    node.id
   );
   const sectionAfterChildren = buildContributionChildrenBySection(
-    contributionModel.afterBodyBySection
+    contributionModel.afterBodyBySection,
+    node.id
   );
 
   if (authoring.canEditNode) {

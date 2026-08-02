@@ -33,12 +33,42 @@ describe('PluginContributionBoundary', () => {
   it('renders the supplied local fallback when one plugin contribution throws', () => {
     act(() => {
       root.render(
-        <PluginContributionBoundary fallback={<div data-slot="local-fallback">Fallback</div>}>
+        <PluginContributionBoundary
+          resetKey="failing-contribution"
+          fallback={<div data-slot="local-fallback">Fallback</div>}
+        >
           <ThrowingContribution />
         </PluginContributionBoundary>
       );
     });
 
     expect(container.querySelector('[data-slot="local-fallback"]')).not.toBeNull();
+  });
+
+  it('recovers when the explicit contribution identity changes', () => {
+    act(() => {
+      root.render(
+        <PluginContributionBoundary
+          resetKey="failing-contribution"
+          fallback={<div data-slot="local-fallback">Fallback</div>}
+        >
+          <ThrowingContribution />
+        </PluginContributionBoundary>
+      );
+    });
+
+    act(() => {
+      root.render(
+        <PluginContributionBoundary
+          resetKey="healthy-contribution"
+          fallback={<div data-slot="local-fallback">Fallback</div>}
+        >
+          <div data-slot="healthy-contribution">Healthy</div>
+        </PluginContributionBoundary>
+      );
+    });
+
+    expect(container.querySelector('[data-slot="local-fallback"]')).toBeNull();
+    expect(container.querySelector('[data-slot="healthy-contribution"]')).not.toBeNull();
   });
 });

@@ -216,7 +216,7 @@ export function NodePropertiesTabs({
         const PanelComponent = panel.component;
         return (
           <TabsContent key={panel.id} value={panel.id} className="m-0">
-            <PluginContributionBoundary fallback={null}>
+            <PluginContributionBoundary resetKey={`${node.id}:${panel.id}`} fallback={null}>
               <PanelComponent
                 node={node}
                 activeRunId={activeRunId}
