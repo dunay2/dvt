@@ -1,5 +1,6 @@
 /** Owned concern: assemble explicit app-service test doubles outside the product runtime. */
 import type { CostAttributionSummary, ICostAttributionSummaryPort } from '../app/ports/cost';
+import type { FrontendOperabilitySink } from '../app/ports/frontendOperability';
 import type { WorkspaceScopeSelectionPort } from '../app/ports/workspaceScopeSelection';
 import type { AppServicesOverrides } from '../app/services/composition/appServices';
 import { createMockPlansService } from './plansPortDoubles';
@@ -13,7 +14,12 @@ import {
 
 export type AppServicesTestOverridesOptions = {
   readonly workspaceState?: MockWorkspaceState;
+  readonly frontendOperabilitySink?: FrontendOperabilitySink;
 };
+
+export function createInertFrontendOperabilitySink(): FrontendOperabilitySink {
+  return { record: () => undefined };
+}
 
 export function createMockCostAttributionSummaryPort(
   summary?: CostAttributionSummary
@@ -78,5 +84,7 @@ export function createAppServicesTestOverrides(
     costAttributionSummaryPort: createMockCostAttributionSummaryPort(),
     sessionContext,
     workspaceScopeSelection: createMockWorkspaceScopeSelectionPort(),
+    frontendOperabilitySink:
+      options.frontendOperabilitySink ?? createInertFrontendOperabilitySink(),
   };
 }
