@@ -2,7 +2,7 @@
 title: Screen Manuals And User Stories
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-07
+last_reviewed: 2026-08-02
 ---
 
 # Screen Manuals And User Stories
@@ -44,11 +44,11 @@ The user always understands:
 
 - Users should not see route-specific wiring differences between `mock` and
   `api`.
-- Main routes remain operable in both modes.
-- When an API-only capability is not implemented yet, the user gets an explicit
-  service error instead of silent fallback behavior.
-- Source import remains mock-capable, while API mode reports unimplemented
-  backend import support explicitly.
+- `api` is the canonical product runtime; `mock` remains an explicit isolated
+  test/demo posture and is not accepted as product evidence.
+- Source Import uses protected API rails for connection list/create/test,
+  provider-neutral object discovery, and registration. Backend rejection is
+  surfaced without silent fallback behavior.
 - The console no longer pretends mock log lines are real in `api` mode.
 - In `api` mode, the console empty state uses product wording about run events
   and explicitly states that live log streaming is not yet available.
@@ -66,36 +66,42 @@ flowchart LR
 
 ### User expectation
 
-Canvas is the main authoring and topology workspace.
+Canvas is the primary Process Map and authoring workspace for heterogeneous
+DVT+ graphs. dbt is the current native transformation vertical, not the whole
+product ontology.
 
 The user expects to:
 
 - inspect the graph;
-- open or hide explorer and inspector panels;
+- open Code, source import, project exploration, and node detail contextually
+  without replacing the Process Map;
 - request plan;
 - start a run;
 - understand visual overlays without changing graph truth accidentally.
 
 ### Current user journey
 
-Today the Canvas route behaves as one graph workbench with:
+The Canvas route behaves as one contextual graph workbench with:
 
-- explorer on the left when needed;
-- viewport in the center as the main interaction surface;
-- inspector on the right for selection-driven detail;
-- overlay toggles for impact, runtime, and lineage-oriented projection;
-- planning and run-start actions tied to the current graph context.
+- the Process Map as the persistent primary surface;
+- Code and node details opened contextually while the graph remains visible;
+- Source Import and project exploration opened on demand rather than as fixed
+  resource rails;
+- Log, Problems, Runs, and Preview retained in the bottom operational drawer;
+- Preview and run-start actions tied to the same authoritative persisted
+  preview and immutable `PlanRef`.
 
-This remediation does not change that journey. It hardens the route so loading,
-error, and persistence behavior become more deterministic without changing how
-the user moves through the workbench.
+This is the route model delivered by
+[US-F10.1](https://github.com/dunay2/dvt/issues/2102). Legacy peer workbench
+routes may preserve deep-link intent, but they do not own additional permanent
+work surfaces or a second graph model.
 
 ```mermaid
 flowchart LR
   Entry["Open /canvas"] --> Shell["Shell frame stays visible"]
-  Shell --> Explorer["Explorer optional"]
   Shell --> Viewport["Viewport primary surface"]
-  Shell --> Inspector["Inspector optional"]
+  Viewport --> Contextual["Code / source / node work context"]
+  Viewport --> Drawer["Log / Problems / Runs / Preview"]
 
   Viewport --> Overlay["Visual overlays only"]
   Viewport --> Plan["Plan from current selection"]
@@ -209,11 +215,12 @@ Contract authority:
 - Snapshot-only: route remains operational without fake step or artifact detail.
 - Degraded: timeline failure does not erase a valid snapshot state.
 
-## Lineage
+## Lineage Lens
 
 ### User expectation
 
-Lineage is a read-only dependency and impact-analysis surface.
+Lineage is a read-only dependency and impact-analysis lens over the Process
+Map. It is not a peer route or a second graph model.
 
 The user expects:
 
@@ -234,86 +241,70 @@ The user expects:
 - Loading: preserve route frame.
 - Missing metadata: explain why column lineage is unavailable.
 
-## Code
+## Contextual Code Workbench
 
 ### User expectation
 
-Code is the read-only workspace file browser and the entry surface for future
-file-history review.
+Code is the contextual workspace file editor for the active project or selected
+node. It keeps the Process Map visible and automatically synchronizes edits
+through the revision-guarded `SaveWorkspaceFileContent` command.
 
 The user expects:
 
 - one selected file at a time;
-- a stable file tree and source preview;
-- explicit handoff to `Diff` when revision comparison is needed.
+- a stable file tree and editable Monaco surface;
+- explicit modified, syncing, synchronized, conflict, failed, and read-only
+  states without a second Save lifecycle;
+- contextual file history attached to the selected file.
 
 ### Primary user stories
 
 - As an operator, I want to browse workspace files inside the main shell so I
   can inspect source without leaving the product.
+- As an author, I want edits to synchronize through compare-and-swap so a stale
+  browser cannot overwrite newer project content.
 - As a reviewer, I want selected-file history to stay attached to the current
-  file so I can decide when to open a real compare view.
-- As a reviewer, I want revision comparison to move into `Diff` instead of
-  overloading the file browser.
+  file without requiring a permanent peer route.
 
 ### Expected states
 
 - Empty: explain that no file is selected or no workspace files are available.
-- Loading: keep shell and route visible while file tree or preview resolves.
+- Loading: keep the Process Map visible while file tree or content resolves.
 - Error: preserve selected-file context and explain which file surface failed.
+- Modified/syncing/synchronized: report working-tree persistence without
+  claiming a Git commit or push.
+- Conflict: retain the current file and require reconciliation with the
+  authoritative revision.
 - Read-only: make it clear that browsing is allowed but editing is not.
 
-## Diff
+## Retired Diff And Artifacts Peer Routes
 
 ### User expectation
 
-Diff is the review surface for structural, SQL, and catalog changes.
+`/canvas/diff` and `/canvas/artifacts` are retired peer workbench routes. Their
+deep links redirect to the Process Map with an explicit unavailable intent;
+they do not render a second graph, fixed panel, or replacement read model.
 
-The user expects:
+Current behavior:
 
-- summary first;
-- severity first-class;
-- structured tabs instead of one raw blob;
-- Monaco-backed diff and structured-text review where payload size and syntax
-  complexity justify it.
-
-### Primary user stories
-
-- As a reviewer, I want to see breaking changes before informational changes so
-  I can prioritize review.
-- As a reviewer, I want SQL and structural diff contexts to stay separate so the
-  review stays understandable.
-
-### Expected states
-
-- Empty: explain that no diff data is available.
-- Loading: keep shell and route visible.
-- Error: preserve compare context and explain failure.
-
-## Artifacts
-
-### User expectation
-
-Artifacts is the read-only browser for manifest and related dbt artifacts.
-
-The user expects:
-
-- local import when useful;
-- stable preview panes;
-- no accidental editing path;
-- Monaco-backed read-only inspection when payload size makes basic viewers weak.
+- the redirect preserves the fact that a retired surface was requested;
+- Canvas explains that no equivalent permanent surface is available;
+- Code and file history retain their existing contextual owners;
+- a future comparison capability requires its own GitHub issue and must reuse
+  the authoritative workspace-file rails.
 
 ### Primary user stories
 
-- As a user, I want to inspect manifest and artifact content without leaving the
-  main shell.
-- As a user, I want local artifact import to be explicit and reversible.
+- As a reviewer, I want retired deep links to preserve intent and explain the
+  supported alternative rather than fail silently.
+- As a maintainer, I want comparison and artifact review to gain one canonical
+  owner before they become visible product surfaces.
 
 ### Expected states
 
-- Empty: explain why no artifact is loaded.
-- Loading: preserve route frame.
-- Invalid import: show why the local file is rejected.
+- Redirected: return to Canvas and publish the unavailable retired-surface
+  intent.
+- Unknown retired surface: fail closed with generic unavailable guidance.
 
 ## Execution Templates And Source Generation
 
@@ -351,47 +342,40 @@ The user expects to:
   provenance and target profile.
 - Read-only: allow review and export while mutation or dispatch is gated.
 
-## Execution Acceptance Matrix (F-20 kickoff)
+## Surface Acceptance Matrix
 
-This matrix is the active acceptance baseline for route-level workbench slices.
-Each route keeps one primary job and hands off to another route explicitly.
+This matrix is the active acceptance baseline. It distinguishes routes from
+contextual surfaces so a capability cannot accidentally create a peer graph or
+duplicate command/query owner.
 
-| Route       | Primary job                               | Allowed handoff targets     | Required acceptance states                      |
-| ----------- | ----------------------------------------- | --------------------------- | ----------------------------------------------- |
-| `Canvas`    | graph authoring and graph-context intent  | `Runs`, `Diff`, `Templates` | loading, empty, error, degraded, read-only      |
-| `Runs`      | execution operations and run evidence     | `Artifacts`                 | loading, empty, error, degraded, missing run    |
-| `Lineage`   | dependency and impact analysis            | `Canvas`                    | loading, empty, error, missing metadata         |
-| `Code`      | read-only file browsing and history entry | `Diff`                      | loading, empty, error, read-only                |
-| `Diff`      | structural and SQL review                 | `Templates`                 | loading, empty, error                           |
-| `Artifacts` | immutable artifact inspection             | none                        | loading, empty, error, invalid import           |
-| `Templates` | governed source generation                | none                        | loading, empty, validation error, preview ready |
+| Surface                    | Placement            | Primary job                                   | Required acceptance states                         |
+| -------------------------- | -------------------- | --------------------------------------------- | -------------------------------------------------- |
+| Process Map                | `/canvas` route      | graph authoring, Preview, and run handoff     | loading, empty, error, degraded, read-only         |
+| Code                       | contextual workbench | revision-guarded project and node file edits  | loading, empty, modified, syncing, conflict, error |
+| Lineage                    | Canvas lens          | dependency and impact projection              | empty, loading, missing metadata                   |
+| Source Import              | contextual modal     | discover and register governed source objects | loading, empty, rejected, completed                |
+| Log/Problems/Runs/Preview  | operational drawer   | operational evidence and readiness            | collapsed, loading, blocked, active, terminal      |
+| Runs list/detail           | `/runs` routes       | execution evidence                            | loading, empty, error, degraded, missing run       |
+| Templates                  | `/templates` route   | governed source generation                    | loading, empty, validation error, preview ready    |
+| retired Diff/Artifacts URL | redirect intent only | explain unavailable superseded surface        | redirected, unavailable                            |
 
 ```mermaid
 flowchart TB
-  Canvas -->|"run"| Runs
-  Canvas -->|"review"| Diff
+  Canvas["Process Map"] --> Code["Contextual Code"]
+  Canvas --> Lineage["Lineage lens"]
+  Canvas --> Source["Source Import modal"]
+  Canvas --> Drawer["Operational drawer"]
+  Canvas -->|"run evidence"| Runs
   Canvas -->|"generate"| Templates
-  Code -->|"revision compare"| Diff
-  Runs -->|"inspect"| Artifacts
-  Lineage -->|"authoring follow-up"| Canvas
-  Diff -->|"generated-source review"| Templates
+  Legacy["Retired peer URL"] -->|"one-shot intent"| Canvas
 ```
 
 ## Tracking Stories As Work
 
-These manuals should be translated into implementation work through Lane E task
-tracking, not left as static documentation.
-
-Current related tasks:
-
-- `F-20` per-screen user manuals and story coverage
-- `F-15` workbench UX contract
-- `F-16` dense operational tables
-- `F-17` Monaco embedded review surfaces for Diff, Artifacts, and Templates
-- `F-18` console and live-log convergence
-- `F-19` Marquez open-data visual direction
-- `F-21` execution-template and source-generation workbench
-- `F-23` governed file-history review inside `Code` and `Diff`
+Unimplemented behavior from these manuals must be represented by one
+[GitHub Issue](https://github.com/dunay2/dvt/issues) before implementation.
+Planning DB records architecture components, relationships, capabilities,
+rails, and evidence; it does not own or mirror issue lifecycle.
 
 Runtime contract baseline references:
 

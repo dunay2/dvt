@@ -1,12 +1,16 @@
 ---
 title: Diff Monaco Review Surface User Stories
-status: Accepted
+status: Superseded
 owner: Web / Architecture
-last_reviewed: 2026-05-19
+last_reviewed: 2026-08-02
 planning_type: architecture
 ---
 
 # Diff Monaco Review Surface User Stories
+
+These route-level stories are retired with the Diff peer route. They are
+retained as historical acceptance evidence for the internal comparison
+modules; they are not current product-route requirements.
 
 ## User Stories
 

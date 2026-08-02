@@ -1,12 +1,17 @@
 ---
 title: Artifacts Monaco Read-Only Viewer Component
-status: Accepted
+status: Superseded
 owner: Web / Architecture
-last_reviewed: 2026-05-20
+last_reviewed: 2026-08-02
 planning_type: architecture
 ---
 
 # Artifacts Monaco Read-Only Viewer Component
+
+This route-level component is retired. The implementation modules remain
+internal presentation evidence, but Raven does not expose an Artifacts peer
+route. Current product placement is governed by
+[Screen Manuals And User Stories](../screen-manuals-and-user-stories.md).
 
 ## Purpose
 

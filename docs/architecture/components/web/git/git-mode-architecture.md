@@ -1,12 +1,17 @@
 ---
 title: Git Mode Architecture
 document_type: architecture_note
-status: Active
+status: Superseded
 owner: Frontend / Architecture
-last_updated: 2026-04-11
+last_updated: 2026-08-02
 ---
 
 # Git Mode Architecture
+
+This route-oriented Git mode is retired. Workspace files now use the
+contextual Code workbench and revision-guarded `SaveWorkspaceFileContent`
+command described by
+[Screen Manuals And User Stories](../screen-manuals-and-user-stories.md).
 
 ## Purpose
 

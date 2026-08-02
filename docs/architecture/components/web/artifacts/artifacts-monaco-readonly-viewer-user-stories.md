@@ -1,12 +1,16 @@
 ---
 title: Artifacts Monaco Read-Only Viewer User Stories
-status: Accepted
+status: Superseded
 owner: Web / Architecture
-last_reviewed: 2026-05-20
+last_reviewed: 2026-08-02
 planning_type: architecture
 ---
 
 # Artifacts Monaco Read-Only Viewer User Stories
+
+These route-level stories are retired with the Artifacts peer route. They are
+retained as historical acceptance evidence for the internal read-only viewer;
+they are not current product-route requirements.
 
 ## User Stories
 

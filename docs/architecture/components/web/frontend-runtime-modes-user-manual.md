@@ -2,7 +2,7 @@
 title: Frontend Runtime Modes User Manual
 status: Active
 owner: Frontend / Product / Docs
-last_reviewed: 2026-04-22
+last_reviewed: 2026-08-02
 ---
 
 # Frontend Runtime Modes User Manual
@@ -48,8 +48,9 @@ Current Canvas rule:
 
 - active Canvas authoring requires `api` mode plus protected workspace-draft
   authority
-- `api` mode still does not expose source import because the backend endpoint
-  is not implemented yet
+- `api` mode exposes Source Import through the protected warehouse connection,
+  source-object discovery, connection probe, and import rails when the active
+  route and plugin contribution allow it
 - `mock` mode may still boot the frontend, but Canvas authoring is fail-closed
   and must not be treated as equivalent product behavior
 
@@ -86,9 +87,12 @@ Operators should distinguish "feature unavailable" from "system offline".
 
 For Canvas specifically:
 
-- `feature unavailable` means the route is up but the active runtime does not
-  provide source import, so the UI must hide `Add data` and render honest empty
-  guidance
+- `feature unavailable` means the route is up but its route posture, plugin
+  contribution, or protected source-import capability does not admit the
+  action; the UI must hide the affordance rather than invoke a fake fallback
+- provider, authorization, discovery, and import failures are operation
+  failures surfaced by the real API rail, not evidence that the feature is
+  globally absent
 - `system offline` means route startup or backend access is degraded and the
   route should publish blocked or offline posture instead
 

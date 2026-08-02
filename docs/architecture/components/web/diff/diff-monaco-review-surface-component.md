@@ -1,12 +1,17 @@
 ---
 title: Diff Monaco Review Surface Component
-status: Accepted
+status: Superseded
 owner: Web / Architecture
-last_reviewed: 2026-05-19
+last_reviewed: 2026-08-02
 planning_type: architecture
 ---
 
 # Diff Monaco Review Surface Component
+
+This route-level component is retired. The implementation modules and backend
+diff query remain internal capabilities, but Raven does not expose a Diff peer
+route. Current product placement is governed by
+[Screen Manuals And User Stories](../screen-manuals-and-user-stories.md).
 
 ## Purpose
 

@@ -2,14 +2,16 @@
 title: Graph Frontend Architecture
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-26
+last_reviewed: 2026-08-02
 ---
 
 # Graph Frontend Architecture
 
 ## Purpose
 
-The Graph surface is the bounded frontend authoring context of DVT.
+The Graph surface is the bounded frontend authoring context of DVT+. It hosts
+heterogeneous plugin-qualified nodes and edges; dbt is the current native
+transformation vertical, not a closed product ontology.
 
 Its job is to expose graph authoring, route operability, preview, and run
 handoff without becoming the source of execution truth or shell truth.
@@ -28,6 +30,7 @@ handoff without becoming the source of execution truth or shell truth.
 - [Graph Sequences And State Machines](./graph-sequences-and-state-machines.md)
 - [Frontend Fowler Implementation Pattern](../frontend-fowler-implementation-pattern.md)
 - [Frontend Data Boundary Architecture](../frontend-data-boundary-architecture.md)
+- [US-F10.1 contextual Process Map correction](https://github.com/dunay2/dvt/issues/2102)
 
 Reading rule:
 
@@ -103,7 +106,7 @@ Current posture:
 
 ## Current Architecture Point
 
-As of 2026-04-25:
+As of release `0.5.3` on 2026-08-02:
 
 - route startup is generalized by `route.id` plus explicit bootstrap metadata
 - Canvas graph mutation now flows through one local lifecycle component
@@ -136,13 +139,18 @@ As of 2026-04-25:
   projection from `GET /workspace/graph/draft` instead of calling a retired
   `/workspace/graph` endpoint; the snapshot remains projection-only and does
   not regain aggregate authority
-- Canvas source-import affordances are now capability-gated instead of being
-  implied by mock-era empty states; the active `api` path hides
-  `Add source` until the backend import endpoint exists, and `mock` is not a
-  substitute active-authoring runtime under the hard-cut
-- the DVT authoring catalog now explicitly includes the governed
-  `dvt:source -> dvt:sql_transform -> dvt:sink` path instead of letting source
-  nodes fall through the unknown-node fallback
+- Canvas source-import affordances are capability-gated instead of being
+  implied by mock-era empty states; the active `api` path uses the implemented
+  protected connection list/create/test, source-object discovery, and import
+  rails, while `mock` is not a substitute active-authoring runtime
+- DVT+ treats the graph as a heterogeneous plugin-qualified topology. The
+  `dvt:source -> dvt:sql_transform -> dvt:sink` sequence remains one supported
+  transformation example, not the whole product ontology or a fixed graph
+  shape
+- Canvas is the single primary Process Map. Code, source import, project
+  exploration, and node work open contextually; Log, Problems, Runs, and
+  Preview retain their existing bottom-drawer owners rather than becoming peer
+  graph routes or fixed side rails
 - active Canvas runtime composition is now registered once per canvas kind:
   `CanvasRuntimeRegistration` binds product kind, graph strategy, execution
   posture, and first-node catalog
@@ -163,6 +171,11 @@ As of 2026-04-25:
   persisted `PlanRef`; API-mode warehouse source import is available only when
   the workspace port advertises the implemented protected-runtime source-import
   rails.
+- Preview publishes exactly one of `accepted`, `selection-rejected`, or
+  `plan-invalid`. An accepted or invalid built plan keeps its exact persisted
+  `PlanRef`; later project or graph changes may require a new Preview but do not
+  mutate or invalidate that stored execution identity. `StartRun(planRef)`
+  executes the referenced stored artifact.
 - route shell composition applies the effective fail-closed route posture to
   Inspector authoring, so an unsupported or blocked canvas cannot reopen
   side-panel mutation even if a lower-level controller value drifts

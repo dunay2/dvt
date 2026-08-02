@@ -2,7 +2,7 @@
 title: Internal Alpha Route Gate Component
 status: Review
 owner: Product / Architecture / Frontend
-last_reviewed: 2026-05-18
+last_reviewed: 2026-08-02
 planning_type: component
 task_ids:
   - F-27
@@ -95,8 +95,8 @@ stateDiagram-v2
 | Consumer                     | Uses the gate for                                      |
 | ---------------------------- | ------------------------------------------------------ |
 | Product and Architecture     | Alpha entry, exit, cadence, and acceptance decisions.  |
-| Lane E planning              | Route-level ownership and child-slice sequencing.      |
-| Lane C runtime safety        | Protected runtime, admission, degraded-mode inputs.    |
+| GitHub MVP issues            | Route-level ownership and child-slice sequencing.      |
+| Runtime safety components    | Protected runtime, admission, degraded-mode inputs.    |
 | Frontend child slices        | Stage-specific UI proof without route-level authority. |
 | PR reviewers and CI evidence | Checking that alpha-full is not declared prematurely.  |
 
