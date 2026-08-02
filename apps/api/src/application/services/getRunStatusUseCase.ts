@@ -1,3 +1,4 @@
+import type { IStoredPlanRefReader } from '@dvt/artifacts';
 import type {
   EventEnvelope,
   PlanRecord,
@@ -37,9 +38,8 @@ interface SnapshotStalenessResolution {
   fallbackReason?: SnapshotStalenessFallbackReason;
 }
 
-interface PlanRecordReader {
+interface RunPlanReader extends Partial<Pick<IStoredPlanRefReader, 'getStoredPlanRef'>> {
   getPlanRecord(input: ScopedPlanId): Promise<PlanRecord | undefined>;
-  getStoredPlanRef?: import('@dvt/artifacts').IStoredPlanRefReader['getStoredPlanRef'];
 }
 
 type CanonicalRunSnapshot = Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>;
@@ -62,7 +62,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     private readonly stateStore: IRunStateStoreRead,
     private readonly stalenessReader?: IRunSnapshotStalenessReader,
     private readonly stalenessTelemetry?: IRunStatusStalenessTelemetry,
-    private readonly planStore?: PlanRecordReader,
+    private readonly planStore?: RunPlanReader,
     private readonly executionContextReader?: IRunExecutionContextReferenceReader,
     private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver
   ) {}
