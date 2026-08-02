@@ -124,6 +124,43 @@ describe('RootShell chrome', () => {
     }
   });
 
+  it('moves focus only after a real pathname change', async () => {
+    const mounted = await withTestQueryClient(
+      createRootShellNode(
+        createHealthyPlatformCapability(),
+        ['/canvas'],
+        undefined,
+        <Link to="/runs">Leave Canvas</Link>
+      )
+    );
+
+    try {
+      await waitForHealthyShellChrome(mounted);
+      const routeLink = mounted.container.querySelector<HTMLAnchorElement>('a[href="/runs"]')!;
+      const main = mounted.container.querySelector<HTMLElement>('#app-shell-main-content')!;
+
+      expect(document.activeElement).not.toBe(main);
+      routeLink.focus();
+      expect(document.activeElement).toBe(routeLink);
+
+      await act(async () => {
+        setRootShellBottomDrawer({ visible: true, height: 160 });
+      });
+      expect(document.activeElement).toBe(routeLink);
+
+      await act(async () => {
+        fireEvent.click(routeLink);
+      });
+
+      await waitFor(() => {
+        expect(mounted.container.textContent).toContain('Runs route');
+        expect(document.activeElement).toBe(main);
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('preserves focus-mode behavior by hiding the left rail while keeping the shell top bar', async () => {
     setRootShellFocusMode(true);
     const mounted = await withTestQueryClient(
