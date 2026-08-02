@@ -3611,6 +3611,34 @@ function planDbSurfaceUpsertOperation({ command, existingSurface, operationId, n
   return { surface, audit };
 }
 
+function normalizeFeatureMechanizationList(value) {
+  const normalized = normalizeExistingPayload(value);
+  if (Array.isArray(normalized)) {
+    return normalized;
+  }
+  if (normalized && typeof normalized === 'object') {
+    return Object.values(normalized)
+      .filter(Array.isArray)
+      .flat()
+      .filter((item) => typeof item === 'string');
+  }
+  return [];
+}
+
+function normalizeFeatureMechanizationReferences(value) {
+  return normalizeFeatureMechanizationList(value)
+    .map((reference) => {
+      if (typeof reference === 'string') {
+        return reference;
+      }
+      if (reference && typeof reference.path === 'string' && typeof reference.name === 'string') {
+        return `${reference.path}#${reference.name}`;
+      }
+      return null;
+    })
+    .filter(Boolean);
+}
+
 function normalizeFeatureMechanizationRail(row) {
   if (!row) {
     return null;
@@ -3618,7 +3646,172 @@ function normalizeFeatureMechanizationRail(row) {
 
   return {
     railId: row.rail_id ?? row.railId,
-    revision: Number(row.revision ?? 0),
+    revision: row.revision === null || row.revision === undefined ? null : Number(row.revision),
+    createdAt: row.created_at ?? row.createdAt ?? row.imported_at ?? row.importedAt,
+    symbolRefs: normalizeFeatureMechanizationReferences(row.symbol_refs ?? row.symbolRefs ?? []),
+    implementationRefs: normalizeFeatureMechanizationReferences(
+      row.implementation_refs ?? row.implementationRefs ?? []
+    ),
+    documentationRefs: normalizeFeatureMechanizationList(
+      row.documentation_refs ?? row.documentationRefs ?? []
+    ),
+    governingSources: normalizeFeatureMechanizationList(
+      row.governing_sources ?? row.governingSources ?? []
+    ),
+    allowedImplementationSurfaces: normalizeFeatureMechanizationList(
+      row.allowed_implementation_surfaces ?? row.allowedImplementationSurfaces ?? []
+    ),
+    architectureGuards: normalizeFeatureMechanizationList(
+      row.architecture_guards ?? row.architectureGuards ?? []
+    ),
+    completionGate: normalizeFeatureMechanizationList(
+      row.completion_gate ?? row.completionGate ?? []
+    ),
+    rawRail: normalizeExistingPayload(row.raw_rail ?? row.rawRail ?? {}),
+    rawManifest: normalizeExistingPayload(row.raw_manifest ?? row.rawManifest ?? {}),
+  };
+}
+
+function mergeUniqueValues(existing = [], incoming = []) {
+  const merged = new Map();
+  for (const value of [...existing, ...incoming]) {
+    merged.set(canonicalJson(value), value);
+  }
+  return [...merged.values()];
+}
+
+function mergeFeatureMechanizationValue(existing, incoming) {
+  if (Array.isArray(existing) && Array.isArray(incoming)) {
+    return mergeUniqueValues(existing, incoming);
+  }
+  if (
+    existing &&
+    incoming &&
+    typeof existing === 'object' &&
+    typeof incoming === 'object' &&
+    !Array.isArray(existing) &&
+    !Array.isArray(incoming)
+  ) {
+    return Object.fromEntries(
+      mergeUniqueValues(Object.keys(existing), Object.keys(incoming)).map((key) => [
+        key,
+        key in incoming
+          ? key in existing
+            ? mergeFeatureMechanizationValue(existing[key], incoming[key])
+            : incoming[key]
+          : existing[key],
+      ])
+    );
+  }
+  return incoming;
+}
+
+function mergeFeatureMechanizationObjectsByKey(existing, incoming, keyOf) {
+  const merged = new Map();
+  for (const value of existing) {
+    merged.set(keyOf(value), value);
+  }
+  for (const value of incoming) {
+    const key = keyOf(value);
+    merged.set(
+      key,
+      merged.has(key) ? mergeFeatureMechanizationValue(merged.get(key), value) : value
+    );
+  }
+  return [...merged.values()];
+}
+
+function surfaceMatchesPattern(surface, pattern) {
+  if (surface === pattern) {
+    return true;
+  }
+  if (pattern.endsWith('/**')) {
+    const prefix = pattern.slice(0, -3);
+    return surface === prefix || surface.startsWith(`${prefix}/`);
+  }
+  return false;
+}
+
+function excludesFeatureMechanizationSurface(reference, patterns) {
+  const surface = reference.split('#', 1)[0];
+  return patterns.some((pattern) => surfaceMatchesPattern(surface, pattern));
+}
+
+function pruneForbiddenFeatureMechanizationReferences(value, patterns) {
+  if (typeof value === 'string') {
+    return excludesFeatureMechanizationSurface(value, patterns) ? undefined : value;
+  }
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => pruneForbiddenFeatureMechanizationReferences(item, patterns))
+      .filter((item) => item !== undefined);
+  }
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .map(([key, item]) => [key, pruneForbiddenFeatureMechanizationReferences(item, patterns)])
+        .filter(([, item]) => item !== undefined)
+    );
+  }
+  return value;
+}
+
+function mergeFeatureMechanizationManifest(existingManifest, incomingManifest, command) {
+  const existing = existingManifest || {};
+  const merged = pruneForbiddenFeatureMechanizationReferences(
+    mergeFeatureMechanizationValue(existing, incomingManifest),
+    command.forbiddenImplementationSurfaces
+  );
+  const retainedForbidden = (existing.forbiddenImplementationSurfaces || []).filter(
+    (pattern) =>
+      !command.allowedImplementationSurfaces.some((surface) =>
+        surfaceMatchesPattern(surface, pattern)
+      )
+  );
+  const forbiddenImplementationSurfaces = mergeUniqueValues(
+    retainedForbidden,
+    command.forbiddenImplementationSurfaces
+  );
+  const symbols = mergeFeatureMechanizationObjectsByKey(
+    (existing.symbols || []).filter(
+      (symbol) =>
+        !excludesFeatureMechanizationSurface(
+          `${symbol.path}#${symbol.name}`,
+          command.forbiddenImplementationSurfaces
+        )
+    ),
+    incomingManifest.symbols,
+    (symbol) => `${symbol.path}#${symbol.name}`
+  );
+
+  const reconciled = {
+    ...merged,
+    allowedImplementationSurfaces: mergeUniqueValues(
+      existing.allowedImplementationSurfaces || [],
+      incomingManifest.allowedImplementationSurfaces
+    ).filter(
+      (surface) =>
+        !excludesFeatureMechanizationSurface(surface, command.forbiddenImplementationSurfaces)
+    ),
+    forbiddenImplementationSurfaces,
+    commandQueryRails: mergeFeatureMechanizationObjectsByKey(
+      existing.commandQueryRails || [],
+      incomingManifest.commandQueryRails,
+      (rail) => `${rail.type}#${rail.name}`
+    ),
+    redGreenCycles: mergeFeatureMechanizationObjectsByKey(
+      existing.redGreenCycles || [],
+      incomingManifest.redGreenCycles,
+      (cycle) => cycle.id
+    ),
+    symbols,
+  };
+  return {
+    ...pruneForbiddenFeatureMechanizationReferences(
+      reconciled,
+      command.forbiddenImplementationSurfaces
+    ),
+    forbiddenImplementationSurfaces,
   };
 }
 
@@ -3658,18 +3851,19 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
   }
 
   const resultingRevision = previousRevision === null ? 0 : previousRevision + 1;
-  const createdAt = toIso(now);
-  const rawRail = {
+  const updatedAt = toIso(now);
+  const createdAt = previous?.createdAt || updatedAt;
+  const rawRail = mergeFeatureMechanizationValue(previous?.rawRail || {}, {
     name: command.railName,
     type: command.railType,
     dddOwner: command.dddOwner,
     status: command.railStatus,
-  };
+  });
   const patchSurfaces =
     command.patchSurfaces.length > 0
       ? command.patchSurfaces
       : command.allowedImplementationSurfaces;
-  const rawManifest = {
+  const incomingManifest = {
     version: 1,
     featureId: command.featureId,
     mechanizationStatus: command.mechanizationStatus,
@@ -3697,6 +3891,16 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     ],
     symbols: buildFeatureMechanizationSymbols(command),
   };
+  const rawManifest = mergeFeatureMechanizationManifest(
+    previous?.rawManifest,
+    incomingManifest,
+    command
+  );
+  const retained = (values) =>
+    values.filter(
+      (value) =>
+        !excludesFeatureMechanizationSurface(value, command.forbiddenImplementationSurfaces)
+    );
   const rail = {
     railId: command.railId,
     featureId: command.featureId,
@@ -3706,13 +3910,20 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     railType: command.railType,
     dddOwner: command.dddOwner,
     railStatus: command.railStatus,
-    symbolRefs: command.implementationRefs,
-    implementationRefs: command.implementationRefs,
-    documentationRefs: command.documentationRefs,
-    governingSources: command.governingSources,
-    allowedImplementationSurfaces: command.allowedImplementationSurfaces,
-    architectureGuards: command.architectureGuards,
-    completionGate: command.completionGate,
+    symbolRefs: retained(mergeUniqueValues(previous?.symbolRefs, command.implementationRefs)),
+    implementationRefs: retained(
+      mergeUniqueValues(previous?.implementationRefs, command.implementationRefs)
+    ),
+    documentationRefs: mergeUniqueValues(previous?.documentationRefs, command.documentationRefs),
+    governingSources: mergeUniqueValues(previous?.governingSources, command.governingSources),
+    allowedImplementationSurfaces: retained(
+      mergeUniqueValues(
+        previous?.allowedImplementationSurfaces,
+        command.allowedImplementationSurfaces
+      )
+    ),
+    architectureGuards: mergeUniqueValues(previous?.architectureGuards, command.architectureGuards),
+    completionGate: mergeUniqueValues(previous?.completionGate, command.completionGate),
     sourcePath: command.sourceRef,
     sourceContentSha256: command.sourceContentSha256,
     rawRail,
@@ -3720,7 +3931,7 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     revision: resultingRevision,
     createdBy: command.actor,
     createdAt,
-    updatedAt: createdAt,
+    updatedAt,
   };
   const audit = {
     operationId,
@@ -3734,7 +3945,7 @@ function planFeatureMechanizationRailRecordOperation({ command, existingRail, op
     previousRevision,
     resultingRevision,
     payload: operationPayload(command),
-    createdAt,
+    createdAt: updatedAt,
   };
 
   return { rail, audit };
@@ -4002,7 +4213,7 @@ async function readExistingFowlerAnalysisOperation(client, idempotencyKey) {
   return result.rows[0] || null;
 }
 
-async function readLocalFeatureMechanizationRail(client, railId, lock = false) {
+async function readLocalFeatureMechanizationRail(client, railId, lock = false, identity = null) {
   const result = await client.query(
     `select *
      from ${schemaName}.feature_mechanization_local_rails
@@ -4011,7 +4222,21 @@ async function readLocalFeatureMechanizationRail(client, railId, lock = false) {
     [railId]
   );
 
-  return result.rows[0] || null;
+  if (result.rows[0] || !identity) {
+    return result.rows[0] || null;
+  }
+
+  const effectiveResult = await client.query(
+    `select *
+     from ${schemaName}.command_query_rail_manifest_query
+     where feature_id = $1
+       and rail_type = $2
+       and normalized_rail_name = $3
+     limit 1`,
+    [identity.featureId, identity.railType, identity.normalizedRailName]
+  );
+
+  return effectiveResult.rows[0] || null;
 }
 
 async function readExistingArchitectureDesignOperation(client, idempotencyKey) {
@@ -5707,7 +5932,12 @@ async function applyFeatureMechanizationRailRecordOperation(command, options = {
       return { idempotent: true, audit: existing };
     }
 
-    const existingRail = await readLocalFeatureMechanizationRail(client, command.railId, true);
+    const existingRail = await readLocalFeatureMechanizationRail(
+      client,
+      command.railId,
+      true,
+      command
+    );
     const planned = planFeatureMechanizationRailRecordOperation({
       command,
       existingRail,

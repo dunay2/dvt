@@ -362,6 +362,523 @@
       "createdAt": "2026-07-31T11:29:35.729Z"
     },
     {
+      "railId": "local#E-CANVAS-UXDB-COMPONENT-SLICES-1#query#rendercanvascontextualgraphsurface",
+      "featureId": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
+      "mechanizationStatus": "implemented",
+      "railName": "RenderCanvasContextualGraphSurface",
+      "normalizedRailName": "rendercanvascontextualgraphsurface",
+      "railType": "query",
+      "dddOwner": "CanvasViewportSurfaceView",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts#CANVAS_NODE_EMBEDDED_CONTROL_ATTRIBUTE",
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts#canvasNodeEmbeddedControlProps",
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts#CANVAS_NODE_EMBEDDED_CONTROL_SELECTOR",
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts#isCanvasNodeEmbeddedControlTarget",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportReactFlowSurface",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportSurfaceView",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportSurfaceViewProps",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#resolveMiniMapNodeColor",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildNodeDecorations",
+        "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts#useCanvasOverlayModel",
+        "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts#buildCanvasNodeInteractionPresentation",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeWorkspaceGraphAuthoringDraft"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+        "apps/web/src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts",
+        "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+        "apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts",
+        "apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx",
+        "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+        "apps/web/src/app/views/canvas/useCanvasControllerReadModel.test.tsx",
+        "apps/web/src/app/views/canvas/useCanvasViewportGraphModel.nodeData.test.tsx",
+        "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+        "scripts/planning-db-migrate.test.cjs",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportSurfaceView",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildNodeDecorations",
+        "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts#useCanvasOverlayModel",
+        "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts#buildCanvasNodeInteractionPresentation",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeWorkspaceGraphAuthoringDraft"
+      ],
+      "documentationRefs": [
+        "planning-db:component/web.component.canvas.CanvasViewport",
+        "planning-db:task/E-CANVAS-UXDB-COMPONENT-SLICES-1",
+        "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+        "docs/architecture/components/web/frontend-component-inventory.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/guides/ai-work-protocol.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "buzon/TAREA.TXT"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+        "apps/web/src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts",
+        "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+        "apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts",
+        "apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx",
+        "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+        "apps/web/src/app/views/canvas/useCanvasControllerReadModel.test.tsx",
+        "apps/web/src/app/views/canvas/useCanvasViewportGraphModel.nodeData.test.tsx",
+        "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+        "scripts/planning-db-migrate.test.cjs",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+        "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+        "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+        "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+        "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+      ],
+      "architectureGuards": [
+        "CanvasViewport.architecture.test.ts",
+        "canvasInteractionCommandSurface.architecture.test.ts",
+        "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web test:canvas-architecture:run -- src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts src/app/views/canvas/useCanvasViewportGraphModel.architecture.test.ts",
+        "pnpm --filter @dvt/web test:canvas-presentation:run -- src/app/views/canvas/CanvasViewport.test.tsx src/app/views/canvas/CanvasViewport.contextMenu.test.tsx",
+        "node --test --test-name-pattern \"Canvas viewport component slice boundaries\" scripts/planning-db-migrate.test.cjs",
+        "pnpm planning:db:query frontend-component-files --limit 160",
+        "pnpm planning:db:query frontend-component-rails --limit 160",
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+      "sourceContentSha256": "050fc4f93f177c9cf82c74378c374c333053fc01be1eb9e25cd069f2d52f4ae3",
+      "rawRail": {
+        "name": "RenderCanvasContextualGraphSurface",
+        "type": "query",
+        "owner": "CanvasViewportSurfaceView",
+        "status": "implemented",
+        "purpose": "Render the graph-first React Flow surface from a named presentation component.",
+        "dddOwner": "CanvasViewportSurfaceView",
+        "componentId": "web.component.canvas.CanvasViewport"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "CANVAS_NODE_EMBEDDED_CONTROL_ATTRIBUTE",
+            "path": "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasNodeInteractionBoundary",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "separated presentation interaction policy",
+              "embedded control boundary"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+          },
+          {
+            "name": "canvasNodeEmbeddedControlProps",
+            "path": "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasNodeInteractionBoundary",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "separated presentation interaction policy",
+              "embedded control boundary"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+          },
+          {
+            "name": "CANVAS_NODE_EMBEDDED_CONTROL_SELECTOR",
+            "path": "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasNodeInteractionBoundary",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "separated presentation interaction policy",
+              "embedded control boundary"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+          },
+          {
+            "name": "isCanvasNodeEmbeddedControlTarget",
+            "path": "apps/web/src/app/components/canvas/canvasNodeInteractionBoundary.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasNodeInteractionBoundary",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+            ],
+            "fowlerSignals": [
+              "separated presentation interaction policy",
+              "embedded control boundary"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx"
+          },
+          {
+            "name": "applyCanvasViewportStyle",
+            "path": "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["side_effect_boundary"],
+            "cypressCoverage": "not-required: style side effect is covered by viewport DOM assertions",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "resolveCanvasViewportStyle",
+            "path": "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["read_model"],
+            "cypressCoverage": "not-required: style model is covered by jsdom style assertions",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportReactFlowSurface",
+            "path": "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": [
+              "CanvasViewport.test.tsx",
+              "CanvasViewport.contextMenu.test.tsx"
+            ],
+            "fowlerSignals": ["template_method"],
+            "cypressCoverage": "not-required: no browser behavior changed in this component boundary slice",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportSurfaceView",
+            "path": "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "CanvasViewport.test.tsx",
+              "CanvasViewport.contextMenu.test.tsx",
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "presentation_logic_mixing",
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportSurfaceViewProps",
+            "path": "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["explicit_interface"],
+            "cypressCoverage": "not-required: exported view props are verified through presentation tests",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "resolveMiniMapNodeColor",
+            "path": "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["presentation_projection"],
+            "cypressCoverage": "not-required: minimap color is a deterministic view projection",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportLifecycleArgs",
+            "path": "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["explicit_interface"],
+            "cypressCoverage": "not-required: type boundary only",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportPosition",
+            "path": "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["value_object"],
+            "cypressCoverage": "not-required: type boundary only",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "CanvasViewportReactFlowApi",
+            "path": "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["port_interface"],
+            "cypressCoverage": "not-required: type boundary only",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "useCanvasViewportLifecycle",
+            "path": "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+            "cqRails": ["GetCanvasLayout"],
+            "dddOwner": "web.component.canvas.CanvasViewport",
+            "unitTests": ["CanvasViewport.test.tsx"],
+            "fowlerSignals": ["lifecycle_boundary"],
+            "cypressCoverage": "not-required: lifecycle effects are covered by persisted viewport and imported-node focus tests",
+            "architectureGuard": "CanvasViewport.architecture.test.ts"
+          },
+          {
+            "name": "buildOverlayContext",
+            "path": "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "buildNodeDecorations",
+            "path": "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "useCanvasOverlayModel",
+            "path": "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "buildCanvasNodeInteractionPresentation",
+            "path": "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "buildLargeWorkspaceGraphAuthoringDraft",
+            "path": "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
+        "userStories": [
+          "As a frontend maintainer, I can change Canvas viewport presentation without editing viewport lifecycle effects.",
+          "As a product engineer, I can evolve graph-first Canvas presentation through a named React Flow template instead of route-level JSX.",
+          "https://github.com/dunay2/dvt/issues/188"
+        ],
+        "cypressFlows": [
+          "not-required: this slice preserves existing viewport behavior and does not claim DVT/DBT P0 browser flow completion",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasViewport",
+          "CanvasViewportSurfaceView",
+          "CanvasViewportStyle",
+          "CanvasViewportLifecycle",
+          "CanvasImpactProjection",
+          "WorkspaceGraphDraftFixture"
+        ],
+        "fowlerSignals": [
+          "responsibility_overload",
+          "presentation_logic_mixing",
+          "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+        ],
+        "patchSurfaces": [
+          "CanvasViewport orchestrator",
+          "CanvasViewportSurfaceView template",
+          "Canvas viewport style model",
+          "Canvas viewport lifecycle hook"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web test:canvas-architecture:run -- src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts src/app/views/canvas/useCanvasViewportGraphModel.architecture.test.ts",
+          "pnpm --filter @dvt/web test:canvas-presentation:run -- src/app/views/canvas/CanvasViewport.test.tsx src/app/views/canvas/CanvasViewport.contextMenu.test.tsx",
+          "node --test --test-name-pattern \"Canvas viewport component slice boundaries\" scripts/planning-db-migrate.test.cjs",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "CV-VIEWPORT-ARCH-001",
+            "redTest": "pnpm --filter @dvt/web test:canvas-architecture:run -- src/app/views/canvas/CanvasViewport.architecture.test.ts",
+            "greenTest": "pnpm --filter @dvt/web test:canvas-architecture:run -- src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts src/app/views/canvas/useCanvasViewportGraphModel.architecture.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+              "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+              "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts"
+            ],
+            "expectedFailure": "CanvasViewportSurfaceView.tsx did not exist and CanvasViewport still owned React Flow presentation."
+          },
+          {
+            "id": "CV-VIEWPORT-DB-001",
+            "redTest": "node --test --test-name-pattern \"Canvas viewport component slice boundaries\" scripts/planning-db-migrate.test.cjs",
+            "greenTest": "node --test --test-name-pattern \"Canvas viewport component slice boundaries\" scripts/planning-db-migrate.test.cjs",
+            "patchSurfaces": ["scripts/planning-db-migrate.test.cjs"],
+            "expectedFailure": "Migration 297 was absent, so DB-owned component files and rails were not registered."
+          },
+          {
+            "id": "rendercanvascontextualgraphsurface-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+              "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+              "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+              "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+              "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+            ],
+            "expectedFailure": "The active Canvas render rail references a retired projection or lacks canonical 1,000-node evidence."
+          }
+        ],
+        "componentGuides": [
+          "planning-db:component/web.component.canvas.CanvasViewport",
+          "docs/architecture/components/web/graph/canvas-fowler-canon-component.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "buzon/TAREA.TXT"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RenderCanvasContextualGraphSurface",
+            "type": "query",
+            "owner": "CanvasViewportSurfaceView",
+            "status": "implemented",
+            "purpose": "Render the graph-first React Flow surface from a named presentation component.",
+            "dddOwner": "CanvasViewportSurfaceView",
+            "componentId": "web.component.canvas.CanvasViewport"
+          },
+          {
+            "name": "GetCanvasLayout",
+            "type": "query",
+            "dddOwner": "web.component.canvas.CanvasViewport"
+          }
+        ],
+        "architectureGuards": [
+          "CanvasViewport.architecture.test.ts",
+          "canvasInteractionCommandSurface.architecture.test.ts",
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/188",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "recordedColumnsVisibility": {
+          "rail": "RenderCanvasContextualGraphSurface",
+          "tests": [
+            "apps/web/src/app/views/canvas/useCanvasViewportGraphModel.nodeData.test.tsx",
+            "apps/web/src/app/views/canvas/useCanvasControllerReadModel.test.tsx"
+          ],
+          "mapper": "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+          "componentId": "web.component.canvas.CanvasViewport",
+          "lineageOverlayDoesNotHideRecordedColumns": true
+        },
+        "embeddedNodeControlBoundary": {
+          "componentId": "web.component.canvas.CanvasNodeInteractionBoundary",
+          "noParallelRail": true,
+          "emptySelectionPreservesOpenedSurface": true,
+          "differentNodeSelectionClosesOpenedSurface": true
+        },
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+          "apps/web/src/app/views/canvas/canvasViewportStyle.ts",
+          "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasInteractionCommandSurface.architecture.test.ts",
+          "scripts/planning-db-migrate.test.cjs",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx",
+          "apps/web/src/app/components/InspectorPanel.tsx",
+          "apps/web/src/app/components/sourceImportWizard/**",
+          "apps/web/src/app/views/canvas/canvasImpactOverlay.ts",
+          "tools/planning-db/migrations/**"
+        ],
+        "canvasViewportNodeSurfaceLifecycleTests": {
+          "rail": "RenderCanvasContextualGraphSurface",
+          "status": "implemented",
+          "componentId": "web.component.canvas.CanvasViewport",
+          "hostedComponents": [
+            "web.component.canvas.NodeFloatingToolbar",
+            "web.component.canvas.GraphNodeHealthPopover"
+          ],
+          "noOrphanedNodeSurfaces": true
+        }
+      },
+      "revision": 6,
+      "createdBy": "codex",
+      "createdAt": "2026-08-02T09:29:37.877Z"
+    },
+    {
       "railId": "local#E-WEB-DBT-ATOMIC-PUBLICATION-1#command#publishgraphdbtworkspaceartifacts",
       "featureId": "E-WEB-DBT-ATOMIC-PUBLICATION-1",
       "mechanizationStatus": "implemented",
@@ -1735,7 +2252,633 @@
       },
       "revision": 3,
       "createdBy": "codex",
-      "createdAt": "2026-07-30T21:41:49.879Z"
+      "createdAt": "2026-08-02T09:32:31.263Z"
+    },
+    {
+      "railId": "local#FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605#command#recordfeaturemechanizationrail",
+      "featureId": "FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605",
+      "mechanizationStatus": "implemented",
+      "railName": "RecordFeatureMechanizationRail",
+      "normalizedRailName": "recordfeaturemechanizationrail",
+      "railType": "command",
+      "dddOwner": "Planning DB governance writer",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationStatuses",
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationRailTypes",
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationRailStatuses",
+        "scripts/planning-db-operate.cjs#featureMechanizationListOptionKeys",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationStatus",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRailType",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRailStatus",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationFeatureId",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationRailName",
+        "scripts/planning-db-operate.cjs#assertFeatureMechanizationRailIdempotentReplayMatches",
+        "scripts/planning-db-operate.cjs#featureMechanizationRailId",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRecordCommand",
+        "scripts/planning-db-operate.cjs#parseFeatureMechanizationCommand",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationRail",
+        "scripts/planning-db-operate.cjs#buildFeatureMechanizationSymbols",
+        "scripts/planning-db-operate.cjs#planFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.cjs#readExistingFeatureMechanizationOperation",
+        "scripts/planning-db-operate.cjs#readLocalFeatureMechanizationRail",
+        "scripts/planning-db-operate.cjs#writePlannedFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.cjs#applyFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.test.cjs#featureMechanizationRecordArgs",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationList",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationReferences",
+        "scripts/planning-db-operate.cjs#mergeUniqueValues",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationValue",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationObjectsByKey",
+        "scripts/planning-db-operate.cjs#surfaceMatchesPattern",
+        "scripts/planning-db-operate.cjs#excludesFeatureMechanizationSurface",
+        "scripts/planning-db-operate.cjs#pruneForbiddenFeatureMechanizationReferences",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationManifest"
+      ],
+      "implementationRefs": [
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationRailStatuses",
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationRailTypes",
+        "scripts/planning-db-operate.cjs#allowedFeatureMechanizationStatuses",
+        "scripts/planning-db-operate.cjs#applyFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.cjs#assertFeatureMechanizationRailIdempotentReplayMatches",
+        "scripts/planning-db-operate.cjs#buildFeatureMechanizationSymbols",
+        "scripts/planning-db-operate.cjs#featureMechanizationListOptionKeys",
+        "scripts/planning-db-operate.cjs#featureMechanizationRailId",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationRail",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationRailName",
+        "scripts/planning-db-operate.cjs#parseFeatureMechanizationCommand",
+        "scripts/planning-db-operate.cjs#planFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.cjs#readExistingFeatureMechanizationOperation",
+        "scripts/planning-db-operate.cjs#readLocalFeatureMechanizationRail",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationFeatureId",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRailStatus",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRailType",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationRecordCommand",
+        "scripts/planning-db-operate.cjs#validateFeatureMechanizationStatus",
+        "scripts/planning-db-operate.cjs#writePlannedFeatureMechanizationRailRecordOperation",
+        "scripts/planning-db-operate.test.cjs#featureMechanizationRecordArgs",
+        "scripts/planning-db-operate.cjs#RecordFeatureMechanizationRail",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationList",
+        "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationReferences",
+        "scripts/planning-db-operate.cjs#mergeUniqueValues",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationValue",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationObjectsByKey",
+        "scripts/planning-db-operate.cjs#surfaceMatchesPattern",
+        "scripts/planning-db-operate.cjs#excludesFeatureMechanizationSurface",
+        "scripts/planning-db-operate.cjs#pruneForbiddenFeatureMechanizationReferences",
+        "scripts/planning-db-operate.cjs#mergeFeatureMechanizationManifest"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+        "docs/guides/ai-work-protocol.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "docs/planning/status/db-surface-inventory.md",
+        "scripts/planning-db-operate.cjs",
+        "scripts/planning-db-operate.test.cjs",
+        "scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "scripts/check-feature-mechanization.cjs",
+        "scripts/check-feature-mechanization.test.cjs",
+        "scripts/planning-db-migrate.test.cjs"
+      ],
+      "architectureGuards": [
+        "node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+        "node --test scripts/planning-db-operate.test.cjs"
+      ],
+      "completionGate": [
+        "node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+        "pnpm planning:db:migrate",
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush",
+        "node --test scripts/planning-db-operate.test.cjs"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+      "sourceContentSha256": "095876e4e10e9cc690b065448b206f75e30a4af54bd72596b4611cbf47e7278c",
+      "rawRail": {
+        "name": "RecordFeatureMechanizationRail",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Planning DB governance writer"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "allowedFeatureMechanizationStatuses",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Writer command validates lifecycle states before DB writes."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "allowedFeatureMechanizationRailTypes",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Writer command rejects non-command/query rail types at the boundary."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "allowedFeatureMechanizationRailStatuses",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Writer command preserves gap and implementation rail statuses."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "featureMechanizationListOptionKeys",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Repeated manifest fields stay explicit at the command boundary."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "validateFeatureMechanizationStatus",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Feature status validation happens before DB mutation."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "validateFeatureMechanizationRailType",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Rail type validation keeps the command/query catalog normalized."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "validateFeatureMechanizationRailStatus",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Rail status validation protects gap and duplicate queries."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "validateFeatureMechanizationFeatureId",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Stable feature ids keep local records replayable."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "normalizeFeatureMechanizationRailName",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Normalized names give duplicate detection a deterministic key."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "assertFeatureMechanizationRailIdempotentReplayMatches",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Idempotency replays cannot silently rewrite rail payloads."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "featureMechanizationRailId",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Rail identity is deterministic across command replays."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "validateFeatureMechanizationRecordCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "The writer rejects incomplete manifests before persistence."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "parseFeatureMechanizationCommand",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "CLI input is normalized into a single command shape."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "normalizeFeatureMechanizationRail",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Existing local rows are normalized before revision checks."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "buildFeatureMechanizationSymbols",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "The writer projects implementation refs into manifest symbols for existing gates."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "planFeatureMechanizationRailRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Planning separates command validation from DB mutation."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "readExistingFeatureMechanizationOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Durable operation history owns idempotency replay checks."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "readLocalFeatureMechanizationRail",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Local rail revision checks happen against the DB row, not Markdown."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "writePlannedFeatureMechanizationRailRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Persistence writes local rails and local operations without mutating imported rails."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "applyFeatureMechanizationRailRecordOperation",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Runtime command application wraps migration, transaction, idempotency, and write."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "featureMechanizationRecordArgs",
+            "path": "scripts/planning-db-operate.test.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer tests",
+            "unitTests": ["scripts/planning-db-operate.test.cjs"],
+            "fowlerSignals": [
+              "Tests reuse a full command contract fixture instead of narrow ad-hoc argument lists."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "normalizeFeatureMechanizationList",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "normalizeFeatureMechanizationReferences",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "mergeUniqueValues",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "mergeFeatureMechanizationValue",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "mergeFeatureMechanizationObjectsByKey",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "surfaceMatchesPattern",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "excludesFeatureMechanizationSurface",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "pruneForbiddenFeatureMechanizationReferences",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          },
+          {
+            "name": "mergeFeatureMechanizationManifest",
+            "path": "scripts/planning-db-operate.cjs",
+            "cqRails": ["RecordFeatureMechanizationRail"],
+            "dddOwner": "Planning DB governance writer",
+            "unitTests": [
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "fowlerSignals": [
+              "Rail updates extend effective evidence instead of replacing accumulated manifests."
+            ],
+            "cypressCoverage": "N/A - repository governance CLI gate",
+            "architectureGuard": "node --test scripts/planning-db-operate.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605",
+        "userStories": [
+          "docs/architecture/components/ci-governance/component-engineering-record-user-stories.md"
+        ],
+        "cypressFlows": ["N/A - repository governance CLI gate"],
+        "domainObjects": [
+          {
+            "name": "FeatureMechanizationLocalRail",
+            "type": "aggregate row",
+            "owner": "Planning DB governance writer"
+          },
+          {
+            "name": "FeatureMechanizationLocalOperation",
+            "type": "audit row",
+            "owner": "Planning DB governance writer"
+          },
+          {
+            "name": "FeatureMechanizationEffectiveRailProjection",
+            "type": "read model",
+            "owner": "Planning DB governance read model"
+          },
+          "FeatureMechanizationLocalRail",
+          "FeatureMechanizationEffectiveRailProjection"
+        ],
+        "fowlerSignals": [
+          "Markdown import was the only rail declaration writer even after DB-first posture.",
+          "Implementation validation read the imported table and ignored local DB-authored rails.",
+          "A local rail writer can produce invalid raw manifests unless the command owns the complete manifest projection contract.",
+          "Rail updates extend effective evidence instead of replacing accumulated manifests."
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+          "pnpm planning:db:migrate",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush",
+          "node --test scripts/planning-db-operate.test.cjs"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "feature-mechanization-writer-records-valid-local-rails",
+            "redTest": "node --test scripts/planning-db-operate.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-operate.cjs",
+              "scripts/planning-db-operate.test.cjs",
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "expectedFailure": "feature-mechanization record is an unknown operation or emits an invalid local manifest projection."
+          },
+          {
+            "id": "implementation-gate-reads-effective-rail-projection",
+            "redTest": "node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+            "greenTest": "node --test scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+            "patchSurfaces": [
+              "scripts/check-feature-mechanization.cjs",
+              "scripts/check-feature-mechanization.test.cjs",
+              "scripts/planning-db-migrate.test.cjs"
+            ],
+            "expectedFailure": "implementation manifests are read from command_query_rails instead of the DB manifest projection."
+          },
+          {
+            "id": "recordfeaturemechanizationrail-record",
+            "redTest": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+            "greenTest": "node --test scripts/planning-db-operate.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-operate.cjs",
+              "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+            ],
+            "expectedFailure": "Updating an existing or imported rail discards accumulated symbols, validation evidence, and specialized manifest fields."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordFeatureMechanizationRail",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Planning DB governance writer"
+          },
+          {
+            "name": "ListFeatureMechanizationRails",
+            "type": "query",
+            "dddOwner": "Planning DB governance read model"
+          },
+          {
+            "name": "ValidateFeatureMechanizationImplementation",
+            "type": "command",
+            "dddOwner": "CI governance implementation gate"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs scripts/check-feature-mechanization.test.cjs scripts/planning-db-migrate.test.cjs",
+          "node --test scripts/planning-db-operate.test.cjs"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+          "docs/planning/status/db-surface-inventory.md",
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate.test.cjs",
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+          "scripts/check-feature-mechanization.cjs",
+          "scripts/check-feature-mechanization.test.cjs",
+          "scripts/planning-db-migrate.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "specs/contracts/**",
+          "docs/archive/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-02T09:32:58.301Z"
     },
     {
       "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
@@ -14336,7 +15479,7 @@
       },
       "revision": 1,
       "createdBy": "codex",
-      "createdAt": "2026-07-30T21:37:21.767Z"
+      "createdAt": "2026-08-02T09:29:37.877Z"
     },
     {
       "railId": "local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties",
@@ -14459,7 +15602,7 @@
       },
       "revision": 8,
       "createdBy": "codex",
-      "createdAt": "2026-07-30T21:37:21.767Z"
+      "createdAt": "2026-08-02T09:29:37.877Z"
     }
   ],
   "featureMechanizationRailOperations": [
@@ -23425,6 +24568,186 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-02T08:33:50.845Z"
+    },
+    {
+      "operationId": "2a8aed45-ffe1-433d-975c-ca8b7cf9d529",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:E-CANVAS-UXDB-COMPONENT-SLICES-1:query:rendercanvascontextualgraphsurface:5:f46c177eececf59e",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#E-CANVAS-UXDB-COMPONENT-SLICES-1#query#rendercanvascontextualgraphsurface",
+      "sourcePath": "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+      "sourceContentSha256": "050fc4f93f177c9cf82c74378c374c333053fc01be1eb9e25cd069f2d52f4ae3",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+        "dddOwner": "CanvasViewportSurfaceView",
+        "railName": "RenderCanvasContextualGraphSurface",
+        "railType": "query",
+        "featureId": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+        "sourceRef": "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/188"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasViewportSurfaceView",
+          "CanvasImpactProjection",
+          "WorkspaceGraphDraftFixture"
+        ],
+        "fowlerSignals": [
+          "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-fowler-canon-component.md"
+        ],
+        "expectedFailure": "The active Canvas render rail references a retired projection or lacks canonical 1,000-node evidence.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/188",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportSurfaceView",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildNodeDecorations",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts#useCanvasOverlayModel",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts#buildCanvasNodeInteractionPresentation",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeWorkspaceGraphAuthoringDraft"
+        ],
+        "normalizedRailName": "rendercanvascontextualgraphsurface",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "050fc4f93f177c9cf82c74378c374c333053fc01be1eb9e25cd069f2d52f4ae3",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasImpactOverlay.ts",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-02T09:00:04.401Z"
+    },
+    {
+      "operationId": "668a65f2-d22c-4a3c-9417-c322dd00aad2",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605:command:recordfeaturemechanizationrail:latest:3433d55a1e29b904",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605#command#recordfeaturemechanizationrail",
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+      "sourceContentSha256": "095876e4e10e9cc690b065448b206f75e30a4af54bd72596b4611cbf47e7278c",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "node --test scripts/planning-db-operate-tests/feature-mechanization.test.cjs",
+        "dddOwner": "Planning DB governance writer",
+        "railName": "RecordFeatureMechanizationRail",
+        "railType": "command",
+        "featureId": "FEATURE-MECHANIZATION-DB-FIRST-WRITER-20260605",
+        "greenTest": "node --test scripts/planning-db-operate.test.cjs",
+        "sourceRef": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "unitTests": [
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/architecture/components/ci-governance/component-engineering-record-user-stories.md"
+        ],
+        "cypressFlows": ["N/A - repository governance CLI gate"],
+        "domainObjects": [
+          "FeatureMechanizationLocalRail",
+          "FeatureMechanizationEffectiveRailProjection"
+        ],
+        "fowlerSignals": [
+          "Rail updates extend effective evidence instead of replacing accumulated manifests."
+        ],
+        "patchSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-operate.test.cjs",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Updating an existing or imported rail discards accumulated symbols, validation evidence, and specialized manifest fields.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-operate.test.cjs"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
+        "implementationRefs": [
+          "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationList",
+          "scripts/planning-db-operate.cjs#normalizeFeatureMechanizationReferences",
+          "scripts/planning-db-operate.cjs#mergeUniqueValues",
+          "scripts/planning-db-operate.cjs#mergeFeatureMechanizationValue",
+          "scripts/planning-db-operate.cjs#mergeFeatureMechanizationObjectsByKey",
+          "scripts/planning-db-operate.cjs#surfaceMatchesPattern",
+          "scripts/planning-db-operate.cjs#excludesFeatureMechanizationSurface",
+          "scripts/planning-db-operate.cjs#pruneForbiddenFeatureMechanizationReferences",
+          "scripts/planning-db-operate.cjs#mergeFeatureMechanizationManifest"
+        ],
+        "normalizedRailName": "recordfeaturemechanizationrail",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "095876e4e10e9cc690b065448b206f75e30a4af54bd72596b4611cbf47e7278c",
+        "allowedImplementationSurfaces": [
+          "scripts/planning-db-operate.cjs",
+          "scripts/planning-db-operate-tests/feature-mechanization.test.cjs"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/**",
+          "packages/**",
+          "specs/contracts/**",
+          "docs/archive/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-02T09:41:35.786Z"
     }
   ]
 }

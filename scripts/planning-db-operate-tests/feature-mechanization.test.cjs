@@ -164,6 +164,154 @@ test('feature mechanization rail planner emits a local rail and audit row', () =
   );
 });
 
+test('feature mechanization rail planner promotes an imported manifest as local revision zero', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      implementationRefs: ['scripts/new-writer-helper.cjs#mergeImportedEvidence'],
+    })
+  );
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail: {
+      rail_id: 'docs/source.md#FM-DB-FIRST-WRITER#command#recordfeaturemechanizationrail',
+      revision: null,
+      rail_source: 'imported',
+      symbol_refs: [
+        {
+          path: 'scripts/existing-writer.cjs',
+          name: 'recordExistingEvidence',
+        },
+      ],
+      implementation_refs: [
+        {
+          path: 'scripts/existing-writer.cjs',
+          name: 'recordExistingEvidence',
+        },
+      ],
+      raw_manifest: {
+        symbols: [
+          {
+            path: 'scripts/existing-writer.cjs',
+            name: 'recordExistingEvidence',
+          },
+        ],
+      },
+    },
+    operationId: 'op-feature-mechanization-promote-import',
+    now: new Date('2026-06-05T18:00:00.000Z'),
+  });
+
+  assert.equal(planned.rail.revision, 0);
+  assert.deepEqual(planned.rail.symbolRefs, [
+    'scripts/existing-writer.cjs#recordExistingEvidence',
+    'scripts/new-writer-helper.cjs#mergeImportedEvidence',
+  ]);
+  assert.equal(planned.rail.rawManifest.symbols.length, 2);
+});
+
+test('feature mechanization rail planner extends existing evidence without restoring forbidden surfaces', () => {
+  const command = parseArgs(
+    featureMechanizationRecordArgs({
+      implementationRefs: ['apps/web/src/newProjection.ts#buildNewProjection'],
+      extraArgs: [
+        '--allowed-surface',
+        'apps/web/cypress/e2e/canvas/new-flow.cy.ts',
+        '--forbidden-surface',
+        'apps/web/src/retiredProjection.ts',
+      ],
+    })
+  );
+  const existingRail = {
+    rail_id: command.railId,
+    revision: 4,
+    created_at: '2026-06-01T12:00:00.000Z',
+    symbol_refs: [
+      'apps/web/src/existingProjection.ts#buildExistingProjection',
+      'apps/web/src/retiredProjection.ts#buildRetiredProjection',
+    ],
+    implementation_refs: [
+      'apps/web/src/existingProjection.ts#buildExistingProjection',
+      'apps/web/src/retiredProjection.ts#buildRetiredProjection',
+    ],
+    documentation_refs: ['docs/existing-component.md'],
+    governing_sources: ['docs/existing-governance.md'],
+    allowed_implementation_surfaces: [
+      'apps/web/src/existingProjection.ts',
+      'apps/web/src/retiredProjection.ts',
+    ],
+    architecture_guards: ['existing architecture guard'],
+    completion_gate: {
+      tests: ['existing completion gate'],
+      dbQueries: ['existing DB evidence query'],
+    },
+    raw_rail: { purpose: 'Existing rail purpose' },
+    raw_manifest: {
+      recordedColumnsVisibility: {
+        status: 'implemented',
+        decorator: 'apps/web/src/retiredProjection.ts',
+      },
+      forbiddenImplementationSurfaces: ['apps/web/cypress/e2e/canvas/**'],
+      redGreenCycles: [
+        {
+          id: 'existing-cycle',
+          patchSurfaces: ['apps/web/src/retiredProjection.ts'],
+        },
+      ],
+      symbols: [
+        {
+          name: 'buildExistingProjection',
+          path: 'apps/web/src/existingProjection.ts',
+          unitTests: ['apps/web/src/existingProjection.test.ts'],
+        },
+        {
+          name: 'buildRetiredProjection',
+          path: 'apps/web/src/retiredProjection.ts',
+        },
+      ],
+    },
+  };
+
+  const planned = planFeatureMechanizationRailRecordOperation({
+    command,
+    existingRail,
+    operationId: 'op-feature-mechanization-extend',
+    now: new Date('2026-06-05T18:00:00.000Z'),
+  });
+
+  assert.equal(planned.rail.revision, 5);
+  assert.equal(planned.rail.createdAt, existingRail.created_at);
+  assert.deepEqual(planned.rail.rawManifest.recordedColumnsVisibility, {
+    status: 'implemented',
+  });
+  assert.deepEqual(
+    planned.rail.rawManifest.symbols.map(({ path, name }) => `${path}#${name}`),
+    [
+      'apps/web/src/existingProjection.ts#buildExistingProjection',
+      'apps/web/src/newProjection.ts#buildNewProjection',
+    ]
+  );
+  assert.ok(
+    planned.rail.allowedImplementationSurfaces.includes('apps/web/src/existingProjection.ts')
+  );
+  assert.ok(planned.rail.completionGate.includes('existing completion gate'));
+  assert.ok(
+    planned.rail.allowedImplementationSurfaces.includes(
+      'apps/web/cypress/e2e/canvas/new-flow.cy.ts'
+    )
+  );
+  assert.equal(
+    planned.rail.allowedImplementationSurfaces.includes('apps/web/src/retiredProjection.ts'),
+    false
+  );
+  assert.equal(
+    planned.rail.rawManifest.forbiddenImplementationSurfaces.includes(
+      'apps/web/cypress/e2e/canvas/**'
+    ),
+    false
+  );
+  assert.deepEqual(planned.rail.rawManifest.redGreenCycles[0].patchSurfaces, []);
+});
+
 test('feature mechanization rail writer stores local rails without mutating imports', async () => {
   const command = parseArgs(
     featureMechanizationRecordArgs({
