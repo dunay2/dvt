@@ -1,43 +1,61 @@
-import { asNonBlankString } from '@dvt/contracts';
+/** Owned concern: recover a run from server-owned source lineage and immutable artifacts. */
+import type { IPlanStoreReader } from '@dvt/artifacts';
+import { asNonBlankString, type PlanRecord } from '@dvt/contracts';
 import {
   RunMetadataNotFoundError,
   type IRunStateStoreRead,
   type IWorkflowEngine,
   type PlanRef,
   type RunContext,
+  type RunMetadata,
 } from '@dvt/engine';
 
+import { RunRecoveryUnavailableError } from '../errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
+import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRecoverRunUseCase, RecoverRunCommand, RecoverRunResult } from '../ports/runtime.js';
 
+export interface RecoverRunUseCaseDependencies {
+  readonly engine: IWorkflowEngine;
+  readonly stateStore: IRunStateStoreRead;
+  readonly planStore: Pick<IPlanStoreReader, 'getPlanRecord'>;
+  readonly executionContextReader: IRunExecutionContextReferenceReader;
+}
+
 export class RecoverRunUseCase implements IRecoverRunUseCase {
-  public constructor(
-    private readonly engine: IWorkflowEngine,
-    private readonly stateStore: IRunStateStoreRead
-  ) {}
+  public constructor(private readonly dependencies: RecoverRunUseCaseDependencies) {}
 
   public async execute(
     command: RecoverRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<RecoverRunResult> {
-    const source = await this.stateStore.getRunMetadataByRunId(
-      context.scope.tenantId.value,
+    const tenantId = context.scope.tenantId.value;
+    const source = await this.dependencies.stateStore.getRunMetadataByRunId(
+      tenantId,
       command.sourceRunId
     );
     if (!source) {
       throw new RunMetadataNotFoundError(command.sourceRunId);
     }
 
-    await this.engine.recoverRun(
+    const planRecord = await this.dependencies.planStore.getPlanRecord({
+      tenantId,
+      projectId: source.projectId,
+      environmentId: source.environmentId,
+      planId: source.planId,
+    });
+    if (!planRecord) {
+      throw new RunRecoveryUnavailableError(command.sourceRunId, 'source_plan_unavailable');
+    }
+
+    const runExecutionContextRef = await this.dependencies.executionContextReader.read({
+      tenantId,
+      runId: command.sourceRunId,
+    });
+    await this.dependencies.engine.recoverRun(
       command.sourceRunId,
-      toEnginePlanRef(command.planRef),
-      toEngineRunContext(
-        command,
-        source.projectId,
-        source.environmentId,
-        context.scope.tenantId.value,
-        source.providerRef.provider
-      )
+      toEnginePlanRef(planRecord),
+      toEngineRunContext(command, source, tenantId, runExecutionContextRef)
     );
 
     return {
@@ -48,38 +66,28 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
   }
 }
 
-function toEnginePlanRef(input: RecoverRunCommand['planRef']): PlanRef {
+function toEnginePlanRef(record: PlanRecord): PlanRef {
   return {
-    uri: asNonBlankString(input.uri),
-    sha256: asNonBlankString(input.sha256),
-    schemaVersion: asNonBlankString(input.schemaVersion),
-    planId: asNonBlankString(input.planId),
-    planVersion: asNonBlankString(input.planVersion),
+    uri: asNonBlankString(record.sourceRef),
+    sha256: asNonBlankString(record.canonicalHash),
+    schemaVersion: asNonBlankString(record.schemaVersion),
+    planId: asNonBlankString(record.planId),
+    planVersion: asNonBlankString(record.planVersion),
   };
 }
 
 function toEngineRunContext(
   command: RecoverRunCommand,
-  projectId: string,
-  environmentId: string,
+  source: RunMetadata,
   tenantId: string,
-  sourceProvider: RunContext['targetAdapter']
+  runExecutionContextRef: RunContext['runExecutionContextRef']
 ): RunContext {
-  const targetAdapter = command.targetAdapter ?? sourceProvider;
-  const runContext: RunContext = {
-    tenantId: asNonBlankString(tenantId),
-    projectId: asNonBlankString(projectId),
-    environmentId: asNonBlankString(environmentId),
-    runId: asNonBlankString(command.recoveryRunId),
-    targetAdapter,
-  };
-
-  if (command.runExecutionContextRef === undefined) {
-    return runContext;
-  }
-
   return {
-    ...runContext,
-    runExecutionContextRef: command.runExecutionContextRef,
+    tenantId: asNonBlankString(tenantId),
+    projectId: asNonBlankString(source.projectId),
+    environmentId: asNonBlankString(source.environmentId),
+    runId: asNonBlankString(command.recoveryRunId),
+    targetAdapter: source.providerRef.provider,
+    ...(runExecutionContextRef === undefined ? {} : { runExecutionContextRef }),
   };
 }

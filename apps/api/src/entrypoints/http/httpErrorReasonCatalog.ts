@@ -43,6 +43,7 @@ export const HTTP_ERROR_REASON = Object.freeze({
   planRejected: 'plan_rejected',
   runAlreadyExists: 'run_already_exists',
   runControlUnavailable: 'run_control_unavailable',
+  runRecoveryUnavailable: 'run_recovery_unavailable',
   runNotFound: 'run_not_found',
   sourceRunNotTerminal: 'source_run_not_terminal',
   tenantAccessDenied: 'tenant_access_denied',

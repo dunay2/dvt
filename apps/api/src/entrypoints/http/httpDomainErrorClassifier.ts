@@ -13,7 +13,10 @@ import {
   SignalNotImplementedError,
 } from '@dvt/engine';
 
-import { RunControlUnavailableError } from '../../application/errors/runControlErrors.js';
+import {
+  RunControlUnavailableError,
+  RunRecoveryUnavailableError,
+} from '../../application/errors/runControlErrors.js';
 
 import {
   createHttpErrorResponse,
@@ -84,6 +87,17 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
         action: error.action,
         status: error.status,
         controlReason: error.reason,
+      },
+    });
+  }
+
+  if (error instanceof RunRecoveryUnavailableError) {
+    return createHttpErrorResponse({
+      type: HTTP_ERROR_TYPE.conflict,
+      reason: HTTP_ERROR_REASON.runRecoveryUnavailable,
+      details: {
+        sourceRunId: error.sourceRunId,
+        recoveryReason: error.reason,
       },
     });
   }

@@ -104,6 +104,11 @@ function createProtectedRuntimeModuleHarness(): {
       planner: {} as never,
       planCompilePlanner: {} as never,
       planStore: {} as never,
+      runExecutionContextReferenceReader: {
+        async read() {
+          return undefined;
+        },
+      },
       planValidator: {} as never,
       executablePlanResolver: { fetch: async () => ({}) } as never,
       workspaceContextQuery: {

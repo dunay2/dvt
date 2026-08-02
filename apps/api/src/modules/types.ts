@@ -1,4 +1,4 @@
-import type { IStoredPlanArtifactStore } from '@dvt/artifacts';
+import type { IPlanStoreReader, IStoredPlanArtifactStore } from '@dvt/artifacts';
 import type { ExecutionPlan, IPlanner, PlanRef } from '@dvt/contracts';
 import type {
   EngineRunRef,
@@ -12,6 +12,7 @@ import type { IPlanExecutabilityValidator } from '@dvt/planner';
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { ICanvasAuthoringAuthorityStore } from '../application/ports/canvasAuthoringAuthority.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
+import type { IRunExecutionContextReferenceReader } from '../application/ports/runExecutionContextReferenceReader.js';
 import type { IWorkspaceContextQuery } from '../application/ports/workspaceContext.js';
 import type { IWorkspaceGraphDraftStore } from '../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
@@ -43,7 +44,8 @@ export interface ProtectedRuntimeModule {
   stateStore: StateStoreRoleBindings;
   planner: IPlanner;
   planCompilePlanner: IPlanner;
-  planStore: IStoredPlanArtifactStore;
+  planStore: IStoredPlanArtifactStore & IPlanStoreReader;
+  runExecutionContextReferenceReader: IRunExecutionContextReferenceReader;
   planValidator: IPlanExecutabilityValidator;
   executablePlanResolver: {
     fetch(input: {

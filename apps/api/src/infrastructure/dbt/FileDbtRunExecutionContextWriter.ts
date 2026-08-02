@@ -12,6 +12,8 @@ import type {
   IDbtRunExecutionContextWriter,
 } from '../../application/ports/dbtRunExecutionContextWriter.js';
 
+import { resolveRunExecutionContextArtifactPath } from './runExecutionContextArtifactPath.js';
+
 export class FileDbtRunExecutionContextWriter implements IDbtRunExecutionContextWriter {
   public constructor(private readonly store: DbtProjectBundleArtifactStore | undefined) {}
 
@@ -23,13 +25,11 @@ export class FileDbtRunExecutionContextWriter implements IDbtRunExecutionContext
 
     const bytes = Buffer.from(JSON.stringify(input.context), 'utf8');
     const sha256 = createHash('sha256').update(bytes).digest('hex');
-    const runKey = createHash('sha256').update(input.runId, 'utf8').digest('hex');
-    const artifactPath = path.resolve(
-      this.store.rootPath,
-      'run-contexts',
-      input.context.tenantId,
-      `${runKey}.json`
-    );
+    const artifactPath = resolveRunExecutionContextArtifactPath({
+      rootPath: this.store.rootPath,
+      tenantId: input.context.tenantId,
+      runId: input.runId,
+    });
     await writeOnceOrVerify(artifactPath, bytes);
 
     return {

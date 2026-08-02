@@ -50,7 +50,7 @@ export function buildProtectedRuntimeRouteDependencies(
     protectedModule.stateStore.read,
     new SafeRunSnapshotStalenessReader(protectedModule.stateStore.snapshotStaleness, observability),
     new ObservabilityRunStatusStalenessTelemetry({ observability }),
-    protectedModule.planStore as unknown as ConstructorParameters<typeof GetRunStatusUseCase>[5]
+    protectedModule.planStore
   );
   const previewPlanUseCase = new PreviewPlanUseCase({
     planner: {
@@ -85,10 +85,12 @@ export function buildProtectedRuntimeRouteDependencies(
     }),
     listRunsUseCase: new ListRunsUseCase(protectedModule.stateStore.read, protectedModule.engine),
     previewPlanUseCase,
-    recoverRunUseCase: new RecoverRunUseCase(
-      protectedModule.engine,
-      protectedModule.stateStore.read
-    ),
+    recoverRunUseCase: new RecoverRunUseCase({
+      engine: protectedModule.engine,
+      stateStore: protectedModule.stateStore.read,
+      planStore: protectedModule.planStore,
+      executionContextReader: protectedModule.runExecutionContextReferenceReader,
+    }),
     runtimeAuth,
     signalRunUseCase: new SignalRunUseCase(protectedModule.engine, protectedModule.stateStore.read),
     workspaceGraphDraftTelemetry: new ObservabilityWorkspaceGraphDraftTelemetry({ observability }),

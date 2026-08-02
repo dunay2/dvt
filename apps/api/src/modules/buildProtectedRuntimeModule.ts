@@ -12,6 +12,7 @@ import type { Logger } from 'pino';
 import { getPgPool } from '../db/pool.js';
 import { ConfiguredDbtExecutionTargetResolver } from '../infrastructure/dbt/ConfiguredDbtExecutionTargetResolver.js';
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
+import { FileRunExecutionContextReferenceReader } from '../infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
 import { PostgresDbtProjectImportProcessStore } from '../infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
 import type { Env } from '../plugins/env.js';
@@ -183,6 +184,9 @@ export async function buildProtectedRuntimeModule(
     planner: startRunRuntime.planner,
     planCompilePlanner: startRunRuntime.planCompilePlanner,
     planStore: storageRuntime.planStore,
+    runExecutionContextReferenceReader: new FileRunExecutionContextReferenceReader(
+      storageRuntime.dbtBundleStore
+    ),
     planValidator: startRunRuntime.planValidator,
     executablePlanResolver: storageRuntime.executablePlanResolver,
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,

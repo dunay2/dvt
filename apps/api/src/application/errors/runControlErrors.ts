@@ -14,3 +14,16 @@ export class RunControlUnavailableError extends Error {
     super(`Run ${action} is unavailable for ${status}: ${reason}`);
   }
 }
+
+export type RunRecoveryUnavailableReason = 'source_plan_unavailable';
+
+export class RunRecoveryUnavailableError extends Error {
+  public readonly name = 'RunRecoveryUnavailableError';
+
+  public constructor(
+    public readonly sourceRunId: string,
+    public readonly reason: RunRecoveryUnavailableReason
+  ) {
+    super(`Run recovery is unavailable for ${sourceRunId}: ${reason}`);
+  }
+}

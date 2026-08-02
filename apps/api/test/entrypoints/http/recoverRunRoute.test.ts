@@ -34,6 +34,7 @@ function createDeps(): {
   authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
   authorizer: { authorize: ReturnType<typeof vi.fn> };
   useCase: { execute: ReturnType<typeof vi.fn> };
+  runIdGenerator: ReturnType<typeof vi.fn>;
 } {
   return {
     authenticator: {
@@ -71,6 +72,7 @@ function createDeps(): {
         accepted: true,
       }),
     },
+    runIdGenerator: vi.fn().mockReturnValue('recovery-run-1'),
   };
 }
 
@@ -86,14 +88,6 @@ describe('recoverRunRoute', () => {
         params: { runId: 'source-run-1' },
         body: {
           tenantId: 'tenant-a',
-          recoveryRunId: 'recovery-run-1',
-          planRef: {
-            uri: 'https://plans.example/plan.json',
-            sha256: 'a'.repeat(64),
-            schemaVersion: 'v1.0',
-            planId: 'plan-a',
-            planVersion: '1.0.0',
-          },
         },
       } as never,
       reply as never,
@@ -108,12 +102,13 @@ describe('recoverRunRoute', () => {
       'req-1'
     );
     expect(deps.useCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
+      {
         sourceRunId: 'source-run-1',
         recoveryRunId: 'recovery-run-1',
-      }),
+      },
       expect.anything()
     );
+    expect(deps.runIdGenerator).toHaveBeenCalledTimes(1);
     expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
   });
 
@@ -128,15 +123,7 @@ describe('recoverRunRoute', () => {
         params: { runId: 'source-run-1' },
         body: {
           tenantId: 'tenant-a',
-          recoveryRunId: 'recovery-run-1',
           targetAdapter: 'invalid',
-          planRef: {
-            uri: 'https://plans.example/plan.json',
-            sha256: 'a'.repeat(64),
-            schemaVersion: 'v1.0',
-            planId: 'plan-a',
-            planVersion: '1.0.0',
-          },
         },
       } as never,
       reply as never,
@@ -145,7 +132,7 @@ describe('recoverRunRoute', () => {
 
     expect(reply.code).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith(
-      httpError('bad_request', 'invalid_target_adapter', 'targetAdapter')
+      httpError('bad_request', 'invalid_body', 'targetAdapter')
     );
     expect(deps.authorizer.authorize).not.toHaveBeenCalled();
     expect(deps.useCase.execute).not.toHaveBeenCalled();

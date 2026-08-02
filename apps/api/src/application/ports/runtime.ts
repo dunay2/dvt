@@ -8,7 +8,6 @@ import type {
   Provider,
   MaterializationEvidence,
   ProviderRunStatusView,
-  RunExecutionContextRef,
   TransformationExecutor,
   TransformationSqlFirstPlanSummary,
 } from '@dvt/contracts';
@@ -270,28 +269,9 @@ export interface ICancelRunUseCase {
   ): Promise<CancelRunResult>;
 }
 
-export const SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS = ['temporal'] as const;
-
-export type RecoverRunTargetAdapter = (typeof SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS)[number];
-
-export function isRecoverRunTargetAdapter(value: string): value is RecoverRunTargetAdapter {
-  return (SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS as readonly string[]).includes(value);
-}
-
-export interface RecoverRunPlanRef {
-  readonly uri: string;
-  readonly sha256: string;
-  readonly schemaVersion: string;
-  readonly planId: string;
-  readonly planVersion: string;
-}
-
 export interface RecoverRunCommand {
   readonly sourceRunId: string;
   readonly recoveryRunId: string;
-  readonly targetAdapter?: RecoverRunTargetAdapter;
-  readonly runExecutionContextRef?: RunExecutionContextRef;
-  readonly planRef: RecoverRunPlanRef;
 }
 
 export interface RecoverRunResult {
