@@ -59,7 +59,8 @@ export function buildProtectedRuntimeRouteDependencies(
     protectedModule.planStore,
     protectedModule.runExecutionContextReferenceReader,
     executionContextRequirementResolver,
-    protectedModule.planIntegrityValidator
+    protectedModule.planIntegrityValidator,
+    protectedModule.startRunTargetAdapterRegistry
   );
   const previewPlanUseCase = new PreviewPlanUseCase({
     planner: {
@@ -98,7 +99,8 @@ export function buildProtectedRuntimeRouteDependencies(
       protectedModule.runExecutionContextReferenceReader,
       executionContextRequirementResolver,
       protectedModule.planStore,
-      protectedModule.planIntegrityValidator
+      protectedModule.planIntegrityValidator,
+      protectedModule.startRunTargetAdapterRegistry
     ),
     previewPlanUseCase,
     recoverRunUseCase: new RecoverRunUseCase({

@@ -61,7 +61,7 @@ describe('runsApiSnapshotMapper operational truth', () => {
       durationMs: -1,
       controls: {
         cancel: { available: false, reason: 'run_active' },
-        recover: { available: false, reason: 'run_active' },
+        recover: { available: false, reason: 'source_adapter_unavailable' },
       },
     });
 
@@ -71,6 +71,10 @@ describe('runsApiSnapshotMapper operational truth', () => {
       createdAt: '2026-07-19T09:59:55.000Z',
       startedAt: undefined,
       durationMs: undefined,
+      controls: {
+        cancel: { available: false, reason: 'run_active' },
+        recover: { available: false, reason: 'source_adapter_unavailable' },
+      },
     });
   });
 

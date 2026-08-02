@@ -145,6 +145,22 @@ describe('projectRunOperationalTruth', () => {
     });
   });
 
+  it('does not advertise recovery when the source runtime adapter is unavailable', () => {
+    const truth = projectRunOperationalTruth({
+      metadata,
+      status: {
+        runId: 'run-provider',
+        status: 'FAILED',
+      },
+      recoveryAdapterAvailable: false,
+    });
+
+    expect(truth.controls.recover).toEqual({
+      available: false,
+      reason: 'source_adapter_unavailable',
+    });
+  });
+
   it('uses enriched failure evidence only when canonical evidence is incomplete', () => {
     expect(
       projectRunOperationalTruth({

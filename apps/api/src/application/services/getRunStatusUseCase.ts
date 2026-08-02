@@ -14,6 +14,7 @@ import {
   type IWorkflowEngine,
 } from '@dvt/engine';
 
+import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
@@ -66,7 +67,8 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     private readonly planStore?: RunPlanReader,
     private readonly executionContextReader?: IRunExecutionContextReferenceReader,
     private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver,
-    private readonly planIntegrityValidator?: IPlanIntegrityValidator
+    private readonly planIntegrityValidator?: IPlanIntegrityValidator,
+    private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry
   ) {}
 
   public async execute(
@@ -152,6 +154,8 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       evidence: evidenceModel,
       recoveryContextTrusted,
       recoveryPlanAvailable,
+      recoveryAdapterAvailable:
+        this.targetAdapterRegistry?.isSupported(metadata.providerRef.provider) ?? false,
     });
 
     return {

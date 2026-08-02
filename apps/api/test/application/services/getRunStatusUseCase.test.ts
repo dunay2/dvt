@@ -34,6 +34,11 @@ const expectedOperationalIdentity = {
   provider: 'temporal',
 } as const;
 
+const registeredTargetAdapterRegistry = {
+  isSupported: vi.fn().mockReturnValue(true),
+  listSupported: vi.fn().mockReturnValue(['temporal']),
+};
+
 function createStateStore(): {
   getRunMetadataByRunId: ReturnType<typeof vi.fn>;
   getSnapshot: ReturnType<typeof vi.fn>;
@@ -1610,7 +1615,8 @@ describe('GetRunStatusUseCase', () => {
       planStore as never,
       undefined,
       undefined,
-      planIntegrityValidator as never
+      planIntegrityValidator as never,
+      registeredTargetAdapterRegistry as never
     );
 
     await expect(
@@ -1636,5 +1642,44 @@ describe('GetRunStatusUseCase', () => {
       },
       planStore
     );
+  });
+
+  it('does not advertise recovery when the source runtime adapter is not registered', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({
+        runId: 'provider-run-1',
+        status: 'FAILED' as const,
+      }),
+      getRunEnrichment: vi.fn(),
+    };
+    const planRef = { planId: 'plan-1' };
+    const planStore = {
+      getPlanRecord: vi.fn().mockResolvedValue(undefined),
+      getStoredPlanRef: vi.fn().mockResolvedValue(planRef),
+      getStoredPlanValidationRecord: vi.fn(),
+      fetchStoredPlanArtifact: vi.fn(),
+      fetchStoredPlanArtifactForValidation: vi.fn(),
+    };
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      { isSnapshotStale: vi.fn().mockResolvedValue(false) } as never,
+      undefined,
+      planStore as never,
+      undefined,
+      undefined,
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
+      { isSupported: vi.fn().mockReturnValue(false), listSupported: vi.fn() } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      status: 'FAILED',
+      controls: {
+        recover: { available: false, reason: 'source_adapter_unavailable' },
+      },
+    });
   });
 });

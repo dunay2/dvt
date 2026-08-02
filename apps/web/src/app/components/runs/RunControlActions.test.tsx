@@ -108,6 +108,21 @@ describe('RunControlActions', () => {
     ).toContain('execution plan is no longer available');
   });
 
+  it('explains when the original runtime adapter is unavailable', async () => {
+    await renderActions({
+      availability: {
+        cancel: { available: false, reason: 'run_terminal' },
+        recover: { available: false, reason: 'source_adapter_unavailable' },
+      },
+    });
+
+    expect(
+      container
+        ?.querySelector<HTMLButtonElement>('[data-slot="run-recover-action"]')
+        ?.getAttribute('aria-description')
+    ).toContain('runtime adapter is not configured');
+  });
+
   it('explains when cancellation is waiting for authoritative runtime dispatch', async () => {
     await renderActions({
       availability: {

@@ -16,6 +16,7 @@ export interface ProjectRunOperationalTruthInput {
   readonly evidence?: RunOperationalTruthEvidence;
   readonly recoveryContextTrusted?: boolean;
   readonly recoveryPlanAvailable?: boolean;
+  readonly recoveryAdapterAvailable?: boolean;
 }
 
 export function projectRunOperationalTruth(
@@ -52,7 +53,8 @@ export function projectRunOperationalTruth(
     controls: projectRunControlAvailability(
       status,
       input.recoveryContextTrusted ?? true,
-      input.recoveryPlanAvailable ?? true
+      input.recoveryPlanAvailable ?? true,
+      input.recoveryAdapterAvailable ?? true
     ),
   };
 }

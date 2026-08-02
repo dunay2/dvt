@@ -43,6 +43,11 @@ function createPlanStoreReader(getStoredPlanRef: ReturnType<typeof vi.fn>): Plan
   };
 }
 
+const registeredTargetAdapterRegistry = {
+  isSupported: vi.fn().mockReturnValue(true),
+  listSupported: vi.fn().mockReturnValue(['temporal']),
+};
+
 describe('ListRunsUseCase', () => {
   it('filters by authorized scope and projects the same canonical operational truth as detail', async () => {
     const stateStore = {
@@ -121,7 +126,8 @@ describe('ListRunsUseCase', () => {
       executionContextReader as never,
       undefined,
       createPlanStoreReader(vi.fn().mockResolvedValue({})) as never,
-      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
+      registeredTargetAdapterRegistry as never
     );
 
     await expect(useCase.execute({ limit: 25 }, queryContext as never)).resolves.toEqual({
@@ -282,7 +288,8 @@ describe('ListRunsUseCase', () => {
       undefined,
       undefined,
       planStore as never,
-      { fetchAndValidate: vi.fn() } as never
+      { fetchAndValidate: vi.fn() } as never,
+      registeredTargetAdapterRegistry as never
     );
 
     const result = await useCase.execute({ limit: 25 }, queryContext as never);
@@ -332,7 +339,8 @@ describe('ListRunsUseCase', () => {
       undefined,
       undefined,
       planStore as never,
-      planIntegrityValidator as never
+      planIntegrityValidator as never,
+      registeredTargetAdapterRegistry as never
     );
 
     const result = await useCase.execute({ limit: 25 }, queryContext as never);
@@ -350,5 +358,46 @@ describe('ListRunsUseCase', () => {
       },
       planStore
     );
+  });
+
+  it('fails closed when the source runtime adapter is not registered', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const planStore = createPlanStoreReader(vi.fn().mockResolvedValue({ planId: 'plan-1' }));
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'FAILED',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      planStore as never,
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
+      { isSupported: vi.fn().mockReturnValue(false), listSupported: vi.fn() } as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.recover).toEqual({
+      available: false,
+      reason: 'source_adapter_unavailable',
+    });
   });
 });

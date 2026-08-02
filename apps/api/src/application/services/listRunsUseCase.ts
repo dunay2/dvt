@@ -7,6 +7,7 @@ import type {
   RunMetadata,
 } from '@dvt/engine';
 
+import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
@@ -33,7 +34,8 @@ export class ListRunsUseCase implements IListRunsUseCase {
     private readonly executionContextReader?: IRunExecutionContextReferenceReader,
     private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver,
     private readonly planStore?: RecoveryPlanReader,
-    private readonly planIntegrityValidator?: IPlanIntegrityValidator
+    private readonly planIntegrityValidator?: IPlanIntegrityValidator,
+    private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry
   ) {}
 
   public async execute(
@@ -102,6 +104,8 @@ export class ListRunsUseCase implements IListRunsUseCase {
       status,
       recoveryContextTrusted,
       recoveryPlanAvailable,
+      recoveryAdapterAvailable:
+        this.targetAdapterRegistry?.isSupported(item.providerRef.provider) ?? false,
     });
   }
 

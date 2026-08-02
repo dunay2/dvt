@@ -33,6 +33,7 @@ export type RunControlUnavailableReason =
   | 'run_cancelled'
   | 'run_completed'
   | 'run_terminal'
+  | 'source_adapter_unavailable'
   | 'source_plan_unavailable'
   | 'source_context_untrusted';
 
