@@ -96,10 +96,12 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
   const dataSourceMode = resolveDataSource();
   setRuntimeDataSourceMode(dataSourceMode);
   const apiClient = overrides.apiClient ?? createApiClient();
+  const frontendOperabilitySink =
+    overrides.frontendOperabilitySink ?? createConsoleFrontendOperabilitySink();
   const sessionContext = overrides.sessionContext ?? createSessionContextPort();
   const workspaceScopeSelection =
     overrides.workspaceScopeSelection ?? createWorkspaceScopeSelectionPort();
-  const workspacePorts = createWorkspacePorts(apiClient);
+  const workspacePorts = createWorkspacePorts(apiClient, frontendOperabilitySink);
   const workspaceGraphSnapshotQuery =
     overrides.workspaceGraphSnapshotQuery ?? workspacePorts.workspaceGraphSnapshotQuery;
   const workspaceFilesQuery = overrides.workspaceFilesQuery ?? workspacePorts.workspaceFilesQuery;
@@ -150,7 +152,6 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     sessionContext,
     workspaceScopeSelection,
     shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),
-    frontendOperabilitySink:
-      overrides.frontendOperabilitySink ?? createConsoleFrontendOperabilitySink(),
+    frontendOperabilitySink,
   };
 }
