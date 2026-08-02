@@ -27,7 +27,12 @@ export type UiRunStatus = 'unknown' | 'pending' | 'running' | 'completed' | 'fai
 export type RunExecutor = 'postgres' | 'dbt';
 
 export type RunControlUnavailableReason =
-  'cancellation_pending' | 'run_active' | 'run_cancelled' | 'run_completed' | 'run_terminal';
+  | 'cancellation_pending'
+  | 'run_active'
+  | 'run_cancelled'
+  | 'run_completed'
+  | 'run_terminal'
+  | 'source_context_untrusted';
 
 export type RunControlActionAvailability =
   | { readonly available: true }

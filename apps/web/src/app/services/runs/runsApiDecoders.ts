@@ -27,6 +27,7 @@ const RUN_CONTROL_UNAVAILABLE_REASONS = new Set<RunControlUnavailableReason>([
   'run_cancelled',
   'run_completed',
   'run_terminal',
+  'source_context_untrusted',
 ]);
 
 export function asString(value: unknown): string | undefined {

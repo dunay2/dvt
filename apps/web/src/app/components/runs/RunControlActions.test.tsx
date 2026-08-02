@@ -77,4 +77,19 @@ describe('RunControlActions', () => {
       container?.querySelector<HTMLButtonElement>('[data-slot="run-cancel-action"]')?.disabled
     ).toBe(true);
   });
+
+  it('explains when recovery context integrity cannot be verified', async () => {
+    await renderActions({
+      availability: {
+        cancel: { available: false, reason: 'run_terminal' },
+        recover: { available: false, reason: 'source_context_untrusted' },
+      },
+    });
+
+    expect(
+      container
+        ?.querySelector<HTMLButtonElement>('[data-slot="run-recover-action"]')
+        ?.getAttribute('aria-description')
+    ).toContain('cannot be verified');
+  });
 });

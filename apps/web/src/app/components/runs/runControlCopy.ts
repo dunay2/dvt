@@ -25,6 +25,8 @@ const EN_COPY: RunControlCopy = {
     run_cancelled: 'The run is already cancelled.',
     run_completed: 'Completed runs cannot be cancelled or recovered.',
     run_terminal: 'This terminal run cannot be cancelled.',
+    source_context_untrusted:
+      'Recovery is unavailable because the original execution context cannot be verified.',
   },
 };
 
@@ -42,6 +44,8 @@ const ES_COPY: RunControlCopy = {
     run_cancelled: 'La ejecucion ya esta cancelada.',
     run_completed: 'Las ejecuciones completadas no se pueden cancelar ni recuperar.',
     run_terminal: 'Esta ejecucion terminal no se puede cancelar.',
+    source_context_untrusted:
+      'La recuperacion no esta disponible porque no se puede verificar el contexto de ejecucion original.',
   },
 };
 
