@@ -1,7 +1,10 @@
 import { RecoverySourceNotTerminalError, RunMetadataNotFoundError } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
-import { RunRecoveryUnavailableError } from '../../../src/application/errors/runControlErrors.js';
+import {
+  RunControlUnavailableError,
+  RunRecoveryUnavailableError,
+} from '../../../src/application/errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/auth.js';
 import { RecoverRunUseCase } from '../../../src/application/services/recoverRunUseCase.js';
 import { TenantId } from '../../../src/domain/auth/types.js';
@@ -51,7 +54,10 @@ const storedPlanRef = {
 };
 
 interface TestDependencies {
-  readonly engine: { recoverRun: ReturnType<typeof vi.fn> };
+  readonly engine: {
+    getRunStatus: ReturnType<typeof vi.fn>;
+    recoverRun: ReturnType<typeof vi.fn>;
+  };
   readonly stateStore: { getRunMetadataByRunId: ReturnType<typeof vi.fn> };
   readonly planStore: { getStoredPlanRef: ReturnType<typeof vi.fn> };
   readonly executionContextReader: { read: ReturnType<typeof vi.fn> };
@@ -60,6 +66,7 @@ interface TestDependencies {
 function createDependencies(): TestDependencies {
   return {
     engine: {
+      getRunStatus: vi.fn().mockResolvedValue({ status: 'FAILED' }),
       recoverRun: vi.fn().mockResolvedValue({
         provider: 'temporal',
         tenantId: 'tenant-a',
@@ -180,5 +187,25 @@ describe('RecoverRunUseCase', () => {
         commandContext
       )
     ).rejects.toBeInstanceOf(RecoverySourceNotTerminalError);
+  });
+
+  it('rejects completed source runs before resolving recovery artifacts', async () => {
+    const dependencies = createDependencies();
+    dependencies.engine.getRunStatus.mockResolvedValue({ status: 'COMPLETED' });
+    const useCase = new RecoverRunUseCase(dependencies as never);
+
+    await expect(
+      useCase.execute(
+        { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
+        commandContext
+      )
+    ).rejects.toMatchObject<RunControlUnavailableError>({
+      action: 'recover',
+      status: 'COMPLETED',
+      reason: 'run_completed',
+    });
+    expect(dependencies.planStore.getStoredPlanRef).not.toHaveBeenCalled();
+    expect(dependencies.executionContextReader.read).not.toHaveBeenCalled();
+    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
   });
 });

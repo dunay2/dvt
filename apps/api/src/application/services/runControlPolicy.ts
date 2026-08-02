@@ -15,6 +15,10 @@ export type CancelRunDecision =
     }>
   | Readonly<{ kind: 'reject'; reason: RunControlUnavailableReason }>;
 
+export type RecoverRunDecision =
+  | Readonly<{ kind: 'dispatch' }>
+  | Readonly<{ kind: 'reject'; reason: RunControlUnavailableReason }>;
+
 export function decideCancelRun(status: CanonicalRunStatus): CancelRunDecision {
   if (status.status === 'CANCELLED') {
     return { kind: 'settled', disposition: 'already_cancelled' };
@@ -26,6 +30,16 @@ export function decideCancelRun(status: CanonicalRunStatus): CancelRunDecision {
     return { kind: 'reject', reason: 'run_terminal' };
   }
   return { kind: 'dispatch', disposition: 'requested' };
+}
+
+export function decideRecoverRun(status: CanonicalRunStatus): RecoverRunDecision {
+  if (status.status === 'FAILED' || status.status === 'CANCELLED') {
+    return { kind: 'dispatch' };
+  }
+  return {
+    kind: 'reject',
+    reason: status.status === 'COMPLETED' ? 'run_completed' : 'run_active',
+  };
 }
 
 export function projectRunControlAvailability(
@@ -45,7 +59,8 @@ export function projectRunControlAvailability(
                 : 'run_cancelled',
         };
 
-  if (status.status === 'FAILED' || status.status === 'CANCELLED') {
+  const recoverDecision = decideRecoverRun(status);
+  if (recoverDecision.kind === 'dispatch') {
     return { cancel, recover: { available: true } };
   }
 
@@ -53,7 +68,7 @@ export function projectRunControlAvailability(
     cancel,
     recover: {
       available: false,
-      reason: status.status === 'COMPLETED' ? 'run_completed' : 'run_active',
+      reason: recoverDecision.reason,
     },
   };
 }

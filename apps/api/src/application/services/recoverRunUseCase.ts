@@ -9,7 +9,10 @@ import {
   type RunMetadata,
 } from '@dvt/engine';
 
-import { RunRecoveryUnavailableError } from '../errors/runControlErrors.js';
+import {
+  RunControlUnavailableError,
+  RunRecoveryUnavailableError,
+} from '../errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import {
@@ -18,6 +21,9 @@ import {
   type RecoverRunCommand,
   type RecoverRunResult,
 } from '../ports/runtime.js';
+
+import { decideRecoverRun } from './runControlPolicy.js';
+import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 
 export interface RecoverRunUseCaseDependencies {
   readonly engine: IWorkflowEngine;
@@ -40,6 +46,12 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     );
     if (!source) {
       throw new RunMetadataNotFoundError(command.sourceRunId);
+    }
+
+    const status = await this.dependencies.engine.getRunStatus(runMetadataToEngineRunRef(source));
+    const recoveryDecision = decideRecoverRun(status);
+    if (recoveryDecision.kind === 'reject') {
+      throw new RunControlUnavailableError('recover', status.status, recoveryDecision.reason);
     }
 
     const planRef = await this.dependencies.planStore.getStoredPlanRef({
