@@ -23,6 +23,9 @@ describe('PlanAdmissionFinding architecture', () => {
 
   it('links both decision contracts to the canonical fail-fast collection', () => {
     const selectionDecision = readRepoFile(
+      'apps/api/src/application/services/previewSelectionFinding.ts'
+    );
+    const selectionAuthority = readRepoFile(
       'apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts'
     );
     const executabilityDecision = readRepoFile(
@@ -30,6 +33,7 @@ describe('PlanAdmissionFinding architecture', () => {
     );
 
     expect(selectionDecision).toContain('PlanAdmissionFindingCollection<PreviewSelectionFinding>');
+    expect(selectionAuthority).toContain('buildPreviewSelectionRejection');
     expect(executabilityDecision).toContain(
       'PlanAdmissionFindingCollection<PlanExecutabilityFinding>'
     );
