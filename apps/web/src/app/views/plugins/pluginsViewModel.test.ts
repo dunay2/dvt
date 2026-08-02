@@ -26,7 +26,10 @@ function contribution(id: string): PluginContributions {
   return { id, displayName: id, version: '0.5.3' };
 }
 
-function reconcile(catalog: Plugin, local?: PluginContributions) {
+function reconcile(
+  catalog: Plugin,
+  local?: PluginContributions
+): ReturnType<typeof reconcilePluginCatalog>['entries'][number] {
   return reconcilePluginCatalog({
     catalog: [catalog],
     localContributions: local ? [local] : [],
