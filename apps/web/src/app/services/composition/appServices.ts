@@ -29,6 +29,10 @@ import { setRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { createApiCostAttributionSummaryPort } from '../cost/costService.api';
 import { createToastShellFeedbackPort } from '../feedback/shellFeedbackPort';
 import { createConsoleFrontendOperabilitySink } from '../operability/consoleFrontendOperabilitySink';
+import {
+  createFrontendOperabilityTransitionRecorder,
+  type FrontendOperabilityTransitionRecorder,
+} from '../operability/frontendOperabilityRecorder';
 import { createPlansService } from '../plans/plansService';
 import { createRunsService } from '../runs/runsService';
 import { createSessionContextPort } from '../session/sessionContextPort';
@@ -65,6 +69,7 @@ export interface AppServices {
   readonly workspaceScopeSelection: WorkspaceScopeSelectionPort;
   readonly shellFeedback: ShellFeedbackPort;
   readonly frontendOperabilitySink: FrontendOperabilitySink;
+  readonly frontendOperabilityTransitionRecorder: FrontendOperabilityTransitionRecorder;
 }
 
 export interface AppServicesOverrides {
@@ -98,6 +103,8 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
   const apiClient = overrides.apiClient ?? createApiClient();
   const frontendOperabilitySink =
     overrides.frontendOperabilitySink ?? createConsoleFrontendOperabilitySink();
+  const frontendOperabilityTransitionRecorder =
+    createFrontendOperabilityTransitionRecorder(frontendOperabilitySink);
   const sessionContext = overrides.sessionContext ?? createSessionContextPort();
   const workspaceScopeSelection =
     overrides.workspaceScopeSelection ?? createWorkspaceScopeSelectionPort();
@@ -153,5 +160,6 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     workspaceScopeSelection,
     shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),
     frontendOperabilitySink,
+    frontendOperabilityTransitionRecorder,
   };
 }

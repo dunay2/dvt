@@ -6,7 +6,7 @@ import {
 } from './appRouteErrorBoundaryCopy';
 import { createBootstrapFailureCommand } from './bootstrap/appBootstrapCommands';
 import { isBootstrapScreenVisible, showBootstrapFailure } from './bootstrap/appBootstrapScreen';
-import { useFrontendOperabilitySink } from './services/AppServicesContext';
+import { useFrontendOperabilityTransitionRecorder } from './services/AppServicesContext';
 import {
   createBootstrapFailureEvent,
   createRouteFailureEvent,
@@ -33,7 +33,7 @@ function getErrorMessage(error: unknown, copy: AppRouteErrorBoundaryCopy): strin
 export default function AppRouteErrorBoundary() {
   const error = useRouteError();
   const matches = useMatches();
-  const frontendOperabilitySink = useFrontendOperabilitySink();
+  const frontendOperabilityTransitionRecorder = useFrontendOperabilityTransitionRecorder();
   const copy = resolveAppRouteErrorBoundaryCopy();
   const message = getErrorMessage(error, copy);
   const bootstrapScreenVisible = isBootstrapScreenVisible();
@@ -50,8 +50,16 @@ export default function AppRouteErrorBoundary() {
     [bootstrapScreenVisible]
   );
 
-  useFrontendOperabilityTransition(frontendOperabilitySink, routeFailureEvent);
-  useFrontendOperabilityTransition(frontendOperabilitySink, bootstrapFailureEvent);
+  useFrontendOperabilityTransition(
+    frontendOperabilityTransitionRecorder,
+    'route.boundary',
+    routeFailureEvent
+  );
+  useFrontendOperabilityTransition(
+    frontendOperabilityTransitionRecorder,
+    'route.bootstrap',
+    bootstrapFailureEvent
+  );
 
   useEffect(() => {
     if (bootstrapScreenVisible) {

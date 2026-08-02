@@ -8,7 +8,11 @@ import type {
   FrontendOperabilityEvent,
   FrontendOperabilitySink,
 } from '../../ports/frontendOperability';
-import { createSurfaceDegradedEvent } from './frontendOperabilityRecorder';
+import {
+  createFrontendOperabilityTransitionRecorder,
+  createSurfaceDegradedEvent,
+  type FrontendOperabilityTransitionRecorder,
+} from './frontendOperabilityRecorder';
 import { useFrontendOperabilityTransition } from './useFrontendOperabilityTransition';
 
 const reactTestEnvironment = globalThis as typeof globalThis & {
@@ -31,12 +35,12 @@ afterAll(() => {
 
 function TransitionProbe({
   event,
-  sink,
+  recorder,
 }: {
   readonly event: FrontendOperabilityEvent | null;
-  readonly sink: FrontendOperabilitySink;
+  readonly recorder: FrontendOperabilityTransitionRecorder;
 }): null {
-  useFrontendOperabilityTransition(sink, event);
+  useFrontendOperabilityTransition(recorder, 'root.platform-health', event);
   return null;
 }
 
@@ -45,7 +49,7 @@ describe('useFrontendOperabilityTransition', () => {
     const container = document.createElement('div');
     const root = createRoot(container);
     const record = vi.fn<FrontendOperabilitySink['record']>();
-    const sink = { record } satisfies FrontendOperabilitySink;
+    const recorder = createFrontendOperabilityTransitionRecorder({ record });
     const degraded = createSurfaceDegradedEvent(
       'shell.platform-health',
       'partial',
@@ -53,18 +57,18 @@ describe('useFrontendOperabilityTransition', () => {
     );
 
     await act(async () => {
-      root.render(<TransitionProbe event={degraded} sink={sink} />);
+      root.render(<TransitionProbe event={degraded} recorder={recorder} />);
     });
     await act(async () => {
-      root.render(<TransitionProbe event={{ ...degraded }} sink={sink} />);
+      root.render(<TransitionProbe event={{ ...degraded }} recorder={recorder} />);
     });
     expect(record).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      root.render(<TransitionProbe event={null} sink={sink} />);
+      root.render(<TransitionProbe event={null} recorder={recorder} />);
     });
     await act(async () => {
-      root.render(<TransitionProbe event={degraded} sink={sink} />);
+      root.render(<TransitionProbe event={degraded} recorder={recorder} />);
     });
 
     expect(record).toHaveBeenCalledTimes(2);
@@ -75,7 +79,7 @@ describe('useFrontendOperabilityTransition', () => {
     const container = document.createElement('div');
     const root = createRoot(container);
     const record = vi.fn<FrontendOperabilitySink['record']>();
-    const sink = { record } satisfies FrontendOperabilitySink;
+    const recorder = createFrontendOperabilityTransitionRecorder({ record });
 
     await act(async () => {
       root.render(
@@ -85,7 +89,7 @@ describe('useFrontendOperabilityTransition', () => {
             'partial',
             'platform-health-state-transition'
           )}
-          sink={sink}
+          recorder={recorder}
         />
       );
     });
@@ -97,7 +101,7 @@ describe('useFrontendOperabilityTransition', () => {
             'probe-unavailable',
             'platform-health-state-transition'
           )}
-          sink={sink}
+          recorder={recorder}
         />
       );
     });

@@ -36,10 +36,10 @@ import {
 import { useActiveRouteBootstrapRegistration } from './bootstrap/useActiveRouteBootstrapRegistration';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import {
-  buildRootBootstrapFailureEvent,
+  buildRootBootstrapOperabilityTransition,
   buildRootPlatformHealthDegradedEvent,
 } from './rootOperabilityModel';
-import { useFrontendOperabilitySink } from './services/AppServicesContext';
+import { useFrontendOperabilityTransitionRecorder } from './services/AppServicesContext';
 import { useFrontendOperabilityTransition } from './services/operability/useFrontendOperabilityTransition';
 import {
   isCanvasRoute,
@@ -66,7 +66,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const setConnectionStatus = usePlatformConnectionStore((state) => state.setConnectionStatus);
   const capabilitiesQuery = useCapabilitiesQuery();
-  const frontendOperabilitySink = useFrontendOperabilitySink();
+  const frontendOperabilityTransitionRecorder = useFrontendOperabilityTransitionRecorder();
   const platformHealth = usePlatformHealthSnapshotQuery(platformHealthCapability);
   const shellHealth = buildShellHealthPresentationModel({
     data: platformHealth.data,
@@ -115,22 +115,37 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     () => buildShellRuntimeState(capabilitiesQuery.data).navigationModel,
     [capabilitiesQuery.data]
   );
-  const bootstrapFailureEvent = useMemo(
+  const bootstrapOperabilityTransition = useMemo(
     () =>
-      buildRootBootstrapFailureEvent({
+      buildRootBootstrapOperabilityTransition({
         capabilitiesFailed: capabilitiesQuery.isError,
+        capabilitiesReady: Boolean(capabilitiesQuery.data),
         platformHealthFailed: platformHealth.isError,
         platformRestState: shellHealthRestState,
       }),
-    [capabilitiesQuery.isError, platformHealth.isError, shellHealthRestState]
+    [
+      capabilitiesQuery.data,
+      capabilitiesQuery.isError,
+      platformHealth.isError,
+      shellHealthRestState,
+    ]
   );
   const platformHealthDegradedEvent = useMemo(
     () => buildRootPlatformHealthDegradedEvent(shellHealthRestState),
     [shellHealthRestState]
   );
 
-  useFrontendOperabilityTransition(frontendOperabilitySink, bootstrapFailureEvent);
-  useFrontendOperabilityTransition(frontendOperabilitySink, platformHealthDegradedEvent);
+  useFrontendOperabilityTransition(
+    frontendOperabilityTransitionRecorder,
+    'root.bootstrap',
+    bootstrapOperabilityTransition
+  );
+  useFrontendOperabilityTransition(
+    frontendOperabilityTransitionRecorder,
+    'root.platform-health',
+    platformHealthDegradedEvent
+  );
+  useFrontendOperabilityTransition(frontendOperabilityTransitionRecorder, 'route.boundary', null);
 
   useEffect(() => {
     if (!isCanvasRoute(location.pathname)) {

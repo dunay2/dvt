@@ -7,13 +7,14 @@ import {
 
 type RootBootstrapOperabilityInput = Readonly<{
   capabilitiesFailed: boolean;
+  capabilitiesReady: boolean;
   platformHealthFailed: boolean;
   platformRestState: 'ok' | 'degraded' | 'offline' | undefined;
 }>;
 
-export function buildRootBootstrapFailureEvent(
+export function buildRootBootstrapOperabilityTransition(
   input: RootBootstrapOperabilityInput
-): FrontendOperabilityEvent | null {
+): FrontendOperabilityEvent | null | undefined {
   if (input.capabilitiesFailed) {
     return createBootstrapFailureEvent('capabilities', 'capabilities-query-failed');
   }
@@ -22,7 +23,7 @@ export function buildRootBootstrapFailureEvent(
     return createBootstrapFailureEvent('health', 'health-probe-unavailable');
   }
 
-  return null;
+  return input.capabilitiesReady && input.platformRestState === 'ok' ? null : undefined;
 }
 
 export function buildRootPlatformHealthDegradedEvent(

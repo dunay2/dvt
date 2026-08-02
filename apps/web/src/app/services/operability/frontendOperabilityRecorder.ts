@@ -8,6 +8,16 @@ import type {
 const STABLE_ROUTE_ID_PATTERN = /^[a-z][a-z0-9]*(?:[.-][a-z0-9]+)*$/;
 const MAX_STABLE_ROUTE_ID_LENGTH = 80;
 
+export type FrontendOperabilityTransitionChannel =
+  'root.bootstrap' | 'root.platform-health' | 'route.bootstrap' | 'route.boundary';
+
+export type FrontendOperabilityTransitionRecorder = Readonly<{
+  recordTransition(
+    channel: FrontendOperabilityTransitionChannel,
+    event: FrontendOperabilityEvent | null
+  ): void;
+}>;
+
 export function normalizeFrontendOperabilityRouteId(
   candidate: string | undefined
 ): FrontendOperabilityRouteId {
@@ -72,4 +82,27 @@ export function recordFrontendOperabilityEvent(
   } catch {
     // Operability evidence must never alter product behavior.
   }
+}
+
+export function createFrontendOperabilityTransitionRecorder(
+  sink: FrontendOperabilitySink
+): FrontendOperabilityTransitionRecorder {
+  const eventKeysByChannel = new Map<FrontendOperabilityTransitionChannel, string>();
+
+  return {
+    recordTransition(channel, event) {
+      if (event === null) {
+        eventKeysByChannel.delete(channel);
+        return;
+      }
+
+      const eventKey = getFrontendOperabilityEventKey(event);
+      if (eventKeysByChannel.get(channel) === eventKey) {
+        return;
+      }
+
+      eventKeysByChannel.set(channel, eventKey);
+      recordFrontendOperabilityEvent(sink, event);
+    },
+  };
 }

@@ -171,3 +171,7 @@ export function useShellFeedback(): ShellFeedbackPort {
 export function useFrontendOperabilitySink(): FrontendOperabilitySink {
   return useRequiredAppServicesContext().frontendOperabilitySink;
 }
+
+export function useFrontendOperabilityTransitionRecorder(): AppServices['frontendOperabilityTransitionRecorder'] {
+  return useRequiredAppServicesContext().frontendOperabilityTransitionRecorder;
+}

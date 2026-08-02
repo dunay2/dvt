@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildRootBootstrapFailureEvent,
+  buildRootBootstrapOperabilityTransition,
   buildRootPlatformHealthDegradedEvent,
 } from './rootOperabilityModel';
 
 describe('rootOperabilityModel', () => {
   it('prioritizes capabilities failure as the bootstrap failure cause', () => {
     expect(
-      buildRootBootstrapFailureEvent({
+      buildRootBootstrapOperabilityTransition({
         capabilitiesFailed: true,
+        capabilitiesReady: false,
         platformHealthFailed: true,
         platformRestState: 'offline',
       })
@@ -23,11 +24,12 @@ describe('rootOperabilityModel', () => {
   it('maps an unavailable health probe to bootstrap and surface evidence', () => {
     const input = {
       capabilitiesFailed: false,
+      capabilitiesReady: true,
       platformHealthFailed: true,
       platformRestState: 'offline' as const,
     };
 
-    expect(buildRootBootstrapFailureEvent(input)).toEqual({
+    expect(buildRootBootstrapOperabilityTransition(input)).toEqual({
       type: 'frontend.bootstrap.failed',
       phase: 'health',
       reasonCode: 'health-probe-unavailable',
@@ -38,6 +40,26 @@ describe('rootOperabilityModel', () => {
       state: 'probe-unavailable',
       reasonCode: 'platform-health-state-transition',
     });
+  });
+
+  it('holds the current occurrence while an automatic retry is unresolved', () => {
+    expect(
+      buildRootBootstrapOperabilityTransition({
+        capabilitiesFailed: false,
+        capabilitiesReady: false,
+        platformHealthFailed: false,
+        platformRestState: 'ok',
+      })
+    ).toBeUndefined();
+
+    expect(
+      buildRootBootstrapOperabilityTransition({
+        capabilitiesFailed: false,
+        capabilitiesReady: true,
+        platformHealthFailed: false,
+        platformRestState: 'ok',
+      })
+    ).toBeNull();
   });
 
   it('emits partial only for an existing degraded health projection', () => {

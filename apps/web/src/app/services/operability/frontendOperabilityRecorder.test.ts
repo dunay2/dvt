@@ -4,6 +4,7 @@ import type { FrontendOperabilitySink } from '../../ports/frontendOperability';
 import {
   createBootstrapFailureEvent,
   createContractFailureEvent,
+  createFrontendOperabilityTransitionRecorder,
   createRouteFailureEvent,
   createSurfaceDegradedEvent,
   normalizeFrontendOperabilityRouteId,
@@ -80,6 +81,20 @@ describe('frontendOperabilityRecorder', () => {
         createBootstrapFailureEvent('health', 'health-probe-unavailable')
       )
     ).not.toThrow();
+  });
+
+  it('records each transition once across presenter remounts and resets explicitly', () => {
+    const record = vi.fn<FrontendOperabilitySink['record']>();
+    const recorder = createFrontendOperabilityTransitionRecorder({ record });
+    const event = createBootstrapFailureEvent('capabilities', 'capabilities-query-failed');
+
+    recorder.recordTransition('root.bootstrap', event);
+    recorder.recordTransition('root.bootstrap', { ...event });
+    expect(record).toHaveBeenCalledTimes(1);
+
+    recorder.recordTransition('root.bootstrap', null);
+    recorder.recordTransition('root.bootstrap', event);
+    expect(record).toHaveBeenCalledTimes(2);
   });
 
   it('rejects route parameters and raw paths from the stable route code', () => {
