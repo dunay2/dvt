@@ -2218,10 +2218,12 @@
         "apps/web/src/app/rootOperabilityModel.ts#RootBootstrapOperabilityInput",
         "apps/web/src/app/rootOperabilityModel.ts#buildRootBootstrapOperabilityTransition",
         "apps/web/src/app/rootOperabilityModel.ts#buildRootPlatformHealthDegradedEvent",
-        "apps/web/src/app/services/AppServicesContext.tsx#useFrontendOperabilitySink",
         "apps/web/src/app/services/AppServicesContext.tsx#useFrontendOperabilityTransitionRecorder",
         "apps/web/src/app/services/operability/consoleFrontendOperabilitySink.ts#StructuredOperabilityConsole",
         "apps/web/src/app/services/operability/consoleFrontendOperabilitySink.ts#createConsoleFrontendOperabilitySink",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#BOOTSTRAP_PHASES",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#BOOTSTRAP_REASON_CODES",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#SURFACE_STATES",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#FrontendOperabilityTransitionChannel",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#FrontendOperabilityTransitionRecorder",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#MAX_STABLE_ROUTE_ID_LENGTH",
@@ -2232,7 +2234,10 @@
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#createRouteFailureEvent",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#createSurfaceDegradedEvent",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#getFrontendOperabilityEventKey",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#isAllowedLiteral",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#isRecord",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#normalizeFrontendOperabilityRouteId",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#parseFrontendOperabilityEvent",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#recordFrontendOperabilityEvent",
         "apps/web/src/app/services/operability/useFrontendOperabilityTransition.ts#useFrontendOperabilityTransition",
         "apps/web/src/testing/appServicesTestDoubles.ts#createInertFrontendOperabilitySink"
@@ -2244,10 +2249,12 @@
         "apps/web/src/app/rootOperabilityModel.ts#RootBootstrapOperabilityInput",
         "apps/web/src/app/rootOperabilityModel.ts#buildRootBootstrapOperabilityTransition",
         "apps/web/src/app/rootOperabilityModel.ts#buildRootPlatformHealthDegradedEvent",
-        "apps/web/src/app/services/AppServicesContext.tsx#useFrontendOperabilitySink",
         "apps/web/src/app/services/AppServicesContext.tsx#useFrontendOperabilityTransitionRecorder",
         "apps/web/src/app/services/operability/consoleFrontendOperabilitySink.ts#StructuredOperabilityConsole",
         "apps/web/src/app/services/operability/consoleFrontendOperabilitySink.ts#createConsoleFrontendOperabilitySink",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#BOOTSTRAP_PHASES",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#BOOTSTRAP_REASON_CODES",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#SURFACE_STATES",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#FrontendOperabilityTransitionChannel",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#FrontendOperabilityTransitionRecorder",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#MAX_STABLE_ROUTE_ID_LENGTH",
@@ -2258,7 +2265,10 @@
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#createRouteFailureEvent",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#createSurfaceDegradedEvent",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#getFrontendOperabilityEventKey",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#isAllowedLiteral",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#isRecord",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#normalizeFrontendOperabilityRouteId",
+        "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#parseFrontendOperabilityEvent",
         "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#recordFrontendOperabilityEvent",
         "apps/web/src/app/services/operability/useFrontendOperabilityTransition.ts#useFrontendOperabilityTransition",
         "apps/web/src/testing/appServicesTestDoubles.ts#createInertFrontendOperabilitySink"
@@ -2273,24 +2283,7 @@
       ],
       "allowedImplementationSurfaces": [
         "apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts",
-        "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
-        "apps/web/src/app/AppRouteErrorBoundary.tsx",
-        "apps/web/src/app/Root.bootstrapRoute.test.support.tsx",
-        "apps/web/src/app/Root.operability.test.tsx",
-        "apps/web/src/app/Root.tsx",
-        "apps/web/src/app/ports/frontendOperability.ts",
-        "apps/web/src/app/rootOperabilityModel.test.ts",
-        "apps/web/src/app/rootOperabilityModel.ts",
-        "apps/web/src/app/services/AppServicesContext.tsx",
-        "apps/web/src/app/services/composition/appServices.operability.test.ts",
-        "apps/web/src/app/services/composition/appServices.ts",
-        "apps/web/src/app/services/operability/**",
-        "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-        "apps/web/src/app/services/workspace/workspacePorts.imports.test.ts",
-        "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts",
-        "apps/web/src/app/services/workspace/workspacePorts.ts",
-        "apps/web/src/app/services/workspace/workspacePortsApi.test.harness.ts",
-        "apps/web/src/testing/appServicesTestDoubles.ts",
+        "apps/web/src/app/**",
         "docs/architecture/components/web/observability/front-observability-architecture-dvt.md",
         "tools/planning-db/state/canonical-state.json"
       ],
@@ -2410,22 +2403,6 @@
             "architectureGuard": "apps/web/src/app/services/composition/appServices.operability.test.ts"
           },
           {
-            "name": "useFrontendOperabilitySink",
-            "path": "apps/web/src/app/services/AppServicesContext.tsx",
-            "cqRails": ["RecordFrontendOperabilityEvent"],
-            "dddOwner": "FrontendOperabilityRecorder",
-            "unitTests": [
-              "apps/web/src/app/services/operability/frontendOperabilityRecorder.test.ts",
-              "apps/web/src/app/services/operability/useFrontendOperabilityTransition.test.tsx",
-              "apps/web/src/app/Root.operability.test.tsx",
-              "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
-              "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts"
-            ],
-            "fowlerSignals": ["published_language", "boundary_drift"],
-            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:startup-route-readiness",
-            "architectureGuard": "apps/web/src/app/services/composition/appServices.operability.test.ts"
-          },
-          {
             "name": "useFrontendOperabilityTransitionRecorder",
             "path": "apps/web/src/app/services/AppServicesContext.tsx",
             "cqRails": ["RecordFrontendOperabilityEvent"],
@@ -2460,6 +2437,54 @@
           {
             "name": "createConsoleFrontendOperabilitySink",
             "path": "apps/web/src/app/services/operability/consoleFrontendOperabilitySink.ts",
+            "cqRails": ["RecordFrontendOperabilityEvent"],
+            "dddOwner": "FrontendOperabilityRecorder",
+            "unitTests": [
+              "apps/web/src/app/services/operability/frontendOperabilityRecorder.test.ts",
+              "apps/web/src/app/services/operability/useFrontendOperabilityTransition.test.tsx",
+              "apps/web/src/app/Root.operability.test.tsx",
+              "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
+              "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts"
+            ],
+            "fowlerSignals": ["published_language", "boundary_drift"],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:startup-route-readiness",
+            "architectureGuard": "apps/web/src/app/services/composition/appServices.operability.test.ts"
+          },
+          {
+            "name": "BOOTSTRAP_PHASES",
+            "path": "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts",
+            "cqRails": ["RecordFrontendOperabilityEvent"],
+            "dddOwner": "FrontendOperabilityRecorder",
+            "unitTests": [
+              "apps/web/src/app/services/operability/frontendOperabilityRecorder.test.ts",
+              "apps/web/src/app/services/operability/useFrontendOperabilityTransition.test.tsx",
+              "apps/web/src/app/Root.operability.test.tsx",
+              "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
+              "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts"
+            ],
+            "fowlerSignals": ["published_language", "boundary_drift"],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:startup-route-readiness",
+            "architectureGuard": "apps/web/src/app/services/composition/appServices.operability.test.ts"
+          },
+          {
+            "name": "BOOTSTRAP_REASON_CODES",
+            "path": "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts",
+            "cqRails": ["RecordFrontendOperabilityEvent"],
+            "dddOwner": "FrontendOperabilityRecorder",
+            "unitTests": [
+              "apps/web/src/app/services/operability/frontendOperabilityRecorder.test.ts",
+              "apps/web/src/app/services/operability/useFrontendOperabilityTransition.test.tsx",
+              "apps/web/src/app/Root.operability.test.tsx",
+              "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
+              "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts"
+            ],
+            "fowlerSignals": ["published_language", "boundary_drift"],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:startup-route-readiness",
+            "architectureGuard": "apps/web/src/app/services/composition/appServices.operability.test.ts"
+          },
+          {
+            "name": "SURFACE_STATES",
+            "path": "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts",
             "cqRails": ["RecordFrontendOperabilityEvent"],
             "dddOwner": "FrontendOperabilityRecorder",
             "unitTests": [
@@ -2634,7 +2659,55 @@
             "architectureGuard": "apps/web/src/app/services/composition/appServices.operability.test.ts"
           },
           {
+            "name": "isAllowedLiteral",
+            "path": "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts",
+            "cqRails": ["RecordFrontendOperabilityEvent"],
+            "dddOwner": "FrontendOperabilityRecorder",
+            "unitTests": [
+              "apps/web/src/app/services/operability/frontendOperabilityRecorder.test.ts",
+              "apps/web/src/app/services/operability/useFrontendOperabilityTransition.test.tsx",
+              "apps/web/src/app/Root.operability.test.tsx",
+              "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
+              "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts"
+            ],
+            "fowlerSignals": ["published_language", "boundary_drift"],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:startup-route-readiness",
+            "architectureGuard": "apps/web/src/app/services/composition/appServices.operability.test.ts"
+          },
+          {
+            "name": "isRecord",
+            "path": "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts",
+            "cqRails": ["RecordFrontendOperabilityEvent"],
+            "dddOwner": "FrontendOperabilityRecorder",
+            "unitTests": [
+              "apps/web/src/app/services/operability/frontendOperabilityRecorder.test.ts",
+              "apps/web/src/app/services/operability/useFrontendOperabilityTransition.test.tsx",
+              "apps/web/src/app/Root.operability.test.tsx",
+              "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
+              "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts"
+            ],
+            "fowlerSignals": ["published_language", "boundary_drift"],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:startup-route-readiness",
+            "architectureGuard": "apps/web/src/app/services/composition/appServices.operability.test.ts"
+          },
+          {
             "name": "normalizeFrontendOperabilityRouteId",
+            "path": "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts",
+            "cqRails": ["RecordFrontendOperabilityEvent"],
+            "dddOwner": "FrontendOperabilityRecorder",
+            "unitTests": [
+              "apps/web/src/app/services/operability/frontendOperabilityRecorder.test.ts",
+              "apps/web/src/app/services/operability/useFrontendOperabilityTransition.test.tsx",
+              "apps/web/src/app/Root.operability.test.tsx",
+              "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
+              "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts"
+            ],
+            "fowlerSignals": ["published_language", "boundary_drift"],
+            "cypressCoverage": "pnpm --filter @dvt/web test:e2e:startup-route-readiness",
+            "architectureGuard": "apps/web/src/app/services/composition/appServices.operability.test.ts"
+          },
+          {
+            "name": "parseFrontendOperabilityEvent",
             "path": "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts",
             "cqRails": ["RecordFrontendOperabilityEvent"],
             "dddOwner": "FrontendOperabilityRecorder",
@@ -2722,28 +2795,11 @@
             "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/services/operability/frontendOperabilityRecorder.test.ts",
             "patchSurfaces": [
               "apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts",
-              "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
-              "apps/web/src/app/AppRouteErrorBoundary.tsx",
-              "apps/web/src/app/Root.bootstrapRoute.test.support.tsx",
-              "apps/web/src/app/Root.operability.test.tsx",
-              "apps/web/src/app/Root.tsx",
-              "apps/web/src/app/ports/frontendOperability.ts",
-              "apps/web/src/app/rootOperabilityModel.test.ts",
-              "apps/web/src/app/rootOperabilityModel.ts",
-              "apps/web/src/app/services/AppServicesContext.tsx",
-              "apps/web/src/app/services/composition/appServices.operability.test.ts",
-              "apps/web/src/app/services/composition/appServices.ts",
-              "apps/web/src/app/services/operability/**",
-              "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-              "apps/web/src/app/services/workspace/workspacePorts.imports.test.ts",
-              "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts",
-              "apps/web/src/app/services/workspace/workspacePorts.ts",
-              "apps/web/src/app/services/workspace/workspacePortsApi.test.harness.ts",
-              "apps/web/src/testing/appServicesTestDoubles.ts",
+              "apps/web/src/app/**",
               "docs/architecture/components/web/observability/front-observability-architecture-dvt.md",
               "tools/planning-db/state/canonical-state.json"
             ],
-            "expectedFailure": "Frontend operability contract and recorder symbols did not exist; focused tests failed."
+            "expectedFailure": "Additional private fields and unsupported runtime literals reached the sink."
           }
         ],
         "componentGuides": [
@@ -2770,24 +2826,7 @@
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
           "apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts",
-          "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
-          "apps/web/src/app/AppRouteErrorBoundary.tsx",
-          "apps/web/src/app/Root.bootstrapRoute.test.support.tsx",
-          "apps/web/src/app/Root.operability.test.tsx",
-          "apps/web/src/app/Root.tsx",
-          "apps/web/src/app/ports/frontendOperability.ts",
-          "apps/web/src/app/rootOperabilityModel.test.ts",
-          "apps/web/src/app/rootOperabilityModel.ts",
-          "apps/web/src/app/services/AppServicesContext.tsx",
-          "apps/web/src/app/services/composition/appServices.operability.test.ts",
-          "apps/web/src/app/services/composition/appServices.ts",
-          "apps/web/src/app/services/operability/**",
-          "apps/web/src/app/services/workspace/workspacePorts.api.ts",
-          "apps/web/src/app/services/workspace/workspacePorts.imports.test.ts",
-          "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts",
-          "apps/web/src/app/services/workspace/workspacePorts.ts",
-          "apps/web/src/app/services/workspace/workspacePortsApi.test.harness.ts",
-          "apps/web/src/testing/appServicesTestDoubles.ts",
+          "apps/web/src/app/**",
           "docs/architecture/components/web/observability/front-observability-architecture-dvt.md",
           "tools/planning-db/state/canonical-state.json"
         ],
@@ -2795,7 +2834,7 @@
           "apps/api/** server-owned outcomes and remote ingestion are out of scope"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-02T03:07:37.757Z"
     },
@@ -20847,6 +20886,111 @@
         ]
       },
       "createdAt": "2026-08-02T03:07:37.757Z"
+    },
+    {
+      "operationId": "3e14cfa6-6943-45ba-bfbf-06c16c699414",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-186-FRONTEND-OPERABILITY-TELEMETRY:command:recordfrontendoperabilityevent:0:b855f1264b365e9a",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-186-FRONTEND-OPERABILITY-TELEMETRY#command#recordfrontendoperabilityevent",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/186",
+      "sourceContentSha256": "a82b43b20ee24d590324b8f9c2c46deb6bf495b3656c08bc5fbdb37046f0a69d",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/services/operability/frontendOperabilityRecorder.test.ts",
+        "dddOwner": "FrontendOperabilityRecorder",
+        "railName": "RecordFrontendOperabilityEvent",
+        "railType": "command",
+        "featureId": "MVP-186-FRONTEND-OPERABILITY-TELEMETRY",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/services/operability/frontendOperabilityRecorder.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/186",
+        "unitTests": [
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.test.ts",
+          "apps/web/src/app/services/operability/useFrontendOperabilityTransition.test.tsx",
+          "apps/web/src/app/Root.operability.test.tsx",
+          "apps/web/src/app/AppRouteErrorBoundary.operability.test.tsx",
+          "apps/web/src/app/services/workspace/workspacePorts.operability.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/186"],
+        "cypressFlows": [
+          "pnpm --filter @dvt/web test:e2e:startup-route-readiness"
+        ],
+        "domainObjects": [
+          "FrontendOperabilityEvent",
+          "FrontendOperabilityTransitionRecorder"
+        ],
+        "fowlerSignals": ["published_language", "boundary_drift"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/web test:changed",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/observability/front-observability-architecture-dvt.md"
+        ],
+        "expectedFailure": "Additional private fields and unsupported runtime literals reached the sink.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/components/web/frontend-fowler-implementation-pattern.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/observability/front-observability-architecture-dvt.md"
+        ],
+        "architectureGuards": [
+          "apps/web/src/app/services/composition/appServices.operability.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/186",
+        "implementationRefs": [
+          "apps/web/src/app/ports/frontendOperability.ts#FrontendOperabilityEvent",
+          "apps/web/src/app/ports/frontendOperability.ts#FrontendOperabilityRouteId",
+          "apps/web/src/app/ports/frontendOperability.ts#FrontendOperabilitySink",
+          "apps/web/src/app/rootOperabilityModel.ts#RootBootstrapOperabilityInput",
+          "apps/web/src/app/rootOperabilityModel.ts#buildRootBootstrapOperabilityTransition",
+          "apps/web/src/app/rootOperabilityModel.ts#buildRootPlatformHealthDegradedEvent",
+          "apps/web/src/app/services/AppServicesContext.tsx#useFrontendOperabilityTransitionRecorder",
+          "apps/web/src/app/services/operability/consoleFrontendOperabilitySink.ts#StructuredOperabilityConsole",
+          "apps/web/src/app/services/operability/consoleFrontendOperabilitySink.ts#createConsoleFrontendOperabilitySink",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#BOOTSTRAP_PHASES",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#BOOTSTRAP_REASON_CODES",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#SURFACE_STATES",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#FrontendOperabilityTransitionChannel",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#FrontendOperabilityTransitionRecorder",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#MAX_STABLE_ROUTE_ID_LENGTH",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#STABLE_ROUTE_ID_PATTERN",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#createBootstrapFailureEvent",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#createContractFailureEvent",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#createFrontendOperabilityTransitionRecorder",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#createRouteFailureEvent",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#createSurfaceDegradedEvent",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#getFrontendOperabilityEventKey",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#isAllowedLiteral",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#isRecord",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#normalizeFrontendOperabilityRouteId",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#parseFrontendOperabilityEvent",
+          "apps/web/src/app/services/operability/frontendOperabilityRecorder.ts#recordFrontendOperabilityEvent",
+          "apps/web/src/app/services/operability/useFrontendOperabilityTransition.ts#useFrontendOperabilityTransition",
+          "apps/web/src/testing/appServicesTestDoubles.ts#createInertFrontendOperabilitySink"
+        ],
+        "normalizedRailName": "recordfrontendoperabilityevent",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "a82b43b20ee24d590324b8f9c2c46deb6bf495b3656c08bc5fbdb37046f0a69d",
+        "allowedImplementationSurfaces": [
+          "apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts",
+          "apps/web/src/app/**",
+          "docs/architecture/components/web/observability/front-observability-architecture-dvt.md",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/** server-owned outcomes and remote ingestion are out of scope"
+        ]
+      },
+      "createdAt": "2026-08-02T03:21:40.511Z"
     }
   ]
 }
