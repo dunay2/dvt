@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-08-01",
+  "generated": "2026-08-02",
   "repo": {
     "sha": "local"
   },
@@ -138,6 +138,7 @@
         "Define workflow ports and cursor contracts at the DVT boundary before Temporal-specific execution",
         "Delegate recover-run facade input to the recovery application service.",
         "Delivery-facing port delegation remains the stable aggregate entrypoint for PostgreSQL state storage",
+        "Derive active requirements from the injected binding policy before dispatch.",
         "Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state",
         "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
         "Engine entry-point plan integrity verification resolves the executable plan,",
@@ -296,6 +297,7 @@
         "packages/@dvt/engine/src/services/startRun/StartRunAdmissionService.ts",
         "packages/@dvt/engine/src/services/startRun/StartRunIntentService.ts",
         "packages/@dvt/engine/src/services/startRun/StartRunTelemetryPolicy.ts",
+        "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateAdminSupport.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateCore.ts",
         "packages/@dvt/engine/src/state/InMemoryRunStateReadSupport.ts",

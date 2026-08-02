@@ -1,4 +1,10 @@
-/** Owned concern: select execution-context requirements activated by one plan. */
+/**
+ * @ownedConcern Select execution-context requirements activated by one plan.
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @decision Derive active requirements from the injected binding policy before dispatch.
+ * @consequence Engine admission can reuse one plugin-agnostic requirement selection rule.
+ * @version 1.0.0
+ */
 import type { ExecutionPlan } from '@dvt/contracts';
 
 import type {
