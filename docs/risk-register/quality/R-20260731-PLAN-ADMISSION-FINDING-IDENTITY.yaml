@@ -5,6 +5,7 @@ status: Open
 date: 2026-07-31
 owners:
   - '@dvt/contracts'
+  - dvt-api
 severity: Medium
 probability: Low
 ---
@@ -14,5 +15,7 @@ context: >
   semantic rejection.
 mitigation: >
   The contract owns one identity factory that sorts subjects and evidence before hashing a
-  fixed-shape payload. Contract tests prove order independence and the runtime schema rejects
-  identifiers that do not match the canonical payload.
+  fixed-shape payload. The Preview-selection producer canonicalizes and deduplicates its emitted
+  subjects and evidence before calling that factory. Contract and API tests prove order
+  independence, cover every current rejection cause, protect secret redaction, and ensure the
+  runtime schema rejects identifiers that do not match the canonical payload.
