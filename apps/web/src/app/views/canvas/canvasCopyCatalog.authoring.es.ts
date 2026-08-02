@@ -6,6 +6,8 @@ export const canvasViewAuthoringCopyEs = {
   nodeAlreadyOnCanvasMessage: 'El nodo ya esta en el canvas',
   nodeKindUnavailableForCanvasMessage:
     'Este tipo de nodo no esta disponible para el canvas activo.',
+  nodeDropPayloadInvalidMessage:
+    'No se ha podido leer el nodo arrastrado. El canvas no se ha modificado.',
   transformationConnectionOrderMessage:
     'Las aristas del Execution Preview deben seguir source -> sql_transform -> sink.',
   transformationConnectionEdgeCountMessage:

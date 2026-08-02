@@ -2,12 +2,43 @@
 import { useMemo, useState } from 'react';
 
 import { resolveCanvasGraphStrategy } from '../../plugins/graphStrategyRegistry';
+import type { CanvasGraphStrategy } from '../../plugins/graphStrategyContracts';
 import { useWorkspaceGraphForViewQuery } from '../../queries/workspaceQueries';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { assignLevels, bfsReachable, buildColumnLineage, groupNodesByLevel } from './lineageModel';
 
 function getNodeColumns(node: CanonicalNode | null): Array<{ name: string }> {
   return (node?.metadata?.columns as Array<{ name: string }> | undefined) ?? [];
+}
+
+type LineageGraphProjection = Readonly<{
+  canonicalNodes: CanonicalNode[];
+  canonicalEdges: CanonicalEdge[];
+  projectionError: Error | null;
+}>;
+
+export function projectLineageGraph(
+  rawNodes: readonly unknown[],
+  rawEdges: readonly unknown[],
+  graphStrategy: CanvasGraphStrategy
+): LineageGraphProjection {
+  try {
+    return {
+      canonicalNodes: rawNodes
+        .map((node) => graphStrategy.mapNodeToCanonical(node))
+        .filter((node): node is CanonicalNode => node !== null),
+      canonicalEdges: rawEdges
+        .map((edge) => graphStrategy.mapEdgeToCanonical(edge))
+        .filter((edge): edge is CanonicalEdge => edge !== null),
+      projectionError: null,
+    };
+  } catch (error) {
+    return {
+      canonicalNodes: [],
+      canonicalEdges: [],
+      projectionError: error instanceof Error ? error : new Error(String(error)),
+    };
+  }
 }
 
 export function useLineageViewData() {
@@ -16,17 +47,10 @@ export function useLineageViewData() {
   const graphStrategy = useMemo(() => resolveCanvasGraphStrategy('dbt'), []);
   const snapshotQuery = useWorkspaceGraphForViewQuery('lineage', 60_000);
 
-  const { canonicalNodes, canonicalEdges } = useMemo(() => {
+  const { canonicalNodes, canonicalEdges, projectionError } = useMemo(() => {
     const rawNodes = snapshotQuery.data?.nodes ?? [];
     const rawEdges = snapshotQuery.data?.edges ?? [];
-    return {
-      canonicalNodes: rawNodes
-        .map((node) => graphStrategy.mapNodeToCanonical(node))
-        .filter((node): node is CanonicalNode => node !== null),
-      canonicalEdges: rawEdges
-        .map((edge) => graphStrategy.mapEdgeToCanonical(edge))
-        .filter((edge) => edge !== null),
-    };
+    return projectLineageGraph(rawNodes, rawEdges, graphStrategy);
   }, [graphStrategy, snapshotQuery.data?.edges, snapshotQuery.data?.nodes]);
 
   const levels = useMemo(
@@ -91,7 +115,8 @@ export function useLineageViewData() {
     setSearchQuery,
     setColumnLevel,
     isLoadingSnapshot: snapshotQuery.isLoading,
-    snapshotError: snapshotQuery.error instanceof Error ? snapshotQuery.error : null,
+    snapshotError:
+      projectionError ?? (snapshotQuery.error instanceof Error ? snapshotQuery.error : null),
     focusNodeHasColumnMetadata: getNodeColumns(focusNode).length > 0,
     hasReachableUpstreamNodes: upstreamNodes.length > 0,
     reachableUpstreamHasColumnMetadata: upstreamNodes.some(

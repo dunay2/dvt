@@ -1,20 +1,41 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import type { BadgeContext } from './contracts/NodeRendering';
+import type { InspectorPanelContribution } from './contracts/PluginManifest';
 import {
   getBottomDiagnosticsContributions,
   getCommandPaletteContributions,
   getAllOverlays,
   getNodeBadges,
+  getInspectorPanels,
   getSourceImportOptions,
   getRuntimePlugins,
   PLUGIN_REGISTRY,
   getPluginPortMap,
   getSourceImportContributions,
   getRouteHeaderContributions,
+  mapRunToCanonical,
+  type PluginContributions,
   type RuntimeCapabilities,
 } from './registry';
-import type { CanonicalNode } from '../types/canonical';
+import type { CanonicalNode, CanonicalRun } from '../types/canonical';
+
+const registeredTestPluginIds = new Set<string>();
+
+function registerTestPlugin(plugin: PluginContributions): void {
+  PLUGIN_REGISTRY.push(plugin);
+  registeredTestPluginIds.add(plugin.id);
+}
+
+afterEach(() => {
+  for (let index = PLUGIN_REGISTRY.length - 1; index >= 0; index -= 1) {
+    const plugin = PLUGIN_REGISTRY[index];
+    if (plugin && registeredTestPluginIds.has(plugin.id)) {
+      PLUGIN_REGISTRY.splice(index, 1);
+    }
+  }
+  registeredTestPluginIds.clear();
+});
 
 function buildRuntimeCapabilities(unavailablePluginId: string): RuntimeCapabilities {
   return {
@@ -132,5 +153,114 @@ describe('plugin runtime projection', () => {
       getSourceImportOptions(buildRuntimeCapabilities('dbt')).map((option) => option.id)
     ).toEqual(['includeColumns', 'addTests', 'addFreshness']);
     expect(getSourceImportOptions(buildRuntimeCapabilities('dvt.warehouse-source'))).toEqual([]);
+  });
+
+  it('continues run projection after a plugin adapter throws', () => {
+    const canonicalRun: CanonicalRun = {
+      runId: 'run-1',
+      planId: 'plan-1',
+      pluginId: 'healthy-run-adapter',
+      status: 'completed',
+      startedAt: '2026-08-01T00:00:00.000Z',
+      environment: 'test',
+      tasks: [],
+    };
+    registerTestPlugin({
+      id: 'failing-run-adapter',
+      displayName: 'Failing run adapter',
+      version: '1.0.0',
+      runAdapter: {
+        mapToCanonical: () => {
+          throw new Error('run mapping failed');
+        },
+      },
+    });
+    registerTestPlugin({
+      id: 'null-run-adapter',
+      displayName: 'Null run adapter',
+      version: '1.0.0',
+      runAdapter: { mapToCanonical: () => null },
+    });
+    registerTestPlugin({
+      id: 'healthy-run-adapter',
+      displayName: 'Healthy run adapter',
+      version: '1.0.0',
+      runAdapter: { mapToCanonical: () => canonicalRun },
+    });
+
+    expect(mapRunToCanonical({ id: 'plugin-run' })).toEqual(canonicalRun);
+  });
+
+  it('omits a failing inspector predicate while preserving false and healthy panels', () => {
+    const panel = (id: string, shouldShow: () => boolean): InspectorPanelContribution => ({
+      id,
+      pluginId: id,
+      label: id,
+      icon: (() => null) as unknown as InspectorPanelContribution['icon'],
+      order: id === 'healthy-panel' ? 10 : 20,
+      shouldShow,
+      component: () => null,
+    });
+    registerTestPlugin({
+      id: 'inspector-callbacks',
+      displayName: 'Inspector callbacks',
+      version: '1.0.0',
+      inspectorPanels: [
+        panel('failing-panel', () => {
+          throw new Error('predicate failed');
+        }),
+        panel('hidden-panel', () => false),
+        panel('healthy-panel', () => true),
+      ],
+    });
+
+    const panels = getInspectorPanels(buildCanonicalNode(), {
+      activeRunId: null,
+      registeredPlugins: new Set(),
+    });
+
+    expect(panels.map(({ id }) => id)).toContain('healthy-panel');
+    expect(panels.map(({ id }) => id)).not.toContain('failing-panel');
+    expect(panels.map(({ id }) => id)).not.toContain('hidden-panel');
+  });
+
+  it('omits a failing badge callback while preserving null and healthy badges', () => {
+    registerTestPlugin({
+      id: 'badge-callbacks',
+      displayName: 'Badge callbacks',
+      version: '1.0.0',
+      nodeBadges: [
+        {
+          id: 'failing-badge',
+          pluginId: 'badge-callbacks',
+          forKinds: 'all',
+          priority: 30,
+          getBadge: () => {
+            throw new Error('badge failed');
+          },
+        },
+        {
+          id: 'null-badge',
+          pluginId: 'badge-callbacks',
+          forKinds: 'all',
+          priority: 20,
+          getBadge: () => null,
+        },
+        {
+          id: 'healthy-badge',
+          pluginId: 'badge-callbacks',
+          forKinds: 'all',
+          priority: 10,
+          getBadge: () => ({ text: 'Healthy', color: 'green', position: 'top-right' }),
+        },
+      ],
+    });
+
+    const badges = getNodeBadges(buildCanonicalNode(), {
+      activeRunId: null,
+      runStatusByNodeId: new Map(),
+    });
+
+    expect(badges.map(({ text }) => text)).toContain('Healthy');
   });
 });

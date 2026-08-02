@@ -20,6 +20,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.node.kindUnavailableForCanvasMessage',
     fallback: 'This node kind is not available for the active canvas.',
   },
+  nodeDropPayloadInvalidMessage: {
+    key: 'canvas.node.dropPayloadInvalidMessage',
+    fallback: 'The dropped node could not be read. The canvas was not changed.',
+  },
   transformationConnectionOrderMessage: {
     key: 'canvas.transformation.connectionOrderMessage',
     fallback: 'Execution Preview edges must follow source -> sql_transform -> sink.',

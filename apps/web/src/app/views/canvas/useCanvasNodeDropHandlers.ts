@@ -3,7 +3,7 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
 
-import { CANONICAL_NODE_DRAG_MIME_TYPE } from '../../types/canonical';
+import { CANONICAL_NODE_DRAG_MIME_TYPE, type CanonicalNode } from '../../types/canonical';
 import type { CanvasNodeDropContracts } from './canvasGraphHandlerContracts';
 import { canvasDraftSessionWorkingSet } from './canvasDraftSessionWorkingSet';
 import { canvasViewCopy, formatCanvasNodeAddedMessage } from './copy';
@@ -49,10 +49,20 @@ export function useCanvasNodeDropHandlers({
         return;
       }
 
-      const canonicalNode =
-        parseCanonicalNodeDragPayload(event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE)) ??
-        graphStrategy?.parseDropPayload(event.dataTransfer) ??
-        null;
+      const canonicalDragNode = parseCanonicalNodeDragPayload(
+        event.dataTransfer.getData(CANONICAL_NODE_DRAG_MIME_TYPE)
+      );
+      let pluginDragNode: CanonicalNode | null = null;
+      if (canonicalDragNode == null && graphStrategy != null) {
+        try {
+          pluginDragNode = graphStrategy.parseDropPayload(event.dataTransfer);
+        } catch {
+          toast.error(canvasViewCopy.nodeDropPayloadInvalidMessage);
+          return;
+        }
+      }
+
+      const canonicalNode = canonicalDragNode ?? pluginDragNode;
       if (!canonicalNode) {
         return;
       }

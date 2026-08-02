@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import type { InspectorPanelContribution } from '../../plugins/contracts/PluginManifest';
 import { resolveString } from '../../plugins/contracts/PluginManifest';
+import { PluginContributionBoundary } from '../../plugins/PluginContributionBoundary';
 import { inspectorVisualClasses } from './inspectorVisualTokens';
 import type { CanonicalNode } from '../../types/canonical';
 import { Badge } from '../ui/badge';
@@ -215,12 +216,14 @@ export function NodePropertiesTabs({
         const PanelComponent = panel.component;
         return (
           <TabsContent key={panel.id} value={panel.id} className="m-0">
-            <PanelComponent
-              node={node}
-              activeRunId={activeRunId}
-              onClose={onHide}
-              tagsEditor={tagsEditor}
-            />
+            <PluginContributionBoundary resetKey={`${node.id}:${panel.id}`} fallback={null}>
+              <PanelComponent
+                node={node}
+                activeRunId={activeRunId}
+                onClose={onHide}
+                tagsEditor={tagsEditor}
+              />
+            </PluginContributionBoundary>
           </TabsContent>
         );
       })}

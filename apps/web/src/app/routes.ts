@@ -159,6 +159,7 @@ export function createAppRoutes(): RouteObject[] {
       id: view.id,
       path: normalizeChildPath(view.path),
       element: createPluginRoute(view.id, view.pluginId, view.component, routeHandle),
+      errorElement: createElement(AppRouteErrorBoundary),
       handle: routeHandle,
     };
   });

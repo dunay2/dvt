@@ -84,6 +84,22 @@ export function buildOverlayContext(
 // buildNodeDecorations — applies all active overlays, returns per-node result
 // ---------------------------------------------------------------------------
 
+function resolveNodeDecoration(
+  overlay: CanvasOverlayContribution | null,
+  node: CanonicalNode,
+  ctx: OverlayContext
+): NodeDecoration | null {
+  if (!overlay) {
+    return null;
+  }
+
+  try {
+    return overlay.nodeDecorator(node, ctx);
+  } catch {
+    return null;
+  }
+}
+
 export function buildNodeDecorations(
   canonicalNodes: CanonicalNode[],
   overlays: CanvasOverlayContribution[],
@@ -102,9 +118,9 @@ export function buildNodeDecorations(
   const additiveOverlays = overlays.filter((o) => o.mode === 'additive');
 
   for (const node of canonicalNodes) {
-    const exclusive: NodeDecoration | null = exclusiveOverlay?.nodeDecorator(node, ctx) ?? null;
+    const exclusive = resolveNodeDecoration(exclusiveOverlay, node, ctx);
     const additives: NodeDecoration[] = additiveOverlays
-      .map((o) => o.nodeDecorator(node, ctx))
+      .map((overlay) => resolveNodeDecoration(overlay, node, ctx))
       .filter((d): d is NodeDecoration => d !== null);
 
     result.set(node.id, mergeDecorations(exclusive, additives));

@@ -5,6 +5,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
+import type { InspectorPanelContribution } from '../../plugins/contracts/PluginManifest';
 import { NodePropertiesTabs } from './NodePropertiesTabs';
 import type { NodePropertiesReadModel } from './nodePropertiesReadModel';
 
@@ -20,7 +21,8 @@ const node: CanonicalNode = {
 
 function renderNodePropertiesTabs(
   model: NodePropertiesReadModel,
-  activeTab: string
+  activeTab: string,
+  panels: readonly InspectorPanelContribution[] = []
 ): {
   container: HTMLDivElement;
   root: Root;
@@ -38,7 +40,7 @@ function renderNodePropertiesTabs(
         node={node}
         model={model}
         activeRunId={null}
-        panels={[]}
+        panels={panels}
         activeTab={activeTab}
         moreLabel="More"
         onActiveTabChange={vi.fn()}
@@ -108,5 +110,32 @@ describe('NodePropertiesTabs section content', () => {
 
     expect(codeSection?.querySelector('pre')?.textContent).toBe('select * from orders');
     expect(codeSection?.textContent).toContain('select * from orders');
+  });
+
+  it('keeps the inspector mounted when an active plugin panel throws', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const model: NodePropertiesReadModel = {
+      nodeId: node.id,
+      nodeName: node.name,
+      sections: [{ id: 'general', label: 'General', rows: [], tableRows: [] }],
+    };
+    const panels: InspectorPanelContribution[] = [
+      {
+        id: 'failing-panel',
+        pluginId: 'failing-plugin',
+        label: 'Failing panel',
+        icon: (() => null) as unknown as InspectorPanelContribution['icon'],
+        order: 10,
+        shouldShow: () => true,
+        component: () => {
+          throw new Error('panel render failed');
+        },
+      },
+    ];
+
+    ({ container, root } = renderNodePropertiesTabs(model, 'failing-panel', panels));
+
+    expect(container.querySelector('[role="tablist"]')).not.toBeNull();
+    expect(container.textContent).toContain('Failing panel');
   });
 });
