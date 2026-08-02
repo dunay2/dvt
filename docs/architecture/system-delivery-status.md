@@ -2,7 +2,7 @@
 title: Current Status
 status: Active
 owner: Architecture / Delivery / Docs
-last_reviewed: 2026-04-26
+last_reviewed: 2026-08-02
 ---
 
 # Current Status
@@ -25,8 +25,8 @@ Use this page together with:
   for the curated topic -> doc -> code -> test -> command mapping
 - [Planner Current State Assessment](../planning/status/planner-current-state-assessment.md)
   for the planner-specific current-state baseline and component map
-- [Planning Control Tower](../planning/state/planning-control-tower.md) for the
-  active task registry and lane posture
+- [GitHub MVP Issue Workflow](../planning/state/github-mvp-issue-workflow.md)
+  for the sole MVP task lifecycle and the Planning DB architecture boundary
 - [Strategic Product Roadmap](../planning/roadmap/strategic-product-roadmap.md)
   for the stable long-range product direction and current capability ladder
 - [Roadmap Of Record](../planning/roadmap/index.md) for current planning
@@ -61,24 +61,63 @@ Scope-specific adapter-temporal verification commands:
 
 ## Snapshot
 
-- Review date: 2026-04-26
+- Review date: 2026-08-02
+- Reviewed release: `0.5.3`
+- Reviewed `main` commit: `efed6b9b8a4bc283de6d90472a1b4ee8d2cdafc0`
 - Workspace inventory source:
   [Generated Code State](../planning/status/generated-code-state.md)
-- Active workspaces: 24
-- Source files: 1170
-- Test files: 612
-- Workspaces with test scripts: 23 of 24
+- Active workspaces: 25
+- Source files: 1664
+- Test files: 1085
+- Workspaces with build scripts: 25 of 25
+- Workspaces with test scripts: 24 of 25
+
+## Reviewed MVP Baseline
+
+The executable dbt vertical tracked by
+[EPICA-V1](https://github.com/dunay2/dvt/issues/2106) is complete on this
+baseline:
+
+```text
+supported dbt authoring
+  -> atomic authority-specific publication
+  -> accepted | selection-rejected | plan-invalid Preview
+  -> StartRun(exact stored PlanRef)
+  -> authoritative terminal run snapshot and ordered events
+```
+
+Product interpretation:
+
+- DVT+ owns a heterogeneous plugin-qualified graph. dbt is the current native
+  transformation vertical, not the whole product ontology.
+- Canvas is the single primary Process Map. Code, source import, project
+  exploration, and node details are contextual surfaces; Log, Problems, Runs,
+  and Preview retain the bottom operational drawer.
+- API Source Import implements protected connection list/create/test,
+  provider-neutral source-object discovery, and source registration. Runtime
+  plugin and route posture still gate whether the affordance is available.
+- Preview returns one typed outcome. A built plan keeps its exact immutable
+  stored `PlanRef`; later project changes require another Preview for new work
+  but do not mutate or invalidate the stored artifact already referenced.
+- `ObservePlanRunReadiness` is the single Canvas plan/run readiness query.
+  Presentation does not derive a second gate.
+- Code working-tree autosync and explicit flush both reuse
+  `SaveWorkspaceFileContent`; there is no separate Save lifecycle.
+
+The remaining product-facing control gap is
+[US-F4.3](https://github.com/dunay2/dvt/issues/2103): expose backend-owned Run
+cancellation and retry recovery through existing frontend surfaces.
 
 ## Executive Summary
 
 | Area                       | Current posture    | What is true now                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Primary status source                                                                                                                                                                                                                                   |
 | -------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Entry layer                | Partial            | `apps/api` still owns the protected runtime command/query surface (`POST /runs/start`, `GET /runs`, `GET /runs/:runId`, `GET /runs/:runId/events`, `POST /runs/:runId/signal`) with OIDC auth and integration coverage, and `POST /plans/preview` now enforces explicit preview profiles plus request-boundary graph/provenance validation before returning a persisted `PlanRef`; the plan-compile seam now reuses the canonical `startRun` adapter truth instead of maintaining a second local adapter allowlist; `apps/web` now exposes explicit transformation authoring mode, persisted-preview gating before `Start run`, and run-detail rendering of executor identity, sink materialization evidence, timestamps, failed-step diagnostics, and caller-visible plan provenance from the snapshot surface, with package tests and a Cypress E2E lane (`pnpm --filter @dvt/web test:e2e`) for frontend runtime checks | [API and Admission](../planning/domains/api-and-admission.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                                                             |
-| Planning layer             | Partial            | planner, verifier, DSL, and plan-interpreter packages exist; the stable strategic roadmap now lives under `docs/planning/roadmap/`; the transformation-flow proposal set now governs the shipped SQL-first design-graph, preview-persist boundary, and deterministic compiler mapping; `TF-A1-C` is now closed as the structural hardening follow-up that single-sourced step-kind authority and split the direct API or UI consumer seams without changing the frozen SQL-first semantics; stale standalone domain-cohesion draft packs were archived out of active planning surfaces; and the first caller-visible Lane B provenance chain is now delivered from Git-tracked authoring inputs through persisted plan identity to run outcome, while broader shared-kernel and plan-record hardening remain open                                                                                                          | [Planner Current State Assessment](../planning/status/planner-current-state-assessment.md), [Strategic Product Roadmap](../planning/roadmap/strategic-product-roadmap.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
-| Execution layer            | Partial            | engine, Postgres adapter, and Temporal adapter are implemented; `TF-C2` is accepted; native Temporal cancellation is converged; shared DBT artifact readers now live in `@dvt/artifacts`; and the repo now ships a standalone `apps/temporal-worker` with health/readiness/metrics plus an explicit DBT worker plugin profile. DBT stays out of engine-kernel semantics and out of the Temporal core activity registry; remaining DBT coupling is limited to package-level plugin/CLI surfaces and remains tracked as explicit risk. The compile/admission boundary and shared runtime-provider vocabulary now share one implemented-adapter truth: Temporal is the only active provider runtime. Second-runtime work requires a new ADR-backed contract line, adapter package, conformance suite, and production composition path before it can re-enter active docs or provider typing.                                  | [Execution Runtime](../planning/domains/execution-runtime.md), [Planning Control Tower](../planning/state/planning-control-tower.md)                                                                                                                    |
+| Planning layer             | Partial            | planner, verifier, DSL, and plan-interpreter packages exist; the stable strategic roadmap now lives under `docs/planning/roadmap/`; the transformation-flow proposal set now governs the shipped SQL-first design-graph, preview-persist boundary, and deterministic compiler mapping; `TF-A1-C` is now closed as the structural hardening follow-up that single-sourced step-kind authority and split the direct API or UI consumer seams without changing the frozen SQL-first semantics; stale standalone domain-cohesion draft packs were archived out of active planning surfaces; and the first caller-visible provenance chain is now delivered from Git-tracked authoring inputs through persisted plan identity to run outcome, while broader shared-kernel and plan-record hardening remain open                                                                                                                 | [Planner Current State Assessment](../planning/status/planner-current-state-assessment.md), [Strategic Product Roadmap](../planning/roadmap/strategic-product-roadmap.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) |
+| Execution layer            | Partial            | engine, Postgres adapter, and Temporal adapter are implemented; `TF-C2` is accepted; native Temporal cancellation is converged; shared DBT artifact readers now live in `@dvt/artifacts`; and the repo now ships a standalone `apps/temporal-worker` with health/readiness/metrics plus an explicit DBT worker plugin profile. DBT stays out of engine-kernel semantics and out of the Temporal core activity registry; remaining DBT coupling is limited to package-level plugin/CLI surfaces and remains tracked as explicit risk. The compile/admission boundary and shared runtime-provider vocabulary now share one implemented-adapter truth: Temporal is the only active provider runtime. Second-runtime work requires a new ADR-backed contract line, adapter package, conformance suite, and production composition path before it can re-enter active docs or provider typing.                                  | [Execution Runtime](../planning/domains/execution-runtime.md), [GitHub Issues](https://github.com/dunay2/dvt/issues)                                                                                                                                    |
 | Persistence layer          | Partial            | Postgres state store and outbox persistence primitives are implemented; standalone outbox runtime now exists; persisted preview uses immutable plan records via the plan store; and downstream contract hardening and default-retention enforcement remain open after the proof-environment lifecycle rules were codified for the first PostgreSQL transformation vertical                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | [Event Lifecycle and Retention](../planning/domains/event-lifecycle-and-retention.md), [Execution Runtime](../planning/domains/execution-runtime.md)                                                                                                    |
 | Observability              | Partial            | observability contracts and the OTel binding exist; production validation remains incomplete                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                                                                                                                            |
-| Traceability / OpenLineage | Closed for Phase 1 | mapper, package tests, `_schemaURL` pinning, repo-local facet artifacts, committed golden fixtures, and offline AJV schema validation all pass; delivery-runtime concerns continue as follow-up hardening work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md), [Planning Control Tower](../planning/state/planning-control-tower.md)                                                                                                     |
+| Traceability / OpenLineage | Closed for Phase 1 | mapper, package tests, `_schemaURL` pinning, repo-local facet artifacts, committed golden fixtures, and offline AJV schema validation all pass; delivery-runtime concerns continue as follow-up hardening work                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md), [Evidence Index](../evidence/index.md)                                                                                                                                    |
 
 ## Area Status
 
@@ -90,19 +129,19 @@ direction.
 
 ### Entry Layer
 
-| Area       | Packages   | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ---------- | ---------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| API server | `apps/api` | Closed for Phase 1 | Protected runtime routes are live with OIDC auth, tenant policy, backpressure admission, and query/signal endpoints; `POST /plans/preview` validates preview profile plus provenance before returning a persisted `PlanRef`; planner-backed protected runtime ingress is now hard-cut to canonical `graphSource`; `start-run` plus `preview` share one fail-closed source policy; and the API-to-engine `StartRunCommand`/`StartRunResult` boundary is now governed in `@dvt/contracts` instead of app-local shadow types                                                                                                                                            |
-| Web UI     | `apps/web` | Partial            | Client shell and routing exist; the Canvas now exposes explicit transformation authoring mode, preview gating is tied to persisted `PlanRef` proof, and run detail renders governed result evidence from the snapshot surface, including top-level executor identity, sink table, row counts, timestamps, failure diagnostics, and caller-visible plan provenance; workspace-level frontend tests are wired (`pnpm --filter @dvt/web test`), typecheck coverage exists (`pnpm --filter @dvt/web typecheck`), and a Cypress E2E runtime-contract lane remains available (`pnpm --filter @dvt/web test:e2e`) while broader backend-backed coverage is still incomplete |
+| Area       | Packages   | Status             | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | ---------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API server | `apps/api` | Closed for Phase 1 | Protected runtime routes are live with OIDC auth, tenant policy, backpressure admission, and query/signal endpoints; `POST /plans/preview` validates preview profile plus provenance before returning a persisted `PlanRef`; planner-backed protected runtime ingress is now hard-cut to canonical `graphSource`; `start-run` plus `preview` share one fail-closed source policy; and the API-to-engine `StartRunCommand`/`StartRunResult` boundary is now governed in `@dvt/contracts` instead of app-local shadow types                                                   |
+| Web UI     | `apps/web` | Partial            | Canvas is the primary Process Map for heterogeneous DVT+ graphs; Code, Source Import, project exploration, and node detail open contextually while operational evidence remains in the bottom drawer. API Source Import uses protected list/create/test/discover/import rails. Preview publishes typed `accepted`, `selection-rejected`, or `plan-invalid` outcomes, and run admission consumes the exact persisted `PlanRef`. Package tests, typecheck, and protected Cypress verticals cover the current MVP; frontend Run cancel/recovery controls remain open in #2103. |
 
 ### Planning And Interpretation
 
-| Area                | Packages                | Status      | Notes                                                                                                                                                                                                                                                                                                                          |
-| ------------------- | ----------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Planning core       | `@dvt/planner`          | Partial     | The planner package is real and exercised. Lane A now ships the first SQL-first transformation pack plus the completed `TF-A1-C` seam hardening across contracts, API, and web, while planner output still materializes governed per-step `retryPolicy` metadata and broader plan-record/shared-kernel hardening remains open. |
-| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer.                                                                                                                                                                                                                        |
-| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page.                                                                                                                                                                                                                                     |
-| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs.                                                                                                                                                                                                                                            |
+| Area                | Packages                | Status      | Notes                                                                                                                                                                                                                                                                                                    |
+| ------------------- | ----------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Planning core       | `@dvt/planner`          | Partial     | The planner package is real and exercised. The first SQL-first transformation pack and `TF-A1-C` seam hardening are implemented across contracts, API, and web, while planner output materializes governed per-step `retryPolicy` metadata and broader plan-record/shared-kernel hardening remains open. |
+| Plan verification   | `@dvt/plan-verifier`    | Partial     | Package exists with tests; it remains a narrow verification utility, not a broad workflow policy layer.                                                                                                                                                                                                  |
+| Plan interpretation | `@dvt/plan-interpreter` | Implemented | Deterministic DAG analysis package exists with test coverage and a canonical package page.                                                                                                                                                                                                               |
+| DSL evaluation      | `@dvt/dsl`              | Implemented | Small deterministic DSL package exists with package-level tests and canonical docs.                                                                                                                                                                                                                      |
 
 ### Execution And Adapters
 
@@ -189,12 +228,15 @@ Do not use `S01`, `S02`, `S03`, `S04`, `S05`, `S06`, `S07`, `S08`, `S09`,
 `S10`, or `S11` as current backlog, active debt, roadmap lanes, or next-work
 references.
 
-Current task authority lives in:
+Current task authority lives only in:
 
-- [Planning Dashboard](../planning/state/planning-dashboard.md)
-- [Planning Control Tower](../planning/state/planning-control-tower.md)
-- GitHub Issues for backlog and task lifecycle
-- GitHub pull requests for implementation review and integration
+- [GitHub Issues](https://github.com/dunay2/dvt/issues) for backlog and task
+  lifecycle;
+- GitHub pull requests for implementation review and integration.
+
+Planning DB remains architecture authority for components, capabilities,
+relationships, command/query rails, feature mechanization, and governance
+evidence. It does not own or mirror GitHub issue lifecycle.
 
 The archived Phase 2 slice roadmap remains historical context only:
 
@@ -203,13 +245,14 @@ The archived Phase 2 slice roadmap remains historical context only:
 Interpretation rule:
 
 - `System Delivery Status` describes implementation truth.
-- Planning DB effective task views describe active work.
+- GitHub Issues describe active work.
+- Planning DB architecture records describe system structure, not task state.
 - Legacy `S-*` identifiers must not be inferred as active work from this page.
 
 ## Reading Order
 
 1. [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)
-2. [Planning Control Tower](../planning/state/planning-control-tower.md)
+2. [GitHub MVP Issue Workflow](../planning/state/github-mvp-issue-workflow.md)
 3. [Generated Code State](../planning/status/generated-code-state.md)
 4. Topic-specific specs under [Reference](./index.md)
 
@@ -223,8 +266,7 @@ Interpretation rule:
   [Shared Package Architecture](./shared/index.md)
 - Contracts:
   [Contracts Index](../contracts/index.md)
-- Planning and execution debt:
-  [Planning Control Tower](../planning/state/planning-control-tower.md)
+- Planning and execution debt: [GitHub Issues](https://github.com/dunay2/dvt/issues)
 
 ## System Element Diagrams (from Current Code)
 
