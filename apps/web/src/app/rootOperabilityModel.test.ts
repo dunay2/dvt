@@ -9,6 +9,7 @@ describe('rootOperabilityModel', () => {
   it('prioritizes capabilities failure as the bootstrap failure cause', () => {
     expect(
       buildRootBootstrapOperabilityTransition({
+        bootstrapActive: true,
         capabilitiesFailed: true,
         capabilitiesReady: false,
         platformHealthFailed: true,
@@ -23,6 +24,7 @@ describe('rootOperabilityModel', () => {
 
   it('maps an unavailable health probe to bootstrap and surface evidence', () => {
     const input = {
+      bootstrapActive: true,
       capabilitiesFailed: false,
       capabilitiesReady: true,
       platformHealthFailed: true,
@@ -45,6 +47,7 @@ describe('rootOperabilityModel', () => {
   it('holds the current occurrence while an automatic retry is unresolved', () => {
     expect(
       buildRootBootstrapOperabilityTransition({
+        bootstrapActive: true,
         capabilitiesFailed: false,
         capabilitiesReady: false,
         platformHealthFailed: false,
@@ -54,10 +57,23 @@ describe('rootOperabilityModel', () => {
 
     expect(
       buildRootBootstrapOperabilityTransition({
+        bootstrapActive: true,
         capabilitiesFailed: false,
         capabilitiesReady: true,
         platformHealthFailed: false,
         platformRestState: 'ok',
+      })
+    ).toBeNull();
+  });
+
+  it('does not classify a runtime health outage as a bootstrap failure', () => {
+    expect(
+      buildRootBootstrapOperabilityTransition({
+        bootstrapActive: false,
+        capabilitiesFailed: false,
+        capabilitiesReady: true,
+        platformHealthFailed: true,
+        platformRestState: 'offline',
       })
     ).toBeNull();
   });

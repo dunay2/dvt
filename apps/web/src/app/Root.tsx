@@ -106,6 +106,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const routeBootstrapStartupReadinessRef = useRef(
     createInitialRouteBootstrapStartupReadinessState()
   );
+  const bootstrapOperabilityActiveRef = useRef(true);
   const [routeBootstrapCanComplete, setRouteBootstrapCanComplete] = useState(false);
   const navigationDisposition = useMemo(
     () => resolveShellNavigationDisposition(location.pathname),
@@ -118,6 +119,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const bootstrapOperabilityTransition = useMemo(
     () =>
       buildRootBootstrapOperabilityTransition({
+        bootstrapActive: bootstrapOperabilityActiveRef.current,
         capabilitiesFailed: capabilitiesQuery.isError,
         capabilitiesReady: Boolean(capabilitiesQuery.data),
         platformHealthFailed: platformHealth.isError,
@@ -260,6 +262,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
       return;
     }
 
+    bootstrapOperabilityActiveRef.current = false;
     completeBootstrapScreen();
   }, [
     capabilitiesQuery.isError,

@@ -6,6 +6,7 @@ import {
 } from './services/operability/frontendOperabilityRecorder';
 
 type RootBootstrapOperabilityInput = Readonly<{
+  bootstrapActive: boolean;
   capabilitiesFailed: boolean;
   capabilitiesReady: boolean;
   platformHealthFailed: boolean;
@@ -15,6 +16,10 @@ type RootBootstrapOperabilityInput = Readonly<{
 export function buildRootBootstrapOperabilityTransition(
   input: RootBootstrapOperabilityInput
 ): FrontendOperabilityEvent | null | undefined {
+  if (!input.bootstrapActive) {
+    return null;
+  }
+
   if (input.capabilitiesFailed) {
     return createBootstrapFailureEvent('capabilities', 'capabilities-query-failed');
   }
