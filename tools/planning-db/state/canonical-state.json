@@ -27819,6 +27819,127 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-02T16:22:50.786Z"
+    },
+    {
+      "operationId": "c8a14c3d-2f58-47f7-9c41-9531f74f329d",
+      "idempotencyKey": "US-F4-3-RecoverRun-review-hardening-r4",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#recoverrun",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+        "dddOwner": "RunRecoveryApplicationService",
+        "railName": "RecoverRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+        "sourceRef": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "unitTests": [
+          "apps/api/test/application/services/recoverRunUseCase.test.ts",
+          "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+          "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+          "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+          "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+          "apps/web/src/app/services/runs/runsService.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
+        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "domainObjects": ["RunRecoveryIntent"],
+        "fowlerSignals": [
+          "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
+          "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
+          "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/errors/runControlErrors.ts",
+          "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts",
+          "apps/api/src/application/services/recoverRunUseCase.ts",
+          "apps/api/src/application/services/runRecoveryContextTrust.ts",
+          "apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+          "apps/api/src/entrypoints/http/recoverRunIdentity.ts",
+          "apps/api/src/entrypoints/http/recoverRunRoute.ts",
+          "apps/api/src/entrypoints/http/recoverRunRouteParser.ts",
+          "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts",
+          "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/api/src/modules/types.ts",
+          "apps/api/test/application/services/recoverRunUseCase.test.ts",
+          "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+          "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+          "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+          "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+          "apps/api/test/modules/registerOperationalHooks.cases.ts",
+          "apps/web/src/app/services/runs/runsService.api.ts",
+          "apps/web/src/app/services/runs/runsService.test.ts"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Recovery replay dispatches twice, descendants lose trusted context, or a context-store fault breaks run reads.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationRefs": [
+          "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts#IRunExecutionContextInheritanceWriter",
+          "apps/api/src/application/services/recoverRunUseCase.ts#isRecoveryChildOf",
+          "apps/api/src/application/services/runRecoveryContextTrust.ts#resolveRunRecoveryContextTrust",
+          "apps/api/src/entrypoints/http/recoverRunIdentity.ts#deriveRecoveryRunId",
+          "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#parseRecoverRunRequest",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts#FileRunExecutionContextInheritanceWriter",
+          "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts#writeImmutableFileArtifact",
+          "apps/web/src/app/services/runs/runsService.api.ts#createBrowserIdempotencyKey"
+        ],
+        "normalizedRailName": "recoverrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/errors/runControlErrors.ts",
+          "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts",
+          "apps/api/src/application/services/recoverRunUseCase.ts",
+          "apps/api/src/application/services/runRecoveryContextTrust.ts",
+          "apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+          "apps/api/src/entrypoints/http/recoverRunIdentity.ts",
+          "apps/api/src/entrypoints/http/recoverRunRoute.ts",
+          "apps/api/src/entrypoints/http/recoverRunRouteParser.ts",
+          "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts",
+          "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/api/src/modules/types.ts",
+          "apps/api/test/application/services/recoverRunUseCase.test.ts",
+          "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+          "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+          "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+          "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+          "apps/api/test/modules/registerOperationalHooks.cases.ts",
+          "apps/web/src/app/services/runs/runsService.api.ts",
+          "apps/web/src/app/services/runs/runsService.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T17:15:50.491Z"
     }
   ]
 }
