@@ -3326,7 +3326,9 @@
       "railStatus": "implemented",
       "symbolRefs": [
         "apps/web/src/app/plugins/contracts/ConnectionRules.ts#evaluateConnectionPolicy",
-        "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#buildCanvasConnectionAggregate",
+        "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#proposeConnection",
+        "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#confirmConnection",
+        "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#confirmReconnect",
         "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#GraphAdjacency",
         "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#buildForwardAdjacency",
         "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#collectReachableNodeIds",
@@ -3335,7 +3337,9 @@
       ],
       "implementationRefs": [
         "apps/web/src/app/plugins/contracts/ConnectionRules.ts#evaluateConnectionPolicy",
-        "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#buildCanvasConnectionAggregate",
+        "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#proposeConnection",
+        "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#confirmConnection",
+        "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#confirmReconnect",
         "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#GraphAdjacency",
         "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#buildForwardAdjacency",
         "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#collectReachableNodeIds",
@@ -3343,7 +3347,7 @@
         "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#buildCanvasConnectionCompatibilityByNodeId"
       ],
       "documentationRefs": [
-        "docs/architecture/components/web/graph-frontend-architecture.md"
+        "docs/architecture/components/web/graph/graph-frontend-architecture.md"
       ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
@@ -3363,7 +3367,7 @@
         "pnpm docs:feature-mechanization:implementation",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "docs/architecture/components/web/graph-frontend-architecture.md",
+      "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
       "sourceContentSha256": "6986db74405dabc2ae3c4b3da8aaa27b7929e7af274be8adeed8e837a7573b40",
       "rawRail": {
         "name": "AuthorCanvasGraphEdge",
@@ -3390,7 +3394,39 @@
             "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
           },
           {
-            "name": "buildCanvasConnectionAggregate",
+            "name": "proposeConnection",
+            "path": "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts",
+            "cqRails": ["AuthorCanvasGraphEdge"],
+            "dddOwner": "CanvasGraphEdgeAuthoring",
+            "unitTests": [
+              "apps/web/src/app/plugins/contracts/ConnectionRules.test.ts",
+              "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+              "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Topology validation and plugin connection policy are evaluated once at their owning boundaries."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+          },
+          {
+            "name": "confirmConnection",
+            "path": "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts",
+            "cqRails": ["AuthorCanvasGraphEdge"],
+            "dddOwner": "CanvasGraphEdgeAuthoring",
+            "unitTests": [
+              "apps/web/src/app/plugins/contracts/ConnectionRules.test.ts",
+              "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+              "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Topology validation and plugin connection policy are evaluated once at their owning boundaries."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+          },
+          {
+            "name": "confirmReconnect",
             "path": "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts",
             "cqRails": ["AuthorCanvasGraphEdge"],
             "dddOwner": "CanvasGraphEdgeAuthoring",
@@ -3519,7 +3555,7 @@
           }
         ],
         "componentGuides": [
-          "docs/architecture/components/web/graph-frontend-architecture.md"
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md"
         ],
         "governingSources": [
           "docs/architecture/command-query-rail-governance.md",
@@ -3548,7 +3584,7 @@
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 1,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-02T07:41:35.171Z"
     },
@@ -3560,7 +3596,7 @@
       "normalizedRailName": "rendercanvascontextualgraphsurface",
       "railType": "query",
       "dddOwner": "CanvasGraphViewportProjection",
-      "railStatus": "implemented",
+      "railStatus": "retired",
       "symbolRefs": [
         "apps/web/src/app/views/canvas/canvasOverlayContext.ts#Adjacency",
         "apps/web/src/app/views/canvas/canvasOverlayContext.ts#appendAdjacentNode",
@@ -3628,7 +3664,7 @@
       "rawRail": {
         "name": "RenderCanvasContextualGraphSurface",
         "type": "query",
-        "status": "implemented",
+        "status": "retired",
         "dddOwner": "CanvasGraphViewportProjection"
       },
       "rawManifest": {
@@ -3949,7 +3985,7 @@
           {
             "name": "RenderCanvasContextualGraphSurface",
             "type": "query",
-            "status": "implemented",
+            "status": "retired",
             "dddOwner": "CanvasGraphViewportProjection"
           }
         ],
@@ -3972,7 +4008,7 @@
           "tools/planning-db/migrations/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-02T07:41:09.600Z"
     },
@@ -23033,6 +23069,362 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-02T07:43:28.939Z"
+    },
+    {
+      "operationId": "ea8df481-00ce-4af9-82aa-f028d2a173aa",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY:query:rendercanvascontextualgraphsurface:0:902f062a1d19182f",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY#query#rendercanvascontextualgraphsurface",
+      "sourcePath": "docs/architecture/components/web/graph/canvas-view-menu-component.md",
+      "sourceContentSha256": "f630ba16871766dc2ea35e52518ad3f9de83d38195a677be57733bd37259fad3",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+        "dddOwner": "CanvasGraphViewportProjection",
+        "railName": "RenderCanvasContextualGraphSurface",
+        "railType": "query",
+        "featureId": "MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+        "sourceRef": "docs/architecture/components/web/graph/canvas-view-menu-component.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+        ],
+        "railStatus": "retired",
+        "userStories": ["https://github.com/dunay2/dvt/issues/188"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasImpactProjection",
+          "WorkspaceGraphDraftFixture"
+        ],
+        "fowlerSignals": [
+          "One projection owns impact traversal and one deterministic fixture proves the critical large-graph boundary."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-view-menu-component.md",
+          "docs/architecture/components/web/graph/workspace-graph-draft-test-fixture-boundary-component.md"
+        ],
+        "expectedFailure": "Impact traversal repeats adjacency work or the canonical 1,000-node graph loses deterministic layout and browser operability.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/canvas-view-menu-component.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/188",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts#Adjacency",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts#appendAdjacentNode",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts#collectReachableNodes",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts#useCanvasOverlayModel",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts#BuildCanvasNodeInteractionPresentationParams",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts#NodeActionHandlers",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts#buildCanvasNodeInteractionPresentation",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts#shouldShowColumns",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#LARGE_GRAPH_LAYER_COUNT",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#LARGE_GRAPH_NODES_PER_LAYER",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeGraphEdges",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeGraphNode",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeGraphNodeId",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeWorkspaceGraphAuthoringDraft",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts#findDraftSaveContainingNode",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts#removeCanvasNode",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts#waitForDraftSaveContainingNode"
+        ],
+        "normalizedRailName": "rendercanvascontextualgraphsurface",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "f630ba16871766dc2ea35e52518ad3f9de83d38195a677be57733bd37259fad3",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasImpactOverlay.ts",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-02T08:31:54.969Z"
+    },
+    {
+      "operationId": "89c6b172-3a46-46cd-b890-2e8df0a8b0db",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY:command:authorcanvasgraphedge:1:1ec300f80ad9b048",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY#command#authorcanvasgraphedge",
+      "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+      "sourceContentSha256": "6986db74405dabc2ae3c4b3da8aaa27b7929e7af274be8adeed8e837a7573b40",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts",
+        "dddOwner": "CanvasGraphEdgeAuthoring",
+        "railName": "AuthorCanvasGraphEdge",
+        "railType": "command",
+        "featureId": "MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts",
+        "sourceRef": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+        "unitTests": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/188"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasConnectionCompatibilityProjection",
+          "CanvasConnectionPolicy"
+        ],
+        "fowlerSignals": [
+          "Topology validation and plugin connection policy are evaluated once at their owning boundaries."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph-frontend-architecture.md"
+        ],
+        "expectedFailure": "Passive compatibility projection repeats full graph topology analysis for every candidate endpoint.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/188",
+        "implementationRefs": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.ts#evaluateConnectionPolicy",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#buildCanvasConnectionAggregate",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#GraphAdjacency",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#buildForwardAdjacency",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#collectReachableNodeIds",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#edgeSignature",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#buildCanvasConnectionCompatibilityByNodeId"
+        ],
+        "normalizedRailName": "authorcanvasgraphedge",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6986db74405dabc2ae3c4b3da8aaa27b7929e7af274be8adeed8e837a7573b40",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T08:32:11.119Z"
+    },
+    {
+      "operationId": "0024e770-d54e-4163-8634-b21681c16494",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY:command:authorcanvasgraphedge:2:dd20e7399a7ccc31",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY#command#authorcanvasgraphedge",
+      "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+      "sourceContentSha256": "6986db74405dabc2ae3c4b3da8aaa27b7929e7af274be8adeed8e837a7573b40",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts",
+        "dddOwner": "CanvasGraphEdgeAuthoring",
+        "railName": "AuthorCanvasGraphEdge",
+        "railType": "command",
+        "featureId": "MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts",
+        "sourceRef": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+        "unitTests": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/188"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasConnectionCompatibilityProjection",
+          "CanvasConnectionPolicy"
+        ],
+        "fowlerSignals": [
+          "Topology validation and plugin connection policy are evaluated once at their owning boundaries."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md"
+        ],
+        "expectedFailure": "Passive compatibility projection repeats full graph topology analysis for every candidate endpoint.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/188",
+        "implementationRefs": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.ts#evaluateConnectionPolicy",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#proposeConnection",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#confirmConnection",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#confirmReconnect",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#buildCanvasConnectionCompatibilityByNodeId"
+        ],
+        "normalizedRailName": "authorcanvasgraphedge",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6986db74405dabc2ae3c4b3da8aaa27b7929e7af274be8adeed8e837a7573b40",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T08:32:47.158Z"
+    },
+    {
+      "operationId": "60a24e31-3417-4336-a4ae-79d7c4ab049b",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY:command:authorcanvasgraphedge:3:602dea9a5cdc4c55",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY#command#authorcanvasgraphedge",
+      "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+      "sourceContentSha256": "6986db74405dabc2ae3c4b3da8aaa27b7929e7af274be8adeed8e837a7573b40",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts",
+        "dddOwner": "CanvasGraphEdgeAuthoring",
+        "railName": "AuthorCanvasGraphEdge",
+        "railType": "command",
+        "featureId": "MVP-188-CANVAS-LARGE-GRAPH-OPERABILITY",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts",
+        "sourceRef": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+        "unitTests": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/188"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasConnectionCompatibilityProjection",
+          "CanvasConnectionPolicy"
+        ],
+        "fowlerSignals": [
+          "Topology validation and plugin connection policy are evaluated once at their owning boundaries."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md"
+        ],
+        "expectedFailure": "Passive compatibility projection repeats full graph topology analysis for every candidate endpoint.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/plugins/contracts/ConnectionRules.test.ts src/app/views/canvas/canvasConnectionAggregate.test.ts src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/188",
+        "implementationRefs": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.ts#evaluateConnectionPolicy",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#proposeConnection",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#confirmConnection",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts#confirmReconnect",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#GraphAdjacency",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#buildForwardAdjacency",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#collectReachableNodeIds",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#edgeSignature",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts#buildCanvasConnectionCompatibilityByNodeId"
+        ],
+        "normalizedRailName": "authorcanvasgraphedge",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6986db74405dabc2ae3c4b3da8aaa27b7929e7af274be8adeed8e837a7573b40",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/contracts/ConnectionRules.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionAggregate.test.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.ts",
+          "apps/web/src/app/views/canvas/canvasConnectionCompatibilityPresenter.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T08:33:50.845Z"
     }
   ]
 }
