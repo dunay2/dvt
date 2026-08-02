@@ -25,10 +25,12 @@ export default function PluginsView() {
   const copy = resolvePluginsViewCopy();
   const reconciliation = useMemo(
     () =>
-      reconcilePluginCatalog({
-        catalog: pluginCatalog ?? [],
-        localContributions: PLUGIN_REGISTRY,
-      }),
+      pluginCatalog === undefined
+        ? undefined
+        : reconcilePluginCatalog({
+            catalog: pluginCatalog,
+            localContributions: PLUGIN_REGISTRY,
+          }),
     [pluginCatalog]
   );
   const probeStatus = resolveProbeStatus(

@@ -26,13 +26,16 @@ import type {
 type PluginsViewHeaderProps = Readonly<{
   capabilities: PluginCapabilitiesSnapshot | undefined;
   copy: PluginsViewCopy;
-  reconciliation: PluginCatalogReconciliationResult;
+  reconciliation: PluginCatalogReconciliationResult | undefined;
 }>;
 
 export function PluginsViewHeader({ capabilities, copy, reconciliation }: PluginsViewHeaderProps) {
-  const registeredCount = reconciliation.entries.filter(
+  const authorityState = reconciliation ? 'known' : 'unknown';
+  const registeredCount = reconciliation?.entries.filter(
     (entry) => entry.frontendPresence === 'registered'
   ).length;
+  const resolveCount = (count: number | undefined): string =>
+    count === undefined ? copy.unknownLabel : String(count);
   return (
     <div data-slot="plugins-view-header-band" className={routeWorkbenchHeaderBandClassName}>
       <ViewHeader
@@ -42,14 +45,29 @@ export function PluginsViewHeader({ capabilities, copy, reconciliation }: Plugin
         subtitle={copy.subtitle}
         actions={
           <>
-            <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
-              {copy.catalogCount}: {reconciliation.entries.length}
+            <Badge
+              data-slot="plugin-catalog-count"
+              data-authority-state={authorityState}
+              variant="outline"
+              className={cn(routeWorkbenchFieldClassName, 'text-xs')}
+            >
+              {copy.catalogCount}: {resolveCount(reconciliation?.entries.length)}
             </Badge>
-            <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
-              {copy.registeredCount}: {registeredCount}
+            <Badge
+              data-slot="plugin-registered-count"
+              data-authority-state={authorityState}
+              variant="outline"
+              className={cn(routeWorkbenchFieldClassName, 'text-xs')}
+            >
+              {copy.registeredCount}: {resolveCount(registeredCount)}
             </Badge>
-            <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
-              {copy.localOnlyCount}: {reconciliation.localOnlyContributions.length}
+            <Badge
+              data-slot="plugin-local-only-count"
+              data-authority-state={authorityState}
+              variant="outline"
+              className={cn(routeWorkbenchFieldClassName, 'text-xs')}
+            >
+              {copy.localOnlyCount}: {resolveCount(reconciliation?.localOnlyContributions.length)}
             </Badge>
             {capabilities ? (
               <Badge variant="outline" className={cn(routeWorkbenchFieldClassName, 'text-xs')}>
@@ -80,7 +98,7 @@ export function PluginsPrimarySurface({
   pluginCatalogError: unknown;
   pluginCatalogLoading: boolean;
   probeStatus: PluginProbeStatus;
-  reconciliation: PluginCatalogReconciliationResult;
+  reconciliation: PluginCatalogReconciliationResult | undefined;
 }>) {
   return (
     <>
@@ -194,7 +212,7 @@ function PluginRegistryContent({
   copy: PluginsViewCopy;
   pluginCatalogError: unknown;
   pluginCatalogLoading: boolean;
-  reconciliation: PluginCatalogReconciliationResult;
+  reconciliation: PluginCatalogReconciliationResult | undefined;
 }>) {
   if (pluginCatalogLoading) {
     return (
@@ -206,6 +224,15 @@ function PluginRegistryContent({
     );
   }
   if (pluginCatalogError) {
+    return (
+      <ViewStateOverlay
+        kind="error"
+        title={copy.pluginCatalogErrorTitle}
+        description={copy.pluginCatalogErrorDescription}
+      />
+    );
+  }
+  if (!reconciliation) {
     return (
       <ViewStateOverlay
         kind="error"
