@@ -3,7 +3,12 @@ import { RunMetadataNotFoundError } from '@dvt/engine';
 
 import { RunControlUnavailableError } from '../errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
-import type { CancelRunCommand, CancelRunResult, ICancelRunUseCase } from '../ports/runtime.js';
+import {
+  RUN_CONTROL_RESULT_CONTRACT_VERSION,
+  type CancelRunCommand,
+  type CancelRunResult,
+  type ICancelRunUseCase,
+} from '../ports/runtime.js';
 
 import { decideCancelRun } from './runControlPolicy.js';
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
@@ -32,6 +37,7 @@ export class CancelRunUseCase implements ICancelRunUseCase {
 
     if (decision.kind === 'settled') {
       return {
+        contractVersion: RUN_CONTROL_RESULT_CONTRACT_VERSION,
         runId: command.runId,
         signalType: 'CANCEL',
         accepted: true,
@@ -45,6 +51,7 @@ export class CancelRunUseCase implements ICancelRunUseCase {
     await this.engine.cancelRun(runRef);
 
     return {
+      contractVersion: RUN_CONTROL_RESULT_CONTRACT_VERSION,
       runId: command.runId,
       signalType: 'CANCEL',
       accepted: true,

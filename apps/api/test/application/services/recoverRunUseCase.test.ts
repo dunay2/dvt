@@ -104,6 +104,7 @@ describe('RecoverRunUseCase', () => {
         commandContext
       )
     ).resolves.toEqual({
+      contractVersion: 'v1',
       sourceRunId: 'run-source-1',
       recoveryRunId: 'run-recovery-1',
       accepted: true,

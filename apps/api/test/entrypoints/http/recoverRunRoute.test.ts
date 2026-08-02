@@ -67,6 +67,7 @@ function createDeps(): {
     },
     useCase: {
       execute: vi.fn().mockResolvedValue({
+        contractVersion: 'v1',
         sourceRunId: 'source-run-1',
         recoveryRunId: 'recovery-run-1',
         accepted: true,

@@ -13,7 +13,12 @@ import {
 import { RunRecoveryUnavailableError } from '../errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
-import type { IRecoverRunUseCase, RecoverRunCommand, RecoverRunResult } from '../ports/runtime.js';
+import {
+  RUN_CONTROL_RESULT_CONTRACT_VERSION,
+  type IRecoverRunUseCase,
+  type RecoverRunCommand,
+  type RecoverRunResult,
+} from '../ports/runtime.js';
 
 export interface RecoverRunUseCaseDependencies {
   readonly engine: IWorkflowEngine;
@@ -59,6 +64,7 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     );
 
     return {
+      contractVersion: RUN_CONTROL_RESULT_CONTRACT_VERSION,
       sourceRunId: command.sourceRunId,
       recoveryRunId: command.recoveryRunId,
       accepted: true,

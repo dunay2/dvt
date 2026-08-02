@@ -64,6 +64,7 @@ describe('CancelRunUseCase', () => {
         commandContext
       )
     ).resolves.toEqual({
+      contractVersion: 'v1',
       runId: 'run-1',
       signalType: 'CANCEL',
       accepted: true,

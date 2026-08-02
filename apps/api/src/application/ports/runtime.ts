@@ -250,7 +250,10 @@ export interface SignalRunResult {
 
 export type CancelRunDisposition = 'requested' | 'already_requested' | 'already_cancelled';
 
+export const RUN_CONTROL_RESULT_CONTRACT_VERSION = 'v1' as const;
+
 export interface CancelRunResult extends SignalRunResult {
+  readonly contractVersion: typeof RUN_CONTROL_RESULT_CONTRACT_VERSION;
   readonly signalType: 'CANCEL';
   readonly disposition: CancelRunDisposition;
 }
@@ -275,6 +278,7 @@ export interface RecoverRunCommand {
 }
 
 export interface RecoverRunResult {
+  readonly contractVersion: typeof RUN_CONTROL_RESULT_CONTRACT_VERSION;
   readonly sourceRunId: string;
   readonly recoveryRunId: string;
   readonly accepted: boolean;
