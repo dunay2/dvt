@@ -11,6 +11,10 @@ import type { PlanRef, RunContext } from '../../types/contracts.js';
 
 import type { ExecutionPlan, GenericGraphSourceV1 } from './ExecutionPlan.v1.js';
 import type { ExecutionSelection } from './ExecutionSelection.v1.js';
+import type {
+  PlanAdmissionFindingCollection,
+  PreviewSelectionFinding,
+} from './PlanAdmissionFinding.v1.js';
 import type { ExecutabilityValidationResult } from './PlanExecutabilityValidation.v1.js';
 import type {
   PlanPreviewProvenance,
@@ -92,6 +96,7 @@ export interface PlanPreviewSelectionRejection {
   readonly code: 'REJECTED';
   readonly cause?: string;
   readonly reason: string;
+  readonly findings?: PlanAdmissionFindingCollection<PreviewSelectionFinding>;
 }
 
 export interface PlanPreviewSelectionRejectedOutcome {

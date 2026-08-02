@@ -22,7 +22,10 @@ import {
   TransformationExecutorSchema,
 } from './common.js';
 import { ExecutionPlanSchema } from './execution-plan.js';
-import { PlanExecutabilityFindingSchema } from './plan-admission-finding.js';
+import {
+  PlanExecutabilityFindingSchema,
+  PreviewSelectionFindingSchema,
+} from './plan-admission-finding.js';
 import { PreviewProfileSchema } from './plan-preview-profile.js';
 
 function addPlanPreviewResponseIssue(
@@ -182,6 +185,7 @@ const PlanPreviewSelectionRejectedOutcomeSchema = z
         code: z.literal('REJECTED'),
         cause: NonBlankStringSchema.optional(),
         reason: NonBlankStringSchema,
+        findings: z.tuple([PreviewSelectionFindingSchema]).readonly().optional(),
       })
       .strict(),
   })

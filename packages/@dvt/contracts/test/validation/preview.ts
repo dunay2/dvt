@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { createPlanAdmissionFindingId } from '../../src/index.js';
 import {
   ContractValidationError,
   parseDesignGraphDraft,
@@ -298,6 +299,27 @@ export function registerValidationPreviewSuite(): void {
     });
 
     it('parses the versioned selection-rejected outcome without plan identity', () => {
+      const findingIdentity = {
+        phase: 'preview-selection' as const,
+        code: 'REJECTED',
+        cause: 'dependency_gap',
+        requestId: 'request-2078',
+        subjects: [
+          { kind: 'request' as const, id: 'request-2078' },
+          { kind: 'node' as const, id: 'model.orders' },
+        ],
+        evidence: [
+          {
+            evidenceCode: 'preview_selection_rejection_cause',
+            observedValue: 'dependency_gap',
+          },
+        ],
+      };
+      const finding = {
+        ...findingIdentity,
+        findingId: createPlanAdmissionFindingId(findingIdentity),
+        remediationCode: 'REDUCE_OR_REPAIR_SELECTION',
+      };
       const outcome = parsePlanPreviewRejectedOutcome({
         contractVersion: '1.0.0',
         kind: 'selection-rejected',
@@ -305,6 +327,7 @@ export function registerValidationPreviewSuite(): void {
           code: 'REJECTED',
           cause: 'dependency_gap',
           reason: 'Selected closure is missing a dependency.',
+          findings: [finding],
         },
       });
 
@@ -315,6 +338,7 @@ export function registerValidationPreviewSuite(): void {
           code: 'REJECTED',
           cause: 'dependency_gap',
           reason: 'Selected closure is missing a dependency.',
+          findings: [finding],
         },
       });
       expect(outcome).not.toHaveProperty('planRef');
