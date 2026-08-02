@@ -1,25 +1,39 @@
 #!/usr/bin/env node
+const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
+const { Client } = require('pg');
+
 const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
+const { runPlanningImport } = require('./planning-db-import.cjs');
+const { schemaName } = require('./planning-db-migrate.cjs');
+const { defaultPgUrl } = require('./planning-db-run.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
 const packagesRoot = path.join(repoRoot, 'packages');
 const appsRoot = path.join(repoRoot, 'apps');
-const outputPath = path.join(
+const codeStateOutputPath = path.join(
   repoRoot,
   '.generated-docs',
   'planning',
   'status',
   'generated-code-state.md'
 );
+const repositoryMapOutputPath = path.join(repoRoot, 'docs', 'concepts', 'repository-map.md');
 
-function toPosix(p) {
-  return p.replace(/\\/g, '/');
+function toPosix(value) {
+  return value.replace(/\\/g, '/');
 }
 
 function relFromRepo(abs) {
   return toPosix(path.relative(repoRoot, abs));
+}
+
+function normalizeRepoPath(value) {
+  return toPosix(String(value ?? ''))
+    .replace(/^\.\//, '')
+    .replace(/\/$/, '')
+    .trim();
 }
 
 function walk(dir, predicate) {
@@ -54,19 +68,31 @@ function isColocatedTestFile(name) {
   return /\.(test|spec)\.(ts|tsx|js|jsx)$/.test(name);
 }
 
+function markdownCell(value) {
+  return String(value ?? '-')
+    .replace(/\r?\n/g, ' ')
+    .replace(/\|/g, '\\|')
+    .trim();
+}
+
 function markdownTable(headers, rows) {
-  const widths = headers.map((h, i) => Math.max(h.length, ...rows.map((r) => String(r[i]).length)));
-  const row = (cells) => `| ${cells.map((c, i) => String(c).padEnd(widths[i], ' ')).join(' | ')} |`;
-  const sep = `| ${widths.map((w) => '-'.repeat(Math.max(3, w))).join(' | ')} |`;
-  return [row(headers), sep, ...rows.map((r) => row(r))];
+  const normalizedRows = rows.map((row) => row.map(markdownCell));
+  const normalizedHeaders = headers.map(markdownCell);
+  const widths = normalizedHeaders.map((header, index) =>
+    Math.max(header.length, ...normalizedRows.map((row) => String(row[index] ?? '').length))
+  );
+  const row = (cells) =>
+    `| ${cells.map((cell, index) => String(cell ?? '').padEnd(widths[index], ' ')).join(' | ')} |`;
+  const separator = `| ${widths.map((width) => '-'.repeat(Math.max(3, width))).join(' | ')} |`;
+  return [row(normalizedHeaders), separator, ...normalizedRows.map((cells) => row(cells))];
 }
 
 function collectWorkspaceDirs(rootDir) {
   if (!fs.existsSync(rootDir)) return [];
   const direct = fs
     .readdirSync(rootDir, { withFileTypes: true })
-    .filter((d) => d.isDirectory())
-    .map((d) => path.join(rootDir, d.name));
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(rootDir, entry.name));
 
   const out = [];
   for (const dir of direct) {
@@ -77,13 +103,13 @@ function collectWorkspaceDirs(rootDir) {
     }
     const nested = fs
       .readdirSync(dir, { withFileTypes: true })
-      .filter((d) => d.isDirectory())
-      .map((d) => path.join(dir, d.name))
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => path.join(dir, entry.name))
       .filter((child) => fs.existsSync(path.join(child, 'package.json')));
     out.push(...nested);
   }
 
-  return out.sort((a, b) => relFromRepo(a).localeCompare(relFromRepo(b), 'en'));
+  return out.sort((left, right) => relFromRepo(left).localeCompare(relFromRepo(right), 'en'));
 }
 
 function collectWorkspaceStats(dir) {
@@ -100,7 +126,9 @@ function collectWorkspaceStats(dir) {
     ? walk(srcDir, (_, name) => isColocatedTestFile(name))
     : [];
   const testFiles = [
-    ...(fs.existsSync(testDir) ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/.test(name)) : []),
+    ...(fs.existsSync(testDir)
+      ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/.test(name))
+      : []),
     ...colocatedTestFiles,
   ];
 
@@ -110,14 +138,15 @@ function collectWorkspaceStats(dir) {
     const content = fs.readFileSync(indexTs, 'utf8');
     const exportLines = content
       .split(/\r?\n/)
-      .map((l) => l.trim())
-      .filter((l) => l.startsWith('export ')).length;
+      .map((line) => line.trim())
+      .filter((line) => line.startsWith('export ')).length;
     return String(exportLines);
   })();
 
   return {
     workspace: pkg.name || relFromRepo(dir),
     path: relFromRepo(dir),
+    kind: relFromRepo(dir).startsWith('apps/') ? 'app' : 'package',
     src: srcFiles.length,
     tests: testFiles.length,
     hasBuild: scripts.build ? 'yes' : 'no',
@@ -127,11 +156,19 @@ function collectWorkspaceStats(dir) {
   };
 }
 
-function renderDoc(workspaces, utcDate) {
-  const totalSrc = workspaces.reduce((acc, w) => acc + w.src, 0);
-  const totalTests = workspaces.reduce((acc, w) => acc + w.tests, 0);
-  const withBuild = workspaces.filter((w) => w.hasBuild === 'yes').length;
-  const withTest = workspaces.filter((w) => w.hasTest === 'yes').length;
+function collectRepositoryWorkspaceStats() {
+  const workspaceDirs = [
+    ...collectWorkspaceDirs(packagesRoot),
+    ...collectWorkspaceDirs(appsRoot),
+  ].sort((left, right) => relFromRepo(left).localeCompare(relFromRepo(right), 'en'));
+  return workspaceDirs.map(collectWorkspaceStats);
+}
+
+function renderCodeState(workspaces, utcDate) {
+  const totalSrc = workspaces.reduce((acc, workspace) => acc + workspace.src, 0);
+  const totalTests = workspaces.reduce((acc, workspace) => acc + workspace.tests, 0);
+  const withBuild = workspaces.filter((workspace) => workspace.hasBuild === 'yes').length;
+  const withTest = workspaces.filter((workspace) => workspace.hasTest === 'yes').length;
 
   const summaryRows = [
     ['Total workspaces', String(workspaces.length)],
@@ -141,15 +178,15 @@ function renderDoc(workspaces, utcDate) {
     ['Workspaces with test script', `${withTest}/${workspaces.length}`],
   ];
 
-  const workspaceRows = workspaces.map((w) => [
-    w.workspace,
-    `\`${w.path}\``,
-    String(w.src),
-    String(w.tests),
-    w.hasBuild,
-    w.hasTest,
-    w.hasTypecheck,
-    w.exports,
+  const workspaceRows = workspaces.map((workspace) => [
+    workspace.workspace,
+    `\`${workspace.path}\``,
+    String(workspace.src),
+    String(workspace.tests),
+    workspace.hasBuild,
+    workspace.hasTest,
+    workspace.hasTypecheck,
+    workspace.exports,
   ]);
 
   const lines = [
@@ -189,7 +226,208 @@ function renderDoc(workspaces, utcDate) {
     '',
   ];
 
-  return `${lines.join('\n')}`;
+  return lines.join('\n');
+}
+
+function databaseUrl() {
+  return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
+}
+
+async function readRepositoryArchitectureFacts(client) {
+  const [componentResult, documentationResult] = await Promise.all([
+    client.query(`
+      select
+        component_id,
+        name,
+        kind,
+        layer,
+        owner,
+        repo_path,
+        status
+      from architecture.component_query
+      where coalesce(status, '') <> 'deprecated'
+      order by repo_path, component_id
+    `),
+    client.query(`
+      select
+        subject_key,
+        document_path,
+        canonicality,
+        lifecycle_state,
+        status
+      from ${schemaName}.documentation_lifecycle_query
+      where canonicality = 'canonical'
+      order by subject_key, document_path
+    `),
+  ]);
+
+  return {
+    components: componentResult.rows,
+    documents: documentationResult.rows,
+  };
+}
+
+function isCurrentCanonicalDocument(row) {
+  const lifecycle = String(row.lifecycle_state ?? row.lifecycleState ?? '').toLowerCase();
+  const status = String(row.status ?? '').toLowerCase();
+  return !['archived', 'historical', 'superseded', 'retired'].includes(lifecycle) &&
+    !['archived', 'historical', 'superseded', 'retired'].includes(status);
+}
+
+function relativeDocLink(documentPath) {
+  const normalized = normalizeRepoPath(documentPath);
+  if (!normalized.startsWith('docs/')) return null;
+  const relative = path.posix.relative('docs/concepts', normalized);
+  return relative || './repository-map.md';
+}
+
+function resolveWorkspaceArchitecture(workspace, components, documents) {
+  const exactMatches = components.filter(
+    (component) => normalizeRepoPath(component.repo_path ?? component.repoPath) === workspace.path
+  );
+
+  if (exactMatches.length === 0) {
+    return {
+      component: '-',
+      componentStatus: '-',
+      canonicalDoc: '-',
+      gaps: ['unregistered-component'],
+    };
+  }
+
+  if (exactMatches.length > 1) {
+    return {
+      component: exactMatches
+        .map((component) => component.component_id ?? component.componentId)
+        .sort((left, right) => String(left).localeCompare(String(right), 'en'))
+        .join(', '),
+      componentStatus: '-',
+      canonicalDoc: '-',
+      gaps: ['ambiguous-component'],
+    };
+  }
+
+  const component = exactMatches[0];
+  const componentId = component.component_id ?? component.componentId;
+  const matchingDocs = documents
+    .filter((document) => document.subject_key === componentId || document.subjectKey === componentId)
+    .filter(isCurrentCanonicalDocument)
+    .map((document) => document.document_path ?? document.documentPath)
+    .filter(Boolean)
+    .sort((left, right) => String(left).localeCompare(String(right), 'en'));
+
+  const gaps = [];
+  let canonicalDoc = '-';
+  if (matchingDocs.length === 0) {
+    gaps.push('missing-doc-entry');
+  } else if (matchingDocs.length > 1) {
+    gaps.push('ambiguous-doc-entry');
+    canonicalDoc = matchingDocs.join(', ');
+  } else {
+    const link = relativeDocLink(matchingDocs[0]);
+    if (!link) {
+      gaps.push('missing-doc-entry');
+    } else {
+      canonicalDoc = `[${matchingDocs[0]}](${link})`;
+    }
+  }
+
+  return {
+    component: componentId,
+    componentStatus: component.status ?? '-',
+    canonicalDoc,
+    gaps,
+  };
+}
+
+function buildRepositoryMapRows(workspaces, facts) {
+  return workspaces.map((workspace) => {
+    const architecture = resolveWorkspaceArchitecture(
+      workspace,
+      facts.components || [],
+      facts.documents || []
+    );
+    return [
+      workspace.workspace,
+      `\`${workspace.path}\``,
+      workspace.kind,
+      String(workspace.src),
+      String(workspace.tests),
+      workspace.hasBuild,
+      workspace.hasTest,
+      workspace.hasTypecheck,
+      architecture.component,
+      architecture.componentStatus,
+      architecture.canonicalDoc,
+      architecture.gaps.length > 0 ? architecture.gaps.join(', ') : 'none',
+    ];
+  });
+}
+
+function renderRepositoryMap(workspaces, facts, utcDate) {
+  const rows = buildRepositoryMapRows(workspaces, facts);
+  const gapCount = rows.filter((row) => row[row.length - 1] !== 'none').length;
+
+  return [
+    '---',
+    'title: Repository Map',
+    'status: Active',
+    'owner: Architecture / Docs',
+    `last_reviewed: ${utcDate}`,
+    '---',
+    '',
+    '# Repository Map',
+    '',
+    'Current workspace facts come from package manifests and repository source/test files.',
+    'Architecture identity and canonical-document ownership come from exact Planning DB read models.',
+    'Missing or conflicting identity is reported as a gap and is never inferred from names.',
+    '',
+    '## Current state',
+    '',
+    ...markdownTable(
+      ['Metric', 'Value'],
+      [
+        ['Workspaces', String(workspaces.length)],
+        ['Rows with explicit gaps', String(gapCount)],
+        ['Workspace source', '`apps/*` and `packages/*` package manifests'],
+        ['Architecture source', '`architecture.component_query`'],
+        ['Documentation source', `\`${schemaName}.documentation_lifecycle_query\``],
+      ]
+    ),
+    '',
+    '## Workspace map',
+    '',
+    ...markdownTable(
+      [
+        'Workspace',
+        'Path',
+        'Kind',
+        'Src',
+        'Tests',
+        'Build',
+        'Test',
+        'Typecheck',
+        'Planning DB component',
+        'Component status',
+        'Canonical documentation',
+        'Gap',
+      ],
+      rows
+    ),
+    '',
+    '## Reading rule',
+    '',
+    '- `unregistered-component`: no active Planning DB component has the exact workspace repository path.',
+    '- `ambiguous-component`: more than one active Planning DB component claims the exact workspace path.',
+    '- `missing-doc-entry`: the matched component has no current canonical document with the same subject key.',
+    '- `ambiguous-doc-entry`: more than one current canonical document claims the component subject key.',
+    '',
+    'This map is a repository and architecture projection, not a behavioral specification.',
+    'Use the linked canonical document for authored meaning and design rationale.',
+    '',
+    '> This page is auto-generated by `pnpm docs:status:generate`. Do not edit manually.',
+    '',
+  ].join('\n');
 }
 
 function writeIfChanged(absPath, content) {
@@ -200,21 +438,82 @@ function writeIfChanged(absPath, content) {
   return true;
 }
 
-function main() {
-  const workspaceDirs = [
-    ...collectWorkspaceDirs(packagesRoot),
-    ...collectWorkspaceDirs(appsRoot),
-  ].sort((a, b) => relFromRepo(a).localeCompare(relFromRepo(b), 'en'));
+function assertTrackedRepositoryMapCleanInCi() {
+  if (!process.env.CI) return;
 
-  const stats = workspaceDirs.map(collectWorkspaceStats);
-  const utcDate = resolveGeneratedDate(outputPath, (date) => renderDoc(stats, date));
-  const content = renderDoc(stats, utcDate);
-  const changed = writeIfChanged(outputPath, content);
-  if (changed) {
-    console.log(`[docs:status:generate] Updated ${relFromRepo(outputPath)}`);
-  } else {
-    console.log(`[docs:status:generate] ${relFromRepo(outputPath)} already up to date.`);
+  const relPath = relFromRepo(repositoryMapOutputPath);
+  const result = spawnSync('git', ['diff', '--exit-code', '--', relPath], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+  if (result.status === 0) return;
+
+  const generated = fs.readFileSync(repositoryMapOutputPath, 'utf8');
+  console.error(`[docs:status:generate] ${relPath} is stale. Regenerate and commit it.`);
+  if (result.stdout) console.error(result.stdout.trimEnd());
+  if (result.stderr) console.error(result.stderr.trimEnd());
+  console.error('--- BEGIN GENERATED REPOSITORY MAP ---');
+  console.error(generated.trimEnd());
+  console.error('--- END GENERATED REPOSITORY MAP ---');
+  throw new Error(`${relPath} is stale.`);
+}
+
+async function main() {
+  const workspaces = collectRepositoryWorkspaceStats();
+
+  const codeStateDate = resolveGeneratedDate(codeStateOutputPath, (date) =>
+    renderCodeState(workspaces, date)
+  );
+  const codeState = renderCodeState(workspaces, codeStateDate);
+  const codeStateChanged = writeIfChanged(codeStateOutputPath, codeState);
+  console.log(
+    codeStateChanged
+      ? `[docs:status:generate] Updated ${relFromRepo(codeStateOutputPath)}`
+      : `[docs:status:generate] ${relFromRepo(codeStateOutputPath)} already up to date.`
+  );
+
+  const url = databaseUrl();
+  await runPlanningImport(
+    { databaseUrl: url, ifStale: true, silent: true },
+    { logger: { log() {} } }
+  );
+
+  const client = new Client({ connectionString: url });
+  await client.connect();
+  try {
+    const facts = await readRepositoryArchitectureFacts(client);
+    const repositoryMapDate = resolveGeneratedDate(repositoryMapOutputPath, (date) =>
+      renderRepositoryMap(workspaces, facts, date)
+    );
+    const repositoryMap = renderRepositoryMap(workspaces, facts, repositoryMapDate);
+    const repositoryMapChanged = writeIfChanged(repositoryMapOutputPath, repositoryMap);
+    console.log(
+      repositoryMapChanged
+        ? `[docs:status:generate] Updated ${relFromRepo(repositoryMapOutputPath)}`
+        : `[docs:status:generate] ${relFromRepo(repositoryMapOutputPath)} already up to date.`
+    );
+    assertTrackedRepositoryMapCleanInCi();
+  } finally {
+    await client.end();
   }
 }
 
-main();
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}
+
+module.exports = {
+  buildRepositoryMapRows,
+  collectRepositoryWorkspaceStats,
+  collectWorkspaceDirs,
+  collectWorkspaceStats,
+  isCurrentCanonicalDocument,
+  normalizeRepoPath,
+  relativeDocLink,
+  renderCodeState,
+  renderRepositoryMap,
+  resolveWorkspaceArchitecture,
+};
