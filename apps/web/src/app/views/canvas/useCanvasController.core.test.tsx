@@ -177,4 +177,30 @@ describe('useCanvasController core', () => {
     expect(harness.getLatestResult()?.canUseCostOverlay).toBe(false);
     expect(harness.getLatestResult()?.exclusiveOverlayMode).toBe('runtime');
   });
+
+  it('disables only the active Impact overlay and its graph traversal', async () => {
+    harness.state.store.impactOverlayEnabled = false;
+    harness.mocks.getAllOverlays.mockReturnValue([
+      { id: 'runtime' },
+      { id: 'impact' },
+      { id: 'cost' },
+    ]);
+    harness.mocks.buildOverlayContext.mockClear();
+    harness.mocks.buildNodeDecorations.mockClear();
+
+    await harness.renderProbe();
+
+    expect(harness.mocks.buildOverlayContext).toHaveBeenLastCalledWith(
+      expect.any(Array),
+      expect.any(Array),
+      null,
+      expect.any(Map),
+      expect.any(Map),
+      false
+    );
+    expect(harness.mocks.buildNodeDecorations.mock.calls.at(-1)?.[1]).toEqual([
+      { id: 'runtime' },
+      { id: 'cost' },
+    ]);
+  });
 });

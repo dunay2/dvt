@@ -36,7 +36,7 @@ const mocks = vi.hoisted(() => ({
   getRegisteredPluginIds: vi.fn(),
   getPluginPortMap: vi.fn(),
   getSourceImportContributions: vi.fn(),
-  buildNodesWithImpact: vi.fn(),
+  buildCanvasNodeInteractionPresentation: vi.fn(),
   useCanvasExecutionActions: vi.fn(),
   useCanvasGraphHandlers: vi.fn(),
   useCanvasNavigationActions: vi.fn(),
@@ -117,7 +117,9 @@ vi.mock('../../stores/uiLayoutStore', () => ({ useUiLayoutStore: mocks.useUiLayo
 vi.mock('../../queries/useCapabilitiesQuery', () => ({
   useCapabilitiesQuery: mocks.useCapabilitiesQuery,
 }));
-vi.mock('./canvasImpactOverlay', () => ({ buildNodesWithImpact: mocks.buildNodesWithImpact }));
+vi.mock('./canvasNodeInteractionPresentation', () => ({
+  buildCanvasNodeInteractionPresentation: mocks.buildCanvasNodeInteractionPresentation,
+}));
 vi.mock('./canvasOverlayContext', () => ({
   buildOverlayContext: mocks.buildOverlayContext,
   buildNodeDecorations: mocks.buildNodeDecorations,

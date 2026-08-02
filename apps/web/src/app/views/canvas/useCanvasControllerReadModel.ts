@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import type { Edge, Node } from '@xyflow/react';
 
-import { buildNodesWithImpact } from './canvasImpactOverlay';
+import { buildCanvasNodeInteractionPresentation } from './canvasNodeInteractionPresentation';
 import { validateTransformationGraph } from './transformationGraphValidation';
 import type { RuntimeCapabilities } from '../../plugins/registry';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
@@ -48,7 +48,6 @@ type UseCanvasControllerReadModelArgs = {
   canMutateGraph: boolean;
   canSelectExecution: boolean;
   columnLevelLineageEnabled: boolean;
-  impactOverlayEnabled: boolean;
 };
 
 export function useCanvasControllerReadModel({
@@ -64,7 +63,6 @@ export function useCanvasControllerReadModel({
   canMutateGraph,
   canSelectExecution,
   columnLevelLineageEnabled,
-  impactOverlayEnabled,
 }: UseCanvasControllerReadModelArgs) {
   const transformationValidation = useMemo(
     () =>
@@ -84,12 +82,10 @@ export function useCanvasControllerReadModel({
 
   const nodesWithImpact = useMemo(
     () =>
-      buildNodesWithImpact({
+      buildCanvasNodeInteractionPresentation({
         nodes: graphModel.nodes,
-        edges: graphModel.edges,
         selectedNodeIds: uiScope.selectedNodeIds,
         canMutateGraph,
-        impactOverlayEnabled,
         columnLevelLineageEnabled,
         handlers: {
           onInspectNode: graphHandlers.handleInspectNode,
@@ -133,10 +129,8 @@ export function useCanvasControllerReadModel({
       graphHandlers.handleAttachSchemaToNode,
       onToggleExecutionSelection,
       graphModel.canonicalNodesById,
-      graphModel.edges,
       graphModel.nodes,
       activeCanvasKind,
-      impactOverlayEnabled,
       overlayModel.activeRunId,
       overlayModel.overlayDecorations,
       overlayModel.runStatusByNodeId,

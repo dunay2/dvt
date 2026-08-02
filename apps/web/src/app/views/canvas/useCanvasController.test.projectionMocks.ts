@@ -165,7 +165,9 @@ export function configureCanvasHarnessHookAndProjectionMocks(
       options: [],
     },
   ]);
-  mocks.buildNodesWithImpact.mockImplementation(({ nodes }: { nodes: unknown[] }) => nodes);
+  mocks.buildCanvasNodeInteractionPresentation.mockImplementation(
+    ({ nodes }: { nodes: unknown[] }) => nodes
+  );
   mocks.useCanvasGraphHandlers.mockImplementation(() => state.graphHandlersResult);
   mocks.useCanvasExecutionActions.mockImplementation(() => state.executionActionsResult);
   mocks.useCanvasNavigationActions.mockImplementation(() => state.navigationActionsResult);

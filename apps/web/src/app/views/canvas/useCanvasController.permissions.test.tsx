@@ -91,7 +91,9 @@ describe('useCanvasController permission and posture contract', () => {
     };
     await harness.renderProbe();
 
-    const latestBuildNodesCall = harness.mocks.buildNodesWithImpact.mock.calls.at(-1)?.[0] as
+    const latestBuildNodesCall = harness.mocks.buildCanvasNodeInteractionPresentation.mock.calls.at(
+      -1
+    )?.[0] as
       | {
           handlers?: {
             onDuplicateNode?: unknown;

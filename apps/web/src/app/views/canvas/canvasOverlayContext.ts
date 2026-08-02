@@ -11,9 +11,42 @@ import type { NodeCostData } from '../../plugins/contracts/PluginServices';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanonicalRunStatus } from '../../types/engine';
 
-// ---------------------------------------------------------------------------
-// buildImpactSets — BFS upstream/downstream from all selected nodes
-// ---------------------------------------------------------------------------
+type Adjacency = ReadonlyMap<string, readonly string[]>;
+
+function appendAdjacentNode(
+  adjacency: Map<string, string[]>,
+  nodeId: string,
+  adjacentId: string
+): void {
+  const adjacentNodes = adjacency.get(nodeId);
+  if (adjacentNodes) {
+    adjacentNodes.push(adjacentId);
+    return;
+  }
+
+  adjacency.set(nodeId, [adjacentId]);
+}
+
+function collectReachableNodes(rootId: string, adjacency: Adjacency, result: Set<string>): void {
+  const queue = [rootId];
+  const visited = new Set<string>();
+
+  for (let cursor = 0; cursor < queue.length; cursor += 1) {
+    const current = queue[cursor];
+    if (current === undefined || visited.has(current)) {
+      continue;
+    }
+    visited.add(current);
+
+    for (const adjacentId of adjacency.get(current) ?? []) {
+      if (adjacentId === rootId) {
+        continue;
+      }
+      result.add(adjacentId);
+      queue.push(adjacentId);
+    }
+  }
+}
 
 function buildImpactSets(
   edges: Edge[],
@@ -21,37 +54,17 @@ function buildImpactSets(
 ): { upstreamOfSelected: Set<string>; downstreamOfSelected: Set<string> } {
   const upstreamOfSelected = new Set<string>();
   const downstreamOfSelected = new Set<string>();
+  const forwardAdjacency = new Map<string, string[]>();
+  const reverseAdjacency = new Map<string, string[]>();
+
+  for (const edge of edges) {
+    appendAdjacentNode(forwardAdjacency, edge.source, edge.target);
+    appendAdjacentNode(reverseAdjacency, edge.target, edge.source);
+  }
 
   for (const selectedId of selectedIds) {
-    // upstream: nodes that feed into the selected node
-    const upQ = [selectedId];
-    const visitedUp = new Set<string>();
-    while (upQ.length > 0) {
-      const cur = upQ.shift()!;
-      if (visitedUp.has(cur)) continue;
-      visitedUp.add(cur);
-      for (const edge of edges) {
-        if (edge.target === cur && edge.source !== selectedId) {
-          upstreamOfSelected.add(edge.source);
-          upQ.push(edge.source);
-        }
-      }
-    }
-
-    // downstream: nodes that the selected node feeds into
-    const dnQ = [selectedId];
-    const visitedDn = new Set<string>();
-    while (dnQ.length > 0) {
-      const cur = dnQ.shift()!;
-      if (visitedDn.has(cur)) continue;
-      visitedDn.add(cur);
-      for (const edge of edges) {
-        if (edge.source === cur && edge.target !== selectedId) {
-          downstreamOfSelected.add(edge.target);
-          dnQ.push(edge.target);
-        }
-      }
-    }
+    collectReachableNodes(selectedId, reverseAdjacency, upstreamOfSelected);
+    collectReachableNodes(selectedId, forwardAdjacency, downstreamOfSelected);
   }
 
   return { upstreamOfSelected, downstreamOfSelected };
@@ -66,9 +79,12 @@ export function buildOverlayContext(
   selectedNodeIds: string[],
   activeRun: CanonicalRunStatus | null,
   runStatusByNodeId: ReadonlyMap<string, string>,
-  costByNodeId: ReadonlyMap<string, NodeCostData>
+  costByNodeId: ReadonlyMap<string, NodeCostData>,
+  impactOverlayEnabled = true
 ): OverlayContext {
-  const { upstreamOfSelected, downstreamOfSelected } = buildImpactSets(edges, selectedNodeIds);
+  const { upstreamOfSelected, downstreamOfSelected } = impactOverlayEnabled
+    ? buildImpactSets(edges, selectedNodeIds)
+    : { upstreamOfSelected: new Set<string>(), downstreamOfSelected: new Set<string>() };
 
   return {
     activeRun,
