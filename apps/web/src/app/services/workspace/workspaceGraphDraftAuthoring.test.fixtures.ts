@@ -1,9 +1,58 @@
 /** Owned concern: build workspace graph authoring draft and protected record fixtures. */
 import type {
   WorkspaceGraphAuthoringDraft,
+  WorkspaceGraphAuthoringEdge,
+  WorkspaceGraphAuthoringNode,
   WorkspaceGraphDraftRecord as ProtectedWorkspaceGraphDraftRecord,
   WorkspaceGraphDraftScope,
 } from '@dvt/contracts';
+
+const LARGE_GRAPH_LAYER_COUNT = 25;
+const LARGE_GRAPH_NODES_PER_LAYER = 40;
+
+function buildLargeGraphNodeId(layerIndex: number, nodeIndex: number): string {
+  return `large-node-${layerIndex.toString().padStart(2, '0')}-${nodeIndex
+    .toString()
+    .padStart(2, '0')}`;
+}
+
+function buildLargeGraphNode(layerIndex: number, nodeIndex: number): WorkspaceGraphAuthoringNode {
+  const firstLayer = layerIndex === 0;
+  const lastLayer = layerIndex === LARGE_GRAPH_LAYER_COUNT - 1;
+  const id = buildLargeGraphNodeId(layerIndex, nodeIndex);
+
+  return {
+    id,
+    name: id,
+    pluginId: 'dvt',
+    kind: firstLayer ? 'source' : lastLayer ? 'sink' : 'sql_transform',
+    role: firstLayer ? 'input' : lastLayer ? 'output' : 'transform',
+    status: 'idle',
+    tags: ['large-graph'],
+    ...(firstLayer || lastLayer ? {} : { path: `models/large/${id}.sql` }),
+  };
+}
+
+function buildLargeGraphEdges(): WorkspaceGraphAuthoringEdge[] {
+  const edges: WorkspaceGraphAuthoringEdge[] = [];
+
+  for (let layerIndex = 0; layerIndex < LARGE_GRAPH_LAYER_COUNT - 1; layerIndex += 1) {
+    for (let nodeIndex = 0; nodeIndex < LARGE_GRAPH_NODES_PER_LAYER; nodeIndex += 1) {
+      const sourceId = buildLargeGraphNodeId(layerIndex, nodeIndex);
+      for (const targetIndex of [nodeIndex, (nodeIndex + 1) % LARGE_GRAPH_NODES_PER_LAYER]) {
+        const targetId = buildLargeGraphNodeId(layerIndex + 1, targetIndex);
+        edges.push({
+          id: `large-edge-${sourceId}-${targetId}`,
+          sourceId,
+          targetId,
+          relation: 'lineage',
+        });
+      }
+    }
+  }
+
+  return edges;
+}
 
 export function buildWorkspaceGraphAuthoringDraft(
   overrides: Partial<WorkspaceGraphAuthoringDraft> = {}
@@ -93,6 +142,34 @@ export function buildWorkspaceGraphAuthoringDraft(
     ],
     ...overrides,
   };
+}
+
+export function buildLargeWorkspaceGraphAuthoringDraft(): WorkspaceGraphAuthoringDraft {
+  const nodes: WorkspaceGraphAuthoringNode[] = [];
+  const nodePositions: WorkspaceGraphAuthoringDraft['nodePositions'] = {};
+
+  for (let layerIndex = 0; layerIndex < LARGE_GRAPH_LAYER_COUNT; layerIndex += 1) {
+    for (let nodeIndex = 0; nodeIndex < LARGE_GRAPH_NODES_PER_LAYER; nodeIndex += 1) {
+      const node = buildLargeGraphNode(layerIndex, nodeIndex);
+      nodes.push(node);
+      nodePositions[node.id] = {
+        x: layerIndex * 240,
+        y: nodeIndex * 120,
+      };
+    }
+  }
+
+  return buildWorkspaceGraphAuthoringDraft({
+    canvas: {
+      id: 'large-canvas',
+      kind: 'transformation',
+      title: 'Large Canvas regression fixture',
+    },
+    nodeIds: nodes.map((node) => node.id),
+    nodePositions,
+    nodes,
+    edges: buildLargeGraphEdges(),
+  });
 }
 
 export function buildProtectedDraftRecord(

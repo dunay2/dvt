@@ -27,6 +27,7 @@ const fixtureModules = [
     ownedConcern: 'Owned concern: build protected workspace graph draft protocol envelope fixtures',
     forbiddenTerms: [
       'export function buildWorkspaceGraphAuthoringDraft',
+      'export function buildLargeWorkspaceGraphAuthoringDraft',
       'buildExpectedWorkspaceGraphDraftSemanticGraph',
       'buildWorkspaceGraphDraftEndpoint',
     ],
