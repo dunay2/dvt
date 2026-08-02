@@ -108,6 +108,37 @@ describe('buildCanvasOperationalDrawerContribution', () => {
     });
   });
 
+  it('projects only explicitly supplied backend run controls', () => {
+    const props = buildCanvasShellProps({ panels: { activeRunId: 'run-active' } });
+    const runControls = {
+      runId: 'run-active',
+      availability: {
+        cancel: { available: true as const },
+        recover: { available: false as const, reason: 'run_active' as const },
+      },
+      activity: null,
+      outcome: null,
+      failure: null,
+      onCancel: vi.fn(),
+      onRecover: vi.fn(),
+    };
+
+    const contribution = buildCanvasOperationalDrawerContribution({
+      policy: props.layout.surfaceStrategy!.operationalDrawer!,
+      canPlan: props.panels.userPermissions.canPlan,
+      activeRunId: 'run-active',
+      runControls,
+      canPlanGraph: props.chromeState.canPlanGraph,
+      canStartRun: props.chromeState.canStartRun,
+      planRunReadiness: props.chromeState.planRunReadiness,
+      planStatusSummary: props.chromeState.planStatusSummary,
+      onPreviewExecutionPlan: vi.fn(),
+      onStartRun: vi.fn(),
+    });
+
+    expect(contribution.runs.controls).toBe(runControls);
+  });
+
   it('projects blocked selection recovery without admitting Preview', () => {
     const props = buildCanvasShellProps();
     const recoveryCommands = {

@@ -2,6 +2,7 @@
 import type {
   OperationalDrawerContribution,
   OperationalDrawerProblem,
+  OperationalDrawerRunControls,
   OperationalDrawerTabId,
 } from '../../components/shell/operationalDrawerContributionStore';
 import type { CanvasOperationalDrawerSurfacePolicy } from '../../plugins/canvasSurfaceStrategyContracts';
@@ -17,6 +18,7 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   policy: CanvasOperationalDrawerSurfacePolicy;
   canPlan: boolean;
   activeRunId: string | null;
+  runControls?: OperationalDrawerRunControls | null;
   canPlanGraph: boolean;
   canStartRun: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
@@ -79,6 +81,7 @@ export function buildCanvasOperationalDrawerContribution({
   planRunReadiness,
   planStatusSummary,
   policy,
+  runControls = null,
   selectionRecovery = null,
   selectionRecoveryCommands = null,
   selectionRecoveryMessages = canvasViewCopy,
@@ -146,6 +149,7 @@ export function buildCanvasOperationalDrawerContribution({
     runs: {
       activeRunId,
       canStartRun,
+      controls: runControls,
       onStartRun,
       status: runsStatus,
       summary:
