@@ -13,6 +13,7 @@ export default function SourceImportWizard({
   open,
   canvasId,
   onClose,
+  onRestoreFocus,
   onComplete,
   sourceImportOptions: declaredSourceImportOptions,
   initialSelection,
@@ -42,6 +43,7 @@ export default function SourceImportWizard({
       isProcessing={state.isProcessing}
       canImport={controller.canImport}
       onClose={onClose}
+      onRestoreFocus={onRestoreFocus}
       onDone={controller.handleComplete}
       onImport={() => void controller.handleImport()}
       sections={

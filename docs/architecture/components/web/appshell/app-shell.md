@@ -304,6 +304,20 @@ flowchart LR
 - focus mode hides secondary chrome but keeps the active view intact;
 - route switches should not remount the entire shell frame.
 
+### Keyboard And Route Focus Invariants
+
+- `AppShellFrame` owns exactly one `main` landmark with the stable
+  `app-shell-main-content` id and a programmatic focus target;
+- the first shell bypass control is an internationalized skip link that points
+  to that landmark;
+- initial shell mount does not move focus;
+- a change to `location.pathname` moves focus to the main landmark exactly
+  once with scrolling suppressed;
+- rerenders that keep the same pathname, including health polling and route
+  bootstrap publication, do not move focus;
+- route focus is presentation behavior. It does not create a navigation
+  command, focus store, route announcer, or parallel application rail.
+
 ## Mature Libraries And References
 
 - base shell primitives:

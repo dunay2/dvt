@@ -70,6 +70,7 @@ type SourceImportWizardFrameProps = Readonly<{
   sections: ReactNode;
   children: ReactNode;
   onClose: () => void;
+  onRestoreFocus?: () => void;
   onDone: () => void;
   onImport: () => void;
 }>;
@@ -83,6 +84,7 @@ export function SourceImportWizardFrame({
   sections,
   children,
   onClose,
+  onRestoreFocus,
   onDone,
   onImport,
 }: SourceImportWizardFrameProps): JSX.Element {
@@ -95,7 +97,15 @@ export function SourceImportWizardFrame({
         }
       }}
     >
-      <DialogContent className="flex h-[min(90vh,760px)] max-w-5xl flex-col overflow-hidden">
+      <DialogContent
+        className="flex h-[min(90vh,760px)] max-w-5xl flex-col overflow-hidden"
+        onCloseAutoFocus={(event) => {
+          if (onRestoreFocus) {
+            event.preventDefault();
+            onRestoreFocus();
+          }
+        }}
+      >
         <DialogHeader className="shrink-0">
           <DialogTitle>{copy.title}</DialogTitle>
           <DialogDescription>{copy.description}</DialogDescription>

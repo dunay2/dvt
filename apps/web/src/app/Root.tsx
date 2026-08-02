@@ -10,8 +10,9 @@ import {
 import LeftNavigation from './components/LeftNavigation';
 import ShellHealthBanner from './components/ShellHealthBanner';
 import TopAppBar from './components/TopAppBar';
-import AppShellFrame from './components/shell/AppShellFrame';
+import AppShellFrame, { APP_SHELL_MAIN_CONTENT_ID } from './components/shell/AppShellFrame';
 import BottomOperationalDrawer from './components/shell/BottomOperationalDrawer';
+import { resolveShellTopBarCopy } from './components/shell/copy';
 import {
   createCapabilitiesFallbackBootstrapCommand,
   createCapabilitiesPendingBootstrapCommand,
@@ -57,6 +58,7 @@ type RootShellProps = {
 
 export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const location = useLocation();
+  const previousPathnameRef = useRef(location.pathname);
   const focusMode = useUiLayoutStore((state) => state.focusMode);
   const bottomDrawerHeight = useUiLayoutStore((state) => state.bottomDrawerHeight);
   const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
@@ -79,6 +81,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
   const bootstrapLocale = detectRouteBootstrapLocale();
+  const shellCopy = useMemo(() => resolveShellTopBarCopy(bootstrapLocale), [bootstrapLocale]);
   const appBootstrapCopy = useMemo(
     () => resolveAppBootstrapCopy(bootstrapLocale),
     [bootstrapLocale]
@@ -86,6 +89,15 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const activeRouteBootstrapRegistration = useActiveRouteBootstrapRegistration(undefined, {
     locale: bootstrapLocale,
   });
+
+  useEffect(() => {
+    if (previousPathnameRef.current === location.pathname) {
+      return;
+    }
+
+    previousPathnameRef.current = location.pathname;
+    document.getElementById(APP_SHELL_MAIN_CONTENT_ID)?.focus({ preventScroll: true });
+  }, [location.pathname]);
   const getRouteBootstrapSnapshot = () => {
     if (!activeRouteBootstrapRegistration) {
       throw new RouteBootstrapActiveRegistrationMissingError({
@@ -295,6 +307,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
       leftNavigation={<LeftNavigation />}
       navigationDisposition={navigationDisposition}
       showBottomDrawer={bottomDrawerVisible && bottomDrawerHeight > 0}
+      skipToMainContentLabel={shellCopy.skipToMainContent}
       topBar={
         <TopAppBar
           connectionDetail={shellHealth.connectionDetail}

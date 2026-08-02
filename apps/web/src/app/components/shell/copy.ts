@@ -2,6 +2,7 @@
 import { resolveString, type LocalizableString } from '../../plugins/contracts/PluginManifest';
 
 export type ShellTopBarCopy = {
+  readonly skipToMainContent: string;
   readonly shell: string;
   readonly aboutCommand: string;
   readonly aboutTitle: string;
@@ -39,6 +40,7 @@ export type ShellTopBarCopy = {
 };
 
 const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
+  skipToMainContent: { key: 'shell.skipToMainContent', fallback: 'Skip to main content' },
   shell: { key: 'shell.view', fallback: 'View' },
   aboutCommand: { key: 'shell.about.command', fallback: 'About Raven' },
   aboutTitle: { key: 'shell.about.title', fallback: 'About Raven' },
@@ -97,6 +99,7 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
 };
 
 const COPY_ES: ShellTopBarCopy = {
+  skipToMainContent: 'Saltar al contenido principal',
   shell: 'Vista',
   aboutCommand: 'Acerca de Raven',
   aboutTitle: 'Acerca de Raven',
@@ -160,6 +163,7 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
   }
 
   return {
+    skipToMainContent: resolveString(COPY_BY_KEY.skipToMainContent, locale),
     shell: resolveString(COPY_BY_KEY.shell, locale),
     aboutCommand: resolveString(COPY_BY_KEY.aboutCommand, locale),
     aboutTitle: resolveString(COPY_BY_KEY.aboutTitle, locale),

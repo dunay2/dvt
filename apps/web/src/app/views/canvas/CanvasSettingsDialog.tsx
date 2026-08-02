@@ -1,5 +1,14 @@
 /** Owned concern: render contextual Canvas settings without owning preference state. */
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
 import type { CanvasPaletteId } from './canvasPalette';
+import { canvasViewCopy } from './copy';
+import type { CanvasViewCopy } from './canvasCopy.types';
 
 type CanvasSettingsDialogProps = Readonly<{
   open: boolean;
@@ -11,6 +20,7 @@ type CanvasSettingsDialogProps = Readonly<{
   canvasGridColor: CanvasPaletteId;
   canvasSnapToGrid: boolean;
   canvasEmptyStateGuideVisible: boolean;
+  copy?: CanvasViewCopy;
   onToggleImpact: () => void;
   onToggleColumns: () => void;
   onToggleCostOverlay: () => void;
@@ -18,18 +28,23 @@ type CanvasSettingsDialogProps = Readonly<{
   onGridColorChange: (color: CanvasPaletteId) => void;
   onToggleSnapToGrid: () => void;
   onSetCanvasEmptyStateGuideVisible: (visible: boolean) => void;
+  onRestoreFocus?: () => void;
   onClose: () => void;
 }>;
 
 type CanvasSettingsToggleRowProps = Readonly<{
   label: string;
   active: boolean;
+  activeLabel: string;
+  inactiveLabel: string;
   onToggle: () => void;
 }>;
 
 function CanvasSettingsToggleRow({
   label,
   active,
+  activeLabel,
+  inactiveLabel,
   onToggle,
 }: CanvasSettingsToggleRowProps): JSX.Element {
   return (
@@ -37,10 +52,10 @@ function CanvasSettingsToggleRow({
       <span className="text-sm font-medium text-(--text-default)">{label}</span>
       <button
         type="button"
-        className="min-w-28 rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+        className="min-w-28 rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) outline-none hover:bg-(--surface-elevated) focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
         onClick={onToggle}
       >
-        {active ? 'Disable' : 'Enable'}
+        {active ? activeLabel : inactiveLabel}
       </button>
     </div>
   );
@@ -56,6 +71,7 @@ export function CanvasSettingsDialog({
   canvasGridColor,
   canvasSnapToGrid,
   canvasEmptyStateGuideVisible,
+  copy = canvasViewCopy,
   onToggleImpact,
   onToggleColumns,
   onToggleCostOverlay,
@@ -63,93 +79,104 @@ export function CanvasSettingsDialog({
   onGridColorChange,
   onToggleSnapToGrid,
   onSetCanvasEmptyStateGuideVisible,
+  onRestoreFocus,
   onClose,
-}: CanvasSettingsDialogProps): JSX.Element | null {
-  if (!open) {
-    return null;
-  }
-
+}: CanvasSettingsDialogProps): JSX.Element {
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Canvas settings"
-      data-slot="canvas-settings-dialog"
-      className="absolute inset-0 z-40 flex items-start justify-center bg-black/40 p-8"
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
     >
-      <section className="w-full max-w-2xl rounded-md border border-(--border-default) bg-(--surface-panel) shadow-2xl">
-        <header className="border-b border-(--border-muted) px-5 py-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-base font-semibold text-(--text-default)">Canvas settings</h2>
-              <p className="mt-1 text-sm text-(--text-muted)">
-                Graph display preferences for the active canvas.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
-              onClick={onClose}
-            >
-              Close
-            </button>
-          </div>
-        </header>
+      <DialogContent
+        data-slot="canvas-settings-dialog"
+        closeLabel={copy.canvasSettingsCloseLabel}
+        className="max-w-2xl gap-0 overflow-hidden border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default)"
+        onCloseAutoFocus={(event) => {
+          if (onRestoreFocus) {
+            event.preventDefault();
+            onRestoreFocus();
+          }
+        }}
+      >
+        <DialogHeader className="border-b border-(--border-muted) px-5 py-4 pr-12">
+          <DialogTitle>{copy.canvasContextMenuCanvasSettingsLabel}</DialogTitle>
+          <DialogDescription>{copy.canvasSettingsDescription}</DialogDescription>
+        </DialogHeader>
         <div className="grid gap-3 p-4">
           <CanvasSettingsToggleRow
-            label="Impact overlay"
+            label={copy.toolbarImpactLabel}
             active={impactOverlayEnabled}
+            activeLabel={copy.canvasSettingsDisableLabel}
+            inactiveLabel={copy.canvasSettingsEnableLabel}
             onToggle={onToggleImpact}
           />
           <CanvasSettingsToggleRow
-            label="Column lineage"
+            label={copy.toolbarColumnsLabel}
             active={columnLevelLineageEnabled}
+            activeLabel={copy.canvasSettingsDisableLabel}
+            inactiveLabel={copy.canvasSettingsEnableLabel}
             onToggle={onToggleColumns}
           />
           {canUseCostOverlay ? (
             <CanvasSettingsToggleRow
-              label="Cost overlay"
+              label={copy.toolbarCostLabel}
               active={costOverlayEnabled}
+              activeLabel={copy.canvasSettingsDisableLabel}
+              inactiveLabel={copy.canvasSettingsEnableLabel}
               onToggle={onToggleCostOverlay}
             />
           ) : null}
           <div className="flex items-center justify-between gap-4 rounded border border-(--border-muted) bg-(--surface-panel-subtle) px-3 py-2">
-            <span className="text-sm font-medium text-(--text-default)">Grid</span>
+            <span className="text-sm font-medium text-(--text-default)">
+              {copy.toolbarGridLabel}
+            </span>
             <button
               type="button"
-              className="min-w-28 rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+              className="min-w-28 rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) outline-none hover:bg-(--surface-elevated) focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
               onClick={onToggleGridVisible}
             >
-              {canvasGridVisible ? 'Hide grid' : 'Show grid'}
+              {canvasGridVisible
+                ? copy.canvasSettingsHideGridLabel
+                : copy.canvasSettingsShowGridLabel}
             </button>
           </div>
           <label className="flex items-center justify-between gap-4 rounded border border-(--border-muted) bg-(--surface-panel-subtle) px-3 py-2 text-sm font-medium text-(--text-default)">
-            Grid color
+            {copy.toolbarGridColorLabel}
             <input
               type="color"
               value={canvasGridColor}
-              aria-label="Grid color"
+              aria-label={copy.toolbarGridColorLabel}
               className="size-8 cursor-pointer rounded border border-(--border-default) bg-transparent p-0"
               onInput={(event) => onGridColorChange(event.currentTarget.value as CanvasPaletteId)}
             />
           </label>
           <div className="flex items-center justify-between gap-4 rounded border border-(--border-muted) bg-(--surface-panel-subtle) px-3 py-2">
-            <span className="text-sm font-medium text-(--text-default)">Snap to grid</span>
+            <span className="text-sm font-medium text-(--text-default)">
+              {copy.toolbarSnapToGridLabel}
+            </span>
             <button
               type="button"
-              className="min-w-28 rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+              className="min-w-28 rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) outline-none hover:bg-(--surface-elevated) focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
               onClick={onToggleSnapToGrid}
             >
-              {canvasSnapToGrid ? 'Disable snap' : 'Enable snap'}
+              {canvasSnapToGrid
+                ? copy.canvasSettingsDisableSnapLabel
+                : copy.canvasSettingsEnableSnapLabel}
             </button>
           </div>
           <CanvasSettingsToggleRow
-            label="Empty canvas guide"
+            label={copy.toolbarEmptyCanvasGuideLabel}
             active={canvasEmptyStateGuideVisible}
+            activeLabel={copy.canvasSettingsDisableLabel}
+            inactiveLabel={copy.canvasSettingsEnableLabel}
             onToggle={() => onSetCanvasEmptyStateGuideVisible(!canvasEmptyStateGuideVisible)}
           />
         </div>
-      </section>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

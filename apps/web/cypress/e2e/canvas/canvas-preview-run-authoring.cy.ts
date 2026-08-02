@@ -84,4 +84,41 @@ describe('Canvas preview-run authoring guardrails', () => {
     cy.contains('Start dbt canvas').should('be.visible');
     cy.contains('button', 'Add first dbt node').should('not.exist');
   });
+
+  it('keeps shell and Canvas context actions keyboard operable without losing focus', () => {
+    stubCanvasRuntimeApis({
+      canvasKind: 'dbt',
+      emptyCanvas: true,
+      title: 'Warehouse dbt',
+    });
+
+    visitCanvasWithSettledBootstrap();
+
+    cy.get('[data-slot="app-shell-skip-link"]').focus();
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.focused().should('have.attr', 'id', 'app-shell-main-content');
+
+    cy.get('[data-slot="canvas-viewport-context-surface"]')
+      .focus()
+      .trigger('keydown', { key: 'F10', code: 'F10', shiftKey: true });
+
+    cy.get('[data-slot="canvas-context-menu"] [role="menuitem"]').first().should('have.focus');
+    cy.press(Cypress.Keyboard.Keys.END);
+    cy.focused().should('have.attr', 'data-menu-action', 'open-canvas-settings');
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+
+    cy.get('[data-slot="canvas-settings-dialog"]')
+      .should('be.visible')
+      .should(($dialog) => {
+        expect($dialog[0]?.contains(Cypress.$(':focus')[0])).to.equal(true);
+      });
+    cy.press(Cypress.Keyboard.Keys.ESC);
+
+    cy.get('[data-slot="canvas-settings-dialog"]').should('not.exist');
+    cy.focused()
+      .should('have.attr', 'data-slot', 'canvas-viewport-context-surface')
+      .should(($focused) => {
+        expect($focused[0]).not.to.equal(Cypress.$('body')[0]);
+      });
+  });
 });

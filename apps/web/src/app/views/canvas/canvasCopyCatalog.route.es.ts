@@ -7,6 +7,8 @@ export const canvasViewRouteCopyEs = {
   backendLoadingTitle: 'Comprobando disponibilidad del backend',
   backendLoadingMessage:
     'Canvas espera a que terminen las comprobaciones de disponibilidad del backend antes de cargar la superficie de authoring.',
+  canvasViewportContextSurfaceLabel: 'Fondo del grafo del canvas',
+  canvasContextMenuLabel: 'Acciones del canvas',
   routeNeedsCanvasTitle: 'Crear canvas en este workspace',
   routeNeedsCanvasMessage:
     'Este workspace activo todavia no tiene un documento de canvas persistido. Elige una plantilla de canvas para empezar a trabajar.',

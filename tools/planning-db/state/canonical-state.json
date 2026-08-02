@@ -2834,6 +2834,488 @@
       "createdAt": "2026-08-02T03:07:37.757Z"
     },
     {
+      "railId": "local#MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS#query#rendercanvascontextmenu",
+      "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+      "mechanizationStatus": "implemented",
+      "railName": "RenderCanvasContextMenu",
+      "normalizedRailName": "rendercanvascontextmenu",
+      "railType": "query",
+      "dddOwner": "CanvasContextMenuLayer",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx#CanvasContextMenuSurface",
+        "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx#focusMenuItemForKey",
+        "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts#useCanvasContextMenuLifecycle",
+        "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts#CanvasContextMenuOpenRequest"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx#CanvasContextMenuSurface",
+        "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx#focusMenuItemForKey",
+        "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts#useCanvasContextMenuLifecycle",
+        "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts#CanvasContextMenuOpenRequest"
+      ],
+      "documentationRefs": [
+        "docs/architecture/components/web/appshell/app-shell.md",
+        "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx",
+        "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+        "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts",
+        "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+        "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm --filter @dvt/web lint",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+      "sourceContentSha256": "4cf0e40b9370d50a4e42cf435d54d6016502c37b912eb0e81d89bc16ee3f3c94",
+      "rawRail": {
+        "name": "RenderCanvasContextMenu",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CanvasContextMenuLayer"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "CanvasContextMenuSurface",
+            "path": "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx",
+            "cqRails": ["RenderCanvasContextMenu"],
+            "dddOwner": "CanvasContextMenuLayer",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+            ],
+            "fowlerSignals": [
+              "One presentation adapter renders pointer and keyboard access to the canonical Canvas context actions."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx"
+          },
+          {
+            "name": "focusMenuItemForKey",
+            "path": "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx",
+            "cqRails": ["RenderCanvasContextMenu"],
+            "dddOwner": "CanvasContextMenuLayer",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+            ],
+            "fowlerSignals": [
+              "One presentation adapter renders pointer and keyboard access to the canonical Canvas context actions."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx"
+          },
+          {
+            "name": "useCanvasContextMenuLifecycle",
+            "path": "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts",
+            "cqRails": ["RenderCanvasContextMenu"],
+            "dddOwner": "CanvasContextMenuLayer",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+            ],
+            "fowlerSignals": [
+              "One presentation adapter renders pointer and keyboard access to the canonical Canvas context actions."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx"
+          },
+          {
+            "name": "CanvasContextMenuOpenRequest",
+            "path": "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts",
+            "cqRails": ["RenderCanvasContextMenu"],
+            "dddOwner": "CanvasContextMenuLayer",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+            ],
+            "fowlerSignals": [
+              "One presentation adapter renders pointer and keyboard access to the canonical Canvas context actions."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/187"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus"
+        ],
+        "domainObjects": ["CanvasContextMenuPresentation"],
+        "fowlerSignals": [
+          "One presentation adapter renders pointer and keyboard access to the canonical Canvas context actions."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "rendercanvascontextmenu-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx",
+              "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+              "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts",
+              "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+              "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+            ],
+            "expectedFailure": "The Canvas context menu does not own keyboard focus, activation, navigation, or deterministic restoration."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RenderCanvasContextMenu",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CanvasContextMenuLayer"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx"
+        ],
+        "implementationPlan": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx",
+          "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-02T05:22:42.639Z"
+    },
+    {
+      "railId": "local#MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS#query#rendercanvasshellchrome",
+      "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+      "mechanizationStatus": "implemented",
+      "railName": "RenderCanvasShellChrome",
+      "normalizedRailName": "rendercanvasshellchrome",
+      "railType": "query",
+      "dddOwner": "CanvasShellChromePresentation",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/components/shell/AppShellFrame.tsx#APP_SHELL_MAIN_CONTENT_ID",
+        "apps/web/src/app/components/shell/AppShellFrame.tsx#AppShellFrame"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/components/shell/AppShellFrame.tsx#APP_SHELL_MAIN_CONTENT_ID",
+        "apps/web/src/app/components/shell/AppShellFrame.tsx#AppShellFrame"
+      ],
+      "documentationRefs": [
+        "docs/architecture/components/web/appshell/app-shell.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/architecture/components/web/appshell/app-shell.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/components/shell/AppShellFrame.tsx",
+        "apps/web/src/app/components/shell/AppShellFrame.test.tsx",
+        "apps/web/src/app/Root.tsx",
+        "apps/web/src/app/Root.shellChrome.test.tsx",
+        "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/web exec vitest run src/app/components/shell/AppShellFrame.test.tsx src/app/Root.shellChrome.test.tsx"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm --filter @dvt/web lint",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/architecture/components/web/appshell/app-shell.md",
+      "sourceContentSha256": "03f06acc69f80ca18bab849bd09341498bfcb76717173bfa7b7a7e76a94a718f",
+      "rawRail": {
+        "name": "RenderCanvasShellChrome",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CanvasShellChromePresentation"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "APP_SHELL_MAIN_CONTENT_ID",
+            "path": "apps/web/src/app/components/shell/AppShellFrame.tsx",
+            "cqRails": ["RenderCanvasShellChrome"],
+            "dddOwner": "CanvasShellChromePresentation",
+            "unitTests": [
+              "apps/web/src/app/components/shell/AppShellFrame.test.tsx"
+            ],
+            "fowlerSignals": [
+              "The shell frame owns one main landmark and route focus without introducing a global focus service."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/components/shell/AppShellFrame.test.tsx src/app/Root.shellChrome.test.tsx"
+          },
+          {
+            "name": "AppShellFrame",
+            "path": "apps/web/src/app/components/shell/AppShellFrame.tsx",
+            "cqRails": ["RenderCanvasShellChrome"],
+            "dddOwner": "CanvasShellChromePresentation",
+            "unitTests": [
+              "apps/web/src/app/components/shell/AppShellFrame.test.tsx"
+            ],
+            "fowlerSignals": [
+              "The shell frame owns one main landmark and route focus without introducing a global focus service."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/components/shell/AppShellFrame.test.tsx src/app/Root.shellChrome.test.tsx"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/187"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus"
+        ],
+        "domainObjects": ["CanvasShellChromePresentation"],
+        "fowlerSignals": [
+          "The shell frame owns one main landmark and route focus without introducing a global focus service."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "rendercanvasshellchrome-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/components/shell/AppShellFrame.test.tsx src/app/Root.shellChrome.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/components/shell/AppShellFrame.test.tsx src/app/Root.shellChrome.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/components/shell/AppShellFrame.tsx",
+              "apps/web/src/app/components/shell/AppShellFrame.test.tsx",
+              "apps/web/src/app/Root.tsx",
+              "apps/web/src/app/Root.shellChrome.test.tsx",
+              "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+            ],
+            "expectedFailure": "The shell has no effective keyboard bypass and route changes do not focus the sole main landmark."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/app-shell.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/components/web/appshell/app-shell.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RenderCanvasShellChrome",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CanvasShellChromePresentation"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/components/shell/AppShellFrame.test.tsx src/app/Root.shellChrome.test.tsx"
+        ],
+        "implementationPlan": "docs/architecture/components/web/appshell/app-shell.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/components/shell/AppShellFrame.tsx",
+          "apps/web/src/app/components/shell/AppShellFrame.test.tsx",
+          "apps/web/src/app/Root.tsx",
+          "apps/web/src/app/Root.shellChrome.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-02T05:40:16.982Z"
+    },
+    {
+      "railId": "local#MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS#query#resolvecanvascontextmenu",
+      "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+      "mechanizationStatus": "implemented",
+      "railName": "ResolveCanvasContextMenu",
+      "normalizedRailName": "resolvecanvascontextmenu",
+      "railType": "query",
+      "dddOwner": "CanvasNodeContextMenuView",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/canvasContextMenuViewModel.ts#buildCanvasContextMenuViewModel",
+        "apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts#useCanvasContextMenuPresenter",
+        "apps/web/src/app/views/canvas/canvasContextMenuPresenter.types.ts#ContextMenuKeyboardEvent"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/canvasContextMenuViewModel.ts#buildCanvasContextMenuViewModel",
+        "apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts#useCanvasContextMenuPresenter",
+        "apps/web/src/app/views/canvas/canvasContextMenuPresenter.types.ts#ContextMenuKeyboardEvent"
+      ],
+      "documentationRefs": [
+        "docs/architecture/components/web/appshell/app-shell.md",
+        "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/views/canvas/canvasContextMenuViewModel.ts",
+        "apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts",
+        "apps/web/src/app/views/canvas/canvasContextMenuPresenter.types.ts",
+        "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+        "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm --filter @dvt/web lint",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+      "sourceContentSha256": "4cf0e40b9370d50a4e42cf435d54d6016502c37b912eb0e81d89bc16ee3f3c94",
+      "rawRail": {
+        "name": "ResolveCanvasContextMenu",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CanvasNodeContextMenuView"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "buildCanvasContextMenuViewModel",
+            "path": "apps/web/src/app/views/canvas/canvasContextMenuViewModel.ts",
+            "cqRails": ["ResolveCanvasContextMenu"],
+            "dddOwner": "CanvasNodeContextMenuView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+            ],
+            "fowlerSignals": [
+              "One query model resolves keyboard and pointer context into the same Canvas menu semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+          },
+          {
+            "name": "useCanvasContextMenuPresenter",
+            "path": "apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts",
+            "cqRails": ["ResolveCanvasContextMenu"],
+            "dddOwner": "CanvasNodeContextMenuView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+            ],
+            "fowlerSignals": [
+              "One query model resolves keyboard and pointer context into the same Canvas menu semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+          },
+          {
+            "name": "ContextMenuKeyboardEvent",
+            "path": "apps/web/src/app/views/canvas/canvasContextMenuPresenter.types.ts",
+            "cqRails": ["ResolveCanvasContextMenu"],
+            "dddOwner": "CanvasNodeContextMenuView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+            ],
+            "fowlerSignals": [
+              "One query model resolves keyboard and pointer context into the same Canvas menu semantics."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/187"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus"
+        ],
+        "domainObjects": ["CanvasContextMenuModel"],
+        "fowlerSignals": [
+          "One query model resolves keyboard and pointer context into the same Canvas menu semantics."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "resolvecanvascontextmenu-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/canvasContextMenuViewModel.ts",
+              "apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts",
+              "apps/web/src/app/views/canvas/canvasContextMenuPresenter.types.ts",
+              "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+              "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+            ],
+            "expectedFailure": "The focused Canvas surface cannot resolve and open the canonical context menu from keyboard input."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ResolveCanvasContextMenu",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CanvasNodeContextMenuView"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+        ],
+        "implementationPlan": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasContextMenuViewModel.ts",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts",
+          "apps/web/src/app/views/canvas/canvasContextMenuPresenter.types.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-02T05:22:24.840Z"
+    },
+    {
       "railId": "local#MVP-2072-RUN-EVENT-FEED#query#listrunevents",
       "featureId": "MVP-2072-RUN-EVENT-FEED",
       "mechanizationStatus": "implemented",
@@ -21280,6 +21762,365 @@
         ]
       },
       "createdAt": "2026-08-02T04:24:11.054Z"
+    },
+    {
+      "operationId": "b7992202-c34f-4c96-80e1-c8b75229ac07",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS:query:resolvecanvascontextmenu:latest:ea96cbda92c76a95",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS#query#resolvecanvascontextmenu",
+      "sourcePath": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+      "sourceContentSha256": "4cf0e40b9370d50a4e42cf435d54d6016502c37b912eb0e81d89bc16ee3f3c94",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+        "dddOwner": "CanvasNodeContextMenuView",
+        "railName": "ResolveCanvasContextMenu",
+        "railType": "query",
+        "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+        "sourceRef": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/187"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus"
+        ],
+        "domainObjects": ["CanvasContextMenuModel"],
+        "fowlerSignals": [
+          "One query model resolves keyboard and pointer context into the same Canvas menu semantics."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "expectedFailure": "The focused Canvas surface cannot resolve and open the canonical context menu from keyboard input.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/appshell/app-shell.md",
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+        ],
+        "implementationPlan": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasContextMenuViewModel.ts#buildCanvasContextMenuViewModel",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts#useCanvasContextMenuPresenter"
+        ],
+        "normalizedRailName": "resolvecanvascontextmenu",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4cf0e40b9370d50a4e42cf435d54d6016502c37b912eb0e81d89bc16ee3f3c94",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasContextMenuViewModel.ts",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T05:22:24.840Z"
+    },
+    {
+      "operationId": "07537fa0-701b-4ef3-9806-dd3710f0f300",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS:query:rendercanvascontextmenu:latest:7eba91dc0f916a73",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS#query#rendercanvascontextmenu",
+      "sourcePath": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+      "sourceContentSha256": "4cf0e40b9370d50a4e42cf435d54d6016502c37b912eb0e81d89bc16ee3f3c94",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+        "dddOwner": "CanvasContextMenuLayer",
+        "railName": "RenderCanvasContextMenu",
+        "railType": "query",
+        "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx",
+        "sourceRef": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/187"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus"
+        ],
+        "domainObjects": ["CanvasContextMenuPresentation"],
+        "fowlerSignals": [
+          "One presentation adapter renders pointer and keyboard access to the canonical Canvas context actions."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "expectedFailure": "The Canvas context menu does not own keyboard focus, activation, navigation, or deterministic restoration.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/appshell/app-shell.md",
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx"
+        ],
+        "implementationPlan": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx#CanvasContextMenuSurface",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts#useCanvasContextMenuLifecycle"
+        ],
+        "normalizedRailName": "rendercanvascontextmenu",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4cf0e40b9370d50a4e42cf435d54d6016502c37b912eb0e81d89bc16ee3f3c94",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx",
+          "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T05:22:42.639Z"
+    },
+    {
+      "operationId": "257f9e6d-34c1-4ab5-92d2-c78e64e069e8",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS:query:resolvecanvascontextmenu:0:417c59cde8ce6b16",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS#query#resolvecanvascontextmenu",
+      "sourcePath": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+      "sourceContentSha256": "4cf0e40b9370d50a4e42cf435d54d6016502c37b912eb0e81d89bc16ee3f3c94",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+        "dddOwner": "CanvasNodeContextMenuView",
+        "railName": "ResolveCanvasContextMenu",
+        "railType": "query",
+        "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+        "sourceRef": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/187"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus"
+        ],
+        "domainObjects": ["CanvasContextMenuModel"],
+        "fowlerSignals": [
+          "One query model resolves keyboard and pointer context into the same Canvas menu semantics."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "expectedFailure": "The focused Canvas surface cannot resolve and open the canonical context menu from keyboard input.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/appshell/app-shell.md",
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+        ],
+        "implementationPlan": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasContextMenuViewModel.ts#buildCanvasContextMenuViewModel",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts#useCanvasContextMenuPresenter",
+          "apps/web/src/app/views/canvas/canvasContextMenuPresenter.types.ts#ContextMenuKeyboardEvent"
+        ],
+        "normalizedRailName": "resolvecanvascontextmenu",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4cf0e40b9370d50a4e42cf435d54d6016502c37b912eb0e81d89bc16ee3f3c94",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasContextMenuViewModel.ts",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuPresenter.ts",
+          "apps/web/src/app/views/canvas/canvasContextMenuPresenter.types.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T05:39:38.721Z"
+    },
+    {
+      "operationId": "ec89115c-9625-482b-855f-d55881751eb3",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS:query:rendercanvascontextmenu:0:0ab56564b729a8fb",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS#query#rendercanvascontextmenu",
+      "sourcePath": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+      "sourceContentSha256": "4cf0e40b9370d50a4e42cf435d54d6016502c37b912eb0e81d89bc16ee3f3c94",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+        "dddOwner": "CanvasContextMenuLayer",
+        "railName": "RenderCanvasContextMenu",
+        "railType": "query",
+        "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx",
+        "sourceRef": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/187"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus"
+        ],
+        "domainObjects": ["CanvasContextMenuPresentation"],
+        "fowlerSignals": [
+          "One presentation adapter renders pointer and keyboard access to the canonical Canvas context actions."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "expectedFailure": "The Canvas context menu does not own keyboard focus, activation, navigation, or deterministic restoration.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/appshell/app-shell.md",
+          "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx src/app/views/canvas/CanvasContextMenuView.test.tsx"
+        ],
+        "implementationPlan": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx#CanvasContextMenuSurface",
+          "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx#focusMenuItemForKey",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts#useCanvasContextMenuLifecycle",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts#CanvasContextMenuOpenRequest"
+        ],
+        "normalizedRailName": "rendercanvascontextmenu",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "4cf0e40b9370d50a4e42cf435d54d6016502c37b912eb0e81d89bc16ee3f3c94",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasContextMenuPrimitives.tsx",
+          "apps/web/src/app/views/canvas/CanvasContextMenuView.tsx",
+          "apps/web/src/app/views/canvas/useCanvasContextMenuLifecycle.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.keyboardContextMenu.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T05:39:59.142Z"
+    },
+    {
+      "operationId": "9c3bc2ba-6693-4ad8-827e-dafb97a5d720",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS:query:rendercanvasshellchrome:latest:94506a17b40dc33c",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS#query#rendercanvasshellchrome",
+      "sourcePath": "docs/architecture/components/web/appshell/app-shell.md",
+      "sourceContentSha256": "03f06acc69f80ca18bab849bd09341498bfcb76717173bfa7b7a7e76a94a718f",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/components/shell/AppShellFrame.test.tsx src/app/Root.shellChrome.test.tsx",
+        "dddOwner": "CanvasShellChromePresentation",
+        "railName": "RenderCanvasShellChrome",
+        "railType": "query",
+        "featureId": "MVP-187-SHELL-CANVAS-KEYBOARD-FOCUS",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/components/shell/AppShellFrame.test.tsx src/app/Root.shellChrome.test.tsx",
+        "sourceRef": "docs/architecture/components/web/appshell/app-shell.md",
+        "unitTests": [
+          "apps/web/src/app/components/shell/AppShellFrame.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/187"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts#keeps shell and Canvas context actions keyboard operable without losing focus"
+        ],
+        "domainObjects": ["CanvasShellChromePresentation"],
+        "fowlerSignals": [
+          "The shell frame owns one main landmark and route focus without introducing a global focus service."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/appshell/app-shell.md"
+        ],
+        "expectedFailure": "The shell has no effective keyboard bypass and route changes do not focus the sole main landmark.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/components/web/appshell/app-shell.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/appshell/app-shell.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/components/shell/AppShellFrame.test.tsx src/app/Root.shellChrome.test.tsx"
+        ],
+        "implementationPlan": "docs/architecture/components/web/appshell/app-shell.md",
+        "implementationRefs": [
+          "apps/web/src/app/components/shell/AppShellFrame.tsx#APP_SHELL_MAIN_CONTENT_ID",
+          "apps/web/src/app/components/shell/AppShellFrame.tsx#AppShellFrame"
+        ],
+        "normalizedRailName": "rendercanvasshellchrome",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "03f06acc69f80ca18bab849bd09341498bfcb76717173bfa7b7a7e76a94a718f",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/components/shell/AppShellFrame.tsx",
+          "apps/web/src/app/components/shell/AppShellFrame.test.tsx",
+          "apps/web/src/app/Root.tsx",
+          "apps/web/src/app/Root.shellChrome.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-preview-run-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T05:40:16.982Z"
     }
   ]
 }

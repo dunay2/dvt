@@ -188,6 +188,7 @@ export default function CanvasShell({
           open={sourceImportDialog.open}
           canvasId={panels.activeCanvasId}
           onClose={sourceImportDialog.close}
+          onRestoreFocus={contextMenuPresenter.restoreContextMenuOpenerFocus}
           onComplete={graphCommands.onSourceImportComplete}
           sourceImportOptions={sourceImportOptions}
           initialSelection={sourceImportDialog.initialSelection}
@@ -218,6 +219,7 @@ export default function CanvasShell({
         onGridColorChange={chromeCommands.onGridColorChange}
         onToggleSnapToGrid={chromeCommands.onToggleSnapToGrid}
         onSetCanvasEmptyStateGuideVisible={chromeCommands.onSetCanvasEmptyStateGuideVisible}
+        onRestoreFocus={contextMenuPresenter.restoreContextMenuOpenerFocus}
         onClose={() => setCanvasSettingsOpen(false)}
       />
       <DbtProjectImportDialog

@@ -12,6 +12,7 @@ import { isCanvasNodeEmbeddedControlTarget } from '../../components/canvas/canva
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 import { buildCanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
 import {
@@ -76,6 +77,7 @@ function CanvasViewportWithPresenter({
   ...props
 }: CanvasViewportWithPresenterProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
+  const copy = resolveCanvasViewCopy();
   const viewportRef = useRef<HTMLDivElement>(null);
   const [nodeContextSurfaceState, dispatchNodeContextSurface] = useReducer(
     reduceCanvasNodeContextSurface,
@@ -379,6 +381,8 @@ function CanvasViewportWithPresenter({
       onDragOver={props.onDragOver}
       contextMenuPresenter={contextMenuPresenter}
       renderContextMenuView={renderContextMenuView}
+      contextSurfaceLabel={copy.canvasViewportContextSurfaceLabel}
+      contextMenuLabel={copy.canvasContextMenuLabel}
       nodeFloatingToolbarModel={nodeFloatingToolbarModel}
       onCloseNodeFloatingToolbar={closeNodeFloatingToolbar}
       nodeHealthPopoverModel={nodeHealthPopoverModel}

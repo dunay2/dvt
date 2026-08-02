@@ -100,13 +100,14 @@ describe('CanvasShell contextual dialogs', () => {
       openCanvasSettings?.();
     });
 
-    expect(container.querySelector('[data-slot="canvas-settings-dialog"]')).not.toBeNull();
-    expect(container.textContent).toContain('Canvas settings');
+    const settingsDialog = document.body.querySelector('[data-slot="canvas-settings-dialog"]');
+    expect(settingsDialog).not.toBeNull();
+    expect(settingsDialog?.textContent).toContain('Canvas settings');
 
-    const gridButton = Array.from(container.querySelectorAll('button')).find(
+    const gridButton = Array.from(settingsDialog?.querySelectorAll('button') ?? []).find(
       (button) => button.textContent === 'Hide grid'
     );
-    const snapButton = Array.from(container.querySelectorAll('button')).find(
+    const snapButton = Array.from(settingsDialog?.querySelectorAll('button') ?? []).find(
       (button) => button.textContent === 'Enable snap'
     );
     expect(gridButton).toBeDefined();

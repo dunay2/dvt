@@ -44,6 +44,8 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   onDragOver: DragEventHandler<HTMLDivElement>;
   contextMenuPresenter: CanvasContextMenuPresenter;
   renderContextMenuView: boolean;
+  contextSurfaceLabel: string;
+  contextMenuLabel: string;
   nodeFloatingToolbarModel: CanvasNodeFloatingToolbarModel | null;
   onCloseNodeFloatingToolbar: () => void;
   nodeHealthPopoverModel: {
@@ -81,6 +83,7 @@ function CanvasViewportReactFlowSurface({
   onDrop,
   onDragOver,
   contextMenuPresenter,
+  contextSurfaceLabel,
   onCloseNodeFloatingToolbar,
   onCloseNodeHealthPopover,
 }: Omit<
@@ -88,6 +91,7 @@ function CanvasViewportReactFlowSurface({
   | 'viewportRef'
   | 'resolvedCanvasPalette'
   | 'renderContextMenuView'
+  | 'contextMenuLabel'
   | 'nodeFloatingToolbarModel'
   | 'nodeHealthPopoverModel'
 >): JSX.Element {
@@ -145,8 +149,11 @@ function CanvasViewportReactFlowSurface({
     <div
       ref={contextMenuPresenter.contextSurfaceRef}
       data-slot="canvas-viewport-context-surface"
-      className="h-full w-full"
+      aria-label={contextSurfaceLabel}
+      tabIndex={0}
+      className="h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
       onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
+      onKeyDown={contextMenuPresenter.handleViewportContextMenuKeyDown}
     >
       <ReactFlow
         nodes={nodesWithImpact}
@@ -204,6 +211,8 @@ export function CanvasViewportSurfaceView({
   viewportRef,
   resolvedCanvasPalette,
   renderContextMenuView,
+  contextSurfaceLabel,
+  contextMenuLabel,
   contextMenuPresenter,
   nodeFloatingToolbarModel,
   onCloseNodeFloatingToolbar,
@@ -221,6 +230,7 @@ export function CanvasViewportSurfaceView({
       <CanvasViewportReactFlowSurface
         {...reactFlowSurfaceProps}
         contextMenuPresenter={contextMenuPresenter}
+        contextSurfaceLabel={contextSurfaceLabel}
         onCloseNodeFloatingToolbar={onCloseNodeFloatingToolbar}
         onCloseNodeHealthPopover={onCloseNodeHealthPopover}
       />
@@ -236,6 +246,7 @@ export function CanvasViewportSurfaceView({
       )}
       {renderContextMenuView ? (
         <CanvasContextMenuView
+          ariaLabel={contextMenuLabel}
           model={contextMenuPresenter.model}
           menuRef={contextMenuPresenter.menuRef}
           onCanvasAction={contextMenuPresenter.handleCanvasAction}

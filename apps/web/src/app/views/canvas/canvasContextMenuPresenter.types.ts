@@ -1,6 +1,10 @@
 /** Owned concern: define Canvas context-menu presenter ports without owning React behavior. */
 import type { Edge, Node as FlowNode, ReactFlowProps } from '@xyflow/react';
-import type { MouseEvent as ReactMouseEvent, RefObject } from 'react';
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+  RefObject,
+} from 'react';
 
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
@@ -35,16 +39,23 @@ export type PaneClickEvent = Pick<
 >;
 
 export type CloseCanvasContextMenuOptions = Readonly<{
-  force?: boolean;
+  restoreFocus?: boolean;
 }>;
+
+export type ContextMenuKeyboardEvent = Pick<
+  ReactKeyboardEvent<HTMLDivElement>,
+  'currentTarget' | 'key' | 'preventDefault' | 'shiftKey' | 'stopPropagation' | 'target'
+>;
 
 export type UseCanvasContextMenuPresenterResult = Readonly<{
   model: CanvasContextMenuModel | null;
   menuRef: RefObject<HTMLDivElement>;
   contextSurfaceRef: RefObject<HTMLDivElement>;
   closeContextMenu: (options?: CloseCanvasContextMenuOptions) => void;
+  restoreContextMenuOpenerFocus: () => void;
   handlePaneClick: (event: PaneClickEvent) => void;
   handleViewportContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => void;
+  handleViewportContextMenuKeyDown: (event: ContextMenuKeyboardEvent) => void;
   handlePaneContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onPaneContextMenu']>;
   handleEdgeContextMenu: NonNullable<ReactFlowProps<FlowNode, Edge>['onEdgeContextMenu']>;
   handleCanvasAction: (action: CanvasContextMenuCanvasAction) => void;

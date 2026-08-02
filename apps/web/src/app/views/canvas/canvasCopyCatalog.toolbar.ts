@@ -137,6 +137,38 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.contextMenu.canvasSettingsLabel',
     fallback: 'Canvas settings',
   },
+  canvasSettingsDescription: {
+    key: 'canvas.settings.description',
+    fallback: 'Graph display preferences for the active canvas.',
+  },
+  canvasSettingsCloseLabel: {
+    key: 'canvas.settings.closeLabel',
+    fallback: 'Close canvas settings',
+  },
+  canvasSettingsEnableLabel: {
+    key: 'canvas.settings.enableLabel',
+    fallback: 'Enable',
+  },
+  canvasSettingsDisableLabel: {
+    key: 'canvas.settings.disableLabel',
+    fallback: 'Disable',
+  },
+  canvasSettingsShowGridLabel: {
+    key: 'canvas.settings.showGridLabel',
+    fallback: 'Show grid',
+  },
+  canvasSettingsHideGridLabel: {
+    key: 'canvas.settings.hideGridLabel',
+    fallback: 'Hide grid',
+  },
+  canvasSettingsEnableSnapLabel: {
+    key: 'canvas.settings.enableSnapLabel',
+    fallback: 'Enable snap',
+  },
+  canvasSettingsDisableSnapLabel: {
+    key: 'canvas.settings.disableSnapLabel',
+    fallback: 'Disable snap',
+  },
   canvasNodePortTargetLabel: {
     key: 'canvas.nodePort.targetLabel',
     fallback: 'Connect incoming port',

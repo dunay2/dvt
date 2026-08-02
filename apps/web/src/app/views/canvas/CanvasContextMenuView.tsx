@@ -11,6 +11,7 @@ import type {
 } from './canvasInteractionCommandSurface';
 import { buildCanvasAddNodeCatalogItems } from './canvasAddNodeCatalogModel';
 import { CanvasAddNodeCatalogView } from './CanvasAddNodeCatalogView';
+import { canvasViewCopy } from './copy';
 import {
   CanvasContextMenuItem,
   CanvasContextMenuSection,
@@ -24,6 +25,7 @@ import {
 type CanvasContextMenuViewProps = Readonly<{
   model: CanvasContextMenuModel | null;
   menuRef: RefObject<HTMLDivElement>;
+  ariaLabel?: string;
   onCanvasAction: (action: CanvasContextMenuCanvasAction) => void;
   onCreateNodeAction: (action: CanvasContextMenuCreateNodeAction) => void;
   onEdgeAction: (action: CanvasContextMenuEdgeAction) => void;
@@ -79,6 +81,7 @@ export function resolveCanvasContextMenuSurfaceStyle(
 export function CanvasContextMenuView({
   model,
   menuRef,
+  ariaLabel = canvasViewCopy.canvasContextMenuLabel,
   onCanvasAction,
   onCreateNodeAction,
   onEdgeAction,
@@ -105,7 +108,7 @@ export function CanvasContextMenuView({
       : [];
 
   return (
-    <CanvasContextMenuSurface menuRef={menuRef} style={menuStyle}>
+    <CanvasContextMenuSurface ariaLabel={ariaLabel} menuRef={menuRef} style={menuStyle}>
       {model.surface === 'add-node-catalog' ? (
         <CanvasAddNodeCatalogView
           items={catalogItems}

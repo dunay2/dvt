@@ -48,6 +48,7 @@ describe('AppShellFrame', () => {
           leftNavigation={<div data-testid="left-nav">Left nav</div>}
           navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
           showBottomDrawer
+          skipToMainContentLabel="Skip to main content"
           topBar={<div data-testid="top-bar">Top bar</div>}
         >
           <div data-testid="route-outlet">Route outlet</div>
@@ -63,6 +64,10 @@ describe('AppShellFrame', () => {
     const bottomDrawer = container.querySelector('[data-slot="app-shell-bottom-drawer"]');
     const panelGroup = container.querySelector('[data-slot="resizable-panel-group"]');
     const panels = Array.from(container.querySelectorAll('[data-slot="resizable-panel"]'));
+    const skipLinks = Array.from(
+      container.querySelectorAll<HTMLAnchorElement>('[data-slot="app-shell-skip-link"]')
+    );
+    const mainLandmarks = Array.from(container.querySelectorAll('main'));
 
     expect(frame?.textContent).toContain('Top bar');
     expect(frame?.textContent).toContain('Shell banner');
@@ -83,6 +88,19 @@ describe('AppShellFrame', () => {
     expect(panels.map((panel) => panel.getAttribute('id'))).toContain(
       'app-shell-bottom-drawer-panel'
     );
+    expect(skipLinks).toHaveLength(1);
+    expect(skipLinks[0]?.textContent).toBe('Skip to main content');
+    expect(skipLinks[0]?.getAttribute('href')).toBe('#app-shell-main-content');
+    expect(mainLandmarks).toHaveLength(1);
+    expect(mainLandmarks[0]).toBe(outlet);
+    expect(mainLandmarks[0]?.id).toBe('app-shell-main-content');
+    expect(mainLandmarks[0]?.tabIndex).toBe(-1);
+
+    skipLinks[0]?.focus();
+    await act(async () => {
+      skipLinks[0]?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    });
+    expect(document.activeElement).toBe(mainLandmarks[0]);
   });
 
   it('hides navigation and bottom drawer in focus mode while keeping top bar and outlet', async () => {
@@ -95,6 +113,7 @@ describe('AppShellFrame', () => {
           leftNavigation={<div>Left nav</div>}
           navigationDisposition={PINNED_NAVIGATION_DISPOSITION}
           showBottomDrawer
+          skipToMainContentLabel="Skip to main content"
           topBar={<div>Top bar</div>}
         >
           <div>Route outlet</div>
@@ -123,6 +142,7 @@ describe('AppShellFrame', () => {
           leftNavigation={<div>Left nav</div>}
           navigationDisposition={MENU_NAVIGATION_DISPOSITION}
           showBottomDrawer={false}
+          skipToMainContentLabel="Skip to main content"
           topBar={<div>Top bar</div>}
         >
           <div>Route outlet</div>
