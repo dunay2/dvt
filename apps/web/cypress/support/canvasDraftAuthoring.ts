@@ -1,4 +1,5 @@
 import {
+  buildLargeWorkspaceGraphAuthoringDraft,
   buildProtectedDraftRecord,
   buildWorkspaceGraphAuthoringDraft,
 } from '../../src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures';
@@ -29,6 +30,7 @@ export type StubCanvasDraftReadOptions = {
   authoringGenerated?: boolean;
   title?: string;
   readOnly?: boolean;
+  largeGraph?: boolean;
 };
 
 type CanvasAuthoringDraft = ReturnType<typeof buildWorkspaceGraphAuthoringDraft>;
@@ -48,7 +50,12 @@ export function buildCanvasAuthoringDraft({
   importedWarehouseSource = false,
   authoringGenerated = false,
   title,
+  largeGraph = false,
 }: StubCanvasDraftReadOptions = {}): CanvasAuthoringDraft {
+  if (largeGraph) {
+    return buildLargeWorkspaceGraphAuthoringDraft();
+  }
+
   const canvas = {
     id: 'main-canvas',
     kind: canvasKind,
