@@ -25,7 +25,9 @@ Scenario coverage is tracked in
 
 - `workspaceGraphDraftAuthoring.test.fixtures.ts`
   Builds `WorkspaceGraphAuthoringDraft` and protected
-  `WorkspaceGraphDraftRecord` fixtures.
+  `WorkspaceGraphDraftRecord` fixtures. It also owns the deterministic
+  `buildLargeWorkspaceGraphAuthoringDraft()` fixture shared by pure Canvas and
+  browser evidence.
 - `workspaceGraphDraftProtocol.test.fixtures.ts`
   Builds protected read/save envelope fixtures for authoring-port and Canvas
   controller tests.
@@ -51,6 +53,11 @@ Scenario coverage is tracked in
 - Endpoint expectations use `workspaceGraphDraftHttp.ts`, the production HTTP
   boundary.
 - Every fixture module starts with a short owned-concern docblock.
+- The large Canvas fixture is one generated 25-layer by 40-node DAG: exactly
+  1,000 unique nodes and 1,920 edges, with stable ids, positions, kinds, and
+  roles.
+- Unit and Cypress evidence reuse that builder. They must not commit a large
+  JSON artifact or add a product-only seed endpoint.
 
 ## Transitions
 
