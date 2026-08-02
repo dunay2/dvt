@@ -23,6 +23,10 @@ export const EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT = {
       APPLICATION_ROOT,
       'services/resolveAuthorizedPreviewSelection.ts'
     ),
+    previewSelectionFindingProducer: defineArtifact(
+      APPLICATION_ROOT,
+      'services/previewSelectionFinding.ts'
+    ),
     resolverService: defineArtifact(
       APPLICATION_ROOT,
       'services/resolveAuthorizedExecutableSubgraph.ts'
@@ -38,6 +42,7 @@ export const EXECUTABLE_SUBGRAPH_RESOLUTION_COMPONENT = {
   },
   contracts: {
     canonicalBoundaryModule: '@dvt/contracts',
+    previewSelectionFindingModule: './previewSelectionFinding.js',
     workspaceGraphDraftPortsModule: '../ports/workspaceGraphDraft.js',
   },
 } as const;

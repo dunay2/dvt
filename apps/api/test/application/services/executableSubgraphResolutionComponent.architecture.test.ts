@@ -28,11 +28,37 @@ describe('Executable-subgraph resolution component architecture', () => {
   it('states owned concern docblocks on resolver-owned modules', () => {
     for (const artifact of [
       artifacts.resolverService,
+      artifacts.previewSelectionFindingProducer,
       artifacts.previewUseCase,
       artifacts.plannerBackedUseCase,
     ]) {
       expect(artifact.hasOwnedConcernDocblock()).toBe(true);
     }
+  });
+
+  it('keeps structured finding production on preview-selection authorities only', () => {
+    for (const artifact of [artifacts.resolverService, artifacts.previewSelectionAuthority]) {
+      expect(
+        artifact.readSource().hasNamedImport({
+          importedName: 'buildPreviewSelectionRejection',
+          moduleSpecifier: contracts.previewSelectionFindingModule,
+        })
+      ).toBe(true);
+    }
+
+    const startRunSource = artifacts.plannerBackedUseCase.readSource();
+    expect(
+      startRunSource.hasNamedImport({
+        importedName: 'buildPreviewSelectionRejection',
+        moduleSpecifier: contracts.previewSelectionFindingModule,
+      })
+    ).toBe(false);
+    expect(
+      startRunSource.hasNamedImport({
+        importedName: 'ResolveAuthorizedPreviewSelectionService',
+        moduleSpecifier: './resolveAuthorizedPreviewSelection.js',
+      })
+    ).toBe(false);
   });
 
   it('keeps protected draft parsing and store access isolated to the resolver service', () => {

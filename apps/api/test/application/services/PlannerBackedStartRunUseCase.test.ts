@@ -3,6 +3,7 @@ import { PlannerFacade } from '@dvt/planner';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PlannerBackedStartRunUseCase } from '../../../src/application/services/PlannerBackedStartRunUseCase.js';
+import { buildPreviewSelectionRejection } from '../../../src/application/services/previewSelectionFinding.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
 
 const AUTHORIZED_CONTEXT = {
@@ -451,6 +452,48 @@ describe('PlannerBackedStartRunUseCase', () => {
     expect(delegate.execute).not.toHaveBeenCalled();
     expect(planStore.markStoredPlanArtifactValid).not.toHaveBeenCalled();
     expect(planStore.markStoredPlanArtifactInvalid).not.toHaveBeenCalled();
+  });
+
+  it('does not publish preview-selection findings through planner-backed StartRun', async () => {
+    const planner = { buildPlan: vi.fn() };
+    const planStore = {
+      storePlanArtifact: vi.fn(),
+      markStoredPlanArtifactValid: vi.fn(),
+      markStoredPlanArtifactInvalid: vi.fn(),
+    };
+    const delegate = { execute: vi.fn() };
+    const rejection = buildPreviewSelectionRejection({
+      requestId: AUTHORIZED_CONTEXT.requestId,
+      cause: 'dependency_gap',
+      reason: 'Selected closure is missing a dependency.',
+      subjects: [{ kind: 'node', id: 'model.orders' }],
+    });
+    const useCase = new PlannerBackedStartRunUseCase({
+      planner: planner as never,
+      planStore: planStore as never,
+      validator: { validatePlan: vi.fn() } as never,
+      delegate: delegate as never,
+      executableSubgraphResolver: {
+        execute: vi.fn(async () => ({ ok: false as const, rejection })),
+      } as never,
+    });
+
+    const result = await useCase.execute(PLANNER_COMMAND, AUTHORIZED_CONTEXT);
+
+    expect(result).toEqual({
+      ok: true,
+      value: {
+        kind: 'plan_rejected',
+        accepted: false,
+        code: 'REJECTED',
+        cause: 'dependency_gap',
+        reason: 'Selected closure is missing a dependency.',
+      },
+    });
+    expect(result).not.toHaveProperty('value.findings');
+    expect(planner.buildPlan).not.toHaveBeenCalled();
+    expect(planStore.storePlanArtifact).not.toHaveBeenCalled();
+    expect(delegate.execute).not.toHaveBeenCalled();
   });
 
   it('rethrows unexpected planner errors', async () => {

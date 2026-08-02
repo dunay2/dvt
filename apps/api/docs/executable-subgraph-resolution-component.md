@@ -2,7 +2,7 @@
 title: Executable-subgraph resolution component
 status: Active
 owner: apps/api
-last_reviewed: 2026-04-23
+last_reviewed: 2026-08-02
 ---
 
 # Executable-subgraph resolution component
@@ -41,6 +41,9 @@ It does **not** own:
 - `ResolveAuthorizedExecutableSubgraphService`
   Application service:
   `execute({ selection, graphSource? }, context)`
+- `buildPreviewSelectionRejection`
+  Pure producer that describes an existing fail-fast selection rejection as
+  one deterministic `PreviewSelectionFinding`; it does not evaluate selection.
 - `PreviewPlanUseCase`
   Uses the resolver before building a preview plan so preview compiles the
   selected closure only.
@@ -63,6 +66,9 @@ It does **not** own:
   explicit rejections, not fallback compile paths.
 - planRef-backed start-run bypasses this resolver intentionally because preview
   has already persisted the selected closure into a validated stored plan.
+- Preview-selection authorities emit one structured finding before plan build;
+  planner-backed StartRun preserves its existing `code/cause/reason` rejection
+  boundary and does not publish Preview findings or revalidate project revision.
 
 ## Component map
 
@@ -70,6 +76,7 @@ It does **not** own:
 flowchart LR
   Preview["PreviewPlanUseCase"] --> Resolver["ResolveAuthorizedExecutableSubgraphService"]
   StartRun["PlannerBackedStartRunUseCase"] --> Resolver
+  Resolver --> Finding["buildPreviewSelectionRejection"]
   Resolver --> Store["IWorkspaceGraphDraftStore.read(...)"]
   Resolver --> Planner["IPlanner.deriveExecutableSubgraph(...)"]
   Store --> Draft["WorkspaceGraphAuthoringDraft"]
@@ -98,7 +105,8 @@ sequenceDiagram
     Resolver-->>Caller: ok(selected closure)
   else missing node / dependency gap / cycle / mismatch
     Planner-->>Resolver: non-executable subgraph or mismatch
-    Resolver-->>Caller: rejected(reason, cause)
+    Resolver->>Resolver: describe one deterministic PreviewSelectionFinding
+    Resolver-->>Caller: rejected(reason, cause, finding)
   end
 ```
 
@@ -136,6 +144,8 @@ preview has already persisted valid selected-closure proof.
 ## Focused file map
 
 - `apps/api/src/application/services/resolveAuthorizedExecutableSubgraph.ts`
+- `apps/api/src/application/services/resolveAuthorizedPreviewSelection.ts`
+- `apps/api/src/application/services/previewSelectionFinding.ts`
 - `apps/api/src/application/services/PreviewPlanUseCase.ts`
 - `apps/api/src/application/services/PlannerBackedStartRunUseCase.ts`
 - `apps/api/src/modules/startRun/buildProtectedStartRunRuntime.ts`

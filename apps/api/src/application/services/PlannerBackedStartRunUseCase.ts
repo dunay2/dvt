@@ -216,7 +216,9 @@ function toPlanRejectedResult(rejection: ExecutableSubgraphSelectionRejection): 
       value: {
         kind: START_RUN_RESULT_KIND.planRejected,
         accepted: false,
-        ...rejection,
+        code: rejection.code,
+        reason: rejection.reason,
+        ...(rejection.cause === undefined ? {} : { cause: rejection.cause }),
       },
     },
   };

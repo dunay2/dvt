@@ -2,6 +2,7 @@ import { parsePlanRef, type ExecutionPlan } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { PreviewPlanUseCase } from '../../../src/application/services/PreviewPlanUseCase.js';
+import { buildPreviewSelectionRejection } from '../../../src/application/services/previewSelectionFinding.js';
 
 const PLAN_REF = parsePlanRef({
   uri: 'dvt-plan://plans/plan-1',
@@ -143,11 +144,12 @@ describe('PreviewPlanUseCase outcomes', () => {
   });
 
   it('returns selection-rejected without building or storing a plan', async () => {
-    const rejection = {
-      code: 'REJECTED' as const,
+    const rejection = buildPreviewSelectionRejection({
+      requestId: 'request-1',
       cause: 'dependency_gap',
       reason: 'Selected closure is missing a dependency.',
-    };
+      subjects: [{ kind: 'node', id: 'model.analytics.orders' }],
+    });
     const { useCase, planner, planStore } = createUseCase({
       previewSelectionResolver: {
         execute: vi.fn(async () => ({ ok: false as const, rejection })),
@@ -157,6 +159,7 @@ describe('PreviewPlanUseCase outcomes', () => {
     const result = await useCase.execute(COMMAND, CONTEXT);
 
     expect(result).toEqual({ kind: 'selection-rejected', rejection });
+    expect(JSON.stringify(result)).not.toMatch(/plan(Id|Version|Ref)/u);
     expect(planner.buildPlan).not.toHaveBeenCalled();
     expect(planStore.storePlanArtifact).not.toHaveBeenCalled();
   });
