@@ -48,7 +48,7 @@ export class CancelRunUseCase implements ICancelRunUseCase {
         throw providerFailure;
       }
 
-      const reconciledResult = resolveCancelDecision(command, reconciledStatus);
+      const reconciledResult = resolveReconciledCancelDecision(command, reconciledStatus);
       if (reconciledResult !== undefined) {
         return reconciledResult;
       }
@@ -57,6 +57,20 @@ export class CancelRunUseCase implements ICancelRunUseCase {
 
     return acceptedCancellation(command, 'requested');
   }
+}
+
+function resolveReconciledCancelDecision(
+  command: CancelRunCommand,
+  status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
+): CancelRunResult | undefined {
+  const decision = decideCancelRun(status);
+  if (decision.kind === 'settled') {
+    return acceptedCancellation(command, decision.disposition);
+  }
+  if (decision.kind === 'reject' && decision.reason === 'run_terminal') {
+    throw new RunControlUnavailableError('cancel', status.status, decision.reason);
+  }
+  return undefined;
 }
 
 function resolveCancelDecision(

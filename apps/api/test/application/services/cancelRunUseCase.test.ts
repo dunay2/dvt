@@ -26,32 +26,36 @@ const commandContext: AuthorizedCommandExecutionContext = {
   authorizedAt: new Date('2026-03-19T00:00:00Z'),
 };
 
+const RUN_METADATA = {
+  tenantId: 'tenant-a',
+  projectId: 'proj-1',
+  environmentId: 'env-1',
+  runId: 'run-1',
+  planId: 'plan-1',
+  planVersion: '1.0',
+  logicalAttemptId: 1,
+  providerRef: {
+    provider: 'temporal' as const,
+    tenantId: 'tenant-a',
+    namespace: 'default',
+    workflowId: 'wf-1',
+    runId: 'provider-run-1',
+  },
+};
+
+function createStateStore(): { getRunMetadataByRunId: ReturnType<typeof vi.fn> } {
+  return {
+    getRunMetadataByRunId: vi.fn().mockResolvedValue(RUN_METADATA),
+  };
+}
+
 describe('CancelRunUseCase', () => {
   it('maps cancel commands to engine.cancelRun', async () => {
     const engine = {
       cancelRun: vi.fn().mockResolvedValue(undefined),
       getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status: 'RUNNING' }),
     };
-    const stateStore = {
-      async getRunMetadataByRunId() {
-        return {
-          tenantId: 'tenant-a',
-          projectId: 'proj-1',
-          environmentId: 'env-1',
-          runId: 'run-1',
-          planId: 'plan-1',
-          planVersion: '1.0',
-          logicalAttemptId: 1,
-          providerRef: {
-            provider: 'temporal' as const,
-            tenantId: 'tenant-a',
-            namespace: 'default',
-            workflowId: 'wf-1',
-            runId: 'provider-run-1',
-          },
-        };
-      },
-    };
+    const stateStore = createStateStore();
 
     const useCase = new CancelRunUseCase(engine as never, stateStore as never);
 
@@ -94,24 +98,7 @@ describe('CancelRunUseCase', () => {
           ...(substatus === undefined ? {} : { substatus }),
         }),
       };
-      const stateStore = {
-        getRunMetadataByRunId: vi.fn().mockResolvedValue({
-          tenantId: 'tenant-a',
-          projectId: 'proj-1',
-          environmentId: 'env-1',
-          runId: 'run-1',
-          planId: 'plan-1',
-          planVersion: '1.0',
-          logicalAttemptId: 1,
-          providerRef: {
-            provider: 'temporal',
-            tenantId: 'tenant-a',
-            namespace: 'default',
-            workflowId: 'wf-1',
-            runId: 'provider-run-1',
-          },
-        }),
-      };
+      const stateStore = createStateStore();
 
       const useCase = new CancelRunUseCase(engine as never, stateStore as never);
 
@@ -131,24 +118,7 @@ describe('CancelRunUseCase', () => {
         .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
         .mockResolvedValueOnce({ runId: 'run-1', status: 'COMPLETED' }),
     };
-    const stateStore = {
-      getRunMetadataByRunId: vi.fn().mockResolvedValue({
-        tenantId: 'tenant-a',
-        projectId: 'proj-1',
-        environmentId: 'env-1',
-        runId: 'run-1',
-        planId: 'plan-1',
-        planVersion: '1.0',
-        logicalAttemptId: 1,
-        providerRef: {
-          provider: 'temporal',
-          tenantId: 'tenant-a',
-          namespace: 'default',
-          workflowId: 'wf-1',
-          runId: 'provider-run-1',
-        },
-      }),
-    };
+    const stateStore = createStateStore();
     const useCase = new CancelRunUseCase(engine as never, stateStore as never);
 
     await expect(
@@ -170,24 +140,7 @@ describe('CancelRunUseCase', () => {
         .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
         .mockResolvedValueOnce({ runId: 'run-1', status: 'CANCELLED' }),
     };
-    const stateStore = {
-      getRunMetadataByRunId: vi.fn().mockResolvedValue({
-        tenantId: 'tenant-a',
-        projectId: 'proj-1',
-        environmentId: 'env-1',
-        runId: 'run-1',
-        planId: 'plan-1',
-        planVersion: '1.0',
-        logicalAttemptId: 1,
-        providerRef: {
-          provider: 'temporal',
-          tenantId: 'tenant-a',
-          namespace: 'default',
-          workflowId: 'wf-1',
-          runId: 'provider-run-1',
-        },
-      }),
-    };
+    const stateStore = createStateStore();
     const useCase = new CancelRunUseCase(engine as never, stateStore as never);
 
     await expect(
@@ -195,39 +148,24 @@ describe('CancelRunUseCase', () => {
     ).resolves.toMatchObject({ accepted: true, disposition: 'already_cancelled' });
   });
 
-  it('preserves the provider failure when canonical state remains cancellable', async () => {
-    const providerFailure = new Error('temporal transport unavailable');
-    const engine = {
-      cancelRun: vi.fn().mockRejectedValue(providerFailure),
-      getRunStatus: vi
-        .fn()
-        .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
-        .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' }),
-    };
-    const stateStore = {
-      getRunMetadataByRunId: vi.fn().mockResolvedValue({
-        tenantId: 'tenant-a',
-        projectId: 'proj-1',
-        environmentId: 'env-1',
-        runId: 'run-1',
-        planId: 'plan-1',
-        planVersion: '1.0',
-        logicalAttemptId: 1,
-        providerRef: {
-          provider: 'temporal',
-          tenantId: 'tenant-a',
-          namespace: 'default',
-          workflowId: 'wf-1',
-          runId: 'provider-run-1',
-        },
-      }),
-    };
-    const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+  it.each(['RUNNING', 'PENDING'] as const)(
+    'preserves the provider failure when canonical state reconciles to %s',
+    async (reconciledStatus) => {
+      const providerFailure = new Error('temporal transport unavailable');
+      const engine = {
+        cancelRun: vi.fn().mockRejectedValue(providerFailure),
+        getRunStatus: vi
+          .fn()
+          .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
+          .mockResolvedValueOnce({ runId: 'run-1', status: reconciledStatus }),
+      };
+      const useCase = new CancelRunUseCase(engine as never, createStateStore() as never);
 
-    await expect(
-      useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
-    ).rejects.toBe(providerFailure);
-  });
+      await expect(
+        useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
+      ).rejects.toBe(providerFailure);
+    }
+  );
 
   it.each([
     ['PENDING', 'dispatch_pending'],
@@ -240,24 +178,7 @@ describe('CancelRunUseCase', () => {
         cancelRun: vi.fn(),
         getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status }),
       };
-      const stateStore = {
-        getRunMetadataByRunId: vi.fn().mockResolvedValue({
-          tenantId: 'tenant-a',
-          projectId: 'proj-1',
-          environmentId: 'env-1',
-          runId: 'run-1',
-          planId: 'plan-1',
-          planVersion: '1.0',
-          logicalAttemptId: 1,
-          providerRef: {
-            provider: 'temporal',
-            tenantId: 'tenant-a',
-            namespace: 'default',
-            workflowId: 'wf-1',
-            runId: 'provider-run-1',
-          },
-        }),
-      };
+      const stateStore = createStateStore();
       const useCase = new CancelRunUseCase(engine as never, stateStore as never);
 
       await expect(
