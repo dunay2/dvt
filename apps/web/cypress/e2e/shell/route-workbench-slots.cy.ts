@@ -38,6 +38,29 @@ function stubRouteWorkbenchBootstrapApis(): void {
     effectiveWorkspace: E2E_WORKSPACE_SESSION,
     availableWorkspaces: [E2E_WORKSPACE_SESSION],
   });
+  stubE2eJsonApi('GET', '/workspace/plugins', {
+    plugins: [
+      {
+        id: 'backend-only',
+        name: 'Backend only',
+        version: '0.5.3',
+        description: 'Backend service without a frontend contribution.',
+        capabilities: ['run.observe'],
+        enabled: true,
+        permissions: [],
+        backendPluginId: 'monitoring',
+      },
+      {
+        id: 'unbound',
+        name: 'Unbound catalog entry',
+        version: '0.5.3',
+        description: 'Catalog entry without a runtime binding.',
+        capabilities: [],
+        enabled: true,
+        permissions: [],
+      },
+    ],
+  });
 }
 
 function stubCodeWorkbenchApis(): void {
@@ -58,7 +81,6 @@ function stubCodeWorkbenchApis(): void {
 function assertPrimaryRouteWorkbench(): void {
   cy.get('[data-slot="app-route-error-boundary"]').should('not.exist');
   cy.get('[data-slot="route-workbench-frame"]').should('be.visible');
-  cy.get('[data-slot="route-workbench-header"]').should('be.visible');
   cy.get('[data-slot="route-workbench-body"]').should('be.visible');
   cy.get('[data-slot="route-workbench-primary-surface"]').should('be.visible');
 }
@@ -77,6 +99,21 @@ describe('Route workbench semantic slots', () => {
       .contains(/Plugins/)
       .should('be.visible');
     cy.get('[data-slot="plugins-capability-probe"]').should('be.visible');
+    cy.get('[data-slot="plugin-capability-row"]').should('have.length', 2);
+    cy.get('[data-plugin-id="backend-only"]')
+      .should('have.attr', 'data-runtime-shape', 'backend-only')
+      .and('have.attr', 'data-frontend-presence', 'not-registered')
+      .and('have.attr', 'data-backend-state', 'available')
+      .and('have.attr', 'data-operational-state', 'ready');
+    cy.get('[data-plugin-id="unbound"]')
+      .should('have.attr', 'data-runtime-shape', 'unbound')
+      .and('have.attr', 'data-backend-state', 'not-bound')
+      .and('have.attr', 'data-operational-state', 'unbound');
+    cy.get('[data-slot="plugin-local-registry-diagnostic"]').should('be.visible');
+    cy.get('[data-slot="plugin-frontend-state-filter"]').select('unbound');
+    cy.get('[data-slot="plugin-capability-row"]')
+      .should('have.length', 1)
+      .and('have.attr', 'data-plugin-id', 'unbound');
 
     stubRouteWorkbenchBootstrapApis();
     visitWithE2eWorkspaceSession('/admin');

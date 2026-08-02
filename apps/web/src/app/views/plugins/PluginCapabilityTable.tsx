@@ -338,6 +338,10 @@ export function PluginCapabilityTable(props: PluginCapabilityTableProps) {
                 key={row.entry.catalog.id}
                 data-slot="plugin-capability-row"
                 data-plugin-id={row.entry.catalog.id}
+                data-runtime-shape={row.readiness.runtimeShape}
+                data-frontend-presence={row.readiness.frontendPresence}
+                data-backend-state={row.readiness.backendState}
+                data-operational-state={row.readiness.operationalState}
                 onClick={() => setSelectedPluginId(row.entry.catalog.id)}
                 className={cn(
                   'grid min-w-[45rem] w-full grid-cols-[minmax(12rem,1.4fr)_7rem_7rem_7rem_5rem] gap-3 border-t border-(--border-default) px-3 py-3 text-left text-sm',
