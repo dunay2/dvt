@@ -46,4 +46,23 @@ describe('PostgresRunRecoveryCommandCoordinator', () => {
     expect(query).toHaveBeenCalledTimes(2);
     expect(release).toHaveBeenCalledOnce();
   });
+
+  it('discards the session when advisory unlock fails', async () => {
+    const unlockFailure = new Error('unlock interrupted');
+    const query = vi.fn().mockResolvedValueOnce({ rows: [] }).mockRejectedValueOnce(unlockFailure);
+    const release = vi.fn();
+    const coordinator = new PostgresRunRecoveryCommandCoordinator({
+      connect: vi.fn().mockResolvedValue({ query, release }),
+    } as never);
+
+    await expect(
+      coordinator.executeExclusive(
+        { tenantId: 'tenant-a', recoveryRunId: 'run-recovery-1' },
+        async () => 'accepted'
+      )
+    ).rejects.toThrow('unlock interrupted');
+
+    expect(release).toHaveBeenCalledOnce();
+    expect(release).toHaveBeenCalledWith(unlockFailure);
+  });
 });
