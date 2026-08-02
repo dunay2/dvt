@@ -2,7 +2,7 @@
 title: Screen Manuals And User Stories
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-07
+last_reviewed: 2026-08-02
 ---
 
 # Screen Manuals And User Stories
@@ -44,11 +44,11 @@ The user always understands:
 
 - Users should not see route-specific wiring differences between `mock` and
   `api`.
-- Main routes remain operable in both modes.
-- When an API-only capability is not implemented yet, the user gets an explicit
-  service error instead of silent fallback behavior.
-- Source import remains mock-capable, while API mode reports unimplemented
-  backend import support explicitly.
+- `api` is the canonical product runtime; `mock` remains an explicit isolated
+  test/demo posture and is not accepted as product evidence.
+- Source Import uses protected API rails for connection list/create/test,
+  provider-neutral object discovery, and registration. Backend rejection is
+  surfaced without silent fallback behavior.
 - The console no longer pretends mock log lines are real in `api` mode.
 - In `api` mode, the console empty state uses product wording about run events
   and explicitly states that live log streaming is not yet available.
@@ -66,36 +66,42 @@ flowchart LR
 
 ### User expectation
 
-Canvas is the main authoring and topology workspace.
+Canvas is the primary Process Map and authoring workspace for heterogeneous
+DVT+ graphs. dbt is the current native transformation vertical, not the whole
+product ontology.
 
 The user expects to:
 
 - inspect the graph;
-- open or hide explorer and inspector panels;
+- open Code, source import, project exploration, and node detail contextually
+  without replacing the Process Map;
 - request plan;
 - start a run;
 - understand visual overlays without changing graph truth accidentally.
 
 ### Current user journey
 
-Today the Canvas route behaves as one graph workbench with:
+The Canvas route behaves as one contextual graph workbench with:
 
-- explorer on the left when needed;
-- viewport in the center as the main interaction surface;
-- inspector on the right for selection-driven detail;
-- overlay toggles for impact, runtime, and lineage-oriented projection;
-- planning and run-start actions tied to the current graph context.
+- the Process Map as the persistent primary surface;
+- Code and node details opened contextually while the graph remains visible;
+- Source Import and project exploration opened on demand rather than as fixed
+  resource rails;
+- Log, Problems, Runs, and Preview retained in the bottom operational drawer;
+- Preview and run-start actions tied to the same authoritative persisted
+  preview and immutable `PlanRef`.
 
-This remediation does not change that journey. It hardens the route so loading,
-error, and persistence behavior become more deterministic without changing how
-the user moves through the workbench.
+This is the route model delivered by
+[US-F10.1](https://github.com/dunay2/dvt/issues/2102). Legacy peer workbench
+routes may preserve deep-link intent, but they do not own additional permanent
+work surfaces or a second graph model.
 
 ```mermaid
 flowchart LR
   Entry["Open /canvas"] --> Shell["Shell frame stays visible"]
-  Shell --> Explorer["Explorer optional"]
   Shell --> Viewport["Viewport primary surface"]
-  Shell --> Inspector["Inspector optional"]
+  Viewport --> Contextual["Code / source / node work context"]
+  Viewport --> Drawer["Log / Problems / Runs / Preview"]
 
   Viewport --> Overlay["Visual overlays only"]
   Viewport --> Plan["Plan from current selection"]

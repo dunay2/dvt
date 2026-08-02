@@ -2,7 +2,7 @@
 title: Canvas Component Map And Modernization Review
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-24
+last_reviewed: 2026-08-02
 planning_type: architecture
 ---
 
@@ -263,13 +263,18 @@ sequenceDiagram
   Wizard-->>Explorer: passive result summary until Done
 ```
 
-Current truth for the hard-cut branch:
+Current truth:
 
-- the active `api` authoring path hides `Add source` because backend source
-  import is not implemented yet
-- `mock` mode is not a substitute active-authoring path for Canvas
-- this section documents ownership and handoff semantics, not guaranteed
-  runtime availability in every mode
+- the active `api` authoring path exposes `Add source` only when route mutation
+  posture, a runtime plugin contribution, and the implemented protected
+  source-import transport capability all allow it
+- the API path owns connection list/create/test, provider-neutral object
+  discovery, and source registration; failures remain server-authored and
+  fail closed
+- `mock` mode is not a substitute active-authoring path or accepted product
+  proof for Canvas
+- this section documents ownership and handoff semantics; availability remains
+  capability- and context-dependent rather than mode folklore
 
 ## Startup Contract
 

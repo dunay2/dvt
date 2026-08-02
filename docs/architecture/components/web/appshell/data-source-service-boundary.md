@@ -2,7 +2,7 @@
 title: Data Source Service Boundary
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-22
+last_reviewed: 2026-08-02
 ---
 
 # Data Source Service Boundary
@@ -119,10 +119,15 @@ route:
 
 Current governed capability example:
 
-- `workspaceService.importSources()` is explicitly unavailable in `api` mode
-  until the backend endpoint exists
-- the Canvas route therefore must hide `Add data` in the active `api` path
-  instead of implying a missing button or failed wizard is a transient issue
+- `IWarehouseSourceImportPort` is a dedicated capability boundary rather than
+  part of the general workspace service;
+- its `api` adapter implements connection listing and creation, server-owned
+  connection probes, provider-neutral source-object discovery, and source
+  registration through protected runtime routes;
+- the Canvas route exposes `Add source` only when route mutation posture,
+  runtime plugin contribution, and transport capability all permit it;
+- rejected authorization, provider, catalog, or import requests remain typed
+  backend failures. The browser never substitutes mock data or fake success.
 
 ```mermaid
 sequenceDiagram
@@ -149,10 +154,10 @@ sequenceDiagram
 The route must consume explicit capability seams rather than infer them from
 copy or transport failures.
 
-| Mode   | Workspace adapter                      | `sourceImportAvailable` | Active Canvas authoring posture                           |
-| ------ | -------------------------------------- | ----------------------- | --------------------------------------------------------- |
-| `mock` | `createMockWorkspaceService()`         | `true`                  | blocked as canonical authoring runtime under the hard-cut |
-| `api`  | `createApiWorkspaceService(apiClient)` | `false`                 | active runtime if readiness passes, but import hidden     |
+| Mode   | Source-import adapter                     | `sourceImportAvailable` | Active Canvas authoring posture                                           |
+| ------ | ----------------------------------------- | ----------------------- | ------------------------------------------------------------------------- |
+| `mock` | explicit test/demo source-import adapter  | `true`                  | not accepted as canonical product proof                                   |
+| `api`  | `createApiWarehouseSourceImportPort(...)` | `true`                  | active when route posture and a runtime plugin contribution also allow it |
 
 Interpretation rule:
 
@@ -200,8 +205,9 @@ locally, including:
 For Canvas specifically, the boundary now governs two separate truths:
 
 - route startup still belongs to the Canvas route contract
-- source-import affordances must be driven by explicit workspace-service
-  capabilities, not by mode folklore or outdated copy
+- source-import affordances must be driven by the dedicated source-import
+  transport capability plus route and plugin posture, not by mode folklore or
+  outdated copy
 
 ## Explicit Non-Goals
 
