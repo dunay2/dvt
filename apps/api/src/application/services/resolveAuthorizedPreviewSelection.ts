@@ -8,11 +8,14 @@ import type {
   ExecutionSelection,
   GenericGraphNodeV1,
   GenericGraphSourceV1,
+  PlanAdmissionEvidence,
+  PlanAdmissionFindingSubject,
   PlanPreviewProvenance,
 } from '@dvt/contracts';
 
 import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js';
 
+import { buildPreviewSelectionRejection } from './previewSelectionFinding.js';
 import type { ProjectDbtGraphFromFilesUseCase } from './projectDbtGraphFromFilesUseCase.js';
 import type {
   ExecutableSubgraphSelectionRejection,
@@ -87,20 +90,40 @@ export class ResolveAuthorizedPreviewSelectionService {
     const environmentId = context.scope.environmentId?.value;
     if (projectId === undefined || environmentId === undefined) {
       return reject(
+        context.requestId,
         'authorized_scope_incomplete',
-        'Authorized scope is missing projectId or environmentId.'
+        'Authorized scope is missing projectId or environmentId.',
+        input.selection.nodeIds
       );
     }
     if (input.selection.mode !== 'explicit') {
       return reject(
+        context.requestId,
         'dbt_project_selection_mode_unsupported',
-        'File-authoritative dbt Preview requires an explicit resolved selection.'
+        'File-authoritative dbt Preview requires an explicit resolved selection.',
+        input.selection.nodeIds,
+        [
+          {
+            evidenceCode: 'selection_mode',
+            observedValue: input.selection.mode,
+            expectedValue: 'explicit',
+          },
+        ]
       );
     }
     if (!sameStringSet(input.selection.nodeIds, provenance.selectedUniqueIds)) {
       return reject(
+        context.requestId,
         'dbt_project_selection_provenance_mismatch',
-        'Execution selection must match the resource set bound into dbt Preview provenance.'
+        'Execution selection must match the resource set bound into dbt Preview provenance.',
+        [...input.selection.nodeIds, ...provenance.selectedUniqueIds],
+        [
+          {
+            evidenceCode: 'selection_matches_preview_provenance',
+            observedValue: false,
+            expectedValue: true,
+          },
+        ]
       );
     }
 
@@ -116,24 +139,53 @@ export class ResolveAuthorizedPreviewSelectionService {
       });
     } catch {
       return reject(
+        context.requestId,
         'dbt_project_preview_projection_unavailable',
-        'The authoritative dbt project projection could not be resolved.'
+        'The authoritative dbt project projection could not be resolved.',
+        input.selection.nodeIds,
+        [
+          {
+            evidenceCode: 'authoritative_project_projection_available',
+            observedValue: false,
+            expectedValue: true,
+            reference: { kind: 'project-revision', id: provenance.projectRoot },
+          },
+        ]
       );
     }
 
     const provenanceMismatch = findProvenanceMismatch(projection, provenance);
     if (provenanceMismatch !== null) {
-      return reject('dbt_project_preview_provenance_stale', provenanceMismatch);
+      return reject(
+        context.requestId,
+        'dbt_project_preview_provenance_stale',
+        provenanceMismatch.reason,
+        input.selection.nodeIds,
+        provenanceMismatch.evidence
+      );
     }
 
-    const canonicalGraph = buildAuthoritativeGraph(projection, provenance.selectedUniqueIds);
+    const canonicalGraph = buildAuthoritativeGraph(
+      projection,
+      provenance.selectedUniqueIds,
+      context.requestId
+    );
     if (!canonicalGraph.ok) {
       return canonicalGraph;
     }
     if (!sameGraphSource(input.graphSource, canonicalGraph.value)) {
       return reject(
+        context.requestId,
         'dbt_project_graph_source_mismatch',
-        'Browser graph semantics do not match the current authoritative dbt project projection.'
+        'Browser graph semantics do not match the current authoritative dbt project projection.',
+        input.selection.nodeIds,
+        [
+          {
+            evidenceCode: 'browser_graph_matches_authoritative_projection',
+            observedValue: false,
+            expectedValue: true,
+          },
+        ]
       );
     }
 
@@ -152,10 +204,15 @@ export class ResolveAuthorizedPreviewSelectionService {
   }
 }
 
+type ProvenanceMismatch = Readonly<{
+  reason: string;
+  evidence: readonly PlanAdmissionEvidence[];
+}>;
+
 function findProvenanceMismatch(
   projection: DbtProjectGraphProjection,
   provenance: DbtProjectFilesProvenance
-): string | null {
+): ProvenanceMismatch | null {
   const authority = projection.authorityBinding.authority;
   if (
     projection.authorityBinding.canvasId !== provenance.canvasId ||
@@ -163,7 +220,16 @@ function findProvenanceMismatch(
     authority.projectRoot !== provenance.projectRoot ||
     projection.projectRevision.projectRoot !== provenance.projectRoot
   ) {
-    return 'The active Canvas authority no longer matches the previewed dbt project.';
+    return {
+      reason: 'The active Canvas authority no longer matches the previewed dbt project.',
+      evidence: [
+        {
+          evidenceCode: 'canvas_authority_matches_preview_provenance',
+          observedValue: false,
+          expectedValue: true,
+        },
+      ],
+    };
   }
   if (
     projection.freshness !== 'fresh' ||
@@ -172,17 +238,68 @@ function findProvenanceMismatch(
     projection.analysisSha256 !== provenance.analysisSha256 ||
     projection.projectRevision.dbtVersion !== provenance.dbtVersion
   ) {
-    return 'The analyzed dbt project revision no longer matches the preview provenance.';
+    return {
+      reason: 'The analyzed dbt project revision no longer matches the preview provenance.',
+      evidence: [
+        {
+          evidenceCode: 'project_content_set_sha256',
+          observedValue: projection.projectRevision.contentSetSha256,
+          expectedValue: provenance.contentSetSha256,
+          reference: { kind: 'project-revision', id: provenance.projectRoot },
+        },
+        {
+          evidenceCode: 'project_analysis_sha256',
+          observedValue: projection.analysisSha256,
+          expectedValue: provenance.analysisSha256,
+          reference: { kind: 'project-revision', id: provenance.projectRoot },
+        },
+        {
+          evidenceCode: 'project_preview_capability',
+          observedValue: projection.capabilities.canPreview,
+          expectedValue: true,
+        },
+        {
+          evidenceCode: 'project_projection_freshness',
+          observedValue: projection.freshness,
+          expectedValue: 'fresh',
+        },
+      ],
+    };
   }
   if (!sameExecutionTarget(projection.executionTarget, provenance.executionTarget)) {
-    return 'The server-owned dbt execution target no longer matches the preview provenance.';
+    return {
+      reason: 'The server-owned dbt execution target no longer matches the preview provenance.',
+      evidence: [
+        {
+          evidenceCode: 'execution_target_match',
+          observedValue: false,
+          expectedValue: true,
+        },
+        {
+          evidenceCode: 'execution_target_provider',
+          observedValue: projection.executionTarget?.provider ?? 'unavailable',
+          expectedValue: provenance.executionTarget.provider,
+        },
+        {
+          evidenceCode: 'execution_target_adapter',
+          observedValue: projection.executionTarget?.adapter ?? 'unavailable',
+          expectedValue: provenance.executionTarget.adapter,
+        },
+        {
+          evidenceCode: 'execution_target_name',
+          observedValue: projection.executionTarget?.targetName ?? 'unavailable',
+          expectedValue: provenance.executionTarget.targetName,
+        },
+      ],
+    };
   }
   return null;
 }
 
 function buildAuthoritativeGraph(
   projection: DbtProjectGraphProjection,
-  selectedUniqueIds: readonly string[]
+  selectedUniqueIds: readonly string[],
+  requestId: string
 ): { readonly ok: true; readonly value: GenericGraphSourceV1 } | PreviewSelectionRejection {
   const nodeById = new Map(projection.nodes.map((node) => [node.uniqueId, node]));
   const selectedIdSet = new Set(selectedUniqueIds);
@@ -191,8 +308,19 @@ function buildAuthoritativeGraph(
     const node = nodeById.get(nodeId);
     if (node === undefined || !(node.resourceType in EXECUTABLE_RESOURCE)) {
       return reject(
+        requestId,
         'dbt_project_selected_resource_not_executable',
-        `Selected dbt resource ${nodeId} is missing or is not executable.`
+        `Selected dbt resource ${nodeId} is missing or is not executable.`,
+        [nodeId],
+        [
+          {
+            evidenceCode: 'selected_resource_executable',
+            observedValue: false,
+            expectedValue: true,
+            subject: { kind: 'resource', id: nodeId },
+          },
+        ],
+        'resource'
       );
     }
   }
@@ -214,8 +342,19 @@ function buildAuthoritativeGraph(
     );
     if (missingDependency !== undefined) {
       return reject(
+        requestId,
         'dbt_project_dependency_gap',
-        `Selected dbt resource ${nodeId} is missing executable dependency ${missingDependency}.`
+        `Selected dbt resource ${nodeId} is missing executable dependency ${missingDependency}.`,
+        [nodeId, missingDependency],
+        [
+          {
+            evidenceCode: 'executable_dependency_selected',
+            observedValue: false,
+            expectedValue: true,
+            subject: { kind: 'resource', id: missingDependency },
+          },
+        ],
+        'resource'
       );
     }
 
@@ -307,9 +446,26 @@ function compareStrings(left: string, right: string): number {
   return left.localeCompare(right);
 }
 
-function reject(cause: string, reason: string): PreviewSelectionRejection {
+function reject(
+  requestId: string,
+  cause: string,
+  reason: string,
+  subjectIds: readonly string[],
+  evidence: readonly PlanAdmissionEvidence[] = [],
+  subjectKind: PlanAdmissionFindingSubject['kind'] = 'selection'
+): PreviewSelectionRejection {
+  const subjects: readonly PlanAdmissionFindingSubject[] = subjectIds.map((id) => ({
+    kind: subjectKind,
+    id,
+  }));
   return {
     ok: false,
-    rejection: { code: 'REJECTED', cause, reason },
+    rejection: buildPreviewSelectionRejection({
+      requestId,
+      cause,
+      reason,
+      subjects,
+      evidence,
+    }),
   };
 }

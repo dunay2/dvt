@@ -202,8 +202,63 @@ describe('ResolveAuthorizedPreviewSelectionService', () => {
       )
     ).resolves.toMatchObject({
       ok: false,
-      rejection: { cause: 'dbt_project_preview_provenance_stale' },
+      rejection: {
+        cause: 'dbt_project_preview_provenance_stale',
+        findings: [
+          {
+            phase: 'preview-selection',
+            requestId: 'req-1',
+            remediationCode: 'REGENERATE_PREVIEW',
+            evidence: expect.arrayContaining([
+              expect.objectContaining({ evidenceCode: 'project_content_set_sha256' }),
+            ]),
+          },
+        ],
+      },
     });
+  });
+
+  it('reports target mismatch without exposing credential references', async () => {
+    const { service } = buildService(
+      buildProjection({
+        executionTarget: {
+          ...PROVENANCE.executionTarget,
+          credentialRef: 'env:SERVER_SECRET_PROFILE',
+        },
+      })
+    );
+
+    const result = await service.execute(
+      {
+        selection: parseExecutionSelection({ mode: 'explicit', nodeIds: [MODEL_ID] }),
+        graphSource: GRAPH_SOURCE,
+        provenance: {
+          ...PROVENANCE,
+          executionTarget: {
+            ...PROVENANCE.executionTarget,
+            credentialRef: 'env:CLIENT_SECRET_PROFILE',
+          },
+        },
+      },
+      buildContext()
+    );
+
+    expect(result).toMatchObject({
+      ok: false,
+      rejection: {
+        cause: 'dbt_project_preview_provenance_stale',
+        findings: [
+          {
+            remediationCode: 'REGENERATE_PREVIEW',
+            evidence: expect.arrayContaining([
+              expect.objectContaining({ evidenceCode: 'execution_target_match' }),
+            ]),
+          },
+        ],
+      },
+    });
+    expect(JSON.stringify(result)).not.toContain('SERVER_SECRET_PROFILE');
+    expect(JSON.stringify(result)).not.toContain('CLIENT_SECRET_PROFILE');
   });
 
   it('rejects browser graph semantics that differ from the authoritative dbt projection', async () => {

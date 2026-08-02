@@ -112,12 +112,21 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
       }
     );
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       ok: false,
       rejection: {
         code: 'REJECTED',
         cause: 'authorized_scope_incomplete',
         reason: 'Authorized scope is missing projectId or environmentId.',
+        findings: [
+          {
+            phase: 'preview-selection',
+            code: 'REJECTED',
+            cause: 'authorized_scope_incomplete',
+            requestId: 'req-1',
+            remediationCode: 'REQUEST_AUTHORIZED_SCOPE',
+          },
+        ],
       },
     });
     expect(read).not.toHaveBeenCalled();
@@ -157,12 +166,21 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
       buildContext()
     );
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       ok: false,
       rejection: {
         code: 'REJECTED',
         cause: 'dependency_gap',
         reason: 'transform-node requires source-node to be selected.',
+        findings: [
+          {
+            phase: 'preview-selection',
+            code: 'REJECTED',
+            cause: 'dependency_gap',
+            requestId: 'req-1',
+            remediationCode: 'REDUCE_OR_REPAIR_SELECTION',
+          },
+        ],
       },
     });
     expect(planner.deriveExecutableSubgraph).toHaveBeenCalledTimes(1);
@@ -364,13 +382,23 @@ describe('ResolveAuthorizedExecutableSubgraphService', () => {
       buildContext()
     );
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       ok: false,
       rejection: {
         code: 'REJECTED',
         cause: 'graph_source_selection_mismatch',
         reason:
           'graphSource nodes must match the planner-derived executable subgraph for the selection.',
+        findings: [
+          {
+            phase: 'preview-selection',
+            requestId: 'req-1',
+            remediationCode: 'REGENERATE_PREVIEW',
+            evidence: expect.arrayContaining([
+              expect.objectContaining({ evidenceCode: 'graph_source_node_count' }),
+            ]),
+          },
+        ],
       },
     });
   });

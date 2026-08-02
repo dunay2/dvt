@@ -7,8 +7,8 @@ import type {
   ExecutionSelection,
   GenericGraphSourceV1,
   IPlanner,
-  PlanAdmissionFindingCollection,
-  PreviewSelectionFinding,
+  PlanAdmissionEvidence,
+  PlanAdmissionFindingSubject,
   WorkspaceGraphAuthoringDraft,
 } from '@dvt/contracts';
 import { WorkspaceGraphAuthoringDraftSchema } from '@dvt/contracts';
@@ -17,13 +17,12 @@ import type { AuthorizedCommandExecutionContext } from '../ports/authContract.js
 import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js';
 import { WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION } from '../ports/workspaceGraphDraft.js';
 
-export interface ExecutableSubgraphSelectionRejection {
-  readonly code: 'REJECTED';
-  readonly reason: string;
-  readonly cause: string;
-  /** Populated by the preview-selection finding producer in TASK-F6.2B. */
-  readonly findings?: PlanAdmissionFindingCollection<PreviewSelectionFinding> | undefined;
-}
+import {
+  buildPreviewSelectionRejection,
+  type ExecutableSubgraphSelectionRejection,
+} from './previewSelectionFinding.js';
+
+export type { ExecutableSubgraphSelectionRejection } from './previewSelectionFinding.js';
 
 type ExecutableSubgraphResolution =
   | {
@@ -56,8 +55,10 @@ export class ResolveAuthorizedExecutableSubgraphService {
     const environmentId = context.scope.environmentId?.value;
     if (projectId === undefined || environmentId === undefined) {
       return reject(
+        context.requestId,
         'authorized_scope_incomplete',
-        'Authorized scope is missing projectId or environmentId.'
+        'Authorized scope is missing projectId or environmentId.',
+        input.selection.nodeIds
       );
     }
 
@@ -68,14 +69,25 @@ export class ResolveAuthorizedExecutableSubgraphService {
     });
     if (stored === null) {
       return reject(
+        context.requestId,
         'workspace_graph_draft_not_found',
-        'Protected workspace graph draft was not found for the authorized scope.'
+        'Protected workspace graph draft was not found for the authorized scope.',
+        input.selection.nodeIds
       );
     }
     if (stored.schemaVersion !== WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION) {
       return reject(
+        context.requestId,
         'workspace_graph_draft_unsupported_schema_version',
-        `Protected workspace graph draft schema version ${stored.schemaVersion} is not supported.`
+        `Protected workspace graph draft schema version ${stored.schemaVersion} is not supported.`,
+        input.selection.nodeIds,
+        [
+          {
+            evidenceCode: 'workspace_graph_draft_schema_version',
+            observedValue: stored.schemaVersion,
+            expectedValue: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
+          },
+        ]
       );
     }
 
@@ -91,16 +103,28 @@ export class ResolveAuthorizedExecutableSubgraphService {
       });
     } catch {
       return reject(
+        context.requestId,
         'workspace_graph_draft_corrupt_payload',
-        'Protected workspace graph draft payload failed semantic validation.'
+        'Protected workspace graph draft payload failed semantic validation.',
+        input.selection.nodeIds
       );
     }
 
     if (!executableSubgraph.executable) {
       const firstDiagnostic = executableSubgraph.diagnostics[0];
       return reject(
+        context.requestId,
         firstDiagnostic?.code ?? 'unsupported_selection_mode',
-        firstDiagnostic?.message ?? 'Execution selection is not executable for the protected draft.'
+        firstDiagnostic?.message ??
+          'Execution selection is not executable for the protected draft.',
+        input.selection.nodeIds,
+        [
+          {
+            evidenceCode: 'planner_selection_executable',
+            observedValue: false,
+            expectedValue: true,
+          },
+        ]
       );
     }
 
@@ -117,8 +141,18 @@ export class ResolveAuthorizedExecutableSubgraphService {
         sourceNodeIds.some((nodeId, index) => nodeId !== selectedNodeIds[index])
       ) {
         return reject(
+          context.requestId,
           'graph_source_selection_mismatch',
-          'graphSource nodes must match the planner-derived executable subgraph for the selection.'
+          'graphSource nodes must match the planner-derived executable subgraph for the selection.',
+          input.selection.nodeIds,
+          [
+            {
+              evidenceCode: 'graph_source_node_count',
+              observedValue: sourceNodeIds.length,
+              expectedValue: selectedNodeIds.length,
+              unit: 'nodes',
+            },
+          ]
         );
       }
     }
@@ -156,13 +190,25 @@ function projectExecutionDependencyDraft(
   };
 }
 
-function reject(cause: string, reason: string): ExecutableSubgraphResolution {
+function reject(
+  requestId: string,
+  cause: string,
+  reason: string,
+  selectedNodeIds: readonly string[],
+  evidence: readonly PlanAdmissionEvidence[] = []
+): ExecutableSubgraphResolution {
+  const subjects: readonly PlanAdmissionFindingSubject[] = selectedNodeIds.map((id) => ({
+    kind: 'node',
+    id,
+  }));
   return {
     ok: false,
-    rejection: {
-      code: 'REJECTED',
+    rejection: buildPreviewSelectionRejection({
+      requestId,
       cause,
       reason,
-    },
+      subjects,
+      evidence,
+    }),
   };
 }
