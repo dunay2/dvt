@@ -12564,7 +12564,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx",
-      "sourceContentSha256": "34a3fc1c0c436dbc26876b8d496525f5445df09734102f04098016e0c9254a8d",
+      "sourceContentSha256": "8cc833fa5b46e0035e63275305e1a7e24ed714f8adfc334489f3f52c1c49c91f",
       "rawRail": {
         "name": "InspectCanvasNodeProperties",
         "type": "query",
