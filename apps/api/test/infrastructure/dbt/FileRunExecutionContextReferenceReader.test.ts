@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { URL } from 'node:url';
@@ -9,7 +9,10 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { FileDbtRunExecutionContextWriter } from '../../../src/infrastructure/dbt/FileDbtRunExecutionContextWriter.js';
 import { FileRunExecutionContextInheritanceWriter } from '../../../src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.js';
 import { FileRunExecutionContextReferenceReader } from '../../../src/infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
-import { resolveRunExecutionContextArtifactPath } from '../../../src/infrastructure/dbt/runExecutionContextArtifactPath.js';
+import {
+  resolveRunExecutionContextArtifactPath,
+  resolveRunExecutionContextReferenceArtifactPath,
+} from '../../../src/infrastructure/dbt/runExecutionContextArtifactPath.js';
 
 let root: string | undefined;
 
@@ -92,6 +95,44 @@ describe('FileRunExecutionContextReferenceReader', () => {
         sourceRef: written.ref,
       })
     ).rejects.toThrow('digest verification');
+  });
+
+  it('rejects reference metadata that does not describe the verified context bytes', async () => {
+    root = await mkdtemp(path.join(tmpdir(), 'dvt-run-context-reader-'));
+    const store = { kind: 'file' as const, rootPath: root };
+    const context = parseRunExecutionContext({
+      schemaVersion: 'v1.0',
+      planId: 'a'.repeat(64),
+      planVersion: '1.0',
+      planSha256: 'b'.repeat(64),
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'dev',
+      targetAdapter: 'temporal',
+      createdAtIso: '2026-07-15T00:00:00.000Z',
+      createdBy: 'principal-1',
+      pluginCompatibilityFingerprint: 'c'.repeat(64),
+      pluginContexts: {},
+    });
+    const written = await new FileDbtRunExecutionContextWriter(store).write({
+      runId: 'run-source-1',
+      context,
+    });
+    if (!written.ok) throw new Error('Expected an immutable run-context reference.');
+    const referencePath = resolveRunExecutionContextReferenceArtifactPath({
+      rootPath: root,
+      tenantId: 'tenant-1',
+      runId: 'run-source-1',
+    });
+    const reference = JSON.parse(await readFile(referencePath, 'utf8')) as Record<string, unknown>;
+    await writeFile(referencePath, JSON.stringify({ ...reference, planVersion: '2.0' }));
+
+    await expect(
+      new FileRunExecutionContextReferenceReader(store).read({
+        tenantId: 'tenant-1',
+        runId: 'run-source-1',
+      })
+    ).resolves.toEqual({ kind: 'untrusted', reason: 'reference_mismatch' });
   });
 
   it('marks pre-reference context artifacts as untrusted instead of minting a digest', async () => {

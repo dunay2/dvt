@@ -4,7 +4,11 @@ import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
 import type { DbtProjectBundleArtifactStore } from '@dvt/artifacts';
-import { parseRunExecutionContextRef, type RunExecutionContextRef } from '@dvt/contracts';
+import {
+  parseRunExecutionContext,
+  parseRunExecutionContextRef,
+  type RunExecutionContextRef,
+} from '@dvt/contracts';
 
 import type {
   IRunExecutionContextReferenceReader,
@@ -57,6 +61,10 @@ export class FileRunExecutionContextReferenceReader implements IRunExecutionCont
     if (createHash('sha256').update(contextBytes).digest('hex') !== ref.sha256) {
       return { kind: 'untrusted', reason: 'digest_mismatch' };
     }
+    const context = parseStoredContext(contextBytes);
+    if (context === undefined || !referenceDescribesContext(ref, context)) {
+      return { kind: 'untrusted', reason: 'reference_mismatch' };
+    }
     return { kind: 'trusted', ref };
   }
 }
@@ -67,6 +75,28 @@ function parseStoredReference(bytes: Buffer): RunExecutionContextRef | undefined
   } catch {
     return undefined;
   }
+}
+
+function parseStoredContext(
+  bytes: Buffer
+): ReturnType<typeof parseRunExecutionContext> | undefined {
+  try {
+    return parseRunExecutionContext(JSON.parse(bytes.toString('utf8')));
+  } catch {
+    return undefined;
+  }
+}
+
+function referenceDescribesContext(
+  ref: RunExecutionContextRef,
+  context: ReturnType<typeof parseRunExecutionContext>
+): boolean {
+  return (
+    ref.schemaVersion === context.schemaVersion &&
+    ref.planId === context.planId &&
+    ref.planVersion === context.planVersion &&
+    ref.pluginCompatibilityFingerprint === context.pluginCompatibilityFingerprint
+  );
 }
 
 async function readOptionalFile(artifactPath: string): Promise<Buffer | undefined> {
