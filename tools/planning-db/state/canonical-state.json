@@ -362,6 +362,229 @@
       "createdAt": "2026-07-31T11:29:35.729Z"
     },
     {
+      "railId": "local#E-CANVAS-UXDB-COMPONENT-SLICES-1#query#rendercanvascontextualgraphsurface",
+      "featureId": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
+      "mechanizationStatus": "implemented",
+      "railName": "RenderCanvasContextualGraphSurface",
+      "normalizedRailName": "rendercanvascontextualgraphsurface",
+      "railType": "query",
+      "dddOwner": "CanvasViewportSurfaceView",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportSurfaceView",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildNodeDecorations",
+        "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts#useCanvasOverlayModel",
+        "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts#buildCanvasNodeInteractionPresentation",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeWorkspaceGraphAuthoringDraft"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportSurfaceView",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildNodeDecorations",
+        "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts#useCanvasOverlayModel",
+        "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts#buildCanvasNodeInteractionPresentation",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeWorkspaceGraphAuthoringDraft"
+      ],
+      "documentationRefs": [
+        "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+        "docs/architecture/components/web/frontend-component-inventory.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+        "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+        "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+        "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+        "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+        "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+      ],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+      "sourceContentSha256": "050fc4f93f177c9cf82c74378c374c333053fc01be1eb9e25cd069f2d52f4ae3",
+      "rawRail": {
+        "name": "RenderCanvasContextualGraphSurface",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CanvasViewportSurfaceView"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "CanvasViewportSurfaceView",
+            "path": "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "buildOverlayContext",
+            "path": "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "buildNodeDecorations",
+            "path": "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "useCanvasOverlayModel",
+            "path": "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "buildCanvasNodeInteractionPresentation",
+            "path": "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          },
+          {
+            "name": "buildLargeWorkspaceGraphAuthoringDraft",
+            "path": "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+            "cqRails": ["RenderCanvasContextualGraphSurface"],
+            "dddOwner": "CanvasViewportSurfaceView",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+            ],
+            "fowlerSignals": [
+              "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
+        "userStories": ["https://github.com/dunay2/dvt/issues/188"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasViewportSurfaceView",
+          "CanvasImpactProjection",
+          "WorkspaceGraphDraftFixture"
+        ],
+        "fowlerSignals": [
+          "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "rendercanvascontextualgraphsurface-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+              "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+              "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+              "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+              "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+              "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+            ],
+            "expectedFailure": "The active Canvas render rail references a retired projection or lacks canonical 1,000-node evidence."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-fowler-canon-component.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RenderCanvasContextualGraphSurface",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CanvasViewportSurfaceView"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/188",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasImpactOverlay.ts",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "revision": 6,
+      "createdBy": "codex",
+      "createdAt": "2026-07-30T21:37:21.767Z"
+    },
+    {
       "railId": "local#E-WEB-DBT-ATOMIC-PUBLICATION-1#command#publishgraphdbtworkspaceartifacts",
       "featureId": "E-WEB-DBT-ATOMIC-PUBLICATION-1",
       "mechanizationStatus": "implemented",
@@ -23425,6 +23648,97 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-02T08:33:50.845Z"
+    },
+    {
+      "operationId": "2a8aed45-ffe1-433d-975c-ca8b7cf9d529",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:E-CANVAS-UXDB-COMPONENT-SLICES-1:query:rendercanvascontextualgraphsurface:5:f46c177eececf59e",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#E-CANVAS-UXDB-COMPONENT-SLICES-1#query#rendercanvascontextualgraphsurface",
+      "sourcePath": "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+      "sourceContentSha256": "050fc4f93f177c9cf82c74378c374c333053fc01be1eb9e25cd069f2d52f4ae3",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+        "dddOwner": "CanvasViewportSurfaceView",
+        "railName": "RenderCanvasContextualGraphSurface",
+        "railType": "query",
+        "featureId": "E-CANVAS-UXDB-COMPONENT-SLICES-1",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasOverlayContext.test.ts src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+        "sourceRef": "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasOverlayContext.test.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/188"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "domainObjects": [
+          "CanvasViewportSurfaceView",
+          "CanvasImpactProjection",
+          "WorkspaceGraphDraftFixture"
+        ],
+        "fowlerSignals": [
+          "One canonical Canvas projection owns impact traversal and its large-graph evidence."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-fowler-canon-component.md"
+        ],
+        "expectedFailure": "The active Canvas render rail references a retired projection or lacks canonical 1,000-node evidence.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/CanvasViewport.architecture.test.ts src/app/services/workspace/workspaceGraphDraftFixtureBoundaries.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/188",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx#CanvasViewportSurfaceView",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildNodeDecorations",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts#useCanvasOverlayModel",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts#buildCanvasNodeInteractionPresentation",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts#buildLargeWorkspaceGraphAuthoringDraft"
+        ],
+        "normalizedRailName": "rendercanvascontextualgraphsurface",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "050fc4f93f177c9cf82c74378c374c333053fc01be1eb9e25cd069f2d52f4ae3",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "apps/web/src/app/views/canvas/canvasNodeInteractionPresentation.ts",
+          "apps/web/src/app/services/workspace/workspaceGraphDraftAuthoring.test.fixtures.ts",
+          "apps/web/src/app/views/canvas/canvasGraphUtils.largeGraph.test.ts",
+          "apps/web/cypress/e2e/canvas/canvas-ready-node-authoring.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasImpactOverlay.ts",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-02T09:00:04.401Z"
     }
   ]
 }
