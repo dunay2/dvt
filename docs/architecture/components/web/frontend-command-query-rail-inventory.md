@@ -2,7 +2,7 @@
 title: Frontend Command And Query Rail Inventory
 status: Active
 owner: Web / Architecture
-last_reviewed: 2026-06-02
+last_reviewed: 2026-08-02
 ---
 
 # Frontend Command And Query Rail Inventory
@@ -178,14 +178,21 @@ commands or queries are still needed for a mature end-to-end workflow.
 ### `SaveWorkspaceFileContent`
 
 - Type: command.
-- Status: `partial-ui`.
+- Status: `implemented-api`.
 - Owner: workspace file content aggregate.
-- Frontend surface: `IWorkspaceFileContentCommandPort.saveFileContent`.
+- Frontend surfaces:
+  - `IWorkspaceFileContentCommandPort.saveFileContent`;
+  - `useCodeWorkingTreeSync`;
+  - the contextual `CodeView` workbench.
 - Backend surface: `POST /workspace/files/:path`.
-- Gap: `CodeView` currently owns a route-local editable buffer and displays
-  that local-buffer posture, but it does not expose a save command that commits
-  editor changes through this rail.
-- Required frontend command: `SaveCodeWorkspaceFileBuffer`.
+- Synchronization rule: Monaco edits are revision-guarded and automatically
+  synchronized through this rail. Selection changes, contextual target
+  changes, preview handoff, and workbench close may request an explicit
+  `flush()`, but that operation only drains the same
+  `SaveWorkspaceFileContent` command; it is not a second product command.
+- Negative evidence: unchanged buffer no-op, stale revision conflict,
+  unsupported path, read-only workspace, API rejection, serialized edits while
+  a write is in flight, and persistence before contextual target changes.
 
 ### `GetWorkspaceFileHistory`
 
@@ -207,17 +214,6 @@ commands or queries are still needed for a mature end-to-end workflow.
 - Backend rails: `ListWorkspaceFiles` and `GetWorkspaceFileContent`.
 - Repetition risk: artifact preview must not invent a separate workspace-file
   catalog; it is a projection over file rails.
-
-### `SaveCodeWorkspaceFileBuffer`
-
-- Type: command.
-- Status: `gap-needed`.
-- Owner: Code workbench file editing.
-- Reuses backend rail: `SaveWorkspaceFileContent`.
-- Needed because: the route presents an editable Monaco buffer, but the user
-  cannot commit that buffer into workspace files.
-- Negative tests needed: unchanged buffer no-op, stale content, unsupported
-  path, read-only workspace, API rejection, and query invalidation after save.
 
 ## Workspace Diff And Plugin Catalog Rails
 
@@ -297,23 +293,25 @@ commands or queries are still needed for a mature end-to-end workflow.
 ### `CreateWarehouseConnection`
 
 - Type: command.
-- Status: `gap-needed`.
+- Status: `implemented-api`.
 - Owner: warehouse connection registry.
-- Needed because: the current frontend can list server-known connections, but
-  cannot create or authenticate a new source from user-provided connection
-  details.
-- Negative tests needed: invalid credentials, unauthorized tenant, duplicate
-  connection name, unsupported adapter, secret leakage, and failed audit write.
+- Frontend surface:
+  `IWarehouseSourceImportPort.createWarehouseConnection` and the Source Import
+  connection step.
+- Backend surface: `POST /workspace/warehouse/connections`.
+- Negative evidence: malformed or secret-bearing payload, unauthorized scope,
+  duplicate identity, failed provider probe, and stale workspace-file revision.
 
 ### `TestWarehouseConnection`
 
-- Type: query or command-probe.
-- Status: `gap-needed`.
+- Type: command-probe.
+- Status: `implemented-api`.
 - Owner: warehouse connection verification.
-- Needed because: a realistic source selection flow needs a governed connection
-  check before table import.
-- Rule: the probe must be server-owned; the browser must never fake a
-  successful login.
+- Frontend surface: `IWarehouseSourceImportPort.testWarehouseConnection` and
+  the Source Import connection step.
+- Backend surface: `POST /workspace/warehouse/connections/:connectionId/test`.
+- Rule: the probe is server-owned; the browser never fabricates a successful
+  result or receives credential material.
 
 ## Templates Workbench Rails
 
@@ -353,17 +351,22 @@ credentials, or define backend template contracts.
 - Frontend surface: `IPlansPort.importPlan`.
 - Backend surface: `POST /plans/import`.
 
-### `ValidateCanvasExecutionReadiness`
+### `ObservePlanRunReadiness`
 
 - Type: query.
-- Status: `gap-needed`.
-- Owner: Canvas execution readiness read model.
-- Needed because: Canvas currently derives plan readiness through local view
-  models and then relies on plan-preview rejection. A mature frontend should
-  expose a single readable readiness query that names missing source, transform,
-  sink, scope, artifact, and permission problems before opening the preview.
-- Candidate surfaces: `canvasPlanReadiness`, `transformationGraphValidation`,
-  and plan/run toolbar state.
+- Status: `implemented-local`.
+- Owner: `PlanRunReadinessReadModel`.
+- Frontend surfaces: `observePlanRunReadiness`, `deriveCanvasExecutionState`,
+  `PlanRunReadinessPanel`, Canvas toolbar posture, and the bottom operational
+  drawer.
+- Inputs: persisted preview identity, exact `PlanRef`, current graph signature,
+  execution strategy, authorization, adapter/capability posture, backpressure,
+  and the typed Preview outcome.
+- Output: one `ready | blocked` read model with canonical blockers and a
+  source-owned summary. Presentation must not derive a second readiness gate.
+- Negative evidence: missing, stale, unpersisted, or mismatched plan identity;
+  unauthorized run; unsupported capability; degraded adapter; backpressure;
+  `selection-rejected`; and `plan-invalid`.
 
 ## Run Rails
 
@@ -516,8 +519,9 @@ groups those rails by concern:
 5. Workspace file artifacts are a projection over file tree/content rails. Do
    not create a separate backend artifact catalog unless freshness, auth, or
    storage semantics differ materially.
-6. Code editing has an implemented file-save backend rail but a route-local
-   buffer UI. This is the most visible command gap for graph/code parity.
+6. Code editing uses a route-local working-tree buffer, but all automatic and
+   explicit flush paths converge on `SaveWorkspaceFileContent`; there is no
+   separate Save command or browser-owned persistence lifecycle.
 7. Older route-parity planning docs still describe diff/plugins/file-write as
    missing or unavailable in places. Current code and API route constants show
    several of those rails are now implemented.
@@ -526,19 +530,9 @@ groups those rails by concern:
 
 ## Commands And Queries Needed But Not Implemented
 
-The following rails are required for a mature frontend E2E and should be planned
+The following frontend rails remain unimplemented and require an owning issue
 before implementation:
 
-- `SelectWorkspaceScope` command: select an existing tenant/project/environment
-  scope explicitly.
-- `CreateWarehouseConnection` command: register a warehouse connection through
-  protected server authority.
-- `TestWarehouseConnection` query or command-probe: verify connection access
-  without leaking secrets or faking success in the browser.
-- `SaveCodeWorkspaceFileBuffer` command: commit Code route edits through
-  `SaveWorkspaceFileContent` and invalidate file/artifact/code graph queries.
-- `ValidateCanvasExecutionReadiness` query: expose graph, source, sink, scope,
-  artifact, and permission readiness before plan preview.
 - `CancelRun` command: frontend port and route action over the canonical
   backend cancel route.
 - `RecoverRun` command: frontend port and route action over the canonical
@@ -556,11 +550,15 @@ before implementation:
   existed before this file.
 - The web/API integration audit remains useful as history, but current API
   route constants show more implemented rails than its first gap posture.
-- The Code route copy truthfully says the buffer is local; the existence of
-  `SaveWorkspaceFileContent` means the product gap is now UI command wiring, not
-  backend absence.
-- Warehouse source import is server-backed for existing connections and table
-  import, but it is not a full user-created connection workflow.
+- Code working-tree synchronization, contextual flush, and Preview handoff all
+  reuse `SaveWorkspaceFileContent`; any inventory entry that introduces a
+  second Save command is drift.
+- Warehouse source import is server-backed for connection list/create/test,
+  provider-neutral object discovery, and source registration. Provider support
+  remains capability-dependent and must not be inferred from browser copy.
+- `ObservePlanRunReadiness` is the only Canvas plan/run readiness query;
+  `ValidateCanvasExecutionReadiness` is an obsolete proposed name, not an open
+  rail.
 - Admin roles/audit remain fail-closed at the frontend workspace admin port.
 
 ## Topology
