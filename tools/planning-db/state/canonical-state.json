@@ -15556,8 +15556,8 @@
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2103",
-      "sourceContentSha256": "77f69bd82a688f4576f8c2e90ce6ba7d3aa054393d405d990213de9b38479a9e",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
       "rawRail": {
         "name": "CancelRun",
         "type": "command",
@@ -15854,22 +15854,10 @@
             "patchSurfaces": [
               "apps/api/src/application/errors/runControlErrors.ts",
               "apps/api/src/application/ports/runtime.ts",
-              "apps/api/src/application/ports/runtime.ts",
-              "apps/api/src/application/ports/runtime.ts",
-              "apps/api/src/application/services/runControlPolicy.ts",
               "apps/api/src/application/services/runControlPolicy.ts",
               "apps/web/src/app/ports/runs.ts",
               "apps/web/src/app/services/runs/runControlCommandModel.ts",
-              "apps/web/src/app/services/runs/runControlCommandModel.ts",
-              "apps/web/src/app/services/runs/runControlCommandModel.ts",
-              "apps/web/src/app/services/runs/runControlCommandModel.ts",
               "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-              "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-              "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-              "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
-              "apps/web/src/app/views/runs/useRunControlCommands.ts",
-              "apps/web/src/app/views/runs/useRunControlCommands.ts",
-              "apps/web/src/app/views/runs/useRunControlCommands.ts",
               "apps/web/src/app/views/runs/useRunControlCommands.ts"
             ],
             "expectedFailure": "Repeated cancellation redispatches or terminal runs report false cancellation."
@@ -15907,7 +15895,7 @@
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:22.409Z"
     },
@@ -15979,8 +15967,8 @@
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2103",
-      "sourceContentSha256": "77f69bd82a688f4576f8c2e90ce6ba7d3aa054393d405d990213de9b38479a9e",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
       "rawRail": {
         "name": "RecoverRun",
         "type": "command",
@@ -16206,13 +16194,9 @@
             "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/errors/runControlErrors.ts",
-              "apps/api/src/application/errors/runControlErrors.ts",
-              "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
               "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
               "apps/api/src/application/services/recoverRunUseCase.ts",
               "apps/api/src/entrypoints/http/recoverRunRouteParser.ts",
-              "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
-              "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
               "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
               "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts",
               "apps/web/src/app/ports/runs.ts",
@@ -16258,7 +16242,7 @@
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:24.648Z"
     },
@@ -16343,8 +16327,8 @@
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2103",
-      "sourceContentSha256": "77f69bd82a688f4576f8c2e90ce6ba7d3aa054393d405d990213de9b38479a9e",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
       "rawRail": {
         "name": "GetRunStatus",
         "type": "query",
@@ -16668,24 +16652,12 @@
             "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/services/runs/runsApiSnapshotMapper.test.ts --config vitest.unit.config.ts",
             "patchSurfaces": [
               "apps/api/src/application/ports/runtime.ts",
-              "apps/api/src/application/ports/runtime.ts",
-              "apps/api/src/application/ports/runtime.ts",
               "apps/api/src/application/services/runControlPolicy.ts",
               "apps/web/src/app/components/runs/RunControlActions.tsx",
-              "apps/web/src/app/components/runs/RunControlActions.tsx",
-              "apps/web/src/app/components/runs/RunControlActions.tsx",
-              "apps/web/src/app/components/runs/runControlCopy.ts",
-              "apps/web/src/app/components/runs/runControlCopy.ts",
-              "apps/web/src/app/components/runs/runControlCopy.ts",
-              "apps/web/src/app/components/runs/runControlCopy.ts",
               "apps/web/src/app/components/runs/runControlCopy.ts",
               "apps/web/src/app/components/shell/OperationalDrawerPanelPrimitives.tsx",
               "apps/web/src/app/components/shell/operationalDrawerContributionStore.ts",
               "apps/web/src/app/ports/runs.ts",
-              "apps/web/src/app/ports/runs.ts",
-              "apps/web/src/app/ports/runs.ts",
-              "apps/web/src/app/services/runs/runsApiDecoders.ts",
-              "apps/web/src/app/services/runs/runsApiDecoders.ts",
               "apps/web/src/app/services/runs/runsApiDecoders.ts",
               "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts"
             ],
@@ -16726,7 +16698,7 @@
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:26.844Z"
     },
@@ -16738,7 +16710,7 @@
       "normalizedRailName": "listruns",
       "railType": "query",
       "dddOwner": "RunOperationalReadModel",
-      "railStatus": "implemented",
+      "railStatus": "deprecated",
       "symbolRefs": [
         "apps/web/src/app/views/runs/RunListStateView.tsx#RunListStateView"
       ],
@@ -16763,12 +16735,12 @@
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2103",
-      "sourceContentSha256": "77f69bd82a688f4576f8c2e90ce6ba7d3aa054393d405d990213de9b38479a9e",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
       "rawRail": {
         "name": "ListRuns",
         "type": "query",
-        "status": "implemented",
+        "status": "deprecated",
         "dddOwner": "RunOperationalReadModel"
       },
       "rawManifest": {
@@ -16823,7 +16795,7 @@
           {
             "name": "ListRuns",
             "type": "query",
-            "status": "implemented",
+            "status": "deprecated",
             "dddOwner": "RunOperationalReadModel"
           }
         ],
@@ -16838,7 +16810,7 @@
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:29.025Z"
     },
@@ -16887,8 +16859,8 @@
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/2103",
-      "sourceContentSha256": "77f69bd82a688f4576f8c2e90ce6ba7d3aa054393d405d990213de9b38479a9e",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
       "rawRail": {
         "name": "RunEventFeed",
         "type": "query",
@@ -17015,12 +16987,6 @@
             "redTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/runEventFeedQuery.test.tsx --config vitest.presentation.config.ts",
             "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/runEventFeedQuery.test.tsx --config vitest.presentation.config.ts",
             "patchSurfaces": [
-              "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-              "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-              "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-              "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-              "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-              "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
               "apps/web/cypress/e2e/runs/run-controls-live.cy.ts"
             ],
             "expectedFailure": "Cancelled runs keep polling or durable cancellation evidence is absent from the browser flow."
@@ -17052,7 +17018,7 @@
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:31.157Z"
     },
@@ -26748,6 +26714,431 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-02T14:27:31.157Z"
+    },
+    {
+      "operationId": "fb4e88d3-7191-44da-b0f9-a8df6ebdb9a2",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:US-F4-3-RUN-CONTROLS:command:cancelrun:0:75ca68dcdd4862c8",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#cancelrun",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/cancelRunUseCase.test.ts",
+        "dddOwner": "RunCommandApplicationService",
+        "railName": "CancelRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/cancelRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "unitTests": [
+          "apps/api/test/application/services/cancelRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
+        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "domainObjects": ["RunCancellationIntent"],
+        "fowlerSignals": [
+          "Cancellation is idempotent and server-owned; Web renders receipts without mutating lifecycle truth."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Repeated cancellation redispatches or terminal runs report false cancellation.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        ],
+        "architectureGuards": [
+          "apps/api/test/application/services/cancelRunUseCase.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationRefs": [
+          "apps/api/src/application/errors/runControlErrors.ts#RunControlUnavailableError",
+          "apps/api/src/application/ports/runtime.ts#CancelRunDisposition",
+          "apps/api/src/application/ports/runtime.ts#CancelRunResult",
+          "apps/api/src/application/ports/runtime.ts#RUN_CONTROL_RESULT_CONTRACT_VERSION",
+          "apps/api/src/application/services/runControlPolicy.ts#CancelRunDecision",
+          "apps/api/src/application/services/runControlPolicy.ts#decideCancelRun",
+          "apps/web/src/app/ports/runs.ts#CancelRunReceipt",
+          "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandAction",
+          "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandFailure",
+          "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandOutcome",
+          "apps/web/src/app/services/runs/runControlCommandModel.ts#RunControlCommandRequest",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts#CANCEL_DISPOSITIONS",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts#invalidReceipt",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts#isNonBlankString",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts#parseCancelRunReceipt",
+          "apps/web/src/app/views/runs/useRunControlCommands.ts#RunControlCommandController",
+          "apps/web/src/app/views/runs/useRunControlCommands.ts#UseRunControlCommandsOptions",
+          "apps/web/src/app/views/runs/useRunControlCommands.ts#toError",
+          "apps/web/src/app/views/runs/useRunControlCommands.ts#useRunControlCommands"
+        ],
+        "normalizedRailName": "cancelrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/errors/runControlErrors.ts",
+          "apps/api/src/application/ports/runtime.ts",
+          "apps/api/src/application/ports/runtime.ts",
+          "apps/api/src/application/ports/runtime.ts",
+          "apps/api/src/application/services/runControlPolicy.ts",
+          "apps/api/src/application/services/runControlPolicy.ts",
+          "apps/web/src/app/ports/runs.ts",
+          "apps/web/src/app/services/runs/runControlCommandModel.ts",
+          "apps/web/src/app/services/runs/runControlCommandModel.ts",
+          "apps/web/src/app/services/runs/runControlCommandModel.ts",
+          "apps/web/src/app/services/runs/runControlCommandModel.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
+          "apps/web/src/app/views/runs/useRunControlCommands.ts",
+          "apps/web/src/app/views/runs/useRunControlCommands.ts",
+          "apps/web/src/app/views/runs/useRunControlCommands.ts",
+          "apps/web/src/app/views/runs/useRunControlCommands.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T14:52:33.268Z"
+    },
+    {
+      "operationId": "2921cbf8-5590-4ab8-9e27-68a789569cd2",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:US-F4-3-RUN-CONTROLS:command:recoverrun:0:ecf98c14d1558291",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#recoverrun",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts",
+        "dddOwner": "RunRecoveryApplicationService",
+        "railName": "RecoverRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts",
+        "sourceRef": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "unitTests": [
+          "apps/api/test/application/services/recoverRunUseCase.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
+        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "domainObjects": ["RunRecoveryIntent"],
+        "fowlerSignals": [
+          "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Recovery trusts browser-owned execution inputs or reconstructs an invalid PlanRef.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        ],
+        "architectureGuards": [
+          "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationRefs": [
+          "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableError",
+          "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableReason",
+          "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#IRunExecutionContextReferenceReader",
+          "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#RunExecutionContextReferenceQuery",
+          "apps/api/src/application/services/recoverRunUseCase.ts#RecoverRunUseCaseDependencies",
+          "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#RECOVER_RUN_BODY_FIELDS",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#FileRunExecutionContextReferenceReader",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#isNotFoundError",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#readOptionalFile",
+          "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextArtifactPath",
+          "apps/web/src/app/ports/runs.ts#RecoverRunReceipt",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts#parseRecoverRunReceipt",
+          "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts#buildPlanRefFromStoredRow",
+          "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts#IStoredPlanRefReader"
+        ],
+        "normalizedRailName": "recoverrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/errors/runControlErrors.ts",
+          "apps/api/src/application/errors/runControlErrors.ts",
+          "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
+          "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
+          "apps/api/src/application/services/recoverRunUseCase.ts",
+          "apps/api/src/entrypoints/http/recoverRunRouteParser.ts",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts",
+          "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts",
+          "apps/web/src/app/ports/runs.ts",
+          "apps/web/src/app/services/runs/runsApiControlReceipts.ts",
+          "packages/@dvt/adapter-postgres/src/PostgresPlanStore.mappers.ts",
+          "packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T14:52:34.826Z"
+    },
+    {
+      "operationId": "293973d1-504c-4933-950e-5c0e5a46d1d3",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:US-F4-3-RUN-CONTROLS:query:getrunstatus:0:03538d40874d305b",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#getrunstatus",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/services/runs/runsApiSnapshotMapper.test.ts --config vitest.unit.config.ts",
+        "dddOwner": "RunOperationalReadModel",
+        "railName": "GetRunStatus",
+        "railType": "query",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/services/runs/runsApiSnapshotMapper.test.ts --config vitest.unit.config.ts",
+        "sourceRef": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "unitTests": [
+          "apps/web/src/app/services/runs/runsApiSnapshotMapper.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
+        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "domainObjects": ["RunControlAvailability"],
+        "fowlerSignals": [
+          "All control availability is projected from canonical backend status and decoded once for every Web surface."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Web infers control availability or presentation owns query policy.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        ],
+        "architectureGuards": [
+          "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationRefs": [
+          "apps/api/src/application/ports/runtime.ts#RunControlActionAvailabilityDto",
+          "apps/api/src/application/ports/runtime.ts#RunControlAvailabilityDto",
+          "apps/api/src/application/ports/runtime.ts#RunControlUnavailableReason",
+          "apps/api/src/application/services/runControlPolicy.ts#projectRunControlAvailability",
+          "apps/web/src/app/components/runs/RunControlActions.tsx#RunControlActions",
+          "apps/web/src/app/components/runs/RunControlActions.tsx#RunControlActionsProps",
+          "apps/web/src/app/components/runs/RunControlActions.tsx#describeOutcome",
+          "apps/web/src/app/components/runs/runControlCopy.ts#EN_COPY",
+          "apps/web/src/app/components/runs/runControlCopy.ts#ES_COPY",
+          "apps/web/src/app/components/runs/runControlCopy.ts#RunControlCopy",
+          "apps/web/src/app/components/runs/runControlCopy.ts#detectRunControlLocale",
+          "apps/web/src/app/components/runs/runControlCopy.ts#resolveRunControlCopy",
+          "apps/web/src/app/components/shell/OperationalDrawerPanelPrimitives.tsx#OperationalDrawerRunLayout",
+          "apps/web/src/app/components/shell/operationalDrawerContributionStore.ts#OperationalDrawerRunControls",
+          "apps/web/src/app/ports/runs.ts#RunControlActionAvailability",
+          "apps/web/src/app/ports/runs.ts#RunControlAvailability",
+          "apps/web/src/app/ports/runs.ts#RunControlUnavailableReason",
+          "apps/web/src/app/services/runs/runsApiDecoders.ts#RUN_CONTROL_UNAVAILABLE_REASONS",
+          "apps/web/src/app/services/runs/runsApiDecoders.ts#parseRunControlAction",
+          "apps/web/src/app/services/runs/runsApiDecoders.ts#parseRunControlAvailability",
+          "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts#useCanvasRunControlSurface"
+        ],
+        "normalizedRailName": "getrunstatus",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/ports/runtime.ts",
+          "apps/api/src/application/ports/runtime.ts",
+          "apps/api/src/application/ports/runtime.ts",
+          "apps/api/src/application/services/runControlPolicy.ts",
+          "apps/web/src/app/components/runs/RunControlActions.tsx",
+          "apps/web/src/app/components/runs/RunControlActions.tsx",
+          "apps/web/src/app/components/runs/RunControlActions.tsx",
+          "apps/web/src/app/components/runs/runControlCopy.ts",
+          "apps/web/src/app/components/runs/runControlCopy.ts",
+          "apps/web/src/app/components/runs/runControlCopy.ts",
+          "apps/web/src/app/components/runs/runControlCopy.ts",
+          "apps/web/src/app/components/runs/runControlCopy.ts",
+          "apps/web/src/app/components/shell/OperationalDrawerPanelPrimitives.tsx",
+          "apps/web/src/app/components/shell/operationalDrawerContributionStore.ts",
+          "apps/web/src/app/ports/runs.ts",
+          "apps/web/src/app/ports/runs.ts",
+          "apps/web/src/app/ports/runs.ts",
+          "apps/web/src/app/services/runs/runsApiDecoders.ts",
+          "apps/web/src/app/services/runs/runsApiDecoders.ts",
+          "apps/web/src/app/services/runs/runsApiDecoders.ts",
+          "apps/web/src/app/views/canvas/useCanvasRunControlSurface.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T14:52:36.399Z"
+    },
+    {
+      "operationId": "1f0fa415-ea85-47f9-bcd1-6979a07d79cb",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:US-F4-3-RUN-CONTROLS:query:listruns:0:2da59d27a86872aa",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#listruns",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/runs/RunListStateView.test.tsx --config vitest.presentation.config.ts",
+        "dddOwner": "RunOperationalReadModel",
+        "railName": "ListRuns",
+        "railType": "query",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/runs/RunListStateView.test.tsx --config vitest.presentation.config.ts",
+        "sourceRef": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "unitTests": ["apps/web/src/app/views/runs/RunListStateView.test.tsx"],
+        "railStatus": "deprecated",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
+        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "domainObjects": ["RunSummaryCollection"],
+        "fowlerSignals": [
+          "Run list actions consume the same authoritative control projection as detail and Canvas."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Run list diverges from detail or Canvas control semantics.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        ],
+        "architectureGuards": [
+          "apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationRefs": [
+          "apps/web/src/app/views/runs/RunListStateView.tsx#RunListStateView"
+        ],
+        "normalizedRailName": "listruns",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/runs/RunListStateView.tsx"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T14:52:37.942Z"
+    },
+    {
+      "operationId": "95086876-3b41-4463-b71b-b9394a3ee254",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:US-F4-3-RUN-CONTROLS:query:runeventfeed:0:39778ad0fd79cc6c",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#query#runeventfeed",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/runEventFeedQuery.test.tsx --config vitest.presentation.config.ts",
+        "dddOwner": "RunEventFeedReadModel",
+        "railName": "RunEventFeed",
+        "railType": "query",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/runEventFeedQuery.test.tsx --config vitest.presentation.config.ts",
+        "sourceRef": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "unitTests": ["apps/web/src/app/queries/runEventFeedQuery.test.tsx"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
+        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "domainObjects": ["RunLifecycleEventFeed"],
+        "fowlerSignals": [
+          "Requested and terminal cancellation evidence converges through the existing cursor-backed event feed."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Cancelled runs keep polling or durable cancellation evidence is absent from the browser flow.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        ],
+        "architectureGuards": [
+          "apps/web/src/app/queries/runEventFeedQuery.test.tsx"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationRefs": [
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#LONG_RUNNING_SQL",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#LiveRunEventResponse",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#LiveRunSnapshot",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#authorLongRunningTransform",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#readEventTypes",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#waitForPersistedTransformSql",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts#waitForRunStatus"
+        ],
+        "normalizedRailName": "runeventfeed",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+        "allowedImplementationSurfaces": [
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "apps/web/cypress/e2e/runs/run-controls-live.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T14:52:39.413Z"
     }
   ]
 }
