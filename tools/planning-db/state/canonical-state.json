@@ -15929,7 +15929,14 @@
         "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextReferenceArtifactPath",
         "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#RunExecutionContextReferenceReadResult",
         "apps/api/src/application/services/runRecoveryContextTrust.ts#resolveRunRecoveryContextTrust",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#parseStoredReference"
+        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#parseStoredReference",
+        "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts#IRunExecutionContextInheritanceWriter",
+        "apps/api/src/application/services/recoverRunUseCase.ts#isRecoveryChildOf",
+        "apps/api/src/entrypoints/http/recoverRunIdentity.ts#deriveRecoveryRunId",
+        "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#parseRecoverRunRequest",
+        "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts#FileRunExecutionContextInheritanceWriter",
+        "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts#writeImmutableFileArtifact",
+        "apps/web/src/app/services/runs/runsService.api.ts#createBrowserIdempotencyKey"
       ],
       "implementationRefs": [
         "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableError",
@@ -15952,7 +15959,14 @@
         "apps/api/src/infrastructure/dbt/runExecutionContextArtifactPath.ts#resolveRunExecutionContextReferenceArtifactPath",
         "apps/api/src/application/ports/runExecutionContextReferenceReader.ts#RunExecutionContextReferenceReadResult",
         "apps/api/src/application/services/runRecoveryContextTrust.ts#resolveRunRecoveryContextTrust",
-        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#parseStoredReference"
+        "apps/api/src/infrastructure/dbt/FileRunExecutionContextReferenceReader.ts#parseStoredReference",
+        "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts#IRunExecutionContextInheritanceWriter",
+        "apps/api/src/application/services/recoverRunUseCase.ts#isRecoveryChildOf",
+        "apps/api/src/entrypoints/http/recoverRunIdentity.ts#deriveRecoveryRunId",
+        "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#parseRecoverRunRequest",
+        "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts#FileRunExecutionContextInheritanceWriter",
+        "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts#writeImmutableFileArtifact",
+        "apps/web/src/app/services/runs/runsService.api.ts#createBrowserIdempotencyKey"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
@@ -15979,11 +15993,26 @@
         "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
         "apps/api/src/application/services/runRecoveryContextTrust.ts",
         "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-        "apps/api/test/application/services/listRunsUseCase.test.ts"
+        "apps/api/test/application/services/listRunsUseCase.test.ts",
+        "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts",
+        "apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts",
+        "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+        "apps/api/src/entrypoints/http/recoverRunIdentity.ts",
+        "apps/api/src/entrypoints/http/recoverRunRoute.ts",
+        "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts",
+        "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts",
+        "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+        "apps/api/src/modules/types.ts",
+        "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+        "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+        "apps/api/test/modules/registerOperationalHooks.cases.ts",
+        "apps/web/src/app/services/runs/runsService.api.ts",
+        "apps/web/src/app/services/runs/runsService.test.ts"
       ],
       "architectureGuards": [
         "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts",
-        "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+        "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+        "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation",
@@ -16371,14 +16400,20 @@
               "apps/api/test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts",
               "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
               "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
+              "apps/api/test/application/services/listRunsUseCase.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+              "apps/web/src/app/services/runs/runsService.test.ts"
             ],
             "fowlerSignals": [
               "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-              "Recovery availability fails closed when the original execution-context integrity cannot be proven."
+              "Recovery availability fails closed when the original execution-context integrity cannot be proven.",
+              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
+              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
+              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
             ],
             "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
           },
           {
             "name": "parseStoredReference",
@@ -16398,6 +16433,153 @@
             ],
             "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
             "architectureGuard": "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts"
+          },
+          {
+            "name": "IRunExecutionContextInheritanceWriter",
+            "path": "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+              "apps/web/src/app/services/runs/runsService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
+              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
+              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+          },
+          {
+            "name": "isRecoveryChildOf",
+            "path": "apps/api/src/application/services/recoverRunUseCase.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+              "apps/web/src/app/services/runs/runsService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
+              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
+              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+          },
+          {
+            "name": "deriveRecoveryRunId",
+            "path": "apps/api/src/entrypoints/http/recoverRunIdentity.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+              "apps/web/src/app/services/runs/runsService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
+              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
+              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+          },
+          {
+            "name": "parseRecoverRunRequest",
+            "path": "apps/api/src/entrypoints/http/recoverRunRouteParser.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+              "apps/web/src/app/services/runs/runsService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
+              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
+              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+          },
+          {
+            "name": "FileRunExecutionContextInheritanceWriter",
+            "path": "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+              "apps/web/src/app/services/runs/runsService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
+              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
+              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+          },
+          {
+            "name": "writeImmutableFileArtifact",
+            "path": "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+              "apps/web/src/app/services/runs/runsService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
+              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
+              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+          },
+          {
+            "name": "createBrowserIdempotencyKey",
+            "path": "apps/web/src/app/services/runs/runsService.api.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+              "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+              "apps/web/src/app/services/runs/runsService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
+              "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
+              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
           }
         ],
         "version": 1,
@@ -16407,7 +16589,10 @@
         "domainObjects": ["RunRecoveryIntent"],
         "fowlerSignals": [
           "Recovery derives a new run from the exact immutable stored PlanRef and server-owned execution context.",
-          "Recovery availability fails closed when the original execution-context integrity cannot be proven."
+          "Recovery availability fails closed when the original execution-context integrity cannot be proven.",
+          "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
+          "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
+          "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -16417,8 +16602,8 @@
         "redGreenCycles": [
           {
             "id": "recoverrun-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/listRunsUseCase.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/listRunsUseCase.test.ts",
+            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/errors/runControlErrors.ts",
               "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
@@ -16437,9 +16622,23 @@
               "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
               "apps/api/src/application/services/runRecoveryContextTrust.ts",
               "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-              "apps/api/test/application/services/listRunsUseCase.test.ts"
+              "apps/api/test/application/services/listRunsUseCase.test.ts",
+              "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts",
+              "apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts",
+              "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+              "apps/api/src/entrypoints/http/recoverRunIdentity.ts",
+              "apps/api/src/entrypoints/http/recoverRunRoute.ts",
+              "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts",
+              "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts",
+              "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+              "apps/api/src/modules/types.ts",
+              "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+              "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+              "apps/api/test/modules/registerOperationalHooks.cases.ts",
+              "apps/web/src/app/services/runs/runsService.api.ts",
+              "apps/web/src/app/services/runs/runsService.test.ts"
             ],
-            "expectedFailure": "Recovery is advertised or dispatched when the source context exists without a verifiable original reference."
+            "expectedFailure": "Recovery replay dispatches twice, descendants lose trusted context, or a context-store fault breaks run reads."
           }
         ],
         "componentGuides": [
@@ -16459,7 +16658,8 @@
         ],
         "architectureGuards": [
           "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts",
-          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
         "mechanizationStatus": "implemented",
@@ -16482,11 +16682,25 @@
           "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
           "apps/api/src/application/services/runRecoveryContextTrust.ts",
           "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
-          "apps/api/test/application/services/listRunsUseCase.test.ts"
+          "apps/api/test/application/services/listRunsUseCase.test.ts",
+          "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts",
+          "apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+          "apps/api/src/entrypoints/http/recoverRunIdentity.ts",
+          "apps/api/src/entrypoints/http/recoverRunRoute.ts",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts",
+          "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/api/src/modules/types.ts",
+          "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+          "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+          "apps/api/test/modules/registerOperationalHooks.cases.ts",
+          "apps/web/src/app/services/runs/runsService.api.ts",
+          "apps/web/src/app/services/runs/runsService.test.ts"
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 3,
+      "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:24.648Z"
     },
