@@ -15936,7 +15936,12 @@
         "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#parseRecoverRunRequest",
         "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts#FileRunExecutionContextInheritanceWriter",
         "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts#writeImmutableFileArtifact",
-        "apps/web/src/app/services/runs/runsService.api.ts#createBrowserIdempotencyKey"
+        "apps/web/src/app/services/runs/runsService.api.ts#createBrowserIdempotencyKey",
+        "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts#IRunRecoveryCommandCoordinator",
+        "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts#PostgresRunRecoveryCommandCoordinator",
+        "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts#IRunExecutionContextRequirementResolver",
+        "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts#StoredPlanRunExecutionContextRequirementResolver",
+        "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts#selectRunExecutionContextPluginRequirements"
       ],
       "implementationRefs": [
         "apps/api/src/application/errors/runControlErrors.ts#RunRecoveryUnavailableError",
@@ -15966,7 +15971,12 @@
         "apps/api/src/entrypoints/http/recoverRunRouteParser.ts#parseRecoverRunRequest",
         "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts#FileRunExecutionContextInheritanceWriter",
         "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts#writeImmutableFileArtifact",
-        "apps/web/src/app/services/runs/runsService.api.ts#createBrowserIdempotencyKey"
+        "apps/web/src/app/services/runs/runsService.api.ts#createBrowserIdempotencyKey",
+        "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts#IRunRecoveryCommandCoordinator",
+        "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts#PostgresRunRecoveryCommandCoordinator",
+        "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts#IRunExecutionContextRequirementResolver",
+        "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts#StoredPlanRunExecutionContextRequirementResolver",
+        "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts#selectRunExecutionContextPluginRequirements"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
@@ -16007,12 +16017,21 @@
         "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
         "apps/api/test/modules/registerOperationalHooks.cases.ts",
         "apps/web/src/app/services/runs/runsService.api.ts",
-        "apps/web/src/app/services/runs/runsService.test.ts"
+        "apps/web/src/app/services/runs/runsService.test.ts",
+        "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
+        "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
+        "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
+        "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
+        "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
+        "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+        "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+        "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
       ],
       "architectureGuards": [
         "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts",
         "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-        "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+        "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+        "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation",
@@ -16550,15 +16569,21 @@
               "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
               "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
               "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-              "apps/web/src/app/services/runs/runsService.test.ts"
+              "apps/web/src/app/services/runs/runsService.test.ts",
+              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
             ],
             "fowlerSignals": [
               "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
               "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
-              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+              "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models.",
+              "Recovery identities are serialized across API instances before retry-attempt reservation.",
+              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
+              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
             ],
             "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
-            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
           },
           {
             "name": "createBrowserIdempotencyKey",
@@ -16580,6 +16605,106 @@
             ],
             "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
             "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+          },
+          {
+            "name": "IRunRecoveryCommandCoordinator",
+            "path": "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery identities are serialized across API instances before retry-attempt reservation.",
+              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
+              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+          },
+          {
+            "name": "PostgresRunRecoveryCommandCoordinator",
+            "path": "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery identities are serialized across API instances before retry-attempt reservation.",
+              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
+              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+          },
+          {
+            "name": "IRunExecutionContextRequirementResolver",
+            "path": "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery identities are serialized across API instances before retry-attempt reservation.",
+              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
+              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+          },
+          {
+            "name": "StoredPlanRunExecutionContextRequirementResolver",
+            "path": "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery identities are serialized across API instances before retry-attempt reservation.",
+              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
+              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+          },
+          {
+            "name": "selectRunExecutionContextPluginRequirements",
+            "path": "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
+            "cqRails": ["RecoverRun"],
+            "dddOwner": "RunRecoveryApplicationService",
+            "unitTests": [
+              "apps/api/test/application/services/recoverRunUseCase.test.ts",
+              "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Recovery identities are serialized across API instances before retry-attempt reservation.",
+              "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
+              "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
           }
         ],
         "version": 1,
@@ -16592,7 +16717,10 @@
           "Recovery availability fails closed when the original execution-context integrity cannot be proven.",
           "Recovery request identity is deterministic per tenant, source run, and required Idempotency-Key; replay returns the original receipt without a second dispatch.",
           "A recovery descendant receives its own immutable execution-context artifact after source-reference and digest verification.",
-          "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models."
+          "Execution-context storage failures disable recovery without breaking ListRuns or GetRunStatus read models.",
+          "Recovery identities are serialized across API instances before retry-attempt reservation.",
+          "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
+          "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -16602,8 +16730,8 @@
         "redGreenCycles": [
           {
             "id": "recoverrun-record",
-            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+            "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
+            "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/errors/runControlErrors.ts",
               "apps/api/src/application/ports/runExecutionContextReferenceReader.ts",
@@ -16636,9 +16764,17 @@
               "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
               "apps/api/test/modules/registerOperationalHooks.cases.ts",
               "apps/web/src/app/services/runs/runsService.api.ts",
-              "apps/web/src/app/services/runs/runsService.test.ts"
+              "apps/web/src/app/services/runs/runsService.test.ts",
+              "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
+              "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
+              "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
+              "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
+              "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
+              "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+              "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+              "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
             ],
-            "expectedFailure": "Recovery replay dispatches twice, descendants lose trusted context, or a context-store fault breaks run reads."
+            "expectedFailure": "Concurrent recovery delivery consumes another logical attempt, a required absent context is advertised as recoverable, or a failed immutable write leaves a poisoned destination."
           }
         ],
         "componentGuides": [
@@ -16659,7 +16795,8 @@
         "architectureGuards": [
           "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts",
           "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/infrastructure/dbt/FileDbtRunExecutionContextWriter.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
-          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts"
+          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/entrypoints/http/recoverRunRoute.test.ts test/entrypoints/http/recoverRunRouteParser.test.ts test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
         "mechanizationStatus": "implemented",
@@ -16696,11 +16833,19 @@
           "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
           "apps/api/test/modules/registerOperationalHooks.cases.ts",
           "apps/web/src/app/services/runs/runsService.api.ts",
-          "apps/web/src/app/services/runs/runsService.test.ts"
+          "apps/web/src/app/services/runs/runsService.test.ts",
+          "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
+          "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
+          "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
+          "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
+          "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
+          "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+          "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+          "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
         ],
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
-      "revision": 4,
+      "revision": 5,
       "createdBy": "codex",
       "createdAt": "2026-08-02T14:27:24.648Z"
     },
@@ -27940,6 +28085,121 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-02T17:15:50.491Z"
+    },
+    {
+      "operationId": "ac553fad-d5b7-4f5f-8012-becbcc36a609",
+      "idempotencyKey": "recover-run-review-hardening-20260802-v5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#US-F4-3-RUN-CONTROLS#command#recoverrun",
+      "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "expectedRevision": 4,
+      "previousRevision": 4,
+      "resultingRevision": 5,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
+        "dddOwner": "RunRecoveryApplicationService",
+        "railName": "RecoverRun",
+        "railType": "command",
+        "featureId": "US-F4-3-RUN-CONTROLS",
+        "greenTest": "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts",
+        "sourceRef": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
+        "unitTests": [
+          "apps/api/test/application/services/recoverRunUseCase.test.ts",
+          "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+          "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+          "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+          "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2103"],
+        "cypressFlows": ["apps/web/cypress/e2e/runs/run-controls-live.cy.ts"],
+        "domainObjects": ["RunRecoveryIntent"],
+        "fowlerSignals": [
+          "Recovery identities are serialized across API instances before retry-attempt reservation.",
+          "Execution-context absence is evaluated against canonical plugin requirements from the immutable stored plan.",
+          "Failed immutable writes remove only the incomplete destination created by that invocation before retry."
+        ],
+        "patchSurfaces": [
+          "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
+          "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
+          "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
+          "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
+          "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
+          "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts",
+          "apps/api/test/application/services/recoverRunUseCase.test.ts",
+          "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+          "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+          "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+          "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/runs/run-controls-live.cy.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Concurrent recovery delivery consumes another logical attempt, a required absent context is advertised as recoverable, or a failed immutable write leaves a poisoned destination.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api exec vitest run test/application/services/recoverRunUseCase.test.ts test/application/services/runRecoveryContextTrust.test.ts test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2103#issuecomment-5157653363",
+        "implementationRefs": [
+          "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts#IRunRecoveryCommandCoordinator",
+          "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts#PostgresRunRecoveryCommandCoordinator",
+          "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts#IRunExecutionContextRequirementResolver",
+          "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts#StoredPlanRunExecutionContextRequirementResolver",
+          "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts#selectRunExecutionContextPluginRequirements",
+          "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts#writeImmutableFileArtifact"
+        ],
+        "normalizedRailName": "recoverrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/errors/runControlErrors.ts",
+          "apps/api/src/application/ports/runExecutionContextInheritanceWriter.ts",
+          "apps/api/src/application/services/recoverRunUseCase.ts",
+          "apps/api/src/application/services/runRecoveryContextTrust.ts",
+          "apps/api/src/entrypoints/http/httpErrorReasonCatalog.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+          "apps/api/src/entrypoints/http/recoverRunIdentity.ts",
+          "apps/api/src/entrypoints/http/recoverRunRoute.ts",
+          "apps/api/src/entrypoints/http/recoverRunRouteParser.ts",
+          "apps/api/src/infrastructure/dbt/FileDbtRunExecutionContextWriter.ts",
+          "apps/api/src/infrastructure/dbt/FileRunExecutionContextInheritanceWriter.ts",
+          "apps/api/src/infrastructure/dbt/immutableFileArtifactWriter.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/api/src/modules/types.ts",
+          "apps/api/test/application/services/recoverRunUseCase.test.ts",
+          "apps/api/test/application/services/runRecoveryContextTrust.test.ts",
+          "apps/api/test/entrypoints/http/recoverRunRoute.test.ts",
+          "apps/api/test/entrypoints/http/recoverRunRouteParser.test.ts",
+          "apps/api/test/infrastructure/dbt/FileRunExecutionContextReferenceReader.test.ts",
+          "apps/api/test/modules/registerOperationalHooks.cases.ts",
+          "apps/web/src/app/services/runs/runsService.api.ts",
+          "apps/web/src/app/services/runs/runsService.test.ts",
+          "apps/api/src/application/ports/runRecoveryCommandCoordinator.ts",
+          "apps/api/src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.ts",
+          "apps/api/src/application/ports/runExecutionContextRequirementResolver.ts",
+          "apps/api/src/application/services/StoredPlanRunExecutionContextRequirementResolver.ts",
+          "packages/@dvt/engine/src/services/startRun/runExecutionContextRequirements.ts",
+          "apps/api/test/application/services/StoredPlanRunExecutionContextRequirementResolver.test.ts",
+          "apps/api/test/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.test.ts",
+          "apps/api/test/infrastructure/dbt/immutableFileArtifactWriter.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-02T18:14:53.980Z"
     }
   ]
 }
