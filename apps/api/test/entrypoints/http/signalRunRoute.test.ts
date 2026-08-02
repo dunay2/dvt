@@ -33,6 +33,7 @@ function httpError(
 function createDeps(): {
   authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
   authorizer: { authorize: ReturnType<typeof vi.fn> };
+  cancelUseCase: { execute: ReturnType<typeof vi.fn> };
   useCase: { execute: ReturnType<typeof vi.fn> };
   compatibilityPolicy: { allowCancelSignalType: boolean };
 } {
@@ -65,6 +66,15 @@ function createDeps(): {
         },
       }),
     },
+    cancelUseCase: {
+      execute: vi.fn().mockResolvedValue({
+        contractVersion: 'v1',
+        runId: 'run-1',
+        signalType: 'CANCEL',
+        accepted: true,
+        disposition: 'requested',
+      }),
+    },
     useCase: {
       execute: vi.fn().mockResolvedValue({ runId: 'run-1', signalType: 'CANCEL', accepted: true }),
     },
@@ -75,7 +85,7 @@ function createDeps(): {
 }
 
 describe('signalRunRoute', () => {
-  it('returns 202 for a valid signal request', async () => {
+  it('routes compatibility CANCEL through the canonical cancel command', async () => {
     const deps = createDeps();
     const reply = createReply();
 
@@ -90,10 +100,11 @@ describe('signalRunRoute', () => {
       deps as never
     );
 
-    expect(deps.useCase.execute).toHaveBeenCalledWith(
-      { runId: 'run-1', signalType: 'CANCEL', reason: 'operator cancel' },
+    expect(deps.cancelUseCase.execute).toHaveBeenCalledWith(
+      { runId: 'run-1', signalType: 'CANCEL' },
       expect.anything()
     );
+    expect(deps.useCase.execute).not.toHaveBeenCalled();
     expect(deps.authorizer.authorize).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
@@ -102,6 +113,13 @@ describe('signalRunRoute', () => {
       'req-1'
     );
     expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
+    expect(reply.send).toHaveBeenCalledWith({
+      contractVersion: 'v1',
+      runId: 'run-1',
+      signalType: 'CANCEL',
+      accepted: true,
+      disposition: 'requested',
+    });
   });
 
   it('authorizes PAUSE using run:signal action', async () => {

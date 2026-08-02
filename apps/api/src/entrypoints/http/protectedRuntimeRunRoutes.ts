@@ -58,6 +58,7 @@ export function registerProtectedRunRoutes(
   app.post(RUNTIME_ROUTE_PATH.signal, { config: { rateLimit } }, async (request, reply) =>
     signalRunRoute(request as never, reply, {
       ...runtimeAuth,
+      cancelUseCase: dependencies.cancelRunUseCase,
       useCase: dependencies.signalRunUseCase,
       compatibilityPolicy: { allowCancelSignalType: env.DVT_SIGNAL_ROUTE_ALLOW_CANCEL },
     })
