@@ -1,21 +1,19 @@
-/** Owned concern: reconstruct immutable references for server-persisted run contexts. */
-import { createHash } from 'node:crypto';
+/** Owned concern: reload immutable references for server-persisted run contexts. */
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
 import type { DbtProjectBundleArtifactStore } from '@dvt/artifacts';
-import {
-  parseRunExecutionContext,
-  parseRunExecutionContextRef,
-  type RunExecutionContextRef,
-} from '@dvt/contracts';
+import { parseRunExecutionContextRef, type RunExecutionContextRef } from '@dvt/contracts';
 
 import type {
   IRunExecutionContextReferenceReader,
   RunExecutionContextReferenceQuery,
 } from '../../application/ports/runExecutionContextReferenceReader.js';
 
-import { resolveRunExecutionContextArtifactPath } from './runExecutionContextArtifactPath.js';
+import {
+  resolveRunExecutionContextArtifactPath,
+  resolveRunExecutionContextReferenceArtifactPath,
+} from './runExecutionContextArtifactPath.js';
 
 export class FileRunExecutionContextReferenceReader implements IRunExecutionContextReferenceReader {
   public constructor(private readonly store: DbtProjectBundleArtifactStore | undefined) {}
@@ -30,20 +28,19 @@ export class FileRunExecutionContextReferenceReader implements IRunExecutionCont
       tenantId: query.tenantId,
       runId: query.runId,
     });
-    const bytes = await readOptionalFile(artifactPath);
+    const referenceArtifactPath = resolveRunExecutionContextReferenceArtifactPath({
+      rootPath: this.store.rootPath,
+      tenantId: query.tenantId,
+      runId: query.runId,
+    });
+    const bytes = await readOptionalFile(referenceArtifactPath);
     if (bytes === undefined) return undefined;
 
-    const context = parseRunExecutionContext(JSON.parse(bytes.toString('utf8')));
-    return parseRunExecutionContextRef({
-      uri: pathToFileURL(artifactPath).href,
-      sha256: createHash('sha256').update(bytes).digest('hex'),
-      schemaVersion: context.schemaVersion,
-      planId: context.planId,
-      planVersion: context.planVersion,
-      ...(context.pluginCompatibilityFingerprint === undefined
-        ? {}
-        : { pluginCompatibilityFingerprint: context.pluginCompatibilityFingerprint }),
-    });
+    const ref = parseRunExecutionContextRef(JSON.parse(bytes.toString('utf8')));
+    if (ref.uri !== pathToFileURL(artifactPath).href) {
+      throw new Error('Stored run-context reference does not match the authorized source run.');
+    }
+    return ref;
   }
 }
 

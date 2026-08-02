@@ -12,7 +12,10 @@ import type {
   IDbtRunExecutionContextWriter,
 } from '../../application/ports/dbtRunExecutionContextWriter.js';
 
-import { resolveRunExecutionContextArtifactPath } from './runExecutionContextArtifactPath.js';
+import {
+  resolveRunExecutionContextArtifactPath,
+  resolveRunExecutionContextReferenceArtifactPath,
+} from './runExecutionContextArtifactPath.js';
 
 export class FileDbtRunExecutionContextWriter implements IDbtRunExecutionContextWriter {
   public constructor(private readonly store: DbtProjectBundleArtifactStore | undefined) {}
@@ -30,21 +33,26 @@ export class FileDbtRunExecutionContextWriter implements IDbtRunExecutionContext
       tenantId: input.context.tenantId,
       runId: input.runId,
     });
-    await writeOnceOrVerify(artifactPath, bytes);
+    const ref = parseRunExecutionContextRef({
+      uri: pathToFileURL(artifactPath).href,
+      sha256,
+      schemaVersion: input.context.schemaVersion,
+      planId: input.context.planId,
+      planVersion: input.context.planVersion,
+      ...(input.context.pluginCompatibilityFingerprint === undefined
+        ? {}
+        : { pluginCompatibilityFingerprint: input.context.pluginCompatibilityFingerprint }),
+    });
+    const referenceArtifactPath = resolveRunExecutionContextReferenceArtifactPath({
+      rootPath: this.store.rootPath,
+      tenantId: input.context.tenantId,
+      runId: input.runId,
+    });
 
-    return {
-      ok: true,
-      ref: parseRunExecutionContextRef({
-        uri: pathToFileURL(artifactPath).href,
-        sha256,
-        schemaVersion: input.context.schemaVersion,
-        planId: input.context.planId,
-        planVersion: input.context.planVersion,
-        ...(input.context.pluginCompatibilityFingerprint === undefined
-          ? {}
-          : { pluginCompatibilityFingerprint: input.context.pluginCompatibilityFingerprint }),
-      }),
-    };
+    await writeOnceOrVerify(artifactPath, bytes);
+    await writeOnceOrVerify(referenceArtifactPath, Buffer.from(JSON.stringify(ref), 'utf8'));
+
+    return { ok: true, ref };
   }
 }
 
