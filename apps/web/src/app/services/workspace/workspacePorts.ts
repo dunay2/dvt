@@ -9,7 +9,8 @@ import type {
   IWorkspaceGraphSnapshotQueryPort,
   IWorkspacePluginCatalogQueryPort,
 } from '../../ports/workspace';
-import { type ApiClient, createApiClient } from '../api/createApiClient';
+import type { FrontendOperabilitySink } from '../../ports/frontendOperability';
+import type { ApiClient } from '../api/createApiClient';
 import { createApiWorkspacePluginCatalogQueryPort } from './workspacePluginCatalog.api';
 import {
   apiWorkspacePortCapabilities,
@@ -55,7 +56,10 @@ export function resolveWorkspacePortCapabilities(): WorkspacePortCapabilities {
   return apiWorkspacePortCapabilities;
 }
 
-export function createWorkspacePorts(apiClient: ApiClient = createApiClient()): WorkspacePorts {
+export function createWorkspacePorts(
+  apiClient: ApiClient,
+  frontendOperabilitySink: FrontendOperabilitySink
+): WorkspacePorts {
   return {
     workspaceGraphSnapshotQuery: createApiWorkspaceGraphSnapshotQueryPort(apiClient),
     workspaceFilesQuery: createApiWorkspaceFilesQueryPort(apiClient),
@@ -63,7 +67,7 @@ export function createWorkspacePorts(apiClient: ApiClient = createApiClient()): 
     workspaceDiffQuery: createApiWorkspaceDiffQueryPort(apiClient),
     workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(apiClient),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
-    warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient),
+    warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient, frontendOperabilitySink),
     workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(apiClient),
   };
 }

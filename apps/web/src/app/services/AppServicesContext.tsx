@@ -68,6 +68,7 @@ export function AppServicesProvider({ children, overrides }: AppServicesProvider
       overrides?.sessionContext,
       overrides?.workspaceScopeSelection,
       overrides?.shellFeedback,
+      overrides?.frontendOperabilitySink,
     ]
   );
 
@@ -164,4 +165,8 @@ export function useWorkspaceScopeSelection(): WorkspaceScopeSelectionPort {
 
 export function useShellFeedback(): ShellFeedbackPort {
   return useRequiredAppServicesContext().shellFeedback;
+}
+
+export function useFrontendOperabilityTransitionRecorder(): AppServices['frontendOperabilityTransitionRecorder'] {
+  return useRequiredAppServicesContext().frontendOperabilityTransitionRecorder;
 }

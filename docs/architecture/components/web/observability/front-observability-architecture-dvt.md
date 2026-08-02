@@ -4,7 +4,7 @@ subtitle: Current shell health, run monitoring, and future operational surfaces
 document_type: architecture
 status: Active
 owner: Frontend / Architecture
-last_updated: 2026-04-03
+last_updated: 2026-08-02
 language: en
 ---
 
@@ -21,6 +21,11 @@ It is the operator-facing read surface for:
 - execution evidence;
 - cost and performance signals when available;
 - degraded or stale-data warnings.
+
+Browser-only operability evidence is a separate, subordinate concern. It may
+record only closed failure and degraded-state codes that the browser uniquely
+observes. It does not become product analytics or a second source of truth for
+server-owned outcomes.
 
 ## Current Reality
 
@@ -47,6 +52,41 @@ exist yet.
   [runWorkspaceFacade.ts](../../../../../apps/web/src/app/services/runs/runWorkspaceFacade.ts)
 - cost prototype:
   [CostView.tsx](../../../../../apps/web/src/app/views/CostView.tsx)
+- browser operability boundary:
+  [frontendOperability.ts](../../../../../apps/web/src/app/ports/frontendOperability.ts),
+  [frontendOperabilityRecorder.ts](../../../../../apps/web/src/app/services/operability/frontendOperabilityRecorder.ts)
+
+## Browser Operability Boundary
+
+The Web composition root owns one `FrontendOperabilitySink`. Its initial
+production adapter writes structured events to the browser console. Delivery is
+best-effort: sink failures are contained and cannot change bootstrap, routing,
+commands, queries, parsing, or rendering.
+
+The closed event families are:
+
+- bootstrap failure;
+- route-boundary failure;
+- rejection by an explicitly instrumented typed response parser;
+- transition of an existing surface into a coarse degraded state.
+
+Events may contain only allowlisted route, operation, surface, state, and reason
+codes. They must not contain identifiers, route parameters, raw URLs, errors,
+stacks, payloads, SQL, paths, user-authored content, plugin metadata, or server
+business outcomes. Repeated renders and equal refetches do not produce repeated
+events; a new occurrence or coarse-state transition is required.
+
+Bootstrap-family events are valid only while the initial application startup is
+active. Runtime health failures after startup belong to the degraded-surface
+family. A mounted presenter owns its transition channel for one occurrence and
+must release that channel when it unmounts so a later occurrence can be
+recorded.
+
+The outbound port implements the `RecordFrontendOperabilityEvent` operational
+command rail. That rail owns only best-effort recording of a closed browser
+event; it cannot change product state or delivery outcomes. The existing
+product query rails retain authority over bootstrap readiness, source-object
+catalogs, and platform-health presentation.
 
 ## UX Rules
 

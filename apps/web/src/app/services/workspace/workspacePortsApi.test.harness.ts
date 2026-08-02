@@ -1,4 +1,6 @@
 /** Owned concern: build API workspace port harnesses with named narrow ports. */
+import { vi } from 'vitest';
+
 import {
   createApiWarehouseSourceImportPort,
   createApiWorkspaceAdminReadPort,
@@ -8,11 +10,13 @@ import {
   createApiWorkspaceFilesQueryPort,
   createApiWorkspaceGraphSnapshotQueryPort,
 } from './workspacePorts.api';
+import type { FrontendOperabilitySink } from '../../ports/frontendOperability';
 import { createApiWorkspacePluginCatalogQueryPort } from './workspacePluginCatalog.api';
 import { createApiClientHarness } from './workspaceApiClient.test.harness';
 
 export function createApiWorkspacePortHarness(
-  options: Parameters<typeof createApiClientHarness>[0] = {}
+  options: Parameters<typeof createApiClientHarness>[0] = {},
+  frontendOperabilitySink: FrontendOperabilitySink = { record: vi.fn() }
 ) {
   const { apiClient, requestRaw, getJson, postJson } = createApiClientHarness(options);
 
@@ -26,7 +30,7 @@ export function createApiWorkspacePortHarness(
     workspaceDiffQuery: createApiWorkspaceDiffQueryPort(apiClient),
     workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(apiClient),
     workspaceAdminRead: createApiWorkspaceAdminReadPort(),
-    warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient),
+    warehouseSourceImport: createApiWarehouseSourceImportPort(apiClient, frontendOperabilitySink),
     workspaceFileContentCommand: createApiWorkspaceFileContentCommandPort(apiClient),
   };
 }

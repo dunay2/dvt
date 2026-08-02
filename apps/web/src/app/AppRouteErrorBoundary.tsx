@@ -1,10 +1,18 @@
-import { isRouteErrorResponse, useRouteError } from 'react-router';
+import { useEffect, useMemo } from 'react';
+import { isRouteErrorResponse, useMatches, useRouteError } from 'react-router';
 import {
   resolveAppRouteErrorBoundaryCopy,
   type AppRouteErrorBoundaryCopy,
 } from './appRouteErrorBoundaryCopy';
 import { createBootstrapFailureCommand } from './bootstrap/appBootstrapCommands';
 import { isBootstrapScreenVisible, showBootstrapFailure } from './bootstrap/appBootstrapScreen';
+import { useFrontendOperabilityTransitionRecorder } from './services/AppServicesContext';
+import {
+  createBootstrapFailureEvent,
+  createRouteFailureEvent,
+  normalizeFrontendOperabilityRouteId,
+} from './services/operability/frontendOperabilityRecorder';
+import { useFrontendOperabilityTransition } from './services/operability/useFrontendOperabilityTransition';
 
 function getErrorMessage(error: unknown, copy: AppRouteErrorBoundaryCopy): string {
   if (isRouteErrorResponse(error)) {
@@ -24,11 +32,42 @@ function getErrorMessage(error: unknown, copy: AppRouteErrorBoundaryCopy): strin
 
 export default function AppRouteErrorBoundary() {
   const error = useRouteError();
+  const matches = useMatches();
+  const frontendOperabilityTransitionRecorder = useFrontendOperabilityTransitionRecorder();
   const copy = resolveAppRouteErrorBoundaryCopy();
   const message = getErrorMessage(error, copy);
+  const bootstrapScreenVisible = isBootstrapScreenVisible();
+  const routeId = normalizeFrontendOperabilityRouteId(matches[matches.length - 1]?.id);
+  const routeFailureEvent = useMemo(
+    () => createRouteFailureEvent(routeId, 'route-boundary-activated'),
+    [routeId]
+  );
+  const bootstrapFailureEvent = useMemo(
+    () =>
+      bootstrapScreenVisible
+        ? createBootstrapFailureEvent('route', 'route-boundary-activated')
+        : null,
+    [bootstrapScreenVisible]
+  );
 
-  if (isBootstrapScreenVisible()) {
-    showBootstrapFailure(createBootstrapFailureCommand(message));
+  useFrontendOperabilityTransition(
+    frontendOperabilityTransitionRecorder,
+    'route.boundary',
+    routeFailureEvent
+  );
+  useFrontendOperabilityTransition(
+    frontendOperabilityTransitionRecorder,
+    'route.bootstrap',
+    bootstrapFailureEvent
+  );
+
+  useEffect(() => {
+    if (bootstrapScreenVisible) {
+      showBootstrapFailure(createBootstrapFailureCommand(message));
+    }
+  }, [bootstrapScreenVisible, message]);
+
+  if (bootstrapScreenVisible) {
     return null;
   }
 

@@ -2,6 +2,7 @@
 import type { CapabilitiesPort } from '../../ports/capabilities';
 import type { ICostAttributionSummaryPort } from '../../ports/cost';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
+import type { FrontendOperabilitySink } from '../../ports/frontendOperability';
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -27,6 +28,11 @@ import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
 import { setRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { createApiCostAttributionSummaryPort } from '../cost/costService.api';
 import { createToastShellFeedbackPort } from '../feedback/shellFeedbackPort';
+import { createConsoleFrontendOperabilitySink } from '../operability/consoleFrontendOperabilitySink';
+import {
+  createFrontendOperabilityTransitionRecorder,
+  type FrontendOperabilityTransitionRecorder,
+} from '../operability/frontendOperabilityRecorder';
 import { createPlansService } from '../plans/plansService';
 import { createRunsService } from '../runs/runsService';
 import { createSessionContextPort } from '../session/sessionContextPort';
@@ -62,6 +68,7 @@ export interface AppServices {
   readonly sessionContext: SessionContextPort;
   readonly workspaceScopeSelection: WorkspaceScopeSelectionPort;
   readonly shellFeedback: ShellFeedbackPort;
+  readonly frontendOperabilityTransitionRecorder: FrontendOperabilityTransitionRecorder;
 }
 
 export interface AppServicesOverrides {
@@ -86,16 +93,21 @@ export interface AppServicesOverrides {
   readonly sessionContext?: SessionContextPort;
   readonly workspaceScopeSelection?: WorkspaceScopeSelectionPort;
   readonly shellFeedback?: ShellFeedbackPort;
+  readonly frontendOperabilitySink?: FrontendOperabilitySink;
 }
 
 export function buildAppServices(overrides: AppServicesOverrides = {}): AppServices {
   const dataSourceMode = resolveDataSource();
   setRuntimeDataSourceMode(dataSourceMode);
   const apiClient = overrides.apiClient ?? createApiClient();
+  const frontendOperabilitySink =
+    overrides.frontendOperabilitySink ?? createConsoleFrontendOperabilitySink();
+  const frontendOperabilityTransitionRecorder =
+    createFrontendOperabilityTransitionRecorder(frontendOperabilitySink);
   const sessionContext = overrides.sessionContext ?? createSessionContextPort();
   const workspaceScopeSelection =
     overrides.workspaceScopeSelection ?? createWorkspaceScopeSelectionPort();
-  const workspacePorts = createWorkspacePorts(apiClient);
+  const workspacePorts = createWorkspacePorts(apiClient, frontendOperabilitySink);
   const workspaceGraphSnapshotQuery =
     overrides.workspaceGraphSnapshotQuery ?? workspacePorts.workspaceGraphSnapshotQuery;
   const workspaceFilesQuery = overrides.workspaceFilesQuery ?? workspacePorts.workspaceFilesQuery;
@@ -146,5 +158,6 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     sessionContext,
     workspaceScopeSelection,
     shellFeedback: overrides.shellFeedback ?? createToastShellFeedbackPort(),
+    frontendOperabilityTransitionRecorder,
   };
 }

@@ -18,6 +18,7 @@ import {
 } from './bootstrap/routeBootstrapRegistry';
 import { getRouteBootstrapRegistration } from './bootstrap/routeBootstrapRegistration';
 import type { CapabilitiesPort } from './ports/capabilities';
+import type { AppServicesOverrides } from './services/composition/appServices';
 import { RootShell } from './Root';
 import { AppServicesProvider } from './services/AppServicesContext';
 import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from './views/canvas/canvasDraftPresentationStore';
@@ -122,7 +123,8 @@ export function createRootShellNode(
   capability: PlatformHealthCapabilityApi,
   initialEntries: string[] = ['/'],
   capabilitiesPort?: CapabilitiesPort,
-  canvasRouteElement: JSX.Element = <div>Canvas route</div>
+  canvasRouteElement: JSX.Element = <div>Canvas route</div>,
+  serviceOverrides: AppServicesOverrides = {}
 ): JSX.Element {
   const router = createMemoryRouter(
     [
@@ -178,7 +180,9 @@ export function createRootShellNode(
     <AppServicesProvider
       overrides={{
         ...createAppServicesTestOverrides(),
-        capabilitiesPort: capabilitiesPort ?? createDefaultCapabilitiesPort(),
+        ...serviceOverrides,
+        capabilitiesPort:
+          capabilitiesPort ?? serviceOverrides.capabilitiesPort ?? createDefaultCapabilitiesPort(),
       }}
     >
       <RouterProvider router={router} />
@@ -188,7 +192,8 @@ export function createRootShellNode(
 
 export function createBrokenRootShellNode(
   capability: PlatformHealthCapabilityApi,
-  initialEntries: string[] = ['/broken']
+  initialEntries: string[] = ['/broken'],
+  serviceOverrides: AppServicesOverrides = {}
 ): JSX.Element {
   const router = createMemoryRouter(
     [
@@ -206,7 +211,8 @@ export function createBrokenRootShellNode(
     <AppServicesProvider
       overrides={{
         ...createAppServicesTestOverrides(),
-        capabilitiesPort: createDefaultCapabilitiesPort(),
+        ...serviceOverrides,
+        capabilitiesPort: serviceOverrides.capabilitiesPort ?? createDefaultCapabilitiesPort(),
       }}
     >
       <RouterProvider router={router} />

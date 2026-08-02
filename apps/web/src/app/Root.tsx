@@ -36,6 +36,12 @@ import {
 import { useActiveRouteBootstrapRegistration } from './bootstrap/useActiveRouteBootstrapRegistration';
 import { useCapabilitiesQuery } from './queries/useCapabilitiesQuery';
 import {
+  buildRootBootstrapOperabilityTransition,
+  buildRootPlatformHealthDegradedEvent,
+} from './rootOperabilityModel';
+import { useFrontendOperabilityTransitionRecorder } from './services/AppServicesContext';
+import { useFrontendOperabilityTransition } from './services/operability/useFrontendOperabilityTransition';
+import {
   isCanvasRoute,
   resolveShellNavigationDisposition,
 } from './shell/shellNavigationDisposition';
@@ -60,6 +66,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
   const setConnectionStatus = usePlatformConnectionStore((state) => state.setConnectionStatus);
   const capabilitiesQuery = useCapabilitiesQuery();
+  const frontendOperabilityTransitionRecorder = useFrontendOperabilityTransitionRecorder();
   const platformHealth = usePlatformHealthSnapshotQuery(platformHealthCapability);
   const shellHealth = buildShellHealthPresentationModel({
     data: platformHealth.data,
@@ -99,6 +106,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
   const routeBootstrapStartupReadinessRef = useRef(
     createInitialRouteBootstrapStartupReadinessState()
   );
+  const bootstrapOperabilityActiveRef = useRef(true);
   const [routeBootstrapCanComplete, setRouteBootstrapCanComplete] = useState(false);
   const navigationDisposition = useMemo(
     () => resolveShellNavigationDisposition(location.pathname),
@@ -108,6 +116,38 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     () => buildShellRuntimeState(capabilitiesQuery.data).navigationModel,
     [capabilitiesQuery.data]
   );
+  const bootstrapOperabilityTransition = useMemo(
+    () =>
+      buildRootBootstrapOperabilityTransition({
+        bootstrapActive: bootstrapOperabilityActiveRef.current,
+        capabilitiesFailed: capabilitiesQuery.isError,
+        capabilitiesReady: Boolean(capabilitiesQuery.data),
+        platformHealthFailed: platformHealth.isError,
+        platformRestState: shellHealthRestState,
+      }),
+    [
+      capabilitiesQuery.data,
+      capabilitiesQuery.isError,
+      platformHealth.isError,
+      shellHealthRestState,
+    ]
+  );
+  const platformHealthDegradedEvent = useMemo(
+    () => buildRootPlatformHealthDegradedEvent(shellHealthRestState),
+    [shellHealthRestState]
+  );
+
+  useFrontendOperabilityTransition(
+    frontendOperabilityTransitionRecorder,
+    'root.bootstrap',
+    bootstrapOperabilityTransition
+  );
+  useFrontendOperabilityTransition(
+    frontendOperabilityTransitionRecorder,
+    'root.platform-health',
+    platformHealthDegradedEvent
+  );
+  useFrontendOperabilityTransition(frontendOperabilityTransitionRecorder, 'route.boundary', null);
 
   useEffect(() => {
     if (!isCanvasRoute(location.pathname)) {
@@ -222,6 +262,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
       return;
     }
 
+    bootstrapOperabilityActiveRef.current = false;
     completeBootstrapScreen();
   }, [
     capabilitiesQuery.isError,

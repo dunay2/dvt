@@ -69,4 +69,37 @@ describe('Startup route readiness', () => {
     cy.get('#app-loading-screen').should('have.attr', 'data-state', 'complete');
     cy.get('#app-loading-screen').should('not.be.visible');
   });
+
+  it('keeps startup usable while recording a privacy-safe capabilities failure', () => {
+    const operabilityEvents: unknown[] = [];
+    stubE2eApi('GET', '/capabilities', () => ({
+      statusCode: 503,
+      body: { error: 'private upstream detail' },
+    }));
+    stubE2eJsonApi('GET', '/workspace/context', {
+      effectiveWorkspace: E2E_WORKSPACE_SESSION,
+      availableWorkspaces: [E2E_WORKSPACE_SESSION],
+    });
+    stubCanvasDraftRead();
+
+    visitWithE2eWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        window.console.warn = (marker: unknown, event: unknown) => {
+          if (marker === '[frontend-operability]') {
+            operabilityEvents.push(event);
+          }
+        };
+      },
+    });
+
+    cy.contains('Sales canvas').should('be.visible');
+    cy.get('#app-loading-screen').should('have.attr', 'data-state', 'complete');
+    cy.wrap(operabilityEvents).should('deep.equal', [
+      {
+        type: 'frontend.bootstrap.failed',
+        phase: 'capabilities',
+        reasonCode: 'capabilities-query-failed',
+      },
+    ]);
+  });
 });

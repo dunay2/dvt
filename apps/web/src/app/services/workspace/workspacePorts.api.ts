@@ -22,8 +22,13 @@ import type {
   WorkspaceFileSaveReceipt,
   WorkspaceGraphSnapshot,
 } from '../../ports/workspace';
+import type { FrontendOperabilitySink } from '../../ports/frontendOperability';
 import type { DiffChange } from '../../types/dbt';
 import { ApiError, type ApiClient } from '../api/createApiClient';
+import {
+  createContractFailureEvent,
+  recordFrontendOperabilityEvent,
+} from '../operability/frontendOperabilityRecorder';
 import {
   WorkspaceApiCapabilityUnsupportedError,
   WorkspaceFileLoadError,
@@ -182,17 +187,32 @@ function buildWarehouseSourcesImportEndpoint(): string {
 }
 
 export function createApiWarehouseSourceImportPort(
-  apiClient: ApiClient
+  apiClient: ApiClient,
+  frontendOperabilitySink: FrontendOperabilitySink
 ): IWarehouseSourceImportPort {
   return {
     listWarehouseConnections: async () =>
       WarehouseConnectionListSchema.parse(
         await apiClient.getJson(buildWarehouseConnectionsEndpoint())
       ),
-    listSourceObjects: async (connectionId) =>
-      SourceObjectCatalogResponseSchema.parse(
-        await apiClient.getJson(buildWarehouseConnectionSourceObjectsEndpoint(connectionId))
-      ).objects,
+    listSourceObjects: async (connectionId) => {
+      const response = await apiClient.getJson(
+        buildWarehouseConnectionSourceObjectsEndpoint(connectionId)
+      );
+      const parsed = SourceObjectCatalogResponseSchema.safeParse(response);
+      if (!parsed.success) {
+        recordFrontendOperabilityEvent(
+          frontendOperabilitySink,
+          createContractFailureEvent(
+            'ListWarehouseConnectionSourceObjects',
+            'response-contract-rejected'
+          )
+        );
+        throw parsed.error;
+      }
+
+      return parsed.data.objects;
+    },
     createWarehouseConnection: async (input) =>
       WarehouseConnectionSchema.parse(
         await apiClient.postJson(buildWarehouseConnectionsEndpoint(), input)
