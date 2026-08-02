@@ -1,3 +1,4 @@
+import type { PlanRecord } from '@dvt/contracts';
 import { describe, expect, it, vi } from 'vitest';
 
 import { StoredPlanRunExecutionContextRequirementResolver } from '../../../src/application/services/StoredPlanRunExecutionContextRequirementResolver.js';
@@ -54,8 +55,9 @@ describe('StoredPlanRunExecutionContextRequirementResolver', () => {
   });
 });
 
-function recordFor(stepKinds: readonly string[]) {
+function recordFor(stepKinds: readonly string[]): PlanRecord {
   return {
+    ...metadata,
     canonicalPlanJson: JSON.stringify({
       metadata: {
         planId: metadata.planId,
@@ -71,5 +73,13 @@ function recordFor(stepKinds: readonly string[]) {
         dependsOn: [],
       })),
     }),
-  } as never;
+    canonicalHash: 'c'.repeat(64),
+    planVersion: '1.0',
+    schemaVersion: '1.0',
+    contractVersion: '1.0.0',
+    sourceRef: 'test://stored-plan',
+    state: 'ACTIVE',
+    createdAtIso: '2026-08-02T00:00:00.000Z',
+    updatedAtIso: '2026-08-02T00:00:00.000Z',
+  };
 }
