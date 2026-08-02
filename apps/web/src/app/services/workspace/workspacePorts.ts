@@ -10,8 +10,7 @@ import type {
   IWorkspacePluginCatalogQueryPort,
 } from '../../ports/workspace';
 import type { FrontendOperabilitySink } from '../../ports/frontendOperability';
-import { type ApiClient, createApiClient } from '../api/createApiClient';
-import { createConsoleFrontendOperabilitySink } from '../operability/consoleFrontendOperabilitySink';
+import type { ApiClient } from '../api/createApiClient';
 import { createApiWorkspacePluginCatalogQueryPort } from './workspacePluginCatalog.api';
 import {
   apiWorkspacePortCapabilities,
@@ -58,8 +57,8 @@ export function resolveWorkspacePortCapabilities(): WorkspacePortCapabilities {
 }
 
 export function createWorkspacePorts(
-  apiClient: ApiClient = createApiClient(),
-  frontendOperabilitySink: FrontendOperabilitySink = createConsoleFrontendOperabilitySink()
+  apiClient: ApiClient,
+  frontendOperabilitySink: FrontendOperabilitySink
 ): WorkspacePorts {
   return {
     workspaceGraphSnapshotQuery: createApiWorkspaceGraphSnapshotQueryPort(apiClient),

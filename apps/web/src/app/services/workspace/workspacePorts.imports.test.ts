@@ -17,6 +17,8 @@ import {
 } from './workspaceScope.test.harness';
 import { createWorkspacePorts, resolveWorkspacePortCapabilities } from './workspacePorts';
 
+const TEST_OPERABILITY_SINK = { record: () => undefined } as const;
+
 describe('workspace ports source import', () => {
   installWorkspaceScopeHarness();
 
@@ -147,7 +149,7 @@ describe('workspace ports source import', () => {
         ] as TResponse,
       postJson: async <_TRequest, TResponse>() => buildGraphDraftSourceImportResult() as TResponse,
     });
-    const ports = createWorkspacePorts(apiClient);
+    const ports = createWorkspacePorts(apiClient, TEST_OPERABILITY_SINK);
 
     await expect(ports.warehouseSourceImport.listWarehouseConnections()).resolves.toHaveLength(1);
     await expect(
@@ -171,7 +173,7 @@ describe('workspace ports source import', () => {
     const { apiClient, postJson } = createApiClientHarness({
       postJson: async <_TRequest, TResponse>() => ({}) as TResponse,
     });
-    const ports = createWorkspacePorts(apiClient);
+    const ports = createWorkspacePorts(apiClient, TEST_OPERABILITY_SINK);
 
     await expect(
       ports.warehouseSourceImport.importSources(

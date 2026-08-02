@@ -35,7 +35,7 @@ function TransitionProbe({
 }: {
   readonly event: FrontendOperabilityEvent | null;
   readonly sink: FrontendOperabilitySink;
-}) {
+}): null {
   useFrontendOperabilityTransition(sink, event);
   return null;
 }
