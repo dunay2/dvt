@@ -253,6 +253,7 @@ export function useCanvasController() {
     capabilities,
     edges: graphModel.edges,
     selectedNodeIds: uiScope.selectedNodeIds,
+    impactOverlayEnabled: store.impactOverlayEnabled,
   });
 
   const handleToggleExecutionSelection = useCallback(
@@ -353,7 +354,6 @@ export function useCanvasController() {
       canMutateGraph: canMutateActiveCanvas,
       canSelectExecution,
       columnLevelLineageEnabled: store.columnLevelLineageEnabled,
-      impactOverlayEnabled: store.impactOverlayEnabled,
     }
   );
   const inspectorCommands = useCanvasInspectorCommands({

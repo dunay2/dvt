@@ -54,6 +54,7 @@ type UseCanvasOverlayModelArgs = {
   capabilities: RuntimeCapabilities | undefined;
   edges: Edge[];
   selectedNodeIds: string[];
+  impactOverlayEnabled: boolean;
 };
 
 export function useCanvasOverlayModel({
@@ -62,6 +63,7 @@ export function useCanvasOverlayModel({
   capabilities,
   edges,
   selectedNodeIds,
+  impactOverlayEnabled,
 }: UseCanvasOverlayModelArgs) {
   const activeCanonicalRun = useMemo(
     () => (currentRun ? mapRunToCanonical(currentRun, capabilities) : null),
@@ -97,11 +99,15 @@ export function useCanvasOverlayModel({
       selectedNodeIds,
       activeRunStatus,
       runStatusByNodeId,
-      costByNodeId
+      costByNodeId,
+      impactOverlayEnabled
+    );
+    const activeOverlays = getAllOverlays(capabilities).filter(
+      (overlay) => impactOverlayEnabled || overlay.id !== 'impact'
     );
     return buildNodeDecorations(
       canonicalNodes,
-      getAllOverlays(capabilities),
+      activeOverlays,
       activeExclusiveOverlayId,
       overlayCtx
     );
@@ -112,6 +118,7 @@ export function useCanvasOverlayModel({
     costByNodeId,
     edges,
     exclusiveOverlayMode,
+    impactOverlayEnabled,
     runStatusByNodeId,
     selectedNodeIds,
   ]);

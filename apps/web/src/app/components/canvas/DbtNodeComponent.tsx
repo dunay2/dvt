@@ -49,7 +49,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   status: NodeStatus;
   lastDuration?: number;
   lastCost?: number;
-  /** Plugin overlay decoration — replaces impactLevel/isHighlighted */
+  /** Plugin-projected overlay decoration. */
   overlayDecoration?: MergedNodeDecoration | null;
   showColumns?: boolean;
   columns?: Array<{ name: string; type: string }>;

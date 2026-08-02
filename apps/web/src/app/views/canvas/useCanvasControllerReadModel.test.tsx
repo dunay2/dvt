@@ -85,7 +85,6 @@ function buildReadModelArgs(
     canMutateGraph: false,
     canSelectExecution: true,
     columnLevelLineageEnabled: false,
-    impactOverlayEnabled: false,
     ...overrides,
   };
 }
@@ -203,7 +202,6 @@ describe('useCanvasControllerReadModel', () => {
         canonicalEdges: [],
       },
       columnLevelLineageEnabled: false,
-      impactOverlayEnabled: false,
     };
     const mounted = await renderReadModel(args);
 

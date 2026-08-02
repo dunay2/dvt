@@ -125,7 +125,7 @@ describe('useCanvasGraphHandlers edge authoring', () => {
   });
 
   it('uses visible draft node ports when runtime capabilities omit a node plugin', async () => {
-    evaluateGraphHandlerConnectionWith((source, target, _currentEdges, pluginPortMap) => {
+    evaluateGraphHandlerConnectionWith((source, target, pluginPortMap) => {
       if (pluginPortMap.has(source.pluginId) && pluginPortMap.has(target.pluginId)) {
         return { allowed: true };
       }

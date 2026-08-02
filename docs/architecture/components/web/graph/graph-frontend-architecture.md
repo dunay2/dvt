@@ -111,6 +111,11 @@ As of 2026-04-25:
   and first-node creation use canonical admission before any viewport
   projection, while plugin graph strategies only parse or project
   plugin-owned payloads
+- connection admission separates topology invariants from plugin policy:
+  `proposeConnection` owns endpoint, duplicate, direction, and cycle checks,
+  then delegates to `evaluateConnectionPolicy`; passive compatibility hints
+  precompute graph topology once and reuse that same policy object instead of
+  rebuilding the command aggregate for every possible node pair
 - node create/drop handlers delegate node admission to
   `useCanvasNodeAdmissionCommandRunner`, and edge confirmation/reconnect
   delegates to `useCanvasEdgeCommandRunner`; both runners serialize local

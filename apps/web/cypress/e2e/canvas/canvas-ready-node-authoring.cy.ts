@@ -10,12 +10,7 @@ import {
   clickCanvasContextMenuItem,
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
-import {
-  getE2eApiCalls,
-  getLastE2eApiCall,
-  stubE2eJsonApi,
-  waitForE2eApiCall,
-} from '../../support/e2eApiStub';
+import { getE2eApiCalls, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
 import {
   E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
@@ -72,6 +67,19 @@ function waitForDraftSaveCount(expectedCount: number): void {
   });
 }
 
+function findDraftSaveContainingNode(nodeId: string): CanvasDraftSaveRequestBody | undefined {
+  return getE2eApiCalls('/workspace/graph/draft', 'PUT')
+    .map((call) => call.body as CanvasDraftSaveRequestBody)
+    .find((body) => body.draft.nodeIds.includes(nodeId));
+}
+
+function waitForDraftSaveContainingNode(nodeId: string): void {
+  cy.wrap(null).should(() => {
+    expect(findDraftSaveContainingNode(nodeId), `saved draft containing ${nodeId}`).to.not.be
+      .undefined;
+  });
+}
+
 function assertNoManualSaveCommand(): void {
   cy.contains('button', /^Save$/).should('not.exist');
   cy.contains('button', /^Guardar$/).should('not.exist');
@@ -103,8 +111,8 @@ function addSqlTransformNode(): void {
   chooseSqlTransformFromCanvasContextMenu();
 }
 
-function removeCanvasNode(nodeName: string): void {
-  cy.contains('.react-flow__node', nodeName).rightclick();
+function removeCanvasNode(nodeId: string): void {
+  cy.get(`.react-flow__node[data-id="${nodeId}"]`).rightclick();
   cy.contains('[role="menuitem"]', 'Delete').click();
 }
 
@@ -114,8 +122,7 @@ describe('Canvas ready node authoring', () => {
   });
 
   it('adds a governed authoring node from the canvas context menu on an existing canvas', () => {
-    stubCanvasDraftRead();
-    stubCanvasDraftSave();
+    stubStatefulCanvasDraftAuthoring();
 
     visitReadyCanvas();
 
@@ -125,12 +132,10 @@ describe('Canvas ready node authoring', () => {
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
     addSqlTransformNode();
 
-    cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
-    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
+    waitForDraftSaveContainingNode('dvt-sql-transform-1');
     cy.then(() => {
-      const saveBody = getLastE2eApiCall('/workspace/graph/draft', 'PUT')?.body as
-        | CanvasDraftSaveRequestBody
-        | undefined;
+      const saveBody = findDraftSaveContainingNode('dvt-sql-transform-1');
       const createdNode = saveBody?.draft.nodes.find((node) => node.id === 'dvt-sql-transform-1');
       const createdPosition = saveBody?.draft.nodePositions['dvt-sql-transform-1'];
 
@@ -154,13 +159,6 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.get('.react-flow__pane').should('be.visible').rightclick(320, 260, { force: true });
-    cy.get('.react-flow__pane').trigger('click', {
-      button: 0,
-      clientX: 356,
-      clientY: 288,
-      bubbles: true,
-      force: true,
-    });
 
     cy.get('[data-slot="canvas-context-menu"]').should('be.visible');
     cy.wait(1_500);
@@ -228,20 +226,20 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     addSqlTransformNode();
-    cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
+    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
     waitForDraftSaveCount(1);
 
     visitReadyCanvas();
 
-    cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
-    removeCanvasNode('SQL transform 1');
-    cy.contains('.react-flow__node', 'SQL transform 1').should('not.exist');
+    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
+    removeCanvasNode('dvt-sql-transform-1');
+    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('not.exist');
     waitForDraftSaveCount(2);
 
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'SQL transform 1').should('not.exist');
+    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('not.exist');
   });
 
   it('does not present failed draft saves as persisted after reload', () => {
@@ -251,7 +249,7 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     addSqlTransformNode();
-    cy.contains('.react-flow__node', 'SQL transform 1').should('be.visible');
+    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('be.visible');
     waitForDraftSaveCount(1);
     assertNoManualSaveCommand();
     assertDraftSaveStatus('draftSaveFailedLabel');
@@ -259,7 +257,7 @@ describe('Canvas ready node authoring', () => {
     visitReadyCanvas();
 
     cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'SQL transform 1').should('not.exist');
+    cy.get('.react-flow__node[data-id="dvt-sql-transform-1"]').should('not.exist');
   });
 
   it('does not expose ready-canvas node creation when draft capability is read-only', () => {
@@ -278,4 +276,76 @@ describe('Canvas ready node authoring', () => {
       expect(getE2eApiCalls('/workspace/graph/draft', 'PUT')).to.have.length(0);
     });
   });
+
+  it(
+    'keeps critical Canvas interactions operable on the canonical 1,000-node graph',
+    { defaultCommandTimeout: 30_000 },
+    () => {
+      stubStatefulCanvasDraftAuthoring({ largeGraph: true });
+
+      visitReadyCanvas();
+
+      cy.contains('Large Canvas regression fixture').should('be.visible');
+      cy.get('.react-flow__node[data-id="large-node-00-00"]')
+        .should('exist')
+        .click({ force: true });
+      cy.get('[data-slot="canvas-node-floating-toolbar"]').should('be.visible');
+
+      cy.get('.react-flow__node[data-id="large-node-01-00"]')
+        .should('exist')
+        .click({ force: true });
+      cy.get('[data-slot="canvas-node-floating-toolbar"]').should('be.visible');
+
+      cy.get('.react-flow__viewport')
+        .invoke('attr', 'style')
+        .then((initialTransform) => {
+          cy.get('.react-flow__controls-zoomin').click({ force: true });
+          cy.get('.react-flow__viewport').should(($viewport) => {
+            expect($viewport.attr('style')).not.to.equal(initialTransform);
+          });
+        });
+
+      cy.get('.react-flow__viewport')
+        .invoke('attr', 'style')
+        .then((zoomedTransform) => {
+          cy.window().then((browserWindow) => {
+            cy.get('.react-flow__pane')
+              .trigger('mousedown', {
+                button: 0,
+                clientX: 520,
+                clientY: 360,
+                force: true,
+                view: browserWindow,
+              })
+              .trigger('mousemove', {
+                buttons: 1,
+                clientX: 620,
+                clientY: 420,
+                force: true,
+                view: browserWindow,
+              })
+              .trigger('mouseup', {
+                button: 0,
+                clientX: 620,
+                clientY: 420,
+                force: true,
+                view: browserWindow,
+              });
+          });
+          cy.get('.react-flow__viewport').should(($viewport) => {
+            expect($viewport.attr('style')).not.to.equal(zoomedTransform);
+          });
+        });
+
+      cy.get('[data-slot="canvas-node-floating-toolbar"]')
+        .should('have.attr', 'data-node-id', 'large-node-01-00')
+        .find('[data-toolbar-action="code"]')
+        .click();
+      cy.get('[data-slot="canvas-node-workbench-panel"]')
+        .should('be.visible')
+        .and('contain.text', 'large-node-01-00');
+      cy.contains('[data-slot="canvas-node-workbench-panel"] button', /^(Close|Cerrar)$/).click();
+      cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    }
+  );
 });

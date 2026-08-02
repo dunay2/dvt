@@ -41,6 +41,12 @@ contribution and renders it inside `View`.
 
 - `View` owns Canvas visual toggles: layout, impact overlay, column lineage,
   cost overlay, grid visibility, grid color, and snap-to-grid.
+- `ConfigureCanvasViewportPreferences` is the sole command rail for the Impact
+  preference; disabling it removes only the additive `impact` contribution and
+  skips upstream/downstream traversal.
+- Runtime and cost overlays remain available when Impact is disabled.
+- `overlayDecoration` is the only node-impact presentation contract. Canvas
+  node data must not project a parallel impact shape.
 - `CanvasToolbarPrimaryControls` must not render those visual toggles in the
   top-bar toolbar.
 - `ShellMenu` must not import Canvas controller hooks or inspect Canvas route
@@ -75,6 +81,8 @@ flowchart LR
   Store --> ShellMenu["ShellMenu"]
   ShellMenu --> ViewGroup["Canvas view controls"]
   ViewGroup --> Commands["layout / overlays / grid / snap"]
+  Commands --> OverlayModel["useCanvasOverlayModel"]
+  OverlayModel --> ActiveOverlays["runtime / cost / optional impact"]
 ```
 
 ## Consumers
@@ -106,3 +114,5 @@ See [Canvas View Menu User Stories](./canvas-view-menu-user-stories.md).
   or diagrams, architecture review can no longer verify the boundary;
 - if view controls start planning or running workflows, the View menu has
   crossed into command-rail behavior.
+- if the Impact preference gates a node-data field while the active overlay
+  remains enabled, two authorities have reappeared.
