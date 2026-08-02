@@ -422,20 +422,29 @@ credentials, or define backend template contracts.
 ### `CancelRun`
 
 - Type: command.
-- Status: `gap-needed` for frontend consumption.
+- Status: `implemented-api`.
 - Owner: runtime control.
+- Frontend surfaces:
+  - `IRunsPort.cancelRun`;
+  - `useRunControlCommands`;
+  - Runs and Canvas operational controls.
 - Backend surface: `POST /runs/:runId/cancel`.
-- Needed because: backend vocabulary exposes canonical cancellation, but
-  `IRunsPort` does not expose a frontend command.
+- Semantics: the backend decides availability and idempotent cancellation
+  disposition; presentation consumes that projected truth.
 
 ### `RecoverRun`
 
 - Type: command.
-- Status: `gap-needed` for frontend consumption.
+- Status: `implemented-api`.
 - Owner: runtime recovery.
+- Frontend surfaces:
+  - `IRunsPort.recoverRun`;
+  - `useRunControlCommands`;
+  - Runs and Canvas operational controls.
 - Backend surface: `POST /runs/:runId/recover`.
-- Needed because: backend vocabulary exposes recovery, but the frontend run
-  port does not expose a governed retry/recover command.
+- Semantics: recovery creates a new run from the source run's exact immutable,
+  integrity-validated stored `PlanRef`; the browser supplies only source run
+  identity.
 
 ### `SignalRun`
 
@@ -533,10 +542,6 @@ groups those rails by concern:
 The following frontend rails remain unimplemented and require an owning issue
 before implementation:
 
-- `CancelRun` command: frontend port and route action over the canonical
-  backend cancel route.
-- `RecoverRun` command: frontend port and route action over the canonical
-  backend recovery route.
 - `OpenRunSourceCanvas` command: navigate from run evidence back to the canvas
   and execution scope that produced the run.
 - `UpdateNodeCodeProjection` command: reconcile graph node SQL/dbt properties
