@@ -194,12 +194,13 @@ describe('RecoverRunUseCase', () => {
     dependencies.engine.getRunStatus.mockResolvedValue({ status: 'COMPLETED' });
     const useCase = new RecoverRunUseCase(dependencies as never);
 
-    await expect(
-      useCase.execute(
-        { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
-        commandContext
-      )
-    ).rejects.toMatchObject<RunControlUnavailableError>({
+    const recovery = useCase.execute(
+      { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
+      commandContext
+    );
+
+    await expect(recovery).rejects.toBeInstanceOf(RunControlUnavailableError);
+    await expect(recovery).rejects.toMatchObject({
       action: 'recover',
       status: 'COMPLETED',
       reason: 'run_completed',
