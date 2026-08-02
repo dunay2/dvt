@@ -2,6 +2,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useMemo } from 'react';
 
+import { queryKeys } from '../../queries/queryKeys';
 import { useRunsService } from '../../services/AppServicesContext';
 import type {
   RunControlCommandFailure,
@@ -37,7 +38,7 @@ export function useRunControlCommands(options: UseRunControlCommandsOptions = {}
       };
     },
     onSuccess: async (outcome) => {
-      await queryClient.invalidateQueries({ queryKey: ['runs'] });
+      await queryClient.invalidateQueries({ queryKey: queryKeys.runs.root() });
       if (outcome.action === 'recover') {
         options.onRecoveryAccepted?.(outcome.receipt.recoveryRunId);
       }

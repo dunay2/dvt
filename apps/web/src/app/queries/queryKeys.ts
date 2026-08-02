@@ -55,6 +55,7 @@ export const queryKeys = {
   // Runs
   // -------------------------------------------------------------------------
   runs: {
+    root: () => ['runs'] as const,
     summaries: (workspaceLayoutKey: string) => ['runs', 'summaries', workspaceLayoutKey] as const,
     snapshot: (workspaceLayoutKey: string, runId: string | undefined) =>
       ['runs', 'snapshot', workspaceLayoutKey, runId] as const,
