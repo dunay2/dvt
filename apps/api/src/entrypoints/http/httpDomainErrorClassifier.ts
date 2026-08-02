@@ -13,15 +13,14 @@ import {
   SignalNotImplementedError,
 } from '@dvt/engine';
 
+import { RunControlUnavailableError } from '../../application/errors/runControlErrors.js';
+
 import {
   createHttpErrorResponse,
   HTTP_ERROR_TYPE,
   type HttpResponseModel,
 } from './httpErrorContract.js';
-import {
-  compactHttpErrorDetails,
-  withOptionalHttpErrorDetails,
-} from './httpErrorDetails.js';
+import { compactHttpErrorDetails, withOptionalHttpErrorDetails } from './httpErrorDetails.js';
 import { HTTP_ERROR_REASON } from './httpErrorReasonCatalog.js';
 
 export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null {
@@ -74,6 +73,18 @@ export function mapRuntimeDomainError(error: unknown): HttpResponseModel | null 
           ...readMessageParams(error, 'status', 'status'),
         })
       ),
+    });
+  }
+
+  if (error instanceof RunControlUnavailableError) {
+    return createHttpErrorResponse({
+      type: HTTP_ERROR_TYPE.conflict,
+      reason: HTTP_ERROR_REASON.runControlUnavailable,
+      details: {
+        action: error.action,
+        status: error.status,
+        controlReason: error.reason,
+      },
     });
   }
 

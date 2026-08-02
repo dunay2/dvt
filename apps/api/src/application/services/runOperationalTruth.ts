@@ -2,6 +2,8 @@ import type { CanonicalRunStatus, RunMetadata } from '@dvt/contracts';
 
 import type { RunOperationalTruthDto } from '../ports/runtime.js';
 
+import { projectRunControlAvailability } from './runControlPolicy.js';
+
 export interface RunOperationalTruthEvidence {
   readonly currentStepId?: string;
   readonly failedStepId?: string;
@@ -45,6 +47,7 @@ export function projectRunOperationalTruth(
     ...(currentStepId === undefined ? {} : { currentStepId }),
     ...(failedStepId === undefined ? {} : { failedStepId }),
     ...(errorReason === undefined ? {} : { errorReason }),
+    controls: projectRunControlAvailability(status),
   };
 }
 

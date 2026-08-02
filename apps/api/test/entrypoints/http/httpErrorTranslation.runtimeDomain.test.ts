@@ -10,6 +10,7 @@ import {
 } from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
 
+import { RunControlUnavailableError } from '../../../src/application/errors/runControlErrors.js';
 import { httpErrorTranslation } from '../../../src/entrypoints/http/httpErrorTranslation.js';
 
 import {
@@ -81,6 +82,20 @@ describe('httpErrorTranslation runtime domain mapping', () => {
         details: {
           runId: 'run-source',
           status: 'RUNNING',
+        },
+      },
+    },
+    {
+      description: 'maps unavailable run controls to 409',
+      buildError: () => new RunControlUnavailableError('cancel', 'COMPLETED', 'run_terminal'),
+      expected: {
+        status: 409,
+        type: 'conflict',
+        reason: 'run_control_unavailable',
+        details: {
+          action: 'cancel',
+          status: 'COMPLETED',
+          controlReason: 'run_terminal',
         },
       },
     },

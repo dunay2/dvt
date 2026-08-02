@@ -1,0 +1,59 @@
+/** Owned concern: derive run-control decisions from canonical server-owned lifecycle truth. */
+import type { CanonicalRunStatus } from '@dvt/contracts';
+
+import type {
+  CancelRunDisposition,
+  RunControlAvailabilityDto,
+  RunControlUnavailableReason,
+} from '../ports/runtime.js';
+
+export type CancelRunDecision =
+  | Readonly<{ kind: 'dispatch'; disposition: 'requested' }>
+  | Readonly<{
+      kind: 'settled';
+      disposition: Exclude<CancelRunDisposition, 'requested'>;
+    }>
+  | Readonly<{ kind: 'reject'; reason: RunControlUnavailableReason }>;
+
+export function decideCancelRun(status: CanonicalRunStatus): CancelRunDecision {
+  if (status.status === 'CANCELLED') {
+    return { kind: 'settled', disposition: 'already_cancelled' };
+  }
+  if (status.substatus === 'CANCELLING') {
+    return { kind: 'settled', disposition: 'already_requested' };
+  }
+  if (status.status === 'COMPLETED' || status.status === 'FAILED') {
+    return { kind: 'reject', reason: 'run_terminal' };
+  }
+  return { kind: 'dispatch', disposition: 'requested' };
+}
+
+export function projectRunControlAvailability(
+  status: CanonicalRunStatus
+): RunControlAvailabilityDto {
+  const cancelDecision = decideCancelRun(status);
+  const cancel: RunControlAvailabilityDto['cancel'] =
+    cancelDecision.kind === 'dispatch'
+      ? { available: true }
+      : {
+          available: false,
+          reason:
+            cancelDecision.kind === 'reject'
+              ? cancelDecision.reason
+              : cancelDecision.disposition === 'already_requested'
+                ? 'cancellation_pending'
+                : 'run_cancelled',
+        };
+
+  if (status.status === 'FAILED' || status.status === 'CANCELLED') {
+    return { cancel, recover: { available: true } };
+  }
+
+  return {
+    cancel,
+    recover: {
+      available: false,
+      reason: status.status === 'COMPLETED' ? 'run_completed' : 'run_active',
+    },
+  };
+}

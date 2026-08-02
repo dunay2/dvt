@@ -110,6 +110,19 @@ export interface RunOperationalTruthDto {
   readonly currentStepId?: string;
   readonly failedStepId?: string;
   readonly errorReason?: string;
+  readonly controls: RunControlAvailabilityDto;
+}
+
+export type RunControlUnavailableReason =
+  'cancellation_pending' | 'run_active' | 'run_cancelled' | 'run_completed' | 'run_terminal';
+
+export type RunControlActionAvailabilityDto =
+  | Readonly<{ available: true }>
+  | Readonly<{ available: false; reason: RunControlUnavailableReason }>;
+
+export interface RunControlAvailabilityDto {
+  readonly cancel: RunControlActionAvailabilityDto;
+  readonly recover: RunControlActionAvailabilityDto;
 }
 
 export type GetRunStatusResult = RunOperationalTruthDto & {
@@ -236,6 +249,13 @@ export interface SignalRunResult {
   readonly accepted: boolean;
 }
 
+export type CancelRunDisposition = 'requested' | 'already_requested' | 'already_cancelled';
+
+export interface CancelRunResult extends SignalRunResult {
+  readonly signalType: 'CANCEL';
+  readonly disposition: CancelRunDisposition;
+}
+
 export interface ISignalRunUseCase {
   execute(
     command: SignalRunCommand,
@@ -247,7 +267,7 @@ export interface ICancelRunUseCase {
   execute(
     command: CancelRunCommand,
     context: AuthorizedCommandExecutionContext
-  ): Promise<SignalRunResult>;
+  ): Promise<CancelRunResult>;
 }
 
 export const SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS = ['temporal'] as const;

@@ -30,6 +30,7 @@ describe('CancelRunUseCase', () => {
   it('maps cancel commands to engine.cancelRun', async () => {
     const engine = {
       cancelRun: vi.fn().mockResolvedValue(undefined),
+      getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status: 'RUNNING' }),
     };
     const stateStore = {
       async getRunMetadataByRunId() {
@@ -66,6 +67,7 @@ describe('CancelRunUseCase', () => {
       runId: 'run-1',
       signalType: 'CANCEL',
       accepted: true,
+      disposition: 'requested',
     });
 
     expect(engine.cancelRun).toHaveBeenCalledWith({
@@ -76,6 +78,86 @@ describe('CancelRunUseCase', () => {
       runId: 'provider-run-1',
     });
   });
+
+  it.each([
+    ['RUNNING', 'CANCELLING', 'already_requested'],
+    ['CANCELLED', undefined, 'already_cancelled'],
+  ] as const)(
+    'does not redispatch cancellation for %s/%s',
+    async (status, substatus, disposition) => {
+      const engine = {
+        cancelRun: vi.fn(),
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'run-1',
+          status,
+          ...(substatus === undefined ? {} : { substatus }),
+        }),
+      };
+      const stateStore = {
+        getRunMetadataByRunId: vi.fn().mockResolvedValue({
+          tenantId: 'tenant-a',
+          projectId: 'proj-1',
+          environmentId: 'env-1',
+          runId: 'run-1',
+          planId: 'plan-1',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          providerRef: {
+            provider: 'temporal',
+            tenantId: 'tenant-a',
+            namespace: 'default',
+            workflowId: 'wf-1',
+            runId: 'provider-run-1',
+          },
+        }),
+      };
+
+      const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+
+      await expect(
+        useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
+      ).resolves.toMatchObject({ accepted: true, disposition });
+      expect(engine.cancelRun).not.toHaveBeenCalled();
+    }
+  );
+
+  it.each(['COMPLETED', 'FAILED'] as const)(
+    'rejects cancellation for terminal %s runs without dispatch',
+    async (status) => {
+      const engine = {
+        cancelRun: vi.fn(),
+        getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status }),
+      };
+      const stateStore = {
+        getRunMetadataByRunId: vi.fn().mockResolvedValue({
+          tenantId: 'tenant-a',
+          projectId: 'proj-1',
+          environmentId: 'env-1',
+          runId: 'run-1',
+          planId: 'plan-1',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          providerRef: {
+            provider: 'temporal',
+            tenantId: 'tenant-a',
+            namespace: 'default',
+            workflowId: 'wf-1',
+            runId: 'provider-run-1',
+          },
+        }),
+      };
+      const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+
+      await expect(
+        useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
+      ).rejects.toMatchObject({
+        name: 'RunControlUnavailableError',
+        action: 'cancel',
+        status,
+      });
+      expect(engine.cancelRun).not.toHaveBeenCalled();
+    }
+  );
 
   it('throws when the run metadata is missing', async () => {
     const engine = {
