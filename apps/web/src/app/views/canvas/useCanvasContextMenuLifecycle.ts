@@ -35,6 +35,7 @@ type UseCanvasContextMenuLifecycleResult = Readonly<{
   contextSurfaceRef: RefObject<HTMLDivElement>;
   markContextMenuOpened: (request: CanvasContextMenuOpenRequest) => void;
   closeContextMenu: (options?: CloseCanvasContextMenuOptions) => void;
+  restoreContextMenuOpenerFocus: () => void;
   handlePaneClick: (event: PaneClickEvent) => void;
 }>;
 
@@ -106,6 +107,14 @@ export function useCanvasContextMenuLifecycle({
     [clearPendingDocumentPointerEchoTimeout, setModel]
   );
 
+  const restoreContextMenuOpenerFocus = useCallback(() => {
+    const focusTarget = openerRef.current ?? contextSurfaceRef.current;
+    openerRef.current = null;
+    if (focusTarget?.isConnected) {
+      focusTarget.focus({ preventScroll: true });
+    }
+  }, []);
+
   useEffect(() => clearPendingDocumentPointerEchoTimeout, [clearPendingDocumentPointerEchoTimeout]);
 
   useLayoutEffect(() => {
@@ -117,14 +126,10 @@ export function useCanvasContextMenuLifecycle({
     }
 
     if (restoreFocusAfterCloseRef.current) {
-      const opener = openerRef.current;
       restoreFocusAfterCloseRef.current = false;
-      openerRef.current = null;
-      if (opener?.isConnected) {
-        opener.focus({ preventScroll: true });
-      }
+      restoreContextMenuOpenerFocus();
     }
-  }, [model]);
+  }, [model, restoreContextMenuOpenerFocus]);
 
   const handlePaneClick = useCallback(
     (event: PaneClickEvent) => {
@@ -231,6 +236,7 @@ export function useCanvasContextMenuLifecycle({
   }, [
     clearPendingDocumentPointerEchoTimeout,
     closeContextMenu,
+    restoreContextMenuOpenerFocus,
     consumePendingPaneClickEcho,
     model,
   ]);
@@ -240,6 +246,7 @@ export function useCanvasContextMenuLifecycle({
     contextSurfaceRef,
     markContextMenuOpened,
     closeContextMenu,
+    restoreContextMenuOpenerFocus,
     handlePaneClick,
   };
 }

@@ -40,8 +40,14 @@ export function useCanvasContextMenuPresenter({
   onOpenCanvasSettings,
 }: UseCanvasContextMenuPresenterArgs): UseCanvasContextMenuPresenterResult {
   const [model, setModel] = useState<CanvasContextMenuModel | null>(null);
-  const { menuRef, contextSurfaceRef, markContextMenuOpened, closeContextMenu, handlePaneClick } =
-    useCanvasContextMenuLifecycle({ model, setModel });
+  const {
+    menuRef,
+    contextSurfaceRef,
+    markContextMenuOpened,
+    closeContextMenu,
+    restoreContextMenuOpenerFocus,
+    handlePaneClick,
+  } = useCanvasContextMenuLifecycle({ model, setModel });
 
   const openCanvasContextMenu = useCallback(
     (
@@ -228,6 +234,7 @@ export function useCanvasContextMenuPresenter({
     menuRef,
     contextSurfaceRef,
     closeContextMenu,
+    restoreContextMenuOpenerFocus,
     handlePaneClick,
     handleViewportContextMenu,
     handleViewportContextMenuKeyDown,

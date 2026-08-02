@@ -12,6 +12,7 @@ export interface SourceImportWizardProps {
   open: boolean;
   canvasId: string;
   onClose: () => void;
+  onRestoreFocus?: () => void;
   onComplete?: (result: ImportSourcesResult) => void;
   sourceImportOptions?: readonly SourceImportOptionContribution[];
   initialSelection?: SourceImportInitialSelection | null;

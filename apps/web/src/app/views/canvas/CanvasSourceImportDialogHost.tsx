@@ -12,6 +12,7 @@ type CanvasSourceImportDialogHostProps = Readonly<{
   placement?: CanvasShellSourceImportPlacement;
   sourceImportOptions: readonly SourceImportOptionContribution[];
   onClose: () => void;
+  onRestoreFocus?: () => void;
   onComplete: (result: ImportSourcesResult, placement?: CanvasShellSourceImportPlacement) => void;
 }>;
 
@@ -22,6 +23,7 @@ export function CanvasSourceImportDialogHost({
   placement,
   sourceImportOptions,
   onClose,
+  onRestoreFocus,
   onComplete,
 }: CanvasSourceImportDialogHostProps): JSX.Element {
   return (
@@ -29,6 +31,7 @@ export function CanvasSourceImportDialogHost({
       open={open}
       canvasId={canvasId}
       onClose={onClose}
+      onRestoreFocus={onRestoreFocus}
       onComplete={(result) => onComplete(result, placement)}
       sourceImportOptions={sourceImportOptions}
       initialSelection={initialSelection}

@@ -99,6 +99,14 @@ export type CanvasViewCopy = {
   readonly canvasContextMenuAddMacroLabel: string;
   readonly canvasContextMenuAddNodeLabel: string;
   readonly canvasContextMenuCanvasSettingsLabel: string;
+  readonly canvasSettingsDescription: string;
+  readonly canvasSettingsCloseLabel: string;
+  readonly canvasSettingsEnableLabel: string;
+  readonly canvasSettingsDisableLabel: string;
+  readonly canvasSettingsShowGridLabel: string;
+  readonly canvasSettingsHideGridLabel: string;
+  readonly canvasSettingsEnableSnapLabel: string;
+  readonly canvasSettingsDisableSnapLabel: string;
   readonly canvasNodePortTargetLabel: string;
   readonly canvasNodePortSourceLabel: string;
   readonly canvasNodePortCompatibleWithPrefix: string;
