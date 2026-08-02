@@ -108,6 +108,10 @@ describe('ListRunsUseCase', () => {
           provider: 'temporal',
           createdAt: '2026-03-19T00:00:00Z',
           status: 'FAILED',
+          controls: {
+            cancel: { available: false, reason: 'run_terminal' },
+            recover: { available: true },
+          },
           startedAt: '2026-03-19T00:00:05Z',
           completedAt: '2026-03-19T00:00:20Z',
           durationMs: 15000,

@@ -110,6 +110,10 @@ describe('GetRunStatusUseCase', () => {
     ).resolves.toEqual({
       ...expectedOperationalIdentity,
       status: 'RUNNING',
+      controls: {
+        cancel: { available: true },
+        recover: { available: false, reason: 'run_active' },
+      },
       enriched: false,
       snapshotStaleness: 'FRESH',
       diagnostics: {
@@ -421,6 +425,10 @@ describe('GetRunStatusUseCase', () => {
     ).resolves.toEqual({
       ...expectedOperationalIdentity,
       status: 'RUNNING',
+      controls: {
+        cancel: { available: true },
+        recover: { available: false, reason: 'run_active' },
+      },
       enriched: true,
       snapshotStaleness: 'FRESH',
       diagnostics: {
