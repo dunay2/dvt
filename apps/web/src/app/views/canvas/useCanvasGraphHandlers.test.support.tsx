@@ -12,11 +12,10 @@ import type { CanvasDraftSession } from './canvasDraftSession';
 import { useCanvasGraphHandlers } from './useCanvasGraphHandlers';
 
 const graphHandlersTestDoubles = vi.hoisted(() => ({
-  evaluateConnection: vi.fn<
+  evaluateConnectionPolicy: vi.fn<
     (
       source: CanonicalNode,
       target: CanonicalNode,
-      currentEdges: unknown,
       pluginPorts: PluginPortMap
     ) => ConnectionRuleResult
   >(() => ({ allowed: true })),
@@ -26,7 +25,7 @@ vi.mock('../../plugins/contracts/ConnectionRules', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../../plugins/contracts/ConnectionRules')>();
   return {
     ...actual,
-    evaluateConnection: graphHandlersTestDoubles.evaluateConnection,
+    evaluateConnectionPolicy: graphHandlersTestDoubles.evaluateConnectionPolicy,
   };
 });
 
@@ -218,8 +217,8 @@ export function resetGraphHandlersTestDoubles() {
   (
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
-  graphHandlersTestDoubles.evaluateConnection.mockReset();
-  graphHandlersTestDoubles.evaluateConnection.mockReturnValue({ allowed: true });
+  graphHandlersTestDoubles.evaluateConnectionPolicy.mockReset();
+  graphHandlersTestDoubles.evaluateConnectionPolicy.mockReturnValue({ allowed: true });
   toastState.error.mockReset();
   toastState.success.mockReset();
   toastState.info.mockReset();
@@ -233,16 +232,15 @@ export function restoreGraphHandlersTestDoubles() {
 export function rejectGraphHandlerConnectionWith(
   rejection: Exclude<ConnectionRuleResult, { allowed: true }>
 ) {
-  graphHandlersTestDoubles.evaluateConnection.mockReturnValue(rejection);
+  graphHandlersTestDoubles.evaluateConnectionPolicy.mockReturnValue(rejection);
 }
 
 export function evaluateGraphHandlerConnectionWith(
   implementation: (
     source: CanonicalNode,
     target: CanonicalNode,
-    currentEdges: unknown,
     pluginPorts: PluginPortMap
   ) => ConnectionRuleResult
 ) {
-  graphHandlersTestDoubles.evaluateConnection.mockImplementation(implementation);
+  graphHandlersTestDoubles.evaluateConnectionPolicy.mockImplementation(implementation);
 }
