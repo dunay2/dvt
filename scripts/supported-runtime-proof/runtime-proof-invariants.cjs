@@ -4,6 +4,8 @@ const INVARIANT_ORDER = Object.freeze([
   'all_commands_accepted',
   'all_runs_completed',
   'event_sequences_contiguous',
+  'all_events_delivered',
+  'delivery_order_preserved',
   'outbox_backlog_drained',
   'no_duplicate_deliveries',
   'snapshots_match_replay',
@@ -20,6 +22,8 @@ function evaluateRuntimeProof(report) {
       report.completedRunCount === report.expectedAcceptedCommandCount &&
       report.failedRunCount === 0,
     event_sequences_contiguous: report.eventSequencesContiguous === true,
+    all_events_delivered: report.deliveredEventCount === report.persistedEventCount,
+    delivery_order_preserved: report.deliveryOrderPreserved === true,
     outbox_backlog_drained: report.pendingOutboxCount === 0,
     no_duplicate_deliveries: report.duplicateDeliveryCount === 0,
     snapshots_match_replay: report.snapshotReplayMismatchCount === 0,
@@ -52,8 +56,25 @@ function percentile(values, percentileValue) {
   return ordered[index];
 }
 
+function isDeliveryOrderPreserved(deliveries) {
+  const sequencesByRun = new Map();
+  for (const delivery of deliveries) {
+    if (typeof delivery?.runId !== 'string' || !Number.isInteger(delivery.runSeq)) {
+      return false;
+    }
+    const sequences = sequencesByRun.get(delivery.runId) ?? [];
+    sequences.push(delivery.runSeq);
+    sequencesByRun.set(delivery.runId, sequences);
+  }
+
+  return [...sequencesByRun.values()].every((sequences) =>
+    sequences.every((runSeq, index) => runSeq === index + 1)
+  );
+}
+
 module.exports = {
   INVARIANT_ORDER,
   evaluateRuntimeProof,
+  isDeliveryOrderPreserved,
   percentile,
 };

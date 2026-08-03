@@ -3,12 +3,14 @@
 const SUPPORTED_RUNTIME_PROOF_PROFILE = deepFreeze({
   schemaVersion: 'dvt-supported-runtime-proof/v1',
   profileId: 'mvp-18-local-v1',
+  baselineRunCount: 3,
   scope: {
     tenantId: 'tenant-proof-mvp-18',
     projectId: 'project-proof-mvp-18',
     environmentId: 'env-proof-mvp-18',
   },
   workload: {
+    runCompletionTimeoutMs: 60_000,
     source: { schema: 'raw', table: 'orders' },
     sink: { schema: 'runtime_proof', table: 'orders_snapshot' },
     steadyState: {
@@ -39,6 +41,13 @@ function validateSupportedRuntimeProofProfile(profile) {
     if (typeof value !== 'string' || value.trim().length === 0) {
       failures.push(`scope.${name} must be a non-empty string`);
     }
+  }
+
+  if (!isPositiveInteger(profile?.baselineRunCount)) {
+    failures.push('baselineRunCount must be a positive integer');
+  }
+  if (!isPositiveInteger(profile?.workload?.runCompletionTimeoutMs)) {
+    failures.push('workload.runCompletionTimeoutMs must be a positive integer');
   }
 
   const steadyState = profile?.workload?.steadyState;

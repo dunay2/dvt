@@ -6,6 +6,7 @@ const test = require('node:test');
 const {
   INVARIANT_ORDER,
   evaluateRuntimeProof,
+  isDeliveryOrderPreserved,
   percentile,
 } = require('./runtime-proof-invariants.cjs');
 
@@ -17,6 +18,9 @@ function passingReport(overrides = {}) {
     completedRunCount: 8,
     failedRunCount: 0,
     eventSequencesContiguous: true,
+    persistedEventCount: 64,
+    deliveredEventCount: 64,
+    deliveryOrderPreserved: true,
     pendingOutboxCount: 0,
     duplicateDeliveryCount: 0,
     snapshotReplayMismatchCount: 0,
@@ -59,4 +63,23 @@ test('percentile uses the nearest-rank definition without mutating observations'
   assert.equal(percentile(values, 0.95), 40);
   assert.deepEqual(values, [40, 10, 30, 20]);
   assert.equal(percentile([], 0.95), null);
+});
+
+test('delivery order is evaluated independently for each interleaved run', () => {
+  assert.equal(
+    isDeliveryOrderPreserved([
+      { runId: 'run-1', runSeq: 1 },
+      { runId: 'run-2', runSeq: 1 },
+      { runId: 'run-1', runSeq: 2 },
+      { runId: 'run-2', runSeq: 2 },
+    ]),
+    true
+  );
+  assert.equal(
+    isDeliveryOrderPreserved([
+      { runId: 'run-1', runSeq: 2 },
+      { runId: 'run-1', runSeq: 1 },
+    ]),
+    false
+  );
 });
