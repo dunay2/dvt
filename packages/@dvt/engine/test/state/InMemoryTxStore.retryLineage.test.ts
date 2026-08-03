@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { EventInput, RunMetadata } from '../../src/contracts/runEvents.js';
+import type { RecoveryRunBootstrapResult } from '../../src/ports/IRunStateStore.js';
 import { InMemoryRunStateCore } from '../../src/state/InMemoryRunStateCore.js';
 import { InMemoryTxStore } from '../../src/state/InMemoryTxStore.js';
 
@@ -43,13 +44,18 @@ function makeQueuedEvent(runId: string, logicalAttemptId: number): EventInput {
 }
 
 type RecoveryBootstrapStore = Pick<InMemoryRunStateCore, 'bootstrapRecoveryRunTx'>;
+type DeferredWriteFailure = {
+  release: () => void;
+  started: Promise<void>;
+  store: InMemoryRunStateCore;
+};
 
 function bootstrapRecovery(
   store: RecoveryBootstrapStore,
   sourceRunId: string,
   childRunId: string,
   includeQueuedEvent = false
-) {
+): Promise<RecoveryRunBootstrapResult> {
   return store.bootstrapRecoveryRunTx('tenant-1', sourceRunId, (reservation) => ({
     metadata: makeMetadata(childRunId, {
       logicalAttemptId: reservation.logicalAttemptId,
@@ -62,7 +68,7 @@ function bootstrapRecovery(
   }));
 }
 
-function createDeferredWriteFailure(failedRunId: string) {
+function createDeferredWriteFailure(failedRunId: string): DeferredWriteFailure {
   let release!: () => void;
   let reportStarted!: () => void;
   const gate = new Promise<void>((resolve) => {
