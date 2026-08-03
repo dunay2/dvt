@@ -5,9 +5,12 @@ export const STRICT_ISO_UTC_STRING_MESSAGE =
   'String must be a strict ISO UTC timestamp (YYYY-MM-DDTHH:mm:ss.mmmZ)';
 export const SHA256_HEX_STRING_MESSAGE =
   'String must be a 64-character lowercase hex SHA-256 value';
+export const CREDENTIAL_REFERENCE_MESSAGE =
+  'credentialRef must be an opaque provider-qualified reference';
 
 const ISO_UTC_REGEX = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})\.(\d{3})Z$/;
 const SHA256_HEX_REGEX = /^[a-f0-9]{64}$/;
+const CREDENTIAL_REFERENCE_REGEX = /^[a-z][a-z0-9-]*:[A-Za-z0-9][A-Za-z0-9._/-]*$/;
 const MS_PER_SECOND = 1000;
 const MS_PER_MINUTE = 60 * MS_PER_SECOND;
 const MS_PER_HOUR = 60 * MS_PER_MINUTE;
@@ -31,6 +34,10 @@ export function asStepId(value: string): StepId {
 
 export function isSha256HexString(value: string): value is Sha256HexString {
   return isNonBlankString(value) && SHA256_HEX_REGEX.test(value);
+}
+
+export function isCredentialReference(value: string): boolean {
+  return CREDENTIAL_REFERENCE_REGEX.test(value);
 }
 
 export function asSha256HexString(value: string): Sha256HexString {

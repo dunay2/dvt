@@ -13,6 +13,7 @@ export type DbtPlanExecutionBinding =
       projectRoot: string;
       expectedContentSetSha256?: string;
       targetProfile: string;
+      credentialRef: string;
     }>
   | Readonly<{ ok: false; reason: string }>;
 
@@ -40,6 +41,7 @@ export function resolveDbtPlanExecutionBinding(input: {
       ok: true,
       projectRoot: '.',
       targetProfile: input.executionTarget.targetName,
+      credentialRef: input.executionTarget.credentialRef,
     };
   }
 
@@ -65,6 +67,7 @@ export function resolveDbtPlanExecutionBinding(input: {
     projectRoot: parsedProvenance.data.projectRoot,
     expectedContentSetSha256: parsedProvenance.data.contentSetSha256,
     targetProfile: input.executionTarget.targetName,
+    credentialRef: input.executionTarget.credentialRef,
   };
 }
 

@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 import { RUNTIME_PROVIDER_VALUES } from '../../types/contracts.js';
 import {
+  CREDENTIAL_REFERENCE_MESSAGE,
+  isCredentialReference,
   isIsoUtcString,
   isNonBlankString,
   isSha256HexString,
@@ -23,6 +25,9 @@ const IsoUtcStringSchema = NonBlankStringSchema.refine((value) => isIsoUtcString
 const Sha256HexStringSchema = NonBlankStringSchema.refine((value) => isSha256HexString(value), {
   message: SHA256_HEX_STRING_MESSAGE,
 }).brand<'Sha256HexString'>();
+const CredentialReferenceSchema = NonBlankStringSchema.refine(isCredentialReference, {
+  message: CREDENTIAL_REFERENCE_MESSAGE,
+});
 
 const ProviderSchema = z.enum(RUNTIME_PROVIDER_VALUES);
 export const DbtProjectBundleRefSchema = z
@@ -58,6 +63,7 @@ export const DbtPluginContextSchema = z
   .object({
     projectBundleRef: DbtProjectBundleRefSchema,
     targetProfile: NonBlankStringSchema.optional(),
+    credentialRef: CredentialReferenceSchema,
   })
   .strict();
 export type DbtPluginContextSchemaT = z.infer<typeof DbtPluginContextSchema>;
