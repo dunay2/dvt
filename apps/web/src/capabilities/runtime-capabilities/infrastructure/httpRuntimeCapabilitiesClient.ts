@@ -1,4 +1,4 @@
-import { createApiClient, type ApiClient } from '../../../app/services/api/createApiClient';
+import type { ApiClient } from '../../../app/services/api/createApiClient';
 import type { RuntimeCapabilitiesDto } from '../contracts/runtimeCapabilitiesDtos';
 
 export interface RuntimeCapabilitiesHttpClient {
@@ -6,7 +6,7 @@ export interface RuntimeCapabilitiesHttpClient {
 }
 
 export function createHttpRuntimeCapabilitiesClient(
-  apiClient: ApiClient = createApiClient()
+  apiClient: ApiClient
 ): RuntimeCapabilitiesHttpClient {
   return {
     loadCapabilities: () =>

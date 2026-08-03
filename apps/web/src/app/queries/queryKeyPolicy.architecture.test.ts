@@ -132,7 +132,9 @@ describe('Query key policy (architecture)', () => {
       'utf8'
     );
 
-    expect(querySource).not.toContain('useRuntimeCapabilitiesQuery as useCapabilitiesQuery');
+    expect(querySource).toContain('const capabilitiesPort = useCapabilitiesPort()');
+    expect(querySource).toContain('createCapabilitiesQueryOptions(capabilitiesPort)');
+    expect(querySource).toContain("from '@tanstack/react-query'");
   });
 
   it('forbids direct useQuery ownership in selected operator views', () => {
