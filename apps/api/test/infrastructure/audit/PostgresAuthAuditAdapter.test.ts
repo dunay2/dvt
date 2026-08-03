@@ -63,25 +63,60 @@ describe('PostgresAuthAuditAdapter schema contract', () => {
 const databaseUrl = process.env['DVT_PG_URL'] ?? process.env['DATABASE_URL'];
 const describeWithPostgres = databaseUrl ? describe : describe.skip;
 const schema = `it_auth_audit_${randomUUID().replaceAll('-', '')}`;
+const applicationRole = `it_auth_app_${randomUUID().replaceAll('-', '')}`;
+const applicationPassword = `pwd_${randomUUID().replaceAll('-', '')}`;
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl }) : null;
 const adapter = pool ? new PostgresAuthAuditAdapter(pool, schema) : null;
+let applicationPool: Pool | null = null;
+let applicationAdapter: PostgresAuthAuditAdapter | null = null;
 
 describeWithPostgres('PostgresAuthAuditAdapter persistence', () => {
   beforeAll(async () => {
     await adapter!.ensureSchema();
+    await pool!.query(`CREATE ROLE "${applicationRole}" LOGIN PASSWORD '${applicationPassword}'`);
+    await pool!.query(`GRANT USAGE ON SCHEMA "${schema}" TO "${applicationRole}"`);
+    await pool!.query(
+      `GRANT INSERT, SELECT ON "${schema}".auth_audit_events TO "${applicationRole}"`
+    );
+
+    const applicationUrl = new globalThis.URL(databaseUrl!);
+    applicationUrl.username = applicationRole;
+    applicationUrl.password = applicationPassword;
+    applicationPool = new Pool({ connectionString: applicationUrl.toString() });
+    applicationAdapter = new PostgresAuthAuditAdapter(applicationPool, schema);
   });
 
   afterAll(async () => {
+    await applicationPool?.end();
     await pool!.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+    await pool!.query(`DROP ROLE IF EXISTS "${applicationRole}"`);
     await pool!.end();
   });
 
   it('deduplicates one decision identity and scopes operator reads by tenant', async () => {
-    await adapter!.record(EVENT);
-    await adapter!.record({ ...EVENT, occurredAt: new Date('2026-08-03T08:00:01.000Z') });
+    await applicationAdapter!.record(EVENT);
+    await applicationAdapter!.record({
+      ...EVENT,
+      occurredAt: new Date('2026-08-03T08:00:01.000Z'),
+    });
 
-    await expect(adapter!.listForTenant('tenant-a', 'request-1')).resolves.toHaveLength(1);
-    await expect(adapter!.listForTenant('tenant-b', 'request-1')).resolves.toEqual([]);
+    await expect(applicationAdapter!.listForTenant('tenant-a', 'request-1')).resolves.toHaveLength(
+      1
+    );
+    await expect(applicationAdapter!.listForTenant('tenant-b', 'request-1')).resolves.toEqual([]);
+  });
+
+  it('enforces RLS independently of the adapter query predicate', async () => {
+    const client = await applicationPool!.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query(`SELECT set_config('dvt.tenant_id', $1, true)`, ['tenant-b']);
+      const result = await client.query(`SELECT event_id FROM "${schema}".auth_audit_events`);
+      expect(result.rows).toEqual([]);
+      await client.query('COMMIT');
+    } finally {
+      client.release();
+    }
   });
 
   it.each(['UPDATE', 'DELETE'])('rejects committed-row %s operations', async (operation) => {
@@ -93,4 +128,17 @@ describeWithPostgres('PostgresAuthAuditAdapter persistence', () => {
       )
     ).rejects.toThrow(/AUTH_AUDIT_APPEND_ONLY/);
   });
+
+  it.each(['UPDATE', 'DELETE'])(
+    'does not grant the application role permission for %s',
+    async (operation) => {
+      await expect(
+        applicationPool!.query(
+          operation === 'UPDATE'
+            ? `UPDATE "${schema}".auth_audit_events SET action = 'other'`
+            : `DELETE FROM "${schema}".auth_audit_events`
+        )
+      ).rejects.toThrow(/permission denied/i);
+    }
+  );
 });
