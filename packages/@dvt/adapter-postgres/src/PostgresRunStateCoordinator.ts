@@ -16,6 +16,9 @@ import type {
   AppendResult,
   EventEnvelope,
   EventInput,
+  RecoveryRunBootstrapFactory,
+  RecoveryRunBootstrapResult,
+  RetryAttemptReservation,
   RunBootstrapInput,
   RunId,
   RunMetadata,
@@ -27,6 +30,11 @@ type SetTenantContext = (client: PoolClient, tenantId: string) => Promise<void>;
 interface RunMetadataWritePort {
   resolveTenantWithClient(client: PoolClient, runId: RunId): Promise<string>;
   insertWithClient(client: PoolClient, metadata: RunMetadata): Promise<void>;
+  reserveRetryAttemptWithClient(
+    client: PoolClient,
+    tenantId: string,
+    sourceRunId: RunId
+  ): Promise<RetryAttemptReservation>;
 }
 
 interface SnapshotWritePort {
@@ -90,26 +98,34 @@ export class PostgresRunStateCoordinator {
       return await this.withTransaction(async (client) => {
         const tenantId = requireTenantId(input.metadata.tenantId);
         await this.setTenantContext(client, tenantId);
-        await this.metadataRepo.insertWithClient(client, input.metadata);
-        const append = await this.appendEventsTxWithClient(
+        return this.bootstrapRunWithClient(client, tenantId, input);
+      });
+    } catch (error: unknown) {
+      if (isRunMetadataUniqueViolation(error)) {
+        throw createRunAlreadyExistsError(error);
+      }
+      throw error;
+    }
+  }
+
+  async bootstrapRecoveryRunTx(
+    tenantIdInput: string,
+    sourceRunId: RunId,
+    buildInput: RecoveryRunBootstrapFactory
+  ): Promise<RecoveryRunBootstrapResult> {
+    try {
+      return await this.withTransaction(async (client) => {
+        const tenantId = requireTenantId(tenantIdInput);
+        await this.setTenantContext(client, tenantId);
+        const reservation = await this.metadataRepo.reserveRetryAttemptWithClient(
           client,
           tenantId,
-          input.metadata.runId as RunId,
-          input.firstEvents
+          sourceRunId
         );
-        await this.snapshotStore.updateWithClient(
-          client,
-          input.metadata.runId as RunId,
-          append.appended,
-          0,
-          append.lastSeq
-        );
-        await this.outboxStore.enqueueWithClient(
-          client,
-          input.metadata.runId as RunId,
-          append.appended
-        );
-        return append;
+        const input = buildInput(reservation);
+        assertRecoveryBootstrapMatchesReservation(input, tenantId, reservation);
+        const appendResult = await this.bootstrapRunWithClient(client, tenantId, input);
+        return { reservation, metadata: input.metadata, appendResult };
       });
     } catch (error: unknown) {
       if (isRunMetadataUniqueViolation(error)) {
@@ -154,6 +170,35 @@ export class PostgresRunStateCoordinator {
       appended
     );
     return { appended, deduped, lastSeq: lastAppendedRunSeq ?? baseRunSeq };
+  }
+
+  private async bootstrapRunWithClient(
+    client: PoolClient,
+    tenantId: string,
+    input: RunBootstrapInput
+  ): Promise<AppendResult> {
+    await this.metadataRepo.insertWithClient(client, input.metadata);
+    const runId = input.metadata.runId as RunId;
+    const append = await this.appendEventsTxWithClient(client, tenantId, runId, input.firstEvents);
+    await this.snapshotStore.updateWithClient(client, runId, append.appended, 0, append.lastSeq);
+    await this.outboxStore.enqueueWithClient(client, runId, append.appended);
+    return append;
+  }
+}
+
+function assertRecoveryBootstrapMatchesReservation(
+  input: RunBootstrapInput,
+  tenantId: string,
+  reservation: RetryAttemptReservation
+): void {
+  const metadata = input.metadata;
+  if (
+    metadata.tenantId !== tenantId ||
+    metadata.parentRunId !== reservation.parentRunId ||
+    metadata.originRunId !== reservation.originRunId ||
+    metadata.logicalAttemptId !== reservation.logicalAttemptId
+  ) {
+    throw new Error('RECOVERY_BOOTSTRAP_RESERVATION_MISMATCH');
   }
 }
 

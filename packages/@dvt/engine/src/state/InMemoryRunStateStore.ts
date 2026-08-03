@@ -13,7 +13,8 @@ import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
-  RetryAttemptReservation,
+  RecoveryRunBootstrapFactory,
+  RecoveryRunBootstrapResult,
   RunBootstrapInput,
 } from '../ports/IRunStateStore.js';
 
@@ -36,6 +37,14 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
 
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
     return this.runState.bootstrapRunTx(input);
+  }
+
+  bootstrapRecoveryRunTx(
+    tenantId: string,
+    sourceRunId: string,
+    buildInput: RecoveryRunBootstrapFactory
+  ): Promise<RecoveryRunBootstrapResult> {
+    return this.runState.bootstrapRecoveryRunTx(tenantId, sourceRunId, buildInput);
   }
 
   appendAndEnqueueTx(runId: string, eventsToAppend: EventInput[]): Promise<AppendResult> {
@@ -68,9 +77,5 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
 
   isSnapshotStale(tenantId: string, runId: string): Promise<boolean> {
     return this.runState.isSnapshotStale(tenantId, runId);
-  }
-
-  reserveRetryAttempt(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation> {
-    return this.runState.reserveRetryAttempt(tenantId, sourceRunId);
   }
 }

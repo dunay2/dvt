@@ -285,7 +285,7 @@ describe('RecoverRunUseCase', () => {
     });
   });
 
-  it('rejects replay when child metadata exists without confirmed provider dispatch', async () => {
+  it('resumes replay when child metadata exists without confirmed provider dispatch', async () => {
     const dependencies = createDependencies();
     dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
       async (_tenantId: string, runId: string) =>
@@ -307,8 +307,12 @@ describe('RecoverRunUseCase', () => {
         { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
         commandContext
       )
-    ).rejects.toMatchObject({ reason: 'recovery_dispatch_unconfirmed' });
-    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
+    ).resolves.toMatchObject({
+      sourceRunId: 'run-source-1',
+      recoveryRunId: 'run-recovery-1',
+      accepted: true,
+    });
+    expect(dependencies.engine.recoverRun).toHaveBeenCalledTimes(1);
   });
 
   it('serializes concurrent delivery of one recovery identity without consuming another attempt', async () => {

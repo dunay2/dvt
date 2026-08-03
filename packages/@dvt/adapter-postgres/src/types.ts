@@ -20,6 +20,8 @@ export type { IOutboxStorage, OutboxClaimSelection };
 
 export type {
   RetryAttemptReservation,
+  RecoveryRunBootstrapFactory,
+  RecoveryRunBootstrapResult,
   IRunSnapshotStalenessQuery,
   IRunStateStore,
   IRunStateStoreMaintenance,

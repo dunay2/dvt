@@ -7,9 +7,9 @@ import { bindStateStoreRoles } from '../../src/modules/stateStoreRoles.js';
 function createStateStoreSource(): StateStoreRoleSource {
   return {
     bootstrapRunTx: async () => null as never,
+    bootstrapRecoveryRunTx: async () => null as never,
     appendAndEnqueueTx: async () => null as never,
     saveProviderRef: async () => null as never,
-    reserveRetryAttempt: async () => null as never,
     getRunMetadataByRunId: async () => null as never,
     listEvents: async () => [],
     listRuns: async () => [],
@@ -54,15 +54,16 @@ describe('bindStateStoreRoles', () => {
 
   it.each([
     ['bootstrapRunTx', 'read bootstrap role'],
+    ['bootstrapRecoveryRunTx', 'recovery bootstrap role'],
     ['appendAndEnqueueTx', 'write append role'],
     ['rebuildSnapshot', 'maintenance rebuild role'],
     ['isSnapshotStale', 'snapshot staleness role'],
   ] as const)('rejects a source missing %s for the %s', (methodName, _roleLabel) => {
     const partialSource = {
       bootstrapRunTx: async () => null as never,
+      bootstrapRecoveryRunTx: async () => null as never,
       appendAndEnqueueTx: async () => null as never,
       saveProviderRef: async () => null as never,
-      reserveRetryAttempt: async () => null as never,
       getRunMetadataByRunId: async () => null as never,
       listEvents: async () => [],
       listRuns: async () => [],

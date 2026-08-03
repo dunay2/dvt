@@ -16,7 +16,13 @@ import type { IObservability } from '@dvt/observability';
 
 import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import type { IStartRunApplicationService } from '../application/IStartRunApplicationService.js';
-import { RecoverySourceNotTerminalError, RunMetadataNotFoundError } from '../contracts/errors.js';
+import {
+  RecoverySourceNotTerminalError,
+  RunAlreadyExistsError,
+  RunMetadataNotFoundError,
+} from '../contracts/errors.js';
+import type { RunMetadata } from '../contracts/runEvents.js';
+import type { IdempotencyKeyBuilder } from '../core/idempotency.js';
 import { buildTraceContext } from '../core/lifecycle/coreRuntime.js';
 import { SnapshotProjector, snapshotToStatus } from '../core/SnapshotProjector.js';
 import type {
@@ -29,6 +35,7 @@ import type { IRunExecutionContextResolver } from '../ports/IRunExecutionContext
 import type { IRunStateStoreRead, IRunStateStoreWrite } from '../ports/IRunStateStore.js';
 import { PlanIntegrityValidator } from '../security/planIntegrity.js';
 import type { IRunAccessPolicy } from '../security/RunAccessPolicy.js';
+import { StartRunEventFactory } from '../services/startRun/StartRunEventFactory.js';
 import type { IClock } from '../utils/clock.js';
 import { toErrorMessage } from '../utils/errorUtils.js';
 
@@ -45,6 +52,7 @@ export interface RecoverRunApplicationServiceDeps {
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   observability: IObservability;
   clock: IClock;
+  idempotency: IdempotencyKeyBuilder;
   startRunApplicationService: IStartRunApplicationService;
   planIntegrityValidator?: IPlanIntegrityValidator;
 }
@@ -54,18 +62,19 @@ type RecoverySourceRef = Readonly<{
   sourceRunId: string;
 }>;
 
-type RecoverySourceMetadata = Readonly<{
-  runId: string;
-  logicalAttemptId: number;
-  originRunId?: string;
-}>;
+type RecoverySourceMetadata = RunMetadata;
 
 export class RecoverRunApplicationService implements IRunRecoveryService {
   private readonly planIntegrityValidator: IPlanIntegrityValidator;
+  private readonly eventFactory: StartRunEventFactory;
 
   constructor(private readonly deps: RecoverRunApplicationServiceDeps) {
     this.planIntegrityValidator =
       deps.planIntegrityValidator ?? new PlanIntegrityValidator({ clock: deps.clock });
+    this.eventFactory = new StartRunEventFactory({
+      idempotency: deps.idempotency,
+      clock: deps.clock,
+    });
   }
 
   async recoverRun({
@@ -76,17 +85,25 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
     const sourceRef = { tenantId: context.tenantId, sourceRunId };
     const sourceMetadata = await this.resolveRecoverySourceMetadata(sourceRef);
     await this.assertRecoverySourceTerminal(sourceRef);
-    await this.preflightRecoverRun(planRef, context, sourceMetadata);
-    const reservedAttempt = await this.reserveRetryAttempt({
+    const existingRecovery = await this.deps.stateStoreRead.getRunMetadataByRunId(
+      context.tenantId,
+      context.runId
+    );
+    const preflightContext = this.resolvePreflightContext(
+      context,
       sourceMetadata,
-      tenantId: context.tenantId,
-    });
-    const resolvedContext: ResolvedRunContext = {
-      ...context,
-      logicalAttemptId: reservedAttempt.logicalAttemptId,
-      parentRunId: asNonBlankString(reservedAttempt.parentRunId),
-      originRunId: asNonBlankString(reservedAttempt.originRunId),
-    };
+      existingRecovery
+    );
+    const adapter = await this.preflightRecoverRun(
+      planRef,
+      preflightContext,
+      existingRecovery !== null
+    );
+    const prepared =
+      existingRecovery === null
+        ? await this.prepareRecoveryRun(sourceMetadata, planRef, context, adapter)
+        : { context: preflightContext, runRef: existingRecovery.providerRef };
+    const resolvedContext = prepared.context;
     const traceContext = buildTraceContext(resolvedContext, planRef.planId);
 
     return this.deps.observability.withContext(traceContext, () =>
@@ -103,10 +120,12 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
         },
         async (span) => {
           try {
-            const runRef = await this.deps.startRunApplicationService.startRun(
+            const runRef = await this.deps.startRunApplicationService.startPreparedRun(
               planRef,
               resolvedContext,
-              traceContext
+              traceContext,
+              prepared.runRef,
+              adapter
             );
             span.setStatus('ok');
             return runRef;
@@ -167,9 +186,9 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
 
   private async preflightRecoverRun(
     planRef: PlanRef,
-    context: RunContext,
-    sourceMetadata: RecoverySourceMetadata
-  ): Promise<void> {
+    preflightContext: ResolvedRunContext,
+    preparedRun: boolean
+  ): Promise<IProviderAdapter> {
     const guard = new StartRunAdmissionGuard({
       policy: this.deps.policy,
       stateStoreRead: this.deps.stateStoreRead,
@@ -181,14 +200,11 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
         ? {}
         : { runExecutionContextBindingPolicy: this.deps.runExecutionContextBindingPolicy }),
     });
-    const preflightContext: ResolvedRunContext = {
-      ...context,
-      logicalAttemptId: sourceMetadata.logicalAttemptId + 1,
-      parentRunId: asNonBlankString(sourceMetadata.runId),
-      originRunId: asNonBlankString(sourceMetadata.originRunId ?? sourceMetadata.runId),
-    };
-
-    await guard.assertStartRunAllowed(planRef, preflightContext);
+    if (preparedRun) {
+      await guard.assertPreparedRunAllowed(planRef, preflightContext);
+    } else {
+      await guard.assertStartRunAllowed(planRef, preflightContext);
+    }
     const adapter = guard.resolveAdapter(preflightContext);
     const verifiedArtifact = await this.planIntegrityValidator.fetchAndValidate(
       toScopedPlanRef(planRef, preflightContext),
@@ -201,25 +217,96 @@ export class RecoverRunApplicationService implements IRunRecoveryService {
       context: preflightContext,
       adapter,
     });
+    return adapter;
   }
 
-  private async reserveRetryAttempt({
-    sourceMetadata,
-    tenantId,
-  }: {
-    sourceMetadata: RecoverySourceMetadata;
-    tenantId: string;
-  }): Promise<{
-    parentRunId: string;
-    originRunId: string;
-    logicalAttemptId: number;
-  }> {
-    if (this.deps.stateStoreWrite.reserveRetryAttempt === undefined) {
-      throw new Error('stateStoreWrite.reserveRetryAttempt is required for recoverRun');
+  private resolvePreflightContext(
+    context: RunContext,
+    sourceMetadata: RecoverySourceMetadata,
+    existingRecovery: RunMetadata | null
+  ): ResolvedRunContext {
+    if (existingRecovery !== null) {
+      if (!isRecoveryChildOf(existingRecovery, sourceMetadata)) {
+        throw new RunAlreadyExistsError(context.runId);
+      }
+      return {
+        ...context,
+        logicalAttemptId: existingRecovery.logicalAttemptId,
+        parentRunId: asNonBlankString(existingRecovery.parentRunId),
+        originRunId: asNonBlankString(existingRecovery.originRunId),
+      };
     }
 
-    return this.deps.stateStoreWrite.reserveRetryAttempt(tenantId, sourceMetadata.runId);
+    return {
+      ...context,
+      logicalAttemptId: sourceMetadata.logicalAttemptId + 1,
+      parentRunId: asNonBlankString(sourceMetadata.runId),
+      originRunId: asNonBlankString(sourceMetadata.originRunId ?? sourceMetadata.runId),
+    };
   }
+
+  private async prepareRecoveryRun(
+    sourceMetadata: RecoverySourceMetadata,
+    planRef: PlanRef,
+    context: RunContext,
+    adapter: IProviderAdapter
+  ): Promise<{ context: ResolvedRunContext; runRef: EngineRunRef }> {
+    const estimateRunRef = adapter.estimateRunRef;
+    if (estimateRunRef === undefined) {
+      throw new Error('adapter.estimateRunRef is required for recoverRun');
+    }
+    if (this.deps.stateStoreWrite.bootstrapRecoveryRunTx === undefined) {
+      throw new Error('stateStoreWrite.bootstrapRecoveryRunTx is required for recoverRun');
+    }
+    const prepared = await this.deps.stateStoreWrite.bootstrapRecoveryRunTx(
+      context.tenantId,
+      sourceMetadata.runId,
+      (reservation) => {
+        const resolvedContext: ResolvedRunContext = {
+          ...context,
+          logicalAttemptId: reservation.logicalAttemptId,
+          parentRunId: asNonBlankString(reservation.parentRunId),
+          originRunId: asNonBlankString(reservation.originRunId),
+        };
+        const runRef = estimateRunRef(resolvedContext);
+        const metadata = this.eventFactory.buildRunMetadata(
+          resolvedContext,
+          planRef,
+          runRef,
+          this.deps.clock.nowIsoUtc()
+        );
+        return {
+          metadata,
+          firstEvents: [this.eventFactory.buildRunEvent(metadata, 'RunQueued')],
+        };
+      }
+    );
+    return {
+      context: {
+        ...context,
+        logicalAttemptId: prepared.metadata.logicalAttemptId,
+        parentRunId: asNonBlankString(prepared.reservation.parentRunId),
+        originRunId: asNonBlankString(prepared.reservation.originRunId),
+      },
+      runRef: prepared.metadata.providerRef,
+    };
+  }
+}
+
+function isRecoveryChildOf(
+  candidate: RunMetadata,
+  source: RecoverySourceMetadata
+): candidate is RunMetadata & { parentRunId: string; originRunId: string } {
+  return (
+    candidate.parentRunId === source.runId &&
+    candidate.originRunId === (source.originRunId ?? source.runId) &&
+    candidate.tenantId === source.tenantId &&
+    candidate.projectId === source.projectId &&
+    candidate.environmentId === source.environmentId &&
+    candidate.planId === source.planId &&
+    candidate.planVersion === source.planVersion &&
+    candidate.providerRef.provider === source.providerRef.provider
+  );
 }
 
 function toScopedPlanRef(planRef: PlanRef, context: ResolvedRunContext): ScopedPlanRef {

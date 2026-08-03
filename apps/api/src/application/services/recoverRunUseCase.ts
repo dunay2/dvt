@@ -82,8 +82,9 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       if (!isRecoveryChildOf(repeatedRecovery, source)) {
         throw new RunRecoveryUnavailableError(command.sourceRunId, 'recovery_identity_conflict');
       }
-      await this.assertRecoveryDispatchConfirmed(repeatedRecovery, tenantId, command.sourceRunId);
-      return acceptedRecovery(command);
+      if (await this.isRecoveryDispatchConfirmed(repeatedRecovery, tenantId)) {
+        return acceptedRecovery(command);
+      }
     }
 
     const status = await this.dependencies.engine.getRunStatus(runMetadataToEngineRunRef(source));
@@ -132,11 +133,10 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     return acceptedRecovery(command);
   }
 
-  private async assertRecoveryDispatchConfirmed(
+  private async isRecoveryDispatchConfirmed(
     recovery: RunMetadata,
-    tenantId: string,
-    sourceRunId: string
-  ): Promise<void> {
+    tenantId: string
+  ): Promise<boolean> {
     const intentId = this.dependencies.idempotency.startRunIntentId(
       tenantId,
       recovery.runId,
@@ -144,12 +144,10 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       recovery.providerRef.provider
     );
     const intent = await this.dependencies.startRunIntentStore.getIntent({ tenantId, intentId });
-    if (
-      intent?.engineRunRef === undefined ||
-      (intent.status !== 'DISPATCHED' && intent.status !== 'RESOLVED')
-    ) {
-      throw new RunRecoveryUnavailableError(sourceRunId, 'recovery_dispatch_unconfirmed');
-    }
+    return (
+      intent?.engineRunRef !== undefined &&
+      (intent.status === 'DISPATCHED' || intent.status === 'RESOLVED')
+    );
   }
 }
 

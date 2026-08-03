@@ -50,9 +50,9 @@ function createOperationalHookApp(): {
 function createStateStoreRoleSource(): StateStoreRoleSource {
   return {
     bootstrapRunTx: async () => null as never,
+    bootstrapRecoveryRunTx: async () => null as never,
     appendAndEnqueueTx: async () => null as never,
     saveProviderRef: async () => null as never,
-    reserveRetryAttempt: async () => null as never,
     getRunMetadataByRunId: async () => null,
     listEvents: async () => [],
     listRuns: async () => [],

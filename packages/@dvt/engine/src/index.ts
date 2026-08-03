@@ -37,6 +37,8 @@ export type {
   ListEventsOptions,
   ListRunsOptions,
   ProviderRefUpdate,
+  RecoveryRunBootstrapFactory,
+  RecoveryRunBootstrapResult,
   RetryAttemptReservation,
   RunBootstrapInput,
   RunStateCommandPort,

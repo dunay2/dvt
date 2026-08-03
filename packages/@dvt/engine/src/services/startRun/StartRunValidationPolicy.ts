@@ -9,6 +9,7 @@ import {
   CapabilitiesNotSupportedError,
   InvalidRunIdError,
   RunAlreadyExistsError,
+  RunMetadataNotFoundError,
 } from '../../contracts/errors.js';
 import { assertSupportedPlanSchemaVersion } from '../../contracts/PlanSchemaVersionPolicy.js';
 import type { IRunStateStoreRead } from '../../ports/IRunStateStore.js';
@@ -23,6 +24,16 @@ export class StartRunValidationPolicy {
   constructor(private readonly deps: StartRunValidationPolicyDeps) {}
 
   async validateStartRunPreconditions(planRef: PlanRef, context: RunContext): Promise<void> {
+    await this.validateSharedPreconditions(planRef, context);
+    await this.ensureRunDoesNotExist(context.tenantId, context.runId);
+  }
+
+  async validatePreparedRunPreconditions(planRef: PlanRef, context: RunContext): Promise<void> {
+    await this.validateSharedPreconditions(planRef, context);
+    await this.ensureRunExists(context.tenantId, context.runId);
+  }
+
+  private async validateSharedPreconditions(planRef: PlanRef, context: RunContext): Promise<void> {
     await this.deps.policy.assertTenantAccess(context.tenantId);
     this.deps.policy.validatePlanRef(planRef);
     assertSupportedPlanSchemaVersion({
@@ -30,7 +41,6 @@ export class StartRunValidationPolicy {
       schemaVersion: planRef.schemaVersion,
     });
     validateRunIdOrThrow(context.runId);
-    await this.ensureRunDoesNotExist(context.tenantId, context.runId);
   }
 
   validateCapabilitiesOrThrow(
@@ -61,6 +71,11 @@ export class StartRunValidationPolicy {
   private async ensureRunDoesNotExist(tenantId: string, runId: string): Promise<void> {
     const existing = await this.deps.stateStoreRead.getRunMetadataByRunId(tenantId, runId);
     if (existing) throw new RunAlreadyExistsError(runId);
+  }
+
+  private async ensureRunExists(tenantId: string, runId: string): Promise<void> {
+    const existing = await this.deps.stateStoreRead.getRunMetadataByRunId(tenantId, runId);
+    if (!existing) throw new RunMetadataNotFoundError(runId);
   }
 }
 

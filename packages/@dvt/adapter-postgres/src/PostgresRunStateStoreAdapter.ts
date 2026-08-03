@@ -18,7 +18,8 @@ import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
-  RetryAttemptReservation,
+  RecoveryRunBootstrapFactory,
+  RecoveryRunBootstrapResult,
   RunBootstrapInput,
   RunId,
   RunMetadata,
@@ -39,6 +40,15 @@ export class PostgresRunStateStoreAdapter
     return this.bootstrapRunTxInternal(input);
   }
 
+  async bootstrapRecoveryRunTx(
+    tenantId: string,
+    sourceRunId: RunId,
+    buildInput: RecoveryRunBootstrapFactory
+  ): Promise<RecoveryRunBootstrapResult> {
+    this.ready();
+    return this.bootstrapRecoveryRunTxInternal(tenantId, sourceRunId, buildInput);
+  }
+
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     this.ready();
     return this.getRunMetadataByRunIdInternal(tenantId, runId);
@@ -56,14 +66,6 @@ export class PostgresRunStateStoreAdapter
   ): Promise<RunMetadata> {
     this.ready();
     return this.saveProviderRefInternal(tenantId, runId, providerRef);
-  }
-
-  async reserveRetryAttempt(
-    tenantId: string,
-    sourceRunId: RunId
-  ): Promise<RetryAttemptReservation> {
-    this.ready();
-    return this.reserveRetryAttemptInternal(tenantId, sourceRunId);
   }
 
   async listEvents(

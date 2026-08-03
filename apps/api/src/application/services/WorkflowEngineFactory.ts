@@ -190,6 +190,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     adapters: protectedAdapters,
     observability: config.infrastructure.observability,
     clock: config.infrastructure.clock,
+    idempotency,
     startRunApplicationService,
     planIntegrityValidator,
     ...optionalConfig(

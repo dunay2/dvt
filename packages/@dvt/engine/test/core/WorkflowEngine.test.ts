@@ -131,6 +131,20 @@ async function appendRunCompleted(store: InMemoryTxStore, runId: string): Promis
   await store.appendAndEnqueueTx(runId, [event]);
 }
 
+function makeRecoverableAdapters(): ReturnType<typeof makeAdapters> {
+  return makeAdapters({
+    estimateRunRef(context) {
+      return {
+        provider: 'temporal',
+        tenantId: context.tenantId,
+        namespace: 'default',
+        workflowId: `wf-${context.runId}`,
+        runId: context.runId,
+      };
+    },
+  });
+}
+
 function makePluginBearingPlan(): ExecutionPlan {
   const basePlan = makeDefaultExecutionPlan();
   const steps: ExecutionPlan['steps'] = [
@@ -617,7 +631,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('recoverRun reserves retry lineage for recovery runs', async () => {
-    const { engine, store } = createEngine({ adapters: makeAdapters() });
+    const { engine, store } = createEngine({ adapters: makeRecoverableAdapters() });
     const sourceRunId = 'recover-source-1';
     const recoveryRunId = 'recover-target-1';
 
@@ -638,7 +652,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('recoverRun rejects when sourceRunId equals recovery runId', async () => {
-    const { engine, store } = createEngine({ adapters: makeAdapters() });
+    const { engine, store } = createEngine({ adapters: makeRecoverableAdapters() });
     const runId = 'recover-same-id-1';
 
     await engine.startRun(makePlanRef(), makeContext(runId));
@@ -654,7 +668,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('recoverRun rejects when source run is not terminal', async () => {
-    const { engine, store } = createEngine({ adapters: makeAdapters() });
+    const { engine, store } = createEngine({ adapters: makeRecoverableAdapters() });
     const sourceRunId = 'recover-running-source-1';
     const recoveryRunId = 'recover-running-target-1';
 
@@ -669,7 +683,7 @@ describe('WorkflowEngine (basic failure modes)', () => {
   });
 
   it('recoverRun fails closed when retry reservation support is unavailable', async () => {
-    const { engine, store } = createEngine({ adapters: makeAdapters() });
+    const { engine, store } = createEngine({ adapters: makeRecoverableAdapters() });
     const rootRunId = 'recover-fallback-root-1';
     const firstRecoveryRunId = 'recover-fallback-child-1';
     const secondRecoveryRunId = 'recover-fallback-child-2';
@@ -678,17 +692,17 @@ describe('WorkflowEngine (basic failure modes)', () => {
     await appendRunCompleted(store, rootRunId);
     await engine.recoverRun(rootRunId, makePlanRef(), makeContext(firstRecoveryRunId));
 
-    (store as { reserveRetryAttempt?: unknown }).reserveRetryAttempt = undefined;
+    (store as { bootstrapRecoveryRunTx?: unknown }).bootstrapRecoveryRunTx = undefined;
     await expect(
       engine.recoverRun(rootRunId, makePlanRef(), makeContext(secondRecoveryRunId))
-    ).rejects.toThrow(/stateStoreWrite\.reserveRetryAttempt is required for recoverRun/);
+    ).rejects.toThrow(/bootstrapRecoveryRunTx/);
 
     const secondRecovery = await store.getRunMetadataByRunId('t', secondRecoveryRunId);
     expect(secondRecovery).toBeNull();
   });
 
   it('recoverRun does not consume retry lineage on duplicate preflight rejection', async () => {
-    const { engine, store } = createEngine({ adapters: makeAdapters() });
+    const { engine, store } = createEngine({ adapters: makeRecoverableAdapters() });
     const sourceRunId = 'recover-preflight-source-1';
     const duplicateRecoveryRunId = 'recover-preflight-dup-1';
     const validRecoveryRunId = 'recover-preflight-valid-1';
@@ -704,6 +718,31 @@ describe('WorkflowEngine (basic failure modes)', () => {
     await engine.recoverRun(sourceRunId, makePlanRef(), makeContext(validRecoveryRunId));
 
     const recovery = await store.getRunMetadataByRunId('t', validRecoveryRunId);
+    expect(recovery?.logicalAttemptId).toBe(2);
+    expect(recovery?.parentRunId).toBe(sourceRunId);
+    expect(recovery?.originRunId).toBe(sourceRunId);
+  });
+
+  it('recoverRun reuses one logical attempt after pre-dispatch intent persistence fails', async () => {
+    const intentStore = new InMemoryStartRunIntentStore();
+    const adapters = makeRecoverableAdapters();
+    const { engine, store } = createEngine({ adapters, intentStore });
+    const sourceRunId = 'recover-resume-source-1';
+    const recoveryRunId = 'recover-resume-target-1';
+
+    await engine.startRun(makePlanRef(), makeContext(sourceRunId));
+    await appendRunCompleted(store, sourceRunId);
+    vi.spyOn(intentStore, 'createIntent').mockRejectedValueOnce(
+      new Error('transient intent persistence failure')
+    );
+
+    await expect(
+      engine.recoverRun(sourceRunId, makePlanRef(), makeContext(recoveryRunId))
+    ).rejects.toThrow(/transient intent persistence failure/);
+
+    await engine.recoverRun(sourceRunId, makePlanRef(), makeContext(recoveryRunId));
+
+    const recovery = await store.getRunMetadataByRunId('t', recoveryRunId);
     expect(recovery?.logicalAttemptId).toBe(2);
     expect(recovery?.parentRunId).toBe(sourceRunId);
     expect(recovery?.originRunId).toBe(sourceRunId);

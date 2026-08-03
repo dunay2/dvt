@@ -24,6 +24,8 @@ import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
+  RecoveryRunBootstrapFactory,
+  RecoveryRunBootstrapResult,
   RetryAttemptReservation,
   RunBootstrapInput,
 } from '../ports/IRunStateStore.js';
@@ -133,6 +135,26 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
     }
   }
 
+  async bootstrapRecoveryRunTx(
+    tenantId: string,
+    sourceRunId: string,
+    buildInput: RecoveryRunBootstrapFactory
+  ): Promise<RecoveryRunBootstrapResult> {
+    const retryLineageCheckpoint = new Map(this.nextRetryAttemptByOriginRunId);
+    try {
+      const reservation = await this.reserveRetryAttempt(tenantId, sourceRunId);
+      const bootstrapInput = buildInput(reservation);
+      const appendResult = await this.bootstrapRunTx(bootstrapInput);
+      return { reservation, metadata: bootstrapInput.metadata, appendResult };
+    } catch (error) {
+      this.nextRetryAttemptByOriginRunId.clear();
+      for (const [runId, nextAttempt] of retryLineageCheckpoint) {
+        this.nextRetryAttemptByOriginRunId.set(runId, nextAttempt);
+      }
+      throw error;
+    }
+  }
+
   /**
    * Atomic in this in-memory implementation: outbox enqueue and event-state commit
    * happen as a single ordered mutation from the caller's perspective.
@@ -188,7 +210,7 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
     return isInMemorySnapshotStale(this, tenantId, runId);
   }
 
-  async reserveRetryAttempt(
+  private async reserveRetryAttempt(
     tenantId: string,
     sourceRunId: string
   ): Promise<RetryAttemptReservation> {
