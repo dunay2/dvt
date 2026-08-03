@@ -34,7 +34,7 @@ function createRuntimeProofPostgresProbe(options) {
     },
     readEvents: async (tenantId, runId) => {
       const result = await query(
-        `SELECT run_seq, event_type, idempotency_key FROM ${schema}.run_events WHERE tenant_id = $1 AND run_id = $2 ORDER BY run_seq`,
+        `SELECT run_seq, event_type, idempotency_key, payload FROM ${schema}.run_events WHERE tenant_id = $1 AND run_id = $2 ORDER BY run_seq`,
         [tenantId, runId]
       );
       return result.rows;

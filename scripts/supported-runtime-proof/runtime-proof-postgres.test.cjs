@@ -41,5 +41,6 @@ test('postgres probe scopes evidence queries by tenant and run', async () => {
   await probe.readEvents('tenant-a', 'run-1');
 
   assert.match(calls[0].text, /FROM "dvt"\.run_events/);
+  assert.match(calls[0].text, /payload/);
   assert.deepEqual(calls[0].values, ['tenant-a', 'run-1']);
 });

@@ -138,6 +138,24 @@ async function startSupportedRuntimeProofLifecycle(profile) {
       temporalWorker
     );
 
+    const projectorProcess = spawnProcess(
+      'runtime-proof-projector',
+      ['--filter', 'dvt-projector-worker', 'start'],
+      buildRuntimeProofProjectorEnv({
+        databaseUrl,
+        adminPort: ports.projectorAdmin,
+      })
+    );
+    processes.push(projectorProcess);
+    await waitForUrlOrProcessExit(
+      `http://${host}:${ports.projectorAdmin}/readyz`,
+      (response) => response.statusCode === 200,
+      READY_TIMEOUT_MS,
+      POLL_INTERVAL_MS,
+      'Runtime proof projector worker',
+      projectorProcess
+    );
+
     eventSink = await startRuntimeProofEventSink();
     await startOutbox();
 
@@ -211,13 +229,29 @@ function buildRuntimeProofOutboxEnv(options) {
   };
 }
 
+function buildRuntimeProofProjectorEnv(options) {
+  return {
+    NODE_ENV: 'test',
+    LOG_LEVEL: 'warn',
+    SERVICE_NAME: 'dvt-supported-runtime-proof-projector',
+    DATABASE_URL: options.databaseUrl,
+    DVT_PG_SCHEMA: 'dvt',
+    DVT_PROJECTOR_ADMIN_HOST: '127.0.0.1',
+    DVT_PROJECTOR_ADMIN_PORT: String(options.adminPort),
+    DVT_PROJECTOR_BATCH_SIZE: '100',
+    DVT_PROJECTOR_POLL_INTERVAL_MS: '50',
+    DVT_PROJECTOR_ERROR_BACKOFF_MS: '100',
+  };
+}
+
 async function allocateRuntimePorts(host) {
-  const [api, temporalWorkerAdmin, outboxAdmin] = await Promise.all([
+  const [api, temporalWorkerAdmin, outboxAdmin, projectorAdmin] = await Promise.all([
+    allocateFreePort(host),
     allocateFreePort(host),
     allocateFreePort(host),
     allocateFreePort(host),
   ]);
-  return { api, temporalWorkerAdmin, outboxAdmin };
+  return { api, temporalWorkerAdmin, outboxAdmin, projectorAdmin };
 }
 
 function buildScopeEnv(scope) {
@@ -230,5 +264,6 @@ function buildScopeEnv(scope) {
 
 module.exports = {
   buildRuntimeProofOutboxEnv,
+  buildRuntimeProofProjectorEnv,
   startSupportedRuntimeProofLifecycle,
 };

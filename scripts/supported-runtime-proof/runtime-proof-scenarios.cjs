@@ -7,6 +7,7 @@ const {
 } = require('./runtime-proof-invariants.cjs');
 const { startSupportedRuntimeProofLifecycle } = require('./runtime-proof-lifecycle.cjs');
 const { hasContiguousRunSequence, snapshotsMatch } = require('./runtime-proof-postgres.cjs');
+const { projectCanonicalSnapshot } = require('./runtime-proof-snapshot.cjs');
 const {
   buildRuntimeProofDraftSaveRequest,
   buildRuntimeProofPreviewRequest,
@@ -194,10 +195,21 @@ async function collectRunEvidence(lifecycle, profile, runs) {
   for (const run of runs) {
     const persistedEvents = await lifecycle.postgres.readEvents(profile.scope.tenantId, run.runId);
     events.push({ runId: run.runId, events: persistedEvents });
-    const before = await lifecycle.postgres.readSnapshot(profile.scope.tenantId, run.runId);
+    const canonicalReplay = await projectCanonicalSnapshot(run.runId, persistedEvents);
+    const eventHead = persistedEvents.at(-1)?.run_seq ?? 0;
+    const before = await waitForCondition(
+      async () => {
+        const snapshot = await lifecycle.postgres.readSnapshot(profile.scope.tenantId, run.runId);
+        return snapshot?.last_run_seq === eventHead ? snapshot : false;
+      },
+      profile.workload.workerInterruption.recoveryTimeoutMs,
+      `snapshot projection for ${run.runId}`
+    );
     await lifecycle.api.rebuildSnapshot(run.runId, profile.scope.tenantId);
     const after = await lifecycle.postgres.readSnapshot(profile.scope.tenantId, run.runId);
-    if (!snapshotsMatch(before, after)) snapshotReplayMismatchCount += 1;
+    if (!snapshotsMatch(canonicalReplay, before) || !snapshotsMatch(canonicalReplay, after)) {
+      snapshotReplayMismatchCount += 1;
+    }
   }
 
   return { events, snapshotReplayMismatchCount };
