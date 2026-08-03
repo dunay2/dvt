@@ -65,6 +65,31 @@ describe('workspace port decomposition architecture', () => {
     expect(compositionSource).toContain('workspaceFileContentCommand');
   });
 
+  it('keeps workspace plugin adapter construction inside workspace port composition', () => {
+    const compositionSource = readRepoFile(
+      'src',
+      'app',
+      'services',
+      'composition',
+      'appServices.ts'
+    );
+    const workspacePortsSource = readRepoFile(
+      'src',
+      'app',
+      'services',
+      'workspace',
+      'workspacePorts.ts'
+    );
+
+    expect(workspacePortsSource).toContain(
+      'workspacePluginCatalogQuery: createApiWorkspacePluginCatalogQueryPort(apiClient)'
+    );
+    expect(compositionSource).toContain(
+      'overrides.workspacePluginCatalogQuery ?? workspacePorts.workspacePluginCatalogQuery'
+    );
+    expect(compositionSource).not.toContain('createApiWorkspacePluginCatalogQueryPort');
+  });
+
   it('does not keep legacy workspace service modules after the hard cut', () => {
     const workspaceServiceFileNames = readdirSync(
       resolve(process.cwd(), 'src', 'app', 'services', 'workspace')
