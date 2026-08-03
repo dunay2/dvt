@@ -14,12 +14,14 @@ code_refs:
   - apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts
   - packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts
   - packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts
+  - packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts
   - apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts
   - apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test
     - pnpm --filter @dvt/temporal-dbt-plugin test
+    - pnpm --filter @dvt/adapter-temporal test
     - pnpm --filter dvt-temporal-worker test
     - pnpm --filter dvt-api test
     - pnpm --filter @dvt/contracts typecheck
@@ -44,7 +46,9 @@ application credential object. The plugin writes one restrictive temporary
 `profiles.yml`, passes only its directory to DBT, clears the source bytes, and
 removes profile and project material after success, failure, timeout, or
 cancellation. Activity cancellation is connected to the DBT subprocess through
-`AbortSignal` and is rethrown only after cleanup.
+`AbortSignal` and is rethrown only after cleanup. The workflow waits for step
+activity cancellation to complete, so `RunCancelled` cannot be emitted before
+the worker has terminated the subprocess and removed the credential material.
 
 The existing `IAuthAuditPort` remains the sole authorization-audit boundary.
 One composite writes each allow or deny decision first to PostgreSQL append-only

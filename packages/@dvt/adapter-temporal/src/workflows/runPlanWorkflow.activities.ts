@@ -4,8 +4,8 @@
  * @baseline ADR-0001: Temporal Integration Test Policy
  * @baseline ADR-0003: Execution Model
  * @baseline ADR-0040: Retry Ownership And Attempt Authority
- * @decision Keep workflow side effects behind Temporal activities while DVT-owned retry policy drives step execution attempts
- * @consequence Workflow replay stays deterministic and retry behavior remains explicit at the DVT activity boundary
+ * @decision Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation
+ * @consequence Workflow replay stays deterministic and RunCancelled cannot precede worker resource cleanup
  * @version 1.2.0
  */
 import {
@@ -24,7 +24,7 @@ export function createStepActivities(
 ): Pick<WorkflowActivitiesPort, 'executeStep'> {
   return proxyActivities<Pick<WorkflowActivitiesPort, 'executeStep'>>({
     startToCloseTimeout: '30m',
-    cancellationType: ActivityCancellationType.TRY_CANCEL,
+    cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
     retry: resolveStepActivityRetryPolicy(step),
     ...resolveStepActivityTaskQueue(step, stepActivityRouting),
   });
