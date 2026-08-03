@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest';
 const HARDCUT_OWNED_CONCERN_MODULES = [
   ['src', 'app', 'services', 'composition', 'appServices.ts'],
   ['src', 'app', 'services', 'AppServicesContext.tsx'],
-  ['src', 'app', 'services', 'config', 'dataSource.ts'],
   ['src', 'app', 'services', 'workspace', 'workspacePorts.ts'],
   ['src', 'app', 'services', 'plans', 'plansService.ts'],
   ['src', 'app', 'services', 'runs', 'runsService.ts'],
@@ -124,11 +123,29 @@ describe('app services mock hardcut architecture', () => {
     }
   });
 
-  it('keeps DataSourceMode API-only in product runtime', () => {
-    const source = readRepoFile('src', 'app', 'services', 'config', 'dataSource.ts');
+  it('keeps product runtime free of an exhausted data-source strategy', () => {
+    const productFiles = listFilesRecursive('src').filter(
+      (filePath) =>
+        !filePath.includes('/testing/') &&
+        !filePath.includes('/test/') &&
+        !filePath.match(/\.(?:test|spec)\.[cm]?[jt]sx?$/)
+    );
+    const forbiddenStrategyTerms = [
+      /\bDataSourceMode\b/,
+      /\bresolveDataSource\b/,
+      /\bgetRuntimeDataSourceMode\b/,
+      /\bsetRuntimeDataSourceMode\b/,
+      /\bVITE_DATA_SOURCE\b/,
+      /\bdataSourceMode\b/,
+    ];
 
-    expect(source).toContain("export type DataSourceMode = 'api'");
-    expect(source).not.toContain("'mock'");
+    for (const filePath of productFiles) {
+      const source = readRepoFile(...filePath.split('/'));
+
+      for (const forbiddenTerm of forbiddenStrategyTerms) {
+        expect(source, `${filePath} contains ${forbiddenTerm}`).not.toMatch(forbiddenTerm);
+      }
+    }
   });
 
   it('keeps product services free of non-test mock modules', () => {
