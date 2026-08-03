@@ -891,6 +891,50 @@ describe('RunMaintenanceService', () => {
       ).resolves.toEqual({ kind: 'ready_to_dispatch' });
     });
 
+    it('blocks redispatch when a bootstrapped recovery child is already terminal', async () => {
+      const { service, store, intentStore, clock, idempotency } = createFixtureWith(
+        makeAdapterWithLookup(new Set())
+      );
+      const metadata = {
+        tenantId: 't',
+        projectId: 'p',
+        environmentId: 'dev',
+        runId: 'failed-recovery-child',
+        planId: 'plan',
+        planVersion: '1.0',
+        logicalAttemptId: 2,
+        providerRef: {
+          provider: 'temporal' as const,
+          tenantId: 't',
+          namespace: 'default',
+          workflowId: 'wf-failed-recovery-child',
+          runId: 'failed-recovery-child',
+        },
+        createdAt: '1970-01-01T00:00:00.000Z',
+      };
+      await store.bootstrapRunTx({
+        metadata,
+        firstEvents: buildRunEvents([
+          { idempotency, clock, meta: metadata, eventType: 'RunQueued' },
+          {
+            idempotency,
+            clock,
+            meta: metadata,
+            eventType: 'RunFailed',
+            payload: { reason: 'QUEUED_TIMEOUT' },
+          },
+        ]),
+      });
+      await makePendingIntent(intentStore, metadata.runId, 'i-terminal-recovery');
+
+      await expect(
+        service.reconcileStartRunIntent({ tenantId: 't', intentId: 'i-terminal-recovery' })
+      ).resolves.toEqual({ kind: 'blocked' });
+      expect((await intentStore.getIntent(intentRef('i-terminal-recovery')))?.status).toBe(
+        'EXPIRED'
+      );
+    });
+
     it('classifies DISPATCHED bootstrapped intent as resolved without cancelling', async () => {
       const cancelLog: string[] = [];
       const { service, store, intentStore } = createFixtureWith(

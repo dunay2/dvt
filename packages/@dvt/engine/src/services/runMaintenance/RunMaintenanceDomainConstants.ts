@@ -8,6 +8,8 @@ export const RUN_MAINTENANCE_MESSAGE = {
     'Keeping orphaned PENDING intent unresolved because provider lookup failed',
   pendingIntentMetadataReadFailed:
     'Keeping orphaned PENDING intent unresolved because run metadata could not be read',
+  pendingIntentRunStateReadFailed:
+    'Keeping orphaned PENDING intent unresolved because canonical run state could not be read',
   pendingIntentExpiredAfterCancel:
     'Expired PENDING intent and cancelled orphaned provider workflow',
   pendingIntentResolvedBootstrapped:
@@ -18,6 +20,8 @@ export const RUN_MAINTENANCE_MESSAGE = {
   pendingIntentBootstrappedWithoutWorkflow:
     'Keeping orphaned PENDING intent unresolved because run is bootstrapped but provider workflow was not found',
   pendingIntentExpiredNoWorkflow: 'Expired orphaned PENDING intent (no provider workflow)',
+  pendingIntentExpiredTerminalRun:
+    'Expired orphaned PENDING intent because the bootstrapped run is already terminal',
   dispatchedIntentResolvedBootstrapped:
     'Resolved orphaned DISPATCHED intent (run already bootstrapped)',
   dispatchedIntentMissingAdapterOrRef:
@@ -46,6 +50,7 @@ export const RUN_MAINTENANCE_METRIC = {
   intentDeferredLookupUnsupportedTotal: 'dvt.intent.deferred_lookup_unsupported_total',
   intentDeferredLookupFailedTotal: 'dvt.intent.deferred_lookup_failed_total',
   intentDeferredMetadataReadFailedTotal: 'dvt.intent.deferred_metadata_read_failed_total',
+  intentDeferredRunStateReadFailedTotal: 'dvt.intent.deferred_run_state_read_failed_total',
   intentDeferredBootstrappedWithoutWorkflowTotal:
     'dvt.intent.deferred_bootstrapped_without_workflow_total',
   intentUnexpectedStatusTotal: 'dvt.intent.unexpected_status_total',
