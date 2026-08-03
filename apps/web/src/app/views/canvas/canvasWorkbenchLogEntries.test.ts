@@ -8,7 +8,7 @@ describe('buildCanvasWorkbenchLogEntries', () => {
     const model = buildCanvasWorkbenchLogEntries({
       presentation: {
         routeState: 'ready',
-        bootstrapDetail: 'Canvas is ready',
+        routeReadiness: { status: 'complete', detail: 'Canvas is ready' },
       },
       draft: {
         kind: 'save_failed',
@@ -57,7 +57,7 @@ describe('buildCanvasWorkbenchLogEntries', () => {
     const model = buildCanvasWorkbenchLogEntries({
       presentation: {
         routeState: 'blocked_backend',
-        bootstrapDetail: 'Backend is not ready.',
+        routeReadiness: { status: 'complete', detail: 'Backend is not ready.' },
       },
       draft: {
         kind: 'writable',

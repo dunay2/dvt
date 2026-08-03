@@ -1,6 +1,6 @@
 ---
 title: TF-E2-M-D Startup Route Readiness Implementation Plan
-status: Active
+status: Implemented
 owner: Frontend / Architecture
 date: 2026-05-02
 feature_id: TF-E2-M-D
@@ -12,7 +12,6 @@ feature_id: TF-E2-M-D
 
 - `AGENTS.md`
 - `docs/planning/status/governance-document-rule-inventory.md`
-- `docs/planning/state/agent-lane-e.yaml`
 - `docs/guides/ai-work-protocol.md`
 - `docs/guides/testing-and-ci-capabilities.md`
 - `docs/architecture/command-query-rail-governance.md`
@@ -39,7 +38,7 @@ before capability posture is visible.
 | Signal               | Current risk                                                                          | Correction                                                                                 |
 | -------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
 | Boundary drift       | `RootShell` mixes route publication with cross-step readiness ordering.               | Move cross-step route readiness into a pure policy owned by app bootstrap.                 |
-| Duplicate semantics  | Route components decide readiness and root decides final shell reveal separately.     | Route readiness policy returns both the effective route command and can-complete posture.  |
+| Duplicate semantics  | Route and Canvas stored status plus independent completion booleans.                  | Reuse `BootstrapStepState` and derive startup allowance once from its status.              |
 | Temporal coupling    | A route may publish before capabilities settle.                                       | Suppress route `complete` while capabilities are in cold-start pending.                    |
 | Test-only confidence | Existing tests cover route complete/failure, but not demotion or capability ordering. | Add negative unit, root integration, architecture, and Cypress user-flow coverage.         |
 | Documentation drift  | Component guide describes the screen but not the new route-readiness invariant.       | Update the component guide with API, invariants, transitions, consumers, and test mapping. |
@@ -64,7 +63,8 @@ No new externally observable behavior may be implemented outside these rails.
 | Object                                | Type                   | Owned concern                                                                                           |
 | ------------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------- |
 | `RouteBootstrapStartupReadinessState` | read model             | Remembers same-route stable route readiness so terminal or blocker posture does not regress to pending. |
-| `RouteBootstrapPresentation`          | value object           | Route-published readiness posture and detail copy.                                                      |
+| `BootstrapStepState`                  | value object           | Canonical application, route, and Canvas startup status/detail value.                                   |
+| `RouteBootstrapPresentation`          | direct type alias      | Route-facing name for `BootstrapStepState`; it adds no second semantics.                                |
 | `RuntimeCapabilitiesBootstrapState`   | query input            | Whether capability posture is still in cold-start pending.                                              |
 | `BootstrapStepStatusCommand`          | command value object   | The only command shape sent to the pre-React bootstrap screen for a step.                               |
 | `BootstrapScreenState`                | presentation aggregate | The startup gate aggregate that guards visible state and DOM removal.                                   |
@@ -76,10 +76,12 @@ flowchart LR
   Capabilities["Runtime capabilities query"] --> Root["RootShell"]
   RouteRegistry["Route bootstrap registry"] --> Root
   Root --> Policy["RouteBootstrapStartupReadiness policy"]
-  Policy --> Command["BootstrapStepStatusCommand(route)"]
-  Policy --> Completion["canComplete route signal"]
+  Policy --> Readiness["BootstrapStepState"]
+  Readiness --> Root
+  Root --> Command["BootstrapStepStatusCommand(route)"]
+  Root --> CompleteGuard["status-derived completion guard"]
   Command --> Screen["appBootstrapScreen.ts"]
-  Completion --> CompleteGuard["completeBootstrapScreen() guard"]
+  CompleteGuard --> Screen
   Screen --> DOM["Pre-React startup DOM"]
 ```
 
@@ -87,14 +89,14 @@ The implementation adds one pure app-bootstrap policy:
 
 1. If the active route changes, discard the previous stable route posture.
 2. If runtime capabilities are still in cold-start pending and the active route
-   publishes `complete`, publish an effective route `pending` command with
+   publishes `complete`, resolve an effective route `pending` readiness with
    capability-waiting copy.
 3. If the same route already published a stable posture and later falls back to
    `pending`, keep the stable posture.
 4. If the route publishes `failed`, `blocked`, `error`, or `complete`, store it
    as the stable posture for that route.
-5. `RootShell` uses the effective policy result for both the route startup
-   command and shell completion attempt.
+5. `RootShell` maps the effective readiness to the route command and applies
+   the canonical status-derived startup-allowance rule before completion.
 
 ## User Stories
 
@@ -132,7 +134,6 @@ userStories:
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
-  - docs/planning/state/agent-lane-e.yaml
   - docs/guides/ai-work-protocol.md
   - docs/guides/testing-and-ci-capabilities.md
   - docs/architecture/command-query-rail-governance.md
@@ -154,10 +155,6 @@ allowedImplementationSurfaces:
   - docs/**/index.md
   - docs/architecture/components/web/app-bootstrap-screen-component.md
   - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-d-startup-route-readiness-implementation-plan-20260502.md
-  - docs/planning/state/agent-lane-e.yaml
-  - docs/planning/state/agent-lane-e.md
-  - docs/planning/state/execution-workboard.md
-  - docs/planning/state/open-task-route.md # Task: E-PROP-DISP-1
   - docs/planning/status/**
   - package.json
 forbiddenImplementationSurfaces:
@@ -182,6 +179,9 @@ domainObjects:
     type: read model
     owner: Web Shell / App Bootstrap
   - name: RouteBootstrapPresentation
+    type: direct type alias
+    owner: Web Shell / App Bootstrap
+  - name: BootstrapStepState
     type: value object
     owner: Web Shell / App Bootstrap
   - name: RuntimeCapabilitiesBootstrapState
@@ -224,7 +224,7 @@ redGreenCycles:
     greenTest: pnpm --filter @dvt/web test -- routeBootstrapStartupReadiness.test.ts
   - id: root-route-readiness-wiring
     redTest: pnpm --filter @dvt/web test -- Root.bootstrapFlow.test.tsx
-    expectedFailure: RootShell forwards raw route readiness and can complete while capabilities are still cold-start pending.
+    expectedFailure: RootShell forwards raw route readiness before capabilities are settled.
     patchSurfaces:
       - apps/web/src/app/Root.tsx
       - apps/web/src/app/Root.bootstrapFlow.test.tsx
@@ -243,21 +243,64 @@ redGreenCycles:
       - apps/web/cypress/e2e/shell/startup-route-readiness.cy.ts
       - apps/web/package.json
     greenTest: pnpm --filter @dvt/web test:e2e:startup-route-readiness
-  - id: docs-and-lane-closeout
+  - id: docs-and-db-closeout
     redTest: pnpm docs:feature-mechanization:tf-e2-m-d
-    expectedFailure: TF-E2-M-D implementation plan, component guide, and lane evidence are not aligned.
+    expectedFailure: TF-E2-M-D implementation plan, component guide, and Planning DB facts are not aligned.
     patchSurfaces:
       - docs/planning/proposals/mandatory/frontend-and-ux/tf-e2-m-d-startup-route-readiness-implementation-plan-20260502.md
       - docs/architecture/components/web/app-bootstrap-screen-component.md
-      - docs/planning/state/agent-lane-e.yaml
-      - docs/planning/state/agent-lane-e.md
-      - docs/planning/state/execution-workboard.md
-      - docs/planning/state/open-task-route.md # Task: E-PROP-DISP-1
       - docs/.manifest.json
       - docs/planning/status/**
       - package.json
     greenTest: pnpm docs:feature-mechanization:tf-e2-m-d
 symbols:
+  - name: isBootstrapStepStartupAllowed
+    path: apps/web/src/app/bootstrap/appBootstrapPresentation.ts
+    dddOwner: BootstrapStepState startup allowance policy
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - CompleteAppBootstrapScreen
+    fowlerSignals:
+      - Duplicate semantics
+      - Boundary drift
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - appBootstrapPresentation.test.ts
+  - name: RouteBootstrapPresentation
+    path: apps/web/src/app/bootstrap/routeBootstrapContract.ts
+    dddOwner: BootstrapStepState direct route-facing alias
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+    fowlerSignals:
+      - Duplicate semantics
+      - Boundary drift
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - routeBootstrapRegistry.test.ts
+  - name: isValidRouteBootstrapPresentation
+    path: apps/web/src/app/bootstrap/routeBootstrapRegistration.ts
+    dddOwner: RouteBootstrapRegistration boundary validator
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - routeBootstrapRegistry.test.ts
+  - name: resetRouteBootstrapPresentation
+    path: apps/web/src/app/bootstrap/routeBootstrapRegistry.ts
+    dddOwner: Route bootstrap readiness registry lifecycle
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+    fowlerSignals:
+      - Temporal coupling
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - routeBootstrapRegistry.test.ts
   - name: RouteBootstrapStartupReadinessState
     path: apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.ts
     dddOwner: RouteBootstrapStartupReadinessState read model
@@ -284,13 +327,11 @@ symbols:
       - routeBootstrapStartupReadiness.test.ts
   - name: RouteBootstrapStartupReadinessResolution
     path: apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.ts
-    dddOwner: BootstrapStepStatusCommand value object
+    dddOwner: RouteBootstrapStartupReadinessState read model
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - PublishAppBootstrapStepStatus
-      - CompleteAppBootstrapScreen
     fowlerSignals:
-      - Duplicate semantics
+      - Boundary drift
       - Temporal coupling
     architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
     cypressCoverage: startup-route-readiness.cy.ts
@@ -313,11 +354,8 @@ symbols:
     dddOwner: RouteBootstrapStartupReadinessState read model
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - PublishAppBootstrapStepStatus
-      - CompleteAppBootstrapScreen
     fowlerSignals:
       - Boundary drift
-      - Duplicate semantics
       - Temporal coupling
       - Test-only confidence
     architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
@@ -329,8 +367,6 @@ symbols:
     dddOwner: RouteBootstrapStartupReadinessState internal policy helper
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - PublishAppBootstrapStepStatus
-      - CompleteAppBootstrapScreen
     fowlerSignals:
       - Boundary drift
       - Temporal coupling
@@ -343,8 +379,6 @@ symbols:
     dddOwner: RouteBootstrapStartupReadinessState internal policy helper
     cqRails:
       - ObserveAppBootstrapRouteReadiness
-      - PublishAppBootstrapStepStatus
-      - CompleteAppBootstrapScreen
     fowlerSignals:
       - Boundary drift
       - Temporal coupling
@@ -358,8 +392,7 @@ symbols:
     cqRails:
       - ObserveAppBootstrapRouteReadiness
     fowlerSignals:
-      - Duplicate semantics
-      - Test-only confidence
+      - Temporal coupling
     architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
     cypressCoverage: startup-route-readiness.cy.ts
     unitTests:
@@ -394,10 +427,10 @@ symbols:
 
 1. Add red unit and integration tests for the readiness policy.
 2. Add the pure policy and capability-waiting copy.
-3. Wire `RootShell` to publish the effective route command and completion
-   posture.
+3. Wire `RootShell` to map the effective readiness into the route command and
+   the shared status-derived completion rule.
 4. Add architecture and Cypress proofs.
-5. Update component guide, lane evidence, generated docs state, and
+5. Update component guide, Planning DB evidence, generated docs state, and
    mechanization metadata.
 6. Run targeted tests, Cypress, typecheck, docs gates, and prepush.
 
@@ -405,7 +438,7 @@ symbols:
 
 | Risk                                                                    | Control                                                                                                                  |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| Startup screen never completes after health settles.                    | Root completion effect stays dependent on health, capability, and effective route completion posture.                    |
+| Startup screen never completes after health settles.                    | Root completion effect stays dependent on health, capability, and effective route readiness status.                      |
 | Policy hides real route failures.                                       | Only suppress `complete` while capabilities cold-start; `failed`, `blocked`, and `error` remain visible.                 |
 | Stable posture leaks across route navigation.                           | State is keyed by active route id and resets on route id change.                                                         |
 | Cypress creates false confidence with fake draft endpoint interception. | Cypress uses fetch-level e2e stubs and does not use `cy.intercept()` for `/workspace/graph/draft` or direct draft `PUT`. |

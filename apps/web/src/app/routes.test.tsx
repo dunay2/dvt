@@ -556,9 +556,7 @@ describe('app routes', () => {
               presentation &&
               typeof presentation === 'object' &&
               (presentation as { status?: string }).status === 'pending' &&
-              (presentation as { detail?: string }).detail ===
-                'Selecting initial workspace route' &&
-              (presentation as { canComplete?: boolean }).canComplete === false
+              (presentation as { detail?: string }).detail === 'Selecting initial workspace route'
           ),
         {
           description: 'default redirect route bootstrap publication',

@@ -31,13 +31,12 @@ export function useCanvasRoutePresentationSync(
   useEffect(() => {
     publishCanvasDraftPresentationState(presentationState);
   }, [
-    presentationState.bootstrapDetail,
-    presentationState.bootstrapStatus,
-    presentationState.canCompleteBootstrap,
     presentationState.draftStatusState.label,
     presentationState.draftStatusState.showReloadAction,
     presentationState.draftStatusState.tone,
     presentationState.recoveryReason,
+    presentationState.routeReadiness.detail,
+    presentationState.routeReadiness.status,
     presentationState.routeState,
   ]);
 

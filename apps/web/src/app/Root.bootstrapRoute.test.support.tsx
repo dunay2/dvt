@@ -109,12 +109,7 @@ export function RouteBootstrapProbe({
     return () => {
       resetRouteBootstrapPresentation(registration);
     };
-  }, [
-    presentationState.canComplete,
-    presentationState.detail,
-    presentationState.status,
-    registration,
-  ]);
+  }, [presentationState.detail, presentationState.status, registration]);
 
   return children;
 }

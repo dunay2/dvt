@@ -97,7 +97,6 @@ describe('canvas startup bootstrap publication architecture', () => {
     expect(createFailedRouteBootstrapPresentation('Route rendered a governed error')).toEqual({
       status: 'failed',
       detail: 'Route rendered a governed error',
-      canComplete: true,
     });
 
     expect(WORKSPACE_GRAPH_DRAFT_ENDPOINT).toBe('/workspace/graph/draft');

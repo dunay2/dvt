@@ -12,12 +12,7 @@ export const BOOTSTRAP_STEP_ORDER = [
 
 export type BootstrapStep = (typeof BOOTSTRAP_STEP_ORDER)[number];
 export type BootstrapStepStatus =
-  | 'pending'
-  | 'complete'
-  | 'degraded'
-  | 'failed'
-  | 'blocked'
-  | 'error';
+  'pending' | 'complete' | 'degraded' | 'failed' | 'blocked' | 'error';
 export type BootstrapScreenState = 'loading' | 'blocked' | 'error' | 'complete';
 
 export type BootstrapStepState = Readonly<{
@@ -299,6 +294,6 @@ function findLatestStepDetail(
   return null;
 }
 
-function isBootstrapStepStartupAllowed(status: BootstrapStepStatus): boolean {
+export function isBootstrapStepStartupAllowed(status: BootstrapStepStatus): boolean {
   return status === 'complete' || status === 'degraded' || status === 'failed';
 }

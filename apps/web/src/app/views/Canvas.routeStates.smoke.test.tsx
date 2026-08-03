@@ -32,9 +32,8 @@ describe('Canvas route state smoke', () => {
       },
       bootstrap: {
         routeState: 'loading_graph',
-        bootstrapStatus: 'pending',
-        bootstrapDetail: 'Loading workspace graph for canvas',
-        canCompleteBootstrap: false,
+        readinessStatus: 'pending',
+        readinessDetail: 'Loading workspace graph for canvas',
       },
     },
     {
@@ -49,9 +48,8 @@ describe('Canvas route state smoke', () => {
       },
       bootstrap: {
         routeState: 'needs_canvas',
-        bootstrapStatus: 'complete',
-        bootstrapDetail: 'Canvas playground is ready to create the first canvas',
-        canCompleteBootstrap: true,
+        readinessStatus: 'complete',
+        readinessDetail: 'Canvas playground is ready to create the first canvas',
       },
     },
   ])('$name', async ({ overrides, surface, bootstrap }) => {

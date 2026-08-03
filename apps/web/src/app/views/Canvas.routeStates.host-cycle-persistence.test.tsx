@@ -104,8 +104,7 @@ describe('Canvas route host-cycle persistence', () => {
   function createFirstNodeFromViewport(kind: string): void {
     const viewportProps = currentCanvasRouteState().viewportProps;
     const createFromViewport = viewportProps?.onCreateAuthoringNode as
-      | ((registration: NodeKindRegistration) => void)
-      | undefined;
+      ((registration: NodeKindRegistration) => void) | undefined;
     const registration = requireAuthoringNodeKind(kind);
 
     expect(viewportProps?.authoringNodeKinds).toContain(registration);
@@ -137,9 +136,8 @@ describe('Canvas route host-cycle persistence', () => {
       expect(harness.container.textContent).not.toContain(fixture.retiredFirstNodeText);
       expectCanvasBootstrapState({
         routeState: 'empty',
-        bootstrapStatus: 'complete',
-        bootstrapDetail: canvasViewCopy.emptyCanvasReadyDetail,
-        canCompleteBootstrap: true,
+        readinessStatus: 'complete',
+        readinessDetail: canvasViewCopy.emptyCanvasReadyDetail,
       });
 
       expect(
@@ -160,9 +158,8 @@ describe('Canvas route host-cycle persistence', () => {
       expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
       expectCanvasBootstrapState({
         routeState: 'ready',
-        bootstrapStatus: 'complete',
-        bootstrapDetail: canvasViewCopy.canvasReadyDetail,
-        canCompleteBootstrap: true,
+        readinessStatus: 'complete',
+        readinessDetail: canvasViewCopy.canvasReadyDetail,
       });
     }
   );
@@ -297,9 +294,8 @@ describe('Canvas route host-cycle persistence', () => {
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expectCanvasBootstrapState({
       routeState: 'empty',
-      bootstrapStatus: 'complete',
-      bootstrapDetail: canvasViewCopy.emptyCanvasReadyDetail,
-      canCompleteBootstrap: true,
+      readinessStatus: 'complete',
+      readinessDetail: canvasViewCopy.emptyCanvasReadyDetail,
     });
   });
 
@@ -326,9 +322,8 @@ describe('Canvas route host-cycle persistence', () => {
     expect(harness.container.querySelector('[data-slot="canvas-viewport"]')).not.toBeNull();
     expectCanvasBootstrapState({
       routeState: 'ready',
-      bootstrapStatus: 'complete',
-      bootstrapDetail: canvasViewCopy.canvasReadyDetail,
-      canCompleteBootstrap: true,
+      readinessStatus: 'complete',
+      readinessDetail: canvasViewCopy.canvasReadyDetail,
     });
   });
 });

@@ -11,7 +11,6 @@ describe('costRouteBootstrap', () => {
       })
     ).toMatchObject({
       status: 'pending',
-      canComplete: false,
     });
 
     expect(
@@ -22,7 +21,6 @@ describe('costRouteBootstrap', () => {
     ).toEqual({
       status: 'failed',
       detail: 'Cost unavailable',
-      canComplete: true,
     });
 
     expect(
@@ -33,7 +31,6 @@ describe('costRouteBootstrap', () => {
     ).toEqual({
       status: 'complete',
       detail: 'Cost route is ready',
-      canComplete: true,
     });
   });
 });

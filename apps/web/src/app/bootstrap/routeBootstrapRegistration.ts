@@ -9,9 +9,7 @@ export type RouteBootstrapRegistration = {
   routeBootstrap: RouteBootstrapHandle;
 };
 
-function isValidRouteBootstrapPresentation(
-  value: unknown
-): value is RouteBootstrapPresentation {
+function isValidRouteBootstrapPresentation(value: unknown): value is RouteBootstrapPresentation {
   if (!value || typeof value !== 'object') {
     return false;
   }
@@ -20,10 +18,11 @@ function isValidRouteBootstrapPresentation(
   return (
     (candidate.status === 'pending' ||
       candidate.status === 'complete' ||
+      candidate.status === 'degraded' ||
+      candidate.status === 'failed' ||
       candidate.status === 'blocked' ||
       candidate.status === 'error') &&
-    typeof candidate.detail === 'string' &&
-    typeof candidate.canComplete === 'boolean'
+    typeof candidate.detail === 'string'
   );
 }
 
@@ -44,10 +43,7 @@ export function getRouteBootstrapRegistration(
     return null;
   }
 
-  if (
-    routeBootstrap.mode !== 'published' &&
-    routeBootstrap.mode !== 'static'
-  ) {
+  if (routeBootstrap.mode !== 'published' && routeBootstrap.mode !== 'static') {
     return null;
   }
 

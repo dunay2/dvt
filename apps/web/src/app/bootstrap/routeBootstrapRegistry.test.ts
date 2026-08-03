@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
 import {
+  createFailedRouteBootstrapPresentation,
   createPublishedRouteBootstrapHandle,
   createStaticRouteBootstrapHandle,
 } from './routeBootstrapContract';
@@ -53,7 +54,6 @@ describe('routeBootstrapRegistry', () => {
     publishRouteBootstrapPresentation(TEST_PUBLISHED_ROUTE_BOOTSTRAP_REGISTRATION, {
       status: 'blocked',
       detail: 'Route is blocked by a prerequisite',
-      canComplete: false,
     });
 
     expect(
@@ -61,7 +61,6 @@ describe('routeBootstrapRegistry', () => {
     ).toEqual({
       status: 'blocked',
       detail: 'Route is blocked by a prerequisite',
-      canComplete: false,
     });
 
     resetRouteBootstrapPresentation(TEST_PUBLISHED_ROUTE_BOOTSTRAP_REGISTRATION);
@@ -72,23 +71,41 @@ describe('routeBootstrapRegistry', () => {
   });
 
   it('extracts bootstrap registrations from route ids and typed route handles', () => {
-    expect(
-      getRouteBootstrapRegistration('test.route', TEST_PUBLISHED_ROUTE_HANDLE)
-    ).toEqual(TEST_PUBLISHED_ROUTE_BOOTSTRAP_REGISTRATION);
+    expect(getRouteBootstrapRegistration('test.route', TEST_PUBLISHED_ROUTE_HANDLE)).toEqual(
+      TEST_PUBLISHED_ROUTE_BOOTSTRAP_REGISTRATION
+    );
     expect(getRouteBootstrapRegistration('test.route', { routeBootstrap: { id: 3 } })).toBeNull();
     expect(getRouteBootstrapRegistration(null, TEST_PUBLISHED_ROUTE_HANDLE)).toBeNull();
   });
 
   it('exposes the settled presentation only for static routes', () => {
-    expect(
-      getStaticRouteSettledPresentation(TEST_STATIC_ROUTE_BOOTSTRAP_REGISTRATION)
-    ).toEqual({
+    expect(getStaticRouteSettledPresentation(TEST_STATIC_ROUTE_BOOTSTRAP_REGISTRATION)).toEqual({
       status: 'complete',
       detail: 'Static route is ready',
-      canComplete: true,
     });
     expect(
       getStaticRouteSettledPresentation(TEST_PUBLISHED_ROUTE_BOOTSTRAP_REGISTRATION)
     ).toBeNull();
+  });
+
+  it('accepts failed as a governed terminal route posture', () => {
+    expect(
+      getRouteBootstrapRegistration('test.failed-route', {
+        routeBootstrap: {
+          mode: 'published',
+          initialPresentation: createFailedRouteBootstrapPresentation(
+            'Plugin route rendered its unavailable surface'
+          ),
+        },
+      })
+    ).toMatchObject({
+      routeId: 'test.failed-route',
+      routeBootstrap: {
+        initialPresentation: {
+          status: 'failed',
+          detail: 'Plugin route rendered its unavailable surface',
+        },
+      },
+    });
   });
 });

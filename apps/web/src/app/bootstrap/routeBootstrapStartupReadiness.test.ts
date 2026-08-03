@@ -21,12 +21,10 @@ describe('route bootstrap startup readiness', () => {
       previousState: createInitialRouteBootstrapStartupReadinessState(),
     });
 
-    expect(result.command).toEqual({
-      step: 'route',
+    expect(result.readiness).toEqual({
       status: 'pending',
       detail: 'Waiting for runtime capabilities before route readiness.',
     });
-    expect(result.canComplete).toBe(false);
     expect(result.nextState.stablePresentation).toBeNull();
   });
 
@@ -47,12 +45,10 @@ describe('route bootstrap startup readiness', () => {
       previousState: suppressed.nextState,
     });
 
-    expect(pending.command).toEqual({
-      step: 'route',
+    expect(pending.readiness).toEqual({
       status: 'pending',
       detail: 'Waiting for runtime capabilities before route readiness.',
     });
-    expect(pending.canComplete).toBe(false);
   });
 
   it('does not demote a same-route failed posture back to pending', () => {
@@ -72,12 +68,10 @@ describe('route bootstrap startup readiness', () => {
       previousState: failed.nextState,
     });
 
-    expect(pending.command).toEqual({
-      step: 'route',
+    expect(pending.readiness).toEqual({
       status: 'failed',
       detail: 'Canvas rendered governed recovery',
     });
-    expect(pending.canComplete).toBe(true);
   });
 
   it('allows a same-route failed posture to recover to complete', () => {
@@ -97,12 +91,10 @@ describe('route bootstrap startup readiness', () => {
       previousState: failed.nextState,
     });
 
-    expect(recovered.command).toEqual({
-      step: 'route',
+    expect(recovered.readiness).toEqual({
       status: 'complete',
       detail: 'Canvas route is ready',
     });
-    expect(recovered.canComplete).toBe(true);
     expect(recovered.nextState.stablePresentation?.status).toBe('complete');
   });
 
@@ -115,12 +107,10 @@ describe('route bootstrap startup readiness', () => {
       previousState: createInitialRouteBootstrapStartupReadinessState(),
     });
 
-    expect(result.command).toEqual({
-      step: 'route',
+    expect(result.readiness).toEqual({
       status: 'blocked',
       detail: 'Canvas requires draft recovery',
     });
-    expect(result.canComplete).toBe(false);
     expect(result.nextState.stablePresentation?.status).toBe('blocked');
   });
 
@@ -141,12 +131,10 @@ describe('route bootstrap startup readiness', () => {
       previousState: failed.nextState,
     });
 
-    expect(nextRoute.command).toEqual({
-      step: 'route',
+    expect(nextRoute.readiness).toEqual({
       status: 'pending',
       detail: 'Preparing Plugins route',
     });
-    expect(nextRoute.canComplete).toBe(false);
     expect(nextRoute.nextState.stablePresentation).toBeNull();
   });
 });

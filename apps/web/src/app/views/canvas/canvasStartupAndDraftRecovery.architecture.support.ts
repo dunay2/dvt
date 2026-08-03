@@ -16,7 +16,7 @@ export const ownedConcernModules = [
   {
     label: 'route bootstrap contract',
     path: '../../bootstrap/routeBootstrapContract.ts',
-    phrase: 'Owned concern: define route bootstrap presentation statuses',
+    phrase: 'Owned concern: define route bootstrap handles and helper factories',
   },
   {
     label: 'workspace draft HTTP boundary',

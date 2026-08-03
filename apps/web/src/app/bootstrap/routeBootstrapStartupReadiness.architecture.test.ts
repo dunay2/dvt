@@ -11,7 +11,8 @@ describe('route bootstrap startup readiness architecture', () => {
     );
 
     expect(source).toContain('Owned concern: resolve active-route startup readiness');
-    expect(source).toContain('createRouteBootstrapStepCommand');
+    expect(source).toContain('RouteBootstrapPresentation');
+    expect(source).not.toContain('createRouteBootstrapStepCommand');
     expect(source).not.toContain('views/canvas');
     expect(source).not.toContain('workspace/graph/draft');
     expect(source).not.toContain('fetch(');
@@ -25,6 +26,24 @@ describe('route bootstrap startup readiness architecture', () => {
     expect(rootSource).not.toContain(
       'setBootstrapStepStatus(createRouteBootstrapStepCommand(routeBootstrapPresentation))'
     );
+  });
+
+  it('uses one readiness vocabulary without persisted completion booleans', () => {
+    const contractSource = readFileSync(
+      path.resolve(import.meta.dirname, 'routeBootstrapContract.ts'),
+      'utf8'
+    );
+    const canvasPresentationSource = readFileSync(
+      path.resolve(import.meta.dirname, '../views/canvas/canvasDraftPresentationModel.ts'),
+      'utf8'
+    );
+    const rootSource = readFileSync(path.resolve(import.meta.dirname, '../Root.tsx'), 'utf8');
+
+    expect(contractSource).toContain('BootstrapStepState');
+    expect(contractSource).not.toContain('RouteBootstrapStatus');
+    expect(contractSource).not.toContain('canComplete');
+    expect(canvasPresentationSource).not.toContain('canCompleteBootstrap');
+    expect(rootSource).not.toContain('routeBootstrapCanComplete');
   });
 
   it('documents the command/query rail, invariants, and Cypress coverage', () => {

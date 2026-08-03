@@ -278,22 +278,21 @@ export function expectCanvasSurfaceState(args: {
 
 export function expectCanvasBootstrapState(args: {
   routeState: string;
-  bootstrapStatus: string;
-  bootstrapDetail: string;
-  canCompleteBootstrap: boolean;
+  readinessStatus: string;
+  readinessDetail: string;
 }) {
-  const { routeState, bootstrapStatus, bootstrapDetail, canCompleteBootstrap } = args;
+  const { routeState, readinessStatus, readinessDetail } = args;
 
   expect(currentCanvasDraftPresentationState()).toMatchObject({
     routeState,
-    bootstrapStatus,
-    bootstrapDetail,
-    canCompleteBootstrap,
+    routeReadiness: {
+      status: readinessStatus,
+      detail: readinessDetail,
+    },
   });
   expect(publishedCanvasRouteBootstrapPresentation()).toMatchObject({
-    status: bootstrapStatus,
-    detail: bootstrapDetail,
-    canComplete: canCompleteBootstrap,
+    status: readinessStatus,
+    detail: readinessDetail,
   });
 }
 
@@ -375,17 +374,9 @@ export function expectBlockedCanvasRouteState(args: {
   text: string;
   detail: string;
   routeState: 'blocked_backend';
-  bootstrapStatus?: 'blocked' | 'complete';
-  canCompleteBootstrap?: boolean;
+  readinessStatus?: 'blocked' | 'complete';
 }): void {
-  const {
-    harness,
-    text,
-    detail,
-    routeState,
-    bootstrapStatus = 'blocked',
-    canCompleteBootstrap = false,
-  } = args;
+  const { harness, text, detail, routeState, readinessStatus = 'blocked' } = args;
 
   expectCanvasSurfaceState({
     harness,
@@ -397,9 +388,8 @@ export function expectBlockedCanvasRouteState(args: {
   expectPrimaryCanvasActionsBlocked(harness.container);
   expectCanvasBootstrapState({
     routeState,
-    bootstrapStatus,
-    bootstrapDetail: detail,
-    canCompleteBootstrap,
+    readinessStatus,
+    readinessDetail: detail,
   });
   expectCanvasRegistryClosed();
 }

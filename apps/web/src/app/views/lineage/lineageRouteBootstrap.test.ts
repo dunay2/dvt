@@ -6,7 +6,6 @@ describe('lineageRouteBootstrap', () => {
   it('maps loading, controlled failure, and ready states to published route posture', () => {
     expect(deriveLineageRouteBootstrapPresentation({ kind: 'loading' })).toMatchObject({
       status: 'pending',
-      canComplete: false,
     });
     expect(
       deriveLineageRouteBootstrapPresentation({
@@ -16,12 +15,10 @@ describe('lineageRouteBootstrap', () => {
     ).toEqual({
       status: 'failed',
       detail: 'Snapshot unavailable',
-      canComplete: true,
     });
     expect(deriveLineageRouteBootstrapPresentation({ kind: 'ready' })).toEqual({
       status: 'complete',
       detail: 'Lineage route is ready',
-      canComplete: true,
     });
   });
 });

@@ -12,7 +12,6 @@ describe('diffRouteBootstrap', () => {
       })
     ).toMatchObject({
       status: 'pending',
-      canComplete: false,
     });
 
     expect(
@@ -24,7 +23,6 @@ describe('diffRouteBootstrap', () => {
     ).toEqual({
       status: 'failed',
       detail: 'Diff changes unavailable',
-      canComplete: true,
     });
 
     expect(
@@ -36,7 +34,6 @@ describe('diffRouteBootstrap', () => {
     ).toEqual({
       status: 'failed',
       detail: 'SQL unavailable',
-      canComplete: true,
     });
 
     expect(
@@ -48,7 +45,6 @@ describe('diffRouteBootstrap', () => {
     ).toEqual({
       status: 'complete',
       detail: 'Diff route is ready with no changes',
-      canComplete: true,
     });
   });
 });

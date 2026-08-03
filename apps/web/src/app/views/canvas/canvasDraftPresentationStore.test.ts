@@ -34,9 +34,10 @@ describe('canvasDraftPresentationStore', () => {
     resetCanvasDraftPresentationState();
     expect(getCanvasDraftPresentationState()).toMatchObject({
       routeState: 'loading_graph',
-      bootstrapStatus: 'pending',
-      bootstrapDetail: canvasViewCopy.preparingCanvasRouteDetail,
-      canCompleteBootstrap: false,
+      routeReadiness: {
+        status: 'pending',
+        detail: canvasViewCopy.preparingCanvasRouteDetail,
+      },
     });
   });
 
@@ -46,7 +47,6 @@ describe('canvasDraftPresentationStore', () => {
       initialPresentation: {
         status: 'pending',
         detail: canvasViewCopy.preparingCanvasRouteDetail,
-        canComplete: false,
       },
     });
 

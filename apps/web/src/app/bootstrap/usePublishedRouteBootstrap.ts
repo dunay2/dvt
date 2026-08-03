@@ -48,7 +48,6 @@ export function usePublishedRouteBootstrap(
     publishRouteBootstrapPresentation(registration, presentation);
   }, [
     allowMissingDataRouterContext,
-    presentation.canComplete,
     presentation.detail,
     presentation.status,
     registration,

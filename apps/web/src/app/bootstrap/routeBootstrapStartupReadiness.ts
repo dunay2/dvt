@@ -1,9 +1,6 @@
 /** Owned concern: resolve active-route startup readiness against runtime capability ordering. */
-import {
-  createRouteBootstrapStepCommand,
-  type BootstrapStepStatusCommand,
-} from './appBootstrapCommands';
-import type { RouteBootstrapPresentation, RouteBootstrapStatus } from './routeBootstrapContract';
+import type { BootstrapStepStatus } from './appBootstrapPresentation';
+import type { RouteBootstrapPresentation } from './routeBootstrapContract';
 
 export type RouteBootstrapStartupReadinessState = Readonly<{
   activeRouteId: string | null;
@@ -20,8 +17,7 @@ export type RouteBootstrapStartupReadinessArgs = Readonly<{
 }>;
 
 export type RouteBootstrapStartupReadinessResolution = Readonly<{
-  command: BootstrapStepStatusCommand;
-  canComplete: boolean;
+  readiness: RouteBootstrapPresentation;
   nextState: RouteBootstrapStartupReadinessState;
 }>;
 
@@ -59,8 +55,7 @@ export function resolveRouteBootstrapStartupReadiness(
     : previousStablePresentation;
 
   return {
-    command: createRouteBootstrapStepCommand(effectivePresentation),
-    canComplete: effectivePresentation.canComplete,
+    readiness: effectivePresentation,
     nextState: {
       activeRouteId: args.activeRouteId,
       capabilitiesSuppressedPresentation,
@@ -78,7 +73,6 @@ function resolveEffectiveRoutePresentation(
     return {
       status: 'pending',
       detail: args.capabilitiesPendingDetail,
-      canComplete: false,
     };
   }
 
@@ -117,6 +111,6 @@ function resolveCapabilitiesSuppressedPresentation(
   return null;
 }
 
-function isStableRouteBootstrapStatus(status: RouteBootstrapStatus): boolean {
+function isStableRouteBootstrapStatus(status: BootstrapStepStatus): boolean {
   return status !== 'pending';
 }

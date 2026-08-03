@@ -64,9 +64,10 @@ function buildArgs(
         tone: 'neutral',
         showReloadAction: false,
       },
-      bootstrapStatus: 'complete',
-      bootstrapDetail: 'ready',
-      canCompleteBootstrap: true,
+      routeReadiness: {
+        status: 'complete',
+        detail: 'ready',
+      },
     },
     workspaceScope: {
       tenantId: 'tenant-a',
