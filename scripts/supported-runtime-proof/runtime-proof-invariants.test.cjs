@@ -27,12 +27,29 @@ function passingReport(overrides = {}) {
     snapshotReplayMismatchCount: 0,
     postgresInterruptionRejected: true,
     postgresRecoveryCompleted: true,
+    observations: {
+      endToEndEventThroughputPerSecond: 2.25,
+      projectionFreshnessMs: 200,
+      startLatencyMs: { p95: 400 },
+      completionDurationMs: { p95: 2_500 },
+      workerRecoveryMs: 3_100,
+      postgresRecoveryMs: 13_400,
+    },
     ...overrides,
   };
 }
 
+const PASSING_BUDGETS = Object.freeze({
+  minimumEventThroughputPerSecond: 1.5,
+  maximumProjectionFreshnessMs: 1_000,
+  maximumStartLatencyP95Ms: 750,
+  maximumCompletionDurationP95Ms: 5_000,
+  maximumWorkerRecoveryMs: 6_000,
+  maximumPostgresRecoveryMs: 25_000,
+});
+
 test('proof evaluation accepts only a complete vertical with every invariant satisfied', () => {
-  const result = evaluateRuntimeProof(passingReport());
+  const result = evaluateRuntimeProof(passingReport(), PASSING_BUDGETS);
 
   assert.equal(result.passed, true);
   assert.equal(result.firstFailure, null);
@@ -47,7 +64,8 @@ test('proof evaluation reports the first failed invariant deterministically', ()
     passingReport({
       acceptedCommandCount: 7,
       pendingOutboxCount: 2,
-    })
+    }),
+    PASSING_BUDGETS
   );
 
   assert.equal(result.passed, false);
@@ -55,6 +73,24 @@ test('proof evaluation reports the first failed invariant deterministically', ()
   assert.deepEqual(
     result.findings.filter(({ passed }) => !passed).map(({ invariant }) => invariant),
     ['all_commands_accepted', 'outbox_backlog_drained']
+  );
+});
+
+test('proof evaluation names each exceeded measured budget', () => {
+  const result = evaluateRuntimeProof(
+    passingReport({
+      observations: {
+        ...passingReport().observations,
+        endToEndEventThroughputPerSecond: 1.49,
+        postgresRecoveryMs: 25_001,
+      },
+    }),
+    PASSING_BUDGETS
+  );
+
+  assert.deepEqual(
+    result.findings.filter(({ passed }) => !passed).map(({ invariant }) => invariant),
+    ['event_throughput_within_budget', 'postgres_recovery_within_budget']
   );
 });
 

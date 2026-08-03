@@ -11,9 +11,15 @@ const INVARIANT_ORDER = Object.freeze([
   'snapshots_match_replay',
   'postgres_interruption_failed_closed',
   'postgres_recovery_completed',
+  'event_throughput_within_budget',
+  'projection_freshness_within_budget',
+  'start_latency_within_budget',
+  'completion_latency_within_budget',
+  'worker_recovery_within_budget',
+  'postgres_recovery_within_budget',
 ]);
 
-function evaluateRuntimeProof(report) {
+function evaluateRuntimeProof(report, budgets) {
   const checks = {
     all_commands_accepted:
       report.acceptedCommandCount === report.expectedAcceptedCommandCount &&
@@ -29,6 +35,19 @@ function evaluateRuntimeProof(report) {
     snapshots_match_replay: report.snapshotReplayMismatchCount === 0,
     postgres_interruption_failed_closed: report.postgresInterruptionRejected === true,
     postgres_recovery_completed: report.postgresRecoveryCompleted === true,
+    event_throughput_within_budget:
+      report.observations?.endToEndEventThroughputPerSecond >=
+      budgets?.minimumEventThroughputPerSecond,
+    projection_freshness_within_budget:
+      report.observations?.projectionFreshnessMs <= budgets?.maximumProjectionFreshnessMs,
+    start_latency_within_budget:
+      report.observations?.startLatencyMs?.p95 <= budgets?.maximumStartLatencyP95Ms,
+    completion_latency_within_budget:
+      report.observations?.completionDurationMs?.p95 <= budgets?.maximumCompletionDurationP95Ms,
+    worker_recovery_within_budget:
+      report.observations?.workerRecoveryMs <= budgets?.maximumWorkerRecoveryMs,
+    postgres_recovery_within_budget:
+      report.observations?.postgresRecoveryMs <= budgets?.maximumPostgresRecoveryMs,
   };
 
   const findings = INVARIANT_ORDER.map((invariant) => ({

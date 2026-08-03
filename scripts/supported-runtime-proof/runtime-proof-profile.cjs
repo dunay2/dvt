@@ -4,6 +4,14 @@ const SUPPORTED_RUNTIME_PROOF_PROFILE = deepFreeze({
   schemaVersion: 'dvt-supported-runtime-proof/v1',
   profileId: 'mvp-18-local-v1',
   baselineRunCount: 3,
+  budgets: {
+    minimumEventThroughputPerSecond: 1.5,
+    maximumProjectionFreshnessMs: 1_000,
+    maximumStartLatencyP95Ms: 750,
+    maximumCompletionDurationP95Ms: 5_000,
+    maximumWorkerRecoveryMs: 6_000,
+    maximumPostgresRecoveryMs: 25_000,
+  },
   scope: {
     tenantId: 'tenant-proof-mvp-18',
     projectId: 'project-proof-mvp-18',
@@ -45,6 +53,15 @@ function validateSupportedRuntimeProofProfile(profile) {
 
   if (!isPositiveInteger(profile?.baselineRunCount)) {
     failures.push('baselineRunCount must be a positive integer');
+  }
+  if (profile?.budgets === null || typeof profile?.budgets !== 'object') {
+    failures.push('budgets must be an object');
+  } else {
+    for (const [name, value] of Object.entries(profile.budgets)) {
+      if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+        failures.push(`budgets.${name} must be a positive number`);
+      }
+    }
   }
   if (!isPositiveInteger(profile?.workload?.runCompletionTimeoutMs)) {
     failures.push('workload.runCompletionTimeoutMs must be a positive integer');

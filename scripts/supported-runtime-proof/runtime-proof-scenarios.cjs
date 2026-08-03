@@ -150,7 +150,7 @@ async function executeRuntimeProofIteration(profile, options = {}) {
       runIds: acceptedRuns.map((run) => run.runId),
     };
 
-    return { report, evaluation: evaluateRuntimeProof(report) };
+    return { report, evaluation: evaluateRuntimeProof(report, profile.budgets) };
   } finally {
     await lifecycle.close();
   }
