@@ -239,8 +239,8 @@ commands or queries are still needed for a mature end-to-end workflow.
   - `IWorkspacePluginCatalogQueryPort.getPlugins`;
   - `useWorkspacePluginCatalogQuery`.
 - Backend surface: `GET /workspace/plugins`.
-- Repetition: `createWorkspacePorts` and `buildAppServices` both know how to
-  create the API plugin catalog query port. Composition should have one owner.
+- Composition ownership: `createWorkspacePorts` creates the API plugin catalog
+  query port; `buildAppServices` consumes that instance or an explicit override.
 
 ### `ListAdminRoles`
 
@@ -517,24 +517,21 @@ groups those rails by concern:
 1. Workspace graph reads repeat one backend rail as two frontend ports:
    `readGraphDraft` and `getGraphSnapshot`. Keep both only as an explicit
    envelope-vs-projection split.
-2. Workspace plugin catalog construction is duplicated between
-   `createWorkspacePorts` and `buildAppServices`. The composition root should
-   choose one construction owner.
-3. Run status is named `GetRunStatus` in backend rail vocabulary and
+2. Run status is named `GetRunStatus` in backend rail vocabulary and
    `getRunSnapshot` in frontend ports. Either the mapping doc must stay explicit
    or the frontend DTO vocabulary should converge.
-4. Run list is exposed through several hooks for view-specific caching. Those
+3. Run list is exposed through several hooks for view-specific caching. Those
    hooks should keep one rail name and vary only query keys/scope.
-5. Workspace file artifacts are a projection over file tree/content rails. Do
+4. Workspace file artifacts are a projection over file tree/content rails. Do
    not create a separate backend artifact catalog unless freshness, auth, or
    storage semantics differ materially.
-6. Code editing uses a route-local working-tree buffer, but all automatic and
+5. Code editing uses a route-local working-tree buffer, but all automatic and
    explicit flush paths converge on `SaveWorkspaceFileContent`; there is no
    separate Save command or browser-owned persistence lifecycle.
-7. Older route-parity planning docs still describe diff/plugins/file-write as
+6. Older route-parity planning docs still describe diff/plugins/file-write as
    missing or unavailable in places. Current code and API route constants show
    several of those rails are now implemented.
-8. Canvas authoring has a strong local catalog, while the broader frontend does
+7. Canvas authoring has a strong local catalog, while the broader frontend does
    not. This document is the web-level consolidation point.
 
 ## Commands And Queries Needed But Not Implemented
