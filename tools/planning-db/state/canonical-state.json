@@ -20551,6 +20551,596 @@
       "createdAt": "2026-08-02T14:27:31.157Z"
     },
     {
+      "railId": "local#WEB-API-AUTHORITY-HARDCUT-20260510#query#getruntimecapabilities",
+      "featureId": "WEB-API-AUTHORITY-HARDCUT-20260510",
+      "mechanizationStatus": "implemented",
+      "railName": "GetRuntimeCapabilities",
+      "normalizedRailName": "getruntimecapabilities",
+      "railType": "query",
+      "dddOwner": "RuntimeCapabilityProjection",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/services/capabilities/capabilitiesPort.ts#createCapabilitiesPort",
+        "apps/web/src/app/plugins/registry.ts#getRuntimePlugins",
+        "apps/web/src/app/plugins/registry.ts#getRouteViews",
+        "apps/web/src/app/plugins/registry.test.ts#buildRuntimeCapabilities",
+        "apps/web/src/app/plugins/registry.ts#requiresBackendCapability",
+        "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts#REPO_ROOT",
+        "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts#REQUIRED_DOCS",
+        "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts#readRepoFile",
+        "apps/web/src/app/queries/useCapabilitiesQuery.ts#createCapabilitiesQueryOptions",
+        "apps/web/src/app/queries/useCapabilitiesQuery.ts#useCapabilitiesQuery",
+        "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.ts#createRuntimeCapabilitiesCapability",
+        "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.ts#createHttpRuntimeCapabilitiesClient"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/plugins/registry.test.ts#buildRuntimeCapabilities",
+        "apps/web/src/app/plugins/registry.ts#getRouteViews",
+        "apps/web/src/app/plugins/registry.ts#getRuntimePlugins",
+        "apps/web/src/app/plugins/registry.ts#requiresBackendCapability",
+        "apps/web/src/app/services/capabilities/capabilitiesPort.ts#createCapabilitiesPort",
+        "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts#readRepoFile",
+        "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts#REPO_ROOT",
+        "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts#REQUIRED_DOCS",
+        "apps/web/src/app/queries/useCapabilitiesQuery.ts#createCapabilitiesQueryOptions",
+        "apps/web/src/app/queries/useCapabilitiesQuery.ts#useCapabilitiesQuery",
+        "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.ts#createRuntimeCapabilitiesCapability",
+        "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.ts#createHttpRuntimeCapabilitiesClient"
+      ],
+      "documentationRefs": [
+        {
+          "name": "GetRuntimeCapabilities",
+          "path": "docs/architecture/components/web/frontend-command-query-rail-inventory.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "GetRuntimeCapabilities",
+          "path": "docs/architecture/components/web/frontend-component-inventory.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "GetRuntimeCapabilities",
+          "path": "docs/architecture/components/web/frontend-query-boundary-component.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "GetRuntimeCapabilities",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/web-auth-project-onboarding-and-actionable-gaps-20260501.md",
+          "sourceKind": "documentation"
+        },
+        "docs/architecture/components/web/frontend-command-query-rail-inventory.md",
+        "docs/architecture/components/web/frontend-query-boundary-component.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/guides/ai-work-protocol.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/adr/ADR-0051-access-decision-service-and-openfga-adapter.md",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/adr/ADR-0056-web-ui-authority-is-server-projected.md",
+        "docs/planning/reviews/20260510-web-api-integration-gap-review.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "buzon/**",
+        "docs/adr/**",
+        "docs/architecture/components/web/workspace/web-api-authority-hardcut-component.md",
+        "docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md",
+        "docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md",
+        "docs/planning/reviews/20260510-web-api-integration-gap-review.md",
+        "docs/planning/status/**",
+        "docs/.manifest.json",
+        "docs/**/index.md",
+        "traceability.config.json",
+        "apps/web/src/app/stores/authorizationStore.ts",
+        "apps/web/src/app/stores/authorizationStore.test.ts",
+        "apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts",
+        "apps/web/src/app/services/capabilities/capabilitiesPort.ts",
+        "apps/web/src/app/services/composition/appServices.test.ts",
+        "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts",
+        "apps/web/src/app/services/session/protectedRouteSessionContext.ts",
+        "apps/web/src/app/services/session/protectedRouteSessionContext.test.ts",
+        "apps/web/src/app/routes.ts",
+        "apps/web/src/app/routes.test.tsx",
+        "apps/web/src/app/plugins/registry.ts",
+        "apps/web/src/app/plugins/registry.test.ts",
+        "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+        "apps/web/src/app/Root.shellChrome.test.support.ts",
+        "apps/web/src/app/queries/useCapabilitiesQuery.ts",
+        "apps/web/src/app/queries/useCapabilitiesQuery.test.tsx",
+        "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts",
+        "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.ts",
+        "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts",
+        "apps/web/src/capabilities/runtime-capabilities/contracts/runtimeCapabilitiesDtos.ts",
+        "apps/web/src/capabilities/runtime-capabilities/index.ts",
+        "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.ts",
+        "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts",
+        "apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.ts",
+        "apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.test.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts",
+        "pnpm --filter @dvt/web exec vitest run src/app/stores/webStoreDomainOwnership.architecture.test.ts",
+        "pnpm --filter @dvt/web exec vitest run src/app/queries/queryKeyPolicy.architecture.test.ts"
+      ],
+      "completionGate": [
+        "pnpm docs:sync",
+        "pnpm docs:status:generate",
+        "pnpm --filter @dvt/web exec vitest run src/app/stores/authorizationStore.test.ts src/app/plugins/registry.test.ts src/app/services/composition/appServices.test.ts src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts src/app/views/PluginsView.test.tsx",
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush",
+        "pnpm --filter @dvt/web exec vitest run src/app/queries/useCapabilitiesQuery.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md",
+      "sourceContentSha256": "eb0e05c9df0ffd65aef6d027367c8f510e4e3b5f125d58e63cd6e432319ad4a1",
+      "rawRail": {
+        "name": "GetRuntimeCapabilities",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "RuntimeCapabilityProjection"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "DEFAULT_USER_PERMISSIONS",
+            "path": "apps/web/src/app/stores/authorizationStore.ts",
+            "cqRails": ["GetRuntimeSession", "GetEffectiveWorkspaceContext"],
+            "dddOwner": "Web authorization projection",
+            "unitTests": ["apps/web/src/app/stores/authorizationStore.test.ts"],
+            "fowlerSignals": ["Fail closed default replaces Hidden Authority"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "createCapabilitiesPort",
+            "path": "apps/web/src/app/services/capabilities/capabilitiesPort.ts",
+            "cqRails": ["GetRuntimeCapabilities"],
+            "dddOwner": "Web runtime capabilities projection",
+            "unitTests": [
+              "apps/web/src/app/services/composition/appServices.test.ts"
+            ],
+            "fowlerSignals": [
+              "Backend capability query failure remains explicit"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "SessionResponse",
+            "path": "apps/web/src/app/services/session/protectedRouteSessionContext.ts",
+            "cqRails": ["GetRuntimeSession"],
+            "dddOwner": "Web authorization projection",
+            "unitTests": [
+              "apps/web/src/app/services/session/protectedRouteSessionContext.test.ts"
+            ],
+            "fowlerSignals": [
+              "Names the server-owned session read model used to hydrate UI permissions."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "readServerPermission",
+            "path": "apps/web/src/app/services/session/protectedRouteSessionContext.ts",
+            "cqRails": ["GetRuntimeSession"],
+            "dddOwner": "Web authorization projection",
+            "unitTests": [
+              "apps/web/src/app/services/session/protectedRouteSessionContext.test.ts"
+            ],
+            "fowlerSignals": [
+              "Keeps optional permission-field hydration explicit instead of treating missing values as grants."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "hasAnyScope",
+            "path": "apps/web/src/app/services/session/protectedRouteSessionContext.ts",
+            "cqRails": ["GetRuntimeSession"],
+            "dddOwner": "Web authorization projection",
+            "unitTests": [
+              "apps/web/src/app/services/session/protectedRouteSessionContext.test.ts"
+            ],
+            "fowlerSignals": [
+              "Centralizes scope-to-permission fallback checks so browser defaults stay fail-closed."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "projectPermissionsFromSession",
+            "path": "apps/web/src/app/services/session/protectedRouteSessionContext.ts",
+            "cqRails": ["GetRuntimeSession", "GetEffectiveWorkspaceContext"],
+            "dddOwner": "Web authorization projection",
+            "unitTests": [
+              "apps/web/src/app/services/session/protectedRouteSessionContext.test.ts"
+            ],
+            "fowlerSignals": [
+              "Hydrates effective UI permissions from the server session projection before protected route rendering."
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "getRuntimePlugins",
+            "path": "apps/web/src/app/plugins/registry.ts",
+            "cqRails": ["GetRuntimeCapabilities"],
+            "dddOwner": "Web plugin composition projection",
+            "unitTests": ["apps/web/src/app/plugins/registry.test.ts"],
+            "fowlerSignals": ["Missing backend plugin row fails closed"],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "getRouteViews",
+            "path": "apps/web/src/app/plugins/registry.ts",
+            "cqRails": [
+              "ObserveAppBootstrapRouteReadiness",
+              "GetRuntimeCapabilities"
+            ],
+            "dddOwner": "Web plugin static route projection",
+            "unitTests": [
+              "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Separates static route composition from backend-backed runtime availability"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/plugins/pluginRuntimeProjection.architecture.test.ts src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "buildRuntimeCapabilities",
+            "path": "apps/web/src/app/plugins/registry.test.ts",
+            "cqRails": ["GetRuntimeCapabilities"],
+            "dddOwner": "Web plugin composition projection tests",
+            "unitTests": ["apps/web/src/app/plugins/registry.test.ts"],
+            "fowlerSignals": [
+              "Keeps capability negative cases explicit in the registry unit tests"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts"
+          },
+          {
+            "name": "requiresBackendCapability",
+            "path": "apps/web/src/app/plugins/registry.ts",
+            "cqRails": ["GetRuntimeCapabilities"],
+            "dddOwner": "Web plugin composition projection",
+            "unitTests": ["apps/web/src/app/plugins/registry.test.ts"],
+            "fowlerSignals": [
+              "Encapsulates the backend-authority requirement instead of repeating string checks across plugin projection paths"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "REPO_ROOT",
+            "path": "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts",
+            "cqRails": ["GetRuntimeSession", "GetRuntimeCapabilities"],
+            "dddOwner": "Web authority architecture guard",
+            "unitTests": [
+              "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Keeps the semantic guard anchored at repository root instead of duplicating path assumptions per assertion"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "REQUIRED_DOCS",
+            "path": "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts",
+            "cqRails": ["GetRuntimeSession", "GetRuntimeCapabilities"],
+            "dddOwner": "Web authority architecture guard",
+            "unitTests": [
+              "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Validates documentation completeness as a semantic invariant of the hardcut"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "readRepoFile",
+            "path": "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts",
+            "cqRails": ["GetRuntimeSession", "GetRuntimeCapabilities"],
+            "dddOwner": "Web authority architecture guard",
+            "unitTests": [
+              "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Centralizes repository-file reads for semantic assertions"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts"
+          },
+          {
+            "name": "createCapabilitiesQueryOptions",
+            "path": "apps/web/src/app/queries/useCapabilitiesQuery.ts",
+            "cqRails": ["GetRuntimeCapabilities"],
+            "dddOwner": "RuntimeCapabilityProjection",
+            "unitTests": [
+              "apps/web/src/app/queries/useCapabilitiesQuery.test.tsx",
+              "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts",
+              "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts"
+            ],
+            "fowlerSignals": [
+              "One composed query boundary owns runtime capability cache policy.",
+              "Application and HTTP adapters require injected dependencies."
+            ],
+            "cypressCoverage": "N/A - shell capability query ownership has no new user interaction",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/queries/queryKeyPolicy.architecture.test.ts"
+          },
+          {
+            "name": "useCapabilitiesQuery",
+            "path": "apps/web/src/app/queries/useCapabilitiesQuery.ts",
+            "cqRails": ["GetRuntimeCapabilities"],
+            "dddOwner": "RuntimeCapabilityProjection",
+            "unitTests": [
+              "apps/web/src/app/queries/useCapabilitiesQuery.test.tsx",
+              "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts",
+              "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts"
+            ],
+            "fowlerSignals": [
+              "One composed query boundary owns runtime capability cache policy.",
+              "Application and HTTP adapters require injected dependencies."
+            ],
+            "cypressCoverage": "N/A - shell capability query ownership has no new user interaction",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/queries/queryKeyPolicy.architecture.test.ts"
+          },
+          {
+            "name": "createRuntimeCapabilitiesCapability",
+            "path": "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.ts",
+            "cqRails": ["GetRuntimeCapabilities"],
+            "dddOwner": "RuntimeCapabilityProjection",
+            "unitTests": [
+              "apps/web/src/app/queries/useCapabilitiesQuery.test.tsx",
+              "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts",
+              "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts"
+            ],
+            "fowlerSignals": [
+              "One composed query boundary owns runtime capability cache policy.",
+              "Application and HTTP adapters require injected dependencies."
+            ],
+            "cypressCoverage": "N/A - shell capability query ownership has no new user interaction",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/queries/queryKeyPolicy.architecture.test.ts"
+          },
+          {
+            "name": "createHttpRuntimeCapabilitiesClient",
+            "path": "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.ts",
+            "cqRails": ["GetRuntimeCapabilities"],
+            "dddOwner": "RuntimeCapabilityProjection",
+            "unitTests": [
+              "apps/web/src/app/queries/useCapabilitiesQuery.test.tsx",
+              "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts",
+              "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts"
+            ],
+            "fowlerSignals": [
+              "One composed query boundary owns runtime capability cache policy.",
+              "Application and HTTP adapters require injected dependencies."
+            ],
+            "cypressCoverage": "N/A - shell capability query ownership has no new user interaction",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/queries/queryKeyPolicy.architecture.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "WEB-API-AUTHORITY-HARDCUT-20260510",
+        "userStories": [
+          "docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md"
+        ],
+        "cypressFlows": [
+          "N/A - authority projection and registry boundary only",
+          "N/A - shell capability query ownership has no new user interaction"
+        ],
+        "domainObjects": [
+          {
+            "name": "UserPermissions",
+            "type": "server-projected read model cache",
+            "owner": "Web authorization projection"
+          },
+          {
+            "name": "RuntimeCapabilitiesDto",
+            "type": "server-projected read model",
+            "owner": "Web runtime capabilities projection"
+          },
+          {
+            "name": "PluginContributions",
+            "type": "static composition declaration",
+            "owner": "Web plugin composition"
+          },
+          "RuntimeCapabilitiesDto",
+          "RuntimeCapabilitiesCapability"
+        ],
+        "fowlerSignals": [
+          "Hidden Authority in optimistic browser permissions",
+          "Parallel Model between static plugin declarations and backend readiness",
+          "Primitive Obsession around frontend-local capabilities",
+          "Fail Open default on missing backend plugin capability rows",
+          "One composed query boundary owns runtime capability cache policy.",
+          "Application and HTTP adapters require injected dependencies."
+        ],
+        "completionGate": [
+          "pnpm docs:sync",
+          "pnpm docs:status:generate",
+          "pnpm --filter @dvt/web exec vitest run src/app/stores/authorizationStore.test.ts src/app/plugins/registry.test.ts src/app/services/composition/appServices.test.ts src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts src/app/views/PluginsView.test.tsx",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web exec vitest run src/app/queries/useCapabilitiesQuery.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "authorization-default-deny",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/stores/authorizationStore.test.ts",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/stores/authorizationStore.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/stores/authorizationStore.test.ts",
+              "apps/web/src/app/stores/authorizationStore.ts"
+            ],
+            "expectedFailure": "DEFAULT_USER_PERMISSIONS still grants plan, run, edge edit, plugin, and RBAC permissions."
+          },
+          {
+            "id": "capabilities-network-fails-closed",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServices.test.ts",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServices.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/services/composition/appServices.test.ts",
+              "apps/web/src/app/services/capabilities/capabilitiesPort.ts"
+            ],
+            "expectedFailure": "createCapabilitiesPort still returns frontend-local capabilities on network failure."
+          },
+          {
+            "id": "backend-plugin-row-required",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/views/PluginsView.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/views/PluginsView.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/plugins/registry.test.ts",
+              "apps/web/src/app/plugins/registry.ts"
+            ],
+            "expectedFailure": "backend-backed plugin surfaces are still projected when capabilities are absent or missing the backend plugin row."
+          },
+          {
+            "id": "semantic-authority-guard",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts",
+              "docs/architecture/components/web/workspace/web-api-authority-hardcut-component.md",
+              "docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md",
+              "buzon/20260510-codex-fowler-web-api-authority-hardcut-analysis.md"
+            ],
+            "expectedFailure": "no architecture guard yet proves the UI authority boundary is semantic and documented."
+          },
+          {
+            "id": "getruntimecapabilities-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/useCapabilitiesQuery.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/useCapabilitiesQuery.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/queries/useCapabilitiesQuery.ts",
+              "apps/web/src/app/queries/useCapabilitiesQuery.test.tsx",
+              "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts",
+              "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.ts",
+              "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts",
+              "apps/web/src/capabilities/runtime-capabilities/contracts/runtimeCapabilitiesDtos.ts",
+              "apps/web/src/capabilities/runtime-capabilities/index.ts",
+              "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.ts",
+              "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts",
+              "apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.ts",
+              "apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.test.ts"
+            ],
+            "expectedFailure": "The app query does not own createCapabilitiesQueryOptions and delegates to an uncomposed runtime capability presentation hook."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/workspace/web-api-authority-hardcut-component.md",
+          "docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md",
+          "docs/planning/reviews/20260510-web-api-integration-gap-review.md",
+          "docs/architecture/components/web/frontend-query-boundary-component.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0051-access-decision-service-and-openfga-adapter.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/adr/ADR-0056-web-ui-authority-is-server-projected.md",
+          "docs/planning/reviews/20260510-web-api-integration-gap-review.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GetRuntimeSession",
+            "type": "query",
+            "dddOwner": "Runtime session admission"
+          },
+          {
+            "name": "GetEffectiveWorkspaceContext",
+            "type": "query",
+            "dddOwner": "Protected runtime workspace context"
+          },
+          {
+            "name": "GetRuntimeCapabilities",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "RuntimeCapabilityProjection"
+          },
+          {
+            "name": "ObserveAppBootstrapRouteReadiness",
+            "type": "query",
+            "dddOwner": "Web shell / app bootstrap"
+          },
+          {
+            "name": "PreviewExecutablePlan",
+            "type": "command",
+            "dddOwner": "Plan preview application service"
+          },
+          {
+            "name": "StartRun",
+            "type": "command",
+            "dddOwner": "Run start application service"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts",
+          "pnpm --filter @dvt/web exec vitest run src/app/stores/webStoreDomainOwnership.architecture.test.ts",
+          "pnpm --filter @dvt/web exec vitest run src/app/queries/queryKeyPolicy.architecture.test.ts"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "buzon/**",
+          "docs/adr/**",
+          "docs/architecture/components/web/workspace/web-api-authority-hardcut-component.md",
+          "docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md",
+          "docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md",
+          "docs/planning/reviews/20260510-web-api-integration-gap-review.md",
+          "docs/planning/status/**",
+          "docs/.manifest.json",
+          "docs/**/index.md",
+          "traceability.config.json",
+          "apps/web/src/app/stores/authorizationStore.ts",
+          "apps/web/src/app/stores/authorizationStore.test.ts",
+          "apps/web/src/app/stores/webStoreDomainOwnership.architecture.test.ts",
+          "apps/web/src/app/services/capabilities/capabilitiesPort.ts",
+          "apps/web/src/app/services/composition/appServices.test.ts",
+          "apps/web/src/app/services/composition/appServicesAuthorityHardcut.architecture.test.ts",
+          "apps/web/src/app/services/session/protectedRouteSessionContext.ts",
+          "apps/web/src/app/services/session/protectedRouteSessionContext.test.ts",
+          "apps/web/src/app/routes.ts",
+          "apps/web/src/app/routes.test.tsx",
+          "apps/web/src/app/plugins/registry.ts",
+          "apps/web/src/app/plugins/registry.test.ts",
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+          "apps/web/src/app/Root.shellChrome.test.support.ts",
+          "apps/web/src/app/queries/useCapabilitiesQuery.ts",
+          "apps/web/src/app/queries/useCapabilitiesQuery.test.tsx",
+          "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts",
+          "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.ts",
+          "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts",
+          "apps/web/src/capabilities/runtime-capabilities/contracts/runtimeCapabilitiesDtos.ts",
+          "apps/web/src/capabilities/runtime-capabilities/index.ts",
+          "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.ts",
+          "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts",
+          "apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.ts",
+          "apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/api/**",
+          "packages/**",
+          "specs/contracts/**",
+          "docs/archive/**",
+          "apps/web/src/app/views/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-03T22:35:07.437Z"
+    },
+    {
       "railId": "local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties",
       "featureId": "WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619",
       "mechanizationStatus": "implemented",
@@ -32381,6 +32971,93 @@
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
       "createdAt": "2026-08-03T16:35:55.507Z"
+    },
+    {
+      "operationId": "9010eb8c-39d3-4d57-ad22-f882e0adf34c",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:WEB-API-AUTHORITY-HARDCUT-20260510:query:getruntimecapabilities:latest:9a5530292dd3ea8a",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#WEB-API-AUTHORITY-HARDCUT-20260510#query#getruntimecapabilities",
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md",
+      "sourceContentSha256": "eb0e05c9df0ffd65aef6d027367c8f510e4e3b5f125d58e63cd6e432319ad4a1",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/useCapabilitiesQuery.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts",
+        "dddOwner": "RuntimeCapabilityProjection",
+        "railName": "GetRuntimeCapabilities",
+        "railType": "query",
+        "featureId": "WEB-API-AUTHORITY-HARDCUT-20260510",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/queries/useCapabilitiesQuery.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts",
+        "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md",
+        "unitTests": [
+          "apps/web/src/app/queries/useCapabilitiesQuery.test.tsx",
+          "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts",
+          "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/architecture/components/web/workspace/web-api-authority-hardcut-user-stories.md"
+        ],
+        "cypressFlows": [
+          "N/A - shell capability query ownership has no new user interaction"
+        ],
+        "domainObjects": [
+          "RuntimeCapabilitiesDto",
+          "RuntimeCapabilitiesCapability"
+        ],
+        "fowlerSignals": [
+          "One composed query boundary owns runtime capability cache policy.",
+          "Application and HTTP adapters require injected dependencies."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/web exec vitest run src/app/queries/useCapabilitiesQuery.test.tsx src/app/queries/queryKeyPolicy.architecture.test.ts src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/frontend-query-boundary-component.md"
+        ],
+        "expectedFailure": "The app query does not own createCapabilitiesQueryOptions and delegates to an uncomposed runtime capability presentation hook.",
+        "governingSources": [
+          "docs/adr/ADR-0056-web-ui-authority-is-server-projected.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/frontend-command-query-rail-inventory.md",
+          "docs/architecture/components/web/frontend-query-boundary-component.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/queries/queryKeyPolicy.architecture.test.ts"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/frontend-and-ux/web-api-authority-hardcut-plan-20260510.md",
+        "implementationRefs": [
+          "apps/web/src/app/queries/useCapabilitiesQuery.ts#createCapabilitiesQueryOptions",
+          "apps/web/src/app/queries/useCapabilitiesQuery.ts#useCapabilitiesQuery",
+          "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.ts#createRuntimeCapabilitiesCapability",
+          "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.ts#createHttpRuntimeCapabilitiesClient"
+        ],
+        "normalizedRailName": "getruntimecapabilities",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "eb0e05c9df0ffd65aef6d027367c8f510e4e3b5f125d58e63cd6e432319ad4a1",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/queries/useCapabilitiesQuery.ts",
+          "apps/web/src/app/queries/useCapabilitiesQuery.test.tsx",
+          "apps/web/src/app/queries/queryKeyPolicy.architecture.test.ts",
+          "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.ts",
+          "apps/web/src/capabilities/runtime-capabilities/application/runtimeCapabilitiesCapability.test.ts",
+          "apps/web/src/capabilities/runtime-capabilities/contracts/runtimeCapabilitiesDtos.ts",
+          "apps/web/src/capabilities/runtime-capabilities/index.ts",
+          "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.ts",
+          "apps/web/src/capabilities/runtime-capabilities/infrastructure/httpRuntimeCapabilitiesClient.test.ts",
+          "apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.ts",
+          "apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/web/src/app/views/**"]
+      },
+      "createdAt": "2026-08-03T22:43:10.589Z"
     }
   ]
 }
