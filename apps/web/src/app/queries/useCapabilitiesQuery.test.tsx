@@ -7,7 +7,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { CapabilitiesPort } from '../ports/capabilities';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
-import { useCapabilitiesQuery } from './useCapabilitiesQuery';
+import { queryKeys } from './queryKeys';
+import { createCapabilitiesQueryOptions, useCapabilitiesQuery } from './useCapabilitiesQuery';
 
 describe('useCapabilitiesQuery', () => {
   afterEach(() => {
@@ -71,5 +72,24 @@ describe('useCapabilitiesQuery', () => {
     } finally {
       await mounted.cleanup();
     }
+  });
+
+  it('owns the runtime capability cache policy around the injected port', async () => {
+    const payload = {
+      apiVersion: '1.2.3',
+      minFrontendVersion: '1.0.0',
+      plugins: {},
+    };
+    const capabilitiesPort: CapabilitiesPort = {
+      loadCapabilities: vi.fn().mockResolvedValue(payload),
+    };
+
+    const options = createCapabilitiesQueryOptions(capabilitiesPort);
+
+    expect(options.queryKey).toEqual(queryKeys.shell.capabilities());
+    expect(options.retry).toBe(false);
+    expect(options.staleTime).toBe(60_000);
+    await expect(options.queryFn()).resolves.toEqual(payload);
+    expect(capabilitiesPort.loadCapabilities).toHaveBeenCalledTimes(1);
   });
 });

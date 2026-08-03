@@ -1,16 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 
-import {
-  createRuntimeCapabilitiesQueryOptions,
-  isPluginAvailableFromCapabilities,
-  type RuntimeCapabilitiesDto,
-} from '../../capabilities/runtime-capabilities';
+import type { RuntimeCapabilitiesDto } from '../../capabilities/runtime-capabilities';
+import type { CapabilitiesPort } from '../ports/capabilities';
 import { useCapabilitiesPort } from '../services/AppServicesContext';
+import { queryKeys } from './queryKeys';
 
-export { isPluginAvailableFromCapabilities };
 export type CapabilitiesResponse = RuntimeCapabilitiesDto;
+
+export function createCapabilitiesQueryOptions(capabilitiesPort: CapabilitiesPort) {
+  return {
+    queryKey: queryKeys.shell.capabilities(),
+    queryFn: () => capabilitiesPort.loadCapabilities(),
+    retry: false,
+    staleTime: 60_000,
+  };
+}
 
 export function useCapabilitiesQuery() {
   const capabilitiesPort = useCapabilitiesPort();
-  return useQuery(createRuntimeCapabilitiesQueryOptions(capabilitiesPort));
+  return useQuery(createCapabilitiesQueryOptions(capabilitiesPort));
 }

@@ -1,5 +1,4 @@
 import type { RuntimeCapabilitiesDto } from '../contracts/runtimeCapabilitiesDtos';
-import { createHttpRuntimeCapabilitiesClient } from '../infrastructure/httpRuntimeCapabilitiesClient';
 
 export interface RuntimeCapabilitiesReader {
   loadCapabilities(): Promise<RuntimeCapabilitiesDto>;
@@ -10,7 +9,7 @@ export interface RuntimeCapabilitiesCapabilityApi {
 }
 
 export function createRuntimeCapabilitiesCapability(
-  reader: RuntimeCapabilitiesReader = createHttpRuntimeCapabilitiesClient()
+  reader: RuntimeCapabilitiesReader
 ): RuntimeCapabilitiesCapabilityApi {
   return {
     loadCapabilities: () => reader.loadCapabilities(),

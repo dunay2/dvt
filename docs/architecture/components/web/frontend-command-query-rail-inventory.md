@@ -66,7 +66,7 @@ commands or queries are still needed for a mature end-to-end workflow.
   the formal frontend command to switch an existing workspace scope is not
   named.
 
-### `LoadRuntimeCapabilities`
+### `GetRuntimeCapabilities`
 
 - Type: query.
 - Status: `implemented-api`.
