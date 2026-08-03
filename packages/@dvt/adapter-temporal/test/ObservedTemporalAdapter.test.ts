@@ -121,6 +121,22 @@ describe('ObservedTemporalAdapter', () => {
     });
   });
 
+  it('preserves deterministic run reference estimation from the wrapped adapter', () => {
+    const { adapter } = makeObservedLookupAdapter(() =>
+      makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }))
+    );
+
+    expect(adapter.estimateRunRef?.(BASE_RUN_CONTEXT)).toEqual(
+      createTemporalRunRef({
+        tenantId: 'tenant-1',
+        namespace: 'dvt-test',
+        workflowId: 'run-1',
+        runId: 'run-1',
+        taskQueue: 'q-main-tenant-1',
+      })
+    );
+  });
+
   it('preserves startRun rejection while recording a failed submission', async () => {
     const { adapter, workflowClient, metrics } = makeObservedLookupAdapter(() =>
       makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }))

@@ -20,6 +20,7 @@ import { toTemporalTaskQueue, toTemporalWorkflowId } from './WorkflowMapper.js';
 
 interface TemporalOperationalAdapter extends IProviderAdapter {
   readonly capabilities?: () => readonly string[];
+  readonly estimateRunRef?: (ctx: ResolvedRunContext) => EngineRunRef;
   readonly lookupRunRef?: (runId: string, tenantId: string) => Promise<EngineRunRef | null>;
   readonly ping?: () => Promise<void>;
 }
@@ -32,12 +33,16 @@ export interface ObservedTemporalAdapterDeps {
 
 export class ObservedTemporalAdapter implements IProviderAdapter {
   readonly provider: EngineRunRef['provider'];
+  readonly estimateRunRef?: (ctx: ResolvedRunContext) => EngineRunRef;
 
   private readonly observability: IObservability;
 
   constructor(private readonly deps: ObservedTemporalAdapterDeps) {
     this.provider = deps.adapter.provider;
     this.observability = resolveTemporalObservability(deps.observability);
+    if (deps.adapter.estimateRunRef) {
+      this.estimateRunRef = (ctx) => deps.adapter.estimateRunRef!(ctx);
+    }
   }
 
   startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
