@@ -75,7 +75,8 @@ export function buildProtectedRuntimeRouteDependencies(
     protectedModule.planIntegrityValidator,
     protectedModule.startRunTargetAdapterRegistry,
     startDispatchResolver,
-    cancellationReceipts
+    cancellationReceipts,
+    protectedModule.planValidator
   );
   const previewPlanUseCase = new PreviewPlanUseCase({
     planner: {
@@ -123,7 +124,8 @@ export function buildProtectedRuntimeRouteDependencies(
       protectedModule.planIntegrityValidator,
       protectedModule.startRunTargetAdapterRegistry,
       startDispatchResolver,
-      cancellationReceipts
+      cancellationReceipts,
+      protectedModule.planValidator
     ),
     previewPlanUseCase,
     recoverRunUseCase: new RecoverRunUseCase({

@@ -6,6 +6,7 @@ import type {
   IWorkflowEngine,
   RunMetadata,
 } from '@dvt/engine';
+import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
 import type { IRunCancellationReceiptStore } from '../ports/runCancellationReceiptStore.js';
@@ -41,7 +42,8 @@ export class ListRunsUseCase implements IListRunsUseCase {
     private readonly planIntegrityValidator?: IPlanIntegrityValidator,
     private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry,
     private readonly startDispatchResolver?: IRunStartDispatchResolver,
-    private readonly cancellationReceipts?: IRunCancellationReceiptStore
+    private readonly cancellationReceipts?: IRunCancellationReceiptStore,
+    private readonly planExecutabilityValidator?: IPlanExecutabilityValidator
   ) {}
 
   public async execute(
@@ -99,7 +101,11 @@ export class ListRunsUseCase implements IListRunsUseCase {
       this.planStore,
       this.planIntegrityValidator,
       item,
-      status
+      status,
+      {
+        targetAdapterRegistry: this.targetAdapterRegistry,
+        planExecutabilityValidator: this.planExecutabilityValidator,
+      }
     );
     const [recoveryContextTrusted, startDispatch, cancellationAccepted] = await Promise.all([
       resolveRunRecoveryContextTrust(
@@ -120,8 +126,7 @@ export class ListRunsUseCase implements IListRunsUseCase {
       status,
       recoveryContextTrusted,
       recoveryPlanAvailable: recoveryPlan.available,
-      recoveryAdapterAvailable:
-        this.targetAdapterRegistry?.isSupported(item.providerRef.provider) ?? false,
+      recoveryAdapterAvailable: recoveryPlan.adapterAvailable,
       cancelDispatchConfirmed: startDispatch?.kind === 'confirmed' || status.status !== 'PENDING',
       cancellationAccepted,
     });

@@ -234,7 +234,10 @@ describe('ListRunsUseCase', () => {
         })
       ) as never,
       { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
-      registeredTargetAdapterRegistry as never
+      registeredTargetAdapterRegistry as never,
+      undefined,
+      undefined,
+      { validatePlan: vi.fn().mockResolvedValue({ status: 'OK' }) } as never
     );
 
     await expect(useCase.execute({ limit: 25 }, queryContext as never)).resolves.toEqual({
@@ -514,6 +517,65 @@ describe('ListRunsUseCase', () => {
     expect(result.items[0]?.controls.recover).toEqual({
       available: false,
       reason: 'source_adapter_unavailable',
+    });
+  });
+
+  it('fails closed when the current adapter lacks a required plan capability', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const planRef = { planId: 'plan-1' };
+    const planStore = createPlanStoreReader(vi.fn().mockResolvedValue(planRef));
+    const planExecutabilityValidator = {
+      validatePlan: vi.fn().mockResolvedValue({
+        status: 'ERROR',
+        code: 'MISSING_CAPABILITY',
+        reason: 'Missing adapter capability: executor.dbt',
+      }),
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'FAILED',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      planStore as never,
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
+      registeredTargetAdapterRegistry as never,
+      undefined,
+      undefined,
+      planExecutabilityValidator as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.recover).toEqual({
+      available: false,
+      reason: 'source_adapter_unavailable',
+    });
+    expect(planExecutabilityValidator.validatePlan).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planRef,
+      adapterId: 'temporal',
     });
   });
 });
