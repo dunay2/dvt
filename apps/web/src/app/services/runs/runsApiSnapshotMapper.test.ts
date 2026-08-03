@@ -78,7 +78,13 @@ describe('runsApiSnapshotMapper operational truth', () => {
     });
   });
 
-  it('rejects detail snapshots without authoritative run controls', () => {
-    expect(mapUnknownRecordToSnapshot({ runId: 'run-1', status: 'RUNNING' })).toBeNull();
+  it('preserves snapshots without controls while withholding run actions', () => {
+    const snapshot = mapUnknownRecordToSnapshot({ runId: 'run-1', status: 'RUNNING' });
+
+    expect(snapshot).toMatchObject({
+      runId: 'run-1',
+      status: 'running',
+    });
+    expect(snapshot?.controls).toBeUndefined();
   });
 });

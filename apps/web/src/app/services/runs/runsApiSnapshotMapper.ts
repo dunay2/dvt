@@ -28,7 +28,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
   const candidate = record as Record<string, unknown>;
   const runId = asString(candidate.runId);
   const controls = parseRunControlAvailability(candidate.controls);
-  if (runId === undefined || controls === undefined) {
+  if (runId === undefined) {
     return null;
   }
 
@@ -55,7 +55,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
     ...(logicalAttemptId === undefined ? {} : { logicalAttemptId }),
     ...(provider ? { provider } : {}),
     status: mapContractStatusToUi(parseContractRunStatus(candidate.status)),
-    controls,
+    ...(controls === undefined ? {} : { controls }),
     ...(executor ? { executor } : {}),
     environment: asString(candidate.environmentId) ?? asString(candidate.environment),
     gitSha: asString(candidate.gitSha),
