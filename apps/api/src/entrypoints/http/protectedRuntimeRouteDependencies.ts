@@ -128,6 +128,7 @@ export function buildProtectedRuntimeRouteDependencies(
       protectedModule.planValidator
     ),
     previewPlanUseCase,
+    observability,
     recoverRunUseCase: new RecoverRunUseCase({
       engine: protectedModule.engine,
       stateStore: protectedModule.stateStore.read,
