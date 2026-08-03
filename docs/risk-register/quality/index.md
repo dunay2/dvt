@@ -42,6 +42,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Capability matrix tests and docs governance can drift after doc relocations](R-20260409-CAPABILITY-MATRIX-DOCS-GOVERNANCE-DRIFT.yaml)
 - [Capability-routed Temporal workers require operational queue alignment](R-20260513-MW-D2-TEMPORAL-WORKER-ROUTING.yaml)
 - [CI rebuild dedupe or job consolidation could hide missing explicit build prerequisites](R-20260409-CI-REBUILD-DEDUPE-AND-ADAPTER-POSTGRES-CONSOLIDATION.yaml)
+- [Concurrent cancel deliveries could dispatch duplicate provider commands](R-20260802-RUN-CANCEL-SUBMISSION-RECEIPT.yaml)
 - [Consumers may expect DVT lifecycle statuses (PAUSED, CANCELLING) in ProviderRunStatusView](R-20260409-PROVIDER-STATUS-SEMANTIC-DRIFT.yaml)
 - [Contract mapper boundary type aliases can drift from schema-level non-blank semantics](R-20260410-CONTRACT-MAPPER-BOUNDARY-TYPE-SEMANTICS.yaml)
 - [Contracts hash-compare scope change lacks PR-runtime E2E validation](R-20260515-CI-CONTRACTS-HASH-SCOPE-E2E.yaml)

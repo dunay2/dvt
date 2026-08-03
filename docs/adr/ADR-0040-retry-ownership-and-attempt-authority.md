@@ -2,7 +2,7 @@
 title: ADR-0040 - Retry Ownership and Attempt Authority
 status: Accepted
 owner: Architecture / Engine / Planner
-last_reviewed: 2026-03-24
+last_reviewed: 2026-08-02
 ---
 
 # ADR-0040 - Retry Ownership and Attempt Authority
@@ -59,18 +59,26 @@ could not share one source of truth.
   - `logicalAttemptId`: monotonic business attempt number in the chain
 - Adapters MUST NOT implement `RETRY_RUN` by mutating the original provider run.
 
-### 4. Retry lineage reservation is a state-store responsibility
+### 4. Recovery bootstrap is a state-store responsibility
 
-The state store owns an atomic reservation operation:
+The state store owns one atomic recovery-bootstrap operation:
 
-`reserveRetryAttempt(tenantId, sourceRunId) -> { parentRunId, originRunId, logicalAttemptId }`
+`bootstrapRecoveryRunTx(tenantId, sourceRunId, buildInput) -> { reservation, metadata, appendResult }`
 
 Rules:
 
-- reservation MUST be monotonic per `originRunId`;
-- concurrent reservations from the same chain MUST produce unique attempt ids;
+- the transaction MUST lock and resolve the source run's retry lineage;
+- the reserved `logicalAttemptId` MUST be monotonic per `originRunId`;
+- concurrent recovery bootstraps from the same chain MUST produce unique attempt ids;
 - the reservation result is the only valid source for a new recovery run's
-  `logicalAttemptId`.
+  `logicalAttemptId`;
+- child metadata, first events, and outbox rows MUST commit atomically with the
+  reservation;
+- any child-bootstrap failure MUST roll back the reservation.
+
+Retry-attempt reservation is not a separate public state-store command. That
+split would allow a failed bootstrap to consume a business attempt without a
+recoverable child run.
 
 ### 5. Provider-native retries stay technical
 
