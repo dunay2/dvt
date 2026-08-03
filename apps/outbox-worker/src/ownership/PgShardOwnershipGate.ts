@@ -15,6 +15,7 @@ interface OwnershipGate {
 interface OwnershipClient {
   query<T>(sql: string, params?: unknown[]): Promise<{ rows: T[]; rowCount: number }>;
   release(destroy?: boolean): void;
+  on(event: 'error', listener: (error: Error) => void): void;
 }
 
 interface OwnershipPool {
@@ -259,19 +260,22 @@ function createOwnershipLease(options: {
     await destroyOwnershipSession(options.client, options.poolLease);
   };
 
+  const handleOwnershipLoss = async (error: unknown): Promise<void> => {
+    await safelyCloseLostOwnershipSession(options, closeSession);
+    settleWaitForLoss(toOwnershipLossError(error, options.acquiredShardIds));
+  };
+
+  options.client.on('error', (error) => {
+    void handleOwnershipLoss(error);
+  });
+
   void monitorOwnershipSession({
     client: options.client,
     intervalMs: options.heartbeatIntervalMs,
     signal: heartbeatAbort.signal,
-  }).then(
-    () => {
-      settleWaitForLoss(null);
-    },
-    async (error) => {
-      await safelyCloseLostOwnershipSession(options, closeSession);
-      settleWaitForLoss(toOwnershipLossError(error, options.acquiredShardIds));
-    }
-  );
+  }).then(() => {
+    settleWaitForLoss(null);
+  }, handleOwnershipLoss);
 
   return {
     waitForLoss: async (): Promise<void> => waitForLossPromise,

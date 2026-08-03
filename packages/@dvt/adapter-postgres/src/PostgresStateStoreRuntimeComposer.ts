@@ -1,5 +1,4 @@
 import type { Pool } from 'pg';
-import { Pool as PostgresPool } from 'pg';
 
 import { normalizeLineageOutboxClaimTimeoutMs } from './lineageOutboxStorePolicy.js';
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
@@ -11,6 +10,7 @@ import {
   normalizeOutboxClaimTimeoutMs,
   normalizeOutboxShardCount,
 } from './PostgresOutboxStore.js';
+import { createObservedPostgresPool } from './PostgresPoolErrorPolicy.js';
 import { PostgresRunEventStore } from './PostgresRunEventStore.js';
 import { PostgresRunMetadataRepository } from './PostgresRunMetadataRepository.js';
 import { PostgresRunSnapshotStore } from './PostgresRunSnapshotStore.js';
@@ -129,7 +129,7 @@ function resolvePool(
   }
 
   const connectionString = resolvePostgresConnectionString(config.connectionString);
-  const pool = new PostgresPool({
+  const pool = createObservedPostgresPool({
     connectionString,
     statement_timeout: statementTimeoutMs,
     query_timeout:

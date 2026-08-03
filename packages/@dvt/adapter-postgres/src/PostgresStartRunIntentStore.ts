@@ -23,10 +23,11 @@ import type {
   StartRunIntentStatus,
 } from '@dvt/engine';
 import { getAllowedFromStatuses } from '@dvt/engine/runtime';
-import { DatabaseError, Pool, type PoolClient } from 'pg';
+import { DatabaseError, type Pool, type PoolClient } from 'pg';
 
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
 import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
+import { createObservedPostgresPool } from './PostgresPoolErrorPolicy.js';
 import { PostgresSchemaManager } from './PostgresSchemaManager.js';
 import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
@@ -143,7 +144,7 @@ export class PostgresStartRunIntentStore implements IStartRunIntentStore {
       this.pool = config.pool;
       this.ownsPool = false;
     } else {
-      this.pool = new Pool({
+      this.pool = createObservedPostgresPool({
         connectionString:
           config.connectionString ??
           process.env['DVT_PG_URL'] ??

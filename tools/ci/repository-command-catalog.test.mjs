@@ -73,6 +73,24 @@ test('classifies runtime, capability, contract, docs, workflow, and ops commands
   );
   assert.equal(
     classifyPackageScriptCommand(
+      'proof:supported-runtime',
+      packageJson.scripts['proof:supported-runtime']
+    ).domain,
+    'runtime-capability'
+  );
+  assert.equal(
+    classifyPackageScriptCommand(
+      'test:supported-runtime-proof',
+      packageJson.scripts['test:supported-runtime-proof']
+    ).domain,
+    'runtime-capability'
+  );
+  assert.match(
+    packageJson.scripts['test:supported-runtime-proof'],
+    /^pnpm --filter @dvt\/contracts --filter @dvt\/run-domain build && node --test /u
+  );
+  assert.equal(
+    classifyPackageScriptCommand(
       'contracts:index:generate',
       packageJson.scripts['contracts:index:generate']
     ).domain,
@@ -147,6 +165,14 @@ test('classifies current command file paths without broad script-directory assum
   );
   assert.equal(
     classifyScriptFilePath('scripts/run-temporal-postgres-proof.cjs').domain,
+    'runtime-capability'
+  );
+  assert.equal(
+    classifyScriptFilePath('scripts/run-supported-runtime-proof.cjs').domain,
+    'runtime-capability'
+  );
+  assert.equal(
+    classifyScriptFilePath('scripts/supported-runtime-proof/runtime-proof-scenarios.cjs').domain,
     'runtime-capability'
   );
   assert.equal(classifyScriptFilePath('scripts/generate-contract-index.cjs').domain, 'contracts');

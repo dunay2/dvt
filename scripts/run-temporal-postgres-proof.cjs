@@ -110,6 +110,15 @@ function composeUp() {
   run(command, [...prefixArgs, '-f', composeFile, 'up', '-d'], { shell });
 }
 
+function stopPostgresContainer() {
+  run('docker', ['stop', containerName]);
+}
+
+function startPostgresContainer() {
+  run('docker', ['start', containerName]);
+  waitForHealthy();
+}
+
 function waitForHealthy(timeoutMs = 60000) {
   const startedAt = Date.now();
 
@@ -222,6 +231,13 @@ async function cleanupTransientProofSchemas() {
   });
 }
 
+async function resetPostgresProofStack() {
+  composeDown();
+  composeUp();
+  waitForHealthy();
+  await verifySeededBaseline();
+}
+
 function runPostgresProofTest() {
   run(
     pnpmCommand,
@@ -242,10 +258,7 @@ async function main() {
   }
 
   if (action === 'reset') {
-    composeDown();
-    composeUp();
-    waitForHealthy();
-    await verifySeededBaseline();
+    await resetPostgresProofStack();
     return;
   }
 
@@ -271,6 +284,16 @@ async function main() {
     if (reset) {
       await verifySeededBaseline();
     }
+    return;
+  }
+
+  if (action === 'stop') {
+    stopPostgresContainer();
+    return;
+  }
+
+  if (action === 'start') {
+    startPostgresContainer();
     return;
   }
 
@@ -312,6 +335,9 @@ module.exports = {
   getProofPgUrl,
   buildPgEnv,
   composeDown,
+  resetPostgresProofStack,
+  stopPostgresContainer,
+  startPostgresContainer,
   resetComposeCommandCache,
   proofBaselineSchemas,
   transientProofSchemaPatterns,

@@ -1,4 +1,4 @@
-import { Pool } from 'pg';
+import type { Pool } from 'pg';
 
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
 import { resolvePostgresConnectionString } from './PostgresAdapterConnectionString.js';
@@ -8,6 +8,7 @@ import {
 } from './PostgresAdapterConstants.js';
 import { getBackpressureSnapshotSql } from './PostgresBackpressureSnapshotReaderSql.js';
 import { enterPostgresMaintenanceContext } from './PostgresMaintenanceAccess.js';
+import { createObservedPostgresPool } from './PostgresPoolErrorPolicy.js';
 import { POSTGRES_SERVICE_ACCESS } from './PostgresServiceAccessCapability.js';
 import { normalizeSchema } from './sqlUtils.js';
 
@@ -62,7 +63,7 @@ export class PostgresBackpressureSnapshotReader {
       this.ownsPool = false;
     } else {
       const connectionString = resolvePostgresConnectionString(config.connectionString);
-      this.pool = new Pool({
+      this.pool = createObservedPostgresPool({
         connectionString,
         query_timeout: this.queryTimeoutMs,
       });

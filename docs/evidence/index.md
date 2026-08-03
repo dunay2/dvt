@@ -109,6 +109,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260802 Run Cancellation Submission Receipt](ED-20260802-run-cancellation-submission-receipt.md)
 - [ED 20260803 Dbt Runtime Credential Resolution](ED-20260803-dbt-runtime-credential-resolution.md)
 - [ED 20260803 Protected Start Run Opentelemetry](ED-20260803-protected-start-run-opentelemetry.md)
+- [ED 20260803 Supported Runtime Recovery](ED-20260803-supported-runtime-recovery.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)

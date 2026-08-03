@@ -196,6 +196,38 @@ Behavior:
   `DATABASE_URL`
 - runs the `@dvt/adapter-temporal` Postgres capability integration lane
 
+### `run-supported-runtime-proof.cjs`
+
+Canonical bounded capacity and recovery proof for the supported production
+runtime path.
+
+Usage:
+
+```bash
+pnpm test:supported-runtime-proof
+pnpm proof:supported-runtime
+pnpm proof:supported-runtime -- --output .dvt/proofs/supported-runtime.json
+```
+
+The test command builds the canonical contracts and run-domain dependencies
+before loading their distribution entry points, so it is reproducible from a
+clean checkout.
+
+Behavior:
+
+- builds the API, Temporal worker, outbox worker, and projector worker
+- drives the protected `StartRun` route with persisted plan references
+- executes steady-state, worker-interruption, and PostgreSQL-interruption
+  scenarios using one versioned workload profile
+- measures accepted runs, event throughput, projection freshness, API latency,
+  completion duration, backlog drain, and bounded recovery
+- rebuilds authoritative run snapshots from the canonical event history and
+  rejects loss, duplicate state effects, ordering violations, or divergence
+- runs the measured baseline three times by default and writes one concise JSON
+  artifact that identifies the first failed invariant
+- owns numeric budgets only in
+  `scripts/supported-runtime-proof/runtime-proof-profile.cjs`
+
 ### `run-dev-stack.cjs`
 
 Canonical local wrapper for coordinated backend + frontend startup.

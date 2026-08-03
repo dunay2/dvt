@@ -96,3 +96,8 @@ export { PostgresRunArchiveStore } from './PostgresRunArchiveStore.js';
 export { PostgresArchiveLeaseStore } from './PostgresArchiveLeaseStore.js';
 export { PostgresDeliveryBufferPurgeStore } from './PostgresDeliveryBufferPurgeStore.js';
 export { PostgresRelationalExecutionCapability } from './PostgresRelationalExecutionCapability.js';
+export {
+  createObservedPostgresPool,
+  type PostgresPoolFailure,
+  type PostgresPoolFailureReporter,
+} from './PostgresPoolErrorPolicy.js';

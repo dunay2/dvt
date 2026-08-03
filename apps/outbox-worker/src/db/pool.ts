@@ -1,4 +1,5 @@
-import { Pool } from 'pg';
+import { createObservedPostgresPool } from '@dvt/adapter-postgres';
+import type { Pool } from 'pg';
 
 export interface PgPoolConfig {
   connectionString: string;
@@ -61,7 +62,7 @@ function getOrCreatePool(config: PgPoolConfig): CachedPool {
   if (cached) return cached;
 
   const created: CachedPool = {
-    pool: new Pool({
+    pool: createObservedPostgresPool({
       connectionString: config.connectionString,
       statement_timeout: normalizeTimeoutMs(config.statementTimeoutMs),
       query_timeout: normalizeTimeoutMs(config.queryTimeoutMs),
