@@ -8,6 +8,10 @@ export const RUN_MAINTENANCE_MESSAGE = {
     'Keeping orphaned PENDING intent unresolved because provider lookup failed',
   pendingIntentExpiredAfterCancel:
     'Expired PENDING intent and cancelled orphaned provider workflow',
+  pendingIntentResolvedBootstrapped:
+    'Resolved PENDING intent after adopting the bootstrapped provider workflow',
+  pendingIntentAdoptionFailed:
+    'Keeping PENDING intent unresolved because provider workflow adoption failed',
   pendingIntentCancelFailed: 'Failed to cancel orphaned provider workflow for PENDING intent',
   pendingIntentBootstrappedWithoutWorkflow:
     'Keeping orphaned PENDING intent unresolved because run is bootstrapped but provider workflow was not found',

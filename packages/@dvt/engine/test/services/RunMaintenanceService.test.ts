@@ -753,6 +753,49 @@ describe('RunMaintenanceService', () => {
       expect((await intentStore.getIntent(intentRef('i-p3')))?.status).toBe('EXPIRED');
     });
 
+    it('adopts a provider workflow when its PENDING intent already has bootstrapped run state', async () => {
+      const cancelLog: string[] = [];
+      const { service, store, intentStore } = createFixtureWith(
+        makeAdapterWithLookup(new Set(['recovery-run-1']), cancelLog)
+      );
+      await store.bootstrapRunTx({
+        metadata: {
+          tenantId: 't',
+          projectId: 'p',
+          environmentId: 'dev',
+          runId: 'recovery-run-1',
+          planId: 'plan',
+          planVersion: '1.0',
+          logicalAttemptId: 2,
+          providerRef: {
+            provider: 'temporal',
+            tenantId: 't',
+            namespace: 'default',
+            workflowId: 'wf-recovery-run-1',
+            runId: 'recovery-run-1',
+          },
+          createdAt: '1970-01-01T00:00:00.000Z',
+        },
+        firstEvents: [],
+      });
+      await makePendingIntent(intentStore, 'recovery-run-1', 'i-recovery');
+
+      await expect(
+        service.reconcileStartRunIntent({ tenantId: 't', intentId: 'i-recovery' })
+      ).resolves.toEqual({ kind: 'confirmed' });
+
+      expect(cancelLog).toEqual([]);
+      expect(await intentStore.getIntent(intentRef('i-recovery'))).toMatchObject({
+        status: 'RESOLVED',
+        engineRunRef: {
+          provider: 'temporal',
+          tenantId: 't',
+          workflowId: 'wf-recovery-run-1',
+          runId: 'recovery-run-1',
+        },
+      });
+    });
+
     it('keeps PENDING intent and reports cancelFailed when workflow cancel throws', async () => {
       const { service, intentStore } = createFixtureWith(
         makeAdapterWithFailingCancel(new Set(['run-cancel-fail-1']))
@@ -803,6 +846,10 @@ describe('RunMaintenanceService', () => {
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual(['i-p5']);
       expect((await intentStore.getIntent(intentRef('i-p5')))?.status).toBe('PENDING');
+
+      await expect(
+        service.reconcileStartRunIntent({ tenantId: 't', intentId: 'i-p5' })
+      ).resolves.toEqual({ kind: 'ready_to_dispatch' });
     });
 
     it('classifies DISPATCHED bootstrapped intent as resolved without cancelling', async () => {

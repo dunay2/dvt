@@ -16,7 +16,7 @@ type RunMaintenanceObservabilityFacade =
 
 type PendingIntentReconciliationPolicyDeps = Pick<
   RunMaintenanceServiceDeps,
-  'adapters' | 'intentStore' | 'stateStoreRead'
+  'adapters' | 'intentStore' | 'stateStoreRead' | 'stateStoreWrite'
 > & {
   observability: RunMaintenanceObservabilityFacade;
 };
@@ -44,9 +44,56 @@ export class PendingIntentReconciliationPolicy {
       return { deferred: intent.intentId };
     }
     if (lookupResult.runRef !== null) {
+      if (existingMeta !== null) {
+        return this.adoptBootstrappedWorkflow(intent, lookupResult.runRef, traceContext);
+      }
       return this.expireAfterCancel(intent, lookupResult.runRef, traceContext, adapter);
     }
     return this.handleMissingRunRef(intent, existingMeta !== null, traceContext);
+  }
+
+  private async adoptBootstrappedWorkflow(
+    intent: OrphanedIntent,
+    runRef: EngineRunRef,
+    traceContext: RunMaintenanceTraceContext
+  ): Promise<ReconcileOrphanedIntentOutcome> {
+    try {
+      await this.deps.stateStoreWrite.saveProviderRef(intent.tenantId, intent.runId, runRef);
+      await this.deps.intentStore.markDispatched(
+        { tenantId: intent.tenantId, intentId: intent.intentId },
+        runRef
+      );
+      await this.deps.intentStore.markResolved({
+        tenantId: intent.tenantId,
+        intentId: intent.intentId,
+      });
+      this.deps.observability.incrementCounter(RUN_MAINTENANCE_METRIC.intentResolvedTotal, {
+        provider: intent.provider,
+        operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,
+      });
+      this.deps.observability.info({
+        msg: RUN_MAINTENANCE_MESSAGE.pendingIntentResolvedBootstrapped,
+        context: traceContext,
+        attributes: {
+          intentId: intent.intentId,
+          runId: intent.runId,
+          provider: intent.provider,
+        },
+      });
+      return { resolved: intent.intentId };
+    } catch (adoptionError) {
+      this.deps.observability.error({
+        msg: RUN_MAINTENANCE_MESSAGE.pendingIntentAdoptionFailed,
+        context: traceContext,
+        err: adoptionError,
+        attributes: {
+          intentId: intent.intentId,
+          runId: intent.runId,
+          provider: intent.provider,
+        },
+      });
+      return { deferred: intent.intentId };
+    }
   }
 
   private async lookupRunRef(
@@ -166,7 +213,7 @@ export class PendingIntentReconciliationPolicy {
           provider: intent.provider,
         },
       });
-      return { deferred: intent.intentId };
+      return { readyToDispatch: intent.intentId };
     }
 
     await this.deps.intentStore.markExpired({
