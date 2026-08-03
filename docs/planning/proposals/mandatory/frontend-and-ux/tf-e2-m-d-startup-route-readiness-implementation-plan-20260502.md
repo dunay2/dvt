@@ -254,6 +254,53 @@ redGreenCycles:
       - package.json
     greenTest: pnpm docs:feature-mechanization:tf-e2-m-d
 symbols:
+  - name: isBootstrapStepStartupAllowed
+    path: apps/web/src/app/bootstrap/appBootstrapPresentation.ts
+    dddOwner: BootstrapStepState startup allowance policy
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+      - CompleteAppBootstrapScreen
+    fowlerSignals:
+      - Duplicate semantics
+      - Boundary drift
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - appBootstrapPresentation.test.ts
+  - name: RouteBootstrapPresentation
+    path: apps/web/src/app/bootstrap/routeBootstrapContract.ts
+    dddOwner: BootstrapStepState direct route-facing alias
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+    fowlerSignals:
+      - Duplicate semantics
+      - Boundary drift
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - routeBootstrapRegistry.test.ts
+  - name: isValidRouteBootstrapPresentation
+    path: apps/web/src/app/bootstrap/routeBootstrapRegistration.ts
+    dddOwner: RouteBootstrapRegistration boundary validator
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+    fowlerSignals:
+      - Boundary drift
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - routeBootstrapRegistry.test.ts
+  - name: resetRouteBootstrapPresentation
+    path: apps/web/src/app/bootstrap/routeBootstrapRegistry.ts
+    dddOwner: Route bootstrap readiness registry lifecycle
+    cqRails:
+      - ObserveAppBootstrapRouteReadiness
+    fowlerSignals:
+      - Temporal coupling
+    architectureGuard: routeBootstrapStartupReadiness.architecture.test.ts
+    cypressCoverage: startup-route-readiness.cy.ts
+    unitTests:
+      - routeBootstrapRegistry.test.ts
   - name: RouteBootstrapStartupReadinessState
     path: apps/web/src/app/bootstrap/routeBootstrapStartupReadiness.ts
     dddOwner: RouteBootstrapStartupReadinessState read model
