@@ -6,6 +6,8 @@ export const RUN_MAINTENANCE_MESSAGE = {
     'Keeping orphaned PENDING intent unresolved because provider lookup is unsupported',
   pendingIntentLookupFailed:
     'Keeping orphaned PENDING intent unresolved because provider lookup failed',
+  pendingIntentMetadataReadFailed:
+    'Keeping orphaned PENDING intent unresolved because run metadata could not be read',
   pendingIntentExpiredAfterCancel:
     'Expired PENDING intent and cancelled orphaned provider workflow',
   pendingIntentResolvedBootstrapped:
@@ -43,6 +45,7 @@ export const RUN_MAINTENANCE_METRIC = {
   intentCancelledTotal: 'dvt.intent.cancelled_total',
   intentDeferredLookupUnsupportedTotal: 'dvt.intent.deferred_lookup_unsupported_total',
   intentDeferredLookupFailedTotal: 'dvt.intent.deferred_lookup_failed_total',
+  intentDeferredMetadataReadFailedTotal: 'dvt.intent.deferred_metadata_read_failed_total',
   intentDeferredBootstrappedWithoutWorkflowTotal:
     'dvt.intent.deferred_bootstrapped_without_workflow_total',
   intentUnexpectedStatusTotal: 'dvt.intent.unexpected_status_total',

@@ -796,6 +796,45 @@ describe('RunMaintenanceService', () => {
       });
     });
 
+    it('defers reconciliation when run metadata cannot be read', async () => {
+      const cancelLog: string[] = [];
+      const store = new InMemoryTxStore();
+      const intentStore = new InMemoryStartRunIntentStore();
+      const service = new RunMaintenanceService({
+        stateStoreRead: {
+          async getRunMetadataByRunId() {
+            throw new Error('state store unavailable');
+          },
+        } as never,
+        stateStoreWrite: store,
+        intentStore,
+        adapters: makeProviderMap(
+          makeAdapterWithLookup(new Set(['recovery-metadata-read-failure']), cancelLog)
+        ),
+        authorizer: new AllowAllAuthorizer(),
+        clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+        idempotency: new IdempotencyKeyBuilder(),
+        observability: createNoopObservability(),
+      });
+      await makePendingIntent(
+        intentStore,
+        'recovery-metadata-read-failure',
+        'i-metadata-read-failure'
+      );
+
+      await expect(
+        service.reconcileStartRunIntent({
+          tenantId: 't',
+          intentId: 'i-metadata-read-failure',
+        })
+      ).resolves.toEqual({ kind: 'blocked' });
+
+      expect(cancelLog).toEqual([]);
+      expect((await intentStore.getIntent(intentRef('i-metadata-read-failure')))?.status).toBe(
+        'PENDING'
+      );
+    });
+
     it('keeps PENDING intent and reports cancelFailed when workflow cancel throws', async () => {
       const { service, intentStore } = createFixtureWith(
         makeAdapterWithFailingCancel(new Set(['run-cancel-fail-1']))

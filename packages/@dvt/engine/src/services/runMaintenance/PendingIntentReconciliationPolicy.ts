@@ -25,6 +25,15 @@ type LookupCapableProviderAdapter = IProviderAdapter & {
   lookupRunRef: NonNullable<IProviderAdapter['lookupRunRef']>;
 };
 
+type RunMetadata = Awaited<
+  ReturnType<RunMaintenanceServiceDeps['stateStoreRead']['getRunMetadataByRunId']>
+>;
+
+type RunMetadataReadResult =
+  | { readonly kind: 'found'; readonly metadata: NonNullable<RunMetadata> }
+  | { readonly kind: 'missing' }
+  | { readonly kind: 'failed'; readonly error: unknown };
+
 export class PendingIntentReconciliationPolicy {
   constructor(private readonly deps: PendingIntentReconciliationPolicyDeps) {}
 
@@ -32,7 +41,11 @@ export class PendingIntentReconciliationPolicy {
     intent: OrphanedIntent,
     traceContext: RunMaintenanceTraceContext
   ): Promise<ReconcileOrphanedIntentOutcome> {
-    const existingMeta = await this.getRunMetadata(intent);
+    const metadataRead = await this.readRunMetadata(intent);
+    if (metadataRead.kind === 'failed') {
+      return this.deferMetadataReadFailure(intent, metadataRead.error, traceContext);
+    }
+    const existingMeta = metadataRead.kind === 'found' ? metadataRead.metadata : null;
     const adapter = this.deps.adapters.get(intent.provider);
 
     if (!this.hasLookupRunRef(adapter)) {
@@ -231,14 +244,41 @@ export class PendingIntentReconciliationPolicy {
     return { expired: intent.intentId };
   }
 
-  private async getRunMetadata(
-    intent: OrphanedIntent
-  ): Promise<Awaited<
-    ReturnType<RunMaintenanceServiceDeps['stateStoreRead']['getRunMetadataByRunId']>
-  > | null> {
-    return this.deps.stateStoreRead
-      .getRunMetadataByRunId(intent.tenantId, intent.runId)
-      .catch(() => null);
+  private async readRunMetadata(intent: OrphanedIntent): Promise<RunMetadataReadResult> {
+    try {
+      const metadata = await this.deps.stateStoreRead.getRunMetadataByRunId(
+        intent.tenantId,
+        intent.runId
+      );
+      return metadata === null ? { kind: 'missing' } : { kind: 'found', metadata };
+    } catch (error) {
+      return { kind: 'failed', error };
+    }
+  }
+
+  private deferMetadataReadFailure(
+    intent: OrphanedIntent,
+    error: unknown,
+    traceContext: RunMaintenanceTraceContext
+  ): ReconcileOrphanedIntentOutcome {
+    this.deps.observability.incrementCounter(
+      RUN_MAINTENANCE_METRIC.intentDeferredMetadataReadFailedTotal,
+      {
+        provider: intent.provider,
+        operation: RUN_MAINTENANCE_OPERATION.reconcileOrphanedIntents,
+      }
+    );
+    this.deps.observability.warn({
+      msg: RUN_MAINTENANCE_MESSAGE.pendingIntentMetadataReadFailed,
+      context: traceContext,
+      err: error,
+      attributes: {
+        intentId: intent.intentId,
+        runId: intent.runId,
+        provider: intent.provider,
+      },
+    });
+    return { deferred: intent.intentId };
   }
 
   private hasLookupRunRef(
