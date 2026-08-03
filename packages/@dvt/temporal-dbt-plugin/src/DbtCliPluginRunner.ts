@@ -40,13 +40,19 @@ export interface DbtCliPluginRunnerOptions {
   materializeProject?: DbtProjectMaterializer;
   materializeRuntimeProfile: DbtRuntimeProfileMaterializer;
   runCommand?: DbtCliCommandRunner;
+  getCancellationSignal?: () => globalThis.AbortSignal | undefined;
 }
+
+type DbtCommandOutcome =
+  | { readonly kind: 'result'; readonly value: StepResult }
+  | { readonly kind: 'cancellation'; readonly error: unknown };
 
 export class DbtCliPluginRunner implements DbtPluginRunner {
   private readonly dbtBin: string;
   private readonly materializeProject: DbtProjectMaterializer;
   private readonly materializeRuntimeProfile: DbtRuntimeProfileMaterializer;
   private readonly runCommand: DbtCliCommandRunner;
+  private readonly getCancellationSignal: () => globalThis.AbortSignal | undefined;
 
   public constructor(options: DbtCliPluginRunnerOptions) {
     const workdirRoot = options.workdirRoot ?? join(tmpdir(), 'dvt', 'temporal-worker');
@@ -60,6 +66,7 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
       });
     this.runCommand = options.runCommand ?? runDbtCommand;
     this.materializeRuntimeProfile = options.materializeRuntimeProfile;
+    this.getCancellationSignal = options.getCancellationSignal ?? (() => undefined);
   }
 
   public async execute(input: DbtPluginExecutionInput): Promise<StepResult> {
@@ -117,7 +124,8 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
     project: MaterializedDbtProject,
     profile: MaterializedDbtRuntimeProfile
   ): Promise<StepResult> {
-    let result: StepResult;
+    const cancellationSignal = this.getCancellationSignal();
+    let outcome: DbtCommandOutcome;
     try {
       const args = buildDbtCliArgs(
         input.step.kind,
@@ -125,21 +133,44 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
         input.pluginContext.targetProfile,
         profile.profilesDir
       );
-      await this.runCommand(this.dbtBin, args, { cwd: project.projectDir });
-      result = {
-        stepId: input.step.stepId,
-        status: 'COMPLETED',
+      await this.runCommand(this.dbtBin, args, {
+        cwd: project.projectDir,
+        ...(cancellationSignal === undefined ? {} : { signal: cancellationSignal }),
+      });
+      if (cancellationSignal?.aborted === true) {
+        throw cancellationSignal.reason;
+      }
+      outcome = {
+        kind: 'result',
+        value: {
+          stepId: input.step.stepId,
+          status: 'COMPLETED',
+        },
       };
     } catch (error) {
-      const failureReason = classifyDbtCliFailure(error);
-      result = buildFailedStepResult(
-        input.step.stepId,
-        failureReason,
-        toDbtCliFailureMessage(failureReason)
-      );
+      if (cancellationSignal?.aborted === true) {
+        outcome = { kind: 'cancellation', error };
+      } else {
+        const failureReason = classifyDbtCliFailure(error);
+        outcome = {
+          kind: 'result',
+          value: buildFailedStepResult(
+            input.step.stepId,
+            failureReason,
+            toDbtCliFailureMessage(failureReason)
+          ),
+        };
+      }
     }
 
-    return this.completeWithCleanup(input.step.stepId, result, [profile, project]);
+    const cleanupFailure = await this.cleanupResources(input.step.stepId, [profile, project]);
+    if (cleanupFailure !== undefined) {
+      return cleanupFailure;
+    }
+    if (outcome.kind === 'cancellation') {
+      throw outcome.error;
+    }
+    return outcome.value;
   }
 
   private async completeWithCleanup(
@@ -147,14 +178,20 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
     result: StepResult,
     resources: readonly { cleanup(): Promise<void> }[]
   ): Promise<StepResult> {
+    return (await this.cleanupResources(stepId, resources)) ?? result;
+  }
+
+  private async cleanupResources(
+    stepId: string,
+    resources: readonly { cleanup(): Promise<void> }[]
+  ): Promise<StepResult | undefined> {
     const outcomes = await Promise.allSettled(resources.map((resource) => resource.cleanup()));
-    if (outcomes.some((outcome) => outcome.status === 'rejected')) {
-      return buildFailedStepResult(
-        stepId,
-        'DBT_RUNTIME_RESOURCE_CLEANUP_FAILED',
-        'DBT runtime resources could not be cleaned safely.'
-      );
-    }
-    return result;
+    return outcomes.some((outcome) => outcome.status === 'rejected')
+      ? buildFailedStepResult(
+          stepId,
+          'DBT_RUNTIME_RESOURCE_CLEANUP_FAILED',
+          'DBT runtime resources could not be cleaned safely.'
+        )
+      : undefined;
   }
 }

@@ -29,6 +29,7 @@ export type DbtRuntimeProfileMaterializer = (
 
 export interface DbtCliCommandOptions {
   readonly cwd: string;
+  readonly signal?: globalThis.AbortSignal;
 }
 
 export interface DbtCliCommandOutput {

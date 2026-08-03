@@ -14,6 +14,7 @@ import {
   createDbtRuntimeProfileMaterializer,
   createDbtStepActivityRegistry,
 } from '@dvt/temporal-dbt-plugin';
+import { Context } from '@temporalio/activity';
 
 import type { Env } from '../plugins/env.js';
 
@@ -55,6 +56,7 @@ export function createTemporalWorkerDbtProfile(
       bundleReader,
       dbtBin: env.DVT_DBT_BIN,
       workdirRoot: env.DVT_DBT_WORKDIR_ROOT,
+      getCancellationSignal: () => Context.current().cancellationSignal,
       materializeRuntimeProfile: createDbtRuntimeProfileMaterializer({
         resolver:
           options.dbtRuntimeProfileResolverFactory?.() ??

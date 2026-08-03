@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -291,6 +291,46 @@ describe('DbtCliPluginRunner', () => {
     expect(JSON.stringify(result)).not.toContain(secret);
     expect(runCommand).not.toHaveBeenCalled();
     expect(cleanupProject).toHaveBeenCalledTimes(1);
+  });
+
+  it('propagates cancellation after cleaning profile and project resources', async () => {
+    const workdirRoot = await mkdtemp(join(tmpdir(), 'dvt-dbt-cancellation-test-'));
+    const projectDir = join(workdirRoot, 'project');
+    const profilesDir = join(workdirRoot, 'profile');
+    await mkdir(projectDir);
+    await mkdir(profilesDir);
+    await writeFile(join(projectDir, 'run'), 'setInterval(() => undefined, 1_000);\n');
+
+    const abortController = new globalThis.AbortController();
+    const cancellation = Object.assign(new Error('The DBT command was cancelled.'), {
+      name: 'AbortError',
+    });
+    const runner = new DbtCliPluginRunner({
+      bundleReader: {
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
+      },
+      materializeProject: async () => ({
+        projectDir,
+        cleanup: () => rm(projectDir, { recursive: true, force: true }),
+      }),
+      materializeRuntimeProfile: async () => ({
+        profilesDir,
+        cleanup: () => rm(profilesDir, { recursive: true, force: true }),
+      }),
+      getCancellationSignal: () => abortController.signal,
+      dbtBin: process.execPath,
+    });
+
+    const execution = runner.execute(INPUT);
+    setTimeout(() => abortController.abort(cancellation), 200);
+
+    try {
+      await expect(execution).rejects.toMatchObject({ name: 'AbortError' });
+      await expect(stat(profilesDir)).rejects.toMatchObject({ code: 'ENOENT' });
+      await expect(stat(projectDir)).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      await rm(workdirRoot, { recursive: true, force: true });
+    }
   });
 
   it('materializes a restrictive profile and erases both memory and disk resources', async () => {
