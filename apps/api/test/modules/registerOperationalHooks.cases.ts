@@ -54,6 +54,7 @@ function createStateStoreRoleSource(): StateStoreRoleSource {
     appendAndEnqueueTx: async () => null as never,
     saveProviderRef: async () => null as never,
     getRunMetadataByRunId: async () => null,
+    hasEventByIdempotencyKey: async () => false,
     listEvents: async () => [],
     listRuns: async () => [],
     getSnapshot: async () => null,

@@ -218,6 +218,12 @@ export interface IRunStateStoreWrite {
 export interface IRunStateStoreRead {
   getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null>;
 
+  hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean>;
+
   listEvents(
     tenantId: string,
     runId: string,

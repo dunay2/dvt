@@ -65,6 +65,14 @@ export class PostgresRunEventStore implements RunEventWriteRepository, RunEventR
     });
   }
 
+  async hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean> {
+    return this.storage.hasEventByIdempotencyKey(tenantId, runId, idempotencyKey);
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------

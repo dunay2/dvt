@@ -29,6 +29,7 @@ const REQUIRED_METHODS = [
   'appendAndEnqueueTx',
   'saveProviderRef',
   'getRunMetadataByRunId',
+  'hasEventByIdempotencyKey',
   'listEvents',
   'listRuns',
   'getSnapshot',

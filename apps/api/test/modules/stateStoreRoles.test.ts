@@ -11,6 +11,7 @@ function createStateStoreSource(): StateStoreRoleSource {
     appendAndEnqueueTx: async () => null as never,
     saveProviderRef: async () => null as never,
     getRunMetadataByRunId: async () => null as never,
+    hasEventByIdempotencyKey: async () => false,
     listEvents: async () => [],
     listRuns: async () => [],
     getSnapshot: async () => null as never,
@@ -56,6 +57,7 @@ describe('bindStateStoreRoles', () => {
     ['bootstrapRunTx', 'read bootstrap role'],
     ['bootstrapRecoveryRunTx', 'recovery bootstrap role'],
     ['appendAndEnqueueTx', 'write append role'],
+    ['hasEventByIdempotencyKey', 'read event existence role'],
     ['rebuildSnapshot', 'maintenance rebuild role'],
     ['isSnapshotStale', 'snapshot staleness role'],
   ] as const)('rejects a source missing %s for the %s', (methodName, _roleLabel) => {
@@ -65,6 +67,7 @@ describe('bindStateStoreRoles', () => {
       appendAndEnqueueTx: async () => null as never,
       saveProviderRef: async () => null as never,
       getRunMetadataByRunId: async () => null as never,
+      hasEventByIdempotencyKey: async () => false,
       listEvents: async () => [],
       listRuns: async () => [],
       getSnapshot: async () => null as never,

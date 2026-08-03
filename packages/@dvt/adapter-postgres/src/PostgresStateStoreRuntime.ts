@@ -132,6 +132,14 @@ export class PostgresStateStoreRuntime {
     return this.runEventRepository.listEvents(tenantId, runId, options);
   }
 
+  protected async hasEventByIdempotencyKeyInternal(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean> {
+    return this.runEventRepository.hasEventByIdempotencyKey(tenantId, runId, idempotencyKey);
+  }
+
   protected async getSnapshotInternal(
     tenantId: string,
     runId: RunId

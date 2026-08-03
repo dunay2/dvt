@@ -21,8 +21,11 @@ export class RunEventCancellationReceiptStore implements IRunCancellationReceipt
   ) {}
 
   public async hasAccepted(key: RunCancellationReceiptKey): Promise<boolean> {
-    const events = await this.deps.stateStoreRead.listEvents(key.tenantId, key.runId);
-    return events.some((event) => event.eventType === CANCELLATION_SUBMITTED_EVENT_TYPE);
+    return this.deps.stateStoreRead.hasEventByIdempotencyKey(
+      key.tenantId,
+      key.runId,
+      this.cancellationReceiptIdempotencyKey(key)
+    );
   }
 
   public async recordAccepted(metadata: RunMetadata): Promise<void> {
@@ -39,15 +42,19 @@ export class RunEventCancellationReceiptStore implements IRunCancellationReceipt
         planVersion: metadata.planVersion,
         engineAttemptId: 1,
         logicalAttemptId: metadata.logicalAttemptId,
-        idempotencyKey: this.deps.idempotency.runEventKey({
-          eventType: CANCELLATION_SUBMITTED_EVENT_TYPE,
-          runId: metadata.runId,
-          logicalAttemptId: metadata.logicalAttemptId,
-          planId: metadata.planId,
-          planVersion: metadata.planVersion,
-        }),
+        idempotencyKey: this.cancellationReceiptIdempotencyKey(metadata),
         payloadVersion: 1,
       },
     ]);
+  }
+
+  private cancellationReceiptIdempotencyKey(key: RunCancellationReceiptKey): string {
+    return this.deps.idempotency.runEventKey({
+      eventType: CANCELLATION_SUBMITTED_EVENT_TYPE,
+      runId: key.runId,
+      logicalAttemptId: key.logicalAttemptId,
+      planId: key.planId,
+      planVersion: key.planVersion,
+    });
   }
 }

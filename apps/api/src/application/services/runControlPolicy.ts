@@ -104,6 +104,10 @@ export function projectRunControlAvailability(
   };
 }
 
+export function cancellationReceiptCanAffectAvailability(status: CanonicalRunStatus): boolean {
+  return !isTerminalCancelDecision(decideCancelRun(status));
+}
+
 function isTerminalCancelDecision(decision: CancelRunDecision): boolean {
   return (
     (decision.kind === 'reject' && decision.reason === 'run_terminal') ||

@@ -9,6 +9,7 @@ import type {
 
 import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
 import type { IRunCancellationReceiptStore } from '../ports/runCancellationReceiptStore.js';
+import { toRunCancellationReceiptKey } from '../ports/runCancellationReceiptStore.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
@@ -19,6 +20,7 @@ import type {
   RunListItemDto,
 } from '../ports/runtime.js';
 
+import { cancellationReceiptCanAffectAvailability } from './runControlPolicy.js';
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth } from './runOperationalTruth.js';
 import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
@@ -108,8 +110,9 @@ export class ListRunsUseCase implements IListRunsUseCase {
         recoveryPlan.planRef
       ),
       this.startDispatchResolver?.resolve(item, status),
-      this.cancellationReceipts?.hasAccepted({ tenantId: item.tenantId, runId: item.runId }) ??
-        false,
+      this.cancellationReceipts !== undefined && cancellationReceiptCanAffectAvailability(status)
+        ? this.cancellationReceipts.hasAccepted(toRunCancellationReceiptKey(item))
+        : false,
     ]);
 
     return projectRunOperationalTruth({

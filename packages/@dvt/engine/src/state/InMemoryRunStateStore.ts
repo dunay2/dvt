@@ -27,6 +27,14 @@ export class InMemoryRunStateStore implements IRunStateStore, IRunSnapshotStalen
     return this.runState.getRunMetadataByRunId(tenantId, runId);
   }
 
+  hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean> {
+    return this.runState.hasEventByIdempotencyKey(tenantId, runId, idempotencyKey);
+  }
+
   saveProviderRef(
     tenantId: string,
     runId: string,

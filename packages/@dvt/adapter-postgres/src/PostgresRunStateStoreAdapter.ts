@@ -77,6 +77,15 @@ export class PostgresRunStateStoreAdapter
     return this.listEventsInternal(tenantId, runId, options);
   }
 
+  async hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean> {
+    this.ready();
+    return this.hasEventByIdempotencyKeyInternal(tenantId, runId, idempotencyKey);
+  }
+
   async getSnapshot(tenantId: string, runId: RunId): Promise<WorkflowSnapshot | null> {
     this.ready();
     return this.getSnapshotInternal(tenantId, runId);

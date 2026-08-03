@@ -29,15 +29,26 @@ describe('RunEventCancellationReceiptStore', () => {
       deduped: [],
       lastSeq: 1,
     });
-    const listEvents = vi.fn().mockResolvedValue([]);
+    const hasEventByIdempotencyKey = vi.fn().mockResolvedValue(false);
     const store = new RunEventCancellationReceiptStore({
-      stateStoreRead: { listEvents } as never,
+      stateStoreRead: { hasEventByIdempotencyKey } as never,
       stateStoreWrite: { appendAndEnqueueTx } as never,
       clock: new SequenceClock(asIsoUtcString('2026-08-02T04:00:00.000Z')),
       idempotency: new IdempotencyKeyBuilder(),
     });
 
-    await expect(store.hasAccepted({ tenantId: 'tenant-a', runId: 'run-1' })).resolves.toBe(false);
+    await expect(store.hasAccepted(RUN_METADATA)).resolves.toBe(false);
+    expect(hasEventByIdempotencyKey).toHaveBeenCalledWith(
+      'tenant-a',
+      'run-1',
+      new IdempotencyKeyBuilder().runEventKey({
+        eventType: 'RunCancelSubmitted',
+        runId: 'run-1',
+        logicalAttemptId: 2,
+        planId: 'plan-1',
+        planVersion: '1.0.0',
+      })
+    );
     await store.recordAccepted(RUN_METADATA);
 
     const submitted = appendAndEnqueueTx.mock.calls[0]?.[1]?.[0];
@@ -49,9 +60,7 @@ describe('RunEventCancellationReceiptStore', () => {
       logicalAttemptId: 2,
     });
 
-    listEvents.mockResolvedValueOnce([
-      { ...submitted, runSeq: 2, persistedAt: submitted.emittedAt },
-    ]);
-    await expect(store.hasAccepted({ tenantId: 'tenant-a', runId: 'run-1' })).resolves.toBe(true);
+    hasEventByIdempotencyKey.mockResolvedValueOnce(true);
+    await expect(store.hasAccepted(RUN_METADATA)).resolves.toBe(true);
   });
 });

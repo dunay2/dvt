@@ -97,6 +97,15 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
     return getInMemoryRunMetadata(this, tenantId, runId);
   }
 
+  async hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean> {
+    if (this.metadataByRunId.get(runId)?.tenantId !== tenantId) return false;
+    return this.idempIndexByRunId.get(runId)?.has(idempotencyKey) ?? false;
+  }
+
   async saveProviderRef(
     tenantId: string,
     runId: string,

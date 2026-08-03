@@ -153,6 +153,9 @@ describe('GetRunStatusUseCase', () => {
     expect(cancellationReceipts.hasAccepted).toHaveBeenCalledWith({
       tenantId: 'tenant-a',
       runId: 'run-1',
+      logicalAttemptId: 1,
+      planId: 'plan-1',
+      planVersion: '1.0',
     });
   });
 

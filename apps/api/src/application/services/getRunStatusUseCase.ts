@@ -16,6 +16,7 @@ import {
 
 import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
 import type { IRunCancellationReceiptStore } from '../ports/runCancellationReceiptStore.js';
+import { toRunCancellationReceiptKey } from '../ports/runCancellationReceiptStore.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
@@ -28,6 +29,7 @@ import type {
   RunSnapshotStaleness,
 } from '../ports/runtime.js';
 
+import { cancellationReceiptCanAffectAvailability } from './runControlPolicy.js';
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth, sanitizeCanonicalRunStatus } from './runOperationalTruth.js';
 import { deriveRunReadEvidenceModel } from './runReadEvidenceModel.js';
@@ -153,7 +155,9 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
         recoveryPlan.planRef
       ),
       this.startDispatchResolver?.resolve(metadata, snapshot),
-      this.cancellationReceipts?.hasAccepted(runReadRef) ?? false,
+      this.cancellationReceipts !== undefined && cancellationReceiptCanAffectAvailability(snapshot)
+        ? this.cancellationReceipts.hasAccepted(toRunCancellationReceiptKey(metadata))
+        : false,
     ]);
     const operationalTruth = projectRunOperationalTruth({
       metadata,

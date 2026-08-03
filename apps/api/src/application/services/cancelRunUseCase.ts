@@ -4,7 +4,10 @@ import { RunMetadataNotFoundError } from '@dvt/engine';
 
 import { RunControlUnavailableError } from '../errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
-import type { IRunCancellationReceiptStore } from '../ports/runCancellationReceiptStore.js';
+import {
+  toRunCancellationReceiptKey,
+  type IRunCancellationReceiptStore,
+} from '../ports/runCancellationReceiptStore.js';
 import type { IRunControlCommandCoordinator } from '../ports/runControlCommandCoordinator.js';
 import {
   RUN_CONTROL_RESULT_CONTRACT_VERSION,
@@ -58,7 +61,7 @@ export class CancelRunUseCase implements ICancelRunUseCase {
       return settledResult;
     }
 
-    if (await this.cancellationReceipts.hasAccepted({ tenantId, runId: command.runId })) {
+    if (await this.cancellationReceipts.hasAccepted(toRunCancellationReceiptKey(metadata))) {
       return acceptedCancellation(command, 'already_requested');
     }
 
