@@ -149,8 +149,7 @@ The workflow now resolves step-activity retry policy per executed step:
 function createStepActivities(step: WorkflowStep) {
   return proxyActivities<Pick<WorkflowActivitiesPort, 'executeStep'>>({
     startToCloseTimeout: '30m',
-    heartbeatTimeout: '10s',
-    cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
+    cancellationType: ActivityCancellationType.TRY_CANCEL,
     retry: resolveStepActivityRetryPolicy(step),
   });
 }
@@ -173,9 +172,7 @@ Resolved policy order:
 
 Notes:
 
-- `executeStep` emits a heartbeat immediately and every second while delegated work remains active. This lets Temporal deliver cancellation to subprocess-backed plugins such as DBT.
-- `WAIT_CANCELLATION_COMPLETED` keeps the workflow open until activity-owned cleanup has completed; terminal cancellation events therefore cannot precede cleanup of runtime credentials and work directories.
-- `scheduleToStartTimeout` and `scheduleToCloseTimeout` are still **not currently configured**.
+- `scheduleToStartTimeout`, `scheduleToCloseTimeout`, and `heartbeatTimeout` are still **not currently configured**.
 - No per-step timeout override matrix is implemented yet; only retry/backoff ownership moved into the plan contract.
 - Retry metadata under `stepTypeConfig.retries` is no longer consumed for runtime activity retry policy. Only top-level `step.retryPolicy` affects Temporal retry mapping.
 
