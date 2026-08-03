@@ -36,6 +36,7 @@ export function registerProtectedPlanRoutes(
     async (request, reply) =>
       startRunRoute(request as never, reply, protectedModule.facade, {
         adapterRegistry: protectedModule.startRunTargetAdapterRegistry,
+        observability: dependencies.observability,
       })
   );
   app.post(RUNTIME_ROUTE_PATH.plansPreview, { config: { rateLimit } }, async (request, reply) =>

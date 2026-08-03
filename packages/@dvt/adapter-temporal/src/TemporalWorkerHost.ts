@@ -228,6 +228,7 @@ export class TemporalWorkerHost {
       taskQueue: this.config.temporalConfig.connection.taskQueue,
       workflowsPath: this.config.workflowsPath ?? resolveDefaultWorkflowsPath(),
       activities,
+      maxHeartbeatThrottleInterval: '1s',
       ...(identity === undefined ? {} : { identity }),
     });
   }

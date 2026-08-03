@@ -3148,6 +3148,706 @@
       "createdAt": "2026-07-31T11:30:50.789Z"
     },
     {
+      "railId": "local#MVP-144-PROTECTED-START-RUN-OTEL#command#exportobservabilitytoopentelemetry",
+      "featureId": "MVP-144-PROTECTED-START-RUN-OTEL",
+      "mechanizationStatus": "implemented",
+      "railName": "ExportObservabilityToOpenTelemetry",
+      "normalizedRailName": "exportobservabilitytoopentelemetry",
+      "railType": "command",
+      "dddOwner": "OtelObservabilityAdapter",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/entrypoints/http/startRunRoute.ts#startRunRoute",
+        "apps/api/src/entrypoints/http/startRunRoute.ts#executeStartRunRoute",
+        "apps/api/src/entrypoints/http/startRunRoute.ts#respondAndObserve",
+        "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts#createTemporalProviderAdapterFactory",
+        "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts#ObservedTemporalAdapter",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#OpenTelemetryTraces",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#OpenTelemetrySpanAdapter",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#ensureOpenTelemetryContextManager",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#contextManagerInitialized",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#runWithManagedSpan",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#isPromiseLike",
+        "packages/@dvt/observability-otel/src/OtelObservability.ts#OtelObservability",
+        "packages/@dvt/observability-otel/src/OtelObservability.ts#createOtlpExporter",
+        "packages/@dvt/observability-otel/src/OtelObservability.ts#resolveTraceEndpoint",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#TRACE_ATTRIBUTE_KEYS",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#MAX_TRACE_ATTRIBUTE_VALUE_LENGTH",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#STABLE_SPAN_NAME",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#SAFE_EXCEPTION_TYPE",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#ALLOWED_RESOURCE_ATTRIBUTE_KEYS",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#normalizeSpanName",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#traceContextAttributes",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#sanitizeTraceAttributes",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#sanitizeTraceAttribute",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#resolveExceptionType",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#parseResourceAttributes",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#normalizeResourceValue",
+        "apps/api/src/app.ts#buildApp",
+        "apps/api/src/plugins/observability.ts#buildObservability",
+        "packages/@dvt/observability/src/contracts/IObservability.ts#IManagedObservability",
+        "packages/@dvt/observability/src/noopObservability.ts#createNoopObservability",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#resolveTraceEndpoint"
+      ],
+      "implementationRefs": [
+        "apps/api/src/entrypoints/http/startRunRoute.ts#startRunRoute",
+        "apps/api/src/entrypoints/http/startRunRoute.ts#executeStartRunRoute",
+        "apps/api/src/entrypoints/http/startRunRoute.ts#respondAndObserve",
+        "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts#createTemporalProviderAdapterFactory",
+        "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts#ObservedTemporalAdapter",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#OpenTelemetryTraces",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#OpenTelemetrySpanAdapter",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#ensureOpenTelemetryContextManager",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#contextManagerInitialized",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#runWithManagedSpan",
+        "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#isPromiseLike",
+        "packages/@dvt/observability-otel/src/OtelObservability.ts#OtelObservability",
+        "packages/@dvt/observability-otel/src/OtelObservability.ts#createOtlpExporter",
+        "packages/@dvt/observability-otel/src/OtelObservability.ts#resolveTraceEndpoint",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#TRACE_ATTRIBUTE_KEYS",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#MAX_TRACE_ATTRIBUTE_VALUE_LENGTH",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#STABLE_SPAN_NAME",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#SAFE_EXCEPTION_TYPE",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#ALLOWED_RESOURCE_ATTRIBUTE_KEYS",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#normalizeSpanName",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#traceContextAttributes",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#sanitizeTraceAttributes",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#sanitizeTraceAttribute",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#resolveExceptionType",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#parseResourceAttributes",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#normalizeResourceValue",
+        "apps/api/src/app.ts#buildApp",
+        "apps/api/src/plugins/observability.ts#buildObservability",
+        "packages/@dvt/observability/src/contracts/IObservability.ts#IManagedObservability",
+        "packages/@dvt/observability/src/noopObservability.ts#createNoopObservability",
+        "packages/@dvt/observability-otel/src/otelTracePolicy.ts#resolveTraceEndpoint"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/adr/ADR-0003-execution-model.md",
+        "docs/adr/ADR-0014-run-driven-adapter-model.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/observability-otel/package.json",
+        "packages/@dvt/observability-otel/README.md",
+        "packages/@dvt/observability-otel/src/**",
+        "packages/@dvt/observability-otel/test/**",
+        "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts",
+        "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+        "apps/api/src/entrypoints/http/startRunRoute.ts",
+        "apps/api/src/entrypoints/http/protectedRuntimePlanRoutes.ts",
+        "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+        "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
+        "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+        "apps/api/test/entrypoints/http/startRunRoute.test.support.ts",
+        "apps/api/test/integration/startRunOpenTelemetry.integration.support.ts",
+        "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+        "apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts",
+        "apps/api/package.json",
+        "packages/@dvt/observability/src/contracts/IObservability.ts",
+        "packages/@dvt/observability/src/noopObservability.ts",
+        "apps/api/src/app.ts",
+        "apps/api/src/plugins/observability.ts",
+        "apps/api/test/app.test.ts",
+        "apps/api/test/plugins/observability.test.ts"
+      ],
+      "architectureGuards": [
+        "Trace export remains diagnostic and cannot alter StartRun outcomes",
+        "Managed observability shutdown is registered with the API lifecycle",
+        "Observed operations own exception events while the trace adapter owns span completion"
+      ],
+      "completionGate": [
+        "pnpm --filter dvt-api proof:start-run-otel",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+      "sourceContentSha256": "0130acb85c3f8870d12d9e3d1bd3d1000c83e51907ddb94820e1cebe9bfcd7db",
+      "rawRail": {
+        "name": "ExportObservabilityToOpenTelemetry",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "OtelObservabilityAdapter"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "startRunRoute",
+            "path": "apps/api/src/entrypoints/http/startRunRoute.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "executeStartRunRoute",
+            "path": "apps/api/src/entrypoints/http/startRunRoute.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "respondAndObserve",
+            "path": "apps/api/src/entrypoints/http/startRunRoute.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "createTemporalProviderAdapterFactory",
+            "path": "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "ObservedTemporalAdapter",
+            "path": "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "OpenTelemetryTraces",
+            "path": "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "OpenTelemetrySpanAdapter",
+            "path": "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "ensureOpenTelemetryContextManager",
+            "path": "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "contextManagerInitialized",
+            "path": "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "runWithManagedSpan",
+            "path": "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "isPromiseLike",
+            "path": "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "OtelObservability",
+            "path": "packages/@dvt/observability-otel/src/OtelObservability.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "createOtlpExporter",
+            "path": "packages/@dvt/observability-otel/src/OtelObservability.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "resolveTraceEndpoint",
+            "path": "packages/@dvt/observability-otel/src/OtelObservability.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "TRACE_ATTRIBUTE_KEYS",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "MAX_TRACE_ATTRIBUTE_VALUE_LENGTH",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "STABLE_SPAN_NAME",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "SAFE_EXCEPTION_TYPE",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "ALLOWED_RESOURCE_ATTRIBUTE_KEYS",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "normalizeSpanName",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "traceContextAttributes",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "sanitizeTraceAttributes",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "sanitizeTraceAttribute",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "resolveExceptionType",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "parseResourceAttributes",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "normalizeResourceValue",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "buildApp",
+            "path": "apps/api/src/app.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "buildObservability",
+            "path": "apps/api/src/plugins/observability.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "IManagedObservability",
+            "path": "packages/@dvt/observability/src/contracts/IObservability.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "createNoopObservability",
+            "path": "packages/@dvt/observability/src/noopObservability.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          },
+          {
+            "name": "resolveTraceEndpoint",
+            "path": "packages/@dvt/observability-otel/src/otelTracePolicy.ts",
+            "cqRails": ["ExportObservabilityToOpenTelemetry"],
+            "dddOwner": "OtelObservabilityAdapter",
+            "unitTests": [
+              "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "fowlerSignals": ["boundary_completion"],
+            "cypressCoverage": "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+            "architectureGuard": "Trace export remains diagnostic and cannot alter StartRun outcomes"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-144-PROTECTED-START-RUN-OTEL",
+        "userStories": ["GitHub issue #144 protected StartRun trace"],
+        "cypressFlows": [
+          "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts"
+        ],
+        "domainObjects": [
+          "StartRunTelemetryPolicy",
+          "OtelObservabilityAdapter",
+          "ManagedObservabilityLifecycle"
+        ],
+        "fowlerSignals": ["boundary_completion"],
+        "completionGate": [
+          "pnpm --filter dvt-api proof:start-run-otel",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "exportobservabilitytoopentelemetry-record",
+            "redTest": "Protected StartRun lacked an SDK-exported connected trace and bounded rejection proof",
+            "greenTest": "pnpm --filter dvt-api proof:start-run-otel",
+            "patchSurfaces": [
+              "packages/@dvt/observability-otel/package.json",
+              "packages/@dvt/observability-otel/README.md",
+              "packages/@dvt/observability-otel/src/**",
+              "packages/@dvt/observability-otel/test/**",
+              "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts",
+              "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+              "apps/api/src/entrypoints/http/startRunRoute.ts",
+              "apps/api/src/entrypoints/http/protectedRuntimePlanRoutes.ts",
+              "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+              "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
+              "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+              "apps/api/test/entrypoints/http/startRunRoute.test.support.ts",
+              "apps/api/test/integration/startRunOpenTelemetry.integration.support.ts",
+              "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+              "apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts",
+              "apps/api/package.json",
+              "packages/@dvt/observability/src/contracts/IObservability.ts",
+              "packages/@dvt/observability/src/noopObservability.ts",
+              "apps/api/src/app.ts",
+              "apps/api/src/plugins/observability.ts",
+              "apps/api/test/app.test.ts",
+              "apps/api/test/plugins/observability.test.ts"
+            ],
+            "expectedFailure": "No connected api.startRun to engine.startRun to temporal.startRun trace was exported"
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/engine/ops/observability.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0003-execution-model.md",
+          "docs/adr/ADR-0014-run-driven-adapter-model.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ExportObservabilityToOpenTelemetry",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "OtelObservabilityAdapter"
+          }
+        ],
+        "architectureGuards": [
+          "Trace export remains diagnostic and cannot alter StartRun outcomes",
+          "Managed observability shutdown is registered with the API lifecycle",
+          "Observed operations own exception events while the trace adapter owns span completion"
+        ],
+        "implementationPlan": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/observability-otel/package.json",
+          "packages/@dvt/observability-otel/README.md",
+          "packages/@dvt/observability-otel/src/**",
+          "packages/@dvt/observability-otel/test/**",
+          "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts",
+          "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+          "apps/api/src/entrypoints/http/startRunRoute.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimePlanRoutes.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+          "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
+          "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+          "apps/api/test/entrypoints/http/startRunRoute.test.support.ts",
+          "apps/api/test/integration/startRunOpenTelemetry.integration.support.ts",
+          "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+          "apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts",
+          "apps/api/package.json",
+          "packages/@dvt/observability/src/contracts/IObservability.ts",
+          "packages/@dvt/observability/src/noopObservability.ts",
+          "apps/api/src/app.ts",
+          "apps/api/src/plugins/observability.ts",
+          "apps/api/test/app.test.ts",
+          "apps/api/test/plugins/observability.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**",
+          "apps/web/**"
+        ]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-08-03T11:40:55.621Z"
+    },
+    {
       "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#startrunadmission",
       "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
       "mechanizationStatus": "implemented",
@@ -29509,6 +30209,304 @@
         ]
       },
       "createdAt": "2026-08-03T09:58:40.217Z"
+    },
+    {
+      "operationId": "05285142-77bc-4cd4-8681-5bd05f224f7d",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-144-PROTECTED-START-RUN-OTEL:command:exportobservabilitytoopentelemetry:latest:3905a9a9b291e96f",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-144-PROTECTED-START-RUN-OTEL#command#exportobservabilitytoopentelemetry",
+      "sourcePath": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+      "sourceContentSha256": "6356167a8660f1c108ee7e01fe233f3d888c267f5181db00851dc82a4252286c",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "Protected StartRun lacked an SDK-exported connected trace and bounded rejection proof",
+        "dddOwner": "OtelObservabilityAdapter",
+        "railName": "ExportObservabilityToOpenTelemetry",
+        "railType": "command",
+        "featureId": "MVP-144-PROTECTED-START-RUN-OTEL",
+        "greenTest": "pnpm --filter dvt-api proof:start-run-otel",
+        "sourceRef": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+        "unitTests": [
+          "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+          "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["GitHub issue #144 protected StartRun trace"],
+        "cypressFlows": [
+          "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts"
+        ],
+        "domainObjects": [
+          "StartRunTelemetryPolicy",
+          "OtelObservabilityAdapter"
+        ],
+        "fowlerSignals": ["boundary_completion"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter dvt-api proof:start-run-otel",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/engine/ops/observability.md"
+        ],
+        "expectedFailure": "No connected api.startRun to engine.startRun to temporal.startRun trace was exported",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0003-execution-model.md",
+          "docs/adr/ADR-0014-run-driven-adapter-model.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md"
+        ],
+        "architectureGuards": [
+          "Trace export remains diagnostic and cannot alter StartRun outcomes"
+        ],
+        "implementationPlan": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+        "implementationRefs": [
+          "apps/api/src/entrypoints/http/startRunRoute.ts#startRunRoute",
+          "apps/api/src/entrypoints/http/startRunRoute.ts#executeStartRunRoute",
+          "apps/api/src/entrypoints/http/startRunRoute.ts#respondAndObserve",
+          "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts#createTemporalProviderAdapterFactory",
+          "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts#ObservedTemporalAdapter",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#OpenTelemetryTraces",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#OpenTelemetrySpanAdapter",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#ensureOpenTelemetryContextManager",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#contextManagerInitialized",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#runWithManagedSpan",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#isPromiseLike",
+          "packages/@dvt/observability-otel/src/OtelObservability.ts#OtelObservability",
+          "packages/@dvt/observability-otel/src/OtelObservability.ts#createOtlpExporter",
+          "packages/@dvt/observability-otel/src/OtelObservability.ts#resolveTraceEndpoint",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#TRACE_ATTRIBUTE_KEYS",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#MAX_TRACE_ATTRIBUTE_VALUE_LENGTH",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#STABLE_SPAN_NAME",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#SAFE_EXCEPTION_TYPE",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#ALLOWED_RESOURCE_ATTRIBUTE_KEYS",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#normalizeSpanName",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#traceContextAttributes",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#sanitizeTraceAttributes",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#sanitizeTraceAttribute",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#resolveExceptionType",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#parseResourceAttributes",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#normalizeResourceValue"
+        ],
+        "normalizedRailName": "exportobservabilitytoopentelemetry",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6356167a8660f1c108ee7e01fe233f3d888c267f5181db00851dc82a4252286c",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/observability-otel/package.json",
+          "packages/@dvt/observability-otel/README.md",
+          "packages/@dvt/observability-otel/src/**",
+          "packages/@dvt/observability-otel/test/**",
+          "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts",
+          "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+          "apps/api/src/entrypoints/http/startRunRoute.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimePlanRoutes.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+          "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
+          "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+          "apps/api/test/entrypoints/http/startRunRoute.test.support.ts",
+          "apps/api/test/integration/startRunOpenTelemetry.integration.support.ts",
+          "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+          "apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts",
+          "apps/api/package.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**",
+          "apps/web/**"
+        ]
+      },
+      "createdAt": "2026-08-03T11:40:55.621Z"
+    },
+    {
+      "operationId": "8ea2a3e3-cabd-4180-86f1-0fdca682b223",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-144-PROTECTED-START-RUN-OTEL:command:exportobservabilitytoopentelemetry:0:319f85d732baafa2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-144-PROTECTED-START-RUN-OTEL#command#exportobservabilitytoopentelemetry",
+      "sourcePath": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+      "sourceContentSha256": "6356167a8660f1c108ee7e01fe233f3d888c267f5181db00851dc82a4252286c",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "Protected StartRun lacked an SDK-exported connected trace and bounded rejection proof",
+        "dddOwner": "OtelObservabilityAdapter",
+        "railName": "ExportObservabilityToOpenTelemetry",
+        "railType": "command",
+        "featureId": "MVP-144-PROTECTED-START-RUN-OTEL",
+        "greenTest": "pnpm --filter dvt-api proof:start-run-otel",
+        "sourceRef": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+        "unitTests": [
+          "packages/@dvt/observability-otel/test/OtelObservability.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["GitHub issue #144 protected StartRun trace"],
+        "cypressFlows": [
+          "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts"
+        ],
+        "domainObjects": ["OtelObservabilityAdapter"],
+        "fowlerSignals": ["boundary_completion"],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/components/engine/ops/observability.md"
+        ],
+        "expectedFailure": "No connected api.startRun to engine.startRun to temporal.startRun trace was exported",
+        "governingSources": [
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md"
+        ],
+        "architectureGuards": [
+          "Trace export remains diagnostic and cannot alter StartRun outcomes"
+        ],
+        "implementationPlan": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+        "implementationRefs": [
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#OpenTelemetryTraces"
+        ],
+        "normalizedRailName": "exportobservabilitytoopentelemetry",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6356167a8660f1c108ee7e01fe233f3d888c267f5181db00851dc82a4252286c",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/observability-otel/src/**"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/web/**"]
+      },
+      "createdAt": "2026-08-03T11:41:43.741Z"
+    },
+    {
+      "operationId": "8518f1ec-6e73-4a88-a2f9-95c0a0c5a488",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-144-PROTECTED-START-RUN-OTEL:command:exportobservabilitytoopentelemetry:1:72b4fdc90ef23bb1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-144-PROTECTED-START-RUN-OTEL#command#exportobservabilitytoopentelemetry",
+      "sourcePath": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+      "sourceContentSha256": "0130acb85c3f8870d12d9e3d1bd3d1000c83e51907ddb94820e1cebe9bfcd7db",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "Protected StartRun lacked an SDK-exported connected trace and bounded rejection proof",
+        "dddOwner": "OtelObservabilityAdapter",
+        "railName": "ExportObservabilityToOpenTelemetry",
+        "railType": "command",
+        "featureId": "MVP-144-PROTECTED-START-RUN-OTEL",
+        "greenTest": "pnpm --filter dvt-api proof:start-run-otel",
+        "sourceRef": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+        "unitTests": [
+          "packages/@dvt/observability-otel/test/OtelObservability.test.ts",
+          "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+          "apps/api/test/app.test.ts",
+          "apps/api/test/plugins/observability.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["GitHub issue #144 protected StartRun trace"],
+        "cypressFlows": [
+          "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts"
+        ],
+        "domainObjects": [
+          "StartRunTelemetryPolicy",
+          "OtelObservabilityAdapter",
+          "ManagedObservabilityLifecycle"
+        ],
+        "fowlerSignals": ["boundary_completion"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter dvt-api proof:start-run-otel",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/engine/ops/observability.md"
+        ],
+        "expectedFailure": "No connected api.startRun to engine.startRun to temporal.startRun trace was exported",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0003-execution-model.md",
+          "docs/adr/ADR-0014-run-driven-adapter-model.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md"
+        ],
+        "architectureGuards": [
+          "Trace export remains diagnostic and cannot alter StartRun outcomes",
+          "Managed observability shutdown is registered with the API lifecycle",
+          "Observed operations own exception events while the trace adapter owns span completion"
+        ],
+        "implementationPlan": "docs/evidence/ED-20260803-protected-start-run-opentelemetry.md",
+        "implementationRefs": [
+          "apps/api/src/app.ts#buildApp",
+          "apps/api/src/plugins/observability.ts#buildObservability",
+          "apps/api/src/entrypoints/http/startRunRoute.ts#startRunRoute",
+          "apps/api/src/entrypoints/http/startRunRoute.ts#executeStartRunRoute",
+          "apps/api/src/entrypoints/http/startRunRoute.ts#respondAndObserve",
+          "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts#createTemporalProviderAdapterFactory",
+          "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts#ObservedTemporalAdapter",
+          "packages/@dvt/observability/src/contracts/IObservability.ts#IManagedObservability",
+          "packages/@dvt/observability/src/noopObservability.ts#createNoopObservability",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#OpenTelemetryTraces",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#OpenTelemetrySpanAdapter",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#ensureOpenTelemetryContextManager",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#contextManagerInitialized",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#runWithManagedSpan",
+          "packages/@dvt/observability-otel/src/OpenTelemetryTraces.ts#isPromiseLike",
+          "packages/@dvt/observability-otel/src/OtelObservability.ts#OtelObservability",
+          "packages/@dvt/observability-otel/src/OtelObservability.ts#createOtlpExporter",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#TRACE_ATTRIBUTE_KEYS",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#MAX_TRACE_ATTRIBUTE_VALUE_LENGTH",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#STABLE_SPAN_NAME",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#SAFE_EXCEPTION_TYPE",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#ALLOWED_RESOURCE_ATTRIBUTE_KEYS",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#normalizeSpanName",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#traceContextAttributes",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#sanitizeTraceAttributes",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#sanitizeTraceAttribute",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#resolveExceptionType",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#parseResourceAttributes",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#normalizeResourceValue",
+          "packages/@dvt/observability-otel/src/otelTracePolicy.ts#resolveTraceEndpoint"
+        ],
+        "normalizedRailName": "exportobservabilitytoopentelemetry",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "0130acb85c3f8870d12d9e3d1bd3d1000c83e51907ddb94820e1cebe9bfcd7db",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/observability/src/contracts/IObservability.ts",
+          "packages/@dvt/observability/src/noopObservability.ts",
+          "packages/@dvt/observability-otel/package.json",
+          "packages/@dvt/observability-otel/README.md",
+          "packages/@dvt/observability-otel/src/**",
+          "packages/@dvt/observability-otel/test/**",
+          "packages/@dvt/adapter-temporal/src/ObservedTemporalAdapter.ts",
+          "packages/@dvt/adapter-temporal/test/ObservedTemporalAdapter.test.ts",
+          "apps/api/src/app.ts",
+          "apps/api/src/plugins/observability.ts",
+          "apps/api/src/entrypoints/http/startRunRoute.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimePlanRoutes.ts",
+          "apps/api/src/entrypoints/http/protectedRuntimeRouteDependencies.ts",
+          "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
+          "apps/api/test/app.test.ts",
+          "apps/api/test/plugins/observability.test.ts",
+          "apps/api/test/entrypoints/http/startRunRoute.authAndSuccess.test.ts",
+          "apps/api/test/entrypoints/http/startRunRoute.test.support.ts",
+          "apps/api/test/integration/startRunOpenTelemetry.integration.support.ts",
+          "apps/api/test/integration/startRunOpenTelemetry.integration.test.ts",
+          "apps/api/test/modules/providerAdapters/createTemporalProviderAdapterFactory.test.ts",
+          "apps/api/package.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**",
+          "apps/web/**"
+        ]
+      },
+      "createdAt": "2026-08-03T12:13:10.222Z"
     }
   ]
 }

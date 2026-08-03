@@ -3,8 +3,8 @@ import type {
   IGauge,
   IHistogram,
   ILogs,
+  IManagedObservability,
   IMetrics,
-  IObservability,
   ISpan,
   ITraces,
   LogEntry,
@@ -101,13 +101,16 @@ class NoopLogs implements ILogs {
   }
 }
 
-export function createNoopObservability(): IObservability {
+export function createNoopObservability(): IManagedObservability {
   return {
     metrics: new NoopMetrics(),
     traces: new NoopTraces(),
     logs: new NoopLogs(),
     withContext<T>(_ctx: ObservabilityContext, fn: () => T): T {
       return fn();
+    },
+    shutdown(): Promise<void> {
+      return Promise.resolve();
     },
   };
 }

@@ -1,3 +1,5 @@
+import type { IObservability } from '@dvt/observability';
+
 import type { IStartRunTargetAdapterRegistry } from '../../../src/application/ports/IStartRunTargetAdapterRegistry.js';
 import { startRunRoute } from '../../../src/entrypoints/http/startRunRoute.js';
 
@@ -110,6 +112,7 @@ type InvokeRouteArgs = {
   readonly facade?: FacadeDouble;
   readonly registry?: IStartRunTargetAdapterRegistry;
   readonly runIdGenerator?: () => string;
+  readonly observability?: IObservability;
 };
 
 export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
@@ -132,6 +135,7 @@ export async function invokeStartRunRoute(args: InvokeRouteArgs = {}): Promise<{
 
   const routeDependencies = {
     ...(args.registry === undefined ? {} : { adapterRegistry: args.registry }),
+    ...(args.observability === undefined ? {} : { observability: args.observability }),
     runIdGenerator: args.runIdGenerator ?? (() => VALID_GENERATED_RUN_ID),
   };
 

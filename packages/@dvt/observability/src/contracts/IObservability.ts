@@ -62,3 +62,7 @@ export interface IObservability {
 
   withContext<T>(ctx: ObservabilityContext, fn: () => T): T;
 }
+
+export interface IManagedObservability extends IObservability {
+  shutdown(): Promise<void>;
+}

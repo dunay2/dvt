@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { createNoopObservability, type ISpan } from '@dvt/observability';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   httpError,
@@ -11,6 +12,69 @@ import {
 } from './startRunRoute.test.support.js';
 
 describe('startRunRoute auth and success outcomes', () => {
+  it('bounds an accepted request with the governed StartRun HTTP span', async () => {
+    const span = createTrackingSpan();
+    const withSpan = vi.fn((_name, _options, run) => run(span));
+
+    const { reply } = await invokeStartRunRoute({
+      observability: {
+        ...createNoopObservability(),
+        traces: {
+          ...createNoopObservability().traces,
+          withSpan,
+        },
+      },
+    });
+
+    expect(reply.statusCode).toBe(202);
+    expect(withSpan).toHaveBeenCalledWith(
+      'api.startRun',
+      {
+        attributes: {
+          method: 'POST',
+          operation: 'startRun',
+          route: '/runs/start',
+        },
+      },
+      expect.any(Function)
+    );
+    expect(span.setAttribute).toHaveBeenCalledWith('provider', 'temporal');
+    expect(span.setAttributes).toHaveBeenCalledWith({
+      'http.response.status_code': 202,
+      outcome: 'accepted',
+    });
+    expect(span.setStatus).toHaveBeenCalledWith('ok');
+  });
+
+  it('records authorization rejection on the HTTP span without treating it as a runtime failure', async () => {
+    const span = createTrackingSpan();
+
+    const { reply } = await invokeStartRunRoute({
+      facade: {
+        async execute() {
+          return okResult({
+            kind: 'unauthorized' as const,
+            reason: 'TENANT_NOT_GRANTED' as const,
+          });
+        },
+      },
+      observability: {
+        ...createNoopObservability(),
+        traces: {
+          ...createNoopObservability().traces,
+          withSpan: (_name, _options, run) => run(span),
+        },
+      },
+    });
+
+    expect(reply.statusCode).toBe(403);
+    expect(span.setAttributes).toHaveBeenCalledWith({
+      'http.response.status_code': 403,
+      outcome: 'rejected',
+    });
+    expect(span.setStatus).toHaveBeenCalledWith('ok');
+  });
+
   it('passes normalized command and requested scope', async () => {
     let received: Record<string, unknown> | undefined;
     const facade = {
@@ -152,3 +216,13 @@ describe('startRunRoute auth and success outcomes', () => {
     });
   });
 });
+
+function createTrackingSpan(): ISpan {
+  return {
+    end: vi.fn(),
+    recordException: vi.fn(),
+    setAttribute: vi.fn(),
+    setAttributes: vi.fn(),
+    setStatus: vi.fn(),
+  };
+}

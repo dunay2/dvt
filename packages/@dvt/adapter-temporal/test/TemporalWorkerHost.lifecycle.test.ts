@@ -185,6 +185,7 @@ describe('TemporalWorkerHost lifecycle', () => {
       taskQueue: 'q-main',
       identity: 'worker-a',
       workflowsPath: '/tmp/workflows.js',
+      maxHeartbeatThrottleInterval: '1s',
     });
 
     await host.shutdown();

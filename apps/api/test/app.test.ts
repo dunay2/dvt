@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { URL } from 'node:url';
 
-import { describe, expect, it } from 'vitest';
+import { OtelObservability } from '@dvt/observability-otel';
+import { describe, expect, it, vi } from 'vitest';
 
 import { HTTP_STATUS } from '../src/routes/healthContract.js';
 
@@ -84,5 +85,22 @@ describe('buildApp composition root smoke', () => {
       expect(res.headers['access-control-allow-headers']).toContain('x-tenant-id');
       expect(res.headers['access-control-allow-headers']).toContain('x-project-id');
     });
+  });
+
+  it('shuts down the managed trace exporter when the application closes', async () => {
+    const shutdownSpy = vi.spyOn(OtelObservability.prototype, 'shutdown');
+    let observability: OtelObservability | undefined;
+
+    await withAppEnv({ ...BASE_APP_ENV, OBS_ENABLED: 'true' }, async ({ ctx }) => {
+      observability = ctx.observability as OtelObservability;
+    });
+
+    const shutdownCallsAtClose = shutdownSpy.mock.calls.length;
+    if (shutdownCallsAtClose === 0) {
+      await observability?.shutdown();
+    }
+    shutdownSpy.mockRestore();
+
+    expect(shutdownCallsAtClose).toBe(1);
   });
 });

@@ -17,6 +17,7 @@
     "test:ci": "vitest run --config vitest.config.ts",
     "pretest:integration": "pnpm --filter \"dvt-api^...\" build && pnpm build",
     "test:integration": "vitest run --config vitest.integration.config.ts",
+    "proof:start-run-otel": "vitest run --config vitest.integration.config.ts test/integration/startRunOpenTelemetry.integration.test.ts",
     "test:arch": "depcruise src --config .dependency-cruiser.cjs"
   },
   "dependencies": {
@@ -45,6 +46,7 @@
     "zod": "^3.0.0"
   },
   "devDependencies": {
+    "@opentelemetry/sdk-trace-base": "^2.10.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^26.1.1",
     "@types/pg": "^8.11.10",
