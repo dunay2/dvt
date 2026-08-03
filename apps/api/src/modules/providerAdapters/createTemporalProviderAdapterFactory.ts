@@ -21,8 +21,7 @@ export function createTemporalProviderAdapterFactory(): ProviderAdapterFactory {
         TemporalAdapter,
         TemporalClientManager,
         loadTemporalAdapterConfig,
-      } =
-        await import('@dvt/adapter-temporal');
+      } = await import('@dvt/adapter-temporal');
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_ADDRESS: context.env.TEMPORAL_ADDRESS,
         TEMPORAL_NAMESPACE: context.env.TEMPORAL_NAMESPACE,
