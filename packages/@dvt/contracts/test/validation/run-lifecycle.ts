@@ -129,5 +129,25 @@ export function registerValidationRunLifecycleSuite(): void {
         })
       ).toThrow(ContractValidationError);
     });
+
+    it('accepts a cancellation submission audit fact without lifecycle semantics', () => {
+      const event = parseRunEventWrite({
+        eventId: 'evt-cancel-submitted',
+        eventType: 'RunCancelSubmitted',
+        payloadVersion: 1,
+        emittedAt: '2026-08-02T03:45:00.000Z',
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'prod',
+        runId: 'run-1',
+        planId: 'plan-1',
+        planVersion: '1.0.0',
+        engineAttemptId: 1,
+        logicalAttemptId: 1,
+        idempotencyKey: 'cancel-submitted',
+      });
+
+      expect(event.eventType).toBe('RunCancelSubmitted');
+    });
   });
 }

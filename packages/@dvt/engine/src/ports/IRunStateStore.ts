@@ -16,6 +16,7 @@ export type EventType =
   | 'RunStarted'
   | 'RunPaused'
   | 'RunResumed'
+  | 'RunCancelSubmitted'
   | 'RunCancelRequested'
   | 'RunCancelled'
   | 'RunCompleted'

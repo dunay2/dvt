@@ -125,6 +125,11 @@ const RunResumedEventWriteSchema = RunEventCommonSchema.extend({
   payload: EmptyEventPayloadSchema.optional(),
 }).strict();
 
+const RunCancelSubmittedEventWriteSchema = RunEventCommonSchema.extend({
+  eventType: z.literal('RunCancelSubmitted'),
+  payload: EmptyEventPayloadSchema.optional(),
+}).strict();
+
 const RunCancelRequestedEventWriteSchema = RunEventCommonSchema.extend({
   eventType: z.literal('RunCancelRequested'),
   payload: EmptyEventPayloadSchema.optional(),
@@ -174,6 +179,7 @@ export const RunEventWriteSchema = z.discriminatedUnion('eventType', [
   RunStartedEventWriteSchema,
   RunPausedEventWriteSchema,
   RunResumedEventWriteSchema,
+  RunCancelSubmittedEventWriteSchema,
   RunCancelRequestedEventWriteSchema,
   RunCancelledEventWriteSchema,
   RunCompletedEventWriteSchema,
@@ -198,6 +204,10 @@ export const RunEventRecordSchema = z.discriminatedUnion('eventType', [
     persistedAt: IsoUtcStringSchema,
   }),
   RunResumedEventWriteSchema.extend({
+    runSeq: z.number().int().positive(),
+    persistedAt: IsoUtcStringSchema,
+  }),
+  RunCancelSubmittedEventWriteSchema.extend({
     runSeq: z.number().int().positive(),
     persistedAt: IsoUtcStringSchema,
   }),
