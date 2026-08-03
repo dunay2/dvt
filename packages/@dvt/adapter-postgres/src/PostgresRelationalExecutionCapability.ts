@@ -10,11 +10,11 @@
 import { asIsoUtcString, asNonBlankString } from '@dvt/contracts';
 import type { ExecutionPlan, MaterializationEvidence } from '@dvt/contracts';
 import type { Pool } from 'pg';
-import { Pool as PostgresPool } from 'pg';
 
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
 import { resolvePostgresConnectionString } from './PostgresAdapterConnectionString.js';
 import { POSTGRES_ADAPTER_RUNTIME_CONSTANTS as C } from './PostgresAdapterConstants.js';
+import { createObservedPostgresPool } from './PostgresPoolErrorPolicy.js';
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 
 export interface RuntimeStepExecutionContext {
@@ -101,7 +101,7 @@ export class PostgresRelationalExecutionCapability {
       this.ownsPool = false;
     } else {
       const connectionString = resolvePostgresConnectionString(config.connectionString);
-      this.pool = new PostgresPool({
+      this.pool = createObservedPostgresPool({
         connectionString,
         statement_timeout: statementTimeoutMs,
         query_timeout:

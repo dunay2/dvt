@@ -71,6 +71,12 @@ async function startSupportedRuntimeProofLifecycle(profile) {
     );
   };
 
+  const restartOutbox = async () => {
+    await stopProcess(outboxProcess);
+    outboxProcess = null;
+    await startOutbox();
+  };
+
   try {
     await resetPostgresProofStack();
     await seedLocalPostgresProofData(databaseUrl);
@@ -147,6 +153,7 @@ async function startSupportedRuntimeProofLifecycle(profile) {
         outboxProcess = null;
       },
       startOutbox,
+      restartOutbox,
       stopPostgres: () => {
         stopPostgresContainer();
         postgresStopped = true;

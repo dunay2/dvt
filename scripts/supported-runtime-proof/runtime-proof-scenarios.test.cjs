@@ -4,7 +4,11 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 
 const { SUPPORTED_RUNTIME_PROOF_PROFILE } = require('./runtime-proof-profile.cjs');
-const { startAndWaitForCompletion, waitForCondition } = require('./runtime-proof-scenarios.cjs');
+const {
+  recoverPostgresRuntime,
+  startAndWaitForCompletion,
+  waitForCondition,
+} = require('./runtime-proof-scenarios.cjs');
 
 test('startAndWaitForCompletion follows the protected command with the authoritative query', async () => {
   let reads = 0;
@@ -36,4 +40,17 @@ test('waitForCondition reports the bounded condition name on timeout', async () 
     waitForCondition(async () => false, 10, 'outbox recovery', 1),
     /outbox recovery did not complete within 10ms/
   );
+});
+
+test('recoverPostgresRuntime restores database readiness before replacing the outbox host', async () => {
+  const calls = [];
+  const lifecycle = {
+    startPostgres: () => calls.push('start-postgres'),
+    waitForApiDatabase: async () => calls.push('api-ready'),
+    restartOutbox: async () => calls.push('restart-outbox'),
+  };
+
+  await recoverPostgresRuntime(lifecycle);
+
+  assert.deepEqual(calls, ['start-postgres', 'api-ready', 'restart-outbox']);
 });

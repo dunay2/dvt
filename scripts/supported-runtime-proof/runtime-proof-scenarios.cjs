@@ -80,8 +80,7 @@ async function executeRuntimeProofIteration(profile, options = {}) {
     }
 
     const postgresRecoveryStartedAt = Date.now();
-    lifecycle.startPostgres();
-    await lifecycle.waitForApiDatabase();
+    await recoverPostgresRuntime(lifecycle);
     const recoveryRun = await startAndWaitForCompletion(lifecycle.api, startRequest, profile);
     acceptedRuns.push(recoveryRun);
     startLatencies.push(recoveryRun.startLatencyMs);
@@ -144,6 +143,12 @@ async function executeRuntimeProofIteration(profile, options = {}) {
   } finally {
     await lifecycle.close();
   }
+}
+
+async function recoverPostgresRuntime(lifecycle) {
+  lifecycle.startPostgres();
+  await lifecycle.waitForApiDatabase();
+  await lifecycle.restartOutbox();
 }
 
 async function preparePersistedPlan(api, profile) {
@@ -229,6 +234,7 @@ function sleep(milliseconds) {
 
 module.exports = {
   executeRuntimeProofIteration,
+  recoverPostgresRuntime,
   startAndWaitForCompletion,
   waitForCondition,
 };

@@ -6,6 +6,7 @@ import type { OutboxWorkerRuntimeLogger } from '../../src/runtime/OutboxWorkerRu
 class RecordingOwnershipClient {
   public readonly queries: Array<{ sql: string; params?: unknown[] }> = [];
   public readonly releaseCalls: boolean[] = [];
+  private readonly errorListeners: Array<(error: Error) => void> = [];
 
   constructor(
     private readonly lockOutcomes: Array<boolean | Error>,
@@ -44,6 +45,14 @@ class RecordingOwnershipClient {
 
   release(destroy?: boolean): void {
     this.releaseCalls.push(Boolean(destroy));
+  }
+
+  on(event: 'error', listener: (error: Error) => void): void {
+    if (event === 'error') this.errorListeners.push(listener);
+  }
+
+  emitError(error: Error): void {
+    for (const listener of this.errorListeners) listener(error);
   }
 }
 
@@ -207,6 +216,20 @@ describe('PgShardOwnershipGate', () => {
     await expect(() =>
       lease?.waitForLoss == null ? Promise.resolve() : lease.waitForLoss()
     ).rejects.toThrow(/OUTBOX_OWNERSHIP_LOST/);
+    expect(harness.client.releaseCalls).toEqual([true]);
+    expect(harness.releaseLeaseCalls).toBe(1);
+  });
+
+  it('reports ownership loss when the dedicated client emits an asynchronous error', async () => {
+    const harness = createGateHarness({
+      shardIds: [0],
+      heartbeatIntervalMs: 60_000,
+    });
+
+    const lease = await harness.gate.acquire(new globalThis.AbortController().signal);
+    harness.client.emitError(new Error('synthetic connection interruption'));
+
+    await expect(() => lease?.waitForLoss?.()).rejects.toThrow(/OUTBOX_OWNERSHIP_LOST/);
     expect(harness.client.releaseCalls).toEqual([true]);
     expect(harness.releaseLeaseCalls).toBe(1);
   });

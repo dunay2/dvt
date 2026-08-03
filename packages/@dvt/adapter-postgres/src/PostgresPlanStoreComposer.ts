@@ -2,7 +2,6 @@
  * Owned concern: compose the scoped Postgres plan-store adapter internals.
  */
 import type { Pool } from 'pg';
-import { Pool as PostgresPool } from 'pg';
 
 import { PostgresPlanAdmissionRepository } from './PostgresPlanStore.admission-repository.js';
 import { PostgresPlanExecutabilityRepository } from './PostgresPlanStore.executability-repository.js';
@@ -10,6 +9,7 @@ import { PostgresExecutableBlobRepository } from './PostgresPlanStore.executable
 import { PostgresPlanRecordRepository } from './PostgresPlanStore.plan-record-repository.js';
 import { PostgresPlanStoreSchemaManager } from './PostgresPlanStore.schema-manager.js';
 import { PostgresPlanStoreTxRunner } from './PostgresPlanStore.tx.js';
+import { createObservedPostgresPool } from './PostgresPoolErrorPolicy.js';
 import { normalizeSchema } from './sqlUtils.js';
 
 export interface PostgresPlanStoreComposerConfig {
@@ -63,7 +63,7 @@ function resolvePool(
     return { pool: config.pool, ownsPool: false };
   }
 
-  const pool = new PostgresPool({
+  const pool = createObservedPostgresPool({
     connectionString:
       config.connectionString ??
       process.env['DVT_PG_URL'] ??

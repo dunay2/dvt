@@ -5,9 +5,9 @@
  */
 import { randomUUID } from 'node:crypto';
 
+import { createObservedPostgresPool } from '@dvt/adapter-postgres';
 import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
-import { Pool } from 'pg';
 import type { Logger } from 'pino';
 
 import { getPgPool } from '../db/pool.js';
@@ -170,7 +170,7 @@ export async function buildProtectedRuntimeModule(
     dbtBundleStore: storageRuntime.dbtBundleStore,
     dbtExecutionTargetResolver,
   });
-  const runControlLockPool = new Pool({
+  const runControlLockPool = createObservedPostgresPool({
     connectionString: databaseUrl,
     max: RUN_CONTROL_LOCK_POOL_SIZE,
     idleTimeoutMillis: 30_000,
