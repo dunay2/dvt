@@ -104,6 +104,8 @@ mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/web-api-mock-runtime-hardcut-plan-20260510.md
 componentGuides:
+  - docs/architecture/components/web/f04-frontend-data-boundary-technical-manual-20260404.md
+  - docs/guides/f04-frontend-data-boundary-user-manual-20260404.md
   - docs/architecture/components/web/workspace/mock-runtime-hardcut-component.md
   - docs/architecture/components/web/workspace/mock-runtime-hardcut-user-stories.md
   - docs/planning/reviews/20260510-web-api-integration-gap-review.md
@@ -124,6 +126,15 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/workspace/mock-runtime-hardcut-user-stories.md
   - docs/architecture/components/web/workspace/workspace-port-decomposition-component.md
   - docs/architecture/components/web/workspace/workspace-port-decomposition-user-stories.md
+  - docs/architecture/components/web/f04-frontend-data-boundary-technical-manual-20260404.md
+  - docs/guides/f04-frontend-data-boundary-user-manual-20260404.md
+  - docs/architecture/components/web/runs/user-stories-runs.md
+  - docs/architecture/components/web/runs/frontend-runtime-contract-user-manual.md
+  - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
+  - docs/architecture/components/web/appshell/effective-workspace-context-component.md
+  - docs/architecture/components/web/appshell/effective-workspace-context-user-stories.md
+  - docs/architecture/components/web/appshell/shell-baseline-target-guide.md
   - docs/planning/reviews/20260510-web-api-integration-gap-review.md
   - buzon/**
   - apps/web/src/app/bootstrap/AuthRouteGate.tsx

@@ -92,12 +92,12 @@ flowchart LR
 | `422`        | invalid payload or request constraints  | validation feedback and correction action |
 | `5xx`        | runtime service unavailable or degraded | service degradation message and retry     |
 
-## Mock And API Modes
+## Runtime And Test Boundaries
 
-- API mode uses governed runtime contract routes.
-- Mock mode remains available for local development.
-- mode selection is an implementation concern; users interact with one run flow
-  model and one route grammar.
+- Product runtime uses governed API contract routes.
+- Local and automated tests inject explicit port doubles.
+- Users interact with one run flow model and one route grammar; no runtime
+  transport selector is exposed.
 
 ## What Users Gain
 

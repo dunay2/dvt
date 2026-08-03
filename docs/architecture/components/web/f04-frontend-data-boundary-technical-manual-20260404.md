@@ -2,7 +2,7 @@
 title: F-04 Frontend Data Boundary Technical Manual
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-08-03
 planning_type: architecture
 ---
 
@@ -14,7 +14,7 @@ Define the technical boundary for frontend data access in the web app using comp
 
 ## Runtime Model
 
-- Composition root resolves mode and wires services once.
+- Composition root wires the API client and typed service ports once.
 - UI modules consume ports/hooks, not transport-specific clients.
 - State is split by concern (`session`, `uiLayout`, `execution`, `canvasInteraction`).
 
@@ -28,7 +28,7 @@ flowchart TB
 
 ## Ownership Rules
 
-1. `resolveDataSource()` is allowed only in composition-root/config ownership modules.
+1. Product runtime has one API-backed data authority; transport selection is not a frontend concern.
 2. Runtime query keys must come from `queryKeys.ts`.
 3. Runtime modules must not import removed aggregate store surfaces.
 4. Feature views must depend on ports (`app/ports/*`) and shared services from context.
@@ -38,7 +38,8 @@ flowchart TB
 - `queryKey` inline arrays are blocked by architecture test.
 - direct import of removed aggregate store surfaces in runtime source is blocked
   by architecture test.
-- mode-resolution leakage outside owner modules is blocked by architecture test.
+- reintroduction of a data-source mode or runtime transport singleton is blocked
+  by architecture test.
 - `startRun` must use `ExecutionPlan.planRef`; runtime start is rejected in UI when `planRef` is missing.
 
 ## Query-Key Ownership And Invalidation Baseline
@@ -74,7 +75,7 @@ The runtime boundary is fail-closed:
    - reopen the plan modal.
 3. If `planRef` exists, start-run continues through `IRunsPort`.
 
-Mock mode may still use deterministic fixture data, but the API path must never
+Tests may inject deterministic port doubles, but product runtime must never
 reconstruct `uri`, `sha256`, or version fields client-side.
 
 This keeps runtime behavior aligned with the engine contract boundary where run
@@ -84,7 +85,8 @@ execution is `PlanRef`-driven.
 
 - `unit`: service adapters, selectors, mappers.
 - `integration`: view + hook behavior per route.
-- `architecture`: boundary checks for imports/query keys/mode ownership.
+- `architecture`: boundary checks for imports, query keys, API-only product
+  composition, and explicit test-double injection.
 
 ## Refactor Guidance (>200 line files)
 

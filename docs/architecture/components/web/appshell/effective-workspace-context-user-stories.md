@@ -27,7 +27,7 @@ These stories cover protected web API-mode workspace context resolution.
 
 ### EWC-1: Resolve Granted Workspace Before Route Render
 
-As an operator opening Canvas in API mode, I want the application to load the
+As an operator opening Canvas, I want the application to load the
 workspace context granted by the backend before the route renders, so the UI
 does not display a tenant/project/environment that the backend has not granted.
 

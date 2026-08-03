@@ -406,7 +406,7 @@ flowchart TD
 - positive: route ownership and error posture become explicit
 - positive: docs and code evolve against one runtime route baseline
 - cost: strict migration work in service tests and route consumers
-- cost: short-term refactor overhead while preserving mock mode behavior
+- cost: short-term refactor overhead while preserving explicit test-double coverage
 
 ## Handoff Chain
 

@@ -34,14 +34,14 @@ admin RBAC truth, or file write semantics.
 | `IWorkspaceFilesQueryPort`         | web query port         | `ListWorkspaceFiles`, `GetWorkspaceFileContent`                                              | List and read workspace files through existing protected API reads.                                                     |
 | `IWorkspaceDiffQueryPort`          | web query port         | `GetWorkspaceDiffChanges`                                                                    | Return authoritative diff changes through `GET /workspace/diff/changes`.                                                |
 | `IWorkspacePluginCatalogQueryPort` | web query port         | `ListWorkspacePlugins`                                                                       | Return backend-published plugin catalog/readiness when the backend rail exists; presentation registry remains separate. |
-| `IWorkspaceAdminReadPort`          | web query port         | `ListAdminRoles`, `ListAdminAuditLog`                                                        | Return admin roles and audit read models when backend rails exist; unavailable in API mode until then.                  |
+| `IWorkspaceAdminReadPort`          | web query port         | `ListAdminRoles`, `ListAdminAuditLog`                                                        | Return admin roles and audit read models when backend rails exist; unavailable in product runtime until then.           |
 | `IWarehouseSourceImportPort`       | web command/query port | `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects`, `ImportWarehouseSources` | Discover provider-neutral source objects and import supported objects through protected runtime source-import rails.    |
 | `IWorkspaceFileContentCommandPort` | web command port       | `SaveWorkspaceFileContent`                                                                   | Persist file content through the accepted scoped backend command.                                                       |
 
 ## Invariants
 
 - A web view depends only on the smallest port matching the capability it uses.
-- API mode must not expose callable methods for routes that do not exist.
+- Product runtime must not expose callable methods for routes that do not exist.
 - Missing backend rails fail closed before transport.
 - Test-only port doubles may support local behavior only inside explicit test
   harnesses.
