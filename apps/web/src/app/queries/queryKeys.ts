@@ -19,11 +19,8 @@ export const queryKeys = {
   // Workspace
   // -------------------------------------------------------------------------
   workspace: {
-    graph: (workspaceLayoutKey: string) => ['workspace', 'graph', workspaceLayoutKey] as const,
     graphDraft: (workspaceLayoutKey: string) =>
       ['workspace', 'graph-draft', workspaceLayoutKey] as const,
-    graphDraftTransport: (workspaceLayoutKey: string) =>
-      ['workspace', 'graph-draft-transport', workspaceLayoutKey] as const,
     graphForView: (viewId: string) => ['workspace', 'graph', viewId] as const,
     dbtProjectGraph: (
       tenantId: string,
@@ -61,7 +58,6 @@ export const queryKeys = {
       ['runs', 'snapshot', workspaceLayoutKey, runId] as const,
     eventFeed: (workspaceLayoutKey: string, runId: string | undefined) =>
       ['runs', 'event-feed', workspaceLayoutKey, runId] as const,
-    list: (viewId: string) => ['runs', 'list', viewId] as const,
   },
 
   // -------------------------------------------------------------------------

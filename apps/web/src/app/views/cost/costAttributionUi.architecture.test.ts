@@ -20,7 +20,6 @@ describe('cost attribution UI architecture', () => {
     expect(useCostData).toContain('useCostAttributionSummaryQuery');
     expect(useCostData).toContain('buildCostViewModel(attributionSummaryQuery.data ?? null)');
     expect(useCostData).not.toContain('useWorkspaceGraphForViewQuery');
-    expect(useCostData).not.toContain('useRunsListForViewQuery');
     expect(useCostData).not.toContain('lastCost');
 
     expect(costQueries).toContain('useCostAttributionSummaryPort');

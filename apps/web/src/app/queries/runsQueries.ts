@@ -32,15 +32,6 @@ function getRunSnapshotRefreshInterval(
   return getRunStatusRefreshInterval(query.state.data?.status);
 }
 
-export function useRunsListForViewQuery(viewId: string) {
-  const runsService = useRunsService();
-  return useQuery({
-    queryKey: queryKeys.runs.list(viewId),
-    queryFn: () => runsService.listRunSummaries(),
-    refetchInterval: getRunSummariesRefreshInterval,
-  });
-}
-
 export function useScopedRunSummariesQuery(workspaceLayoutKey: string) {
   const runsService = useRunsService();
   return useQuery({
