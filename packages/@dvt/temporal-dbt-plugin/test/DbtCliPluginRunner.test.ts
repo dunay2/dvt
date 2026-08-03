@@ -333,6 +333,32 @@ describe('DbtCliPluginRunner', () => {
     }
   });
 
+  it('does not materialize runtime resources when execution is already cancelled', async () => {
+    const abortController = new globalThis.AbortController();
+    const cancellation = Object.assign(new Error('The DBT command was cancelled.'), {
+      name: 'AbortError',
+    });
+    abortController.abort(cancellation);
+    const materializeProject = vi.fn();
+    const materializeRuntimeProfile = vi.fn();
+    const runCommand = vi.fn();
+    const runner = new DbtCliPluginRunner({
+      bundleReader: {
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
+      },
+      materializeProject,
+      materializeRuntimeProfile,
+      runCommand,
+      getCancellationSignal: () => abortController.signal,
+      dbtBin: 'dbt',
+    });
+
+    await expect(runner.execute(INPUT)).rejects.toMatchObject({ name: 'AbortError' });
+    expect(materializeProject).not.toHaveBeenCalled();
+    expect(materializeRuntimeProfile).not.toHaveBeenCalled();
+    expect(runCommand).not.toHaveBeenCalled();
+  });
+
   it('materializes a restrictive profile and erases both memory and disk resources', async () => {
     const workdirRoot = await mkdtemp(join(tmpdir(), 'dvt-dbt-runtime-profile-test-'));
     const sensitiveBytes = Buffer.from(
@@ -356,6 +382,24 @@ describe('DbtCliPluginRunner', () => {
 
       await profile.cleanup();
       await expect(stat(profile.profilesDir)).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      await rm(workdirRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('erases resolved profile bytes when temporary directory setup fails', async () => {
+    const workdirRoot = await mkdtemp(join(tmpdir(), 'dvt-dbt-runtime-profile-failure-test-'));
+    const blockedRoot = join(workdirRoot, 'not-a-directory');
+    const sensitiveBytes = Buffer.from('password: secret\n');
+    await writeFile(blockedRoot, 'occupied');
+    const materialize = createDbtRuntimeProfileMaterializer({
+      resolver: { resolve: vi.fn(async () => ({ profilesYaml: sensitiveBytes })) },
+      workdirRoot: blockedRoot,
+    });
+
+    try {
+      await expect(materialize(INPUT)).rejects.toThrow();
+      expect([...sensitiveBytes]).toEqual(new Array(sensitiveBytes.length).fill(0));
     } finally {
       await rm(workdirRoot, { recursive: true, force: true });
     }

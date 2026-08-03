@@ -46,19 +46,25 @@ async function materializeDbtRuntimeProfile(
     environmentId: input.runExecutionContext.environmentId,
   });
 
-  await mkdir(options.workdirRoot, { recursive: true, mode: 0o700 });
-  const profilesDir = await mkdtemp(join(options.workdirRoot, 'dbt-profile-'));
+  let profilesDir: string | undefined;
 
   try {
-    await chmod(profilesDir, 0o700);
-    await writeFile(join(profilesDir, 'profiles.yml'), resolution.profilesYaml, { mode: 0o600 });
-    await chmod(join(profilesDir, 'profiles.yml'), 0o600);
+    await mkdir(options.workdirRoot, { recursive: true, mode: 0o700 });
+    const materializedProfilesDir = await mkdtemp(join(options.workdirRoot, 'dbt-profile-'));
+    profilesDir = materializedProfilesDir;
+    await chmod(materializedProfilesDir, 0o700);
+    await writeFile(join(materializedProfilesDir, 'profiles.yml'), resolution.profilesYaml, {
+      mode: 0o600,
+    });
+    await chmod(join(materializedProfilesDir, 'profiles.yml'), 0o600);
     return {
-      profilesDir,
-      cleanup: () => rm(profilesDir, { recursive: true, force: true }),
+      profilesDir: materializedProfilesDir,
+      cleanup: () => rm(materializedProfilesDir, { recursive: true, force: true }),
     };
   } catch (error) {
-    await rm(profilesDir, { recursive: true, force: true });
+    if (profilesDir !== undefined) {
+      await rm(profilesDir, { recursive: true, force: true });
+    }
     throw error;
   } finally {
     resolution.profilesYaml.fill(0);

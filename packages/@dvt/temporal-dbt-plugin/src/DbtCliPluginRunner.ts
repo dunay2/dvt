@@ -70,9 +70,19 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
   }
 
   public async execute(input: DbtPluginExecutionInput): Promise<StepResult> {
+    const cancellationSignal = this.getCancellationSignal();
+    const initialCancellation = asAbortedSignal(cancellationSignal);
+    if (initialCancellation !== undefined) {
+      return this.completeCancellation(input.step.stepId, initialCancellation, []);
+    }
+
     const project = await this.materialize(input);
     if ('failure' in project) {
       return project.failure;
+    }
+    const projectCancellation = asAbortedSignal(cancellationSignal);
+    if (projectCancellation !== undefined) {
+      return this.completeCancellation(input.step.stepId, projectCancellation, [project.resource]);
     }
 
     const profile = await this.materializeProfile(input);
@@ -80,7 +90,7 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
       return this.completeWithCleanup(input.step.stepId, profile.failure, [project.resource]);
     }
 
-    return this.runWithResources(input, project.resource, profile.resource);
+    return this.runWithResources(input, project.resource, profile.resource, cancellationSignal);
   }
 
   private async materialize(
@@ -122,9 +132,9 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
   private async runWithResources(
     input: DbtPluginExecutionInput,
     project: MaterializedDbtProject,
-    profile: MaterializedDbtRuntimeProfile
+    profile: MaterializedDbtRuntimeProfile,
+    cancellationSignal: globalThis.AbortSignal | undefined
   ): Promise<StepResult> {
-    const cancellationSignal = this.getCancellationSignal();
     let outcome: DbtCommandOutcome;
     try {
       const args = buildDbtCliArgs(
@@ -173,6 +183,18 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
     return outcome.value;
   }
 
+  private async completeCancellation(
+    stepId: string,
+    signal: globalThis.AbortSignal,
+    resources: readonly { cleanup(): Promise<void> }[]
+  ): Promise<StepResult> {
+    const cleanupFailure = await this.cleanupResources(stepId, resources);
+    if (cleanupFailure !== undefined) {
+      return cleanupFailure;
+    }
+    throw signal.reason ?? new Error('DBT activity was cancelled.');
+  }
+
   private async completeWithCleanup(
     stepId: string,
     result: StepResult,
@@ -194,4 +216,10 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
         )
       : undefined;
   }
+}
+
+function asAbortedSignal(
+  signal: globalThis.AbortSignal | undefined
+): globalThis.AbortSignal | undefined {
+  return signal?.aborted === true ? signal : undefined;
 }
