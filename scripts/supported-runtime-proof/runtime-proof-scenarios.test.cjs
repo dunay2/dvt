@@ -42,15 +42,16 @@ test('waitForCondition reports the bounded condition name on timeout', async () 
   );
 });
 
-test('recoverPostgresRuntime restores database readiness before replacing the outbox host', async () => {
+test('recoverPostgresRuntime restores database readiness before replacing state workers', async () => {
   const calls = [];
   const lifecycle = {
     startPostgres: () => calls.push('start-postgres'),
     waitForApiDatabase: async () => calls.push('api-ready'),
     restartOutbox: async () => calls.push('restart-outbox'),
+    restartProjector: async () => calls.push('restart-projector'),
   };
 
   await recoverPostgresRuntime(lifecycle);
 
-  assert.deepEqual(calls, ['start-postgres', 'api-ready', 'restart-outbox']);
+  assert.deepEqual(calls, ['start-postgres', 'api-ready', 'restart-outbox', 'restart-projector']);
 });

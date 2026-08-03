@@ -36,6 +36,7 @@ async function startSupportedRuntimeProofLifecycle(profile) {
   const scopeEnv = buildScopeEnv(profile.scope);
   const processes = [];
   let outboxProcess = null;
+  let projectorProcess = null;
   let postgresStopped = false;
   let auth = null;
   let temporal = null;
@@ -75,6 +76,33 @@ async function startSupportedRuntimeProofLifecycle(profile) {
     await stopProcess(outboxProcess);
     outboxProcess = null;
     await startOutbox();
+  };
+
+  const startProjector = async () => {
+    if (projectorProcess !== null) return;
+    projectorProcess = spawnProcess(
+      'runtime-proof-projector',
+      ['--filter', 'dvt-projector-worker', 'start'],
+      buildRuntimeProofProjectorEnv({
+        databaseUrl,
+        adminPort: ports.projectorAdmin,
+      })
+    );
+    processes.push(projectorProcess);
+    await waitForUrlOrProcessExit(
+      `http://${host}:${ports.projectorAdmin}/readyz`,
+      (response) => response.statusCode === 200,
+      READY_TIMEOUT_MS,
+      POLL_INTERVAL_MS,
+      'Runtime proof projector worker',
+      projectorProcess
+    );
+  };
+
+  const restartProjector = async () => {
+    await stopProcess(projectorProcess);
+    projectorProcess = null;
+    await startProjector();
   };
 
   try {
@@ -138,23 +166,7 @@ async function startSupportedRuntimeProofLifecycle(profile) {
       temporalWorker
     );
 
-    const projectorProcess = spawnProcess(
-      'runtime-proof-projector',
-      ['--filter', 'dvt-projector-worker', 'start'],
-      buildRuntimeProofProjectorEnv({
-        databaseUrl,
-        adminPort: ports.projectorAdmin,
-      })
-    );
-    processes.push(projectorProcess);
-    await waitForUrlOrProcessExit(
-      `http://${host}:${ports.projectorAdmin}/readyz`,
-      (response) => response.statusCode === 200,
-      READY_TIMEOUT_MS,
-      POLL_INTERVAL_MS,
-      'Runtime proof projector worker',
-      projectorProcess
-    );
+    await startProjector();
 
     eventSink = await startRuntimeProofEventSink();
     await startOutbox();
@@ -172,6 +184,7 @@ async function startSupportedRuntimeProofLifecycle(profile) {
       },
       startOutbox,
       restartOutbox,
+      restartProjector,
       stopPostgres: () => {
         stopPostgresContainer();
         postgresStopped = true;

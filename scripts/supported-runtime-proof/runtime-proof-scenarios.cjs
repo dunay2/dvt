@@ -150,6 +150,7 @@ async function recoverPostgresRuntime(lifecycle) {
   lifecycle.startPostgres();
   await lifecycle.waitForApiDatabase();
   await lifecycle.restartOutbox();
+  await lifecycle.restartProjector();
 }
 
 async function preparePersistedPlan(api, profile) {
