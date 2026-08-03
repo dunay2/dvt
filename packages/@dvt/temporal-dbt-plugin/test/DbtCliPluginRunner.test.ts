@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 import { describe, expect, it, vi } from 'vitest';
 
+import type { DbtCliPluginRunnerOptions } from '../src/DbtCliPluginRunner.js';
 import {
   DbtCliPluginRunner,
   TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
@@ -406,7 +407,7 @@ describe('DbtCliPluginRunner', () => {
   });
 });
 
-function createRuntimeProfileMaterializer() {
+function createRuntimeProfileMaterializer(): DbtCliPluginRunnerOptions['materializeRuntimeProfile'] {
   return vi.fn(async () => ({
     profilesDir: '/tmp/dbt-profile',
     cleanup: vi.fn(async () => undefined),
