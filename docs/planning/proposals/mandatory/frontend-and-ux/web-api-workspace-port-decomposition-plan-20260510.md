@@ -2,7 +2,7 @@
 title: Web API Workspace Port Decomposition Plan
 status: Implemented
 owner: Web / API / Architecture
-last_reviewed: 2026-05-10
+last_reviewed: 2026-08-03
 planning_type: mandatory
 ---
 
@@ -267,20 +267,11 @@ symbols:
     name: AppServicesProvider
     path: apps/web/src/app/services/AppServicesContext.tsx
   - <<: *workspace_port_symbol
-    name: WorkspacePortCapabilities
-    path: apps/web/src/app/services/workspace/workspacePorts.ts
-  - <<: *workspace_port_symbol
     name: WorkspacePorts
-    path: apps/web/src/app/services/workspace/workspacePorts.ts
-  - <<: *workspace_port_symbol
-    name: resolveWorkspacePortCapabilities
     path: apps/web/src/app/services/workspace/workspacePorts.ts
   - <<: *workspace_port_symbol
     name: createWorkspacePorts
     path: apps/web/src/app/services/workspace/workspacePorts.ts
-  - <<: *workspace_port_symbol
-    name: apiWorkspacePortCapabilities
-    path: apps/web/src/app/services/workspace/workspacePorts.api.ts
   - <<: *workspace_port_symbol
     name: isWorkspaceFileNotFoundApiError
     path: apps/web/src/app/services/workspace/workspacePorts.api.ts
@@ -386,9 +377,6 @@ symbols:
     unitTests:
       - apps/web/cypress/e2e/canvas/canvas-preview-run-persisted.cy.ts
       - apps/web/cypress/e2e/canvas/code-workbench-workspace-files.cy.ts
-  - <<: *workspace_port_symbol
-    name: mockWorkspacePortCapabilities
-    path: apps/web/src/app/services/workspace/workspacePorts.mock.ts
   - <<: *workspace_port_symbol
     name: mockConnections
     path: apps/web/src/app/services/workspace/workspacePorts.mock.ts

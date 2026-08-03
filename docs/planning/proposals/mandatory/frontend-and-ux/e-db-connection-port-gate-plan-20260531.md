@@ -2,6 +2,7 @@
 title: E DB Connection Port Gate Plan
 status: Accepted
 date: 2026-05-31
+last_reviewed: 2026-08-03
 owners:
   - Web
 planning_type: mandatory-plan
@@ -11,15 +12,17 @@ planning_type: mandatory-plan
 
 ## Think-First Analysis
 
-Problem summary: the web API workspace port already adapts warehouse connection
-and source-import calls to protected API endpoints, but the Canvas route still
-turns `sourceImportAvailable` into route policy from a transport-level constant.
-That lets route-level state claim source import is open even when runtime plugin
-capabilities disable the dbt source-import contribution.
+Problem summary: the web API workspace port adapts warehouse connection and
+source-import calls to protected API endpoints. The original implementation
+also turned `sourceImportAvailable` into route policy from a transport-level
+constant, allowing route-level state to claim source import was open when
+runtime plugin capabilities disabled the dbt source-import contribution. The
+current hard cut removes that exhausted transport authority.
 
 Root cause: transport reachability and product availability were collapsed into
-one boolean. The workspace port can know that HTTP endpoints exist; the Canvas
-composition root must also account for runtime plugin contribution availability.
+one boolean. Protected endpoint failures already fail closed on the existing
+rails; the Canvas composition root only needs to decide whether an authorized
+runtime source-import contribution is available to the user.
 
 Constraints and invariants:
 
@@ -41,9 +44,10 @@ Options considered:
   plugin contribution is unavailable.
 - Move plugin checks into `workspacePorts.ts`. Rejected: workspace transport
   ports should not depend on plugin presentation registry state.
-- Compose transport availability with runtime source-import contributions inside
-  the Canvas controller environment. Selected: it is the narrow composition-root
-  fix and keeps API transport and plugin contribution ownership separate.
+- Use authorized runtime source-import contributions as the Canvas route gate.
+  Selected and subsequently hard-cut: it keeps product availability in the
+  plugin composition root while protected transport remains behind the existing
+  command/query rails, without a parallel capability boolean.
 
 ## Fowler Opportunity Matrix
 
@@ -54,33 +58,33 @@ Options considered:
 
 ## Component Command/Query Matrix
 
-| Component                                     | CQ role                      | Command/query entry                                                                                                                                                                                                                | Command/query output                                                                                                        | DDD object or read model                                                                                             | Adapter surface                                                                  | Authorization and scope                                                                                                                                   | Proof                                                                                                                                                                                                                                                                                                   |
-| --------------------------------------------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `SYS-WEB-CANVAS-SOURCE-IMPORT-POLICY`         | capability policy consumer   | Reads `sourceImportAvailable` from the workspace source-import port and `SourceImportContribution` from runtime capabilities for `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects`, and `ImportWarehouseSources`. | Emits Canvas route policy `canOpenSourceImport`; no transport call.                                                         | `RuntimeCapabilities` read model and `SourceImportContribution` plugin declaration.                                  | `useCanvasControllerEnvironment`, `useCanvasController`, `CanvasShell`.          | Inherits protected runtime availability; does not grant API authority.                                                                                    | `pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.core.test.tsx`                                                                                                                                                                                                                 |
-| `SYS-WEB-WORKSPACE-SOURCE-IMPORT-PORT-FACADE` | web command/query adapter    | `IWarehouseSourceImportPort.listWarehouseConnections`, `listSourceObjects`, and `importSources`.                                                                                                                                   | Calls scoped protected runtime endpoints for the three accepted rails.                                                      | `WarehouseConnectionCatalog`, `SourceObjectCatalogResponse`, `WorkspaceGraphAuthoringDraft`.                         | `workspacePorts.ts`, `workspacePorts.api.ts`, `ports/workspace.ts`.              | Adds tenant/project/environment query scope from workspace context; backend enforces `workspace:source-import:view` and `workspace:source-import:import`. | `pnpm --filter @dvt/web test -- src/app/services/workspace/workspacePorts.api.test.ts src/app/services/workspace/workspacePorts.imports.test.ts`                                                                                                                                                        |
-| `SYS-WEB-SOURCE-IMPORT-WIZARD`                | UI command/query consumer    | Invokes `IWarehouseSourceImportPort` queries to list connections/source objects and the command to import selected source objects.                                                                                                 | Renders choices and submits `ImportWarehouseSources` input; receives command receipt with imported node IDs and YAML files. | `WarehouseConnection`, `SourceObject`, `ImportSourcesResult`.                                                        | `SourceImportWizard` and `sourceImportWizard/*`.                                 | May only open when Canvas policy allows source import.                                                                                                    | `pnpm --filter @dvt/web test -- src/app/components/SourceImportWizard.test.tsx src/app/components/sourceImportWizard/sourceImportWizardModel.test.ts`                                                                                                                                                   |
-| `SYS-WEB-PLUGIN-SOURCE-IMPORT-CONTRIBUTIONS`  | plugin declaration provider  | Declares source-import options consumed by the Canvas gate and wizard.                                                                                                                                                             | Emits available source-import option declarations; no API authority.                                                        | `SourceImportContribution`.                                                                                          | `plugins/dbt/dbtContributions.ts`, plugin registry.                              | Runtime plugin availability only; cannot bypass backend authorization.                                                                                    | `pnpm --filter @dvt/web test -- src/app/plugins/registry.test.ts src/app/plugins/dbt/dbtContributions.connectionRules.test.ts`                                                                                                                                                                          |
-| `SYS-API-WAREHOUSE-SOURCE-IMPORT-RAILS`       | protected runtime rail owner | `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects`, `ImportWarehouseSources`.                                                                                                                                      | Returns connection/source-object read models or an import receipt after graph/YAML persistence.                             | `WarehouseConnectionCatalog`, `SourceObjectCatalogResponse`, `WorkspaceGraphAuthoringDraft`, `WorkspaceFileContent`. | `warehouseSourceImportRoutes`, use cases, catalog adapter, source YAML services. | `workspace:source-import:view` for reads; `workspace:source-import:import` for import; tenant/project/environment scope from protected runtime request.   | `pnpm --filter dvt-api test -- test/entrypoints/http/warehouseSourceImportRoutes.test.ts test/application/services/warehouseSourceYaml.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.test.ts test/architecture/warehouseSourceImportRails.architecture.test.ts` |
+| Component                                     | CQ role                      | Command/query entry                                                                                                                                                                    | Command/query output                                                                                                        | DDD object or read model                                                                                             | Adapter surface                                                                  | Authorization and scope                                                                                                                                   | Proof                                                                                                                                                                                                                                                                                                   |
+| --------------------------------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SYS-WEB-CANVAS-SOURCE-IMPORT-POLICY`         | capability policy consumer   | Resolves authorized `SourceImportContribution` entries from runtime capabilities for `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects`, and `ImportWarehouseSources`. | Emits Canvas route policy `canOpenSourceImport`; no transport call.                                                         | `RuntimeCapabilities` read model and `SourceImportContribution` plugin declaration.                                  | `useCanvasControllerEnvironment`, `useCanvasController`, `CanvasShell`.          | Requires route mutation posture and an authorized contribution; protected rails retain backend authorization and fail-closed transport behavior.          | `pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.permissions.test.tsx`                                                                                                                                                                                                          |
+| `SYS-WEB-WORKSPACE-SOURCE-IMPORT-PORT-FACADE` | web command/query adapter    | `IWarehouseSourceImportPort.listWarehouseConnections`, `listSourceObjects`, and `importSources`.                                                                                       | Calls scoped protected runtime endpoints for the three accepted rails.                                                      | `WarehouseConnectionCatalog`, `SourceObjectCatalogResponse`, `WorkspaceGraphAuthoringDraft`.                         | `workspacePorts.ts`, `workspacePorts.api.ts`, `ports/workspace.ts`.              | Adds tenant/project/environment query scope from workspace context; backend enforces `workspace:source-import:view` and `workspace:source-import:import`. | `pnpm --filter @dvt/web test -- src/app/services/workspace/workspacePorts.api.test.ts src/app/services/workspace/workspacePorts.imports.test.ts`                                                                                                                                                        |
+| `SYS-WEB-SOURCE-IMPORT-WIZARD`                | UI command/query consumer    | Invokes `IWarehouseSourceImportPort` queries to list connections/source objects and the command to import selected source objects.                                                     | Renders choices and submits `ImportWarehouseSources` input; receives command receipt with imported node IDs and YAML files. | `WarehouseConnection`, `SourceObject`, `ImportSourcesResult`.                                                        | `SourceImportWizard` and `sourceImportWizard/*`.                                 | May only open when Canvas policy allows source import.                                                                                                    | `pnpm --filter @dvt/web test -- src/app/components/SourceImportWizard.test.tsx src/app/components/sourceImportWizard/sourceImportWizardModel.test.ts`                                                                                                                                                   |
+| `SYS-WEB-PLUGIN-SOURCE-IMPORT-CONTRIBUTIONS`  | plugin declaration provider  | Declares source-import options consumed by the Canvas gate and wizard.                                                                                                                 | Emits available source-import option declarations; no API authority.                                                        | `SourceImportContribution`.                                                                                          | `plugins/dbt/dbtContributions.ts`, plugin registry.                              | Runtime plugin availability only; cannot bypass backend authorization.                                                                                    | `pnpm --filter @dvt/web test -- src/app/plugins/registry.test.ts src/app/plugins/dbt/dbtContributions.connectionRules.test.ts`                                                                                                                                                                          |
+| `SYS-API-WAREHOUSE-SOURCE-IMPORT-RAILS`       | protected runtime rail owner | `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects`, `ImportWarehouseSources`.                                                                                          | Returns connection/source-object read models or an import receipt after graph/YAML persistence.                             | `WarehouseConnectionCatalog`, `SourceObjectCatalogResponse`, `WorkspaceGraphAuthoringDraft`, `WorkspaceFileContent`. | `warehouseSourceImportRoutes`, use cases, catalog adapter, source YAML services. | `workspace:source-import:view` for reads; `workspace:source-import:import` for import; tenant/project/environment scope from protected runtime request.   | `pnpm --filter dvt-api test -- test/entrypoints/http/warehouseSourceImportRoutes.test.ts test/application/services/warehouseSourceYaml.test.ts test/infrastructure/warehouseSourceImport/WorkspaceWarehouseConnectionCatalog.test.ts test/architecture/warehouseSourceImportRails.architecture.test.ts` |
 
 ## Pre-Implementation Brief
 
 - Mode: Slim.
-- Scope: derive Canvas `sourceImportAvailable` from both the API workspace port
-  capability and runtime source-import plugin contributions.
+- Scope: derive Canvas `canOpenSourceImport` from authorized runtime
+  source-import plugin contributions and route mutation posture.
 - Expected outcome: when runtime capabilities disable the dbt plugin, Canvas
   route policy exposes `canOpenSourceImport=false` even though the API adapter
   remains available.
 - Risks and mitigations:
   - Risk: coupling workspace transport services to plugin registry. Mitigation:
-    keep the merge in `useCanvasControllerEnvironment`, not in workspace port
-    adapters.
+    keep contribution resolution in `useCanvasControllerEnvironment`, not in
+    workspace port adapters.
   - Risk: reopening source import API behavior. Mitigation: no API files are in
     the allowed implementation surfaces.
 - Out of scope: backend catalog changes, wizard step changes, new source types,
   credential handling, Cypress coverage, and live database introspection.
 - Validation plan:
   - `pnpm docs:feature-mechanization -- --feature E-DB-CONNECTION-PORT-1`
-  - `pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.core.test.tsx`
+  - `pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.permissions.test.tsx`
   - `pnpm --filter @dvt/web typecheck`
   - `pnpm --filter @dvt/web lint`
   - `pnpm docs:sync`
@@ -110,7 +114,7 @@ governingSources:
   - docs/architecture/components/web/plugin-contributions-developer-guide.md
 allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/useCanvasControllerEnvironment.ts
-  - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+  - apps/web/src/app/views/canvas/useCanvasController.permissions.test.tsx
   - apps/web/src/app/views/canvas/useCanvasController.test.projectionMocks.ts
   - apps/web/src/app/views/canvas/useCanvasController.test.types.ts
   - docs/planning/proposals/mandatory/frontend-and-ux/e-db-connection-port-gate-plan-20260531.md
@@ -144,34 +148,34 @@ fowlerSignals:
   - Source import route policy used transport capability as product capability
   - Runtime plugin availability was checked downstream in CanvasShell only
 architectureGuards:
-  - pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.core.test.tsx
+  - pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.permissions.test.tsx
   - pnpm docs:feature-mechanization:implementation
 cypressFlows:
   - N/A - controller policy unit slice only
 completionGate:
   - pnpm docs:sync
-  - pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.core.test.tsx
+  - pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.permissions.test.tsx
   - pnpm --filter @dvt/web typecheck
   - pnpm --filter @dvt/web lint
   - pnpm verify:prepush
 redGreenCycles:
   - id: runtime-source-import-capability-gate
-    redTest: pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.core.test.tsx
+    redTest: pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.permissions.test.tsx
     expectedFailure: Canvas route policy reports canOpenSourceImport=true when runtime capabilities disable the dbt source-import contribution.
     patchSurfaces:
       - apps/web/src/app/views/canvas/useCanvasControllerEnvironment.ts
-      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.permissions.test.tsx
       - apps/web/src/app/views/canvas/useCanvasController.test.projectionMocks.ts
       - apps/web/src/app/views/canvas/useCanvasController.test.types.ts
-    greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.core.test.tsx
+    greenTest: pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.permissions.test.tsx
 symbols:
   - name: useCanvasControllerEnvironment
     path: apps/web/src/app/views/canvas/useCanvasControllerEnvironment.ts
     dddOwner: Canvas route shell
     cqRails: [ImportWarehouseSources, ListWarehouseConnections, ListWarehouseConnectionSourceObjects]
     fowlerSignals: [Source import route policy used transport capability as product capability]
-    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.core.test.tsx
+    architectureGuard: pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasController.permissions.test.tsx
     cypressCoverage: N/A - controller policy unit slice only
     unitTests:
-      - apps/web/src/app/views/canvas/useCanvasController.core.test.tsx
+      - apps/web/src/app/views/canvas/useCanvasController.permissions.test.tsx
 ```

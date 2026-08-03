@@ -28,6 +28,13 @@ describe('useCanvasController permission and posture contract', () => {
     harness.cleanup();
   });
 
+  it('exposes source import when an authorized contribution is available', async () => {
+    await harness.renderProbe();
+
+    expect(harness.mocks.getSourceImportContributions).toHaveBeenCalled();
+    expect(harness.getLatestResult()?.canOpenSourceImport).toBe(true);
+  });
+
   it('gates source import when runtime capabilities disable the source import contribution', async () => {
     harness.mocks.useCapabilitiesQuery.mockReturnValue({
       data: {

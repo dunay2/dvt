@@ -5,7 +5,6 @@ import { usePlatformHealthSnapshotQuery } from '../../../capabilities/platform-h
 import { getSourceImportContributions } from '../../plugins/registry';
 import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
-import { resolveWorkspacePortCapabilities } from '../../services/workspace/workspacePorts';
 import {
   useGraphDbtWorkspaceArtifactPublicationCommandPort,
   usePlansService,
@@ -22,20 +21,11 @@ import { useCanvasStoreFacade } from './useCanvasStoreFacade';
 export function useCanvasControllerEnvironment() {
   const { data: capabilities } = useCapabilitiesQuery();
   const platformHealthQuery = usePlatformHealthSnapshotQuery();
-  const workspacePortTransportCapabilities = useMemo(() => resolveWorkspacePortCapabilities(), []);
   const sourceImportContributions = useMemo(
     () => getSourceImportContributions(capabilities),
     [capabilities]
   );
-  const workspacePortCapabilities = useMemo(
-    () => ({
-      ...workspacePortTransportCapabilities,
-      sourceImportAvailable:
-        workspacePortTransportCapabilities.sourceImportAvailable &&
-        sourceImportContributions.length > 0,
-    }),
-    [sourceImportContributions.length, workspacePortTransportCapabilities]
-  );
+  const hasAuthorizedSourceImportContribution = sourceImportContributions.length > 0;
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
   const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
   const graphDbtWorkspaceArtifactPublicationCommand =
@@ -52,7 +42,7 @@ export function useCanvasControllerEnvironment() {
   return {
     capabilities,
     platformHealthQuery,
-    workspacePortCapabilities,
+    hasAuthorizedSourceImportContribution,
     workspaceFilesQuery,
     workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,

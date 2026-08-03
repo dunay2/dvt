@@ -15,18 +15,12 @@ import {
   installWorkspaceScopeHarness,
   setWorkspaceScope,
 } from './workspaceScope.test.harness';
-import { createWorkspacePorts, resolveWorkspacePortCapabilities } from './workspacePorts';
+import { createWorkspacePorts } from './workspacePorts';
 
 const TEST_OPERABILITY_SINK = { record: () => undefined } as const;
 
 describe('workspace ports source import', () => {
   installWorkspaceScopeHarness();
-
-  it('advertises API source import capability explicitly', () => {
-    expect(resolveWorkspacePortCapabilities()).toEqual({
-      sourceImportAvailable: true,
-    });
-  });
 
   it('imports selected warehouse tables into the mock workspace graph', async () => {
     const ports = createMockWorkspacePorts();
