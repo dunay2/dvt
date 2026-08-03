@@ -387,11 +387,12 @@ credentials, or define backend template contracts.
 - Owner: run list read model.
 - Frontend surfaces:
   - `IRunsPort.listRunSummaries`;
-  - `useRunsListForViewQuery`;
-  - `useScopedRunSummariesQuery`.
+  - `useScopedRunSummariesQuery`;
+  - `useScopedRunSummariesQueryForHistory`.
 - Backend surface: `GET /runs`.
-- Naming drift: frontend summary hooks use multiple route-specific names over
-  the same run-list rail.
+- Cache authority: both observers share
+  `queryKeys.runs.summaries(workspaceLayoutKey)`; the history observer varies
+  only enablement and freshness policy.
 
 ### `GetRunStatus`
 
@@ -520,18 +521,16 @@ groups those rails by concern:
 2. Run status is named `GetRunStatus` in backend rail vocabulary and
    `getRunSnapshot` in frontend ports. Either the mapping doc must stay explicit
    or the frontend DTO vocabulary should converge.
-3. Run list is exposed through several hooks for view-specific caching. Those
-   hooks should keep one rail name and vary only query keys/scope.
-4. Workspace file artifacts are a projection over file tree/content rails. Do
+3. Workspace file artifacts are a projection over file tree/content rails. Do
    not create a separate backend artifact catalog unless freshness, auth, or
    storage semantics differ materially.
-5. Code editing uses a route-local working-tree buffer, but all automatic and
+4. Code editing uses a route-local working-tree buffer, but all automatic and
    explicit flush paths converge on `SaveWorkspaceFileContent`; there is no
    separate Save command or browser-owned persistence lifecycle.
-6. Older route-parity planning docs still describe diff/plugins/file-write as
+5. Older route-parity planning docs still describe diff/plugins/file-write as
    missing or unavailable in places. Current code and API route constants show
    several of those rails are now implemented.
-7. Canvas authoring has a strong local catalog, while the broader frontend does
+6. Canvas authoring has a strong local catalog, while the broader frontend does
    not. This document is the web-level consolidation point.
 
 ## Commands And Queries Needed But Not Implemented
