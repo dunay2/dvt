@@ -3148,6 +3148,691 @@
       "createdAt": "2026-07-31T11:30:50.789Z"
     },
     {
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#startrun",
+      "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+      "mechanizationStatus": "implemented",
+      "railName": "StartRun",
+      "normalizedRailName": "startrun",
+      "railType": "command",
+      "dddOwner": "RunExecution",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#ALLOWED_EVENT_FIELDS",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuditPool",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuthAuditRow",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#CompositeAuthAuditPort",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#PostgresAuthAuditAdapter",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#UNSCOPED_TENANT",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#assertAllowedFields",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#buildEventId",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#inTenantTransaction",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#quoteIdentifier",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#toAuthAuditEvent",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_NAME_PATTERN",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_REFERENCE_PREFIX",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#EnvironmentDbtRuntimeProfileResolver",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#RESOLUTION_ERROR",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#parseEnvironmentName",
+        "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#CredentialReferenceSchema",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_MESSAGE",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_REGEX",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#isCredentialReference",
+        "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#DbtCommandOutcome",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts#toDbtCliFailureMessage",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#DbtRuntimeProfileMaterializer",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#MaterializedDbtRuntimeProfile",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolution",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolutionInput",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#IDbtRuntimeProfileResolver",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#createDbtRuntimeProfileMaterializer",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#materializeDbtRuntimeProfile",
+        "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#asAbortedSignal"
+      ],
+      "implementationRefs": [
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#ALLOWED_EVENT_FIELDS",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuditPool",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuthAuditRow",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#CompositeAuthAuditPort",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#PostgresAuthAuditAdapter",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#UNSCOPED_TENANT",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#assertAllowedFields",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#buildEventId",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#inTenantTransaction",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#quoteIdentifier",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#toAuthAuditEvent",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_NAME_PATTERN",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_REFERENCE_PREFIX",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#EnvironmentDbtRuntimeProfileResolver",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#RESOLUTION_ERROR",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#parseEnvironmentName",
+        "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#CredentialReferenceSchema",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_MESSAGE",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_REGEX",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#isCredentialReference",
+        "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#DbtCommandOutcome",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts#toDbtCliFailureMessage",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#DbtRuntimeProfileMaterializer",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#MaterializedDbtRuntimeProfile",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolution",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolutionInput",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#IDbtRuntimeProfileResolver",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#createDbtRuntimeProfileMaterializer",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#materializeDbtRuntimeProfile",
+        "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#asAbortedSignal"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+        "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/invariants/security-and-trust-invariants.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/contracts/**",
+        "packages/@dvt/temporal-dbt-plugin/**",
+        "apps/temporal-worker/**",
+        "apps/api/**"
+      ],
+      "architectureGuards": [
+        "pnpm --filter dvt-api test",
+        "pnpm --filter dvt-temporal-worker test",
+        "pnpm --filter @dvt/temporal-dbt-plugin test"
+      ],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/152",
+      "sourceContentSha256": "3247e154f99b8645cd03e1bcfd4eab5fa31150d3d38cb6af5b4001267fb87148",
+      "rawRail": {
+        "name": "StartRun",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "RunExecution"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "ALLOWED_EVENT_FIELDS",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "AuditPool",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "AuthAuditRow",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "CompositeAuthAuditPort",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "PostgresAuthAuditAdapter",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "UNSCOPED_TENANT",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "assertAllowedFields",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "buildEventId",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "inTenantTransaction",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "quoteIdentifier",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "toAuthAuditEvent",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "ENV_NAME_PATTERN",
+            "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "ENV_REFERENCE_PREFIX",
+            "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "EnvironmentDbtRuntimeProfileResolver",
+            "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "RESOLUTION_ERROR",
+            "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "parseEnvironmentName",
+            "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "CredentialReferenceSchema",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "CREDENTIAL_REFERENCE_MESSAGE",
+            "path": "packages/@dvt/contracts/src/utils/contractPrimitives.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "CREDENTIAL_REFERENCE_REGEX",
+            "path": "packages/@dvt/contracts/src/utils/contractPrimitives.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "isCredentialReference",
+            "path": "packages/@dvt/contracts/src/utils/contractPrimitives.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "DbtCommandOutcome",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "toDbtCliFailureMessage",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "DbtRuntimeProfileMaterializer",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "MaterializedDbtRuntimeProfile",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "DbtRuntimeProfileResolution",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "DbtRuntimeProfileResolutionInput",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "IDbtRuntimeProfileResolver",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test"
+          },
+          {
+            "name": "createDbtRuntimeProfileMaterializer",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "materializeDbtRuntimeProfile",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+              "IAuthAuditPort remains the single audit application boundary."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "asAbortedSignal",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts",
+            "cqRails": ["StartRun"],
+            "dddOwner": "RunExecution",
+            "unitTests": [
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "Cancelled DBT work cannot materialize runtime credentials."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/temporal-dbt-plugin test"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": [
+          "RunExecutionContext",
+          "DbtRuntimeProfile",
+          "AuthAuditEvent"
+        ],
+        "fowlerSignals": [
+          "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+          "IAuthAuditPort remains the single audit application boundary.",
+          "Cancelled DBT work cannot materialize runtime credentials."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "startrun-record",
+            "redTest": "pnpm --filter @dvt/temporal-dbt-plugin exec vitest run --config vitest.config.ts test/DbtCliPluginRunner.test.ts",
+            "greenTest": "pnpm --filter @dvt/temporal-dbt-plugin test",
+            "patchSurfaces": [
+              "planning_query_store.feature_mechanization_local_rails"
+            ],
+            "expectedFailure": "Resolved profile bytes survive setup failure and pre-cancelled work materializes runtime resources."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/invariants/security-and-trust-invariants.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "StartRun",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "RunExecution"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-temporal-worker test",
+          "pnpm --filter @dvt/temporal-dbt-plugin test"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/temporal-dbt-plugin/**",
+          "apps/temporal-worker/**",
+          "apps/api/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-08-03T08:04:52.758Z"
+    },
+    {
       "railId": "local#MVP-174-PLAN-DECISION-PREVIEW#command#previewplan",
       "featureId": "MVP-174-PLAN-DECISION-PREVIEW",
       "mechanizationStatus": "implemented",
@@ -15557,7 +16242,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
       "rawRail": {
         "name": "CancelRun",
         "type": "command",
@@ -16039,7 +16724,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
       "rawRail": {
         "name": "RecoverRun",
         "type": "command",
@@ -16931,7 +17616,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
       "rawRail": {
         "name": "GetRunStatus",
         "type": "query",
@@ -17339,7 +18024,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
       "rawRail": {
         "name": "ListRuns",
         "type": "query",
@@ -17463,7 +18148,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
       "rawRail": {
         "name": "RunEventFeed",
         "type": "query",
@@ -28200,6 +28885,241 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-02T18:14:53.980Z"
+    },
+    {
+      "operationId": "9bf1eb14-5281-4270-ae35-26363bc2c651",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-152-DBT-RUNTIME-SECRETS:command:startrun:latest:628c75707ac32d42",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#startrun",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/152",
+      "sourceContentSha256": "3247e154f99b8645cd03e1bcfd4eab5fa31150d3d38cb6af5b4001267fb87148",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "RunExecution",
+        "railName": "StartRun",
+        "railType": "command",
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/152",
+        "unitTests": [
+          "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+          "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
+          "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": [
+          "RunExecutionContext",
+          "DbtRuntimeProfile",
+          "AuthAuditEvent"
+        ],
+        "fowlerSignals": [
+          "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
+          "IAuthAuditPort remains the single audit application boundary."
+        ],
+        "patchSurfaces": [
+          "planning_query_store.feature_mechanization_local_rails"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Issue 152 symbols are absent from the DB-first feature mechanization projection.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/invariants/security-and-trust-invariants.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+          "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-api test",
+          "pnpm --filter dvt-temporal-worker test"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "implementationRefs": [
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#ALLOWED_EVENT_FIELDS",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuditPool",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuthAuditRow",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#CompositeAuthAuditPort",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#PostgresAuthAuditAdapter",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#UNSCOPED_TENANT",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#assertAllowedFields",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#buildEventId",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#inTenantTransaction",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#quoteIdentifier",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#toAuthAuditEvent",
+          "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_NAME_PATTERN",
+          "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_REFERENCE_PREFIX",
+          "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#EnvironmentDbtRuntimeProfileResolver",
+          "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#RESOLUTION_ERROR",
+          "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#parseEnvironmentName",
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#CredentialReferenceSchema",
+          "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_MESSAGE",
+          "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_REGEX",
+          "packages/@dvt/contracts/src/utils/contractPrimitives.ts#isCredentialReference",
+          "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#DbtCommandOutcome",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts#toDbtCliFailureMessage",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#DbtRuntimeProfileMaterializer",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#MaterializedDbtRuntimeProfile",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolution",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolutionInput",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#IDbtRuntimeProfileResolver",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#createDbtRuntimeProfileMaterializer",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#materializeDbtRuntimeProfile"
+        ],
+        "normalizedRailName": "startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "3247e154f99b8645cd03e1bcfd4eab5fa31150d3d38cb6af5b4001267fb87148",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/temporal-dbt-plugin/**",
+          "apps/temporal-worker/**",
+          "apps/api/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-03T08:04:52.758Z"
+    },
+    {
+      "operationId": "89c4db74-31e4-448e-babf-b75e7f177f2d",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-152-DBT-RUNTIME-SECRETS:command:startrun:0:ea4663dd1ba66fae",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#startrun",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/152",
+      "sourceContentSha256": "3247e154f99b8645cd03e1bcfd4eab5fa31150d3d38cb6af5b4001267fb87148",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "RunExecution",
+        "railName": "StartRun",
+        "railType": "command",
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/152",
+        "unitTests": [
+          "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["DbtRuntimeProfile"],
+        "fowlerSignals": [
+          "Runtime credentials are resolved behind a worker-owned port at the last responsible moment."
+        ],
+        "patchSurfaces": [
+          "planning_query_store.feature_mechanization_local_rails"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Issue 152 feature does not cite Fowler opportunity planning governance.",
+        "governingSources": [
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md"
+        ],
+        "architectureGuards": ["pnpm --filter dvt-temporal-worker test"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "implementationRefs": [
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#IDbtRuntimeProfileResolver"
+        ],
+        "normalizedRailName": "startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "3247e154f99b8645cd03e1bcfd4eab5fa31150d3d38cb6af5b4001267fb87148",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/temporal-dbt-plugin/**"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-03T08:05:55.663Z"
+    },
+    {
+      "operationId": "dd039c57-4ae3-424d-8461-36b2eeed804a",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-152-DBT-RUNTIME-SECRETS:command:startrun:1:160613b23d082ff2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#startrun",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/152",
+      "sourceContentSha256": "3247e154f99b8645cd03e1bcfd4eab5fa31150d3d38cb6af5b4001267fb87148",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/temporal-dbt-plugin exec vitest run --config vitest.config.ts test/DbtCliPluginRunner.test.ts",
+        "dddOwner": "RunExecution",
+        "railName": "StartRun",
+        "railType": "command",
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "greenTest": "pnpm --filter @dvt/temporal-dbt-plugin test",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/152",
+        "unitTests": [
+          "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["DbtRuntimeProfile"],
+        "fowlerSignals": [
+          "Cancelled DBT work cannot materialize runtime credentials."
+        ],
+        "patchSurfaces": [
+          "planning_query_store.feature_mechanization_local_rails"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Resolved profile bytes survive setup failure and pre-cancelled work materializes runtime resources.",
+        "governingSources": [
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md"
+        ],
+        "architectureGuards": ["pnpm --filter @dvt/temporal-dbt-plugin test"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "implementationRefs": [
+          "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#asAbortedSignal"
+        ],
+        "normalizedRailName": "startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "3247e154f99b8645cd03e1bcfd4eab5fa31150d3d38cb6af5b4001267fb87148",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/temporal-dbt-plugin/**"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-03T08:14:11.182Z"
     }
   ]
 }
