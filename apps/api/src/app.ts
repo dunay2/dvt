@@ -54,6 +54,10 @@ export async function buildApp(): Promise<{ app: FastifyInstance; ctx: AppContex
     },
   });
 
+  app.addHook('onClose', async () => {
+    await observability.shutdown();
+  });
+
   const ctx: AppContext = {
     env,
     observability,

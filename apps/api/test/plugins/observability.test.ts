@@ -56,6 +56,7 @@ describe('buildObservability', () => {
   it('returns a no-op implementation when OBS_ENABLED=false', () => {
     const obs = buildObservability(baseEnv({ OBS_ENABLED: false }));
     expect(typeof obs.withContext).toBe('function');
+    expect(typeof obs.shutdown).toBe('function');
     expect(() => obs.metrics.counter('test.counter').add(1)).not.toThrow();
   });
 
@@ -68,5 +69,6 @@ describe('buildObservability', () => {
     );
     expect(typeof obs.withContext).toBe('function');
     expect(typeof obs.traces.startSpan).toBe('function');
+    expect(typeof obs.shutdown).toBe('function');
   });
 });

@@ -5,8 +5,8 @@ import type {
   IGauge,
   IHistogram,
   ILogs,
+  IManagedObservability,
   IMetrics,
-  IObservability,
   ITraces,
   LogEntry,
   MetricLabels,
@@ -99,7 +99,7 @@ export interface OtelObservabilityOptions {
   readonly spanExporter?: SpanExporter;
 }
 
-export class OtelObservability implements IObservability {
+export class OtelObservability implements IManagedObservability {
   readonly metrics: IMetrics;
   readonly traces: ITraces;
   readonly logs: ILogs;

@@ -1,10 +1,10 @@
-import type { IObservability } from '@dvt/observability';
+import type { IManagedObservability } from '@dvt/observability';
 import { createNoopObservability } from '@dvt/observability';
 import { OtelObservability } from '@dvt/observability-otel';
 
 import type { Env } from './env.js';
 
-export function buildObservability(env: Env): IObservability {
+export function buildObservability(env: Env): IManagedObservability {
   if (!env.OBS_ENABLED) {
     return createNoopObservability();
   }
