@@ -62,6 +62,11 @@ export function parseSignalRunRequest(input: {
   }
 
   const reason = parseOptionalReason(input.body.reason);
+  if (signalType === 'CANCEL' && reason !== undefined) {
+    return badRequestResult(HTTP_ERROR_REASON.cancelReasonNotSupported, {
+      target: 'reason',
+    });
+  }
 
   return {
     ok: true,

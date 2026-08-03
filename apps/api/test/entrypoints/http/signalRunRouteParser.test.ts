@@ -28,7 +28,7 @@ describe('parseSignalRunRequest', () => {
   it('maps CANCEL to run:cancel authorization action', () => {
     const parsed = parseSignalRunRequest({
       runId: ' run-1 ',
-      body: { tenantId: ' tenant-a ', signalType: ' cancel ', reason: ' operator ' },
+      body: { tenantId: ' tenant-a ', signalType: ' cancel ' },
       compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
     });
 
@@ -38,12 +38,28 @@ describe('parseSignalRunRequest', () => {
         command: {
           runId: 'run-1',
           signalType: 'CANCEL',
-          reason: 'operator',
         },
         authorization: {
           tenantId: { value: 'tenant-a' },
           actionName: SIGNAL_COMMAND_ACTION.CANCEL,
         },
+      },
+    });
+  });
+
+  it('rejects a reason on compatibility CANCEL exactly like the canonical route', () => {
+    const parsed = parseSignalRunRequest({
+      runId: 'run-1',
+      body: { tenantId: 'tenant-a', signalType: 'CANCEL', reason: 'operator' },
+      compatibilityPolicy: SIGNAL_ROUTE_COMPATIBILITY_POLICY,
+    });
+
+    expect(parsed).toEqual({
+      ok: false,
+      issue: {
+        type: 'bad_request',
+        reason: HTTP_ERROR_REASON.cancelReasonNotSupported,
+        target: 'reason',
       },
     });
   });
