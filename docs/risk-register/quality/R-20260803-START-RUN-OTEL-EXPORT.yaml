@@ -1,0 +1,27 @@
+---
+id: R-20260803-START-RUN-OTEL-EXPORT
+title: StartRun tracing could expose sensitive data or alter command outcomes
+status: Closed
+date: 2026-08-03
+owners:
+  - packages/@dvt/observability-otel
+  - packages/@dvt/adapter-temporal
+  - apps/api
+severity: High
+probability: Low
+context: >
+  A protected StartRun crosses HTTP authorization, planner-backed admission, the workflow engine,
+  and Temporal submission while sharing one OpenTelemetry trace context.
+risk: >
+  Unbounded attributes or exception text could expose request, plan, credential, SQL, YAML, or path
+  data, while collector failures could incorrectly change command acceptance or runtime state.
+mitigations:
+  - 'Export only the adapter-owned bounded trace attribute vocabulary.'
+  - 'Normalize span names, resource values, exception types, and exception messages.'
+  - 'Keep bearer tokens, request bodies, plan URIs, SQL, YAML, credentials, and paths out of spans.'
+  - 'Catch exporter flush, shutdown, and span-operation failures outside domain behavior.'
+  - 'Keep traces diagnostic; run snapshots and events remain operational truth.'
+  - 'Prove accepted parentage, bounded rejection, redaction, no-op composition, and exporter
+    failure.'
+review_after: 2026-11-03
+---
