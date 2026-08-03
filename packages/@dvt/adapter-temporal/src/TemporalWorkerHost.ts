@@ -19,6 +19,7 @@ import { NativeConnection, Worker } from '@temporalio/worker';
 
 import type {
   ActivityDeps,
+  ActivityHeartbeat,
   StepActivityRegistry,
   StepExecutor,
 } from './activities/stepActivities.js';
@@ -49,6 +50,8 @@ export interface TemporalWorkerHostConfig {
    * Worker profiles compose plugin registries here while the core registry stays empty.
    */
   stepActivitiesByKind?: StepActivityRegistry;
+  /** Override for direct activity tests; workers use the Temporal heartbeat adapter. */
+  activityHeartbeat?: ActivityHeartbeat;
 }
 
 interface WorkerRunState {
@@ -179,7 +182,8 @@ export class TemporalWorkerHost {
     return createActivities(
       this.config.activityDeps,
       this.config.stepExecutors,
-      this.config.stepActivitiesByKind
+      this.config.stepActivitiesByKind,
+      this.config.activityHeartbeat
     );
   }
 

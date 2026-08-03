@@ -279,6 +279,7 @@ function makeDbtRunExecutionContext(planRef: PlanRef, context: RunContext): RunE
     createdBy: 'planner-engine-contract-test',
     pluginContexts: {
       dbt: {
+        credentialRef: 'env:DBT_PROFILES_DIR',
         projectBundleRef: {
           uri: `s3://bundle-bucket/tenants/${context.tenantId}/${'d'.repeat(64)}`,
           kind: 'dbt-project-bundle',

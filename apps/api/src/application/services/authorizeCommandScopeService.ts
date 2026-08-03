@@ -33,7 +33,13 @@ export class AuthorizeCommandScopeService {
     const decidedAt = this.clock();
     const outcome = await this.accessDecisionService.decide(principal, requestedScope);
     if (!outcome.ok) {
-      await this.recordDeniedDecision(principal, requestedScope, requestId, decidedAt, outcome.reason);
+      await this.recordDeniedDecision(
+        principal,
+        requestedScope,
+        requestId,
+        decidedAt,
+        outcome.reason
+      );
 
       return { ok: false, reason: outcome.reason };
     }
@@ -46,7 +52,13 @@ export class AuthorizeCommandScopeService {
       authorizedAt: decidedAt,
     };
 
-    await this.recordGrantedDecision(principal, requestedScope, requestId, decidedAt, outcome.approvedScope);
+    await this.recordGrantedDecision(
+      principal,
+      requestedScope,
+      requestId,
+      decidedAt,
+      outcome.approvedScope
+    );
 
     return { ok: true, context };
   }
@@ -63,6 +75,7 @@ export class AuthorizeCommandScopeService {
       requestId,
       principalId: principal.principalId,
       principalType: principal.principalType,
+      tenantId: requestedScope.tenantId.value,
       action: requestedScope.action.name,
       denialReason,
       occurredAt,

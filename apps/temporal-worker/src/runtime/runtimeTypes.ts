@@ -11,7 +11,7 @@ import type {
 } from '@dvt/adapter-temporal';
 import type { IDbtProjectBundleReader, IRunExecutionContextReader } from '@dvt/artifacts';
 import type { AppendResult, EventInput, RunBootstrapInput } from '@dvt/engine';
-import type { DbtPluginRunner } from '@dvt/temporal-dbt-plugin';
+import type { DbtPluginRunner, IDbtRuntimeProfileResolver } from '@dvt/temporal-dbt-plugin';
 
 import type { Env } from '../plugins/env.js';
 
@@ -42,6 +42,7 @@ export interface CreateTemporalWorkerRuntimeOptions {
   stateStoreFactory?: (env: Env) => StateStoreLike;
   runExecutionContextReaderFactory?: (env: Env) => IRunExecutionContextReader;
   bundleReaderFactory?: (env: Env) => IDbtProjectBundleReader;
+  dbtRuntimeProfileResolverFactory?: () => IDbtRuntimeProfileResolver;
   dbtPluginRunnerFactory?: (input: {
     env: Env;
     bundleReader: IDbtProjectBundleReader;

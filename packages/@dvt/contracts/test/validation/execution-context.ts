@@ -177,6 +177,7 @@ export function registerValidationExecutionContextSuite(): void {
               sha256: 'b'.repeat(64),
               tenantId: 'tenant-a',
             },
+            credentialRef: 'env:DBT_PROFILES_YAML',
           },
         },
       });
@@ -185,6 +186,34 @@ export function registerValidationExecutionContextSuite(): void {
         `s3://bundle-bucket/tenants/tenant-a/${'b'.repeat(64)}`
       );
       expect(runExecutionContext.pluginCompatibilityFingerprint).toHaveLength(64);
+    });
+
+    it('rejects plaintext DBT credentials in RunExecutionContext', () => {
+      expect(() =>
+        parseRunExecutionContext({
+          schemaVersion: 'v1.0',
+          planId: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planId,
+          planVersion: VALID_EXECUTION_PLAN_V1_FIXTURE.metadata.planVersion,
+          planSha256: 'a'.repeat(64),
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'prod',
+          targetAdapter: 'temporal',
+          createdAtIso: '2026-04-03T10:00:00.000Z',
+          createdBy: 'planner-runtime',
+          pluginContexts: {
+            dbt: {
+              projectBundleRef: {
+                uri: `s3://bundle-bucket/tenants/tenant-a/${'b'.repeat(64)}`,
+                kind: 'dbt-project-bundle',
+                sha256: 'b'.repeat(64),
+                tenantId: 'tenant-a',
+              },
+              credentialRef: 'postgres://dbt:plaintext-secret@warehouse/dbt',
+            },
+          },
+        })
+      ).toThrow(ContractValidationError);
     });
 
     it('rejects RunExecutionContext when top-level provenance fields are missing', () => {

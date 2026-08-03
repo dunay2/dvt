@@ -9,6 +9,10 @@ import { AuthorizeCommandScopeService } from '../../application/services/authori
 import { CreateProjectUseCase } from '../../application/services/createProjectUseCase.js';
 import { ListProjectsUseCase } from '../../application/services/listProjectsUseCase.js';
 import { ListWorkspacePluginsUseCase } from '../../application/services/listWorkspacePluginsUseCase.js';
+import {
+  CompositeAuthAuditPort,
+  PostgresAuthAuditAdapter,
+} from '../../infrastructure/audit/PostgresAuthAuditAdapter.js';
 import { StructuredAuditLogger } from '../../infrastructure/audit/structuredAuditLogger.js';
 import { EmbeddedAccessDecisionService } from '../../infrastructure/auth/embeddedAccessDecisionService.js';
 import { EmbeddedProjectOnboardingRepository } from '../../infrastructure/auth/embeddedProjectOnboardingRepository.js';
@@ -35,6 +39,7 @@ export type ProtectedSecurityRuntime = {
   readonly migrateAccessDecisionService: () => Promise<void>;
   readonly migrateProjectOnboardingRepository: () => Promise<void>;
   readonly migrateWorkspacePluginCatalogRepository: () => Promise<void>;
+  readonly ensureAuthAuditSchema: () => Promise<void>;
   readonly commandAuthorizer: AuthorizeCommandScopeService;
   readonly authenticator: OidcAuthenticator;
 };
@@ -58,10 +63,14 @@ export function buildProtectedSecurityRuntime(
     deps.pool,
     deps.env.DVT_PG_SCHEMA
   );
-  const auditLogger = new StructuredAuditLogger(deps.appLogger);
+  const durableAudit = new PostgresAuthAuditAdapter(deps.pool, deps.env.DVT_PG_SCHEMA);
+  const audit = new CompositeAuthAuditPort([
+    durableAudit,
+    new StructuredAuditLogger(deps.appLogger),
+  ]);
   const commandAuthorizer = new AuthorizeCommandScopeService(
     embeddedAccessDecisionService,
-    auditLogger,
+    audit,
     () => new Date()
   );
   const authenticator = new OidcAuthenticator(
@@ -82,6 +91,7 @@ export function buildProtectedSecurityRuntime(
     migrateAccessDecisionService: () => embeddedAccessDecisionService.migrate(),
     migrateProjectOnboardingRepository: () => projectOnboardingRepository.migrate(),
     migrateWorkspacePluginCatalogRepository: () => workspacePluginCatalogRepository.migrate(),
+    ensureAuthAuditSchema: () => durableAudit.ensureSchema(),
     commandAuthorizer,
     authenticator,
   };

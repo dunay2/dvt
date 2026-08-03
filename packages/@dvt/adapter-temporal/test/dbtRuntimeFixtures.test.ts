@@ -80,6 +80,7 @@ describe('dbtRuntimeFixtures', () => {
       pluginContexts: {
         dbt: {
           targetProfile: runExecutionContext.pluginContexts.dbt?.targetProfile,
+          credentialRef: runExecutionContext.pluginContexts.dbt?.credentialRef,
           projectBundleRef: runExecutionContext.pluginContexts.dbt?.projectBundleRef,
         },
       },

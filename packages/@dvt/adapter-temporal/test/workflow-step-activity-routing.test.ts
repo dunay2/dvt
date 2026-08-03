@@ -76,4 +76,15 @@ describe('workflow step activity routing', () => {
       })
     );
   });
+
+  it('waits for step cleanup before workflow cancellation can become terminal', () => {
+    createStepActivities({ stepId: 's-dbt', kind: 'DBT_MODEL' });
+
+    expect(proxyActivitiesMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        cancellationType: 'WAIT_CANCELLATION_COMPLETED',
+        heartbeatTimeout: '10s',
+      })
+    );
+  });
 });

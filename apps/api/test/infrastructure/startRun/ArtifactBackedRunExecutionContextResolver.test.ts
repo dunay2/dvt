@@ -46,6 +46,7 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
       pluginCompatibilityFingerprint: FINGERPRINT,
       pluginContexts: {
         dbt: {
+          credentialRef: 'env:DBT_PROFILES_DIR',
           projectBundleRef: {
             uri: `s3://bundle-bucket/tenants/tenant-1/${'b'.repeat(64)}`,
             kind: 'dbt-project-bundle',
@@ -141,7 +142,9 @@ describe('ArtifactBackedRunExecutionContextResolver', () => {
 
   it('rejects invalid payloads and ref drift', async () => {
     const invalidJsonUrl = writeTempFixture('{not-json}');
-    const invalidPayloadResolver = new ArtifactBackedRunExecutionContextResolver({ nodeEnv: 'test' });
+    const invalidPayloadResolver = new ArtifactBackedRunExecutionContextResolver({
+      nodeEnv: 'test',
+    });
 
     await expect(
       invalidPayloadResolver.resolve(
@@ -277,6 +280,7 @@ function makeRunExecutionContextArtifact(
     createdBy: 'planner-runtime',
     pluginContexts: {
       dbt: {
+        credentialRef: 'env:DBT_PROFILES_DIR',
         projectBundleRef: {
           uri: `s3://bundle-bucket/tenants/tenant-1/${'b'.repeat(64)}`,
           kind: 'dbt-project-bundle',

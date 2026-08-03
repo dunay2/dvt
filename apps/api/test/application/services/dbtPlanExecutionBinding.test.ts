@@ -23,6 +23,7 @@ describe('resolveDbtPlanExecutionBinding', () => {
       projectRoot: 'analytics',
       expectedContentSetSha256: '1'.repeat(64),
       targetProfile: 'production',
+      credentialRef: 'vault:dbt/production',
     });
   });
 
@@ -67,6 +68,7 @@ describe('resolveDbtPlanExecutionBinding', () => {
       ok: true,
       projectRoot: '.',
       targetProfile: 'production',
+      credentialRef: 'vault:dbt/production',
     });
   });
 });

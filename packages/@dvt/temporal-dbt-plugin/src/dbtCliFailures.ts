@@ -49,20 +49,17 @@ export function classifyDbtCliFailure(error: unknown): string {
   return 'DBT_CLI_EXECUTION_FAILED';
 }
 
-export function toDbtCliFailureMessage(error: unknown): string {
-  if (isExecFileErrorWithOutput(error)) {
-    const stderr = error.stderr.trim();
-    if (stderr.length > 0) {
-      return stderr;
-    }
-
-    const stdout = error.stdout.trim();
-    if (stdout.length > 0) {
-      return stdout;
-    }
+export function toDbtCliFailureMessage(failureReason: string): string {
+  if (failureReason === 'DBT_CLI_NOT_FOUND') {
+    return 'DBT CLI executable is unavailable.';
   }
-
-  return toErrorMessage(error);
+  if (
+    failureReason === 'DBT_PROJECT_DIRECTORY_NOT_FOUND' ||
+    failureReason.startsWith('DBT_CLI_STEP_KIND_UNSUPPORTED:')
+  ) {
+    return failureReason;
+  }
+  return 'DBT CLI execution failed.';
 }
 
 export function toErrorMessage(error: unknown): string {

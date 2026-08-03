@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 
 import * as pgPool from '../../src/db/pool.js';
+import { PostgresAuthAuditAdapter } from '../../src/infrastructure/audit/PostgresAuthAuditAdapter.js';
 import { EmbeddedAccessDecisionService } from '../../src/infrastructure/auth/embeddedAccessDecisionService.js';
 import { EmbeddedProjectOnboardingRepository } from '../../src/infrastructure/auth/embeddedProjectOnboardingRepository.js';
 import { PostgresCanvasAuthoringAuthorityStore } from '../../src/infrastructure/canvasAuthoringAuthority/PostgresCanvasAuthoringAuthorityStore.js';
@@ -28,6 +29,7 @@ type ProtectedRuntimeMigrationPatch = {
 };
 
 export type ProtectedRuntimeMigrationCalls = {
+  readonly authAuditSchema: number;
   readonly accessDecision: number;
   readonly projectOnboarding: number;
   readonly workspacePluginCatalog: number;
@@ -40,6 +42,7 @@ export type ProtectedRuntimeMigrationCalls = {
 };
 
 function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
+  const originalAuthAuditEnsureSchema = PostgresAuthAuditAdapter.prototype.ensureSchema;
   const originalAccessDecisionMigrate = EmbeddedAccessDecisionService.prototype.migrate;
   const originalProjectOnboardingMigrate = EmbeddedProjectOnboardingRepository.prototype.migrate;
   const originalWorkspacePluginCatalogMigrate =
@@ -63,9 +66,11 @@ function patchProtectedRuntimeMigrations(): ProtectedRuntimeMigrationPatch {
   PostgresWorkspaceGraphDraftStore.prototype.migrate = async function migrate() {};
   PostgresCanvasAuthoringAuthorityStore.prototype.migrate = async function migrate() {};
   PostgresDbtProjectImportProcessStore.prototype.migrate = async function migrate() {};
+  PostgresAuthAuditAdapter.prototype.ensureSchema = async function ensureSchema() {};
 
   return {
     restore() {
+      PostgresAuthAuditAdapter.prototype.ensureSchema = originalAuthAuditEnsureSchema;
       EmbeddedAccessDecisionService.prototype.migrate = originalAccessDecisionMigrate;
       EmbeddedProjectOnboardingRepository.prototype.migrate = originalProjectOnboardingMigrate;
       EmbeddedWorkspacePluginCatalogRepository.prototype.migrate =
@@ -130,6 +135,7 @@ export async function withProtectedRuntimeApp<T>(
 export async function withCapturedProtectedRuntimeMigrations<T>(
   run: (calls: () => ProtectedRuntimeMigrationCalls) => Promise<T>
 ): Promise<T> {
+  const originalAuthAuditEnsureSchema = PostgresAuthAuditAdapter.prototype.ensureSchema;
   const originalAccessDecisionMigrate = EmbeddedAccessDecisionService.prototype.migrate;
   const originalProjectOnboardingMigrate = EmbeddedProjectOnboardingRepository.prototype.migrate;
   const originalWorkspacePluginCatalogMigrate =
@@ -144,6 +150,7 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
   const originalDbtProjectImportProcessStoreMigrate =
     PostgresDbtProjectImportProcessStore.prototype.migrate;
   const calls = {
+    authAuditSchema: 0,
     accessDecision: 0,
     projectOnboarding: 0,
     workspacePluginCatalog: 0,
@@ -182,10 +189,14 @@ export async function withCapturedProtectedRuntimeMigrations<T>(
   PostgresDbtProjectImportProcessStore.prototype.migrate = async function migrate() {
     calls.dbtProjectImportProcessStore += 1;
   };
+  PostgresAuthAuditAdapter.prototype.ensureSchema = async function ensureSchema() {
+    calls.authAuditSchema += 1;
+  };
 
   try {
     return await run(() => ({ ...calls }));
   } finally {
+    PostgresAuthAuditAdapter.prototype.ensureSchema = originalAuthAuditEnsureSchema;
     EmbeddedAccessDecisionService.prototype.migrate = originalAccessDecisionMigrate;
     EmbeddedProjectOnboardingRepository.prototype.migrate = originalProjectOnboardingMigrate;
     EmbeddedWorkspacePluginCatalogRepository.prototype.migrate =

@@ -7,6 +7,7 @@ import {
   parseResolvedRunContext,
   RUN_EVENT_PAYLOAD_VERSION,
 } from '@dvt/contracts';
+import { heartbeat as temporalActivityHeartbeat } from '@temporalio/activity';
 
 import type { EventInput } from '../engine-types.js';
 import type { ResolvedExecutionSegment } from '../workflows/executionSegmentResolver.js';
@@ -32,10 +33,15 @@ import {
   validateStepShape,
 } from './stepActivityValidation.js';
 
+const STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS = 1_000;
+
+export type ActivityHeartbeat = () => void;
+
 export function createActivities(
   deps: ActivityDeps,
   stepExecutors: readonly StepExecutor[] = DEFAULT_STEP_EXECUTORS,
-  stepActivitiesByKind?: StepActivityRegistry
+  stepActivitiesByKind?: StepActivityRegistry,
+  activityHeartbeat: ActivityHeartbeat = temporalActivityHeartbeat
 ): {
   executeStep(input: StepInput): Promise<StepResult>;
   emitEvent(input: EmitEventInput): Promise<void>;
@@ -55,14 +61,18 @@ export function createActivities(
   return {
     async executeStep(input: StepInput): Promise<StepResult> {
       validateStepShape(input.step);
-      return dispatcher.execute(
-        input.step,
-        {
-          executionIdentity: toStepExecutionIdentity(input.ctx),
-          runContext: input.ctx,
-          gatewayContext: input.gatewayContext,
-        },
-        stepExecutors
+      return executeWithHeartbeat(
+        () =>
+          dispatcher.execute(
+            input.step,
+            {
+              executionIdentity: toStepExecutionIdentity(input.ctx),
+              runContext: input.ctx,
+              gatewayContext: input.gatewayContext,
+            },
+            stepExecutors
+          ),
+        activityHeartbeat
       );
     },
 
@@ -118,6 +128,19 @@ export function createActivities(
       return resolveExecutionSegmentFromPlan(plan, input.layerIndex);
     },
   };
+}
+
+async function executeWithHeartbeat<T>(
+  operation: () => Promise<T>,
+  activityHeartbeat: ActivityHeartbeat
+): Promise<T> {
+  activityHeartbeat();
+  const heartbeatTimer = setInterval(activityHeartbeat, STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS);
+  try {
+    return await operation();
+  } finally {
+    clearInterval(heartbeatTimer);
+  }
 }
 
 function assertSegmentResolverConfigured(deps: ActivityDeps): void {

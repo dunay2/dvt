@@ -3,7 +3,7 @@ import { type PlanRef, type ResolvedRunContext, type RunExecutionContext } from 
 import { sha256Hex } from '@dvt/crypto';
 import { RunExecutionContextRejectedError, type RunStateCommandPort } from '@dvt/engine';
 import { PlanIntegrityValidator, SequenceClock } from '@dvt/engine/runtime';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   createDbtStepActivityRegistry,
@@ -81,6 +81,7 @@ const RUN_EXECUTION_CONTEXT: RunExecutionContext = {
   createdBy: 'test',
   pluginContexts: {
     dbt: {
+      credentialRef: 'env:DVT_TEST_DBT_PROFILES',
       projectBundleRef: {
         uri: `s3://bundle-bucket/tenants/${CTX.tenantId}/${'b'.repeat(64)}`,
         kind: 'dbt-project-bundle',
@@ -289,6 +290,7 @@ type SetupActivitiesOptions = Readonly<{
   stepExecutors?: readonly StepExecutor[];
   stepActivitiesByKind?: ReadonlyMap<string, StepActivity>;
   depOverrides?: ActivityDepOverrides;
+  activityHeartbeat?: () => void;
 }>;
 
 type ActivityDepOverrides = Partial<ActivityDeps> &
@@ -387,12 +389,13 @@ function setupActivities({
   stepExecutors,
   stepActivitiesByKind,
   depOverrides = {},
+  activityHeartbeat = () => undefined,
 }: SetupActivitiesOptions = {}): {
   deps: TestActivityDeps;
   acts: Activities;
 } {
   const deps = buildDeps(store, depOverrides);
-  const acts = createActivities(deps, stepExecutors, stepActivitiesByKind);
+  const acts = createActivities(deps, stepExecutors, stepActivitiesByKind, activityHeartbeat);
   return { deps, acts };
 }
 
@@ -703,6 +706,21 @@ describe('stepActivities', () => {
   });
 
   describe('executeStep', () => {
+    it('heartbeats before delegating long-running step work', async () => {
+      const activityHeartbeat = vi.fn();
+      const { acts } = setupActivities({
+        activityHeartbeat,
+        stepActivitiesByKind: createDbtRegistry(),
+      });
+
+      await acts.executeStep({
+        step: { stepId: 's-heartbeat', kind: 'DBT_MODEL' },
+        ctx: CTX,
+      });
+
+      expect(activityHeartbeat).toHaveBeenCalledTimes(1);
+    });
+
     it('does not register DBT step kinds in the core activity registry by default', async () => {
       const { acts } = setupActivities();
 

@@ -8,7 +8,12 @@
  */
 import { z } from 'zod';
 
-import { isSha256HexString, SHA256_HEX_STRING_MESSAGE } from '../../utils/contractPrimitives.js';
+import {
+  CREDENTIAL_REFERENCE_MESSAGE,
+  isCredentialReference,
+  isSha256HexString,
+  SHA256_HEX_STRING_MESSAGE,
+} from '../../utils/contractPrimitives.js';
 
 import { WorkspaceRelativeProjectRootSchema } from './CanvasAuthoringAuthorityBinding.v1.js';
 
@@ -18,10 +23,7 @@ const Sha256HexStringSchema = NonBlankStringSchema.refine(isSha256HexString, {
 });
 const CredentialReferenceSchema = z
   .string()
-  .regex(
-    /^[a-z][a-z0-9-]*:[A-Za-z0-9][A-Za-z0-9._/-]*$/,
-    'credentialRef must be an opaque provider-qualified reference'
-  );
+  .refine(isCredentialReference, CREDENTIAL_REFERENCE_MESSAGE);
 
 export const PLAN_PREVIEW_PROVENANCE_KIND = {
   transformationGitArtifacts: 'transformation-git-artifacts',

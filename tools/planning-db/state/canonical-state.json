@@ -3148,6 +3148,997 @@
       "createdAt": "2026-07-31T11:30:50.789Z"
     },
     {
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#startrunadmission",
+      "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+      "mechanizationStatus": "implemented",
+      "railName": "StartRunAdmission",
+      "normalizedRailName": "startrunadmission",
+      "railType": "command",
+      "dddOwner": "Run admission policy",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#CredentialReferenceSchema",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_MESSAGE",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_REGEX",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#isCredentialReference",
+        "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts#DbtRunExecutionContextBindingUseCase",
+        "apps/api/src/application/services/dbtPlanExecutionBinding.ts#resolveDbtPlanExecutionBinding"
+      ],
+      "implementationRefs": [
+        "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#CredentialReferenceSchema",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_MESSAGE",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_REGEX",
+        "packages/@dvt/contracts/src/utils/contractPrimitives.ts#isCredentialReference",
+        "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts#DbtRunExecutionContextBindingUseCase",
+        "apps/api/src/application/services/dbtPlanExecutionBinding.ts#resolveDbtPlanExecutionBinding"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+        "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/architecture/invariants/security-and-trust-invariants.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/contracts/**",
+        "apps/api/src/application/services/**"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test"
+      ],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+      "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
+      "rawRail": {
+        "name": "StartRunAdmission",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Run admission policy"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "CredentialReferenceSchema",
+            "path": "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts",
+            "cqRails": ["StartRunAdmission"],
+            "dddOwner": "Run admission policy",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/execution-context.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+              "apps/api/test/application/services/dbtPlanExecutionBinding.test.ts"
+            ],
+            "fowlerSignals": [
+              "Credential references cross StartRun admission as opaque values and plaintext secret material is rejected."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test"
+          },
+          {
+            "name": "CREDENTIAL_REFERENCE_MESSAGE",
+            "path": "packages/@dvt/contracts/src/utils/contractPrimitives.ts",
+            "cqRails": ["StartRunAdmission"],
+            "dddOwner": "Run admission policy",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/execution-context.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+              "apps/api/test/application/services/dbtPlanExecutionBinding.test.ts"
+            ],
+            "fowlerSignals": [
+              "Credential references cross StartRun admission as opaque values and plaintext secret material is rejected."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test"
+          },
+          {
+            "name": "CREDENTIAL_REFERENCE_REGEX",
+            "path": "packages/@dvt/contracts/src/utils/contractPrimitives.ts",
+            "cqRails": ["StartRunAdmission"],
+            "dddOwner": "Run admission policy",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/execution-context.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+              "apps/api/test/application/services/dbtPlanExecutionBinding.test.ts"
+            ],
+            "fowlerSignals": [
+              "Credential references cross StartRun admission as opaque values and plaintext secret material is rejected."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test"
+          },
+          {
+            "name": "isCredentialReference",
+            "path": "packages/@dvt/contracts/src/utils/contractPrimitives.ts",
+            "cqRails": ["StartRunAdmission"],
+            "dddOwner": "Run admission policy",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/execution-context.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+              "apps/api/test/application/services/dbtPlanExecutionBinding.test.ts"
+            ],
+            "fowlerSignals": [
+              "Credential references cross StartRun admission as opaque values and plaintext secret material is rejected."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test"
+          },
+          {
+            "name": "DbtRunExecutionContextBindingUseCase",
+            "path": "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts",
+            "cqRails": ["StartRunAdmission"],
+            "dddOwner": "Run admission policy",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/execution-context.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+              "apps/api/test/application/services/dbtPlanExecutionBinding.test.ts"
+            ],
+            "fowlerSignals": [
+              "Credential references cross StartRun admission as opaque values and plaintext secret material is rejected."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test"
+          },
+          {
+            "name": "resolveDbtPlanExecutionBinding",
+            "path": "apps/api/src/application/services/dbtPlanExecutionBinding.ts",
+            "cqRails": ["StartRunAdmission"],
+            "dddOwner": "Run admission policy",
+            "unitTests": [
+              "packages/@dvt/contracts/test/validation/execution-context.ts",
+              "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+              "apps/api/test/application/services/dbtPlanExecutionBinding.test.ts"
+            ],
+            "fowlerSignals": [
+              "Credential references cross StartRun admission as opaque values and plaintext secret material is rejected."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["RunExecutionContext"],
+        "fowlerSignals": [
+          "Credential references cross StartRun admission as opaque values and plaintext secret material is rejected."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "startrunadmission-record",
+            "redTest": "pnpm docs:feature-mechanization:implementation",
+            "greenTest": "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test",
+            "patchSurfaces": [
+              "packages/@dvt/contracts/**",
+              "apps/api/src/application/services/**"
+            ],
+            "expectedFailure": "Issue 152 symbols are not owned by the existing StartRunAdmission rail."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/invariants/security-and-trust-invariants.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "StartRunAdmission",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Run admission policy"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "apps/api/src/application/services/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-03T09:20:15.266Z"
+    },
+    {
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#startruntelemetrypolicy",
+      "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+      "mechanizationStatus": "implemented",
+      "railName": "StartRunTelemetryPolicy",
+      "normalizedRailName": "startruntelemetrypolicy",
+      "railType": "command",
+      "dddOwner": "Workflow engine start-run observability policy",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#ALLOWED_EVENT_FIELDS",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuditPool",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuthAuditRow",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#CompositeAuthAuditPort",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#PostgresAuthAuditAdapter",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#UNSCOPED_TENANT",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#assertAllowedFields",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#buildEventId",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#inTenantTransaction",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#quoteIdentifier",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#toAuthAuditEvent",
+        "apps/api/src/application/services/authorizeCommandScopeService.ts#AuthorizeCommandScopeService",
+        "apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts#buildProtectedSecurityRuntime"
+      ],
+      "implementationRefs": [
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#ALLOWED_EVENT_FIELDS",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuditPool",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuthAuditRow",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#CompositeAuthAuditPort",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#PostgresAuthAuditAdapter",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#UNSCOPED_TENANT",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#assertAllowedFields",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#buildEventId",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#inTenantTransaction",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#quoteIdentifier",
+        "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#toAuthAuditEvent",
+        "apps/api/src/application/services/authorizeCommandScopeService.ts#AuthorizeCommandScopeService",
+        "apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts#buildProtectedSecurityRuntime"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+        "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/architecture/invariants/security-and-trust-invariants.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/api/src/infrastructure/audit/**",
+        "apps/api/src/application/services/**",
+        "apps/api/src/modules/**"
+      ],
+      "architectureGuards": ["pnpm --filter dvt-api test"],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+      "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
+      "rawRail": {
+        "name": "StartRunTelemetryPolicy",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Workflow engine start-run observability policy"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "ALLOWED_EVENT_FIELDS",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "AuditPool",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "AuthAuditRow",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "CompositeAuthAuditPort",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "PostgresAuthAuditAdapter",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "UNSCOPED_TENANT",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "assertAllowedFields",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "buildEventId",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "inTenantTransaction",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "quoteIdentifier",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "toAuthAuditEvent",
+            "path": "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "AuthorizeCommandScopeService",
+            "path": "apps/api/src/application/services/authorizeCommandScopeService.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          },
+          {
+            "name": "buildProtectedSecurityRuntime",
+            "path": "apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts",
+            "cqRails": ["StartRunTelemetryPolicy"],
+            "dddOwner": "Workflow engine start-run observability policy",
+            "unitTests": [
+              "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+              "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+            ],
+            "fowlerSignals": [
+              "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-api test"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["AuthAuditEvent"],
+        "fowlerSignals": [
+          "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "startruntelemetrypolicy-record",
+            "redTest": "pnpm docs:feature-mechanization:implementation",
+            "greenTest": "pnpm --filter dvt-api test",
+            "patchSurfaces": [
+              "apps/api/src/infrastructure/audit/**",
+              "apps/api/src/application/services/**",
+              "apps/api/src/modules/**"
+            ],
+            "expectedFailure": "Issue 152 symbols are not owned by the existing StartRunTelemetryPolicy rail."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/invariants/security-and-trust-invariants.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "StartRunTelemetryPolicy",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Workflow engine start-run observability policy"
+          }
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api test"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/api/src/infrastructure/audit/**",
+          "apps/api/src/application/services/**",
+          "apps/api/src/modules/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-03T09:20:18.418Z"
+    },
+    {
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#workflowengine.startrun",
+      "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+      "mechanizationStatus": "implemented",
+      "railName": "WorkflowEngine.startRun",
+      "normalizedRailName": "workflowengine.startrun",
+      "railType": "command",
+      "dddOwner": "engine start-run lifecycle",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_NAME_PATTERN",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_REFERENCE_PREFIX",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#EnvironmentDbtRuntimeProfileResolver",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#RESOLUTION_ERROR",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#parseEnvironmentName",
+        "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#DbtCommandOutcome",
+        "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#asAbortedSignal",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts#toDbtCliFailureMessage",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#DbtRuntimeProfileMaterializer",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#MaterializedDbtRuntimeProfile",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolution",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolutionInput",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#IDbtRuntimeProfileResolver",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#createDbtRuntimeProfileMaterializer",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#materializeDbtRuntimeProfile",
+        "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts#createStepActivities",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#ActivityHeartbeat",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#executeWithHeartbeat"
+      ],
+      "implementationRefs": [
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_NAME_PATTERN",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_REFERENCE_PREFIX",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#EnvironmentDbtRuntimeProfileResolver",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#RESOLUTION_ERROR",
+        "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#parseEnvironmentName",
+        "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#DbtCommandOutcome",
+        "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#asAbortedSignal",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts#toDbtCliFailureMessage",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#DbtRuntimeProfileMaterializer",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#MaterializedDbtRuntimeProfile",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolution",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolutionInput",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#IDbtRuntimeProfileResolver",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#createDbtRuntimeProfileMaterializer",
+        "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#materializeDbtRuntimeProfile",
+        "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts#createStepActivities",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#ActivityHeartbeat",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#executeWithHeartbeat"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+        "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/architecture/invariants/security-and-trust-invariants.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/temporal-worker/**",
+        "packages/@dvt/temporal-dbt-plugin/**",
+        "packages/@dvt/adapter-temporal/**"
+      ],
+      "architectureGuards": [
+        "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test",
+        "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+      ],
+      "completionGate": [
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+      "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
+      "rawRail": {
+        "name": "WorkflowEngine.startRun",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "engine start-run lifecycle"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "ENV_NAME_PATTERN",
+            "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "ENV_REFERENCE_PREFIX",
+            "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "EnvironmentDbtRuntimeProfileResolver",
+            "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "RESOLUTION_ERROR",
+            "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "parseEnvironmentName",
+            "path": "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "DbtCommandOutcome",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "asAbortedSignal",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "toDbtCliFailureMessage",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "DbtRuntimeProfileMaterializer",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "MaterializedDbtRuntimeProfile",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "DbtRuntimeProfileResolution",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "DbtRuntimeProfileResolutionInput",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "IDbtRuntimeProfileResolver",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "createDbtRuntimeProfileMaterializer",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "materializeDbtRuntimeProfile",
+            "path": "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "createStepActivities",
+            "path": "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+            ],
+            "fowlerSignals": [
+              "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "ActivityHeartbeat",
+            "path": "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/adapter-temporal/test/activities.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
+              "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+            ],
+            "fowlerSignals": [
+              "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+          },
+          {
+            "name": "STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS",
+            "path": "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/adapter-temporal/test/activities.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
+              "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+            ],
+            "fowlerSignals": [
+              "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+          },
+          {
+            "name": "executeWithHeartbeat",
+            "path": "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/adapter-temporal/test/activities.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
+              "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+            ],
+            "fowlerSignals": [
+              "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["DbtRuntimeProfile"],
+        "fowlerSignals": [
+          "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup.",
+          "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "workflowengine.startrun-record",
+            "redTest": "pnpm --filter @dvt/adapter-temporal test:integration",
+            "greenTest": "pnpm --filter @dvt/adapter-temporal test:integration",
+            "patchSurfaces": [
+              "apps/temporal-worker/**",
+              "packages/@dvt/temporal-dbt-plugin/**",
+              "packages/@dvt/adapter-temporal/**"
+            ],
+            "expectedFailure": "Temporal cancellation waits forever because active step activities do not heartbeat."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/invariants/security-and-trust-invariants.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "WorkflowEngine.startRun",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "engine start-run lifecycle"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test",
+          "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/temporal-worker/**",
+          "packages/@dvt/temporal-dbt-plugin/**",
+          "packages/@dvt/adapter-temporal/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-03T09:20:16.818Z"
+    },
+    {
       "railId": "local#MVP-174-PLAN-DECISION-PREVIEW#command#previewplan",
       "featureId": "MVP-174-PLAN-DECISION-PREVIEW",
       "mechanizationStatus": "implemented",
@@ -15557,7 +16548,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
       "rawRail": {
         "name": "CancelRun",
         "type": "command",
@@ -16039,7 +17030,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
       "rawRail": {
         "name": "RecoverRun",
         "type": "command",
@@ -16931,7 +17922,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
       "rawRail": {
         "name": "GetRunStatus",
         "type": "query",
@@ -17339,7 +18330,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
       "rawRail": {
         "name": "ListRuns",
         "type": "query",
@@ -17463,7 +18454,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260802-recover-run-stored-plan-reference.md",
-      "sourceContentSha256": "2462cdeab8c4438d0a4c641df4c1ae6a07f67c65ab4a77fef117b8ed6157d41d",
+      "sourceContentSha256": "140d82fb7e216bf94f209aa8d5f7b50aa632aee42106e1adc7b92ef7c78edf62",
       "rawRail": {
         "name": "RunEventFeed",
         "type": "query",
@@ -28200,6 +29191,324 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-02T18:14:53.980Z"
+    },
+    {
+      "operationId": "d34e84a4-b71d-43fc-a6e6-1905065757db",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-152-DBT-RUNTIME-SECRETS:command:startrunadmission:latest:c860c1dc2d158194",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#startrunadmission",
+      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+      "sourceContentSha256": "595ac0fbe4868d8d2cb04916e190e96d64fef9baa96ab2ad671cddd5b24892d2",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "Run admission policy",
+        "railName": "StartRunAdmission",
+        "railType": "command",
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "greenTest": "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test",
+        "sourceRef": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+        "unitTests": [
+          "packages/@dvt/contracts/test/validation/execution-context.ts",
+          "apps/api/test/application/services/DbtRunExecutionContextBindingUseCase.test.ts",
+          "apps/api/test/application/services/dbtPlanExecutionBinding.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["RunExecutionContext"],
+        "fowlerSignals": [
+          "Credential references cross StartRun admission as opaque values and plaintext secret material is rejected."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Issue 152 symbols are not owned by the existing StartRunAdmission rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/invariants/security-and-trust-invariants.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+          "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/contracts test && pnpm --filter dvt-api test"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "implementationRefs": [
+          "packages/@dvt/contracts/src/contracts/engine/RunExecutionContext.v1.ts#CredentialReferenceSchema",
+          "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_MESSAGE",
+          "packages/@dvt/contracts/src/utils/contractPrimitives.ts#CREDENTIAL_REFERENCE_REGEX",
+          "packages/@dvt/contracts/src/utils/contractPrimitives.ts#isCredentialReference",
+          "apps/api/src/application/services/DbtRunExecutionContextBindingUseCase.ts#DbtRunExecutionContextBindingUseCase",
+          "apps/api/src/application/services/dbtPlanExecutionBinding.ts#resolveDbtPlanExecutionBinding"
+        ],
+        "normalizedRailName": "startrunadmission",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "595ac0fbe4868d8d2cb04916e190e96d64fef9baa96ab2ad671cddd5b24892d2",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/**",
+          "apps/api/src/application/services/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-03T09:20:15.266Z"
+    },
+    {
+      "operationId": "6e0f3d91-22af-4702-9466-d355eb7a0f17",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-152-DBT-RUNTIME-SECRETS:command:workflowengine.startrun:latest:5b9ee957844acd68",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#workflowengine.startrun",
+      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+      "sourceContentSha256": "595ac0fbe4868d8d2cb04916e190e96d64fef9baa96ab2ad671cddd5b24892d2",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "engine start-run lifecycle",
+        "railName": "WorkflowEngine.startRun",
+        "railType": "command",
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "greenTest": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test",
+        "sourceRef": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+        "unitTests": [
+          "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts",
+          "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+          "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["DbtRuntimeProfile"],
+        "fowlerSignals": [
+          "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Issue 152 symbols are not owned by the existing WorkflowEngine.startRun rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/invariants/security-and-trust-invariants.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+          "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+        ],
+        "architectureGuards": [
+          "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "implementationRefs": [
+          "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_NAME_PATTERN",
+          "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_REFERENCE_PREFIX",
+          "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#EnvironmentDbtRuntimeProfileResolver",
+          "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#RESOLUTION_ERROR",
+          "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#parseEnvironmentName",
+          "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#DbtCommandOutcome",
+          "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts#asAbortedSignal",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtCliFailures.ts#toDbtCliFailureMessage",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#DbtRuntimeProfileMaterializer",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts#MaterializedDbtRuntimeProfile",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolution",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#DbtRuntimeProfileResolutionInput",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#IDbtRuntimeProfileResolver",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#createDbtRuntimeProfileMaterializer",
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#materializeDbtRuntimeProfile",
+          "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts#createStepActivities"
+        ],
+        "normalizedRailName": "workflowengine.startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "595ac0fbe4868d8d2cb04916e190e96d64fef9baa96ab2ad671cddd5b24892d2",
+        "allowedImplementationSurfaces": [
+          "apps/temporal-worker/**",
+          "packages/@dvt/temporal-dbt-plugin/**",
+          "packages/@dvt/adapter-temporal/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-03T09:20:16.818Z"
+    },
+    {
+      "operationId": "b8059fee-fef5-4343-9d33-0fafe887d0b4",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-152-DBT-RUNTIME-SECRETS:command:startruntelemetrypolicy:latest:74eab3a0edb461c2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#startruntelemetrypolicy",
+      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+      "sourceContentSha256": "595ac0fbe4868d8d2cb04916e190e96d64fef9baa96ab2ad671cddd5b24892d2",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "Workflow engine start-run observability policy",
+        "railName": "StartRunTelemetryPolicy",
+        "railType": "command",
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "greenTest": "pnpm --filter dvt-api test",
+        "sourceRef": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+        "unitTests": [
+          "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
+          "apps/api/test/application/services/authorizeCommandScopeService.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["AuthAuditEvent"],
+        "fowlerSignals": [
+          "Authorization outcomes are persisted through the existing audit port as append-only tenant-scoped evidence."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Issue 152 symbols are not owned by the existing StartRunTelemetryPolicy rail.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/invariants/security-and-trust-invariants.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+          "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+        ],
+        "architectureGuards": ["pnpm --filter dvt-api test"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "implementationRefs": [
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#ALLOWED_EVENT_FIELDS",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuditPool",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#AuthAuditRow",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#CompositeAuthAuditPort",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#PostgresAuthAuditAdapter",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#UNSCOPED_TENANT",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#assertAllowedFields",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#buildEventId",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#inTenantTransaction",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#quoteIdentifier",
+          "apps/api/src/infrastructure/audit/PostgresAuthAuditAdapter.ts#toAuthAuditEvent",
+          "apps/api/src/application/services/authorizeCommandScopeService.ts#AuthorizeCommandScopeService",
+          "apps/api/src/modules/protectedRuntime/buildProtectedSecurityRuntime.ts#buildProtectedSecurityRuntime"
+        ],
+        "normalizedRailName": "startruntelemetrypolicy",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "595ac0fbe4868d8d2cb04916e190e96d64fef9baa96ab2ad671cddd5b24892d2",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/infrastructure/audit/**",
+          "apps/api/src/application/services/**",
+          "apps/api/src/modules/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-03T09:20:18.418Z"
+    },
+    {
+      "operationId": "e43f4551-46cd-41ab-b846-5d617664e3b5",
+      "idempotencyKey": "mvp-152-temporal-step-heartbeat-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#workflowengine.startrun",
+      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+      "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/adapter-temporal test:integration",
+        "dddOwner": "engine start-run lifecycle",
+        "railName": "WorkflowEngine.startRun",
+        "railType": "command",
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "greenTest": "pnpm --filter @dvt/adapter-temporal test:integration",
+        "sourceRef": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+        "unitTests": [
+          "packages/@dvt/adapter-temporal/test/activities.test.ts",
+          "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
+          "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["DbtRuntimeProfile"],
+        "fowlerSignals": [
+          "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Temporal cancellation waits forever because active step activities do not heartbeat.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/invariants/security-and-trust-invariants.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+          "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "implementationRefs": [
+          "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#ActivityHeartbeat",
+          "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS",
+          "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#executeWithHeartbeat"
+        ],
+        "normalizedRailName": "workflowengine.startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
+        "allowedImplementationSurfaces": ["packages/@dvt/adapter-temporal/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-03T09:58:40.217Z"
     }
   ]
 }

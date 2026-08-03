@@ -95,6 +95,7 @@ export class DbtRunExecutionContextBindingUseCase implements IStartRunUseCase {
       context,
       projectBundleRef: bundle.projectBundleRef,
       targetProfile: sourceBinding.targetProfile,
+      credentialRef: sourceBinding.credentialRef,
       ...(artifact.executionPolicy?.pluginCompatibilityFingerprint === undefined
         ? {}
         : {
@@ -146,6 +147,7 @@ function buildRunExecutionContext(input: {
   readonly context: AuthorizedCommandExecutionContext;
   readonly projectBundleRef: DbtProjectBundleRef;
   readonly targetProfile: string;
+  readonly credentialRef: string;
   readonly pluginCompatibilityFingerprint?: string;
 }): RunExecutionContext {
   return parseRunExecutionContext({
@@ -166,6 +168,7 @@ function buildRunExecutionContext(input: {
       dbt: {
         projectBundleRef: input.projectBundleRef,
         targetProfile: input.targetProfile,
+        credentialRef: input.credentialRef,
       },
     },
   });

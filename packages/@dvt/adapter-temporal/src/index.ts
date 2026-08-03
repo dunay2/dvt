@@ -60,6 +60,7 @@ export { TemporalPolicyMapper } from './TemporalPolicyMapper.js';
 // PR-2: Activities
 export type {
   ActivityDeps,
+  ActivityHeartbeat,
   Activities,
   EmitEventInput,
   FetchPlanForEngineDispatchInput,

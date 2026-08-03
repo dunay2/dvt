@@ -305,6 +305,7 @@ function makeRunExecutionContextArtifact(projectBundleUri: string): string {
     createdBy: 'test',
     pluginContexts: {
       dbt: {
+        credentialRef: 'env:DVT_TEST_DBT_PROFILES',
         projectBundleRef: {
           uri: projectBundleUri,
           kind: 'dbt-project-bundle',

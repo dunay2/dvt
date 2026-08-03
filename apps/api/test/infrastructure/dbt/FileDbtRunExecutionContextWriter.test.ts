@@ -44,6 +44,7 @@ function buildContext(): RunExecutionContext {
     createdBy: 'principal-1',
     pluginContexts: {
       dbt: {
+        credentialRef: 'env:DBT_PROFILES_DIR',
         projectBundleRef: {
           uri: `file:///bundles/tenants/tenant-1/${'c'.repeat(64)}`,
           kind: 'dbt-project-bundle',

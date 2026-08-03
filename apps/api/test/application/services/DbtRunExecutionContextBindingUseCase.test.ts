@@ -76,7 +76,10 @@ describe('DbtRunExecutionContextBindingUseCase', () => {
       context: expect.objectContaining({
         planSha256: PLAN_REF.sha256,
         pluginContexts: {
-          dbt: expect.objectContaining({ targetProfile: 'production' }),
+          dbt: expect.objectContaining({
+            targetProfile: 'production',
+            credentialRef: 'vault:dbt/production',
+          }),
         },
       }),
     });

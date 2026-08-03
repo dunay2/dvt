@@ -129,6 +129,7 @@ function makeWorkerHost(options: WorkerHostFixtureOptions = {}): TemporalWorkerH
   const config: TemporalWorkerHostConfig = {
     temporalConfig,
     activityDeps: mkActivityDeps(),
+    activityHeartbeat: () => undefined,
   };
 
   if (options.workflowsPath !== null) {
