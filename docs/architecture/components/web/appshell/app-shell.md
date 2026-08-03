@@ -51,14 +51,13 @@ flowchart TB
 
 ## Shell Service Composition
 
-The shell is also the composition boundary for frontend data source mode and
-service wiring.
+The shell is also the composition boundary for frontend service wiring.
 
-`Root` mounts `AppServicesProvider`, which resolves `VITE_DATA_SOURCE` once and
-composes typed service instances for views and plugins through hooks.
+`Root` mounts `AppServicesProvider`, which composes API-backed typed service
+instances for views and plugins through hooks.
 
-This prevents route-level components from instantiating mode-aware services or
-reading `resolveDataSource()` directly.
+This prevents route-level components from constructing transports or selecting
+a second product data authority.
 
 ## Shell Application Menu
 
@@ -157,7 +156,7 @@ Current state model:
 
 ```mermaid
 flowchart LR
-  Inputs["dataSourceMode + runId + isLoading + lines"] --> Model["buildBottomOperationalDrawerLogModel(...)"]
+  Inputs["runId + feed state + lines"] --> Model["buildBottomOperationalDrawerLogModel(...)"]
   Model --> Idle["idle: empty-state guidance"]
   Model --> Loading["loading: run badge + loading copy"]
   Model --> Streaming["streaming: run badge + xterm-backed live companion"]

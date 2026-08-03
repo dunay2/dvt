@@ -1,141 +1,65 @@
 ---
-title: Frontend Runtime Modes User Manual
+title: Frontend API Runtime User Manual
 status: Active
 owner: Frontend / Product / Docs
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ---
 
-# Frontend Runtime Modes User Manual
+# Frontend API Runtime User Manual
 
 ## Purpose
 
-This manual explains how operators and developers should interpret frontend
-behavior in `mock` and `api` modes.
+This manual explains the single supported frontend runtime posture. Raven reads
+and changes product data through governed API ports. There is no selectable
+local or fixture-backed product mode.
 
-## Runtime Modes
+## Runtime Posture
 
-### `mock` mode
-
-- used for explicit local development and UX iteration
-- data is synthetic or locally derived
-- useful for isolated component, route, and adapter work
-- not the canonical product truth for active Canvas authoring after the
-  protected-draft hard-cut
-
-### `api` mode
-
-- default runtime mode when `VITE_DATA_SOURCE` is omitted or invalid
-- used for integration and operational validation
-- views consume backend-backed data through governed adapters
-- route behavior must follow runtime contracts exposed by `apps/api`
-- unsupported mutations must fail closed instead of being implied by retired UI
-  affordances
-
-Mode selection is done once at frontend composition boot. Views should not
-branch on mode.
+- `VITE_API_BASE_URL` selects the backend address, not a data authority.
+- Views consume backend-backed data through the ports composed by
+  `AppServicesProvider`.
+- Unsupported or unavailable operations fail closed.
+- Component and integration tests inject explicit port doubles; those doubles
+  are not product runtime options.
 
 ## Capability Interpretation
 
-Mode selection alone is not enough to understand route behavior.
+Using the API does not imply that every operation is available. Operators must
+distinguish:
 
-Operators and developers must distinguish:
+- selected execution adapter;
+- granted workspace and project scope;
+- backend-reported capability;
+- platform readiness;
+- route startup or operability posture.
 
-- selected adapter family
-- explicit service capability
-- route startup or operability posture
+Canvas authoring requires protected workspace-draft authority and the relevant
+capabilities. Source Import appears only when its governed connection,
+discovery, probe, and import rails are available for the active context.
 
-Current Canvas rule:
+## Shell States
 
-- active Canvas authoring requires `api` mode plus protected workspace-draft
-  authority
-- `api` mode exposes Source Import through the protected warehouse connection,
-  source-object discovery, connection probe, and import rails when the active
-  route and plugin contribution allow it
-- `mock` mode may still boot the frontend, but Canvas authoring is fail-closed
-  and must not be treated as equivalent product behavior
+The shell exposes explicit states:
 
-## Shell Guarantees
+- `loading`: authoritative backend state is being resolved;
+- `empty`: no data exists for the selected context;
+- `degraded`: only part of the required backend surface is available;
+- `offline`: the backend cannot be reached;
+- `read-only`: inspection is allowed but mutation is not.
 
-The shell should expose clear states:
+No route substitutes fixture data or fake success for these states.
 
-- `loading`: backend state is being resolved
-- `empty`: no data exists for the selected context
-- `degraded`: partial backend availability
-- `offline`: backend unreachable
-- `read-only`: user can inspect but cannot execute mutation actions
+## Route Behavior
 
-## Route Behavior Under Target Model
-
-- Canvas: renders graph and planning actions through controller hooks and
-  facades
-- Canvas source import is a capability-gated affordance, not a guaranteed
-  action in every runtime mode
-- Runs: list/detail/events flow reads runtime data through `RunsPort`
-- Diff: reads diff data through `WorkspacePort` or dedicated diff port
-- Artifacts: reads artifact surfaces via adapter-backed services
-- Admin: reads capabilities, role, and audit views through governed clients
-
-No route should decide API/mock mode locally.
+- Canvas renders graph and planning actions through controller hooks and typed
+  ports.
+- Runs reads snapshots and events through `RunsPort`.
+- Workspace files, diff, artifacts, and administration use their governed API
+  queries and commands.
+- Platform diagnostics display the literal API transport and resolved base URL.
 
 ## Failure Interpretation
 
-- capability unavailable: specific feature reported as not available by backend
-- backend failure: request failed due to network or HTTP error
-- permissions failure: action denied by auth or role posture
-
-Operators should distinguish "feature unavailable" from "system offline".
-
-For Canvas specifically:
-
-- `feature unavailable` means the route is up but its route posture, plugin
-  contribution, or protected source-import capability does not admit the
-  action; the UI must hide the affordance rather than invoke a fake fallback
-- provider, authorization, discovery, and import failures are operation
-  failures surfaced by the real API rail, not evidence that the feature is
-  globally absent
-- `system offline` means route startup or backend access is degraded and the
-  route should publish blocked or offline posture instead
-
-## Shell Health Banner Behavior (F-03)
-
-The shell TopBar and global banner use one health capability seam and expose:
-
-- `Checking`: first health query is still pending and no optimistic `ok` is
-  shown
-- `Backend degraded`: backend reachable but health semantics are degraded
-- `Backend offline`: required health snapshot is unreachable
-
-Retry policy:
-
-- automatic polling at `15s` in stable `ok` state
-- exponential backoff for repeated offline failures, capped at `60s`
-- manual `Retry now` action always available while degraded or offline
-
-Reference contract:
-
-- [Frontend-facing backend contract MVP-E1 2026-04-04](./frontend-backend-contract-mvp-e1-20260404.md)
-
-## F-03 Test Matrix By Type
-
-<!-- markdownlint-disable MD060 -->
-
-| Type          | Scope                                      | Primary files                                                                                                                                                             | Focus                                                                                                 |
-| ------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `unit`        | health projection and retry/backoff policy | `apps/web/src/capabilities/platform-health/presentation/platformHealthStatus.test.ts`, `apps/web/src/capabilities/platform-health/domain/platformHealthSelectors.test.ts` | `ok/degraded/offline` mapping and policy behavior for probe/auth/server failures                      |
-| `integration` | shell banner and topbar behavior           | `apps/web/src/app/Root.test.tsx`                                                                                                                                          | Initial checking state, degraded/offline banner rendering, countdown, and manual retry behavior       |
-| `contract`    | backend endpoint-to-snapshot mapping       | `apps/web/src/capabilities/platform-health/infrastructure/httpPlatformHealthClient.test.ts`                                                                               | HTTP and network failure mapping (`401/403/5xx` and unavailable probes) into frontend probe semantics |
-
-<!-- markdownlint-enable MD060 -->
-
-## Route Journey (Operator)
-
-```mermaid
-flowchart LR
-  Shell["Shell"] --> Canvas["Canvas"]
-  Canvas --> Plan["Plan preview"]
-  Plan --> Run["Run start"]
-  Run --> Detail["Runs detail"]
-  Detail --> Timeline["Event timeline"]
-```
-
-Mode selection is not part of this route journey.
+An unavailable capability, authorization denial, readiness failure, or network
+error is a product state. Retry and recovery actions must use the existing
+governed rails and cannot switch the frontend to another data authority.

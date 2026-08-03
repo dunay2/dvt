@@ -11,7 +11,7 @@ planning_type: architecture
 ## Purpose
 
 The web composition root is API-only. Fixture data may exist only behind
-explicit test doubles and must never be selected by product runtime mode.
+explicit test doubles and are never selectable by product runtime.
 
 ## Public API
 
@@ -26,7 +26,7 @@ explicit test doubles and must never be selected by product runtime mode.
 ## Invariants
 
 - Product composition never imports `*.mock.ts` or test-double modules.
-- `DataSourceMode` resolves to API-only for product runtime.
+- Product runtime has no data-source strategy or transport-selection singleton.
 - Protected routes always resolve session and workspace context through API
   rail code; there is no mock bypass.
 - Missing backend rails fail closed in API adapters.
@@ -103,6 +103,6 @@ flowchart TB
 ## Negative Tests
 
 - Product composition source cannot import or call mock adapters.
-- Product data-source resolution cannot return `mock`.
-- `AuthRouteGate` cannot bypass session resolution for `mock`.
+- Product composition cannot expose a fixture-backed runtime branch.
+- `AuthRouteGate` cannot bypass protected session resolution.
 - No non-test `*.mock.ts` files may live under `apps/web/src/app/services`.

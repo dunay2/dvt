@@ -16,7 +16,7 @@ This plan covers the frontend data-boundary subsystem inside `apps/web` and Lane
 
 - frontend remains a browser client, never execution authority;
 - route/view layers do not own mode selection;
-- `VITE_DATA_SOURCE` is read only in one composition boundary;
+- API-backed ports are assembled only in the composition boundary;
 - service and query boundaries use typed contracts;
 - no raw fetch in route-level query hooks when a governed client exists.
 

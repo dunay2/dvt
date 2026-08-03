@@ -34,7 +34,7 @@ flowchart LR
   View["View / Controller hook"] --> Hook["Facade / query hook"]
   Hook --> Composition["buildAppServices() / AppServicesContext"]
   Composition --> Factory["createWorkspaceService/createRunsService/createPlansService"]
-  Factory --> ApiOrMock["API adapter OR mock adapter"]
+  Factory --> ApiAdapter["API adapter"]
   Hook --> Capabilities["useCapabilitiesQuery -> CapabilitiesPort"]
   Capabilities --> ApiClient["governed API client"]
   View --> Stores["session/uiLayout/execution/canvasInteraction stores"]
@@ -72,7 +72,6 @@ flowchart TB
   Presentation["Presentation: routes + views + controller hooks"] --> Application["Application facades"]
   Application --> Ports["Domain ports"]
   Ports --> ApiAdapters["API adapters"]
-  Ports --> MockAdapters["Mock adapters"]
   ApiAdapters --> Api["apps/api"]
   Application --> Session["Session context port"]
   Application --> Shell["Shell feedback port"]
@@ -85,8 +84,8 @@ Chosen model: capability-centered hexagonal frontend.
 - Presentation owns rendering and intent collection only.
 - Application owns orchestration and route use-cases.
 - Domain contracts own port interfaces and UI-facing view-model rules.
-- Adapters implement API or mock behind those ports.
-- Composition root is the only place reading `VITE_DATA_SOURCE`.
+- API adapters implement those ports for product runtime.
+- Tests inject explicit port doubles through the composition root.
 
 ```mermaid
 flowchart LR
@@ -94,7 +93,6 @@ flowchart LR
   Hook --> Facade["Query facade / use case"]
   Facade --> Port["Port interface"]
   Port --> ApiAdapter["API adapter"]
-  Port --> MockAdapter["Mock adapter"]
   ApiAdapter --> Api["apps/api"]
 ```
 
@@ -126,8 +124,8 @@ Positioning rules:
 - Monaco becomes first-class only in `Code`, `Diff`, `Artifacts`, and
   `Templates`, and only through route-safe lazy gateways.
 - Monaco vendor dependencies stay isolated in the named `monaco-vendor` chunk.
-- `VITE_DATA_SOURCE`, adapter selection, and route composition stay owned by the
-  frontend composition root, not by Monaco surfaces.
+- API client and route composition stay owned by the frontend composition root,
+  not by Monaco surfaces.
 - Future docking, if ever needed, is a later layout decision and not part of
   this boundary model.
 
@@ -144,8 +142,8 @@ flowchart LR
 
 Expected gains:
 
-- one controlled mode boundary;
-- lower API/mock drift risk;
+- one product data authority;
+- no transport-selection drift;
 - lower coupling from views to transport concerns;
 - clearer ownership for store and query behavior.
 

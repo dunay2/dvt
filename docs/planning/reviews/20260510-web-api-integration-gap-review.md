@@ -94,7 +94,7 @@ must stay outside product semantics.
 Implementation update on 2026-05-10: product app-service composition was also
 hard-cut to API-only. The former mock adapters were moved out of
 `apps/web/src/app/services` into explicit test-double surfaces under
-`apps/web/src/testing`. `DataSourceMode` now resolves to API-only and protected
+`apps/web/src/testing`. Product runtime now composes API ports directly and protected
 routes no longer have a mock bypass.
 
 ## API And Contract Baseline

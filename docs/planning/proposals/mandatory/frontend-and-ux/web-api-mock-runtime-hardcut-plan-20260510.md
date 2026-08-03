@@ -164,9 +164,6 @@ commandQueryRails:
     type: query
     dddOwner: Workspace graph draft read model
 domainObjects:
-  - name: DataSourceMode
-    type: value object
-    owner: Web composition runtime mode
   - name: AppServices
     type: composition root
     owner: Web application service ports
@@ -177,7 +174,7 @@ fowlerSignals:
   - Hidden Authority from mock runtime services
   - Parallel Model between mock services and API rails
   - Boundary Drift in protected route auth bypass
-  - Primitive Obsession around mode mock
+  - Primitive Obsession around the removed data-source mode
 architectureGuards:
   - pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesMockHardcut.architecture.test.ts
   - pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePortDecomposition.architecture.test.ts
@@ -187,7 +184,7 @@ completionGate:
   - pnpm docs:sync
   - pnpm docs:status:generate
   - pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesMockHardcut.architecture.test.ts
-  - pnpm --filter @dvt/web exec vitest run src/app/services/config/dataSource.test.ts src/app/services/composition/appServices.test.ts src/app/services/workspace/workspacePorts.imports.test.ts
+  - pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServices.test.ts src/app/services/workspace/workspacePorts.imports.test.ts
   - pnpm --filter @dvt/web typecheck
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush

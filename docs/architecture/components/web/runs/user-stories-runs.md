@@ -315,7 +315,7 @@ query fails.
 - Given the application is configured for API mode or mock mode
 - When `createRunsService(mode)` is called
 - Then the returned object satisfies `IRunsPort`
-- And route code does not branch on `DataSourceMode`
+- And route code does not select a product data transport
 
 **Current evidence:**
 

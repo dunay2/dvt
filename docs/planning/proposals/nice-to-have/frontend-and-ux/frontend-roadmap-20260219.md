@@ -101,7 +101,7 @@ Canonical `MVP-E1` contract artifact:
 
 ### Phase 1 - Data and state convergence
 
-- `F-04`: finish the `VITE_DATA_SOURCE` boundary so views stop owning mode
+- `F-04`: keep the API service boundary composition-owned
   decisions.
 - `F-04` implementation and task decomposition are defined in the F-04
   convergence plan document.
@@ -196,10 +196,9 @@ TanStack Query is already installed. The real roadmap item is standardization:
 
 ### Data source separation
 
-`VITE_DATA_SOURCE=mock|api` controls the data layer. Views never import mock
-data directly; they consume `app/services/*` and typed view models. Mock mode
-must remain usable for development and demos without letting mock behavior leak
-into view composition.
+The API is the product data authority. Views never import test doubles or data
+directly; they consume typed application ports and view models. Tests inject
+explicit doubles through the composition root.
 
 ### Service layer
 
