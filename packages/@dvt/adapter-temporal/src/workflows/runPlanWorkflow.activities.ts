@@ -24,6 +24,7 @@ export function createStepActivities(
 ): Pick<WorkflowActivitiesPort, 'executeStep'> {
   return proxyActivities<Pick<WorkflowActivitiesPort, 'executeStep'>>({
     startToCloseTimeout: '30m',
+    heartbeatTimeout: '10s',
     cancellationType: ActivityCancellationType.WAIT_CANCELLATION_COMPLETED,
     retry: resolveStepActivityRetryPolicy(step),
     ...resolveStepActivityTaskQueue(step, stepActivityRouting),

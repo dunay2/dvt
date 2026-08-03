@@ -4,7 +4,7 @@
  * Concrete responsibilities live in focused modules under this folder.
  */
 
-export type { Activities } from './activityFactory.js';
+export type { Activities, ActivityHeartbeat } from './activityFactory.js';
 export { createActivities } from './activityFactory.js';
 export {
   createDefaultStepActivityRegistry,

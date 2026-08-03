@@ -19,6 +19,7 @@ import {
   type PlanRef,
   type ResolvedRunContext,
 } from '@dvt/contracts';
+import { Context } from '@temporalio/activity';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
 import { describe, expect, it } from 'vitest';
 
@@ -150,8 +151,22 @@ function createBlockingExecutor(targetStepId: string): {
       },
       async execute(step) {
         markExecuting?.();
-        await new Promise<void>((resolve) => {
-          releaseExecution = resolve;
+        const cancellationSignal = Context.current().cancellationSignal;
+        await new Promise<void>((resolve, reject) => {
+          const onCancellation = () => {
+            cancellationSignal.removeEventListener('abort', onCancellation);
+            reject(cancellationSignal.reason);
+          };
+          releaseExecution = () => {
+            cancellationSignal.removeEventListener('abort', onCancellation);
+            resolve();
+          };
+
+          if (cancellationSignal.aborted) {
+            onCancellation();
+            return;
+          }
+          cancellationSignal.addEventListener('abort', onCancellation, { once: true });
         });
         return { stepId: step.stepId, status: 'COMPLETED' };
       },
@@ -467,7 +482,6 @@ describe('temporal integration (time-skipping)', () => {
 
         await blocker.waitUntilExecuting;
         await adapter.cancelRun(runRef);
-        blocker.release();
 
         await waitForCondition(
           () => store.listRunEvents(RunId.of(runRef.runId)),

@@ -83,6 +83,7 @@ describe('workflow step activity routing', () => {
     expect(proxyActivitiesMock).toHaveBeenLastCalledWith(
       expect.objectContaining({
         cancellationType: 'WAIT_CANCELLATION_COMPLETED',
+        heartbeatTimeout: '10s',
       })
     );
   });
