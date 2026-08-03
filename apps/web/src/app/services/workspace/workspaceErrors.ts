@@ -7,10 +7,7 @@ export type WorkspaceApiUnsupportedCapability =
   | 'workspace.fileWrite';
 
 export type WorkspaceApiUnsupportedRail =
-  | 'GetWorkspaceDiffChanges'
-  | 'ListAdminRoles'
-  | 'ListAdminAuditLog'
-  | 'SaveWorkspaceFileContent';
+  'GetWorkspaceDiffChanges' | 'ListAdminRoles' | 'ListAdminAuditLog' | 'SaveWorkspaceFileContent';
 
 export const WORKSPACE_HTTP_ERROR_REASON = Object.freeze({
   fileNotFound: 'workspace_file_not_found',
@@ -54,9 +51,7 @@ export class WorkspaceApiCapabilityUnsupportedError extends Error {
   readonly rail: WorkspaceApiUnsupportedRail;
 
   constructor(capability: WorkspaceApiUnsupportedCapability, rail: WorkspaceApiUnsupportedRail) {
-    super(
-      `${capability} is not available in API mode because ${rail} does not have a backend route.`
-    );
+    super(`${capability} is unavailable because ${rail} does not have a backend route.`);
     this.name = 'WorkspaceApiCapabilityUnsupportedError';
     this.capability = capability;
     this.rail = rail;

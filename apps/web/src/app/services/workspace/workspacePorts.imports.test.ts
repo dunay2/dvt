@@ -134,7 +134,7 @@ describe('workspace ports source import', () => {
     expect(secondAfter.nodes.some((node) => node.id === 'src_crm_contacts')).toBe(true);
   });
 
-  it('uses protected API mode warehouse endpoints when source import is available', async () => {
+  it('uses protected warehouse endpoints when source import is available', async () => {
     const scope = buildWorkspaceScope();
     setWorkspaceScope(scope);
     const { apiClient, getJson, postJson } = createApiClientHarness({

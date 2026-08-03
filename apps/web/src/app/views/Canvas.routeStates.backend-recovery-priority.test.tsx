@@ -124,7 +124,7 @@ describe('Canvas route backend and recovery priority', () => {
     });
   });
 
-  it('blocks the canvas surface in api mode when backend readiness is not satisfied', async () => {
+  it('blocks the canvas surface when backend readiness is not satisfied', async () => {
     await renderCanvasRouteWithController(harness, {
       backendReady: false,
       backendBlockMessage: 'Readiness not satisfied: database_not_configured.',

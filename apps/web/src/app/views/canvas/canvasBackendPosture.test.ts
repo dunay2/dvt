@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { deriveCanvasBackendPosture } from './canvasBackendPosture';
 
 describe('canvasBackendPosture', () => {
-  it('keeps api mode pending while the readiness check is unresolved', () => {
+  it('keeps backend posture pending while the readiness check is unresolved', () => {
     expect(
       deriveCanvasBackendPosture({
         platformHealthQuery: {
@@ -21,7 +21,7 @@ describe('canvasBackendPosture', () => {
     });
   });
 
-  it('keeps api mode blocked instead of returning to pending while a failed probe retries', () => {
+  it('keeps backend posture blocked instead of returning to pending while a failed probe retries', () => {
     expect(
       deriveCanvasBackendPosture({
         platformHealthQuery: {
@@ -40,7 +40,7 @@ describe('canvasBackendPosture', () => {
     });
   });
 
-  it('keeps api mode blocked when a previous health error has settled before a retry', () => {
+  it('keeps backend posture blocked when a previous health error has settled before a retry', () => {
     expect(
       deriveCanvasBackendPosture({
         platformHealthQuery: {

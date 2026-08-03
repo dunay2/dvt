@@ -128,7 +128,7 @@ export const canvasViewRouteCopyByKey = {
   },
   backendBlockedFallbackMessage: {
     key: 'canvas.backend.blockedFallbackMessage',
-    fallback: 'Canvas stays blocked until backend readiness is restored in API mode.',
+    fallback: 'Canvas stays blocked until backend readiness is restored.',
   },
   mutationUnavailableMessage: {
     key: 'canvas.mutation.unavailableMessage',
