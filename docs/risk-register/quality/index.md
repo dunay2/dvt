@@ -51,6 +51,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [DBT plan-store replay reuse must keep canonical payload comparison stable](R-20260526-DBT-PLAN-STORE-REUSE.yaml)
 - [dbt preview provenance can drift before runtime admission](R-20260715-DBT-PROJECT-ROUNDTRIP-P4.yaml)
 - [DBT runtime capability posture can drift between API and worker deployment](R-20260603-DBT-CAPABILITY-ADMISSION.yaml)
+- [DBT runtime credentials could escape the worker boundary or survive execution](R-20260803-DBT-RUNTIME-CREDENTIALS.yaml)
 - [dbt YAML description edits could alter unrelated project bytes](R-20260717-DBT-YAML-DESCRIPTION-ROUNDTRIP.yaml)
 - [Delivery-owned in-memory outbox core can mask durable adapter parity gaps](R-20260514-AR-A7-IN-MEMORY-OUTBOX-OWNERSHIP.yaml)
 - [Documentary misalignment risk for snapshot ownership and fallback polling traceability](R-20260402-SNAPSHOT-RETRY-FALLBACK-CADENCE.yaml)
