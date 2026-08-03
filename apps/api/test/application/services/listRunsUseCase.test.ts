@@ -94,6 +94,56 @@ describe('ListRunsUseCase', () => {
     expect(startDispatchResolver.resolve).toHaveBeenCalledOnce();
   });
 
+  it('projects accepted cancellation receipts in list items before lifecycle catches up', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const cancellationReceipts = {
+      hasAccepted: vi.fn().mockResolvedValue(true),
+      recordAccepted: vi.fn(),
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'RUNNING',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      registeredTargetAdapterRegistry as never,
+      undefined,
+      cancellationReceipts
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.cancel).toEqual({
+      available: false,
+      reason: 'cancellation_pending',
+    });
+    expect(cancellationReceipts.hasAccepted).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      runId: 'run-1',
+    });
+  });
+
   it('filters by authorized scope and projects the same canonical operational truth as detail', async () => {
     const stateStore = {
       async listRuns() {

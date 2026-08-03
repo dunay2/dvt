@@ -18,6 +18,7 @@ export interface ProjectRunOperationalTruthInput {
   readonly recoveryPlanAvailable?: boolean;
   readonly recoveryAdapterAvailable?: boolean;
   readonly cancelDispatchConfirmed?: boolean;
+  readonly cancellationAccepted?: boolean;
 }
 
 export function projectRunOperationalTruth(
@@ -51,13 +52,13 @@ export function projectRunOperationalTruth(
     ...(currentStepId === undefined ? {} : { currentStepId }),
     ...(failedStepId === undefined ? {} : { failedStepId }),
     ...(errorReason === undefined ? {} : { errorReason }),
-    controls: projectRunControlAvailability(
-      status,
-      input.recoveryContextTrusted ?? true,
-      input.recoveryPlanAvailable ?? true,
-      input.recoveryAdapterAvailable ?? true,
-      input.cancelDispatchConfirmed ?? false
-    ),
+    controls: projectRunControlAvailability(status, {
+      recoveryContextTrusted: input.recoveryContextTrusted ?? true,
+      recoveryPlanAvailable: input.recoveryPlanAvailable ?? true,
+      recoveryAdapterAvailable: input.recoveryAdapterAvailable ?? true,
+      cancelDispatchConfirmed: input.cancelDispatchConfirmed ?? false,
+      cancellationAccepted: input.cancellationAccepted ?? false,
+    }),
   };
 }
 

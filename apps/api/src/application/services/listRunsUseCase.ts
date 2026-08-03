@@ -8,6 +8,7 @@ import type {
 } from '@dvt/engine';
 
 import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
+import type { IRunCancellationReceiptStore } from '../ports/runCancellationReceiptStore.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
@@ -37,7 +38,8 @@ export class ListRunsUseCase implements IListRunsUseCase {
     private readonly planStore?: RecoveryPlanReader,
     private readonly planIntegrityValidator?: IPlanIntegrityValidator,
     private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry,
-    private readonly startDispatchResolver?: IRunStartDispatchResolver
+    private readonly startDispatchResolver?: IRunStartDispatchResolver,
+    private readonly cancellationReceipts?: IRunCancellationReceiptStore
   ) {}
 
   public async execute(
@@ -91,16 +93,24 @@ export class ListRunsUseCase implements IListRunsUseCase {
     item: RunMetadata,
     status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
   ): Promise<RunListItemDto> {
-    const [recoveryContextTrusted, recoveryPlanAvailable, startDispatch] = await Promise.all([
-      resolveRunRecoveryContextTrust(
-        this.executionContextReader,
-        this.executionContextRequirementResolver,
-        item,
-        status
-      ),
-      resolveRunRecoveryPlanAvailability(this.planStore, this.planIntegrityValidator, item, status),
-      this.startDispatchResolver?.resolve(item, status),
-    ]);
+    const [recoveryContextTrusted, recoveryPlanAvailable, startDispatch, cancellationAccepted] =
+      await Promise.all([
+        resolveRunRecoveryContextTrust(
+          this.executionContextReader,
+          this.executionContextRequirementResolver,
+          item,
+          status
+        ),
+        resolveRunRecoveryPlanAvailability(
+          this.planStore,
+          this.planIntegrityValidator,
+          item,
+          status
+        ),
+        this.startDispatchResolver?.resolve(item, status),
+        this.cancellationReceipts?.hasAccepted({ tenantId: item.tenantId, runId: item.runId }) ??
+          false,
+      ]);
 
     return projectRunOperationalTruth({
       metadata: item,
@@ -110,6 +120,7 @@ export class ListRunsUseCase implements IListRunsUseCase {
       recoveryAdapterAvailable:
         this.targetAdapterRegistry?.isSupported(item.providerRef.provider) ?? false,
       cancelDispatchConfirmed: startDispatch?.kind === 'confirmed' || status.status !== 'PENDING',
+      cancellationAccepted,
     });
   }
 

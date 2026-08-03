@@ -115,6 +115,47 @@ describe('GetRunStatusUseCase', () => {
     expect(startDispatchResolver.resolve).toHaveBeenCalledOnce();
   });
 
+  it('projects an accepted cancellation receipt before runtime lifecycle catches up', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({
+        runId: 'provider-run-1',
+        status: 'RUNNING',
+      }),
+    };
+    const cancellationReceipts = {
+      hasAccepted: vi.fn().mockResolvedValue(true),
+      recordAccepted: vi.fn(),
+    };
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      registeredTargetAdapterRegistry as never,
+      undefined,
+      cancellationReceipts
+    );
+
+    const result = await useCase.execute(
+      { runId: 'run-1', enriched: false },
+      queryContext as never
+    );
+
+    expect(result.controls.cancel).toEqual({
+      available: false,
+      reason: 'cancellation_pending',
+    });
+    expect(cancellationReceipts.hasAccepted).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      runId: 'run-1',
+    });
+  });
+
   it('loads metadata and returns projected engine status with FRESH staleness', async () => {
     const engine = {
       async getRunStatus(runRef: unknown) {

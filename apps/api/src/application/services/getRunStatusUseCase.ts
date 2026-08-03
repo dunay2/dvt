@@ -15,6 +15,7 @@ import {
 } from '@dvt/engine';
 
 import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
+import type { IRunCancellationReceiptStore } from '../ports/runCancellationReceiptStore.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
@@ -70,7 +71,8 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver,
     private readonly planIntegrityValidator?: IPlanIntegrityValidator,
     private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry,
-    private readonly startDispatchResolver?: IRunStartDispatchResolver
+    private readonly startDispatchResolver?: IRunStartDispatchResolver,
+    private readonly cancellationReceipts?: IRunCancellationReceiptStore
   ) {}
 
   public async execute(
@@ -136,21 +138,23 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       runtimeAdapter: metadata.providerRef.provider,
       ...(planRecord === undefined ? {} : { planRecord }),
     });
-    const [recoveryContextTrusted, recoveryPlanAvailable, startDispatch] = await Promise.all([
-      resolveRunRecoveryContextTrust(
-        this.executionContextReader,
-        this.executionContextRequirementResolver,
-        metadata,
-        snapshot
-      ),
-      resolveRunRecoveryPlanAvailability(
-        this.planStore,
-        this.planIntegrityValidator,
-        metadata,
-        snapshot
-      ),
-      this.startDispatchResolver?.resolve(metadata, snapshot),
-    ]);
+    const [recoveryContextTrusted, recoveryPlanAvailable, startDispatch, cancellationAccepted] =
+      await Promise.all([
+        resolveRunRecoveryContextTrust(
+          this.executionContextReader,
+          this.executionContextRequirementResolver,
+          metadata,
+          snapshot
+        ),
+        resolveRunRecoveryPlanAvailability(
+          this.planStore,
+          this.planIntegrityValidator,
+          metadata,
+          snapshot
+        ),
+        this.startDispatchResolver?.resolve(metadata, snapshot),
+        this.cancellationReceipts?.hasAccepted(runReadRef) ?? false,
+      ]);
     const operationalTruth = projectRunOperationalTruth({
       metadata,
       status: snapshot,
@@ -160,6 +164,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       recoveryAdapterAvailable:
         this.targetAdapterRegistry?.isSupported(metadata.providerRef.provider) ?? false,
       cancelDispatchConfirmed: startDispatch?.kind === 'confirmed' || snapshot.status !== 'PENDING',
+      cancellationAccepted,
     });
 
     return {

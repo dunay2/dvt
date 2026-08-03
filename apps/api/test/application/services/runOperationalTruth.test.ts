@@ -108,6 +108,19 @@ describe('projectRunOperationalTruth', () => {
     ).toEqual({ available: true });
   });
 
+  it('withdraws cancellation after command acceptance while runtime lifecycle is still running', () => {
+    expect(
+      projectRunOperationalTruth({
+        metadata,
+        status: {
+          runId: 'run-provider',
+          status: 'RUNNING',
+        },
+        cancellationAccepted: true,
+      }).controls.cancel
+    ).toEqual({ available: false, reason: 'cancellation_pending' });
+  });
+
   it.each([
     ['RUNNING', undefined, true, undefined, false, 'run_active'],
     ['RUNNING', 'CANCELLING', false, 'cancellation_pending', false, 'run_active'],

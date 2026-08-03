@@ -19,6 +19,14 @@ export type RecoverRunDecision =
   | Readonly<{ kind: 'dispatch' }>
   | Readonly<{ kind: 'reject'; reason: RunControlUnavailableReason }>;
 
+export interface RunControlAvailabilityEvidence {
+  readonly recoveryContextTrusted?: boolean;
+  readonly recoveryPlanAvailable?: boolean;
+  readonly recoveryAdapterAvailable?: boolean;
+  readonly cancelDispatchConfirmed?: boolean;
+  readonly cancellationAccepted?: boolean;
+}
+
 export function decideCancelRun(
   status: CanonicalRunStatus,
   startDispatchConfirmed = false
@@ -50,12 +58,11 @@ export function decideRecoverRun(status: CanonicalRunStatus): RecoverRunDecision
 
 export function projectRunControlAvailability(
   status: CanonicalRunStatus,
-  recoveryContextTrusted = true,
-  recoveryPlanAvailable = true,
-  recoveryAdapterAvailable = true,
-  cancelDispatchConfirmed = false
+  evidence: RunControlAvailabilityEvidence = {}
 ): RunControlAvailabilityDto {
-  const cancelDecision = decideCancelRun(status, cancelDispatchConfirmed);
+  const cancelDecision = evidence.cancellationAccepted
+    ? ({ kind: 'settled', disposition: 'already_requested' } as const)
+    : decideCancelRun(status, evidence.cancelDispatchConfirmed ?? false);
   const cancel: RunControlAvailabilityDto['cancel'] =
     cancelDecision.kind === 'dispatch'
       ? { available: true }
@@ -73,11 +80,11 @@ export function projectRunControlAvailability(
   if (recoverDecision.kind === 'dispatch') {
     return {
       cancel,
-      recover: !recoveryAdapterAvailable
+      recover: !(evidence.recoveryAdapterAvailable ?? true)
         ? { available: false, reason: 'source_adapter_unavailable' }
-        : !recoveryPlanAvailable
+        : !(evidence.recoveryPlanAvailable ?? true)
           ? { available: false, reason: 'source_plan_unavailable' }
-          : recoveryContextTrusted
+          : (evidence.recoveryContextTrusted ?? true)
             ? { available: true }
             : { available: false, reason: 'source_context_untrusted' },
     };
