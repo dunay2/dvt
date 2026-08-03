@@ -266,8 +266,9 @@ sequenceDiagram
 Current truth:
 
 - the active `api` authoring path exposes `Add source` only when route mutation
-  posture, a runtime plugin contribution, and the implemented protected
-  source-import transport capability all allow it
+  posture and an authorized runtime source-import contribution both allow it;
+  the contribution invokes the existing protected source-import rails rather
+  than duplicating transport reachability as route policy
 - the API path owns connection list/create/test, provider-neutral object
   discovery, and source registration; failures remain server-authored and
   fail closed
