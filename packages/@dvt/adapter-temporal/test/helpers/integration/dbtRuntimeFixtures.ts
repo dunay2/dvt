@@ -67,6 +67,7 @@ export function createDbtRunExecutionContext(
     createdBy: 'integration-test',
     pluginContexts: {
       dbt: {
+        credentialRef: 'env:DVT_TEST_DBT_PROFILES',
         projectBundleRef: {
           uri: `s3://bundle-bucket/tenants/${ctx.tenantId}/${sha256Hex(
             Buffer.from(

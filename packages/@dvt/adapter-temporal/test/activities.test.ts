@@ -81,6 +81,7 @@ const RUN_EXECUTION_CONTEXT: RunExecutionContext = {
   createdBy: 'test',
   pluginContexts: {
     dbt: {
+      credentialRef: 'env:DVT_TEST_DBT_PROFILES',
       projectBundleRef: {
         uri: `s3://bundle-bucket/tenants/${CTX.tenantId}/${'b'.repeat(64)}`,
         kind: 'dbt-project-bundle',
