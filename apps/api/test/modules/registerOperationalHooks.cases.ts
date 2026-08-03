@@ -92,6 +92,9 @@ function createProtectedRuntimeModuleHarness(): {
       planIntegrityValidator: {} as never,
       runEnrichmentService: {} as never,
       runHealthService: {} as never,
+      runMaintenanceService: {
+        reconcileStartRunIntent: async () => ({ kind: 'missing' }),
+      },
       adapters: new Map(),
       startRunTargetAdapterRegistry: {
         isSupported(_value: string): _value is 'temporal' {

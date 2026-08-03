@@ -6,6 +6,7 @@ import {
   type IStartRunIntentQueryStore,
   type IRunStateStoreRead,
   type IWorkflowEngine,
+  type IRunMaintenanceService,
   type RunContext,
   type RunMetadata,
 } from '@dvt/engine';
@@ -38,6 +39,7 @@ export interface RecoverRunUseCaseDependencies {
   readonly commandCoordinator: IRunControlCommandCoordinator;
   readonly executionContextRequirementResolver: IRunExecutionContextRequirementResolver;
   readonly startRunIntentStore: IStartRunIntentQueryStore;
+  readonly runMaintenanceService: Pick<IRunMaintenanceService, 'reconcileStartRunIntent'>;
   readonly idempotency: {
     startRunIntentId(
       tenantId: string,
@@ -82,8 +84,12 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       if (!isRecoveryChildOf(repeatedRecovery, source)) {
         throw new RunRecoveryUnavailableError(command.sourceRunId, 'recovery_identity_conflict');
       }
-      if (await this.isRecoveryDispatchConfirmed(repeatedRecovery, tenantId)) {
+      const dispatchResolution = await this.resolveRecoveryDispatch(repeatedRecovery, tenantId);
+      if (dispatchResolution === 'confirmed') {
         return acceptedRecovery(command);
+      }
+      if (dispatchResolution === 'blocked') {
+        throw new RunRecoveryUnavailableError(command.sourceRunId, 'recovery_dispatch_unconfirmed');
       }
     }
 
@@ -133,10 +139,10 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     return acceptedRecovery(command);
   }
 
-  private async isRecoveryDispatchConfirmed(
+  private async resolveRecoveryDispatch(
     recovery: RunMetadata,
     tenantId: string
-  ): Promise<boolean> {
+  ): Promise<'confirmed' | 'ready_to_dispatch' | 'missing' | 'blocked'> {
     const intentId = this.dependencies.idempotency.startRunIntentId(
       tenantId,
       recovery.runId,
@@ -144,10 +150,17 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
       recovery.providerRef.provider
     );
     const intent = await this.dependencies.startRunIntentStore.getIntent({ tenantId, intentId });
-    return (
+    if (
       intent?.engineRunRef !== undefined &&
       (intent.status === 'DISPATCHED' || intent.status === 'RESOLVED')
-    );
+    ) {
+      return 'confirmed';
+    }
+    const reconciliation = await this.dependencies.runMaintenanceService.reconcileStartRunIntent({
+      tenantId,
+      intentId,
+    });
+    return reconciliation.kind;
   }
 }
 

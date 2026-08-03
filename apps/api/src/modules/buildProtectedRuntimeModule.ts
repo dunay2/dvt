@@ -193,6 +193,7 @@ export async function buildProtectedRuntimeModule(
     planIntegrityValidator: executionRuntime.planIntegrityValidator,
     runEnrichmentService: executionRuntime.runEnrichmentService,
     runHealthService: executionRuntime.runHealthService,
+    runMaintenanceService: executionRuntime.runMaintenanceService,
     adapters: executionRuntime.adapters,
     startRunTargetAdapterRegistry: executionRuntime.startRunTargetAdapterRegistry,
     stateStore: storageRuntime.stateStoreRoles,

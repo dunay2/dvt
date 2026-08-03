@@ -125,6 +125,7 @@ export function buildProtectedRuntimeRouteDependencies(
       commandCoordinator: protectedModule.runControlCommandCoordinator,
       executionContextRequirementResolver,
       startRunIntentStore: protectedModule.startRunIntentStore,
+      runMaintenanceService: protectedModule.runMaintenanceService,
       idempotency,
     }),
     runtimeAuth,

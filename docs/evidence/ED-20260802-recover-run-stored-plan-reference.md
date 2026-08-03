@@ -13,6 +13,8 @@ code_refs:
   - packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts
   - packages/@dvt/engine/src/application/RecoverRunApplicationService.ts
   - packages/@dvt/engine/src/ports/IRunStateStore.ts
+  - packages/@dvt/engine/src/ports/IRunMaintenanceService.ts
+  - packages/@dvt/engine/src/services/runMaintenance/PendingIntentReconciliationPolicy.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts
   - apps/api/src/application/services/recoverRunUseCase.ts
@@ -41,6 +43,13 @@ one state-store transaction. A failure rolls back the reservation; a later
 retry with the same recovery identity resumes the prepared child instead of
 creating another logical attempt. The engine revalidates the full child
 identity and admission posture before provider dispatch.
+
+Before a prepared recovery is dispatched again, the API invokes the scoped
+form of the canonical orphan-intent reconciliation rail. A provider workflow
+found for bootstrapped run state is adopted by reconciling its provider
+reference and resolving the intent. A confirmed missing workflow permits the
+prepared child to continue; unsupported or failed provider lookup remains
+fail closed.
 
 ## Evidence
 

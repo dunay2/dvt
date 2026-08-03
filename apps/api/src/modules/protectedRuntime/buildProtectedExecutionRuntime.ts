@@ -2,6 +2,8 @@
  * Owned concern: assemble the protected execution runtime from live provider
  * adapters, workflow-engine wiring, and canonical adapter-registry truth.
  */
+import type { IRunMaintenanceService } from '@dvt/engine';
+import { IdempotencyKeyBuilder, RunMaintenanceService } from '@dvt/engine/runtime';
 import type { IObservability } from '@dvt/observability';
 import type { Logger } from 'pino';
 
@@ -74,6 +76,22 @@ export async function buildProtectedExecutionRuntime(deps: BuildProtectedExecuti
         observability: deps.observability,
       },
     });
+  const maintenance = new RunMaintenanceService({
+    stateStoreRead: deps.storageRuntime.stateStoreRoles.read,
+    stateStoreWrite: deps.storageRuntime.stateStoreRoles.write,
+    intentStore: deps.storageRuntime.intentStore,
+    adapters,
+    authorizer: tenantAuthorizer,
+    clock: deps.storageRuntime.systemClock,
+    idempotency: new IdempotencyKeyBuilder(),
+    observability: deps.observability,
+  });
+  const runMaintenanceService: Pick<IRunMaintenanceService, 'reconcileStartRunIntent'> = {
+    reconcileStartRunIntent: (options) =>
+      tenantAuthorizer.runWithTenantScope(options.tenantId, () =>
+        maintenance.reconcileStartRunIntent(options)
+      ),
+  };
 
   return {
     adapters,
@@ -85,6 +103,7 @@ export async function buildProtectedExecutionRuntime(deps: BuildProtectedExecuti
       tenantAuthorizer
     ),
     runHealthService,
+    runMaintenanceService,
     startRunTargetAdapterRegistry,
   };
 }

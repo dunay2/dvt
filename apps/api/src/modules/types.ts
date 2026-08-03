@@ -10,6 +10,7 @@ import type {
   IProviderAdapter,
   IRunEnrichmentService,
   IRunHealthService,
+  IRunMaintenanceService,
   IStartRunIntentQueryStore,
   IWorkflowEngine,
 } from '@dvt/engine';
@@ -49,6 +50,7 @@ export interface ProtectedRuntimeModule {
   planIntegrityValidator: IPlanIntegrityValidator;
   runEnrichmentService: IRunEnrichmentService;
   runHealthService: IRunHealthService;
+  runMaintenanceService: Pick<IRunMaintenanceService, 'reconcileStartRunIntent'>;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   startRunTargetAdapterRegistry: IStartRunTargetAdapterRegistry;
   stateStore: StateStoreRoleBindings;

@@ -74,6 +74,7 @@ interface TestDependencies {
   };
   readonly executionContextRequirementResolver: { resolve: ReturnType<typeof vi.fn> };
   readonly startRunIntentStore: { getIntent: ReturnType<typeof vi.fn> };
+  readonly runMaintenanceService: { reconcileStartRunIntent: ReturnType<typeof vi.fn> };
   readonly idempotency: { startRunIntentId: ReturnType<typeof vi.fn> };
 }
 
@@ -155,6 +156,9 @@ function createDependencies(): TestDependencies {
           runId: 'run-recovery-1',
         },
       }),
+    },
+    runMaintenanceService: {
+      reconcileStartRunIntent: vi.fn().mockResolvedValue({ kind: 'ready_to_dispatch' }),
     },
     idempotency: {
       startRunIntentId: vi.fn().mockReturnValue('intent-recovery-1'),
@@ -313,6 +317,74 @@ describe('RecoverRunUseCase', () => {
       accepted: true,
     });
     expect(dependencies.engine.recoverRun).toHaveBeenCalledTimes(1);
+    expect(dependencies.runMaintenanceService.reconcileStartRunIntent).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      intentId: 'intent-recovery-1',
+    });
+  });
+
+  it('returns the original receipt when reconciliation confirms a previously dispatched recovery', async () => {
+    const dependencies = createDependencies();
+    dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
+      async (_tenantId: string, runId: string) =>
+        runId === 'run-recovery-1'
+          ? {
+              ...sourceMetadata,
+              runId,
+              logicalAttemptId: 2,
+              parentRunId: sourceMetadata.runId,
+              originRunId: sourceMetadata.runId,
+            }
+          : sourceMetadata
+    );
+    dependencies.startRunIntentStore.getIntent.mockResolvedValue({ status: 'PENDING' });
+    dependencies.runMaintenanceService.reconcileStartRunIntent.mockResolvedValue({
+      kind: 'confirmed',
+    });
+    const useCase = new RecoverRunUseCase(dependencies as never);
+
+    await expect(
+      useCase.execute(
+        { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
+        commandContext
+      )
+    ).resolves.toMatchObject({
+      sourceRunId: 'run-source-1',
+      recoveryRunId: 'run-recovery-1',
+      accepted: true,
+    });
+    expect(dependencies.engine.getRunStatus).not.toHaveBeenCalled();
+    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when a pending recovery dispatch cannot be reconciled', async () => {
+    const dependencies = createDependencies();
+    dependencies.stateStore.getRunMetadataByRunId.mockImplementation(
+      async (_tenantId: string, runId: string) =>
+        runId === 'run-recovery-1'
+          ? {
+              ...sourceMetadata,
+              runId,
+              logicalAttemptId: 2,
+              parentRunId: sourceMetadata.runId,
+              originRunId: sourceMetadata.runId,
+            }
+          : sourceMetadata
+    );
+    dependencies.startRunIntentStore.getIntent.mockResolvedValue({ status: 'PENDING' });
+    dependencies.runMaintenanceService.reconcileStartRunIntent.mockResolvedValue({
+      kind: 'blocked',
+    });
+    const useCase = new RecoverRunUseCase(dependencies as never);
+
+    await expect(
+      useCase.execute(
+        { sourceRunId: 'run-source-1', recoveryRunId: 'run-recovery-1' },
+        commandContext
+      )
+    ).rejects.toMatchObject({ reason: 'recovery_dispatch_unconfirmed' });
+    expect(dependencies.engine.getRunStatus).not.toHaveBeenCalled();
+    expect(dependencies.engine.recoverRun).not.toHaveBeenCalled();
   });
 
   it('serializes concurrent delivery of one recovery identity without consuming another attempt', async () => {
