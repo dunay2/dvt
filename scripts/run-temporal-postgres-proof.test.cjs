@@ -7,6 +7,8 @@ const {
   getProofPgUrl,
   buildPgEnv,
   composeDown,
+  stopPostgresContainer,
+  startPostgresContainer,
   resetComposeCommandCache,
   proofBaselineSchemas,
   isTransientProofSchema,
@@ -89,4 +91,42 @@ test('composeDown propagates teardown failures', (t) => {
   });
 
   assert.throws(() => composeDown(), /failed with exit code 1/);
+});
+
+test('stopPostgresContainer interrupts connectivity without removing proof data', (t) => {
+  const calls = [];
+  t.mock.method(childProcess, 'spawnSync', (command, args) => {
+    calls.push({ command, args });
+    return { status: 0 };
+  });
+
+  stopPostgresContainer();
+
+  assert.deepEqual(calls, [{ command: 'docker', args: ['stop', 'dvt-postgres'] }]);
+});
+
+test('startPostgresContainer restores the preserved container and waits for health', (t) => {
+  const calls = [];
+  t.mock.method(childProcess, 'spawnSync', (command, args) => {
+    calls.push({ command, args });
+    if (args[0] === 'inspect') {
+      return { status: 0, stdout: 'healthy\n' };
+    }
+    return { status: 0 };
+  });
+
+  startPostgresContainer();
+
+  assert.deepEqual(calls, [
+    { command: 'docker', args: ['start', 'dvt-postgres'] },
+    {
+      command: 'docker',
+      args: [
+        'inspect',
+        'dvt-postgres',
+        '--format',
+        '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}',
+      ],
+    },
+  ]);
 });

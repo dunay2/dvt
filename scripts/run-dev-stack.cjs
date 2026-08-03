@@ -683,7 +683,11 @@ module.exports = {
   buildLocalWarehouseConnectionRequest,
   seedLocalPostgresProofData,
   ensureLocalWarehouseConnectionViaApi,
+  spawnProcess,
+  waitForUrl,
   waitForUrlOrProcessExit,
+  terminateProcess,
+  closeReaders,
 };
 
 if (require.main === module) {

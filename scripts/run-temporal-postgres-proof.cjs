@@ -110,6 +110,15 @@ function composeUp() {
   run(command, [...prefixArgs, '-f', composeFile, 'up', '-d'], { shell });
 }
 
+function stopPostgresContainer() {
+  run('docker', ['stop', containerName]);
+}
+
+function startPostgresContainer() {
+  run('docker', ['start', containerName]);
+  waitForHealthy();
+}
+
 function waitForHealthy(timeoutMs = 60000) {
   const startedAt = Date.now();
 
@@ -274,6 +283,16 @@ async function main() {
     return;
   }
 
+  if (action === 'stop') {
+    stopPostgresContainer();
+    return;
+  }
+
+  if (action === 'start') {
+    startPostgresContainer();
+    return;
+  }
+
   if (action === 'test') {
     if (reset) {
       composeDown();
@@ -312,6 +331,8 @@ module.exports = {
   getProofPgUrl,
   buildPgEnv,
   composeDown,
+  stopPostgresContainer,
+  startPostgresContainer,
   resetComposeCommandCache,
   proofBaselineSchemas,
   transientProofSchemaPatterns,
