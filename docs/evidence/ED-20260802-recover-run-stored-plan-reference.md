@@ -16,8 +16,12 @@ code_refs:
   - packages/@dvt/engine/src/state/InMemoryRunStateCore.ts
   - packages/@dvt/engine/src/ports/IRunMaintenanceService.ts
   - packages/@dvt/engine/src/services/runMaintenance/PendingIntentReconciliationPolicy.ts
+  - packages/@dvt/engine/src/services/runMaintenance/RunMaintenanceDomainConstants.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
   - packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts
+  - apps/api/src/application/services/runRecoveryPlanAvailability.ts
+  - apps/api/src/application/services/getRunStatusUseCase.ts
+  - apps/api/src/application/services/listRunsUseCase.ts
   - apps/api/src/application/services/recoverRunUseCase.ts
 evidence:
   tests:
@@ -58,6 +62,16 @@ reference and resolving the intent. A confirmed missing workflow permits the
 prepared child to continue; unsupported or failed provider lookup remains
 fail closed.
 
+Reconciliation also reads the canonical bootstrapped-child lifecycle before
+permitting redispatch. A terminal child expires the pending intent and cannot
+be dispatched a second time, even when the provider no longer reports the
+workflow.
+
+Run detail and run list queries reuse the stored-plan executability validator
+used by command admission. Recovery is advertised only when the current target
+adapter is registered and satisfies the persisted plan's step and capability
+requirements.
+
 ## Evidence
 
 Unit coverage distinguishes the executable artifact SHA from the canonical plan
@@ -66,4 +80,7 @@ isolation. Engine and real PostgreSQL coverage prove atomic recovery bootstrap,
 rollback, stable lineage, and prepared-child resumption. The live Cypress proof
 cancels and recovers a real run through the browser, protected API, PostgreSQL,
 Temporal, and worker. In-memory concurrency regressions prove isolated rollback
-across origins and serialization within one lineage.
+across origins and serialization within one lineage. Engine regression coverage
+proves terminal children cannot be redispatched. API list/detail regressions
+prove recovery controls fail closed when the current adapter lacks a required
+plan capability.

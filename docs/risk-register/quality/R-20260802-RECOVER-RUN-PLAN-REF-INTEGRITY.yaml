@@ -24,6 +24,8 @@ mitigations:
   - 'An unconfirmed prepared child resumes under the same recovery identity and logical attempt.'
   - 'A pending recovery intent is reconciled against the provider before any repeated dispatch.'
   - 'Bootstrapped provider workflows are adopted; unavailable reconciliation fails closed.'
+  - 'Canonical terminal child state expires the intent and prevents provider redispatch.'
+  - 'Run list and detail controls reuse current stored-plan adapter capability admission.'
   - 'Unit, PostgreSQL integration, and live browser tests cover the complete recovery path.'
 review_after: 2026-11-02
 ---
