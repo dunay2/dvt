@@ -231,6 +231,13 @@ async function cleanupTransientProofSchemas() {
   });
 }
 
+async function resetPostgresProofStack() {
+  composeDown();
+  composeUp();
+  waitForHealthy();
+  await verifySeededBaseline();
+}
+
 function runPostgresProofTest() {
   run(
     pnpmCommand,
@@ -251,10 +258,7 @@ async function main() {
   }
 
   if (action === 'reset') {
-    composeDown();
-    composeUp();
-    waitForHealthy();
-    await verifySeededBaseline();
+    await resetPostgresProofStack();
     return;
   }
 
@@ -331,6 +335,7 @@ module.exports = {
   getProofPgUrl,
   buildPgEnv,
   composeDown,
+  resetPostgresProofStack,
   stopPostgresContainer,
   startPostgresContainer,
   resetComposeCommandCache,
