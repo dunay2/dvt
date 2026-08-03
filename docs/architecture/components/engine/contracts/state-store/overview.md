@@ -82,9 +82,10 @@ These rules are canonical and should be treated as review gates:
 
 ## Transaction Model
 
-Two transaction paths are part of the baseline:
+Three transaction paths are part of the baseline:
 
 - `bootstrapRunTx`
+- `bootstrapRecoveryRunTx`
 - `appendAndEnqueueTx`
 
 `bootstrapRunTx` must atomically persist:
@@ -92,6 +93,18 @@ Two transaction paths are part of the baseline:
 - `run_metadata`,
 - the first persisted events,
 - outbox rows for the newly appended events.
+
+`bootstrapRecoveryRunTx` must atomically:
+
+- lock and resolve the source run's retry lineage;
+- reserve the next `logicalAttemptId` for the stable `originRunId`;
+- persist the recovery child metadata and first events;
+- enqueue outbox rows for the newly appended events;
+- roll back the lineage reservation when any child bootstrap write fails.
+
+Retry-attempt reservation is not a separate public state-store command. Exposing
+it independently would permit a failed pre-dispatch bootstrap to consume a
+business attempt without creating a recoverable child.
 
 `appendAndEnqueueTx` must atomically:
 
@@ -147,6 +160,8 @@ Minimum expectations:
 The baseline failure posture is:
 
 - duplicate logical retries must not create duplicate persisted events;
+- recovery retries with the same child identity must resume the prepared child
+  rather than consume another logical attempt;
 - provider dispatch and persistence can fail independently and must be
   reconciled explicitly;
 - crash between append and enqueue must be prevented by transactional atomicity;

@@ -5,6 +5,7 @@ status: Closed
 date: 2026-08-02
 owners:
   - packages/@dvt/artifacts
+  - packages/@dvt/engine
   - packages/@dvt/adapter-postgres
   - apps/api
 severity: High
@@ -18,6 +19,8 @@ mitigations:
   - 'RecoverRun consumes the exact persisted PlanRef through IStoredPlanRefReader.'
   - 'PostgresPlanStore verifies tenant, project, and environment ownership before returning it.'
   - 'Engine artifact-byte integrity validation remains mandatory and unchanged.'
+  - 'Recovery lineage reservation and child bootstrap commit or roll back together.'
+  - 'An unconfirmed prepared child resumes under the same recovery identity and logical attempt.'
   - 'Unit, PostgreSQL integration, and live browser tests cover the complete recovery path.'
 review_after: 2026-11-02
 ---
