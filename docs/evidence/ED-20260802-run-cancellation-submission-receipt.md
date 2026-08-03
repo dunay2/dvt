@@ -25,10 +25,16 @@ evidence:
 
 ## Decision
 
-The protected `CancelRun` command persists `RunCancelSubmitted` after the
-runtime provider accepts cancellation and before the per-run command lock is
-released. Repeated deliveries discover that durable fact and do not dispatch a
-second provider cancellation.
+The protected `CancelRun` command dispatches cancellation through the canonical
+signal rail with the stable identity
+`cancel:<tenantId>:<runId>:<logicalAttemptId>`. The Temporal workflow persists
+processed signal identities and therefore applies the cancellation effect once
+even if the API process terminates after provider acceptance.
+
+After provider acceptance, the command persists `RunCancelSubmitted` before the
+per-run command lock is released. Repeated deliveries normally discover that
+durable fact; if receipt persistence failed, they safely redeliver the same
+provider-deduplicated signal identity.
 
 `RunCancelSubmitted` is command evidence, not a lifecycle transition. It does
 not project `CANCELLING`; the runtime-owned `RunCancelRequested` event remains
@@ -37,6 +43,7 @@ the sole authority for that state.
 ## Evidence
 
 Application tests keep provider status at `RUNNING` while concurrent command
-deliveries serialize, proving that deduplication depends on the durable receipt
-rather than an opportunistic runtime status update. Domain projection coverage
-proves that the receipt leaves the run snapshot unchanged.
+deliveries serialize. A crash-window regression also fails the first receipt
+write, redelivers the same stable signal, and proves that the provider-side
+effect is applied once. Domain projection coverage proves that the receipt
+leaves the run snapshot unchanged.

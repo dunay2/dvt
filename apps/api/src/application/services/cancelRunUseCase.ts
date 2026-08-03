@@ -1,3 +1,4 @@
+import { asNonBlankString } from '@dvt/contracts';
 import type { IRunStateStoreRead, IWorkflowEngine } from '@dvt/engine';
 import { RunMetadataNotFoundError } from '@dvt/engine';
 
@@ -63,7 +64,12 @@ export class CancelRunUseCase implements ICancelRunUseCase {
 
     const runRef = startDispatch.kind === 'confirmed' ? startDispatch.runRef : persistedRunRef;
     try {
-      await this.engine.cancelRun(runRef);
+      await this.engine.signal(runRef, {
+        signalId: asNonBlankString(
+          `cancel:${metadata.tenantId}:${metadata.runId}:${metadata.logicalAttemptId}`
+        ),
+        type: 'CANCEL',
+      });
     } catch (providerFailure) {
       let reconciledStatus: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>;
       try {
