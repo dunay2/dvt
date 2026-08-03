@@ -5885,7 +5885,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/architecture/components/web/appshell/app-shell.md",
-      "sourceContentSha256": "03f06acc69f80ca18bab849bd09341498bfcb76717173bfa7b7a7e76a94a718f",
+      "sourceContentSha256": "cf2f2cf3695494da93b6453d9a9c820ec1f88185f4c3670e7d4b67fb9137c545",
       "rawRail": {
         "name": "RenderCanvasShellChrome",
         "type": "query",
