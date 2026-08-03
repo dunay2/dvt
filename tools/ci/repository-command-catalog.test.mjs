@@ -80,6 +80,17 @@ test('classifies runtime, capability, contract, docs, workflow, and ops commands
   );
   assert.equal(
     classifyPackageScriptCommand(
+      'test:supported-runtime-proof',
+      packageJson.scripts['test:supported-runtime-proof']
+    ).domain,
+    'runtime-capability'
+  );
+  assert.match(
+    packageJson.scripts['test:supported-runtime-proof'],
+    /^pnpm --filter @dvt\/contracts --filter @dvt\/run-domain build && node --test /u
+  );
+  assert.equal(
+    classifyPackageScriptCommand(
       'contracts:index:generate',
       packageJson.scripts['contracts:index:generate']
     ).domain,

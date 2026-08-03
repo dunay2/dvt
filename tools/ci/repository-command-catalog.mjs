@@ -113,6 +113,7 @@ const PACKAGE_PREFIX_DOMAINS = [
   [/^test:contracts/u, 'contracts'],
   [/^proof:temporal:postgres/u, 'runtime-capability'],
   [/^proof:supported-runtime$/u, 'runtime-capability'],
+  [/^test:supported-runtime-proof$/u, 'runtime-capability'],
   [/^test:adapter-(postgres|temporal)(:integration)?/u, 'runtime-capability'],
   [/^test:(engine|api|cli|planner|web)(:|$)/u, 'runtime-package'],
   [/^ci:affected:/u, 'runtime-root'],

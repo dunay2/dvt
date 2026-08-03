@@ -19,7 +19,7 @@ code_refs:
   - apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts
 evidence:
   tests:
-    - node --test scripts/supported-runtime-proof/*.test.cjs
+    - pnpm test:supported-runtime-proof
     - pnpm --filter @dvt/adapter-postgres test
     - pnpm --filter @dvt/adapter-postgres typecheck
     - pnpm --filter dvt-outbox-worker test

@@ -204,9 +204,14 @@ runtime path.
 Usage:
 
 ```bash
+pnpm test:supported-runtime-proof
 pnpm proof:supported-runtime
 pnpm proof:supported-runtime -- --output .dvt/proofs/supported-runtime.json
 ```
+
+The test command builds the canonical contracts and run-domain dependencies
+before loading their distribution entry points, so it is reproducible from a
+clean checkout.
 
 Behavior:
 
