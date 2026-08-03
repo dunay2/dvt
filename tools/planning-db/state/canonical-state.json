@@ -3244,8 +3244,8 @@
         "pnpm docs:feature-mechanization:implementation",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "https://github.com/dunay2/dvt/issues/152",
-      "sourceContentSha256": "3247e154f99b8645cd03e1bcfd4eab5fa31150d3d38cb6af5b4001267fb87148",
+      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+      "sourceContentSha256": "7c26301cc2b176c21f807b8ee3d95fe9da30a52916c5385e51f766212240077f",
       "rawRail": {
         "name": "StartRun",
         "type": "command",
@@ -3704,7 +3704,8 @@
             "unitTests": [
               "apps/api/test/infrastructure/audit/PostgresAuthAuditAdapter.test.ts",
               "apps/temporal-worker/test/EnvironmentDbtRuntimeProfileResolver.test.ts",
-              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts",
+              "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts"
             ],
             "fowlerSignals": [
               "Runtime credentials are resolved behind a worker-owned port at the last responsible moment.",
@@ -3785,12 +3786,12 @@
         "redGreenCycles": [
           {
             "id": "startrun-record",
-            "redTest": "pnpm --filter @dvt/temporal-dbt-plugin exec vitest run --config vitest.config.ts test/DbtCliPluginRunner.test.ts",
-            "greenTest": "pnpm --filter @dvt/temporal-dbt-plugin test",
+            "redTest": "pnpm docs:feature-mechanization:implementation",
+            "greenTest": "pnpm planning:db:integrity:check",
             "patchSurfaces": [
               "planning_query_store.feature_mechanization_local_rails"
             ],
-            "expectedFailure": "Resolved profile bytes survive setup failure and pre-cancelled work materializes runtime resources."
+            "expectedFailure": "Issue 152 feature source is not a versioned repository path."
           }
         ],
         "componentGuides": [
@@ -3828,7 +3829,7 @@
           "tools/planning-db/migrations/**"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-03T08:04:52.758Z"
     },
@@ -29120,6 +29121,69 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-03T08:14:11.182Z"
+    },
+    {
+      "operationId": "1265b7d3-d835-4c68-adfe-64eefcd4d8b7",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-152-DBT-RUNTIME-SECRETS:command:startrun:2:8e9c0f0a1aad0a72",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#startrun",
+      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+      "sourceContentSha256": "7c26301cc2b176c21f807b8ee3d95fe9da30a52916c5385e51f766212240077f",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation",
+        "dddOwner": "RunExecution",
+        "railName": "StartRun",
+        "railType": "command",
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "greenTest": "pnpm planning:db:integrity:check",
+        "sourceRef": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+        "unitTests": [
+          "apps/temporal-worker/test/runtime/EnvironmentDbtRuntimeProfileResolver.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["DbtRuntimeProfile"],
+        "fowlerSignals": [
+          "Runtime credentials are resolved behind a worker-owned port at the last responsible moment."
+        ],
+        "patchSurfaces": [
+          "planning_query_store.feature_mechanization_local_rails"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Issue 152 feature source is not a versioned repository path.",
+        "governingSources": [
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md"
+        ],
+        "architectureGuards": ["pnpm --filter dvt-temporal-worker test"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "implementationRefs": [
+          "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#IDbtRuntimeProfileResolver"
+        ],
+        "normalizedRailName": "startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "7c26301cc2b176c21f807b8ee3d95fe9da30a52916c5385e51f766212240077f",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/temporal-dbt-plugin/**"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-03T08:20:39.903Z"
     }
   ]
 }
