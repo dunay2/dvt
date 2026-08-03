@@ -35,7 +35,6 @@ const PUBLISHED_REGISTRATION: RouteBootstrapRegistration = {
     initialPresentation: {
       status: 'pending',
       detail: 'Preparing canvas route',
-      canComplete: false,
     },
   },
 };
@@ -49,7 +48,6 @@ describe('usePublishedRouteBootstrap', () => {
     usePublishedRouteBootstrap('dbt.canvas', {
       status: 'pending',
       detail,
-      canComplete: false,
     });
     return null;
   }

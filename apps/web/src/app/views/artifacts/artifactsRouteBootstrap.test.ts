@@ -6,7 +6,6 @@ describe('artifactsRouteBootstrap', () => {
   it('maps loading, invalid-import, and ready states to route posture', () => {
     expect(deriveArtifactsRouteBootstrapPresentation({ kind: 'loading' })).toMatchObject({
       status: 'pending',
-      canComplete: false,
     });
 
     expect(
@@ -17,13 +16,11 @@ describe('artifactsRouteBootstrap', () => {
     ).toEqual({
       status: 'failed',
       detail: 'Manifest invalid',
-      canComplete: true,
     });
 
     expect(deriveArtifactsRouteBootstrapPresentation({ kind: 'ready' })).toEqual({
       status: 'complete',
       detail: 'Artifacts route is ready',
-      canComplete: true,
     });
   });
 });

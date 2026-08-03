@@ -12,7 +12,6 @@ describe('runsRouteBootstrap', () => {
       })
     ).toMatchObject({
       status: 'pending',
-      canComplete: false,
     });
 
     expect(
@@ -22,7 +21,6 @@ describe('runsRouteBootstrap', () => {
       })
     ).toMatchObject({
       status: 'pending',
-      canComplete: false,
     });
   });
 
@@ -36,7 +34,6 @@ describe('runsRouteBootstrap', () => {
     ).toEqual({
       status: 'complete',
       detail: 'Runs route is ready',
-      canComplete: true,
     });
 
     expect(
@@ -47,7 +44,6 @@ describe('runsRouteBootstrap', () => {
     ).toEqual({
       status: 'complete',
       detail: 'Run run_404 was not found',
-      canComplete: true,
     });
 
     expect(
@@ -58,7 +54,6 @@ describe('runsRouteBootstrap', () => {
     ).toEqual({
       status: 'failed',
       detail: 'Runs unavailable',
-      canComplete: true,
     });
   });
 });

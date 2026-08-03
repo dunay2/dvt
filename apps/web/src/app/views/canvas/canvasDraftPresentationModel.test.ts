@@ -28,9 +28,10 @@ describe('canvasDraftPresentationModel', () => {
       })
     ).toMatchObject({
       routeState: 'blocked_backend',
-      bootstrapStatus: 'complete',
-      bootstrapDetail: 'Readiness not satisfied: database_not_configured.',
-      canCompleteBootstrap: true,
+      routeReadiness: {
+        status: 'complete',
+        detail: 'Readiness not satisfied: database_not_configured.',
+      },
     });
   });
 
@@ -50,9 +51,10 @@ describe('canvasDraftPresentationModel', () => {
       })
     ).toMatchObject({
       routeState: 'recovery',
-      bootstrapStatus: 'blocked',
-      bootstrapDetail: canvasViewCopy.staleDraftMessage,
-      canCompleteBootstrap: false,
+      routeReadiness: {
+        status: 'blocked',
+        detail: canvasViewCopy.staleDraftMessage,
+      },
     });
   });
 
@@ -72,8 +74,7 @@ describe('canvasDraftPresentationModel', () => {
       })
     ).toMatchObject({
       routeState: 'empty',
-      bootstrapStatus: 'complete',
-      canCompleteBootstrap: true,
+      routeReadiness: { status: 'complete' },
     });
 
     expect(
@@ -86,9 +87,10 @@ describe('canvasDraftPresentationModel', () => {
       })
     ).toMatchObject({
       routeState: 'ready',
-      bootstrapStatus: 'complete',
-      bootstrapDetail: canvasViewCopy.canvasReadyDetail,
-      canCompleteBootstrap: true,
+      routeReadiness: {
+        status: 'complete',
+        detail: canvasViewCopy.canvasReadyDetail,
+      },
     });
   });
 
@@ -108,7 +110,6 @@ describe('canvasDraftPresentationModel', () => {
     expect(toRouteBootstrapPresentation(presentationState)).toEqual({
       status: 'complete',
       detail: canvasViewCopy.canvasReadyDetail,
-      canComplete: true,
     });
   });
 });

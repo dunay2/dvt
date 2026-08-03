@@ -1,5 +1,5 @@
 /** Owned concern: compose the Raven shell frame and publish root bootstrap posture. */
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useSyncExternalStore } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import {
   buildShellHealthPresentationModel,
@@ -21,8 +21,10 @@ import {
   createHealthFailedBootstrapCommand,
   createHealthPendingBootstrapCommand,
   createHealthReadyBootstrapCommand,
+  createRouteBootstrapStepCommand,
 } from './bootstrap/appBootstrapCommands';
 import { resolveAppBootstrapCopy } from './bootstrap/appBootstrapCopy';
+import { isBootstrapStepStartupAllowed } from './bootstrap/appBootstrapPresentation';
 import { completeBootstrapScreen, setBootstrapStepStatus } from './bootstrap/appBootstrapScreen';
 import {
   getPublishedRouteBootstrapPresentation,
@@ -119,7 +121,6 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     createInitialRouteBootstrapStartupReadinessState()
   );
   const bootstrapOperabilityActiveRef = useRef(true);
-  const [routeBootstrapCanComplete, setRouteBootstrapCanComplete] = useState(false);
   const navigationDisposition = useMemo(
     () => resolveShellNavigationDisposition(location.pathname),
     [location.pathname]
@@ -258,19 +259,14 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     });
 
     routeBootstrapStartupReadinessRef.current = routeBootstrapStartupReadiness.nextState;
-    setRouteBootstrapCanComplete(routeBootstrapStartupReadiness.canComplete);
-    setBootstrapStepStatus(routeBootstrapStartupReadiness.command);
-  }, [
-    activeRouteBootstrapRegistration,
-    appBootstrapCopy.routeWaitingForCapabilitiesDetail,
-    isInitialCapabilitiesBootstrapPending,
-    routeBootstrapPresentation.canComplete,
-    routeBootstrapPresentation.detail,
-    routeBootstrapPresentation.status,
-  ]);
+    setBootstrapStepStatus(
+      createRouteBootstrapStepCommand(routeBootstrapStartupReadiness.readiness)
+    );
 
-  useEffect(() => {
-    if (isInitialCapabilitiesBootstrapPending || !routeBootstrapCanComplete) {
+    if (
+      isInitialCapabilitiesBootstrapPending ||
+      !isBootstrapStepStartupAllowed(routeBootstrapStartupReadiness.readiness.status)
+    ) {
       return;
     }
 
@@ -280,9 +276,12 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     capabilitiesQuery.isError,
     capabilitiesQuery.isPending,
     capabilitiesQuery.data,
-    routeBootstrapCanComplete,
+    activeRouteBootstrapRegistration,
+    appBootstrapCopy.routeWaitingForCapabilitiesDetail,
     isInitialCapabilitiesBootstrapPending,
     platformHealth.isError,
+    routeBootstrapPresentation.detail,
+    routeBootstrapPresentation.status,
     shellHealth.connectionDetail,
     shellHealth.connectionState,
     shellHealth.isInitialHealthCheckPending,

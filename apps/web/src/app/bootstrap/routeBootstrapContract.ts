@@ -1,11 +1,7 @@
-/** Owned concern: define route bootstrap presentation statuses and helper factories for shell startup. */
-export type RouteBootstrapStatus = 'pending' | 'complete' | 'failed' | 'blocked' | 'error';
+/** Owned concern: define route bootstrap handles and helper factories over canonical startup readiness. */
+import type { BootstrapStepState } from './appBootstrapPresentation';
 
-export type RouteBootstrapPresentation = {
-  status: RouteBootstrapStatus;
-  detail: string;
-  canComplete: boolean;
-};
+export type RouteBootstrapPresentation = BootstrapStepState;
 
 export type RouteBootstrapHandle =
   | {
@@ -28,7 +24,6 @@ export function createPendingRouteBootstrapPresentation(
   return {
     status: 'pending',
     detail,
-    canComplete: false,
   };
 }
 
@@ -38,7 +33,6 @@ export function createCompleteRouteBootstrapPresentation(
   return {
     status: 'complete',
     detail,
-    canComplete: true,
   };
 }
 
@@ -48,7 +42,6 @@ export function createBlockedRouteBootstrapPresentation(
   return {
     status: 'blocked',
     detail,
-    canComplete: false,
   };
 }
 
@@ -56,7 +49,6 @@ export function createFailedRouteBootstrapPresentation(detail: string): RouteBoo
   return {
     status: 'failed',
     detail,
-    canComplete: true,
   };
 }
 
@@ -64,7 +56,6 @@ export function createErrorRouteBootstrapPresentation(detail: string): RouteBoot
   return {
     status: 'error',
     detail,
-    canComplete: false,
   };
 }
 

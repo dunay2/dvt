@@ -10,13 +10,7 @@ import type { PlanRunReadinessReadModel } from './canvasPlanReadiness';
 export type CanvasWorkbenchLogSeverity = 'info' | 'warning' | 'error';
 
 export type CanvasWorkbenchLogSource =
-  | 'route'
-  | 'draft'
-  | 'plan'
-  | 'permission'
-  | 'graph'
-  | 'selection'
-  | 'run';
+  'route' | 'draft' | 'plan' | 'permission' | 'graph' | 'selection' | 'run';
 
 export type CanvasWorkbenchLogEntry = Readonly<{
   id: string;
@@ -34,7 +28,7 @@ export type CanvasWorkbenchLogEntriesReadModel = Readonly<{
 export type BuildCanvasWorkbenchLogEntriesArgs = Readonly<{
   presentation: Pick<
     import('./canvasDraftPresentationModel').CanvasDraftPresentationState,
-    'routeState' | 'bootstrapDetail'
+    'routeState' | 'routeReadiness'
   >;
   draft: Pick<CanvasDraftAccessPosture, 'kind' | 'title' | 'message' | 'statusLabel'>;
   toolbar: Readonly<{
@@ -147,7 +141,7 @@ export function buildCanvasWorkbenchLogEntries({
   pushEntry({
     severity: resolveRouteSeverity(presentation.routeState),
     source: 'route',
-    message: presentation.bootstrapDetail,
+    message: presentation.routeReadiness.detail,
     detail: presentation.routeState,
   });
 

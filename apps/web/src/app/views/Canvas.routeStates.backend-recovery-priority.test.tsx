@@ -38,9 +38,8 @@ describe('Canvas route backend and recovery priority', () => {
     });
     expectCanvasBootstrapState({
       routeState: 'error_graph',
-      bootstrapStatus: 'failed',
-      bootstrapDetail: 'workspace graph unavailable',
-      canCompleteBootstrap: true,
+      readinessStatus: 'failed',
+      readinessDetail: 'workspace graph unavailable',
     });
   });
 
@@ -75,10 +74,9 @@ describe('Canvas route backend and recovery priority', () => {
     expect(harness.container.querySelector('input[name="node-name"]')).toBeNull();
     expectCanvasBootstrapState({
       routeState: 'error_graph',
-      bootstrapStatus: 'failed',
-      bootstrapDetail:
+      readinessStatus: 'failed',
+      readinessDetail:
         'Canvas cannot open persisted canvas kind "retired-canvas-kind" because no runtime registration is available.',
-      canCompleteBootstrap: true,
     });
   });
 
@@ -117,10 +115,9 @@ describe('Canvas route backend and recovery priority', () => {
     expectCanvasRegistryClosed();
     expectCanvasBootstrapState({
       routeState: 'error_graph',
-      bootstrapStatus: 'failed',
-      bootstrapDetail:
+      readinessStatus: 'failed',
+      readinessDetail:
         'Canvas cannot open persisted canvas kind "dbt" because its plugin is disabled or unavailable.',
-      canCompleteBootstrap: true,
     });
   });
 
@@ -135,8 +132,7 @@ describe('Canvas route backend and recovery priority', () => {
       text: 'Backend not ready',
       detail: 'Readiness not satisfied: database_not_configured.',
       routeState: 'blocked_backend',
-      bootstrapStatus: 'complete',
-      canCompleteBootstrap: true,
+      readinessStatus: 'complete',
     });
   });
 
@@ -157,8 +153,7 @@ describe('Canvas route backend and recovery priority', () => {
       text: 'Backend not ready',
       detail: 'Readiness not satisfied: database_not_configured.',
       routeState: 'blocked_backend',
-      bootstrapStatus: 'complete',
-      canCompleteBootstrap: true,
+      readinessStatus: 'complete',
     });
     expect(harness.container.querySelector('[data-slot="canvas-workbench-log-panel"]')).toBeNull();
   });
@@ -181,9 +176,8 @@ describe('Canvas route backend and recovery priority', () => {
     ).toBeNull();
     expectCanvasBootstrapState({
       routeState: 'blocked_backend',
-      bootstrapStatus: 'complete',
-      bootstrapDetail: 'Readiness not satisfied: database_not_configured.',
-      canCompleteBootstrap: true,
+      readinessStatus: 'complete',
+      readinessDetail: 'Readiness not satisfied: database_not_configured.',
     });
   });
 

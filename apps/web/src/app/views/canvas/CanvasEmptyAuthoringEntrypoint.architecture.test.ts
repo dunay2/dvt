@@ -46,9 +46,10 @@ function buildPresentationState(
       tone: 'neutral',
       showReloadAction: false,
     },
-    bootstrapStatus: 'complete',
-    bootstrapDetail: 'ready',
-    canCompleteBootstrap: true,
+    routeReadiness: {
+      status: 'complete',
+      detail: 'ready',
+    },
   };
 }
 

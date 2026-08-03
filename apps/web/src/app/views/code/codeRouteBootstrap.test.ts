@@ -18,7 +18,6 @@ describe('codeRouteBootstrap', () => {
     ).toMatchObject({
       status: 'pending',
       detail: copy.bootstrapLoadingFilesDetail,
-      canComplete: false,
     });
 
     expect(
@@ -32,7 +31,6 @@ describe('codeRouteBootstrap', () => {
     ).toMatchObject({
       status: 'pending',
       detail: copy.bootstrapLoadingPreviewDetail,
-      canComplete: false,
     });
   });
 
@@ -48,7 +46,6 @@ describe('codeRouteBootstrap', () => {
     ).toEqual({
       status: 'failed',
       detail: 'Tree unavailable',
-      canComplete: true,
     });
 
     expect(
@@ -62,7 +59,6 @@ describe('codeRouteBootstrap', () => {
     ).toEqual({
       status: 'failed',
       detail: 'Preview unavailable',
-      canComplete: true,
     });
   });
 
@@ -78,7 +74,6 @@ describe('codeRouteBootstrap', () => {
     ).toEqual({
       status: 'complete',
       detail: copy.bootstrapNoWorkspaceFilesDetail,
-      canComplete: true,
     });
 
     expect(
@@ -92,7 +87,6 @@ describe('codeRouteBootstrap', () => {
     ).toEqual({
       status: 'complete',
       detail: copy.bootstrapReadyDetail,
-      canComplete: true,
     });
   });
 
@@ -113,7 +107,6 @@ describe('codeRouteBootstrap', () => {
     ).toMatchObject({
       status: 'pending',
       detail: spanishCopy.bootstrapLoadingFilesDetail,
-      canComplete: false,
     });
   });
 });

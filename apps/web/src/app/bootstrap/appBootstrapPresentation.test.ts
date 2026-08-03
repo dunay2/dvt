@@ -7,6 +7,7 @@ import {
   createBootstrapStepState,
   createInitialBootstrapStepState,
   formatBootstrapBuildDate,
+  isBootstrapStepStartupAllowed,
   resolveBootstrapScreenPresentation,
   resolveBootstrapStepDetail,
   type BootstrapStep,
@@ -100,6 +101,14 @@ describe('appBootstrapPresentation', () => {
         withStepState(completeState, 'route', createBootstrapStepState('route', 'error'))
       )
     ).toBe(false);
+  });
+
+  it('owns the single status-to-startup-allowance rule', () => {
+    expect(
+      ['pending', 'complete', 'degraded', 'failed', 'blocked', 'error'].map((status) =>
+        isBootstrapStepStartupAllowed(status as BootstrapStepState['status'])
+      )
+    ).toEqual([false, true, true, true, false, false]);
   });
 
   it.each([

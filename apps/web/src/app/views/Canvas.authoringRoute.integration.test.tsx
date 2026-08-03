@@ -204,14 +204,12 @@ describe('Canvas route authoring bootstrap integration', () => {
 
     expect(getCanvasDraftPresentationState()).toMatchObject({
       routeState: 'ready',
-      bootstrapStatus: 'complete',
-      canCompleteBootstrap: true,
+      routeReadiness: { status: 'complete' },
     });
     expect(
       getPublishedRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION)
     ).toMatchObject({
       status: 'complete',
-      canComplete: true,
     });
     expect(container.textContent).not.toContain('The application hit an unexpected error.');
   });

@@ -13,9 +13,10 @@ const INITIAL_CANVAS_DRAFT_PRESENTATION_STATE: CanvasDraftPresentationState = {
     tone: 'neutral',
     showReloadAction: false,
   },
-  bootstrapStatus: 'pending',
-  bootstrapDetail: canvasViewCopy.preparingCanvasRouteDetail,
-  canCompleteBootstrap: false,
+  routeReadiness: {
+    status: 'pending',
+    detail: canvasViewCopy.preparingCanvasRouteDetail,
+  },
 };
 
 export const CANVAS_ROUTE_ID = 'dbt.canvas';
@@ -23,7 +24,7 @@ export const CANVAS_WORKBENCH_ROUTE_ID = 'dbt.canvas.workbench-tab';
 
 export const CANVAS_ROUTE_BOOTSTRAP_HANDLE: RouteBootstrapHandle =
   createPublishedRouteBootstrapHandle({
-    pendingDetail: INITIAL_CANVAS_DRAFT_PRESENTATION_STATE.bootstrapDetail,
+    pendingDetail: INITIAL_CANVAS_DRAFT_PRESENTATION_STATE.routeReadiness.detail,
   });
 
 let canvasDraftPresentationState = INITIAL_CANVAS_DRAFT_PRESENTATION_STATE;
@@ -36,9 +37,8 @@ function arePresentationStatesEqual(
   return (
     left.routeState === right.routeState &&
     left.recoveryReason === right.recoveryReason &&
-    left.bootstrapStatus === right.bootstrapStatus &&
-    left.bootstrapDetail === right.bootstrapDetail &&
-    left.canCompleteBootstrap === right.canCompleteBootstrap &&
+    left.routeReadiness.status === right.routeReadiness.status &&
+    left.routeReadiness.detail === right.routeReadiness.detail &&
     left.draftStatusState.label === right.draftStatusState.label &&
     left.draftStatusState.tone === right.draftStatusState.tone &&
     left.draftStatusState.showReloadAction === right.draftStatusState.showReloadAction

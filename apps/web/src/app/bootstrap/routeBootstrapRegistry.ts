@@ -8,11 +8,7 @@ function areRouteBootstrapPresentationsEqual(
   left: RouteBootstrapPresentation,
   right: RouteBootstrapPresentation
 ): boolean {
-  return (
-    left.status === right.status &&
-    left.detail === right.detail &&
-    left.canComplete === right.canComplete
-  );
+  return left.status === right.status && left.detail === right.detail;
 }
 
 function emitRouteBootstrapChange(): void {
@@ -43,9 +39,7 @@ export function publishRouteBootstrapPresentation(
   emitRouteBootstrapChange();
 }
 
-export function resetRouteBootstrapPresentation(
-  registration: RouteBootstrapRegistration
-): void {
+export function resetRouteBootstrapPresentation(registration: RouteBootstrapRegistration): void {
   if (!routeBootstrapPresentations.delete(registration.routeId)) {
     return;
   }

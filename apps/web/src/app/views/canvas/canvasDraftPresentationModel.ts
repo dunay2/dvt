@@ -1,5 +1,11 @@
 /** Owned concern: derive the canonical Canvas route posture and shell bootstrap projection. */
-import type { RouteBootstrapPresentation } from '../../bootstrap/routeBootstrapContract';
+import {
+  createBlockedRouteBootstrapPresentation,
+  createCompleteRouteBootstrapPresentation,
+  createFailedRouteBootstrapPresentation,
+  createPendingRouteBootstrapPresentation,
+  type RouteBootstrapPresentation,
+} from '../../bootstrap/routeBootstrapContract';
 import type { CanvasWorkbenchState } from './canvasWorkbenchStateModel';
 import { canvasViewCopy } from './copy';
 import {
@@ -23,9 +29,7 @@ export type CanvasDraftPresentationState = {
   routeState: CanvasRouteState;
   recoveryReason: CanvasDraftRecoveryReason;
   draftStatusState: CanvasDraftStatusState;
-  bootstrapStatus: 'pending' | 'complete' | 'failed' | 'blocked' | 'error';
-  bootstrapDetail: string;
-  canCompleteBootstrap: boolean;
+  routeReadiness: RouteBootstrapPresentation;
 };
 
 type CanvasDraftPresentationStateArgs = {
@@ -41,92 +45,72 @@ type CanvasDraftPresentationWorkbenchArgs = Pick<
   'workbenchState' | 'recoveryReason' | 'draftStatusState'
 >;
 
-function createCanvasDraftPresentationState({
-  routeState,
-  recoveryReason,
-  draftStatusState,
-  bootstrapStatus,
-  bootstrapDetail,
-  canCompleteBootstrap,
-}: CanvasDraftPresentationState): CanvasDraftPresentationState {
-  return {
-    routeState,
-    recoveryReason,
-    draftStatusState,
-    bootstrapStatus,
-    bootstrapDetail,
-    canCompleteBootstrap,
-  };
-}
-
 function deriveWorkbenchCanvasDraftPresentationState({
   workbenchState,
   recoveryReason,
   draftStatusState,
 }: CanvasDraftPresentationWorkbenchArgs): CanvasDraftPresentationState {
   if (workbenchState.kind === 'loading') {
-    return createCanvasDraftPresentationState({
+    return {
       routeState: 'loading_graph',
       recoveryReason,
       draftStatusState,
-      bootstrapStatus: 'pending',
-      bootstrapDetail: canvasViewCopy.loadingWorkspaceGraphDetail,
-      canCompleteBootstrap: false,
-    });
+      routeReadiness: createPendingRouteBootstrapPresentation(
+        canvasViewCopy.loadingWorkspaceGraphDetail
+      ),
+    };
   }
 
   if (workbenchState.kind === 'error') {
-    return createCanvasDraftPresentationState({
+    return {
       routeState: 'error_graph',
       recoveryReason,
       draftStatusState,
-      bootstrapStatus: 'failed',
-      bootstrapDetail: workbenchState.message || canvasViewCopy.routeErrorFallbackMessage,
-      canCompleteBootstrap: true,
-    });
+      routeReadiness: createFailedRouteBootstrapPresentation(
+        workbenchState.message || canvasViewCopy.routeErrorFallbackMessage
+      ),
+    };
   }
 
   if (recoveryReason != null) {
-    return createCanvasDraftPresentationState({
+    return {
       routeState: 'recovery',
       recoveryReason,
       draftStatusState,
-      bootstrapStatus: 'blocked',
-      bootstrapDetail: resolveCanvasDraftRecoveryBootstrapDetail(recoveryReason),
-      canCompleteBootstrap: false,
-    });
+      routeReadiness: createBlockedRouteBootstrapPresentation(
+        resolveCanvasDraftRecoveryBootstrapDetail(recoveryReason)
+      ),
+    };
   }
 
   if (workbenchState.kind === 'needs_canvas') {
-    return createCanvasDraftPresentationState({
+    return {
       routeState: 'needs_canvas',
       recoveryReason,
       draftStatusState,
-      bootstrapStatus: 'complete',
-      bootstrapDetail: canvasViewCopy.needsCanvasReadyDetail,
-      canCompleteBootstrap: true,
-    });
+      routeReadiness: createCompleteRouteBootstrapPresentation(
+        canvasViewCopy.needsCanvasReadyDetail
+      ),
+    };
   }
 
   if (workbenchState.kind === 'empty') {
-    return createCanvasDraftPresentationState({
+    return {
       routeState: 'empty',
       recoveryReason,
       draftStatusState,
-      bootstrapStatus: 'complete',
-      bootstrapDetail: canvasViewCopy.emptyCanvasReadyDetail,
-      canCompleteBootstrap: true,
-    });
+      routeReadiness: createCompleteRouteBootstrapPresentation(
+        canvasViewCopy.emptyCanvasReadyDetail
+      ),
+    };
   }
 
-  return createCanvasDraftPresentationState({
+  return {
     routeState: 'ready',
     recoveryReason,
     draftStatusState,
-    bootstrapStatus: 'complete',
-    bootstrapDetail: canvasViewCopy.canvasReadyDetail,
-    canCompleteBootstrap: true,
-  });
+    routeReadiness: createCompleteRouteBootstrapPresentation(canvasViewCopy.canvasReadyDetail),
+  };
 }
 
 export function deriveCanvasDraftPresentationState({
@@ -137,25 +121,23 @@ export function deriveCanvasDraftPresentationState({
   draftStatusState,
 }: CanvasDraftPresentationStateArgs): CanvasDraftPresentationState {
   if (isBackendCheckPending) {
-    return createCanvasDraftPresentationState({
+    return {
       routeState: 'loading_backend',
       recoveryReason,
       draftStatusState,
-      bootstrapStatus: 'pending',
-      bootstrapDetail: canvasViewCopy.checkingBackendReadinessDetail,
-      canCompleteBootstrap: false,
-    });
+      routeReadiness: createPendingRouteBootstrapPresentation(
+        canvasViewCopy.checkingBackendReadinessDetail
+      ),
+    };
   }
 
   if (startupBlockState?.kind === 'backend_readiness') {
-    return createCanvasDraftPresentationState({
+    return {
       routeState: 'blocked_backend',
       recoveryReason,
       draftStatusState,
-      bootstrapStatus: 'complete',
-      bootstrapDetail: startupBlockState.message,
-      canCompleteBootstrap: true,
-    });
+      routeReadiness: createCompleteRouteBootstrapPresentation(startupBlockState.message),
+    };
   }
 
   return deriveWorkbenchCanvasDraftPresentationState({
@@ -168,9 +150,5 @@ export function deriveCanvasDraftPresentationState({
 export function toRouteBootstrapPresentation(
   presentationState: CanvasDraftPresentationState
 ): RouteBootstrapPresentation {
-  return {
-    status: presentationState.bootstrapStatus,
-    detail: presentationState.bootstrapDetail,
-    canComplete: presentationState.canCompleteBootstrap,
-  };
+  return presentationState.routeReadiness;
 }
