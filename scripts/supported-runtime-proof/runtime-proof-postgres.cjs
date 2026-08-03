@@ -27,7 +27,7 @@ function createRuntimeProofPostgresProbe(options) {
     },
     readSnapshot: async (tenantId, runId) => {
       const result = await query(
-        `SELECT snapshot, last_run_seq FROM ${schema}.run_snapshots WHERE tenant_id = $1 AND run_id = $2`,
+        `SELECT snapshot, last_run_seq, updated_at FROM ${schema}.run_snapshots WHERE tenant_id = $1 AND run_id = $2`,
         [tenantId, runId]
       );
       return result.rows[0] ?? null;

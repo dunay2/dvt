@@ -1,13 +1,17 @@
 'use strict';
 
 const {
+  calculateRatePerSecond,
   evaluateRuntimeProof,
   isDeliveryOrderPreserved,
   percentile,
 } = require('./runtime-proof-invariants.cjs');
 const { startSupportedRuntimeProofLifecycle } = require('./runtime-proof-lifecycle.cjs');
 const { hasContiguousRunSequence, snapshotsMatch } = require('./runtime-proof-postgres.cjs');
-const { projectCanonicalSnapshot } = require('./runtime-proof-snapshot.cjs');
+const {
+  calculateProjectionFreshnessMs,
+  projectCanonicalSnapshot,
+} = require('./runtime-proof-snapshot.cjs');
 const {
   buildRuntimeProofDraftSaveRequest,
   buildRuntimeProofPreviewRequest,
@@ -21,6 +25,7 @@ async function executeRuntimeProofIteration(profile, options = {}) {
   const completionDurations = [];
   let workerBacklogPeak = 0;
   let postgresInterruptionRejected = false;
+  const workloadStartedAt = Date.now();
 
   try {
     const planRef = await preparePersistedPlan(lifecycle.api, profile);
@@ -131,6 +136,11 @@ async function executeRuntimeProofIteration(profile, options = {}) {
       postgresInterruptionRejected,
       postgresRecoveryCompleted,
       observations: {
+        endToEndEventThroughputPerSecond: calculateRatePerSecond(
+          expectedKeys.size,
+          Date.now() - workloadStartedAt
+        ),
+        projectionFreshnessMs: evidence.projectionFreshnessMs,
         startLatencyMs: summarizeDurations(startLatencies),
         completionDurationMs: summarizeDurations(completionDurations),
         workerBacklogPeak,
@@ -192,6 +202,7 @@ async function startAndWaitForCompletion(api, startRequest, profile) {
 async function collectRunEvidence(lifecycle, profile, runs) {
   const events = [];
   let snapshotReplayMismatchCount = 0;
+  let projectionFreshnessMs = 0;
 
   for (const run of runs) {
     const persistedEvents = await lifecycle.postgres.readEvents(profile.scope.tenantId, run.runId);
@@ -206,6 +217,11 @@ async function collectRunEvidence(lifecycle, profile, runs) {
       profile.workload.workerInterruption.recoveryTimeoutMs,
       `snapshot projection for ${run.runId}`
     );
+    const runProjectionFreshnessMs = calculateProjectionFreshnessMs(before, persistedEvents);
+    if (runProjectionFreshnessMs === null) {
+      throw new Error(`Projection freshness evidence is unavailable for ${run.runId}`);
+    }
+    projectionFreshnessMs = Math.max(projectionFreshnessMs, runProjectionFreshnessMs);
     await lifecycle.api.rebuildSnapshot(run.runId, profile.scope.tenantId);
     const after = await lifecycle.postgres.readSnapshot(profile.scope.tenantId, run.runId);
     if (!snapshotsMatch(canonicalReplay, before) || !snapshotsMatch(canonicalReplay, after)) {
@@ -213,7 +229,7 @@ async function collectRunEvidence(lifecycle, profile, runs) {
     }
   }
 
-  return { events, snapshotReplayMismatchCount };
+  return { events, projectionFreshnessMs, snapshotReplayMismatchCount };
 }
 
 async function waitForCondition(check, timeoutMs, label, pollIntervalMs = 100) {

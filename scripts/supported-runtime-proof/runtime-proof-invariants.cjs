@@ -72,7 +72,15 @@ function isDeliveryOrderPreserved(deliveries) {
   );
 }
 
+function calculateRatePerSecond(count, durationMs) {
+  if (!Number.isFinite(count) || count < 0 || !Number.isFinite(durationMs) || durationMs <= 0) {
+    throw new Error('count must be non-negative and durationMs must be positive');
+  }
+  return Number(((count * 1_000) / durationMs).toFixed(2));
+}
+
 module.exports = {
+  calculateRatePerSecond,
   INVARIANT_ORDER,
   evaluateRuntimeProof,
   isDeliveryOrderPreserved,

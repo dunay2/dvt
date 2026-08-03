@@ -3,7 +3,10 @@
 const assert = require('node:assert/strict');
 const test = require('node:test');
 
-const { projectCanonicalSnapshot } = require('./runtime-proof-snapshot.cjs');
+const {
+  calculateProjectionFreshnessMs,
+  projectCanonicalSnapshot,
+} = require('./runtime-proof-snapshot.cjs');
 
 test('projects the full persisted event history with canonical run-domain semantics', async () => {
   const events = [
@@ -28,6 +31,16 @@ test('projects the full persisted event history with canonical run-domain semant
     },
     last_run_seq: 3,
   });
+});
+
+test('projection freshness compares the snapshot write with the event head', () => {
+  const events = [makeEvent(1, 'RunQueued', '2026-08-03T00:00:00.000Z')];
+
+  assert.equal(
+    calculateProjectionFreshnessMs({ updated_at: new Date('2026-08-03T00:00:00.125Z') }, events),
+    125
+  );
+  assert.equal(calculateProjectionFreshnessMs(null, events), null);
 });
 
 function makeEvent(runSeq, eventType, emittedAt) {

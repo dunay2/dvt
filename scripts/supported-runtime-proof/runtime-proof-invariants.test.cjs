@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const test = require('node:test');
 
 const {
+  calculateRatePerSecond,
   INVARIANT_ORDER,
   evaluateRuntimeProof,
   isDeliveryOrderPreserved,
@@ -82,4 +83,9 @@ test('delivery order is evaluated independently for each interleaved run', () =>
     ]),
     false
   );
+});
+
+test('throughput rate is derived from observed count and elapsed time', () => {
+  assert.equal(calculateRatePerSecond(72, 36_000), 2);
+  assert.equal(calculateRatePerSecond(9, 1_500), 6);
 });
