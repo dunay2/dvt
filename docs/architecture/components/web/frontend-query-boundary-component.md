@@ -16,12 +16,14 @@ file is explicitly listed as a query boundary.
 
 ## Public API
 
-| Module                                                                                       | Public hooks                                                                                                                                                                                                               | Owned rail                  |
-| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| `apps/web/src/app/queries/workspaceQueries.ts`                                               | `useWorkspaceDiffChangesQuery`<br>`useWorkspaceGraphForViewQuery`<br>`useWorkspaceFileTreeQuery`<br>`useWorkspaceFileContentQuery`<br>`useWorkspaceRolesQuery`<br>`useWorkspaceAuditQuery`<br>`useWorkspaceArtifactsQuery` | Workspace query read models |
-| `apps/web/src/app/queries/runsQueries.ts`                                                    | `useRunsListForViewQuery`<br>`useScopedRunSummariesQuery`<br>`useScopedRunSummariesQueryForHistory`<br>`useRunSnapshotQuery`<br>`useRunEventsQuery`<br>`useRunWorkspaceQuery`                                              | Run query read models       |
-| `apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts`   | `usePlatformHealthSnapshotQuery`                                                                                                                                                                                           | Platform health query       |
-| `apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.ts` | `useRuntimeCapabilitiesQuery`                                                                                                                                                                                              | Runtime capability query    |
+| Module                                                                                       | Public hooks                                                                                                                                                                                                                                                                                     | Owned rail                  |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------- |
+| `apps/web/src/app/queries/workspaceQueries.ts`                                               | `useWorkspaceDiffChangesQuery`<br>`useWorkspacePluginCatalogQuery`<br>`useWorkspaceGraphForViewQuery`<br>`useWorkspaceFileTreeQuery`<br>`useWorkspaceFileContentQuery`<br>`useWorkspaceFileHistoryQuery`<br>`useWorkspaceRolesQuery`<br>`useWorkspaceAuditQuery`<br>`useWorkspaceArtifactsQuery` | Workspace query read models |
+| `apps/web/src/app/queries/runsQueries.ts`                                                    | `useScopedRunSummariesQuery`<br>`useScopedRunSummariesQueryForHistory`<br>`useRunSnapshotQuery`                                                                                                                                                                                                  | Run summary/status queries  |
+| `apps/web/src/app/queries/runEventFeedQuery.ts`                                              | `useRunEventFeedQuery`                                                                                                                                                                                                                                                                           | Run event feed query        |
+| `apps/web/src/app/views/runs/useRunWorkspace.ts`                                             | `useRunWorkspace`                                                                                                                                                                                                                                                                                | Run workspace projection    |
+| `apps/web/src/capabilities/platform-health/presentation/usePlatformHealthSnapshotQuery.ts`   | `usePlatformHealthSnapshotQuery`                                                                                                                                                                                                                                                                 | Platform health query       |
+| `apps/web/src/capabilities/runtime-capabilities/presentation/useRuntimeCapabilitiesQuery.ts` | `useRuntimeCapabilitiesQuery`                                                                                                                                                                                                                                                                    | Runtime capability query    |
 
 ## Invariants
 
@@ -51,12 +53,12 @@ dbt run history queries out of view/plugin modules and into the query boundary.
 
 ## Consumers
 
-| Consumer                                  | Query hooks consumed                                                               |
-| ----------------------------------------- | ---------------------------------------------------------------------------------- |
-| `RunsView` / `useRunWorkspace`            | `useScopedRunSummariesQuery`, `useRunWorkspaceQuery`                               |
-| `AdminView` / `useAdminViewData`          | `useWorkspaceRolesQuery`, `useWorkspaceAuditQuery`                                 |
-| `ArtifactsView` / `useArtifactsViewModel` | `useWorkspaceArtifactsQuery`                                                       |
-| `DbtNodeRenderer` history panel           | `useRunSnapshotQuery`, `useScopedRunSummariesQueryForHistory`, `useRunEventsQuery` |
+| Consumer                                  | Query hooks consumed                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------------------------------- |
+| `RunsView` / `useRunWorkspace`            | `useScopedRunSummariesQuery`, `useRunSnapshotQuery`, `useRunEventFeedQuery`           |
+| `AdminView` / `useAdminViewData`          | `useWorkspaceRolesQuery`, `useWorkspaceAuditQuery`                                    |
+| `ArtifactsView` / `useArtifactsViewModel` | `useWorkspaceArtifactsQuery`                                                          |
+| `DbtNodeRenderer` history panel           | `useRunSnapshotQuery`, `useScopedRunSummariesQueryForHistory`, `useRunEventFeedQuery` |
 
 ## Guardrails
 

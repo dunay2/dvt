@@ -417,7 +417,7 @@ credentials, or define backend template contracts.
 - Owner: run event stream read model.
 - Frontend surfaces:
   - `IRunsPort.listRunEvents`;
-  - `useRunEventsQuery`.
+  - `useRunEventFeedQuery`.
 - Backend surface: `GET /runs/:runId/events`.
 
 ### `CancelRun`
