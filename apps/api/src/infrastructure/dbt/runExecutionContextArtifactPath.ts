@@ -7,8 +7,7 @@ export function resolveRunExecutionContextArtifactPath(input: {
   readonly tenantId: string;
   readonly runId: string;
 }): string {
-  const runKey = createHash('sha256').update(input.runId, 'utf8').digest('hex');
-  return path.resolve(input.rootPath, 'run-contexts', input.tenantId, `${runKey}.json`);
+  return resolveArtifactPath(input, '.json');
 }
 
 export function resolveRunExecutionContextReferenceArtifactPath(input: {
@@ -16,6 +15,14 @@ export function resolveRunExecutionContextReferenceArtifactPath(input: {
   readonly tenantId: string;
   readonly runId: string;
 }): string {
+  return resolveArtifactPath(input, '.ref.json');
+}
+
+function resolveArtifactPath(
+  input: { readonly rootPath: string; readonly tenantId: string; readonly runId: string },
+  extension: '.json' | '.ref.json'
+): string {
+  const tenantKey = createHash('sha256').update(input.tenantId, 'utf8').digest('hex');
   const runKey = createHash('sha256').update(input.runId, 'utf8').digest('hex');
-  return path.resolve(input.rootPath, 'run-contexts', input.tenantId, `${runKey}.ref.json`);
+  return path.resolve(input.rootPath, 'run-contexts', tenantKey, `${runKey}${extension}`);
 }
