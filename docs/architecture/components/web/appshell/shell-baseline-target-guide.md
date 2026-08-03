@@ -189,7 +189,7 @@ flowchart LR
 ### Architecture Target
 
 1. `Views -> Services -> API Client` (no direct fetch in views).
-2. Explicit `VITE_DATA_SOURCE=mock|api` boundary (`F-04`).
+2. API-only product composition with explicit test-double injection (`F-04`).
 3. Store domain ownership closure for session, Canvas interaction, shell layout, runtime evidence,
    platform status, and authorization projections (`F-05`).
 4. Query orchestration through TanStack Query (`F-06`).
@@ -436,7 +436,7 @@ Change control rule:
 1. Update typed contracts first.
 2. Update adapters second.
 3. Update views third.
-4. Validate both `mock` and `api` data source modes before merge.
+4. Validate API adapters and explicit test doubles before merge.
 
 ### Suggested Next Execution Slices
 
@@ -560,7 +560,7 @@ This checklist is the minimum quality bar for each delivery slice.
 ### Cross-Slice QA Exit Criteria
 
 1. Capability conformance tests pass for each enabled plugin.
-2. Mock and API modes both pass contract-level behavior checks.
+2. API adapters and explicit test doubles both pass contract-level behavior checks.
 3. Permission gates are enforced for all plugin actions.
 4. Diff/Artifacts timelines are reproducible from stored snapshots and events.
 5. Validation baseline passes before merge: markdown lint and `verify:prepush`.

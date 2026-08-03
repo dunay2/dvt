@@ -98,24 +98,6 @@ describe('Query key policy (architecture)', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('enforces mode-resolution ownership to composition root and config modules', () => {
-    const sourceFiles: string[] = [];
-    collectSourceFiles(ROOT_DIR, sourceFiles);
-
-    const allowedResolveDataSourceCallers = new Set([
-      'services/composition/appServices.ts',
-      'services/config/dataSource.ts',
-      'services/config/runtimeDataSourceMode.ts',
-    ]);
-
-    const offenders = sourceFiles
-      .filter((filePath) => fileContainsPattern(filePath, /resolveDataSource\s*\(/))
-      .map(toRelativePath)
-      .filter((filePath) => !allowedResolveDataSourceCallers.has(filePath));
-
-    expect(offenders).toEqual([]);
-  });
-
   it('enforces service-factory ownership to composition root and service modules', () => {
     const sourceFiles: string[] = [];
     collectSourceFiles(ROOT_DIR, sourceFiles);

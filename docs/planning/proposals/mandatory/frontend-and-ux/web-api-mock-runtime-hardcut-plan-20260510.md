@@ -104,6 +104,8 @@ mechanizationStatus: implemented
 noHumanDecisionsRemaining: true
 implementationPlan: docs/planning/proposals/mandatory/frontend-and-ux/web-api-mock-runtime-hardcut-plan-20260510.md
 componentGuides:
+  - docs/architecture/components/web/f04-frontend-data-boundary-technical-manual-20260404.md
+  - docs/guides/f04-frontend-data-boundary-user-manual-20260404.md
   - docs/architecture/components/web/workspace/mock-runtime-hardcut-component.md
   - docs/architecture/components/web/workspace/mock-runtime-hardcut-user-stories.md
   - docs/planning/reviews/20260510-web-api-integration-gap-review.md
@@ -117,11 +119,22 @@ governingSources:
   - docs/architecture/fowler-opportunity-planning-governance.md
   - docs/planning/reviews/20260510-web-api-integration-gap-review.md
 allowedImplementationSurfaces:
+  - apps/web/.env.e2e
+  - apps/web/README.md
   - docs/planning/proposals/mandatory/frontend-and-ux/web-api-mock-runtime-hardcut-plan-20260510.md
   - docs/architecture/components/web/workspace/mock-runtime-hardcut-component.md
   - docs/architecture/components/web/workspace/mock-runtime-hardcut-user-stories.md
   - docs/architecture/components/web/workspace/workspace-port-decomposition-component.md
   - docs/architecture/components/web/workspace/workspace-port-decomposition-user-stories.md
+  - docs/architecture/components/web/f04-frontend-data-boundary-technical-manual-20260404.md
+  - docs/guides/f04-frontend-data-boundary-user-manual-20260404.md
+  - docs/architecture/components/web/runs/user-stories-runs.md
+  - docs/architecture/components/web/runs/frontend-runtime-contract-user-manual.md
+  - docs/architecture/components/web/runs/frontend-runtime-contract-technical-manual.md
+  - docs/architecture/components/web/appshell/web-auth-project-onboarding-component.md
+  - docs/architecture/components/web/appshell/effective-workspace-context-component.md
+  - docs/architecture/components/web/appshell/effective-workspace-context-user-stories.md
+  - docs/architecture/components/web/appshell/shell-baseline-target-guide.md
   - docs/planning/reviews/20260510-web-api-integration-gap-review.md
   - buzon/**
   - apps/web/src/app/bootstrap/AuthRouteGate.tsx
@@ -134,6 +147,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/ports/**
   - apps/web/src/app/services/AppServicesContext.tsx
   - apps/web/src/app/services/AppServicesContext.test.tsx
+  - apps/web/src/app/stores/sessionStore.ts
+  - apps/web/src/app/stores/sessionStore.test.ts
   - apps/web/src/app/components/**
   - apps/web/src/app/views/**
   - apps/web/src/app/queries/**
@@ -142,6 +157,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/Root*.ts*
   - apps/web/src/app/data/**
   - apps/web/src/testing/**
+  - apps/web/src/capabilities/platform-health/**
   - docs/planning/status/**
   - docs/.manifest.json
   - docs/**/index.md
@@ -164,9 +180,6 @@ commandQueryRails:
     type: query
     dddOwner: Workspace graph draft read model
 domainObjects:
-  - name: DataSourceMode
-    type: value object
-    owner: Web composition runtime mode
   - name: AppServices
     type: composition root
     owner: Web application service ports
@@ -177,7 +190,7 @@ fowlerSignals:
   - Hidden Authority from mock runtime services
   - Parallel Model between mock services and API rails
   - Boundary Drift in protected route auth bypass
-  - Primitive Obsession around mode mock
+  - Primitive Obsession around the removed data-source mode
 architectureGuards:
   - pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesMockHardcut.architecture.test.ts
   - pnpm --filter @dvt/web exec vitest run src/app/services/workspace/workspacePortDecomposition.architecture.test.ts
@@ -187,7 +200,7 @@ completionGate:
   - pnpm docs:sync
   - pnpm docs:status:generate
   - pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesMockHardcut.architecture.test.ts
-  - pnpm --filter @dvt/web exec vitest run src/app/services/config/dataSource.test.ts src/app/services/composition/appServices.test.ts src/app/services/workspace/workspacePorts.imports.test.ts
+  - pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServices.test.ts src/app/services/workspace/workspacePorts.imports.test.ts
   - pnpm --filter @dvt/web typecheck
   - pnpm docs:feature-mechanization:implementation
   - pnpm verify:prepush
@@ -345,17 +358,28 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - apps/web/src/app/services/composition/appServicesMockHardcut.architecture.test.ts
-  - name: resolveBaseWorkspaceConfig
+  - name: resolveWorkspaceBootstrapConfig
     path: apps/web/src/app/services/config/workspaceConfig.ts
-    dddOwner: Web workspace config query
+    dddOwner: Web workspace bootstrap config query
     cqRails:
       - GetRuntimeSession
     fowlerSignals:
-      - Product workspace config no longer exposes a mock example workspace
+      - Workspace bootstrap remains independent of any product transport strategy
     architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesMockHardcut.architecture.test.ts
     cypressCoverage: N/A
     unitTests:
-      - apps/web/src/app/services/config/dataSource.test.ts
+      - apps/web/src/app/stores/sessionStore.test.ts
+  - name: workspaceBootstrap
+    path: apps/web/src/app/stores/sessionStore.ts
+    dddOwner: Web workspace session scope projection
+    cqRails:
+      - GetRuntimeSession
+    fowlerSignals:
+      - Session defaults consume one transport-independent workspace bootstrap projection
+    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesMockHardcut.architecture.test.ts
+    cypressCoverage: N/A
+    unitTests:
+      - apps/web/src/app/stores/sessionStore.test.ts
   - name: createPlansService
     path: apps/web/src/app/services/plans/plansService.ts
     dddOwner: Web plan API port composition
@@ -422,17 +446,6 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - apps/web/src/app/services/workspace/workspacePorts.imports.test.ts
-  - name: DataSourceMode
-    path: apps/web/src/app/services/config/dataSource.ts
-    dddOwner: Web composition runtime mode
-    cqRails:
-      - GetRuntimeSession
-    fowlerSignals:
-      - Remove primitive mock branch from product runtime
-    architectureGuard: pnpm --filter @dvt/web exec vitest run src/app/services/composition/appServicesMockHardcut.architecture.test.ts
-    cypressCoverage: N/A
-    unitTests:
-      - apps/web/src/app/services/config/dataSource.test.ts
 ```
 
 ## Implementation Steps
@@ -442,7 +455,7 @@ symbols:
 - [x] Add architecture guard proving product composition cannot import mock
       adapters or expose `mode: 'mock'`.
 - [x] Move mock adapters and fixtures to explicit test-double surfaces.
-- [x] Make product data-source resolution API-only.
+- [x] Make product service composition API-only.
 - [x] Update tests to inject doubles instead of enabling mock mode.
 - [x] Update the web/API gap review and component docs.
 - [x] Run closeout validation for the web package.

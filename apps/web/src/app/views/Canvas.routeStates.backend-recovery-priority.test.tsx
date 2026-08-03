@@ -124,9 +124,8 @@ describe('Canvas route backend and recovery priority', () => {
     });
   });
 
-  it('blocks the canvas surface in api mode when backend readiness is not satisfied', async () => {
+  it('blocks the canvas surface when backend readiness is not satisfied', async () => {
     await renderCanvasRouteWithController(harness, {
-      dataSourceMode: 'api',
       backendReady: false,
       backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
     });
@@ -145,7 +144,6 @@ describe('Canvas route backend and recovery priority', () => {
     await renderCanvasRouteWithController(
       harness,
       {
-        dataSourceMode: 'api',
         backendReady: false,
         backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
       },
@@ -167,7 +165,6 @@ describe('Canvas route backend and recovery priority', () => {
 
   it('prioritizes backend blocked route state over draft recovery banners', async () => {
     await renderCanvasRouteWithController(harness, {
-      dataSourceMode: 'api',
       backendReady: false,
       backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
       draftRecoveryReason: 'missing_remote',
@@ -192,7 +189,6 @@ describe('Canvas route backend and recovery priority', () => {
 
   it('keeps Canvas route commands hidden on blocked backend route even when draft reload remains available', async () => {
     await renderCanvasRouteWithController(harness, {
-      dataSourceMode: 'api',
       backendReady: false,
       backendBlockMessage: 'Readiness not satisfied: database_not_configured.',
       draftRecoveryReason: 'missing_remote',

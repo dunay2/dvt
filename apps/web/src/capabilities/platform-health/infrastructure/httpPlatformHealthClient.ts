@@ -4,8 +4,6 @@ import {
   createApiClient,
   resolveApiBaseUrl,
 } from '../../../app/services/api/createApiClient';
-import type { DataSourceMode } from '../../../app/services/config/dataSource';
-import { getRuntimeDataSourceMode } from '../../../app/services/config/runtimeDataSourceMode';
 import type {
   DbReadyDto,
   HealthzDto,
@@ -146,7 +144,10 @@ function createNotEnabledProbe<TData>(endpoint: string): OptionalEndpointProbe<T
 }
 
 function normalizeOptionalProbeToken(value: string): OptionalPlatformHealthProbeKey | 'all' | null {
-  const normalized = value.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, '');
 
   switch (normalized) {
     case 'all':
@@ -285,9 +286,7 @@ export type HttpPlatformHealthClient = {
 
 export function createHttpPlatformHealthClient(
   apiClient: ApiClient = createApiClient(resolveApiBaseUrl()),
-  dataSourceMode: DataSourceMode = getRuntimeDataSourceMode(),
-  optionalProbeKeys: ReadonlySet<OptionalPlatformHealthProbeKey> =
-    resolveOptionalPlatformHealthProbes()
+  optionalProbeKeys: ReadonlySet<OptionalPlatformHealthProbeKey> = resolveOptionalPlatformHealthProbes()
 ): HttpPlatformHealthClient {
   const requestRaw = (path: string) =>
     apiClient.requestRaw(path, {
@@ -329,7 +328,6 @@ export function createHttpPlatformHealthClient(
       return {
         fetchedAt: new Date().toISOString(),
         apiBaseUrl: apiClient.baseUrl,
-        dataSourceMode,
         healthz,
         readyz,
         version,

@@ -1,13 +1,12 @@
 /** Owned concern: enforce semantic boundaries for the web API-only app-services hardcut. */
 import { readdirSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 const HARDCUT_OWNED_CONCERN_MODULES = [
   ['src', 'app', 'services', 'composition', 'appServices.ts'],
   ['src', 'app', 'services', 'AppServicesContext.tsx'],
-  ['src', 'app', 'services', 'config', 'dataSource.ts'],
   ['src', 'app', 'services', 'workspace', 'workspacePorts.ts'],
   ['src', 'app', 'services', 'plans', 'plansService.ts'],
   ['src', 'app', 'services', 'runs', 'runsService.ts'],
@@ -23,6 +22,16 @@ const HARDCUT_OWNED_CONCERN_MODULES = [
 ] as const;
 
 const HARDCUT_DOCUMENTATION_FILES = [
+  [
+    '..',
+    '..',
+    'docs',
+    'architecture',
+    'components',
+    'web',
+    'f04-frontend-data-boundary-technical-manual-20260404.md',
+  ],
+  ['..', '..', 'docs', 'guides', 'f04-frontend-data-boundary-user-manual-20260404.md'],
   [
     '..',
     '..',
@@ -104,7 +113,7 @@ function listFilesRecursive(...segments: string[]): string[] {
       if (entry.isDirectory()) {
         stack.push(entryPath);
       } else {
-        files.push(entryPath.replace(`${process.cwd()}\\`, '').replaceAll('\\', '/'));
+        files.push(relative(process.cwd(), entryPath).split(sep).join('/'));
       }
     }
   }
@@ -124,11 +133,30 @@ describe('app services mock hardcut architecture', () => {
     }
   });
 
-  it('keeps DataSourceMode API-only in product runtime', () => {
-    const source = readRepoFile('src', 'app', 'services', 'config', 'dataSource.ts');
+  it('keeps product runtime free of an exhausted data-source strategy', () => {
+    const productFiles = listFilesRecursive('src').filter(
+      (filePath) =>
+        !filePath.includes('/testing/') &&
+        !filePath.includes('/test/') &&
+        !filePath.includes('.test.') &&
+        !filePath.includes('.spec.')
+    );
+    const forbiddenStrategyTerms = [
+      /\bDataSourceMode\b/,
+      /\bresolveDataSource\b/,
+      /\bgetRuntimeDataSourceMode\b/,
+      /\bsetRuntimeDataSourceMode\b/,
+      /\bVITE_DATA_SOURCE\b/,
+      /\bdataSourceMode\b/,
+    ];
 
-    expect(source).toContain("export type DataSourceMode = 'api'");
-    expect(source).not.toContain("'mock'");
+    for (const filePath of productFiles) {
+      const source = readRepoFile(...filePath.split('/'));
+
+      for (const forbiddenTerm of forbiddenStrategyTerms) {
+        expect(source, `${filePath} contains ${forbiddenTerm}`).not.toMatch(forbiddenTerm);
+      }
+    }
   });
 
   it('keeps product services free of non-test mock modules', () => {

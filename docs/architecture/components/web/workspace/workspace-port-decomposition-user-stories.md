@@ -16,7 +16,7 @@ warehouse import capabilities.
 
 Acceptance:
 
-- Given API mode is active, when a file tree is requested, then the UI calls the
+- Given an authenticated product runtime, when a file tree is requested, then the UI calls the
   workspace files query port.
 - Given a file is missing, when the API returns the protected not-found envelope,
   then the file query port raises the existing file-load unavailable state.
@@ -46,7 +46,7 @@ service.
 
 Acceptance:
 
-- Given API mode is active and no `GetWorkspaceDiffChanges` backend rail exists,
+- Given no `GetWorkspaceDiffChanges` backend rail exists,
   when `DiffView` requests diff changes, then the diff port returns an
   unavailable state before any HTTP call.
 - Given a test harness injects diff fixtures, when diff data renders, then the
@@ -60,7 +60,7 @@ readiness.
 
 Acceptance:
 
-- Given API mode is active, when the plugin catalog is requested, then the
+- Given product runtime is active, when the plugin catalog is requested, then the
   plugin catalog port uses the protected `ListWorkspacePlugins` rail.
 - Given static frontend registry entries exist, when navigation renders, then
   they are treated as presentation composition only.
@@ -74,7 +74,7 @@ workspace graph/file capabilities do not imply RBAC or audit authority.
 
 Acceptance:
 
-- Given API mode is active and no admin read rail exists, when admin roles or
+- Given no admin read rail exists, when admin roles or
   audit log are requested, then the admin read port returns unavailable before
   transport.
 - Given a test harness injects fixture roles and audit entries, when they
@@ -88,7 +88,7 @@ backend command.
 
 Acceptance:
 
-- Given API mode is active, when the wizard opens, then the source import port
+- Given an authenticated product runtime, when the wizard opens, then the source import port
   lists connections through `ListWarehouseConnections`.
 - Given a connection is selected, when source objects are requested, then the
   source import port lists authorized provider-neutral object metadata through

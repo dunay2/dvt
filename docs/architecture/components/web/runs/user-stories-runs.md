@@ -7,7 +7,7 @@ code_refs:
   - apps/web/src/app/ports/runs.ts
   - apps/web/src/app/services/runs/runsService.ts
   - apps/web/src/app/services/runs/runsService.api.ts
-  - apps/web/src/app/services/runs/runsService.mock.ts
+  - apps/web/src/testing/runsPortDoubles.ts
   - apps/web/src/app/services/runs/runWorkspaceFacade.ts
   - apps/web/src/app/services/runs/runsService.test.ts
   - apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts
@@ -300,27 +300,27 @@ query fails.
 - `runWorkspaceFacade.ts` composes snapshot and timeline state.
 - `runWorkspaceFacade.test.ts` covers facade error classification.
 
-## 5. Mock Mode
+## 5. Explicit Test Doubles
 
-### US-13: Mock Mode - Same Port Shape
+### US-13: Test Double - Same Port Shape
 
 **As** a developer,
-**I want** mock and API adapters to satisfy `IRunsPort`,
-**So that** route code can be written against one presentation boundary.
+**I want** explicit test doubles and the API adapter to satisfy `IRunsPort`,
+**So that** route code has one product boundary without a runtime mode.
 
 **C&Q rail:** Not applicable - local adapter parity
 
 **Scenario:**
 
-- Given the application is configured for API mode or mock mode
-- When `createRunsService(mode)` is called
-- Then the returned object satisfies `IRunsPort`
-- And route code does not branch on `DataSourceMode`
+- Given product composition creates `createRunsService(apiClient)`
+- And a test injects `createMockRunsService()` through an override
+- Then both objects satisfy `IRunsPort`
+- And route code cannot select a product data transport
 
 **Current evidence:**
 
-- `createApiRunsService` and `createMockRunsService` both return `IRunsPort`.
-- `createRunsService` owns the mode switch.
+- `createRunsService` returns the API-backed `IRunsPort`.
+- `createMockRunsService` exists only under `src/testing` for explicit injection.
 
 ## 6. Tenant Scoping
 
@@ -409,25 +409,25 @@ alive.
 
 ## Coverage Matrix
 
-| Story | IRunsPort method   | Rail type | Current evidence surface          |
-| ----- | ------------------ | --------- | --------------------------------- |
-| US-01 | `listRunSummaries` | Query     | Mock/API list mapping             |
-| US-02 | `listRunSummaries` | Query     | `RunSummaryItem` DTO and mapper   |
-| US-03 | `listRunSummaries` | Query     | API error propagation             |
-| US-04 | `getRunSnapshot`   | Query     | Snapshot DTO and API mapping      |
-| US-05 | `getRunSnapshot`   | Query     | HTTP 404 to `null` mapping        |
-| US-06 | `getRunSnapshot`   | Query     | Non-404 error propagation         |
-| US-07 | `startRun`         | Command   | `POST /runs/start` receipt parse  |
-| US-08 | `startRun`         | Command   | No client-authored `runId`        |
-| US-09 | `startRun`         | Command   | Runtime rejection normalization   |
-| US-10 | `listRunEvents`    | Query     | Events payload parsing            |
-| US-11 | `listRunEvents`    | Query     | `afterSeq` query construction     |
-| US-12 | `listRunEvents`    | Query     | Facade degraded timeline posture  |
-| US-13 | factory/adapters   | N/A       | One `IRunsPort` for API and mock  |
-| US-14 | all methods        | Scope     | Session-derived workspace scoping |
-| US-15 | `listRunEvents`    | Query     | Event ordering and dedupe model   |
-| US-16 | `listRunEvents`    | Query     | Shared Console/Runs event model   |
-| US-17 | `listRunEvents`    | Query     | Active-status polling policy      |
+| Story | IRunsPort method   | Rail type | Current evidence surface           |
+| ----- | ------------------ | --------- | ---------------------------------- |
+| US-01 | `listRunSummaries` | Query     | Mock/API list mapping              |
+| US-02 | `listRunSummaries` | Query     | `RunSummaryItem` DTO and mapper    |
+| US-03 | `listRunSummaries` | Query     | API error propagation              |
+| US-04 | `getRunSnapshot`   | Query     | Snapshot DTO and API mapping       |
+| US-05 | `getRunSnapshot`   | Query     | HTTP 404 to `null` mapping         |
+| US-06 | `getRunSnapshot`   | Query     | Non-404 error propagation          |
+| US-07 | `startRun`         | Command   | `POST /runs/start` receipt parse   |
+| US-08 | `startRun`         | Command   | No client-authored `runId`         |
+| US-09 | `startRun`         | Command   | Runtime rejection normalization    |
+| US-10 | `listRunEvents`    | Query     | Events payload parsing             |
+| US-11 | `listRunEvents`    | Query     | `afterSeq` query construction      |
+| US-12 | `listRunEvents`    | Query     | Facade degraded timeline posture   |
+| US-13 | factory/adapters   | N/A       | API port plus explicit test double |
+| US-14 | all methods        | Scope     | Session-derived workspace scoping  |
+| US-15 | `listRunEvents`    | Query     | Event ordering and dedupe model    |
+| US-16 | `listRunEvents`    | Query     | Shared Console/Runs event model    |
+| US-17 | `listRunEvents`    | Query     | Active-status polling policy       |
 
 ## Related
 

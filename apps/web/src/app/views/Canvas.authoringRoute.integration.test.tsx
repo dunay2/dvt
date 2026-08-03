@@ -33,7 +33,6 @@ vi.mock('../../capabilities/platform-health', async () => {
       data: {
         fetchedAt: '2026-04-24T00:00:00.000Z',
         apiBaseUrl: 'http://localhost:3000',
-        dataSourceMode: 'api',
         healthz: {
           endpoint: '/healthz',
           availability: 'available',

@@ -18,7 +18,7 @@ export const adminViewCopy = {
     backendStatus: 'Backend status',
     version: 'Version',
     readiness: 'Readiness',
-    dataSourceMode: 'Data source mode',
+    dataTransport: 'Data transport',
     frontendCompatibility: 'Frontend compatibility',
     pluginAvailability: 'Plugin availability',
     apiBaseUrl: 'API base URL',

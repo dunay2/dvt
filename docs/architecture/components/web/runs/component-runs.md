@@ -123,7 +123,7 @@ wire contracts and are not re-exported from `@dvt/contracts`.
 5. `getRunSnapshot` and `listRunEvents` include tenant scope query parameters
    through the API adapter.
 6. Mock and API implementations satisfy the same `IRunsPort` interface, so route
-   code does not branch on `DataSourceMode`.
+   code does not select a product data transport.
 7. Architecture tests in
    [`runsDomainBoundary.architecture.test.ts`](../../../../../apps/web/src/app/views/runs/runsDomainBoundary.architecture.test.ts)
    validate docblock presence, port boundary isolation, CQRS rail separation,

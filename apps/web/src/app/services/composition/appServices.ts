@@ -24,8 +24,6 @@ import type { IDbtProjectImportPort } from '../../ports/dbtProjectImport';
 import type { IDbtYamlDescriptionEditPort } from '../../ports/dbtYamlDescriptionEdit';
 import { createApiClient, type ApiClient } from '../api/createApiClient';
 import { createCapabilitiesPort } from '../capabilities/capabilitiesPort';
-import { resolveDataSource, type DataSourceMode } from '../config/dataSource';
-import { setRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { createApiCostAttributionSummaryPort } from '../cost/costService.api';
 import { createToastShellFeedbackPort } from '../feedback/shellFeedbackPort';
 import { createConsoleFrontendOperabilitySink } from '../operability/consoleFrontendOperabilitySink';
@@ -46,7 +44,6 @@ import { createApiWorkspacePluginCatalogQueryPort } from '../workspace/workspace
 import { createWorkspacePorts } from '../workspace/workspacePorts';
 
 export interface AppServices {
-  readonly dataSourceMode: DataSourceMode;
   readonly apiClient: ApiClient;
   readonly workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort;
   readonly workspaceFilesQuery: IWorkspaceFilesQueryPort;
@@ -97,8 +94,6 @@ export interface AppServicesOverrides {
 }
 
 export function buildAppServices(overrides: AppServicesOverrides = {}): AppServices {
-  const dataSourceMode = resolveDataSource();
-  setRuntimeDataSourceMode(dataSourceMode);
   const apiClient = overrides.apiClient ?? createApiClient();
   const frontendOperabilitySink =
     overrides.frontendOperabilitySink ?? createConsoleFrontendOperabilitySink();
@@ -135,7 +130,6 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     overrides.dbtYamlDescriptionEditPort ?? createApiDbtYamlDescriptionEditPort(apiClient);
 
   return {
-    dataSourceMode,
     apiClient,
     workspaceGraphSnapshotQuery,
     workspaceFilesQuery,

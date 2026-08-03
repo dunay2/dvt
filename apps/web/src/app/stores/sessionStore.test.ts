@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { getRuntimeDataSourceMode } from '../services/config/runtimeDataSourceMode';
 import { resolveWorkspaceBootstrapConfig } from '../services/config/workspaceConfig';
 import { useSessionStore } from './sessionStore';
 
@@ -27,7 +26,7 @@ const bootstrapState = {
   rejectedWorkspaceScope: useSessionStore.getState().rejectedWorkspaceScope,
 };
 
-const workspaceBootstrap = resolveWorkspaceBootstrapConfig(getRuntimeDataSourceMode());
+const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
 
 const stalePersistedTargetAdapter = 'retired-provider';
 

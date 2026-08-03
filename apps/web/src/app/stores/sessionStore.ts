@@ -3,7 +3,6 @@ import { create } from 'zustand';
 import { asNonBlankString } from '@dvt/contracts';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
-import { getRuntimeDataSourceMode } from '../services/config/runtimeDataSourceMode';
 import {
   resolveWorkspaceBootstrapConfig,
   type WorkspaceBootstrapConfig,
@@ -46,8 +45,7 @@ export interface SessionState {
   buildRunContext: (runId: string) => RunContext;
 }
 
-const runtimeDataSourceMode = getRuntimeDataSourceMode();
-const workspaceBootstrap = resolveWorkspaceBootstrapConfig(runtimeDataSourceMode);
+const workspaceBootstrap = resolveWorkspaceBootstrapConfig();
 const DEFAULT_TARGET_ADAPTER: RunContext['targetAdapter'] = 'temporal';
 
 type PersistedSessionState = Pick<SessionState, 'tenantId' | 'projectId' | 'environmentId'> & {

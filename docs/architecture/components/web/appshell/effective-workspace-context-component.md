@@ -21,7 +21,7 @@ protected routes.
 
 ## Owned Concern
 
-Owns server-granted workspace context resolution for protected web API mode.
+Owns server-granted workspace context resolution for protected web routes.
 
 It does not own authentication, login, tenant administration, project creation,
 environment switching UI, graph draft persistence, run execution, or
@@ -42,9 +42,9 @@ workspace-file content.
 - `GET /session` does not return effective workspace context.
 - `GET /workspace/context` requires authentication.
 - `GET /workspace/context` fails closed when no workspace is granted.
-- API mode protected route rendering waits for both session and workspace
+- Protected route rendering waits for both session and workspace
   context.
-- `sessionStore` is a projection of backend-granted context in API mode.
+- `sessionStore` is a projection of backend-granted context.
 - The deployment adapter used by plan/run comes from the protected runtime
   adapter registry through `/workspace/context`; the web client must not infer
   it from local storage.

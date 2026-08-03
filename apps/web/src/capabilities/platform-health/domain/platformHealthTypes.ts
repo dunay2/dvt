@@ -1,5 +1,3 @@
-import type { DataSourceMode } from '../../../app/services/config/dataSource';
-
 export type PlatformHealthStatus = 'healthy' | 'degraded';
 
 export type PlatformIntentReconcilerStatus = 'starting' | 'healthy' | 'disabled' | 'degraded';
@@ -83,7 +81,6 @@ export type RequiredEndpointProbe<TData> = {
 export type PlatformHealthSnapshot = {
   fetchedAt: string;
   apiBaseUrl: string;
-  dataSourceMode: DataSourceMode;
   healthz: RequiredEndpointProbe<PlatformHealthInfo>;
   readyz: OptionalEndpointProbe<PlatformReadinessInfo>;
   version: OptionalEndpointProbe<PlatformVersionInfo>;

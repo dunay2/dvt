@@ -41,7 +41,7 @@ export const canvasViewRouteCopyEs = {
   disabledCanvasPluginMessageSuffix: ' porque su plugin esta deshabilitado o no disponible.',
   backendBlockedTitle: 'Backend no preparado',
   backendBlockedFallbackMessage:
-    'Canvas permanece bloqueado hasta que se recupere la disponibilidad del backend en modo API.',
+    'Canvas permanece bloqueado hasta que se recupere la disponibilidad del backend.',
   mutationUnavailableMessage: 'La edicion del grafo no esta disponible en este contexto.',
   readOnlyTitle: 'Canvas en solo lectura',
   readOnlyMessage:

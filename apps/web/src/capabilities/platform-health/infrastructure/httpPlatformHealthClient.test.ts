@@ -57,7 +57,6 @@ describe('createHttpPlatformHealthClient', () => {
 
       const client = createHttpPlatformHealthClient(
         createApiClientStub(recorder.requestRaw),
-        'api',
         new Set()
       );
 
@@ -70,7 +69,9 @@ describe('createHttpPlatformHealthClient', () => {
 
   describe('loadSnapshot', () => {
     it('loads a full healthy snapshot from the backend endpoints', async () => {
-      const requestRaw = vi.fn((endpoint: string) => Promise.resolve(mockEndpointResponse(endpoint)));
+      const requestRaw = vi.fn((endpoint: string) =>
+        Promise.resolve(mockEndpointResponse(endpoint))
+      );
 
       const client = createHttpPlatformHealthClient(createApiClientStub(requestRaw));
       const snapshot = await client.loadSnapshot();

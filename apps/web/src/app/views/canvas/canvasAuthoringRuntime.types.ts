@@ -1,7 +1,6 @@
 /** Owned concern: define the public local contract for the Canvas authoring-runtime component. */
 import type { WorkspaceScope } from '../../ports/sessionContext';
 import type { IWorkspaceGraphDraftAuthoringPort } from '../../ports/workspaceGraphDraftAuthoring';
-import type { DataSourceMode } from '../../services/config/dataSource';
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { PlatformHealthSnapshot } from '../../../capabilities/platform-health';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
@@ -23,7 +22,6 @@ export type CanvasAuthoringRuntimePreviewProvenanceConfig = Pick<
 >;
 
 export type UseCanvasAuthoringRuntimeArgs = {
-  dataSourceMode: DataSourceMode;
   platformHealthQuery: CanvasAuthoringRuntimePlatformHealthQuery;
   workspaceGraphDraftAuthoringPort: IWorkspaceGraphDraftAuthoringPort;
   workspaceLayoutKey: string;

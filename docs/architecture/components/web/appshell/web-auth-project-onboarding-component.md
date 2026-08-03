@@ -43,7 +43,7 @@ authenticated users who have tenant scope but no effective project/workspace.
   and granted workspace context resolve.
 - `/session` resolves before `/workspace/context`; workspace context is scoped by
   the authenticated principal.
-- sessionStore is a projection of backend-granted scope in API mode; it is not
+- sessionStore is a projection of backend-granted scope; it is not
   the authority for tenant, project, environment, or authorization.
 - Browser `localStorage` and `dvt-web-session` may hydrate selector convenience
   only after the value is still present in server grants.

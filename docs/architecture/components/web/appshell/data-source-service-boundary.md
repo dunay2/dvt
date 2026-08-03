@@ -1,231 +1,90 @@
 ---
-title: Data Source Service Boundary
+title: API Service Boundary
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-03
 ---
 
-# Data Source Service Boundary
+# API Service Boundary
 
 ## Purpose
 
-This document defines the current `F-04` frontend boundary for
-`VITE_DATA_SOURCE` in `apps/web`.
-
-It is the technical source of truth for:
-
-- where mode selection happens;
-- how views consume services;
-- which dependencies are allowed;
-- how tests inject seams without global module mutation.
+This document defines the current frontend service boundary in `apps/web`.
+The API is the single product data authority. Product runtime has no selectable
+data-source strategy, local-data mode, or fallback adapter.
 
 ## Operational Contract
 
-`VITE_DATA_SOURCE` remains a shell-level switch with two valid values:
+`AppServicesProvider` creates one `AppServices` graph through
+`buildAppServices()`. That graph contains the API client and the typed ports
+used by workspace, plans, runs, capabilities, session, feedback, and Canvas
+features.
 
-- `mock`
-- `api`
-
-Mode resolution for service consumption happens once inside shell composition
-through `AppServicesProvider`. Views and plugins do not resolve mode directly.
-
-## Composition Rule
-
-`Root` mounts one provider that composes:
-
-- `dataSourceMode`
-- `apiClient`
-- `workspaceService`
-- `runsService`
-- `plansService`
-
-Consumers use only typed hooks:
-
-- `useAppDataSourceMode()`
-- `useWorkspaceService()`
-- `useRunsService()`
-- `usePlansService()`
-
-This rule applies to view-facing service composition. It does not claim that
-every configuration or capability helper in the entire frontend now reads the
-mode only through the provider.
-
-Route operability and adapter capability are related but not identical:
-
-- the composition root decides which adapter family is active
-- service capability seams decide which operations that adapter family can
-  truthfully advertise
-- routes must combine those capabilities with their own startup posture before
-  exposing mutation affordances
+Views and plugins consume typed hooks. They do not select transports, construct
+API clients, or infer availability from a runtime mode.
 
 ```mermaid
 flowchart LR
-  Root["Root shell"] --> Provider["AppServicesProvider"]
-  Provider --> Mode["resolveDataSource() once"]
-  Provider --> ApiClient["createApiClient() once"]
-
-  Provider --> WS["workspaceService composer"]
-  Provider --> RS["runsService composer"]
-  Provider --> PS["plansService composer"]
-
-  WS --> WSM["workspace.mock adapter"]
-  WS --> WSA["workspace.api adapter"]
-  RS --> RSM["runs.mock adapter"]
-  RS --> RSA["runs.api adapter"]
-  PS --> PSM["plans.mock adapter"]
-  PS --> PSA["plans.api adapter"]
-
-  Views["Views / Components / Plugins"] --> Hooks["use*Service hooks"]
-  Hooks --> Provider
+  Root["Root"] --> Provider["AppServicesProvider"]
+  Provider --> Composition["buildAppServices()"]
+  Composition --> Client["ApiClient"]
+  Composition --> Ports["Typed application ports"]
+  Ports --> Api["apps/api"]
+  Tests["Vitest / Cypress harness"] --> Overrides["Explicit port overrides"]
+  Overrides --> Provider
 ```
 
-## Ownership Matrix
+## Public Composition Surface
 
-| Layer                        | Owns                                                     | Must not own                                        |
-| ---------------------------- | -------------------------------------------------------- | --------------------------------------------------- |
-| Views / components / plugins | UI state, query orchestration, route behavior            | mode resolution, service construction, mock imports |
-| Service hooks / provider     | mode selection, service composition, test override seams | view-local UI decisions                             |
-| Service composers            | mode routing `mock` vs `api`                             | view logic, direct React state                      |
-| `*.mock.*` adapters          | mock data behavior for local/demo mode                   | API transport concerns                              |
-| `*.api.*` adapters           | API transport and DTO mapping                            | local mock datasets                                 |
+- `buildAppServices(overrides?)`
+- `AppServicesProvider`
+- typed hooks such as `useWorkspaceGraphSnapshotQueryPort()`,
+  `useRunsService()`, `usePlansService()`, and `useCapabilitiesPort()`
+- explicit `AppServicesOverrides` for tests
 
-## Dependency Rules
+There is deliberately no `DataSourceMode`, mode hook, environment selector, or
+mutable transport singleton.
 
-Allowed:
+## Responsibility Matrix
 
-- `views -> services/AppServicesContext hooks`
-- `AppServicesContext -> service composers`
-- `service composers -> *.mock.* and *.api.*`
-- `*.api.* -> ApiClient`
-- `*.mock.* -> app/data/mock*`
+| Owner                 | Responsibility                                             | Forbidden responsibility                    |
+| --------------------- | ---------------------------------------------------------- | ------------------------------------------- |
+| Views and plugins     | Render state and submit user intent through typed hooks    | Transport selection or service construction |
+| `AppServicesProvider` | Publish one stable service graph                           | Product behavior or route decisions         |
+| `buildAppServices`    | Compose API-backed ports and apply explicit test overrides | Selecting among product data authorities    |
+| API adapters          | HTTP transport and DTO mapping                             | UI state or test-fixture semantics          |
+| Test harnesses        | Inject explicit port doubles                               | Enabling a product runtime branch           |
 
-Forbidden:
+## Readiness And Capability Truth
 
-- `views/components/plugins -> resolveDataSource()`
-- `views/components/plugins -> createWorkspaceService/createRunsService/createPlansService`
-- non-mock files importing `app/data/mock*`
+API transport is fixed, but feature availability is not assumed. Routes use
+the existing capability, authorization, and platform-readiness queries. Missing
+or unavailable backend behavior remains explicit and fail-closed.
 
-## Runtime Behavior
+Canvas mutation posture therefore depends on platform readiness and granted
+capabilities, never on a data-source label.
 
-Both modes remain bootable, but they are not semantically equivalent for every
-route:
+## Command And Query Rails
 
-- `mock`: services return local mock-backed behavior and remain valid for
-  isolated UI or adapter work. Under the Canvas hard-cut, this mode is not the
-  active product-authoring runtime.
-- `api`: services call backend endpoints. Unsupported operations fail
-  explicitly from the service layer with clear error messages instead of
-  pretending the route can still mutate successfully.
+This boundary is internal composition and introduces no command or query rail.
+Each injected port continues to implement its existing domain-owned command or
+query. Removing the exhausted strategy does not rename or duplicate those
+rails.
 
-Current governed capability example:
+## Test Boundary
 
-- `IWarehouseSourceImportPort` is a dedicated capability boundary rather than
-  part of the general workspace service;
-- its `api` adapter implements connection listing and creation, server-owned
-  connection probes, provider-neutral source-object discovery, and source
-  registration through protected runtime routes;
-- the Canvas route exposes `Add source` only when route mutation posture,
-  runtime plugin contribution, and transport capability all permit it;
-- rejected authorization, provider, catalog, or import requests remain typed
-  backend failures. The browser never substitutes mock data or fake success.
+Tests inject port doubles through `AppServicesOverrides`. Product source must
+not import test doubles or expose a switch that enables them. Architecture
+tests enforce both the API-only composition boundary and the absence of the
+removed strategy symbols.
 
-```mermaid
-sequenceDiagram
-  participant User
-  participant View
-  participant Hook as useWorkspaceService()
-  participant Provider as AppServicesProvider
-  participant Service as WorkspaceService
-  participant Adapter as mock/api adapter
+## Invariants
 
-  User->>View: Open route action
-  View->>Hook: Request service instance
-  Hook->>Provider: Read composed service
-  Provider-->>Hook: WorkspaceService
-  Hook-->>View: WorkspaceService
-  View->>Service: Call operation
-  Service->>Adapter: Route by selected mode
-  Adapter-->>Service: Data or explicit error
-  Service-->>View: Typed result
-```
-
-## Capability Matrix
-
-The route must consume explicit capability seams rather than infer them from
-copy or transport failures.
-
-| Mode   | Source-import adapter                     | `sourceImportAvailable` | Active Canvas authoring posture                                           |
-| ------ | ----------------------------------------- | ----------------------- | ------------------------------------------------------------------------- |
-| `mock` | explicit test/demo source-import adapter  | `true`                  | not accepted as canonical product proof                                   |
-| `api`  | `createApiWarehouseSourceImportPort(...)` | `true`                  | active when route posture and a runtime plugin contribution also allow it |
-
-Interpretation rule:
-
-- adapter capability answers "can this adapter perform the operation?"
-- route posture answers "may the active route expose the operation now?"
-- the route may only expose a mutation when both answers are true
-
-## Test Seam And Injection Strategy
-
-Tests use provider overrides, not global `resolveDataSource` monkey patching.
-
-`AppServicesProvider` accepts:
-
-- explicit `mode` override;
-- optional `apiClient` override;
-- optional per-service overrides for focused tests.
-
-This allows:
-
-- route or component tests to inject deterministic service fakes;
-- service tests to validate composer routing by mode;
-- shared canvas-controller harnesses to mount the real provider with explicit
-  service overrides instead of globally mocking `AppServicesContext` exports;
-- no module-level implicit coupling in consumer tests.
-
-For the workspace mock adapter specifically, instance-local mutable state is
-now part of the boundary contract:
-
-- `createMockWorkspaceService()` allocates isolated workspace state by default;
-- mutable graph imports, editable file contents, and discoverable file-tree
-  paths do not bleed across service instances;
-- deliberate shared state requires an explicit test seam via
-  `createMockWorkspaceState()`.
-
-## Affected Frontend Surfaces
-
-This boundary now governs consumers that previously created mode-aware services
-locally, including:
-
-- canvas controller;
-- runs and operational views;
-- source import and console surfaces;
-- plugin history panels that query run data.
-
-For Canvas specifically, the boundary now governs two separate truths:
-
-- route startup still belongs to the Canvas route contract
-- source-import affordances must be driven by the dedicated source-import
-  transport capability plus route and plugin posture, not by mode folklore or
-  outdated copy
-
-## Explicit Non-Goals
-
-This slice does not:
-
-- standardize query-key ownership or invalidation rules;
-- align runtime route drift such as `/runs` versus `/runs/start`;
-- deliver real live logs in the bottom console.
-
-## Current Residual Gaps
-
-After `F-04`, the boundary is cleaner, but some work remains intentionally
-outside this slice:
-
-- the retired `GraphCanvas` path has been removed from active source; future
-  graph changes must use the governed Canvas route.
-- `sessionStore`, `workspaceConfig`, and platform-health metadata still read
-  data-source configuration outside the shell provider because they are config
-  or capability surfaces rather than route consumers.
-- API-mode console output is now explicitly non-live instead of pretending mock
-  logs are real; true run-event and log convergence remains future work.
+- API is the single product data authority.
+- Product composition has no one-value strategy abstraction.
+- Views and plugins cannot select or construct transports.
+- Test doubles are explicit dependencies, never runtime modes.
+- Workspace defaults and Canvas readiness remain independent of transport
+  selection.
+- Platform diagnostics may state the literal transport fact `API`; they do not
+  expose it as a configurable mode.

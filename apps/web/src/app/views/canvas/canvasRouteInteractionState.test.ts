@@ -144,9 +144,8 @@ describe('canvasRouteInteractionState', () => {
     expect(interactionState.workbenchErrorMessage).toBeNull();
   });
 
-  it('blocks interactions in api mode before backend readiness is available', () => {
+  it('blocks interactions before backend readiness is available', () => {
     const controller = buildController({
-      dataSourceMode: 'api',
       backendReady: false,
       nodesWithImpact: buildReadyNodes(),
     });
@@ -156,7 +155,7 @@ describe('canvasRouteInteractionState', () => {
     expect(interactionState.startupBlockState).toEqual({
       kind: 'backend_readiness',
       title: 'Backend not ready',
-      message: 'Canvas stays blocked until backend readiness is restored in API mode.',
+      message: 'Canvas stays blocked until backend readiness is restored.',
     });
     expect(interactionState.effectiveWorkbenchState).toEqual({ kind: 'ready' });
     expect(interactionState.effectiveUserPermissions).toMatchObject({

@@ -77,7 +77,7 @@ function resolveRouteDraftRecord({
 
 function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const {
-    environment: { dataSourceMode, capabilities, store },
+    environment: { capabilities, store },
     graphPolicy: { canvasAuthoringMode, runtimePolicy, surfaceStrategy },
     authoringRuntime: {
       backendPosture,
@@ -94,7 +94,6 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const routeDraft = routeDraftRecord?.draft ?? null;
 
   return {
-    dataSourceMode,
     workspaceLayoutKey: store.workspaceLayoutKey,
     workspaceScope: args.environment.sessionContext.getWorkspaceScopeSnapshot(),
     isBackendCheckPending: backendPosture.isBackendCheckPending,

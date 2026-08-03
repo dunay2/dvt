@@ -83,10 +83,6 @@ function useRequiredAppServicesContext(): AppServices {
   return context;
 }
 
-export function useAppDataSourceMode(): AppServices['dataSourceMode'] {
-  return useRequiredAppServicesContext().dataSourceMode;
-}
-
 export function useWorkspaceGraphSnapshotQueryPort(): IWorkspaceGraphSnapshotQueryPort {
   return useRequiredAppServicesContext().workspaceGraphSnapshotQuery;
 }

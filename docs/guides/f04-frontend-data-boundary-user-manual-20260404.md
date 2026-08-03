@@ -2,7 +2,7 @@
 title: F-04 Frontend Data Boundary User Manual
 status: Active
 owner: Frontend / Product
-last_reviewed: 2026-04-04
+last_reviewed: 2026-08-03
 planning_type: guide
 ---
 
@@ -11,20 +11,21 @@ planning_type: guide
 ## Who This Is For
 
 - Product and QA teams validating frontend behavior.
-- Integrators using API mode vs mock mode.
+- Integrators wiring API-backed frontend ports.
 - Operators triaging frontend/backend data mismatches.
 
 ## What Changed
 
-- Frontend data mode is selected centrally at startup.
+- Product runtime uses the API as its single data authority.
 - Views read data through stable frontend ports and service context.
+- Tests inject explicit port doubles without enabling a product runtime mode.
 - Query cache keys are standardized to avoid stale data behavior drift.
 
 ## Expected Behavior
 
-1. App startup resolves one data mode (`mock` or `api`) for the session.
+1. App startup creates one API-backed service graph for the session.
 2. Views load data from shared service context.
-3. Platform health and capabilities reflect the same mode context.
+3. Platform health and capabilities report backend-owned runtime truth.
 4. Canvas/runs/cost/lineage stay aligned with centralized query key policy.
 5. Starting a run requires a valid `planRef` on the current execution plan.
 
@@ -35,23 +36,23 @@ planning_type: guide
 - check if the route uses registered query keys.
 - verify no ad-hoc inline cache key was introduced.
 
-### Symptom: mixed mock/api behavior
+### Symptom: fixture behavior appears in product runtime
 
-- confirm mode is resolved by composition root only.
-- confirm no runtime module is calling direct mode resolution.
+- confirm product composition imports only API adapters.
+- confirm test doubles enter through explicit test overrides only.
 
 ### Symptom: inconsistent UI state across panels
 
 - verify features use sliced stores by concern.
-- avoid re-introducing legacy monolithic store selectors.
+- avoid re-introducing retired monolithic store selectors.
 
-### Symptom: "Plan reference is unavailable for this mode"
+### Symptom: "Plan reference is unavailable"
 
 - this is a boundary guard, not a transport error.
 - expected behavior: run start is blocked and plan modal is reopened.
 - resolution path:
-  - in `api` mode, backend plan preview/import payload must include canonical `planRef`.
-  - in `mock` mode, mock execution plan fixture must include `planRef`.
+  - backend plan preview/import payload must include canonical `planRef`;
+  - tests that exercise run start must inject a plan fixture with `planRef`.
 
 ## Validation Checklist (User-Facing Confidence)
 
