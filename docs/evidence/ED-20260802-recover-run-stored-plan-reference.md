@@ -13,6 +13,7 @@ code_refs:
   - packages/@dvt/artifacts/src/ports/IStoredPlanArtifactStore.ts
   - packages/@dvt/engine/src/application/RecoverRunApplicationService.ts
   - packages/@dvt/engine/src/ports/IRunStateStore.ts
+  - packages/@dvt/engine/src/state/InMemoryRunStateCore.ts
   - packages/@dvt/engine/src/ports/IRunMaintenanceService.ts
   - packages/@dvt/engine/src/services/runMaintenance/PendingIntentReconciliationPolicy.ts
   - packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts
@@ -21,6 +22,7 @@ code_refs:
 evidence:
   tests:
     - pnpm --filter @dvt/engine test
+    - pnpm --filter @dvt/engine test -- InMemoryTxStore.retryLineage.test.ts
     - pnpm --filter @dvt/adapter-postgres test
     - DVT_PG_INTEGRATION=1 pnpm --filter @dvt/adapter-postgres exec vitest run test/smoke.test.ts --config vitest.config.ts
     - pnpm --filter dvt-api test
@@ -44,6 +46,11 @@ retry with the same recovery identity resumes the prepared child instead of
 creating another logical attempt. The engine revalidates the full child
 identity and admission posture before provider dispatch.
 
+The in-memory adapter serializes recovery bootstrap per origin lineage and
+restores only that lineage's checkpoint after failure. Independent origins can
+still progress concurrently without one rollback overwriting another origin's
+confirmed logical-attempt counter.
+
 Before a prepared recovery is dispatched again, the API invokes the scoped
 form of the canonical orphan-intent reconciliation rail. A provider workflow
 found for bootstrapped run state is adopted by reconciling its provider
@@ -58,4 +65,5 @@ hash. PostgreSQL integration coverage proves exact-reference recovery and scope
 isolation. Engine and real PostgreSQL coverage prove atomic recovery bootstrap,
 rollback, stable lineage, and prepared-child resumption. The live Cypress proof
 cancels and recovers a real run through the browser, protected API, PostgreSQL,
-Temporal, and worker.
+Temporal, and worker. In-memory concurrency regressions prove isolated rollback
+across origins and serialization within one lineage.

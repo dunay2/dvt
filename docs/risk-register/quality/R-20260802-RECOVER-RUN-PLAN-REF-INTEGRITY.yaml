@@ -20,6 +20,7 @@ mitigations:
   - 'PostgresPlanStore verifies tenant, project, and environment ownership before returning it.'
   - 'Engine artifact-byte integrity validation remains mandatory and unchanged.'
   - 'Recovery lineage reservation and child bootstrap commit or roll back together.'
+  - 'In-memory bootstrap serializes per origin and restores only the failed lineage checkpoint.'
   - 'An unconfirmed prepared child resumes under the same recovery identity and logical attempt.'
   - 'A pending recovery intent is reconciled against the provider before any repeated dispatch.'
   - 'Bootstrapped provider workflows are adopted; unavailable reconciliation fails closed.'
