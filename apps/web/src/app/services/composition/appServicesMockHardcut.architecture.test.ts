@@ -1,6 +1,6 @@
 /** Owned concern: enforce semantic boundaries for the web API-only app-services hardcut. */
 import { readdirSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { relative, resolve, sep } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
@@ -103,7 +103,7 @@ function listFilesRecursive(...segments: string[]): string[] {
       if (entry.isDirectory()) {
         stack.push(entryPath);
       } else {
-        files.push(entryPath.replace(`${process.cwd()}\\`, '').replaceAll('\\', '/'));
+        files.push(relative(process.cwd(), entryPath).split(sep).join('/'));
       }
     }
   }
