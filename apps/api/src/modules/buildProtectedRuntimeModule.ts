@@ -177,7 +177,8 @@ export async function buildProtectedRuntimeModule(
     connectionTimeoutMillis: 5_000,
   });
   const runRecoveryCommandCoordinator = new PostgresRunRecoveryCommandCoordinator(
-    runRecoveryLockPool
+    runRecoveryLockPool,
+    RUN_RECOVERY_LOCK_POOL_SIZE
   );
 
   return {

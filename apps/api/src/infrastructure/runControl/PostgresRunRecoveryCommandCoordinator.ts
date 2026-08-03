@@ -10,9 +10,31 @@ const LOCK_SQL = 'SELECT pg_advisory_lock(hashtextextended($1, 0))';
 const UNLOCK_SQL = 'SELECT pg_advisory_unlock(hashtextextended($1, 0))';
 
 export class PostgresRunRecoveryCommandCoordinator implements IRunRecoveryCommandCoordinator {
-  public constructor(private readonly pool: Pick<Pool, 'connect'>) {}
+  private activeOperations = 0;
+  private readonly capacityWaiters: Array<() => void> = [];
+
+  public constructor(
+    private readonly pool: Pick<Pool, 'connect'>,
+    private readonly maxConcurrentOperations = 2
+  ) {
+    if (!Number.isInteger(maxConcurrentOperations) || maxConcurrentOperations < 1) {
+      throw new Error('maxConcurrentOperations must be a positive integer');
+    }
+  }
 
   public async executeExclusive<T>(
+    key: RunRecoveryCommandKey,
+    operation: () => Promise<T>
+  ): Promise<T> {
+    await this.acquireCapacity();
+    try {
+      return await this.executeWithSession(key, operation);
+    } finally {
+      this.releaseCapacity();
+    }
+  }
+
+  private async executeWithSession<T>(
     key: RunRecoveryCommandKey,
     operation: () => Promise<T>
   ): Promise<T> {
@@ -48,6 +70,26 @@ export class PostgresRunRecoveryCommandCoordinator implements IRunRecoveryComman
     } finally {
       client.release(releaseFailure);
     }
+  }
+
+  private async acquireCapacity(): Promise<void> {
+    if (this.activeOperations < this.maxConcurrentOperations) {
+      this.activeOperations += 1;
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      this.capacityWaiters.push(resolve);
+    });
+  }
+
+  private releaseCapacity(): void {
+    const next = this.capacityWaiters.shift();
+    if (next) {
+      next();
+      return;
+    }
+    this.activeOperations -= 1;
   }
 }
 
