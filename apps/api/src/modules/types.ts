@@ -19,9 +19,9 @@ import type { IPlanExecutabilityValidator } from '@dvt/planner';
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { ICanvasAuthoringAuthorityStore } from '../application/ports/canvasAuthoringAuthority.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
+import type { IRunControlCommandCoordinator } from '../application/ports/runControlCommandCoordinator.js';
 import type { IRunExecutionContextInheritanceWriter } from '../application/ports/runExecutionContextInheritanceWriter.js';
 import type { IRunExecutionContextReferenceReader } from '../application/ports/runExecutionContextReferenceReader.js';
-import type { IRunRecoveryCommandCoordinator } from '../application/ports/runRecoveryCommandCoordinator.js';
 import type { IWorkspaceContextQuery } from '../application/ports/workspaceContext.js';
 import type { IWorkspaceGraphDraftStore } from '../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
@@ -58,7 +58,7 @@ export interface ProtectedRuntimeModule {
   planStore: IStoredPlanArtifactStore & IStoredPlanRefReader & IPlanStoreReader;
   runExecutionContextReferenceReader: IRunExecutionContextReferenceReader;
   runExecutionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
-  runRecoveryCommandCoordinator: IRunRecoveryCommandCoordinator;
+  runControlCommandCoordinator: IRunControlCommandCoordinator;
   runExecutionContextBindingPolicy: IRunExecutionContextBindingPolicy;
   planValidator: IPlanExecutabilityValidator;
   executablePlanResolver: {

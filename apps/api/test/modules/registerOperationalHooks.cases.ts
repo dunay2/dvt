@@ -123,7 +123,7 @@ function createProtectedRuntimeModuleHarness(): {
           return command.sourceRef;
         },
       },
-      runRecoveryCommandCoordinator: {
+      runControlCommandCoordinator: {
         async executeExclusive(_key, operation) {
           return operation();
         },

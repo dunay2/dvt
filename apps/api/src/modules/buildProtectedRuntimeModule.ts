@@ -17,7 +17,7 @@ import { FileRunExecutionContextInheritanceWriter } from '../infrastructure/dbt/
 import { FileRunExecutionContextReferenceReader } from '../infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
 import { PostgresDbtProjectImportProcessStore } from '../infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
-import { PostgresRunRecoveryCommandCoordinator } from '../infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.js';
+import { PostgresRunControlCommandCoordinator } from '../infrastructure/runControl/PostgresRunControlCommandCoordinator.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
@@ -32,7 +32,7 @@ import type { ProtectedRuntimeModule } from './types.js';
 import { buildWorkspaceGraphDraftRuntime } from './workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.js';
 
 const MINIMUM_DBT_PROJECT_IMPORT_OPERATION_LEASE_MS = 300_000;
-const RUN_RECOVERY_LOCK_POOL_SIZE = 2;
+const RUN_CONTROL_LOCK_POOL_SIZE = 2;
 
 async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
   const results = await Promise.allSettled(closers.map((closer) => closer()));
@@ -170,15 +170,15 @@ export async function buildProtectedRuntimeModule(
     dbtBundleStore: storageRuntime.dbtBundleStore,
     dbtExecutionTargetResolver,
   });
-  const runRecoveryLockPool = new Pool({
+  const runControlLockPool = new Pool({
     connectionString: databaseUrl,
-    max: RUN_RECOVERY_LOCK_POOL_SIZE,
+    max: RUN_CONTROL_LOCK_POOL_SIZE,
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 5_000,
   });
-  const runRecoveryCommandCoordinator = new PostgresRunRecoveryCommandCoordinator(
-    runRecoveryLockPool,
-    RUN_RECOVERY_LOCK_POOL_SIZE
+  const runControlCommandCoordinator = new PostgresRunControlCommandCoordinator(
+    runControlLockPool,
+    RUN_CONTROL_LOCK_POOL_SIZE
   );
 
   return {
@@ -206,7 +206,7 @@ export async function buildProtectedRuntimeModule(
     runExecutionContextInheritanceWriter: new FileRunExecutionContextInheritanceWriter(
       storageRuntime.dbtBundleStore
     ),
-    runRecoveryCommandCoordinator,
+    runControlCommandCoordinator,
     runExecutionContextBindingPolicy: storageRuntime.runExecutionContextBindingPolicy,
     planValidator: startRunRuntime.planValidator,
     executablePlanResolver: storageRuntime.executablePlanResolver,
@@ -241,7 +241,7 @@ export async function buildProtectedRuntimeModule(
         () => dbtProjectImportProcessStore.close(),
         () => storageRuntime.stateStore.close(),
         () => storageRuntime.intentStore.close(),
-        () => runRecoveryLockPool.end(),
+        () => runControlLockPool.end(),
         () => pool.end(),
       ]);
     },

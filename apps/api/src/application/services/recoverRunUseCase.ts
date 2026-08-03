@@ -15,10 +15,10 @@ import {
   RunRecoveryUnavailableError,
 } from '../errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
+import type { IRunControlCommandCoordinator } from '../ports/runControlCommandCoordinator.js';
 import type { IRunExecutionContextInheritanceWriter } from '../ports/runExecutionContextInheritanceWriter.js';
 import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
 import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
-import type { IRunRecoveryCommandCoordinator } from '../ports/runRecoveryCommandCoordinator.js';
 import {
   RUN_CONTROL_RESULT_CONTRACT_VERSION,
   type IRecoverRunUseCase,
@@ -35,7 +35,7 @@ export interface RecoverRunUseCaseDependencies {
   readonly planStore: IStoredPlanRefReader;
   readonly executionContextReader: IRunExecutionContextReferenceReader;
   readonly executionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
-  readonly commandCoordinator: IRunRecoveryCommandCoordinator;
+  readonly commandCoordinator: IRunControlCommandCoordinator;
   readonly executionContextRequirementResolver: IRunExecutionContextRequirementResolver;
   readonly startRunIntentStore: IStartRunIntentQueryStore;
   readonly idempotency: {
@@ -57,7 +57,7 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
   ): Promise<RecoverRunResult> {
     const tenantId = context.scope.tenantId.value;
     return this.dependencies.commandCoordinator.executeExclusive(
-      { tenantId, recoveryRunId: command.recoveryRunId },
+      { action: 'recover', tenantId, runId: command.recoveryRunId },
       () => this.executeExclusive(command, context, tenantId)
     );
   }

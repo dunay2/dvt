@@ -64,7 +64,11 @@ interface TestDependencies {
   readonly executionContextInheritanceWriter: { inherit: ReturnType<typeof vi.fn> };
   readonly commandCoordinator: {
     executeExclusive<T>(
-      key: { readonly tenantId: string; readonly recoveryRunId: string },
+      key: {
+        readonly action: 'cancel' | 'recover';
+        readonly tenantId: string;
+        readonly runId: string;
+      },
       operation: () => Promise<T>
     ): Promise<T>;
   };
@@ -77,7 +81,7 @@ function createSerialCoordinator(): TestDependencies['commandCoordinator'] {
   const tails = new Map<string, Promise<void>>();
   return {
     async executeExclusive(key, operation) {
-      const lockKey = `${key.tenantId}:${key.recoveryRunId}`;
+      const lockKey = `${key.action}:${key.tenantId}:${key.runId}`;
       const previous = tails.get(lockKey) ?? Promise.resolve();
       let release!: () => void;
       const current = new Promise<void>((resolve) => {

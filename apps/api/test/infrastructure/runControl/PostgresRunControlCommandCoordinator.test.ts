@@ -1,13 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { PostgresRunRecoveryCommandCoordinator } from '../../../src/infrastructure/runControl/PostgresRunRecoveryCommandCoordinator.js';
+import { PostgresRunControlCommandCoordinator } from '../../../src/infrastructure/runControl/PostgresRunControlCommandCoordinator.js';
 
-describe('PostgresRunRecoveryCommandCoordinator', () => {
+describe('PostgresRunControlCommandCoordinator', () => {
   it('queues a third independent recovery before checking out another database client', async () => {
     const query = vi.fn().mockResolvedValue({ rows: [] });
     const release = vi.fn();
     const connect = vi.fn().mockResolvedValue({ query, release });
-    const coordinator = new PostgresRunRecoveryCommandCoordinator({ connect } as never, 2);
+    const coordinator = new PostgresRunControlCommandCoordinator({ connect } as never, 2);
     const gates = [deferred(), deferred()];
     let activeOperations = 0;
     let maximumActiveOperations = 0;
@@ -15,7 +15,7 @@ describe('PostgresRunRecoveryCommandCoordinator', () => {
 
     const executions = [0, 1, 2].map((index) =>
       coordinator.executeExclusive(
-        { tenantId: 'tenant-a', recoveryRunId: `run-recovery-${index}` },
+        { action: 'recover', tenantId: 'tenant-a', runId: `run-recovery-${index}` },
         async () => {
           startedOperations += 1;
           activeOperations += 1;
@@ -43,21 +43,21 @@ describe('PostgresRunRecoveryCommandCoordinator', () => {
     const query = vi.fn().mockResolvedValue({ rows: [] });
     const release = vi.fn();
     const pool = { connect: vi.fn().mockResolvedValue({ query, release }) };
-    const coordinator = new PostgresRunRecoveryCommandCoordinator(pool as never);
+    const coordinator = new PostgresRunControlCommandCoordinator(pool as never);
     const operation = vi.fn().mockResolvedValue('accepted');
 
     await expect(
       coordinator.executeExclusive(
-        { tenantId: 'tenant-a', recoveryRunId: 'run-recovery-1' },
+        { action: 'recover', tenantId: 'tenant-a', runId: 'run-recovery-1' },
         operation
       )
     ).resolves.toBe('accepted');
 
     expect(query).toHaveBeenNthCalledWith(1, 'SELECT pg_advisory_lock(hashtextextended($1, 0))', [
-      'run-recovery:tenant-a:run-recovery-1',
+      'run-recover:tenant-a:run-recovery-1',
     ]);
     expect(query).toHaveBeenNthCalledWith(2, 'SELECT pg_advisory_unlock(hashtextextended($1, 0))', [
-      'run-recovery:tenant-a:run-recovery-1',
+      'run-recover:tenant-a:run-recovery-1',
     ]);
     expect(operation).toHaveBeenCalledOnce();
     expect(release).toHaveBeenCalledOnce();
@@ -70,17 +70,17 @@ describe('PostgresRunRecoveryCommandCoordinator', () => {
       .fn()
       .mockRejectedValueOnce(new Error('database unavailable'))
       .mockResolvedValueOnce({ query, release });
-    const coordinator = new PostgresRunRecoveryCommandCoordinator({ connect } as never, 1);
+    const coordinator = new PostgresRunControlCommandCoordinator({ connect } as never, 1);
 
     await expect(
       coordinator.executeExclusive(
-        { tenantId: 'tenant-a', recoveryRunId: 'run-recovery-failed-checkout' },
+        { action: 'recover', tenantId: 'tenant-a', runId: 'run-recovery-failed-checkout' },
         async () => 'not-reached'
       )
     ).rejects.toThrow('database unavailable');
     await expect(
       coordinator.executeExclusive(
-        { tenantId: 'tenant-a', recoveryRunId: 'run-recovery-after-checkout' },
+        { action: 'recover', tenantId: 'tenant-a', runId: 'run-recovery-after-checkout' },
         async () => 'accepted'
       )
     ).resolves.toBe('accepted');
@@ -91,13 +91,13 @@ describe('PostgresRunRecoveryCommandCoordinator', () => {
   it('unlocks and releases when the recovery operation fails', async () => {
     const query = vi.fn().mockResolvedValue({ rows: [] });
     const release = vi.fn();
-    const coordinator = new PostgresRunRecoveryCommandCoordinator({
+    const coordinator = new PostgresRunControlCommandCoordinator({
       connect: vi.fn().mockResolvedValue({ query, release }),
     } as never);
 
     await expect(
       coordinator.executeExclusive(
-        { tenantId: 'tenant-a', recoveryRunId: 'run-recovery-1' },
+        { action: 'recover', tenantId: 'tenant-a', runId: 'run-recovery-1' },
         async () => {
           throw new Error('dispatch failed');
         }
@@ -112,13 +112,13 @@ describe('PostgresRunRecoveryCommandCoordinator', () => {
     const unlockFailure = new Error('unlock interrupted');
     const query = vi.fn().mockResolvedValueOnce({ rows: [] }).mockRejectedValueOnce(unlockFailure);
     const release = vi.fn();
-    const coordinator = new PostgresRunRecoveryCommandCoordinator({
+    const coordinator = new PostgresRunControlCommandCoordinator({
       connect: vi.fn().mockResolvedValue({ query, release }),
     } as never);
 
     await expect(
       coordinator.executeExclusive(
-        { tenantId: 'tenant-a', recoveryRunId: 'run-recovery-1' },
+        { action: 'recover', tenantId: 'tenant-a', runId: 'run-recovery-1' },
         async () => 'accepted'
       )
     ).rejects.toThrow('unlock interrupted');

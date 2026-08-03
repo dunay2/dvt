@@ -1,15 +1,15 @@
-/** Owned concern: coordinate run recovery identities with PostgreSQL session locks. */
+/** Owned concern: coordinate run-control command identities with PostgreSQL session locks. */
 import type { Pool } from 'pg';
 
 import type {
-  IRunRecoveryCommandCoordinator,
-  RunRecoveryCommandKey,
-} from '../../application/ports/runRecoveryCommandCoordinator.js';
+  IRunControlCommandCoordinator,
+  RunControlCommandKey,
+} from '../../application/ports/runControlCommandCoordinator.js';
 
 const LOCK_SQL = 'SELECT pg_advisory_lock(hashtextextended($1, 0))';
 const UNLOCK_SQL = 'SELECT pg_advisory_unlock(hashtextextended($1, 0))';
 
-export class PostgresRunRecoveryCommandCoordinator implements IRunRecoveryCommandCoordinator {
+export class PostgresRunControlCommandCoordinator implements IRunControlCommandCoordinator {
   private activeOperations = 0;
   private readonly capacityWaiters: Array<() => void> = [];
 
@@ -23,7 +23,7 @@ export class PostgresRunRecoveryCommandCoordinator implements IRunRecoveryComman
   }
 
   public async executeExclusive<T>(
-    key: RunRecoveryCommandKey,
+    key: RunControlCommandKey,
     operation: () => Promise<T>
   ): Promise<T> {
     await this.acquireCapacity();
@@ -35,11 +35,11 @@ export class PostgresRunRecoveryCommandCoordinator implements IRunRecoveryComman
   }
 
   private async executeWithSession<T>(
-    key: RunRecoveryCommandKey,
+    key: RunControlCommandKey,
     operation: () => Promise<T>
   ): Promise<T> {
     const client = await this.pool.connect();
-    const lockKey = serializeRunRecoveryCommandKey(key);
+    const lockKey = serializeRunControlCommandKey(key);
     let releaseFailure: Error | undefined;
 
     try {
@@ -58,7 +58,7 @@ export class PostgresRunRecoveryCommandCoordinator implements IRunRecoveryComman
         if (outcome.kind === 'failure') {
           throw new AggregateError(
             [outcome.error, releaseFailure],
-            'The recovery operation and advisory unlock both failed.',
+            'The run-control operation and advisory unlock both failed.',
             { cause: error }
           );
         }
@@ -93,8 +93,8 @@ export class PostgresRunRecoveryCommandCoordinator implements IRunRecoveryComman
   }
 }
 
-function serializeRunRecoveryCommandKey(key: RunRecoveryCommandKey): string {
-  return `run-recovery:${key.tenantId}:${key.recoveryRunId}`;
+function serializeRunControlCommandKey(key: RunControlCommandKey): string {
+  return `run-${key.action}:${key.tenantId}:${key.runId}`;
 }
 
 function toError(value: unknown): Error {

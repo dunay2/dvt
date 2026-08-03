@@ -2,6 +2,7 @@ import { RunMetadataNotFoundError } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/auth.js';
+import type { IRunControlCommandCoordinator } from '../../../src/application/ports/runControlCommandCoordinator.js';
 import { CancelRunUseCase } from '../../../src/application/services/cancelRunUseCase.js';
 import { TenantId } from '../../../src/domain/auth/types.js';
 
@@ -49,6 +50,41 @@ function createStateStore(): { getRunMetadataByRunId: ReturnType<typeof vi.fn> }
   };
 }
 
+function createSerialCoordinator(): IRunControlCommandCoordinator {
+  const tails = new Map<string, Promise<void>>();
+  return {
+    async executeExclusive<T>(
+      key: { action: 'cancel' | 'recover'; tenantId: string; runId: string },
+      operation: () => Promise<T>
+    ): Promise<T> {
+      const lockKey = `${key.action}:${key.tenantId}:${key.runId}`;
+      const previous = tails.get(lockKey) ?? Promise.resolve();
+      const gate = deferred();
+      tails.set(lockKey, gate.promise);
+      await previous;
+      try {
+        return await operation();
+      } finally {
+        gate.resolve();
+        if (tails.get(lockKey) === gate.promise) tails.delete(lockKey);
+      }
+    },
+  };
+}
+
+function createUseCase(
+  engine: unknown,
+  stateStore: unknown,
+  startDispatchResolver?: unknown
+): CancelRunUseCase {
+  return new CancelRunUseCase(
+    engine as never,
+    stateStore as never,
+    createSerialCoordinator(),
+    startDispatchResolver as never
+  );
+}
+
 describe('CancelRunUseCase', () => {
   it('maps cancel commands to engine.cancelRun', async () => {
     const engine = {
@@ -57,7 +93,7 @@ describe('CancelRunUseCase', () => {
     };
     const stateStore = createStateStore();
 
-    const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+    const useCase = createUseCase(engine, stateStore);
 
     await expect(
       useCase.execute(
@@ -84,6 +120,35 @@ describe('CancelRunUseCase', () => {
     });
   });
 
+  it('dispatches one provider cancellation for concurrent deliveries of the same command', async () => {
+    let cancelling = false;
+    const providerGate = deferred();
+    const engine = {
+      cancelRun: vi.fn(async () => {
+        await providerGate.promise;
+        cancelling = true;
+      }),
+      getRunStatus: vi.fn(async () => ({
+        runId: 'run-1',
+        status: 'RUNNING',
+        ...(cancelling ? { substatus: 'CANCELLING' } : {}),
+      })),
+    };
+    const useCase = createUseCase(engine, createStateStore());
+    const command = { runId: 'run-1', signalType: 'CANCEL' as const };
+
+    const first = useCase.execute(command, commandContext);
+    const second = useCase.execute(command, commandContext);
+    await vi.waitFor(() => expect(engine.cancelRun).toHaveBeenCalled());
+    providerGate.resolve();
+
+    await expect(Promise.all([first, second])).resolves.toEqual([
+      expect.objectContaining({ disposition: 'requested' }),
+      expect.objectContaining({ disposition: 'already_requested' }),
+    ]);
+    expect(engine.cancelRun).toHaveBeenCalledOnce();
+  });
+
   it('cancels a pending run through its confirmed provider dispatch reference', async () => {
     const dispatchedRunRef = {
       ...RUN_METADATA.providerRef,
@@ -97,11 +162,7 @@ describe('CancelRunUseCase', () => {
     const dispatchResolver = {
       resolve: vi.fn().mockResolvedValue({ kind: 'confirmed', runRef: dispatchedRunRef }),
     };
-    const useCase = new CancelRunUseCase(
-      engine as never,
-      createStateStore() as never,
-      dispatchResolver
-    );
+    const useCase = createUseCase(engine, createStateStore(), dispatchResolver);
 
     await expect(
       useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
@@ -125,7 +186,7 @@ describe('CancelRunUseCase', () => {
       };
       const stateStore = createStateStore();
 
-      const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+      const useCase = createUseCase(engine, stateStore);
 
       await expect(
         useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
@@ -144,7 +205,7 @@ describe('CancelRunUseCase', () => {
         .mockResolvedValueOnce({ runId: 'run-1', status: 'COMPLETED' }),
     };
     const stateStore = createStateStore();
-    const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+    const useCase = createUseCase(engine, stateStore);
 
     await expect(
       useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
@@ -166,7 +227,7 @@ describe('CancelRunUseCase', () => {
         .mockResolvedValueOnce({ runId: 'run-1', status: 'CANCELLED' }),
     };
     const stateStore = createStateStore();
-    const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+    const useCase = createUseCase(engine, stateStore);
 
     await expect(
       useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
@@ -184,7 +245,7 @@ describe('CancelRunUseCase', () => {
           .mockResolvedValueOnce({ runId: 'run-1', status: 'RUNNING' })
           .mockResolvedValueOnce({ runId: 'run-1', status: reconciledStatus }),
       };
-      const useCase = new CancelRunUseCase(engine as never, createStateStore() as never);
+      const useCase = createUseCase(engine, createStateStore());
 
       await expect(
         useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
@@ -209,7 +270,7 @@ describe('CancelRunUseCase', () => {
         }),
       };
       const stateStore = createStateStore();
-      const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+      const useCase = createUseCase(engine, stateStore);
 
       await expect(
         useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
@@ -233,7 +294,7 @@ describe('CancelRunUseCase', () => {
       },
     };
 
-    const useCase = new CancelRunUseCase(engine as never, stateStore as never);
+    const useCase = createUseCase(engine, stateStore);
 
     await expect(
       useCase.execute(
@@ -248,3 +309,11 @@ describe('CancelRunUseCase', () => {
     expect(engine.cancelRun).not.toHaveBeenCalled();
   });
 });
+
+function deferred(): { readonly promise: Promise<void>; readonly resolve: () => void } {
+  let resolve!: () => void;
+  const promise = new Promise<void>((accept) => {
+    resolve = accept;
+  });
+  return { promise, resolve };
+}

@@ -3,6 +3,7 @@ import { RunMetadataNotFoundError } from '@dvt/engine';
 
 import { RunControlUnavailableError } from '../errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
+import type { IRunControlCommandCoordinator } from '../ports/runControlCommandCoordinator.js';
 import {
   RUN_CONTROL_RESULT_CONTRACT_VERSION,
   type CancelRunCommand,
@@ -18,6 +19,7 @@ export class CancelRunUseCase implements ICancelRunUseCase {
   public constructor(
     private readonly engine: IWorkflowEngine,
     private readonly stateStore: IRunStateStoreRead,
+    private readonly commandCoordinator: IRunControlCommandCoordinator,
     private readonly startDispatchResolver?: IRunStartDispatchResolver
   ) {}
 
@@ -25,10 +27,18 @@ export class CancelRunUseCase implements ICancelRunUseCase {
     command: CancelRunCommand,
     context: AuthorizedCommandExecutionContext
   ): Promise<CancelRunResult> {
-    const metadata = await this.stateStore.getRunMetadataByRunId(
-      context.scope.tenantId.value,
-      command.runId
+    const tenantId = context.scope.tenantId.value;
+    return this.commandCoordinator.executeExclusive(
+      { action: 'cancel', tenantId, runId: command.runId },
+      () => this.executeExclusive(command, tenantId)
     );
+  }
+
+  private async executeExclusive(
+    command: CancelRunCommand,
+    tenantId: string
+  ): Promise<CancelRunResult> {
+    const metadata = await this.stateStore.getRunMetadataByRunId(tenantId, command.runId);
     if (!metadata) {
       throw new RunMetadataNotFoundError(command.runId);
     }
