@@ -116,6 +116,24 @@ describe('OtelObservability', () => {
     ).not.toMatch(/secret-token-value|private|workspace|credentials/i);
   });
 
+  it('does not duplicate an exception recorded by the observed operation', async () => {
+    const exporter = new InMemorySpanExporter();
+    const obs = createObservedTestAdapter(exporter);
+    const failure = new Error('submission failed');
+
+    await expect(
+      obs.traces.withSpan('temporal.startRun', undefined, async (span) => {
+        span.recordException(failure);
+        span.setStatus('error');
+        throw failure;
+      })
+    ).rejects.toBe(failure);
+    await obs.forceFlush();
+
+    const span = spanByName(exporter.getFinishedSpans(), 'temporal.startRun');
+    expect(span.events.filter((event) => event.name === 'exception')).toHaveLength(1);
+  });
+
   it('does not let a throwing exporter change the observed callback outcome', async () => {
     const exporter: SpanExporter = {
       export() {

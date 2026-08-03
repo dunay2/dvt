@@ -120,8 +120,6 @@ function runWithManagedSpan<T>(span: OpenTelemetrySpanAdapter, fn: (span: ISpan)
           return value;
         },
         (error: unknown) => {
-          span.recordException(error);
-          span.setStatus('error');
           span.end();
           throw error;
         }
@@ -130,8 +128,6 @@ function runWithManagedSpan<T>(span: OpenTelemetrySpanAdapter, fn: (span: ISpan)
     span.end();
     return result;
   } catch (error) {
-    span.recordException(error);
-    span.setStatus('error');
     span.end();
     throw error;
   }
