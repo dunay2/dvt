@@ -1,19 +1,127 @@
+import {
+  InMemorySpanExporter,
+  type ReadableSpan,
+  type SpanExporter,
+} from '@opentelemetry/sdk-trace-base';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { OtelObservability } from '../src';
 
+const observabilityInstances: OtelObservability[] = [];
+
+function createObservedTestAdapter(exporter: SpanExporter): OtelObservability {
+  const observability = new OtelObservability({
+    serviceName: 'test-service',
+    spanExporter: exporter,
+  });
+  observabilityInstances.push(observability);
+  return observability;
+}
+
+function spanByName(spans: readonly ReadableSpan[], name: string): ReadableSpan {
+  const span = spans.find((candidate) => candidate.name === name);
+  expect(span, `missing span ${name}`).toBeDefined();
+  return span!;
+}
+
 describe('OtelObservability', () => {
-  afterEach(() => {
+  afterEach(async () => {
+    await Promise.all(observabilityInstances.splice(0).map((instance) => instance.shutdown()));
     vi.restoreAllMocks();
   });
 
-  it('creates a no-op span and closes it without throwing', () => {
-    const obs = new OtelObservability({ serviceName: 'test-service' });
-    expect(() => {
-      const span = obs.traces.startSpan('test.span');
-      span.setAttribute('k', 'v');
-      span.end();
-    }).not.toThrow();
+  it('exports nested asynchronous spans in one trace with correct parentage', async () => {
+    const exporter = new InMemorySpanExporter();
+    const obs = createObservedTestAdapter(exporter);
+
+    await obs.traces.withSpan(
+      'api.startRun',
+      { attributes: { operation: 'start_run' } },
+      async () => {
+        await Promise.resolve();
+        await obs.traces.withSpan(
+          'engine.startRun',
+          { attributes: { provider: 'temporal' } },
+          async () => {
+            await Promise.resolve();
+            await obs.traces.withSpan(
+              'temporal.startRun',
+              { attributes: { adapter: 'temporal' } },
+              async () => undefined
+            );
+          }
+        );
+      }
+    );
+    await obs.forceFlush();
+
+    const spans = exporter.getFinishedSpans();
+    const apiSpan = spanByName(spans, 'api.startRun');
+    const engineSpan = spanByName(spans, 'engine.startRun');
+    const temporalSpan = spanByName(spans, 'temporal.startRun');
+
+    expect(new Set(spans.map((span) => span.spanContext().traceId)).size).toBe(1);
+    expect(engineSpan.parentSpanContext?.spanId).toBe(apiSpan.spanContext().spanId);
+    expect(temporalSpan.parentSpanContext?.spanId).toBe(engineSpan.spanContext().spanId);
+  });
+
+  it('exports only governed trace attributes and bounded exception details', async () => {
+    const exporter = new InMemorySpanExporter();
+    const obs = createObservedTestAdapter(exporter);
+
+    await obs.traces.withSpan(
+      'engine.startRun',
+      {
+        context: {
+          adapter: 'temporal',
+          runId: 'run-sensitive-id',
+          planId: 'plan-sensitive-id',
+        },
+        attributes: {
+          operation: 'start_run',
+          provider: 'temporal',
+          planUri: 'file:///private/workspace/secret-plan.json',
+          authorization: 'Bearer secret-token-value',
+          sql: 'select password from credentials',
+        },
+      },
+      async (span) => {
+        span.recordException(new Error('secret-token-value at C:\\private\\workspace'));
+        span.setStatus('error', 'secret-token-value');
+      }
+    );
+    await obs.forceFlush();
+
+    const span = spanByName(exporter.getFinishedSpans(), 'engine.startRun');
+    expect(span.attributes).toMatchObject({
+      operation: 'start_run',
+      provider: 'temporal',
+      adapter: 'temporal',
+    });
+    expect(span.attributes).not.toHaveProperty('planUri');
+    expect(span.attributes).not.toHaveProperty('authorization');
+    expect(span.attributes).not.toHaveProperty('sql');
+    expect(
+      JSON.stringify({ attributes: span.attributes, events: span.events, status: span.status })
+    ).not.toMatch(/secret-token-value|private|workspace|credentials/i);
+  });
+
+  it('does not let a throwing exporter change the observed callback outcome', async () => {
+    const exporter: SpanExporter = {
+      export() {
+        throw new Error('collector unavailable');
+      },
+      async shutdown() {},
+    };
+    const obs = createObservedTestAdapter(exporter);
+
+    await expect(
+      obs.traces.withSpan('api.startRun', undefined, async () => {
+        await Promise.resolve();
+        return 'accepted';
+      })
+    ).resolves.toBe('accepted');
+    await expect(obs.forceFlush()).resolves.toBeUndefined();
   });
 
   it('enforces forbidden high-cardinality metric labels', () => {

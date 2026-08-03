@@ -22,7 +22,12 @@
     "test": "pnpm -C ../../.. --filter @dvt/observability build && pnpm -C ../../.. exec vitest run packages/@dvt/observability-otel/test/OtelObservability.test.ts"
   },
   "dependencies": {
-    "@dvt/observability": "workspace:*"
+    "@dvt/observability": "workspace:*",
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/context-async-hooks": "^2.10.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.221.0",
+    "@opentelemetry/resources": "^2.10.0",
+    "@opentelemetry/sdk-trace-base": "^2.10.0"
   },
   "devDependencies": {
     "typescript": "5.9.3",

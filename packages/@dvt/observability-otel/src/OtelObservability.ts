@@ -1,25 +1,33 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
 
 import type {
-  Attributes,
   ICounter,
   IGauge,
   IHistogram,
   ILogs,
   IMetrics,
   IObservability,
-  ISpan,
   ITraces,
   LogEntry,
   MetricLabels,
   ObservabilityContext,
-  SpanOptions,
-  SpanStatus,
 } from '@dvt/observability';
 import { defaultCardinalityPolicy, validateMetricLabels } from '@dvt/observability';
+import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
+import { resourceFromAttributes } from '@opentelemetry/resources';
+import {
+  BasicTracerProvider,
+  BatchSpanProcessor,
+  type SpanExporter,
+} from '@opentelemetry/sdk-trace-base';
 
-// NOTE: This is a scaffold. Replace the placeholder implementations with OpenTelemetry SDK bindings.
-// The goal is strict typing and an adapter boundary that can be tested.
+import { ensureOpenTelemetryContextManager, OpenTelemetryTraces } from './OpenTelemetryTraces.js';
+import {
+  MAX_TRACE_ATTRIBUTE_VALUE_LENGTH,
+  normalizeResourceValue,
+  parseResourceAttributes,
+  TRACE_ATTRIBUTE_KEYS,
+} from './otelTracePolicy.js';
 
 class NoopCounter implements ICounter {
   constructor(private readonly base: MetricLabels | undefined) {}
@@ -57,40 +65,6 @@ class NoopMetrics implements IMetrics {
   }
 }
 
-class NoopSpan implements ISpan {
-  private ended = false;
-  setAttribute(_key: string, _value: unknown): void {
-    // noop — replace with OTel span.setAttribute when wired
-  }
-  setAttributes(_attrs: Attributes): void {
-    // noop — replace with OTel span.setAttributes when wired
-  }
-  recordException(_err: unknown): void {
-    // noop — replace with OTel span.recordException when wired
-  }
-  setStatus(_status: SpanStatus, _message?: string): void {
-    // noop — replace with OTel span.setStatus when wired
-  }
-  end(): void {
-    if (this.ended) return;
-    this.ended = true;
-  }
-}
-
-class NoopTraces implements ITraces {
-  startSpan(_name: string, _options?: SpanOptions): ISpan {
-    return new NoopSpan();
-  }
-  withSpan<T>(name: string, options: SpanOptions | undefined, fn: (span: ISpan) => T): T {
-    const span = this.startSpan(name, options);
-    try {
-      return fn(span);
-    } finally {
-      span.end();
-    }
-  }
-}
-
 class JsonConsoleLogs implements ILogs {
   constructor(private readonly readCurrentContext: () => ObservabilityContext | undefined) {}
 
@@ -111,7 +85,7 @@ class JsonConsoleLogs implements ILogs {
     const context = entry.context ?? this.readCurrentContext();
     const emittedEntry = context === undefined ? entry : { ...entry, context };
 
-    // Replace with OTel Logs API if/when adopted.
+    // Logs remain on the existing structured JSON transport; this slice only binds traces to OTel.
     // eslint-disable-next-line no-console
     console.log(JSON.stringify(emittedEntry));
   }
@@ -121,6 +95,7 @@ export interface OtelObservabilityOptions {
   readonly serviceName: string;
   readonly otlpEndpoint?: string;
   readonly resourceAttributes?: string;
+  readonly spanExporter?: SpanExporter;
 }
 
 export class OtelObservability implements IObservability {
@@ -129,14 +104,55 @@ export class OtelObservability implements IObservability {
   readonly logs: ILogs;
 
   private readonly contextStorage = new AsyncLocalStorage<ObservabilityContext>();
+  private readonly tracerProvider: BasicTracerProvider;
 
-  constructor(_options: OtelObservabilityOptions) {
+  constructor(options: OtelObservabilityOptions) {
+    ensureOpenTelemetryContextManager();
+    const exporter = options.spanExporter ?? createOtlpExporter(options.otlpEndpoint);
+    this.tracerProvider = new BasicTracerProvider({
+      resource: resourceFromAttributes({
+        'service.name': normalizeResourceValue(options.serviceName),
+        ...parseResourceAttributes(options.resourceAttributes),
+      }),
+      spanProcessors: [new BatchSpanProcessor(exporter)],
+      generalLimits: {
+        attributeCountLimit: TRACE_ATTRIBUTE_KEYS.size,
+        attributeValueLengthLimit: MAX_TRACE_ATTRIBUTE_VALUE_LENGTH,
+      },
+    });
     this.metrics = new NoopMetrics();
-    this.traces = new NoopTraces();
+    this.traces = new OpenTelemetryTraces(this.tracerProvider.getTracer('@dvt/observability-otel'));
     this.logs = new JsonConsoleLogs(() => this.contextStorage.getStore());
   }
 
   withContext<T>(ctx: ObservabilityContext, fn: () => T): T {
     return this.contextStorage.run(ctx, fn);
   }
+
+  async forceFlush(): Promise<void> {
+    try {
+      await this.tracerProvider.forceFlush();
+    } catch {
+      // Exporter health is diagnostic and cannot alter runtime outcomes.
+    }
+  }
+
+  async shutdown(): Promise<void> {
+    try {
+      await this.tracerProvider.shutdown();
+    } catch {
+      // Exporter shutdown failure cannot alter process-domain outcomes.
+    }
+  }
+}
+
+function createOtlpExporter(endpoint: string | undefined): SpanExporter {
+  return endpoint === undefined
+    ? new OTLPTraceExporter()
+    : new OTLPTraceExporter({ url: resolveTraceEndpoint(endpoint) });
+}
+
+function resolveTraceEndpoint(endpoint: string): string {
+  const normalized = endpoint.replace(/\/+$/, '');
+  return normalized.endsWith('/v1/traces') ? normalized : `${normalized}/v1/traces`;
 }
