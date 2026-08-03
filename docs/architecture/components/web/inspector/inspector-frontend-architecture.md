@@ -24,7 +24,6 @@ documentation must reflect the implementation that exists now.
 Primary code anchors:
 
 - [InspectorPanel.tsx](../../../../../apps/web/src/app/components/InspectorPanel.tsx)
-- [PluginRegistryContext.tsx](../../../../../apps/web/src/app/plugins/PluginRegistryContext.tsx)
 - [registry.ts](../../../../../apps/web/src/app/plugins/registry.ts)
 - [DbtNodeRenderer.tsx](../../../../../apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx)
 
