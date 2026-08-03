@@ -17,7 +17,7 @@ code_refs:
 evidence:
   tests:
     - pnpm --filter @dvt/contracts test
-    - pnpm --filter @dvt/run-domain test -- applyRunEvent.test.ts
+    - pnpm --filter @dvt/engine test -- SnapshotProjector.transitions.test.ts
     - pnpm --filter dvt-api test -- cancelRunUseCase.test.ts RunEventCancellationReceiptStore.test.ts
     - pnpm --filter dvt-api typecheck
     - pnpm --filter dvt-api lint

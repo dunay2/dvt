@@ -100,6 +100,14 @@ describe('applyRunEvent - run terminal guard', () => {
     }
   });
 
+  it('does not project RunCancelSubmitted command evidence into lifecycle state', () => {
+    const snap = makeSnap('RUNNING');
+
+    applyRunEvent(snap, makeRunEvent('RunCancelSubmitted'));
+
+    expect(snap).toEqual(makeSnap('RUNNING'));
+  });
+
   it('does not throw for unknown event types on terminal runs (fail-open)', () => {
     const snap = makeSnap('COMPLETED');
     expect(() => applyRunEvent(snap, makeRunEvent('SomeUnknownEvent'))).not.toThrow();

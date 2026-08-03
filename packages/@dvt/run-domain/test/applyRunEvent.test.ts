@@ -105,14 +105,6 @@ describe('applyRunEvent - run terminal guard', () => {
     expect(snap).toEqual(makeSnap('PENDING'));
   });
 
-  it('treats RunCancelSubmitted as command evidence without mutating the snapshot', () => {
-    const snap = makeSnap('RUNNING');
-
-    applyRunEvent(snap, makeRunEvent('RunCancelSubmitted'));
-
-    expect(snap).toEqual(makeSnap('RUNNING'));
-  });
-
   it('does not throw for unknown event types on terminal runs', () => {
     expect(() =>
       applyRunEvent(makeSnap('COMPLETED'), makeRunEvent('SomeUnknownEvent'))
