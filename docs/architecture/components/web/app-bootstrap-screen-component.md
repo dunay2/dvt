@@ -2,7 +2,7 @@
 title: App Bootstrap Screen Component
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-05-02
+last_reviewed: 2026-08-03
 ---
 
 # App Bootstrap Screen Component
@@ -29,7 +29,8 @@ The component is split into a pure Presentation Model and a DOM adapter:
   the exported control API used by the rest of the app.
 - `routeBootstrapStartupReadiness.ts` owns the route readiness read model that
   adapts active-route publication and runtime capability cold-start posture into
-  the single route-step command accepted by the bootstrap screen.
+  one shared route-readiness value. `RootShell` maps that value to the existing
+  route-step command accepted by the bootstrap screen.
 
 It does not own route-specific readiness, backend contract semantics, or Canvas
 draft truth. Those concerns publish into this component through typed route and
@@ -50,11 +51,11 @@ health/bootstrap adapters.
 
 ## Route Readiness Policy API
 
-| API                                                  | Owned behavior                                                                |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `RouteBootstrapStartupReadinessState`                | Browser-local read model for same-route stable route posture                  |
-| `createInitialRouteBootstrapStartupReadinessState()` | Creates an empty route-readiness state before the active route publishes      |
-| `resolveRouteBootstrapStartupReadiness(args)`        | Resolves the effective route command and can-complete posture for `RootShell` |
+| API                                                  | Owned behavior                                                              |
+| ---------------------------------------------------- | --------------------------------------------------------------------------- |
+| `RouteBootstrapStartupReadinessState`                | Browser-local read model for same-route stable route posture                |
+| `createInitialRouteBootstrapStartupReadinessState()` | Creates an empty route-readiness state before the active route publishes    |
+| `resolveRouteBootstrapStartupReadiness(args)`        | Resolves one effective shared readiness value plus the next stability state |
 
 ## Domain Command API
 
@@ -84,12 +85,16 @@ positional tuples directly.
 | `createBootstrapStepState()`           | Resolves one typed step state with caller detail or default presentation copy |
 | `resolveBootstrapScreenPresentation()` | Derives screen copy, announcement state, step presentations, and progress     |
 | `canCompleteBootstrapSteps()`          | Validates the terminal-state invariant before DOM removal                     |
+| `isBootstrapStepStartupAllowed()`      | Owns the single status-to-startup-allowance rule used by screen and root      |
 | `formatBootstrapBuildDate()`           | Normalizes build metadata for the critical startup shell                      |
 
 ## Invariants
 
 - The startup screen remains visible while any critical step is `pending`,
   `blocked`, or `error`.
+- Application, route, and Canvas startup posture use `BootstrapStepState` as the
+  single status/detail value. Completion allowance is derived from status and is
+  never stored beside that value.
 - `blocked` and `error` states do not reveal the workbench behind the startup
   gate.
 - A transport-level health failure is a visible failed startup check, not a
@@ -151,8 +156,10 @@ stateDiagram-v2
 flowchart LR
   Publishers["main / providers / root / route errors"] --> Screen["appBootstrapScreen.ts\nDOM adapter"]
   Publishers --> Commands["appBootstrapCommands.ts\nDomain commands"]
-  Publishers --> RouteReadiness["routeBootstrapStartupReadiness.ts\nRoute readiness policy"]
-  RouteReadiness --> Commands
+  Root["RootShell"] --> RouteReadiness["routeBootstrapStartupReadiness.ts\nRoute readiness policy"]
+  RouteReadiness --> Readiness["BootstrapStepState\nshared readiness value"]
+  Readiness --> Root
+  Root --> Commands
   Commands --> Screen
   Commands --> Copy["appBootstrapCopy.ts\nLocale catalog"]
   Screen --> DomContract["appBootstrapDomContract.ts\nDOM contract"]
@@ -178,11 +185,10 @@ flowchart LR
   Root --> RouteBootstrap["routeBootstrapRegistry.ts"]
   Root --> Health["platform-health query"]
   Root --> Capabilities["runtime capabilities query"]
+  RouteBootstrap --> Root
+  Capabilities --> Root
   Root --> RouteReadiness["routeBootstrapStartupReadiness.ts"]
-  RouteBootstrap --> Bootstrap
-  Capabilities --> RouteReadiness
-  RouteBootstrap --> RouteReadiness
-  RouteReadiness --> Bootstrap
+  RouteReadiness --> Root
   Health --> Bootstrap
   Bootstrap --> Progress["bootstrapProgressBar.ts"]
 ```
