@@ -50,7 +50,7 @@ describe('Root integration guard', () => {
     try {
       await waitFor(() => {
         expect(within(mounted.container).getByTestId('root-services-probe').textContent).toContain(
-          'mode:'
+          'services:ready'
         );
       });
     } finally {

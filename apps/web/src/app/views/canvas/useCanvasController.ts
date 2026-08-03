@@ -37,7 +37,6 @@ import { useCanvasExecutionSelectionRecovery } from './useCanvasExecutionSelecti
 export function useCanvasController() {
   const environment = useCanvasControllerEnvironment();
   const {
-    dataSourceMode,
     capabilities,
     platformHealthQuery,
     workspaceFilesQuery,
@@ -55,7 +54,6 @@ export function useCanvasController() {
   } = environment;
 
   const authoringRuntime = useCanvasAuthoringRuntime({
-    dataSourceMode,
     platformHealthQuery: {
       isPending: platformHealthQuery.isPending,
       isError: platformHealthQuery.isError,

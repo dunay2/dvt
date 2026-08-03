@@ -77,11 +77,9 @@ export function AdminProbeDetailsCard({ platformHealthSnapshot }: Readonly<Probe
           </div>
           <div>
             <div className="text-xs uppercase tracking-wide text-slate-500">
-              {copy.labels.dataSourceMode}
+              {copy.labels.dataTransport}
             </div>
-            <div className="mt-2 text-sm text-slate-200">
-              {platformHealthSnapshot?.dataSourceMode ?? 'unknown'}
-            </div>
+            <div className="mt-2 text-sm text-slate-200">API</div>
           </div>
         </div>
         <div className="mt-3 text-xs text-slate-500">

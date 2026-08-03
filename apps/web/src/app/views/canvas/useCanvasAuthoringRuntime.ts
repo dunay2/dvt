@@ -8,7 +8,6 @@ import { deriveCanvasDraftAuthTransportPosture } from './canvasDraftAuthTranspor
 import { useCanvasAuthoringRuntimeDraftFlow } from './useCanvasAuthoringRuntimeDraftFlow';
 
 export function useCanvasAuthoringRuntime({
-  dataSourceMode,
   platformHealthQuery,
   workspaceGraphDraftAuthoringPort,
   workspaceLayoutKey,
@@ -26,10 +25,9 @@ export function useCanvasAuthoringRuntime({
   const backendPosture = useMemo(
     () =>
       deriveCanvasBackendPosture({
-        dataSourceMode,
         platformHealthQuery,
       }),
-    [dataSourceMode, platformHealthQuery]
+    [platformHealthQuery]
   );
   const canPersistDraftTransport =
     canPersistGraphDraftTransport && backendPosture.backendAllowsMutations;

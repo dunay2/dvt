@@ -25,7 +25,6 @@ import type {
 } from '../../ports/workspace';
 import { makePlanRef, makeRunContext } from '../../testing/contractTestUtils';
 import { ApiError, type ApiClient } from '../api/createApiClient';
-import { getRuntimeDataSourceMode } from '../config/runtimeDataSourceMode';
 import { buildAppServices } from './appServices';
 
 const AUTHORING_DRAFT = {
@@ -203,8 +202,6 @@ describe('buildAppServices', () => {
   it('owns API-only boot-time service composition', () => {
     const appServices = buildAppServices(createAppServicesTestOverrides());
 
-    expect(appServices.dataSourceMode).toBe('api');
-    expect(getRuntimeDataSourceMode()).toBe('api');
     expect(appServices.workspaceGraphSnapshotQuery).toBeDefined();
     expect(appServices.workspaceFilesQuery).toBeDefined();
     expect(appServices.workspaceDiffQuery).toBeDefined();
@@ -376,7 +373,6 @@ describe('buildAppServices', () => {
       shellFeedback,
     });
 
-    expect(appServices.dataSourceMode).toBe('api');
     expect(appServices.apiClient).toBe(apiClient);
     expect(appServices.workspaceGraphSnapshotQuery).toBe(
       workspacePorts.workspaceGraphSnapshotQuery

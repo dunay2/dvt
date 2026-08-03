@@ -146,7 +146,6 @@ describe('canvasRouteInteractionState', () => {
 
   it('blocks interactions in api mode before backend readiness is available', () => {
     const controller = buildController({
-      dataSourceMode: 'api',
       backendReady: false,
       nodesWithImpact: buildReadyNodes(),
     });

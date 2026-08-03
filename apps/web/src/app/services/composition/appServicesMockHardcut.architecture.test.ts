@@ -128,7 +128,8 @@ describe('app services mock hardcut architecture', () => {
       (filePath) =>
         !filePath.includes('/testing/') &&
         !filePath.includes('/test/') &&
-        !filePath.match(/\.(?:test|spec)\.[cm]?[jt]sx?$/)
+        !filePath.includes('.test.') &&
+        !filePath.includes('.spec.')
     );
     const forbiddenStrategyTerms = [
       /\bDataSourceMode\b/,

@@ -4,11 +4,9 @@ import {
   getPlatformHealthErrorMessageFromQuery,
   isPlatformReady,
 } from '../../../capabilities/platform-health';
-import type { DataSourceMode } from '../../services/config/dataSource';
 import type { CanvasAuthoringRuntimePlatformHealthQuery } from './canvasAuthoringRuntime.types';
 
 type DeriveCanvasBackendPostureArgs = {
-  dataSourceMode: DataSourceMode;
   platformHealthQuery: CanvasAuthoringRuntimePlatformHealthQuery;
 };
 

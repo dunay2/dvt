@@ -610,7 +610,6 @@ async function main() {
         '--strictPort',
       ],
       {
-        VITE_DATA_SOURCE: 'api',
         VITE_API_BASE_URL: `http://host.docker.internal:${DEFAULT_API_PORT}`,
         ...localProtectedRuntimeAuth.webEnv,
         VITE_DEFAULT_TENANT_ID: localProtectedRuntimeAuth.workspaceScope.tenantId,

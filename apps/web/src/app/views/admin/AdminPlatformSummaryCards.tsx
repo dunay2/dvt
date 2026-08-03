@@ -80,11 +80,9 @@ export function AdminPlatformSummaryCards({
         <div className="flex items-start justify-between">
           <div>
             <div className="text-xs uppercase tracking-wide text-slate-500">
-              {copy.labels.dataSourceMode}
+              {copy.labels.dataTransport}
             </div>
-            <div className="mt-2 text-lg font-semibold">
-              {platformHealthSnapshot?.dataSourceMode ?? 'unknown'}
-            </div>
+            <div className="mt-2 text-lg font-semibold">API</div>
           </div>
           <Database className="size-5 text-emerald-400" />
         </div>

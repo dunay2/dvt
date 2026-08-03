@@ -1,6 +1,3 @@
-import type { DataSourceMode } from './dataSource';
-import { getRuntimeDataSourceMode } from './runtimeDataSourceMode';
-
 export type WorkspaceOption = {
   value: string;
   label: string;
@@ -85,14 +82,8 @@ function ensureOptionValue(options: WorkspaceOption[], value: string): Workspace
   return [{ value: normalizedValue, label: normalizedValue }, ...options];
 }
 
-function resolveBaseWorkspaceConfig(_mode: DataSourceMode): WorkspaceBootstrapConfig {
-  return GENERIC_WORKSPACE_DEFAULT;
-}
-
-export function resolveWorkspaceBootstrapConfig(
-  mode: DataSourceMode = getRuntimeDataSourceMode()
-): WorkspaceBootstrapConfig {
-  const base = resolveBaseWorkspaceConfig(mode);
+export function resolveWorkspaceBootstrapConfig(): WorkspaceBootstrapConfig {
+  const base = GENERIC_WORKSPACE_DEFAULT;
 
   const tenantId = readOptionalEnv(import.meta.env.VITE_DEFAULT_TENANT_ID) ?? base.tenantId;
   const projectId = readOptionalEnv(import.meta.env.VITE_DEFAULT_PROJECT_ID) ?? base.projectId;

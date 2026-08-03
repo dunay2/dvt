@@ -99,7 +99,6 @@ export function createPlatformHealthSnapshot(
   return {
     fetchedAt: '2026-03-31T00:00:00.000Z',
     apiBaseUrl: 'http://localhost:3000',
-    dataSourceMode: 'api',
     healthz: createHealthzProbe(),
     readyz: createReadyzProbe(),
     version: createVersionProbe(),

@@ -7,7 +7,6 @@ import { useCapabilitiesQuery } from '../../queries/useCapabilitiesQuery';
 import { resolveWorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import { resolveWorkspacePortCapabilities } from '../../services/workspace/workspacePorts';
 import {
-  useAppDataSourceMode,
   useGraphDbtWorkspaceArtifactPublicationCommandPort,
   usePlansService,
   useRunsService,
@@ -21,7 +20,6 @@ import { useCanvasNavigationActions } from './useCanvasNavigationActions';
 import { useCanvasStoreFacade } from './useCanvasStoreFacade';
 
 export function useCanvasControllerEnvironment() {
-  const dataSourceMode = useAppDataSourceMode();
   const { data: capabilities } = useCapabilitiesQuery();
   const platformHealthQuery = usePlatformHealthSnapshotQuery();
   const workspacePortTransportCapabilities = useMemo(() => resolveWorkspacePortCapabilities(), []);
@@ -52,7 +50,6 @@ export function useCanvasControllerEnvironment() {
   const store = useCanvasStoreFacade();
 
   return {
-    dataSourceMode,
     capabilities,
     platformHealthQuery,
     workspacePortCapabilities,

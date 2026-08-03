@@ -371,7 +371,6 @@ class CanvasFirstAuthoringLiveProofRunner {
           '--strictPort',
         ],
         {
-          VITE_DATA_SOURCE: 'api',
           VITE_API_BASE_URL: `http://host.docker.internal:${this.apiPort}`,
           ...processContext.localProtectedRuntimeAuth.webEnv,
           VITE_DEFAULT_TENANT_ID: processContext.localProtectedRuntimeAuth.workspaceScope.tenantId,

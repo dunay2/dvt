@@ -26,7 +26,6 @@ import type { IDbtProjectImportPort } from '../ports/dbtProjectImport';
 import { makePlanRef, makeRunContext } from '../testing/contractTestUtils';
 import {
   AppServicesProvider,
-  useAppDataSourceMode,
   useCapabilitiesPort,
   useDbtProjectGraphQueryPort,
   useDbtProjectImportPort,
@@ -61,7 +60,6 @@ describe('AppServicesProvider', () => {
   let previousActEnvironment: boolean | undefined;
 
   const captured: {
-    mode: ReturnType<typeof useAppDataSourceMode> | null;
     workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort | null;
     workspaceFilesQuery: IWorkspaceFilesQueryPort | null;
     workspaceDiffQuery: IWorkspaceDiffQueryPort | null;
@@ -78,7 +76,6 @@ describe('AppServicesProvider', () => {
     sessionContext: ReturnType<typeof useSessionContext> | null;
     shellFeedback: ReturnType<typeof useShellFeedback> | null;
   } = {
-    mode: null,
     workspaceGraphSnapshotQuery: null,
     workspaceFilesQuery: null,
     workspaceDiffQuery: null,
@@ -97,7 +94,6 @@ describe('AppServicesProvider', () => {
   };
 
   function Probe(): null {
-    captured.mode = useAppDataSourceMode();
     captured.workspaceGraphSnapshotQuery = useWorkspaceGraphSnapshotQueryPort();
     captured.workspaceFilesQuery = useWorkspaceFilesQueryPort();
     captured.workspaceDiffQuery = useWorkspaceDiffQueryPort();
@@ -130,7 +126,6 @@ describe('AppServicesProvider', () => {
       root.unmount();
     });
     container.remove();
-    captured.mode = null;
     captured.workspaceGraphSnapshotQuery = null;
     captured.workspaceFilesQuery = null;
     captured.workspaceDiffQuery = null;
@@ -158,7 +153,7 @@ describe('AppServicesProvider', () => {
     vi.resetModules();
   });
 
-  it('builds services from mode and exposes them through hooks', async () => {
+  it('builds API services and exposes them through hooks', async () => {
     await act(async () => {
       root.render(
         <AppServicesProvider overrides={createAppServicesTestOverrides()}>
@@ -167,7 +162,6 @@ describe('AppServicesProvider', () => {
       );
     });
 
-    expect(captured.mode).toBe('api');
     expect(captured.workspaceGraphSnapshotQuery).not.toBeNull();
     expect(captured.workspaceFilesQuery).not.toBeNull();
     expect(captured.workspaceDiffQuery).not.toBeNull();
@@ -369,7 +363,6 @@ describe('AppServicesProvider', () => {
       );
     });
 
-    expect(captured.mode).toBe('api');
     expect(captured.workspaceGraphSnapshotQuery).toBe(workspaceGraphSnapshotQuery);
     expect(captured.workspaceFilesQuery).toBe(workspaceFilesQuery);
     expect(captured.workspaceDiffQuery).toBe(workspaceDiffQuery);
@@ -394,7 +387,7 @@ describe('AppServicesProvider', () => {
     const secondLoad = await import('./AppServicesContext');
 
     function CrossReloadProbe(): null {
-      captured.mode = secondLoad.useAppDataSourceMode();
+      captured.plansService = secondLoad.usePlansService();
       return null;
     }
 
@@ -406,6 +399,6 @@ describe('AppServicesProvider', () => {
       );
     });
 
-    expect(captured.mode).toBe('api');
+    expect(captured.plansService).not.toBeNull();
   });
 });
