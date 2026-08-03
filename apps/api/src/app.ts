@@ -1,4 +1,5 @@
 ﻿import type { ISpan } from '@dvt/observability';
+import type { IObservability } from '@dvt/observability';
 import cors from '@fastify/cors';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
@@ -25,7 +26,7 @@ import {
 
 export type AppContext = {
   env: Env;
-  observability: ReturnType<typeof buildObservability>;
+  observability: IObservability;
   setIntentReconcilerHealth: (health: ReconcilerHealthState) => void;
   getIntentReconcilerHealth: () => ReconcilerHealthState;
 };
