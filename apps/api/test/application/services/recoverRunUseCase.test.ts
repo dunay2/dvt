@@ -192,6 +192,15 @@ describe('RecoverRunUseCase', () => {
     expect(dependencies.executionContextReader.read).toHaveBeenCalledWith({
       tenantId: 'tenant-a',
       runId: 'run-source-1',
+      expectedBinding: {
+        tenantId: 'tenant-a',
+        projectId: 'project-a',
+        environmentId: 'env-a',
+        planId: 'plan-a',
+        planVersion: '1.0.0',
+        planSha256: 'c'.repeat(64),
+        targetAdapter: 'temporal',
+      },
     });
     expect(dependencies.executionContextInheritanceWriter.inherit).toHaveBeenCalledWith({
       tenantId: 'tenant-a',

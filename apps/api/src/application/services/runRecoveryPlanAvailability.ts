@@ -1,6 +1,6 @@
 /** Owned concern: resolve whether a terminal run retains its immutable source plan. */
 import type { IStoredPlanArtifactReader, IStoredPlanRefReader } from '@dvt/artifacts';
-import type { CanonicalRunStatus, RunMetadata } from '@dvt/contracts';
+import type { CanonicalRunStatus, PlanRef, RunMetadata } from '@dvt/contracts';
 import type { IPlanIntegrityValidator } from '@dvt/engine';
 
 import { decideRecoverRun } from './runControlPolicy.js';
@@ -13,17 +13,22 @@ type RecoveryPlanMetadata = Pick<
 type RecoveryPlanReader = IStoredPlanRefReader & IStoredPlanArtifactReader;
 type OptionalRecoveryPlanReader = Partial<RecoveryPlanReader>;
 
-export async function resolveRunRecoveryPlanAvailability(
+export interface RunRecoveryPlanEvidence {
+  readonly available: boolean;
+  readonly planRef?: PlanRef;
+}
+
+export async function resolveRunRecoveryPlanEvidence(
   reader: OptionalRecoveryPlanReader | undefined,
   validator: IPlanIntegrityValidator | undefined,
   metadata: RecoveryPlanMetadata,
   status: CanonicalRunStatus
-): Promise<boolean> {
+): Promise<RunRecoveryPlanEvidence> {
   if (decideRecoverRun(status).kind === 'reject') {
-    return true;
+    return { available: true };
   }
   if (!isRecoveryPlanReader(reader) || validator === undefined) {
-    return false;
+    return { available: false };
   }
 
   try {
@@ -34,13 +39,13 @@ export async function resolveRunRecoveryPlanAvailability(
     };
     const planRef = await reader.getStoredPlanRef({ ...scope, planId: metadata.planId });
     if (planRef === undefined) {
-      return false;
+      return { available: false };
     }
 
     await validator.fetchAndValidate({ ...scope, planRef }, reader);
-    return true;
+    return { available: true, planRef };
   } catch {
-    return false;
+    return { available: false };
   }
 }
 

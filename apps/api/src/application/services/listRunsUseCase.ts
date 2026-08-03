@@ -22,7 +22,7 @@ import type {
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth } from './runOperationalTruth.js';
 import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
-import { resolveRunRecoveryPlanAvailability } from './runRecoveryPlanAvailability.js';
+import { resolveRunRecoveryPlanEvidence } from './runRecoveryPlanAvailability.js';
 import type { IRunStartDispatchResolver } from './runStartDispatchResolver.js';
 
 const RUN_STATUS_READ_CONCURRENCY = 8;
@@ -93,30 +93,30 @@ export class ListRunsUseCase implements IListRunsUseCase {
     item: RunMetadata,
     status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
   ): Promise<RunListItemDto> {
-    const [recoveryContextTrusted, recoveryPlanAvailable, startDispatch, cancellationAccepted] =
-      await Promise.all([
-        resolveRunRecoveryContextTrust(
-          this.executionContextReader,
-          this.executionContextRequirementResolver,
-          item,
-          status
-        ),
-        resolveRunRecoveryPlanAvailability(
-          this.planStore,
-          this.planIntegrityValidator,
-          item,
-          status
-        ),
-        this.startDispatchResolver?.resolve(item, status),
-        this.cancellationReceipts?.hasAccepted({ tenantId: item.tenantId, runId: item.runId }) ??
-          false,
-      ]);
+    const recoveryPlan = await resolveRunRecoveryPlanEvidence(
+      this.planStore,
+      this.planIntegrityValidator,
+      item,
+      status
+    );
+    const [recoveryContextTrusted, startDispatch, cancellationAccepted] = await Promise.all([
+      resolveRunRecoveryContextTrust(
+        this.executionContextReader,
+        this.executionContextRequirementResolver,
+        item,
+        status,
+        recoveryPlan.planRef
+      ),
+      this.startDispatchResolver?.resolve(item, status),
+      this.cancellationReceipts?.hasAccepted({ tenantId: item.tenantId, runId: item.runId }) ??
+        false,
+    ]);
 
     return projectRunOperationalTruth({
       metadata: item,
       status,
       recoveryContextTrusted,
-      recoveryPlanAvailable,
+      recoveryPlanAvailable: recoveryPlan.available,
       recoveryAdapterAvailable:
         this.targetAdapterRegistry?.isSupported(item.providerRef.provider) ?? false,
       cancelDispatchConfirmed: startDispatch?.kind === 'confirmed' || status.status !== 'PENDING',

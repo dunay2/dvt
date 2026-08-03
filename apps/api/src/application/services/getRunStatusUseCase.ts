@@ -32,7 +32,7 @@ import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth, sanitizeCanonicalRunStatus } from './runOperationalTruth.js';
 import { deriveRunReadEvidenceModel } from './runReadEvidenceModel.js';
 import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
-import { resolveRunRecoveryPlanAvailability } from './runRecoveryPlanAvailability.js';
+import { resolveRunRecoveryPlanEvidence } from './runRecoveryPlanAvailability.js';
 import type { IRunStartDispatchResolver } from './runStartDispatchResolver.js';
 
 type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
@@ -138,29 +138,29 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       runtimeAdapter: metadata.providerRef.provider,
       ...(planRecord === undefined ? {} : { planRecord }),
     });
-    const [recoveryContextTrusted, recoveryPlanAvailable, startDispatch, cancellationAccepted] =
-      await Promise.all([
-        resolveRunRecoveryContextTrust(
-          this.executionContextReader,
-          this.executionContextRequirementResolver,
-          metadata,
-          snapshot
-        ),
-        resolveRunRecoveryPlanAvailability(
-          this.planStore,
-          this.planIntegrityValidator,
-          metadata,
-          snapshot
-        ),
-        this.startDispatchResolver?.resolve(metadata, snapshot),
-        this.cancellationReceipts?.hasAccepted(runReadRef) ?? false,
-      ]);
+    const recoveryPlan = await resolveRunRecoveryPlanEvidence(
+      this.planStore,
+      this.planIntegrityValidator,
+      metadata,
+      snapshot
+    );
+    const [recoveryContextTrusted, startDispatch, cancellationAccepted] = await Promise.all([
+      resolveRunRecoveryContextTrust(
+        this.executionContextReader,
+        this.executionContextRequirementResolver,
+        metadata,
+        snapshot,
+        recoveryPlan.planRef
+      ),
+      this.startDispatchResolver?.resolve(metadata, snapshot),
+      this.cancellationReceipts?.hasAccepted(runReadRef) ?? false,
+    ]);
     const operationalTruth = projectRunOperationalTruth({
       metadata,
       status: snapshot,
       evidence: evidenceModel,
       recoveryContextTrusted,
-      recoveryPlanAvailable,
+      recoveryPlanAvailable: recoveryPlan.available,
       recoveryAdapterAvailable:
         this.targetAdapterRegistry?.isSupported(metadata.providerRef.provider) ?? false,
       cancelDispatchConfirmed: startDispatch?.kind === 'confirmed' || snapshot.status !== 'PENDING',

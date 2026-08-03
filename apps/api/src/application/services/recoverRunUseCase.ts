@@ -112,6 +112,15 @@ export class RecoverRunUseCase implements IRecoverRunUseCase {
     const runExecutionContext = await this.dependencies.executionContextReader.read({
       tenantId,
       runId: command.sourceRunId,
+      expectedBinding: {
+        tenantId,
+        projectId: source.projectId,
+        environmentId: source.environmentId,
+        planId: source.planId,
+        planVersion: source.planVersion,
+        planSha256: planRef.sha256,
+        targetAdapter: source.providerRef.provider,
+      },
     });
     if (
       runExecutionContext.kind === 'untrusted' ||

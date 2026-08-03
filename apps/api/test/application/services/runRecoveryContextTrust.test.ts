@@ -8,7 +8,22 @@ const metadata = {
   projectId: 'project-a',
   environmentId: 'env-a',
   planId: 'plan-a',
+  planVersion: '1.0',
   runId: 'run-source-1',
+  providerRef: {
+    provider: 'temporal' as const,
+    tenantId: 'tenant-a',
+    namespace: 'default',
+    workflowId: 'workflow-1',
+    runId: 'provider-run-1',
+  },
+};
+const planRef = {
+  uri: 'dvt-plan://postgres/plan-a',
+  planId: 'plan-a',
+  planVersion: '1.0',
+  sha256: 'a'.repeat(64),
+  schemaVersion: 'v1.0',
 };
 const statusFor = (status: CanonicalRunStatus['status']): CanonicalRunStatus => ({
   runId: metadata.runId,
@@ -22,7 +37,13 @@ describe('resolveRunRecoveryContextTrust', () => {
     };
 
     await expect(
-      resolveRunRecoveryContextTrust(reader as never, undefined, metadata, statusFor('FAILED'))
+      resolveRunRecoveryContextTrust(
+        reader as never,
+        undefined,
+        metadata,
+        statusFor('FAILED'),
+        planRef
+      )
     ).resolves.toBe(false);
   });
 
@@ -35,7 +56,8 @@ describe('resolveRunRecoveryContextTrust', () => {
         reader as never,
         requirements as never,
         metadata,
-        statusFor('CANCELLED')
+        statusFor('CANCELLED'),
+        planRef
       )
     ).resolves.toBe(true);
   });
@@ -49,7 +71,8 @@ describe('resolveRunRecoveryContextTrust', () => {
         reader as never,
         requirements as never,
         metadata,
-        statusFor('FAILED')
+        statusFor('FAILED'),
+        planRef
       )
     ).resolves.toBe(false);
   });
@@ -58,7 +81,13 @@ describe('resolveRunRecoveryContextTrust', () => {
     const reader = { read: vi.fn().mockRejectedValue(new Error('EACCES')) };
 
     await expect(
-      resolveRunRecoveryContextTrust(reader as never, undefined, metadata, statusFor('FAILED'))
+      resolveRunRecoveryContextTrust(
+        reader as never,
+        undefined,
+        metadata,
+        statusFor('FAILED'),
+        planRef
+      )
     ).resolves.toBe(false);
   });
 

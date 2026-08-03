@@ -220,7 +220,16 @@ describe('ListRunsUseCase', () => {
       engine as never,
       executionContextReader as never,
       undefined,
-      createPlanStoreReader(vi.fn().mockResolvedValue({})) as never,
+      createPlanStoreReader(
+        vi.fn().mockResolvedValue({
+          uri: 'dvt-plan://postgres/plan-1',
+          sha256: 'a'.repeat(64),
+          planId: 'plan-1',
+          planVersion: '1.0',
+          schemaVersion: 'v1.0',
+          sizeBytes: 4096,
+        })
+      ) as never,
       { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
       registeredTargetAdapterRegistry as never
     );
@@ -262,6 +271,15 @@ describe('ListRunsUseCase', () => {
     expect(executionContextReader.read).toHaveBeenCalledWith({
       tenantId: 'tenant-a',
       runId: 'run-1',
+      expectedBinding: {
+        tenantId: 'tenant-a',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        planId: 'plan-1',
+        planVersion: '1.0',
+        planSha256: 'a'.repeat(64),
+        targetAdapter: 'temporal',
+      },
     });
   });
 
