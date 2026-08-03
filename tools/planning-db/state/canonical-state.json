@@ -6914,7 +6914,12 @@
         "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildDraftNode",
         "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofDraftSaveRequest",
         "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofPreviewRequest",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofStartRequest"
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofStartRequest",
+        "scripts/run-dev-stack.cjs#PROCESS_TERMINATION_TIMEOUT_MS",
+        "scripts/run-dev-stack.cjs#hasProcessExited",
+        "scripts/run-dev-stack.cjs#runTaskkill",
+        "scripts/run-dev-stack.cjs#terminateProcess",
+        "scripts/run-dev-stack.cjs#waitForProcessExit"
       ],
       "implementationRefs": [
         "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts#PostgresPoolFailure",
@@ -6975,7 +6980,12 @@
         "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildDraftNode",
         "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofDraftSaveRequest",
         "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofPreviewRequest",
-        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofStartRequest"
+        "scripts/supported-runtime-proof/runtime-proof-workload.cjs#buildRuntimeProofStartRequest",
+        "scripts/run-dev-stack.cjs#PROCESS_TERMINATION_TIMEOUT_MS",
+        "scripts/run-dev-stack.cjs#hasProcessExited",
+        "scripts/run-dev-stack.cjs#runTaskkill",
+        "scripts/run-dev-stack.cjs#terminateProcess",
+        "scripts/run-dev-stack.cjs#waitForProcessExit"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260803-supported-runtime-recovery.md",
@@ -7004,7 +7014,8 @@
       ],
       "architectureGuards": [
         "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs",
-        "pnpm test:supported-runtime-proof"
+        "pnpm test:supported-runtime-proof",
+        "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
       ],
       "completionGate": [
         "pnpm proof:supported-runtime",
@@ -7905,6 +7916,81 @@
             ],
             "cypressCoverage": "N/A - protected backend runtime proof",
             "architectureGuard": "pnpm test:supported-runtime-proof"
+          },
+          {
+            "name": "PROCESS_TERMINATION_TIMEOUT_MS",
+            "path": "scripts/run-dev-stack.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+              "scripts/run-dev-stack.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+          },
+          {
+            "name": "hasProcessExited",
+            "path": "scripts/run-dev-stack.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+              "scripts/run-dev-stack.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+          },
+          {
+            "name": "runTaskkill",
+            "path": "scripts/run-dev-stack.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+              "scripts/run-dev-stack.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+          },
+          {
+            "name": "terminateProcess",
+            "path": "scripts/run-dev-stack.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+              "scripts/run-dev-stack.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+          },
+          {
+            "name": "waitForProcessExit",
+            "path": "scripts/run-dev-stack.cjs",
+            "cqRails": ["ProveSupportedRuntimeRecovery"],
+            "dddOwner": "RuntimeProofHarness",
+            "unitTests": [
+              "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+              "scripts/run-dev-stack.test.cjs"
+            ],
+            "fowlerSignals": [
+              "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+            ],
+            "cypressCoverage": "N/A - protected backend runtime proof",
+            "architectureGuard": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
           }
         ],
         "version": 1,
@@ -7926,8 +8012,8 @@
         "redGreenCycles": [
           {
             "id": "provesupportedruntimerecovery-record",
-            "redTest": "pnpm test:supported-runtime-proof",
-            "greenTest": "pnpm proof:supported-runtime",
+            "redTest": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+            "greenTest": "pnpm test:supported-runtime-proof",
             "patchSurfaces": [
               "package.json",
               "apps/api/src/db/pool.ts",
@@ -7945,7 +8031,7 @@
               "scripts/run-temporal-postgres-proof.test.cjs",
               "scripts/supported-runtime-proof/**"
             ],
-            "expectedFailure": "The supported runtime proof cannot compose, recover, or satisfy every declared invariant."
+            "expectedFailure": "Worker replacement starts before the previous process exits or lacks a bounded forced-kill fallback."
           }
         ],
         "componentGuides": [
@@ -7965,7 +8051,8 @@
         ],
         "architectureGuards": [
           "node --test scripts/run-supported-runtime-proof.test.cjs scripts/supported-runtime-proof/*.test.cjs",
-          "pnpm test:supported-runtime-proof"
+          "pnpm test:supported-runtime-proof",
+          "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/18",
         "mechanizationStatus": "implemented",
@@ -7989,7 +8076,7 @@
         ],
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
-      "revision": 5,
+      "revision": 6,
       "createdBy": "codex",
       "createdAt": "2026-08-03T15:47:32.794Z"
     },
@@ -32208,6 +32295,92 @@
         "forbiddenImplementationSurfaces": ["docs/archive/**"]
       },
       "createdAt": "2026-08-03T16:30:15.927Z"
+    },
+    {
+      "operationId": "e241ccba-cc70-4317-957d-fdaca89150e4",
+      "idempotencyKey": "mvp-18-worker-termination-symbols-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-18-SUPPORTED-RUNTIME-RECOVERY#command#provesupportedruntimerecovery",
+      "sourcePath": "scripts/run-supported-runtime-proof.cjs",
+      "sourceContentSha256": "cee97b8f6a70db8a2416267b710748f6304a8f879ec1ad9a4842878d88c417d1",
+      "expectedRevision": 5,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+        "dddOwner": "RuntimeProofHarness",
+        "railName": "ProveSupportedRuntimeRecovery",
+        "railType": "command",
+        "featureId": "MVP-18-SUPPORTED-RUNTIME-RECOVERY",
+        "greenTest": "pnpm test:supported-runtime-proof",
+        "sourceRef": "scripts/run-supported-runtime-proof.cjs",
+        "unitTests": [
+          "scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs",
+          "scripts/run-dev-stack.test.cjs"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/18"],
+        "cypressFlows": ["N/A - protected backend runtime proof"],
+        "domainObjects": [
+          "SupportedRuntimeProofProfile",
+          "PostgresConnectionResilience"
+        ],
+        "fowlerSignals": [
+          "One workload profile owns proof topology and budgets; runtime hosts retain their production responsibilities."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm proof:supported-runtime",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/runbooks/temporal-postgres-proof-environment.md"
+        ],
+        "expectedFailure": "Worker replacement starts before the previous process exits or lacks a bounded forced-kill fallback.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-supported-runtime-recovery.md",
+          "docs/runbooks/temporal-postgres-proof-environment.md"
+        ],
+        "architectureGuards": [
+          "node --test scripts/supported-runtime-proof/runtime-proof-lifecycle.test.cjs scripts/run-dev-stack.test.cjs"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/18",
+        "implementationRefs": [
+          "scripts/run-dev-stack.cjs#PROCESS_TERMINATION_TIMEOUT_MS",
+          "scripts/run-dev-stack.cjs#hasProcessExited",
+          "scripts/run-dev-stack.cjs#runTaskkill",
+          "scripts/run-dev-stack.cjs#terminateProcess",
+          "scripts/run-dev-stack.cjs#waitForProcessExit"
+        ],
+        "normalizedRailName": "provesupportedruntimerecovery",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "cee97b8f6a70db8a2416267b710748f6304a8f879ec1ad9a4842878d88c417d1",
+        "allowedImplementationSurfaces": [
+          "package.json",
+          "apps/api/src/db/pool.ts",
+          "apps/api/src/modules/buildProtectedRuntimeModule.ts",
+          "apps/outbox-worker/src/db/pool.ts",
+          "apps/outbox-worker/src/ownership/PgShardOwnershipGate.ts",
+          "apps/outbox-worker/test/ownership/PgShardOwnershipGate.test.ts",
+          "packages/@dvt/adapter-postgres/src/Postgres*.ts",
+          "packages/@dvt/adapter-postgres/src/index.ts",
+          "packages/@dvt/adapter-postgres/test/PostgresPoolErrorPolicy.test.ts",
+          "scripts/run-dev-stack.cjs",
+          "scripts/run-supported-runtime-proof.cjs",
+          "scripts/run-supported-runtime-proof.test.cjs",
+          "scripts/run-temporal-postgres-proof.cjs",
+          "scripts/run-temporal-postgres-proof.test.cjs",
+          "scripts/supported-runtime-proof/**"
+        ],
+        "forbiddenImplementationSurfaces": ["docs/archive/**"]
+      },
+      "createdAt": "2026-08-03T16:35:55.507Z"
     }
   ]
 }
