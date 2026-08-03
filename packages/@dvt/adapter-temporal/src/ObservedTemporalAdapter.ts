@@ -41,7 +41,39 @@ export class ObservedTemporalAdapter implements IProviderAdapter {
   }
 
   startRun(planRef: PlanRef, ctx: ResolvedRunContext): Promise<EngineRunRef> {
-    return this.deps.adapter.startRun(planRef, ctx);
+    const taskQueue = toTemporalTaskQueue(ctx.tenantId, this.deps.config);
+    const context = buildTemporalContext(this.deps.config, {
+      tenantId: ctx.tenantId,
+      projectId: ctx.projectId,
+      environmentId: ctx.environmentId,
+      runId: ctx.runId,
+      planId: planRef.planId,
+      taskQueue,
+    });
+
+    return runObservedTemporalOperation({
+      observability: this.observability,
+      context,
+      spanName: 'temporal.startRun',
+      spanAttributes: {
+        namespace: this.deps.config.connection.namespace,
+        operation: 'startRun',
+        provider: 'temporal',
+      },
+      counterName: 'dvt.temporal.start_run_total',
+      durationName: 'dvt.temporal.start_run.duration_ms',
+      metricOperation: 'startRun',
+      recordDurationOnError: true,
+      run: () => this.deps.adapter.startRun(planRef, ctx),
+      onSuccess: () => ({
+        result: 'accepted',
+        logMessage: 'Temporal workflow submission accepted',
+        logAttributes: {
+          namespace: this.deps.config.connection.namespace,
+        },
+      }),
+      onError: () => ({ result: 'error' }),
+    });
   }
 
   cancelRun(runRef: EngineRunRef): Promise<void> {

@@ -5,7 +5,12 @@ import { createTemporalProviderAdapterFactory } from '../../../src/modules/provi
 import type { ProviderAdapterFactoryContext } from '../../../src/modules/providerAdapters/providerAdapterFactory.js';
 import { loadEnv } from '../../../src/plugins/env.js';
 
-const { closeMock, loadTemporalAdapterConfigMock, temporalAdapterDepsMock } = vi.hoisted(() => ({
+const {
+  closeMock,
+  loadTemporalAdapterConfigMock,
+  observedTemporalAdapterDepsMock,
+  temporalAdapterDepsMock,
+} = vi.hoisted(() => ({
   closeMock: vi.fn(async () => undefined),
   loadTemporalAdapterConfigMock: vi.fn((envInput: Record<string, unknown>) => ({
     connection: {
@@ -27,6 +32,7 @@ const { closeMock, loadTemporalAdapterConfigMock, temporalAdapterDepsMock } = vi
       ),
     },
   })),
+  observedTemporalAdapterDepsMock: vi.fn(),
   temporalAdapterDepsMock: vi.fn(),
 }));
 
@@ -36,6 +42,13 @@ vi.mock('@dvt/adapter-temporal', () => ({
       temporalAdapterDepsMock(deps);
     }
   },
+  ObservedTemporalAdapter: class ObservedTemporalAdapter {
+    readonly provider = 'temporal';
+
+    constructor(readonly deps: unknown) {
+      observedTemporalAdapterDepsMock(deps);
+    }
+  },
   TemporalClientManager: class TemporalClientManager {
     close = closeMock;
   },
@@ -43,6 +56,21 @@ vi.mock('@dvt/adapter-temporal', () => ({
 }));
 
 describe('createTemporalProviderAdapterFactory', () => {
+  it('composes the production Temporal adapter behind its observability decorator', async () => {
+    const context = createContext({ TEMPORAL_ADDRESS: 'temporal.test:7233' });
+
+    const registration = await createTemporalProviderAdapterFactory().build(context);
+
+    expect(registration).not.toBeNull();
+    expect(observedTemporalAdapterDepsMock).toHaveBeenCalledWith({
+      adapter: expect.anything(),
+      config: expect.objectContaining({
+        connection: expect.objectContaining({ address: 'temporal.test:7233' }),
+      }),
+      observability: context.observability,
+    });
+  });
+
   it('passes the continue-as-new payload budget env into Temporal adapter config', async () => {
     const factory = createTemporalProviderAdapterFactory();
     const registration = await factory.build(

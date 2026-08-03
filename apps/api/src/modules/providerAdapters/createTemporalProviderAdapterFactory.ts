@@ -16,7 +16,12 @@ export function createTemporalProviderAdapterFactory(): ProviderAdapterFactory {
         return null;
       }
 
-      const { TemporalAdapter, TemporalClientManager, loadTemporalAdapterConfig } =
+      const {
+        ObservedTemporalAdapter,
+        TemporalAdapter,
+        TemporalClientManager,
+        loadTemporalAdapterConfig,
+      } =
         await import('@dvt/adapter-temporal');
       const temporalConfig = loadTemporalAdapterConfig({
         TEMPORAL_ADDRESS: context.env.TEMPORAL_ADDRESS,
@@ -36,11 +41,17 @@ export function createTemporalProviderAdapterFactory(): ProviderAdapterFactory {
         ? [DBT_STEP_REQUIRED_CAPABILITY]
         : [];
 
+      const adapter = new TemporalAdapter({
+        clientManager,
+        config: temporalConfig,
+        additionalCapabilities,
+      });
+
       return {
-        adapter: new TemporalAdapter({
-          clientManager,
+        adapter: new ObservedTemporalAdapter({
+          adapter,
           config: temporalConfig,
-          additionalCapabilities,
+          observability: context.observability,
         }),
         close: () => clientManager.close(),
       };

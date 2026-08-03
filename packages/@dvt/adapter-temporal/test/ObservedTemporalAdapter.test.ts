@@ -2,10 +2,28 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { ObservedTemporalAdapter, TemporalAdapter } from '../src/index.js';
 
-import { createTemporalAdapterConfig, createTemporalRunRef } from './helpers/contractFixtures.js';
+import {
+  createPlanRef,
+  createResolvedRunContext,
+  createTemporalAdapterConfig,
+  createTemporalRunRef,
+} from './helpers/contractFixtures.js';
 import { makeTrackingObservability } from './helpers/mockObservability.js';
 
 const BASE_CONFIG = createTemporalAdapterConfig();
+const BASE_PLAN_REF = createPlanRef({
+  uri: 'https://plans.example.com/plan-123.json',
+  sha256: 'b'.repeat(64),
+  planId: 'plan-123',
+});
+const BASE_RUN_CONTEXT = createResolvedRunContext({
+  tenantId: 'tenant-1',
+  projectId: 'project-1',
+  environmentId: 'environment-1',
+  runId: 'run-1',
+  originRunId: 'run-1',
+});
+const START_RUN_COUNTER = 'dvt.temporal.start_run_total';
 const LOOKUP_RUN_REF_COUNTER = 'dvt.temporal.lookup_run_ref_total';
 const PING_COUNTER = 'dvt.temporal.ping_total';
 
@@ -39,16 +57,20 @@ interface ObservedLookupAdapterFixture {
   };
   logs: ReturnType<typeof makeTrackingObservability>['logs'];
   metrics: ReturnType<typeof makeTrackingObservability>['metrics'];
+  spans: ReturnType<typeof makeTrackingObservability>['spans'];
 }
 
 function makeObservedLookupAdapter(
   getHandleImpl: (workflowId: string) => WorkflowHandleMock
 ): ObservedLookupAdapterFixture {
   const workflowClient = {
-    start: vi.fn(),
+    start: vi.fn(async () => ({
+      workflowId: 'run-1',
+      firstExecutionRunId: 'temporal-run-1',
+    })),
     getHandle: vi.fn((wfId: string) => getHandleImpl(wfId)),
   };
-  const { observability, logs, metrics } = makeTrackingObservability();
+  const { observability, logs, metrics, spans } = makeTrackingObservability();
   const adapter = new ObservedTemporalAdapter({
     adapter: new TemporalAdapter({
       workflowClient,
@@ -58,7 +80,7 @@ function makeObservedLookupAdapter(
     observability,
   });
 
-  return { adapter, workflowClient, logs, metrics };
+  return { adapter, workflowClient, logs, metrics, spans };
 }
 
 function makeWorkflowNotFoundError(): Error {
@@ -68,6 +90,54 @@ function makeWorkflowNotFoundError(): Error {
 }
 
 describe('ObservedTemporalAdapter', () => {
+  it('observes Temporal workflow submission through the startRun rail', async () => {
+    const { adapter, workflowClient, metrics, spans } = makeObservedLookupAdapter(() =>
+      makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }))
+    );
+
+    const runRef = await adapter.startRun(BASE_PLAN_REF, BASE_RUN_CONTEXT);
+
+    expect(runRef).toMatchObject({
+      provider: 'temporal',
+      workflowId: 'run-1',
+      runId: 'run-1',
+    });
+    expect(workflowClient.start).toHaveBeenCalledTimes(1);
+    expect(spans.withSpan).toHaveBeenCalledWith(
+      'temporal.startRun',
+      expect.objectContaining({
+        attributes: {
+          namespace: 'dvt-test',
+          operation: 'startRun',
+          provider: 'temporal',
+        },
+      }),
+      expect.any(Function)
+    );
+    expect(metrics.counter).toHaveBeenCalledWith(START_RUN_COUNTER, {
+      adapter: 'temporal',
+      operation: 'startRun',
+      result: 'accepted',
+    });
+  });
+
+  it('preserves startRun rejection while recording a failed submission', async () => {
+    const { adapter, workflowClient, metrics } = makeObservedLookupAdapter(() =>
+      makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }))
+    );
+    workflowClient.start.mockRejectedValueOnce(new Error('Temporal unavailable'));
+
+    await expect(adapter.startRun(BASE_PLAN_REF, BASE_RUN_CONTEXT)).rejects.toThrow(
+      'Temporal unavailable'
+    );
+
+    expect(metrics.counter).toHaveBeenCalledWith(START_RUN_COUNTER, {
+      adapter: 'temporal',
+      operation: 'startRun',
+      result: 'error',
+    });
+  });
+
   it('emits found observability for lookupRunRef', async () => {
     const handle = makeWorkflowHandleMock(async () => ({ status: { name: 'Running' } }));
     const { adapter, workflowClient, logs, metrics } = makeObservedLookupAdapter(() => handle);
