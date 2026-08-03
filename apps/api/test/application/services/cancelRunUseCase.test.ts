@@ -2,6 +2,7 @@ import { RunMetadataNotFoundError } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { AuthorizedCommandExecutionContext } from '../../../src/application/ports/auth.js';
+import type { IRunCancellationReceiptStore } from '../../../src/application/ports/runCancellationReceiptStore.js';
 import type { IRunControlCommandCoordinator } from '../../../src/application/ports/runControlCommandCoordinator.js';
 import { CancelRunUseCase } from '../../../src/application/services/cancelRunUseCase.js';
 import { TenantId } from '../../../src/domain/auth/types.js';
@@ -75,14 +76,29 @@ function createSerialCoordinator(): IRunControlCommandCoordinator {
 function createUseCase(
   engine: unknown,
   stateStore: unknown,
-  startDispatchResolver?: unknown
+  startDispatchResolver?: unknown,
+  cancellationReceipts: IRunCancellationReceiptStore = createCancellationReceiptStore()
 ): CancelRunUseCase {
   return new CancelRunUseCase(
     engine as never,
     stateStore as never,
     createSerialCoordinator(),
+    cancellationReceipts,
     startDispatchResolver as never
   );
+}
+
+function createCancellationReceiptStore(): IRunCancellationReceiptStore {
+  const accepted = new Set<string>();
+  const keyOf = (tenantId: string, runId: string): string => `${tenantId}:${runId}`;
+  return {
+    async hasAccepted(key) {
+      return accepted.has(keyOf(key.tenantId, key.runId));
+    },
+    async recordAccepted(metadata) {
+      accepted.add(keyOf(metadata.tenantId, metadata.runId));
+    },
+  };
 }
 
 describe('CancelRunUseCase', () => {
@@ -121,18 +137,12 @@ describe('CancelRunUseCase', () => {
   });
 
   it('dispatches one provider cancellation for concurrent deliveries of the same command', async () => {
-    let cancelling = false;
     const providerGate = deferred();
     const engine = {
       cancelRun: vi.fn(async () => {
         await providerGate.promise;
-        cancelling = true;
       }),
-      getRunStatus: vi.fn(async () => ({
-        runId: 'run-1',
-        status: 'RUNNING',
-        ...(cancelling ? { substatus: 'CANCELLING' } : {}),
-      })),
+      getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status: 'RUNNING' }),
     };
     const useCase = createUseCase(engine, createStateStore());
     const command = { runId: 'run-1', signalType: 'CANCEL' as const };

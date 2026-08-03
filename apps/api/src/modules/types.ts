@@ -3,7 +3,7 @@ import type {
   IStoredPlanArtifactStore,
   IStoredPlanRefReader,
 } from '@dvt/artifacts';
-import type { ExecutionPlan, IPlanner, PlanRef } from '@dvt/contracts';
+import type { ExecutionPlan, IPlanner, IsoUtcString, PlanRef } from '@dvt/contracts';
 import type {
   EngineRunRef,
   IPlanIntegrityValidator,
@@ -61,6 +61,7 @@ export interface ProtectedRuntimeModule {
   runExecutionContextReferenceReader: IRunExecutionContextReferenceReader;
   runExecutionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
   runControlCommandCoordinator: IRunControlCommandCoordinator;
+  systemClock: { nowIsoUtc(): IsoUtcString };
   runExecutionContextBindingPolicy: IRunExecutionContextBindingPolicy;
   planValidator: IPlanExecutabilityValidator;
   executablePlanResolver: {

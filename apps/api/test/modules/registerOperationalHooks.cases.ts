@@ -131,6 +131,9 @@ function createProtectedRuntimeModuleHarness(): {
           return operation();
         },
       },
+      systemClock: {
+        nowIsoUtc: () => '2026-08-02T04:00:00.000Z' as never,
+      },
       runExecutionContextBindingPolicy: { pluginRequirements: [] },
       planValidator: {} as never,
       executablePlanResolver: { fetch: async () => ({}) } as never,

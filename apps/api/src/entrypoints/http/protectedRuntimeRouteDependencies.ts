@@ -20,6 +20,7 @@ import { ResolveAuthorizedPreviewSelectionService } from '../../application/serv
 import { RunStartDispatchResolver } from '../../application/services/runStartDispatchResolver.js';
 import { SignalRunUseCase } from '../../application/services/signalRunUseCase.js';
 import { StoredPlanRunExecutionContextRequirementResolver } from '../../application/services/StoredPlanRunExecutionContextRequirementResolver.js';
+import { RunEventCancellationReceiptStore } from '../../infrastructure/runControl/RunEventCancellationReceiptStore.js';
 import { ObservabilityRunStatusStalenessTelemetry } from '../../infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
 import { ObservabilityWorkspaceGraphDraftTelemetry } from '../../infrastructure/telemetry/ObservabilityWorkspaceGraphDraftTelemetry.js';
 import { SafeRunSnapshotStalenessReader } from '../../infrastructure/telemetry/SafeRunSnapshotStalenessReader.js';
@@ -56,6 +57,12 @@ export function buildProtectedRuntimeRouteDependencies(
     protectedModule.startRunIntentStore,
     idempotency
   );
+  const cancellationReceipts = new RunEventCancellationReceiptStore({
+    stateStoreRead: protectedModule.stateStore.read,
+    stateStoreWrite: protectedModule.stateStore.write,
+    clock: protectedModule.systemClock,
+    idempotency,
+  });
   const getRunStatusUseCase = new GetRunStatusUseCase(
     protectedModule.engine,
     protectedModule.runEnrichmentService,
@@ -94,6 +101,7 @@ export function buildProtectedRuntimeRouteDependencies(
       protectedModule.engine,
       protectedModule.stateStore.read,
       protectedModule.runControlCommandCoordinator,
+      cancellationReceipts,
       startDispatchResolver
     ),
     compilePlanUseCase: new CompilePlanUseCase({ planner: protectedModule.planCompilePlanner }),

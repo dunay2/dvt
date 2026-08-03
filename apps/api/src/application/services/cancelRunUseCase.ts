@@ -3,6 +3,7 @@ import { RunMetadataNotFoundError } from '@dvt/engine';
 
 import { RunControlUnavailableError } from '../errors/runControlErrors.js';
 import type { AuthorizedCommandExecutionContext } from '../ports/auth.js';
+import type { IRunCancellationReceiptStore } from '../ports/runCancellationReceiptStore.js';
 import type { IRunControlCommandCoordinator } from '../ports/runControlCommandCoordinator.js';
 import {
   RUN_CONTROL_RESULT_CONTRACT_VERSION,
@@ -20,6 +21,7 @@ export class CancelRunUseCase implements ICancelRunUseCase {
     private readonly engine: IWorkflowEngine,
     private readonly stateStore: IRunStateStoreRead,
     private readonly commandCoordinator: IRunControlCommandCoordinator,
+    private readonly cancellationReceipts: IRunCancellationReceiptStore,
     private readonly startDispatchResolver?: IRunStartDispatchResolver
   ) {}
 
@@ -55,6 +57,10 @@ export class CancelRunUseCase implements ICancelRunUseCase {
       return settledResult;
     }
 
+    if (await this.cancellationReceipts.hasAccepted({ tenantId, runId: command.runId })) {
+      return acceptedCancellation(command, 'already_requested');
+    }
+
     const runRef = startDispatch.kind === 'confirmed' ? startDispatch.runRef : persistedRunRef;
     try {
       await this.engine.cancelRun(runRef);
@@ -72,6 +78,8 @@ export class CancelRunUseCase implements ICancelRunUseCase {
       }
       throw providerFailure;
     }
+
+    await this.cancellationReceipts.recordAccepted(metadata);
 
     return acceptedCancellation(command, 'requested');
   }

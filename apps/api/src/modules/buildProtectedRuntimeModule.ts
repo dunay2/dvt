@@ -208,6 +208,7 @@ export async function buildProtectedRuntimeModule(
       storageRuntime.dbtBundleStore
     ),
     runControlCommandCoordinator,
+    systemClock: storageRuntime.systemClock,
     runExecutionContextBindingPolicy: storageRuntime.runExecutionContextBindingPolicy,
     planValidator: startRunRuntime.planValidator,
     executablePlanResolver: storageRuntime.executablePlanResolver,
