@@ -122,6 +122,23 @@ describe('projectRunOperationalTruth', () => {
   });
 
   it.each([
+    ['COMPLETED', 'run_terminal'],
+    ['FAILED', 'run_terminal'],
+    ['CANCELLED', 'run_cancelled'],
+  ] as const)(
+    'preserves %s lifecycle precedence over durable cancellation receipts',
+    (status, reason) => {
+      expect(
+        projectRunOperationalTruth({
+          metadata,
+          status: { runId: 'run-provider', status },
+          cancellationAccepted: true,
+        }).controls.cancel
+      ).toEqual({ available: false, reason });
+    }
+  );
+
+  it.each([
     ['RUNNING', undefined, true, undefined, false, 'run_active'],
     ['RUNNING', 'CANCELLING', false, 'cancellation_pending', false, 'run_active'],
     ['PAUSED', undefined, true, undefined, false, 'run_active'],

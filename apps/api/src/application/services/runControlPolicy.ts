@@ -60,9 +60,14 @@ export function projectRunControlAvailability(
   status: CanonicalRunStatus,
   evidence: RunControlAvailabilityEvidence = {}
 ): RunControlAvailabilityDto {
-  const cancelDecision = evidence.cancellationAccepted
-    ? ({ kind: 'settled', disposition: 'already_requested' } as const)
-    : decideCancelRun(status, evidence.cancelDispatchConfirmed ?? false);
+  const lifecycleCancelDecision = decideCancelRun(
+    status,
+    evidence.cancelDispatchConfirmed ?? false
+  );
+  const cancelDecision =
+    evidence.cancellationAccepted && !isTerminalCancelDecision(lifecycleCancelDecision)
+      ? ({ kind: 'settled', disposition: 'already_requested' } as const)
+      : lifecycleCancelDecision;
   const cancel: RunControlAvailabilityDto['cancel'] =
     cancelDecision.kind === 'dispatch'
       ? { available: true }
@@ -97,4 +102,11 @@ export function projectRunControlAvailability(
       reason: recoverDecision.reason,
     },
   };
+}
+
+function isTerminalCancelDecision(decision: CancelRunDecision): boolean {
+  return (
+    (decision.kind === 'reject' && decision.reason === 'run_terminal') ||
+    (decision.kind === 'settled' && decision.disposition === 'already_cancelled')
+  );
 }
