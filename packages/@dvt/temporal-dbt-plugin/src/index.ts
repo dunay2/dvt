@@ -21,3 +21,9 @@ export {
   type TemporalDbtPluginExecutableStepKind,
 } from './dbtPluginManifest.js';
 export { DbtCliPluginRunner, assertDbtCliAvailable } from './DbtCliPluginRunner.js';
+export {
+  createDbtRuntimeProfileMaterializer,
+  type DbtRuntimeProfileResolution,
+  type DbtRuntimeProfileResolutionInput,
+  type IDbtRuntimeProfileResolver,
+} from './dbtRuntimeProfile.js';

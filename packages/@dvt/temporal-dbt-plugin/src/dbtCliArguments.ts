@@ -12,7 +12,8 @@ import { resolveDbtCliSubcommand } from './dbtPluginManifest.js';
 export function buildDbtCliArgs(
   stepKind: string,
   stepId: string,
-  targetProfile: string | undefined
+  targetProfile: string | undefined,
+  profilesDir: string
 ): readonly string[] {
   const subcommand = resolveDbtCliSubcommand(stepKind);
   return [
@@ -22,5 +23,7 @@ export function buildDbtCliArgs(
     ...(typeof targetProfile === 'string' && targetProfile.trim().length > 0
       ? ['--target', targetProfile]
       : []),
+    '--profiles-dir',
+    profilesDir,
   ];
 }

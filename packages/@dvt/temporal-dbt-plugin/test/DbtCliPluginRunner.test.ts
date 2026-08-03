@@ -1,9 +1,14 @@
+import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { describe, expect, it, vi } from 'vitest';
 
 import {
   DbtCliPluginRunner,
   TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS,
   assertDbtCliAvailable,
+  createDbtRuntimeProfileMaterializer,
 } from '../src/index.js';
 
 const INPUT = {
@@ -42,6 +47,7 @@ const INPUT = {
           tenantId: 'tenant-1',
         },
         targetProfile: 'analytics',
+        credentialRef: 'env:DBT_PROFILES_DIR',
       },
     },
   },
@@ -53,6 +59,7 @@ const INPUT = {
       tenantId: 'tenant-1',
     },
     targetProfile: 'analytics',
+    credentialRef: 'env:DBT_PROFILES_DIR',
   },
 } as const;
 
@@ -72,6 +79,7 @@ describe('DbtCliPluginRunner', () => {
         read: vi.fn(async (_ref, _options) => new Uint8Array()),
       },
       materializeProject,
+      materializeRuntimeProfile: createRuntimeProfileMaterializer(),
       runCommand,
       dbtBin: 'dbt',
     });
@@ -84,7 +92,15 @@ describe('DbtCliPluginRunner', () => {
     });
     expect(runCommand).toHaveBeenCalledWith(
       'dbt',
-      ['run', '--select', 'model.analytics.orders', '--target', 'analytics'],
+      [
+        'run',
+        '--select',
+        'model.analytics.orders',
+        '--target',
+        'analytics',
+        '--profiles-dir',
+        '/tmp/dbt-profile',
+      ],
       { cwd: '/tmp/dbt-project' }
     );
     expect(cleanup).toHaveBeenCalledTimes(1);
@@ -103,6 +119,7 @@ describe('DbtCliPluginRunner', () => {
         projectDir: '/tmp/dbt-project',
         cleanup: async () => undefined,
       }),
+      materializeRuntimeProfile: createRuntimeProfileMaterializer(),
       runCommand,
       dbtBin: 'dbt',
     });
@@ -117,12 +134,15 @@ describe('DbtCliPluginRunner', () => {
           sha256: 'b'.repeat(64),
           tenantId: 'tenant-1',
         },
+        credentialRef: 'env:DBT_PROFILES_DIR',
       },
     });
 
-    expect(runCommand).toHaveBeenCalledWith('dbt', ['test', '--select', 'test.analytics.orders'], {
-      cwd: '/tmp/dbt-project',
-    });
+    expect(runCommand).toHaveBeenCalledWith(
+      'dbt',
+      ['test', '--select', 'test.analytics.orders', '--profiles-dir', '/tmp/dbt-profile'],
+      { cwd: '/tmp/dbt-project' }
+    );
   });
 
   it.each([
@@ -142,6 +162,7 @@ describe('DbtCliPluginRunner', () => {
         projectDir: '/tmp/dbt-project',
         cleanup: async () => undefined,
       }),
+      materializeRuntimeProfile: createRuntimeProfileMaterializer(),
       runCommand,
       dbtBin: 'dbt',
     });
@@ -154,16 +175,25 @@ describe('DbtCliPluginRunner', () => {
     expect(TEMPORAL_DBT_PLUGIN_EXECUTABLE_STEP_KINDS).toContain(kind);
     expect(runCommand).toHaveBeenCalledWith(
       'dbt',
-      [command, '--select', `${kind.toLowerCase()}.analytics.orders`, '--target', 'analytics'],
+      [
+        command,
+        '--select',
+        `${kind.toLowerCase()}.analytics.orders`,
+        '--target',
+        'analytics',
+        '--profiles-dir',
+        '/tmp/dbt-profile',
+      ],
       { cwd: '/tmp/dbt-project' }
     );
   });
 
   it('returns FAILED when the dbt process exits non-zero', async () => {
+    const secret = 'postgres://dbt:plaintext-secret@warehouse/dbt';
     const error = Object.assign(new Error('dbt failed'), {
       code: 2,
       stdout: '',
-      stderr: 'model failed',
+      stderr: `model failed while connecting to ${secret}`,
     });
     const runner = new DbtCliPluginRunner({
       bundleReader: {
@@ -173,18 +203,22 @@ describe('DbtCliPluginRunner', () => {
         projectDir: '/tmp/dbt-project',
         cleanup: async () => undefined,
       }),
+      materializeRuntimeProfile: createRuntimeProfileMaterializer(),
       runCommand: vi.fn(async () => {
         throw error;
       }),
       dbtBin: 'dbt',
     });
 
-    await expect(runner.execute(INPUT)).resolves.toEqual({
+    const result = await runner.execute(INPUT);
+
+    expect(result).toEqual({
       stepId: 'model.analytics.orders',
       status: 'FAILED',
       failureReason: 'DBT_CLI_EXIT_NON_ZERO',
-      error: 'model failed',
+      error: 'DBT CLI execution failed.',
     });
+    expect(JSON.stringify(result)).not.toContain(secret);
   });
 
   it('returns FAILED when the dbt binary is missing', async () => {
@@ -201,6 +235,7 @@ describe('DbtCliPluginRunner', () => {
         projectDir: '/tmp/dbt-project',
         cleanup: async () => undefined,
       }),
+      materializeRuntimeProfile: createRuntimeProfileMaterializer(),
       runCommand: vi.fn(async () => {
         throw error;
       }),
@@ -211,7 +246,7 @@ describe('DbtCliPluginRunner', () => {
       stepId: 'model.analytics.orders',
       status: 'FAILED',
       failureReason: 'DBT_CLI_NOT_FOUND',
-      error: 'spawn ENOENT',
+      error: 'DBT CLI executable is unavailable.',
     });
   });
 
@@ -225,4 +260,71 @@ describe('DbtCliPluginRunner', () => {
 
     expect(runCommand).toHaveBeenCalledWith('dbt', ['--version'], { cwd: process.cwd() });
   });
+
+  it('fails closed and cleans the project when the runtime credential cannot be resolved', async () => {
+    const secret = 'postgres://dbt:plaintext-secret@warehouse/dbt';
+    const cleanupProject = vi.fn(async () => undefined);
+    const runCommand = vi.fn();
+    const runner = new DbtCliPluginRunner({
+      bundleReader: {
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
+      },
+      materializeProject: async () => ({
+        projectDir: '/tmp/dbt-project',
+        cleanup: cleanupProject,
+      }),
+      materializeRuntimeProfile: vi.fn(async () => {
+        throw new Error(`missing runtime profile: ${secret}`);
+      }),
+      runCommand,
+      dbtBin: 'dbt',
+    });
+
+    const result = await runner.execute(INPUT);
+
+    expect(result).toEqual({
+      stepId: 'model.analytics.orders',
+      status: 'FAILED',
+      failureReason: 'DBT_RUNTIME_CREDENTIAL_UNAVAILABLE',
+      error: 'DBT runtime credentials could not be resolved.',
+    });
+    expect(JSON.stringify(result)).not.toContain(secret);
+    expect(runCommand).not.toHaveBeenCalled();
+    expect(cleanupProject).toHaveBeenCalledTimes(1);
+  });
+
+  it('materializes a restrictive profile and erases both memory and disk resources', async () => {
+    const workdirRoot = await mkdtemp(join(tmpdir(), 'dvt-dbt-runtime-profile-test-'));
+    const sensitiveBytes = Buffer.from(
+      'warehouse:\n  outputs:\n    production:\n      password: secret\n'
+    );
+    const materialize = createDbtRuntimeProfileMaterializer({
+      resolver: { resolve: vi.fn(async () => ({ profilesYaml: sensitiveBytes })) },
+      workdirRoot,
+    });
+
+    try {
+      const profile = await materialize(INPUT);
+      const profilePath = join(profile.profilesDir, 'profiles.yml');
+
+      expect(await readFile(profilePath, 'utf8')).toContain('password: secret');
+      expect([...sensitiveBytes]).toEqual(new Array(sensitiveBytes.length).fill(0));
+      if (process.platform !== 'win32') {
+        expect((await stat(profile.profilesDir)).mode & 0o777).toBe(0o700);
+        expect((await stat(profilePath)).mode & 0o777).toBe(0o600);
+      }
+
+      await profile.cleanup();
+      await expect(stat(profile.profilesDir)).rejects.toMatchObject({ code: 'ENOENT' });
+    } finally {
+      await rm(workdirRoot, { recursive: true, force: true });
+    }
+  });
 });
+
+function createRuntimeProfileMaterializer() {
+  return vi.fn(async () => ({
+    profilesDir: '/tmp/dbt-profile',
+    cleanup: vi.fn(async () => undefined),
+  }));
+}

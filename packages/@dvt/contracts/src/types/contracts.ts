@@ -45,21 +45,10 @@ export type Provider = (typeof RUNTIME_PROVIDER_VALUES)[number];
 export type TransformationExecutor = 'postgres' | 'dbt';
 
 export type RunStatus =
-  | 'PENDING'
-  | 'APPROVED'
-  | 'RUNNING'
-  | 'PAUSED'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELLED';
+  'PENDING' | 'APPROVED' | 'RUNNING' | 'PAUSED' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 
 export type RunSubstatus =
-  | 'DRAINING'
-  | 'RETRYING'
-  | 'CONTINUE_AS_NEW'
-  | 'WAITING_APPROVAL'
-  | 'RECOVERING'
-  | 'CANCELLING';
+  'DRAINING' | 'RETRYING' | 'CONTINUE_AS_NEW' | 'WAITING_APPROVAL' | 'RECOVERING' | 'CANCELLING';
 
 export interface RunFailureEvidence {
   stepId: StepId;
@@ -156,6 +145,7 @@ export type GenericPluginContext = Record<string, PluginContextValue>;
 export interface DbtPluginContext {
   projectBundleRef: DbtProjectBundleRef;
   targetProfile?: NonBlankString | undefined;
+  credentialRef: NonBlankString;
 }
 
 export interface RunExecutionContext {

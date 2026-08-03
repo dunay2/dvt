@@ -14,9 +14,18 @@ export interface MaterializedDbtProject {
   cleanup(): Promise<void>;
 }
 
+export interface MaterializedDbtRuntimeProfile {
+  readonly profilesDir: string;
+  cleanup(): Promise<void>;
+}
+
 export type DbtProjectMaterializer = (
   input: DbtPluginExecutionInput
 ) => Promise<MaterializedDbtProject>;
+
+export type DbtRuntimeProfileMaterializer = (
+  input: DbtPluginExecutionInput
+) => Promise<MaterializedDbtRuntimeProfile>;
 
 export interface DbtCliCommandOptions {
   readonly cwd: string;

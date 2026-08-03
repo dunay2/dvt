@@ -11,11 +11,13 @@ import {
   DbtCliPluginRunner,
   DBT_PLUGIN_ID,
   assertDbtCliAvailable,
+  createDbtRuntimeProfileMaterializer,
   createDbtStepActivityRegistry,
 } from '@dvt/temporal-dbt-plugin';
 
 import type { Env } from '../plugins/env.js';
 
+import { EnvironmentDbtRuntimeProfileResolver } from './EnvironmentDbtRuntimeProfileResolver.js';
 import type { CreateTemporalWorkerRuntimeOptions } from './runtimeTypes.js';
 
 export interface TemporalWorkerDbtProfile {
@@ -53,6 +55,12 @@ export function createTemporalWorkerDbtProfile(
       bundleReader,
       dbtBin: env.DVT_DBT_BIN,
       workdirRoot: env.DVT_DBT_WORKDIR_ROOT,
+      materializeRuntimeProfile: createDbtRuntimeProfileMaterializer({
+        resolver:
+          options.dbtRuntimeProfileResolverFactory?.() ??
+          new EnvironmentDbtRuntimeProfileResolver(),
+        workdirRoot: env.DVT_DBT_WORKDIR_ROOT,
+      }),
     });
 
   return {

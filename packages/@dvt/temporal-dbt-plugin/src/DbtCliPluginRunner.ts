@@ -21,11 +21,14 @@ import {
   toErrorMessage,
 } from './dbtCliFailures.js';
 import { runDbtCommand } from './dbtCliProcess.js';
-import {
-  cleanupMaterializedDbtProject,
-  createDbtProjectMaterializer,
-} from './dbtCliProjectMaterializer.js';
-import type { DbtCliCommandRunner, DbtProjectMaterializer } from './dbtCliTypes.js';
+import { createDbtProjectMaterializer } from './dbtCliProjectMaterializer.js';
+import type {
+  DbtCliCommandRunner,
+  DbtProjectMaterializer,
+  DbtRuntimeProfileMaterializer,
+  MaterializedDbtProject,
+  MaterializedDbtRuntimeProfile,
+} from './dbtCliTypes.js';
 import type { DbtPluginExecutionInput, DbtPluginRunner } from './dbtPluginTypes.js';
 
 export { assertDbtCliAvailable } from './dbtCliProcess.js';
@@ -35,12 +38,14 @@ export interface DbtCliPluginRunnerOptions {
   dbtBin?: string;
   workdirRoot?: string;
   materializeProject?: DbtProjectMaterializer;
+  materializeRuntimeProfile: DbtRuntimeProfileMaterializer;
   runCommand?: DbtCliCommandRunner;
 }
 
 export class DbtCliPluginRunner implements DbtPluginRunner {
   private readonly dbtBin: string;
   private readonly materializeProject: DbtProjectMaterializer;
+  private readonly materializeRuntimeProfile: DbtRuntimeProfileMaterializer;
   private readonly runCommand: DbtCliCommandRunner;
 
   public constructor(options: DbtCliPluginRunnerOptions) {
@@ -54,6 +59,7 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
         workdirRoot,
       });
     this.runCommand = options.runCommand ?? runDbtCommand;
+    this.materializeRuntimeProfile = options.materializeRuntimeProfile;
   }
 
   public async execute(input: DbtPluginExecutionInput): Promise<StepResult> {
@@ -62,7 +68,12 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
       return project.failure;
     }
 
-    return this.runWithProject(input, project.resource);
+    const profile = await this.materializeProfile(input);
+    if ('failure' in profile) {
+      return this.completeWithCleanup(input.step.stepId, profile.failure, [project.resource]);
+    }
+
+    return this.runWithResources(input, project.resource, profile.resource);
   }
 
   private async materialize(
@@ -83,29 +94,67 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
     }
   }
 
-  private async runWithProject(
+  private async materializeProfile(
+    input: DbtPluginExecutionInput
+  ): Promise<
+    { resource: Awaited<ReturnType<DbtRuntimeProfileMaterializer>> } | { failure: StepResult }
+  > {
+    try {
+      return { resource: await this.materializeRuntimeProfile(input) };
+    } catch {
+      return {
+        failure: buildFailedStepResult(
+          input.step.stepId,
+          'DBT_RUNTIME_CREDENTIAL_UNAVAILABLE',
+          'DBT runtime credentials could not be resolved.'
+        ),
+      };
+    }
+  }
+
+  private async runWithResources(
     input: DbtPluginExecutionInput,
-    project: Awaited<ReturnType<DbtProjectMaterializer>>
+    project: MaterializedDbtProject,
+    profile: MaterializedDbtRuntimeProfile
   ): Promise<StepResult> {
+    let result: StepResult;
     try {
       const args = buildDbtCliArgs(
         input.step.kind,
         input.step.stepId,
-        input.pluginContext.targetProfile
+        input.pluginContext.targetProfile,
+        profile.profilesDir
       );
       await this.runCommand(this.dbtBin, args, { cwd: project.projectDir });
-      return {
+      result = {
         stepId: input.step.stepId,
         status: 'COMPLETED',
       };
     } catch (error) {
-      return buildFailedStepResult(
+      const failureReason = classifyDbtCliFailure(error);
+      result = buildFailedStepResult(
         input.step.stepId,
-        classifyDbtCliFailure(error),
-        toDbtCliFailureMessage(error)
+        failureReason,
+        toDbtCliFailureMessage(failureReason)
       );
-    } finally {
-      await cleanupMaterializedDbtProject(project);
     }
+
+    return this.completeWithCleanup(input.step.stepId, result, [profile, project]);
+  }
+
+  private async completeWithCleanup(
+    stepId: string,
+    result: StepResult,
+    resources: readonly { cleanup(): Promise<void> }[]
+  ): Promise<StepResult> {
+    const outcomes = await Promise.allSettled(resources.map((resource) => resource.cleanup()));
+    if (outcomes.some((outcome) => outcome.status === 'rejected')) {
+      return buildFailedStepResult(
+        stepId,
+        'DBT_RUNTIME_RESOURCE_CLEANUP_FAILED',
+        'DBT runtime resources could not be cleaned safely.'
+      );
+    }
+    return result;
   }
 }
