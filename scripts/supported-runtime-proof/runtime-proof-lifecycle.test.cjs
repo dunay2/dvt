@@ -1,12 +1,39 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const { EventEmitter } = require('node:events');
 const test = require('node:test');
 
+const { terminateProcess } = require('../run-dev-stack.cjs');
 const {
   buildRuntimeProofOutboxEnv,
   buildRuntimeProofProjectorEnv,
 } = require('./runtime-proof-lifecycle.cjs');
+
+test('worker termination waits for exit and uses a bounded forced-kill fallback', async () => {
+  const child = new EventEmitter();
+  child.exitCode = null;
+  child.signalCode = null;
+  child.killed = false;
+  child.killSignals = [];
+  child.kill = (signal) => {
+    child.killed = true;
+    child.killSignals.push(signal);
+    if (signal === 'SIGKILL') {
+      child.signalCode = signal;
+      setImmediate(() => child.emit('exit', null, signal));
+    }
+    return true;
+  };
+
+  await terminateProcess(
+    { name: 'runtime-proof-worker', child },
+    { platform: 'linux', gracefulTimeoutMs: 5, forceTimeoutMs: 100 }
+  );
+
+  assert.deepEqual(child.killSignals, ['SIGTERM', 'SIGKILL']);
+  assert.equal(child.signalCode, 'SIGKILL');
+});
 
 test('outbox proof host uses active ownership and disables unrelated retention work', () => {
   const env = buildRuntimeProofOutboxEnv({

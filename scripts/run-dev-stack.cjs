@@ -417,24 +417,69 @@ async function waitForUrlOrProcessExit(
   }
 }
 
-async function terminateProcess(processHandle) {
-  if (processHandle.child.killed || processHandle.child.exitCode !== null) {
+const PROCESS_TERMINATION_TIMEOUT_MS = 5_000;
+
+async function terminateProcess(processHandle, options = {}) {
+  const child = processHandle.child;
+  if (hasProcessExited(child)) {
     return;
   }
 
-  if (process.platform === 'win32') {
-    await new Promise((resolve) => {
-      const killer = spawn('taskkill', ['/pid', String(processHandle.child.pid), '/t', '/f'], {
-        stdio: 'ignore',
-        windowsHide: true,
-      });
-      killer.on('exit', () => resolve());
-      killer.on('error', () => resolve());
+  const platform = options.platform ?? process.platform;
+  const gracefulTimeoutMs = options.gracefulTimeoutMs ?? PROCESS_TERMINATION_TIMEOUT_MS;
+  const forceTimeoutMs = options.forceTimeoutMs ?? PROCESS_TERMINATION_TIMEOUT_MS;
+
+  if (platform === 'win32') {
+    await runTaskkill(child.pid, false, options.spawnProcess ?? spawn);
+  } else {
+    child.kill('SIGTERM');
+  }
+
+  if (await waitForProcessExit(child, gracefulTimeoutMs)) {
+    return;
+  }
+
+  if (platform === 'win32') {
+    await runTaskkill(child.pid, true, options.spawnProcess ?? spawn);
+  } else {
+    child.kill('SIGKILL');
+  }
+
+  if (!(await waitForProcessExit(child, forceTimeoutMs))) {
+    throw new Error(`${processHandle.name} did not exit after forced termination`);
+  }
+}
+
+function hasProcessExited(child) {
+  return child.exitCode !== null || child.signalCode !== null;
+}
+
+async function waitForProcessExit(child, timeoutMs) {
+  if (hasProcessExited(child)) return true;
+
+  return new Promise((resolve) => {
+    const onExit = () => {
+      clearTimeout(timeout);
+      resolve(true);
+    };
+    const timeout = setTimeout(() => {
+      child.off('exit', onExit);
+      resolve(false);
+    }, timeoutMs);
+    child.once('exit', onExit);
+  });
+}
+
+async function runTaskkill(pid, force, spawnProcess) {
+  await new Promise((resolve) => {
+    const args = ['/pid', String(pid), '/t', ...(force ? ['/f'] : [])];
+    const killer = spawnProcess('taskkill', args, {
+      stdio: 'ignore',
+      windowsHide: true,
     });
-    return;
-  }
-
-  processHandle.child.kill('SIGTERM');
+    killer.on('exit', () => resolve());
+    killer.on('error', () => resolve());
+  });
 }
 
 async function closeReaders(processHandle) {
