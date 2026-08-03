@@ -3193,7 +3193,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
-      "sourceContentSha256": "595ac0fbe4868d8d2cb04916e190e96d64fef9baa96ab2ad671cddd5b24892d2",
+      "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
       "rawRail": {
         "name": "StartRunAdmission",
         "type": "command",
@@ -3419,7 +3419,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
-      "sourceContentSha256": "595ac0fbe4868d8d2cb04916e190e96d64fef9baa96ab2ad671cddd5b24892d2",
+      "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
       "rawRail": {
         "name": "StartRunTelemetryPolicy",
         "type": "command",
@@ -3710,7 +3710,10 @@
         "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#IDbtRuntimeProfileResolver",
         "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#createDbtRuntimeProfileMaterializer",
         "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#materializeDbtRuntimeProfile",
-        "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts#createStepActivities"
+        "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts#createStepActivities",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#ActivityHeartbeat",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#executeWithHeartbeat"
       ],
       "implementationRefs": [
         "apps/temporal-worker/src/runtime/EnvironmentDbtRuntimeProfileResolver.ts#ENV_NAME_PATTERN",
@@ -3728,7 +3731,10 @@
         "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#IDbtRuntimeProfileResolver",
         "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#createDbtRuntimeProfileMaterializer",
         "packages/@dvt/temporal-dbt-plugin/src/dbtRuntimeProfile.ts#materializeDbtRuntimeProfile",
-        "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts#createStepActivities"
+        "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts#createStepActivities",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#ActivityHeartbeat",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS",
+        "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#executeWithHeartbeat"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
@@ -3745,14 +3751,15 @@
         "packages/@dvt/adapter-temporal/**"
       ],
       "architectureGuards": [
-        "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+        "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test",
+        "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
       ],
       "completionGate": [
         "pnpm docs:feature-mechanization:implementation",
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
-      "sourceContentSha256": "595ac0fbe4868d8d2cb04916e190e96d64fef9baa96ab2ad671cddd5b24892d2",
+      "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
       "rawRail": {
         "name": "WorkflowEngine.startRun",
         "type": "command",
@@ -4016,6 +4023,54 @@
             ],
             "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
             "architectureGuard": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          },
+          {
+            "name": "ActivityHeartbeat",
+            "path": "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/adapter-temporal/test/activities.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
+              "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+            ],
+            "fowlerSignals": [
+              "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+          },
+          {
+            "name": "STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS",
+            "path": "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/adapter-temporal/test/activities.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
+              "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+            ],
+            "fowlerSignals": [
+              "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+          },
+          {
+            "name": "executeWithHeartbeat",
+            "path": "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/adapter-temporal/test/activities.test.ts",
+              "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
+              "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+            ],
+            "fowlerSignals": [
+              "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
+            ],
+            "cypressCoverage": "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts",
+            "architectureGuard": "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
           }
         ],
         "version": 1,
@@ -4026,7 +4081,8 @@
         ],
         "domainObjects": ["DbtRuntimeProfile"],
         "fowlerSignals": [
-          "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup."
+          "The worker resolves DBT credentials at the last responsible moment and cancellation waits for secret cleanup.",
+          "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization:implementation",
@@ -4035,14 +4091,14 @@
         "redGreenCycles": [
           {
             "id": "workflowengine.startrun-record",
-            "redTest": "pnpm docs:feature-mechanization:implementation",
-            "greenTest": "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test",
+            "redTest": "pnpm --filter @dvt/adapter-temporal test:integration",
+            "greenTest": "pnpm --filter @dvt/adapter-temporal test:integration",
             "patchSurfaces": [
               "apps/temporal-worker/**",
               "packages/@dvt/temporal-dbt-plugin/**",
               "packages/@dvt/adapter-temporal/**"
             ],
-            "expectedFailure": "Issue 152 symbols are not owned by the existing WorkflowEngine.startRun rail."
+            "expectedFailure": "Temporal cancellation waits forever because active step activities do not heartbeat."
           }
         ],
         "componentGuides": [
@@ -4062,7 +4118,8 @@
           }
         ],
         "architectureGuards": [
-          "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test"
+          "pnpm --filter dvt-temporal-worker test && pnpm --filter @dvt/temporal-dbt-plugin test && pnpm --filter @dvt/adapter-temporal test",
+          "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
         "mechanizationStatus": "implemented",
@@ -4077,7 +4134,7 @@
           "tools/planning-db/migrations/**"
         ]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-03T09:20:16.818Z"
     },
@@ -29381,6 +29438,77 @@
         ]
       },
       "createdAt": "2026-08-03T09:20:18.418Z"
+    },
+    {
+      "operationId": "e43f4551-46cd-41ab-b846-5d617664e3b5",
+      "idempotencyKey": "mvp-152-temporal-step-heartbeat-v1",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-152-DBT-RUNTIME-SECRETS#command#workflowengine.startrun",
+      "sourcePath": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+      "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/adapter-temporal test:integration",
+        "dddOwner": "engine start-run lifecycle",
+        "railName": "WorkflowEngine.startRun",
+        "railType": "command",
+        "featureId": "MVP-152-DBT-RUNTIME-SECRETS",
+        "greenTest": "pnpm --filter @dvt/adapter-temporal test:integration",
+        "sourceRef": "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+        "unitTests": [
+          "packages/@dvt/adapter-temporal/test/activities.test.ts",
+          "packages/@dvt/adapter-temporal/test/workflow-step-activity-routing.test.ts",
+          "packages/@dvt/adapter-temporal/test/integration.time-skipping.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/152"],
+        "cypressFlows": [
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts"
+        ],
+        "domainObjects": ["DbtRuntimeProfile"],
+        "fowlerSignals": [
+          "Temporal activity heartbeats deliver cancellation before runtime credential cleanup becomes terminal."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Temporal cancellation waits forever because active step activities do not heartbeat.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/architecture/invariants/security-and-trust-invariants.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260803-dbt-runtime-credential-resolution.md",
+          "docs/risk-register/quality/R-20260803-DBT-RUNTIME-CREDENTIALS.yaml"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/adapter-temporal test && pnpm --filter @dvt/adapter-temporal test:integration"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/152",
+        "implementationRefs": [
+          "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#ActivityHeartbeat",
+          "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#STEP_ACTIVITY_HEARTBEAT_INTERVAL_MS",
+          "packages/@dvt/adapter-temporal/src/activities/activityFactory.ts#executeWithHeartbeat"
+        ],
+        "normalizedRailName": "workflowengine.startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "42293e5e786b9c371f9823c9199a4a99ce095f0d706eb18ab867e48c95a78d80",
+        "allowedImplementationSurfaces": ["packages/@dvt/adapter-temporal/**"],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-03T09:58:40.217Z"
     }
   ]
 }
