@@ -19,8 +19,11 @@ export type RecoverRunDecision =
   | Readonly<{ kind: 'dispatch' }>
   | Readonly<{ kind: 'reject'; reason: RunControlUnavailableReason }>;
 
-export function decideCancelRun(status: CanonicalRunStatus): CancelRunDecision {
-  if (status.status === 'PENDING') {
+export function decideCancelRun(
+  status: CanonicalRunStatus,
+  startDispatchConfirmed = false
+): CancelRunDecision {
+  if (status.status === 'PENDING' && !startDispatchConfirmed) {
     return { kind: 'reject', reason: 'dispatch_pending' };
   }
   if (status.status === 'CANCELLED') {
@@ -49,9 +52,10 @@ export function projectRunControlAvailability(
   status: CanonicalRunStatus,
   recoveryContextTrusted = true,
   recoveryPlanAvailable = true,
-  recoveryAdapterAvailable = true
+  recoveryAdapterAvailable = true,
+  cancelDispatchConfirmed = false
 ): RunControlAvailabilityDto {
-  const cancelDecision = decideCancelRun(status);
+  const cancelDecision = decideCancelRun(status, cancelDispatchConfirmed);
   const cancel: RunControlAvailabilityDto['cancel'] =
     cancelDecision.kind === 'dispatch'
       ? { available: true }

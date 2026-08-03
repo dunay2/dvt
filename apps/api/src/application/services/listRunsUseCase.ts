@@ -22,6 +22,7 @@ import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth } from './runOperationalTruth.js';
 import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
 import { resolveRunRecoveryPlanAvailability } from './runRecoveryPlanAvailability.js';
+import type { IRunStartDispatchResolver } from './runStartDispatchResolver.js';
 
 const RUN_STATUS_READ_CONCURRENCY = 8;
 const RUN_RECOVERY_PROJECTION_CONCURRENCY = 4;
@@ -35,7 +36,8 @@ export class ListRunsUseCase implements IListRunsUseCase {
     private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver,
     private readonly planStore?: RecoveryPlanReader,
     private readonly planIntegrityValidator?: IPlanIntegrityValidator,
-    private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry
+    private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry,
+    private readonly startDispatchResolver?: IRunStartDispatchResolver
   ) {}
 
   public async execute(
@@ -89,7 +91,7 @@ export class ListRunsUseCase implements IListRunsUseCase {
     item: RunMetadata,
     status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
   ): Promise<RunListItemDto> {
-    const [recoveryContextTrusted, recoveryPlanAvailable] = await Promise.all([
+    const [recoveryContextTrusted, recoveryPlanAvailable, startDispatch] = await Promise.all([
       resolveRunRecoveryContextTrust(
         this.executionContextReader,
         this.executionContextRequirementResolver,
@@ -97,6 +99,7 @@ export class ListRunsUseCase implements IListRunsUseCase {
         status
       ),
       resolveRunRecoveryPlanAvailability(this.planStore, this.planIntegrityValidator, item, status),
+      this.startDispatchResolver?.resolve(item, status),
     ]);
 
     return projectRunOperationalTruth({
@@ -106,6 +109,7 @@ export class ListRunsUseCase implements IListRunsUseCase {
       recoveryPlanAvailable,
       recoveryAdapterAvailable:
         this.targetAdapterRegistry?.isSupported(item.providerRef.provider) ?? false,
+      cancelDispatchConfirmed: startDispatch?.kind === 'confirmed' || status.status !== 'PENDING',
     });
   }
 

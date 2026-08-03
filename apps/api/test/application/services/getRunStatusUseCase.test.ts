@@ -73,6 +73,48 @@ function createStateStore(): {
 }
 
 describe('GetRunStatusUseCase', () => {
+  it('advertises cancellation when a pending run has confirmed provider dispatch', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({
+        runId: 'provider-run-1',
+        status: 'PENDING',
+      }),
+    };
+    const startDispatchResolver = {
+      resolve: vi.fn().mockResolvedValue({
+        kind: 'confirmed',
+        runRef: {
+          provider: 'temporal',
+          tenantId: 'tenant-a',
+          namespace: 'default',
+          workflowId: 'wf-1',
+          runId: 'provider-run-1',
+        },
+      }),
+    };
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      registeredTargetAdapterRegistry as never,
+      startDispatchResolver
+    );
+
+    const result = await useCase.execute(
+      { runId: 'run-1', enriched: false },
+      queryContext as never
+    );
+
+    expect(result.controls.cancel).toEqual({ available: true });
+    expect(startDispatchResolver.resolve).toHaveBeenCalledOnce();
+  });
+
   it('loads metadata and returns projected engine status with FRESH staleness', async () => {
     const engine = {
       async getRunStatus(runRef: unknown) {

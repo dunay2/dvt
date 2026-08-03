@@ -84,6 +84,31 @@ describe('CancelRunUseCase', () => {
     });
   });
 
+  it('cancels a pending run through its confirmed provider dispatch reference', async () => {
+    const dispatchedRunRef = {
+      ...RUN_METADATA.providerRef,
+      workflowId: 'actual-workflow',
+      runId: 'actual-provider-run',
+    };
+    const engine = {
+      cancelRun: vi.fn().mockResolvedValue(undefined),
+      getRunStatus: vi.fn().mockResolvedValue({ runId: 'run-1', status: 'PENDING' }),
+    };
+    const dispatchResolver = {
+      resolve: vi.fn().mockResolvedValue({ kind: 'confirmed', runRef: dispatchedRunRef }),
+    };
+    const useCase = new CancelRunUseCase(
+      engine as never,
+      createStateStore() as never,
+      dispatchResolver
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', signalType: 'CANCEL' }, commandContext)
+    ).resolves.toMatchObject({ accepted: true, disposition: 'requested' });
+    expect(engine.cancelRun).toHaveBeenCalledWith(dispatchedRunRef);
+  });
+
   it.each([
     ['RUNNING', 'CANCELLING', 'already_requested'],
     ['CANCELLED', undefined, 'already_cancelled'],

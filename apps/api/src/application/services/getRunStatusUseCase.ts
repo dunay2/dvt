@@ -32,6 +32,7 @@ import { projectRunOperationalTruth, sanitizeCanonicalRunStatus } from './runOpe
 import { deriveRunReadEvidenceModel } from './runReadEvidenceModel.js';
 import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
 import { resolveRunRecoveryPlanAvailability } from './runRecoveryPlanAvailability.js';
+import type { IRunStartDispatchResolver } from './runStartDispatchResolver.js';
 
 type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
 
@@ -68,7 +69,8 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     private readonly executionContextReader?: IRunExecutionContextReferenceReader,
     private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver,
     private readonly planIntegrityValidator?: IPlanIntegrityValidator,
-    private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry
+    private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry,
+    private readonly startDispatchResolver?: IRunStartDispatchResolver
   ) {}
 
   public async execute(
@@ -134,7 +136,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       runtimeAdapter: metadata.providerRef.provider,
       ...(planRecord === undefined ? {} : { planRecord }),
     });
-    const [recoveryContextTrusted, recoveryPlanAvailable] = await Promise.all([
+    const [recoveryContextTrusted, recoveryPlanAvailable, startDispatch] = await Promise.all([
       resolveRunRecoveryContextTrust(
         this.executionContextReader,
         this.executionContextRequirementResolver,
@@ -147,6 +149,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
         metadata,
         snapshot
       ),
+      this.startDispatchResolver?.resolve(metadata, snapshot),
     ]);
     const operationalTruth = projectRunOperationalTruth({
       metadata,
@@ -156,6 +159,7 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       recoveryPlanAvailable,
       recoveryAdapterAvailable:
         this.targetAdapterRegistry?.isSupported(metadata.providerRef.provider) ?? false,
+      cancelDispatchConfirmed: startDispatch?.kind === 'confirmed' || snapshot.status !== 'PENDING',
     });
 
     return {

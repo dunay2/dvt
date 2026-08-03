@@ -12,11 +12,13 @@ import {
 
 import { decideCancelRun } from './runControlPolicy.js';
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
+import type { IRunStartDispatchResolver } from './runStartDispatchResolver.js';
 
 export class CancelRunUseCase implements ICancelRunUseCase {
   public constructor(
     private readonly engine: IWorkflowEngine,
-    private readonly stateStore: IRunStateStoreRead
+    private readonly stateStore: IRunStateStoreRead,
+    private readonly startDispatchResolver?: IRunStartDispatchResolver
   ) {}
 
   public async execute(
@@ -31,13 +33,19 @@ export class CancelRunUseCase implements ICancelRunUseCase {
       throw new RunMetadataNotFoundError(command.runId);
     }
 
-    const runRef = runMetadataToEngineRunRef(metadata);
-    const status = await this.engine.getRunStatus(runRef);
-    const settledResult = resolveCancelDecision(command, status);
+    const persistedRunRef = runMetadataToEngineRunRef(metadata);
+    const status = await this.engine.getRunStatus(persistedRunRef);
+    const startDispatch = await this.resolveStartDispatch(metadata, status);
+    const settledResult = resolveCancelDecision(
+      command,
+      status,
+      startDispatch.kind === 'confirmed'
+    );
     if (settledResult !== undefined) {
       return settledResult;
     }
 
+    const runRef = startDispatch.kind === 'confirmed' ? startDispatch.runRef : persistedRunRef;
     try {
       await this.engine.cancelRun(runRef);
     } catch (providerFailure) {
@@ -57,6 +65,18 @@ export class CancelRunUseCase implements ICancelRunUseCase {
 
     return acceptedCancellation(command, 'requested');
   }
+
+  private async resolveStartDispatch(
+    metadata: Parameters<IRunStartDispatchResolver['resolve']>[0],
+    status: Parameters<IRunStartDispatchResolver['resolve']>[1]
+  ) {
+    if (this.startDispatchResolver) {
+      return this.startDispatchResolver.resolve(metadata, status);
+    }
+    return status.status === 'PENDING'
+      ? ({ kind: 'unconfirmed' } as const)
+      : ({ kind: 'confirmed', runRef: metadata.providerRef } as const);
+  }
 }
 
 function resolveReconciledCancelDecision(
@@ -75,9 +95,10 @@ function resolveReconciledCancelDecision(
 
 function resolveCancelDecision(
   command: CancelRunCommand,
-  status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>
+  status: Awaited<ReturnType<IWorkflowEngine['getRunStatus']>>,
+  startDispatchConfirmed: boolean
 ): CancelRunResult | undefined {
-  const decision = decideCancelRun(status);
+  const decision = decideCancelRun(status, startDispatchConfirmed);
   if (decision.kind === 'dispatch') {
     return undefined;
   }

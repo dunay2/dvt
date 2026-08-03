@@ -17,6 +17,7 @@ export interface ProjectRunOperationalTruthInput {
   readonly recoveryContextTrusted?: boolean;
   readonly recoveryPlanAvailable?: boolean;
   readonly recoveryAdapterAvailable?: boolean;
+  readonly cancelDispatchConfirmed?: boolean;
 }
 
 export function projectRunOperationalTruth(
@@ -54,7 +55,8 @@ export function projectRunOperationalTruth(
       status,
       input.recoveryContextTrusted ?? true,
       input.recoveryPlanAvailable ?? true,
-      input.recoveryAdapterAvailable ?? true
+      input.recoveryAdapterAvailable ?? true,
+      input.cancelDispatchConfirmed ?? false
     ),
   };
 }

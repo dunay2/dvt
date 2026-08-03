@@ -49,6 +49,51 @@ const registeredTargetAdapterRegistry = {
 };
 
 describe('ListRunsUseCase', () => {
+  it('advertises cancellation when a listed pending run has confirmed provider dispatch', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const startDispatchResolver = {
+      resolve: vi.fn().mockResolvedValue({
+        kind: 'confirmed',
+        runRef: metadata.providerRef,
+      }),
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'PENDING',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      registeredTargetAdapterRegistry as never,
+      startDispatchResolver
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.cancel).toEqual({ available: true });
+    expect(startDispatchResolver.resolve).toHaveBeenCalledOnce();
+  });
+
   it('filters by authorized scope and projects the same canonical operational truth as detail', async () => {
     const stateStore = {
       async listRuns() {

@@ -95,6 +95,19 @@ describe('projectRunOperationalTruth', () => {
     });
   });
 
+  it('advertises cancellation for a pending run only after provider dispatch is confirmed', () => {
+    expect(
+      projectRunOperationalTruth({
+        metadata,
+        status: {
+          runId: 'run-provider',
+          status: 'PENDING',
+        },
+        cancelDispatchConfirmed: true,
+      }).controls.cancel
+    ).toEqual({ available: true });
+  });
+
   it.each([
     ['RUNNING', undefined, true, undefined, false, 'run_active'],
     ['RUNNING', 'CANCELLING', false, 'cancellation_pending', false, 'run_active'],

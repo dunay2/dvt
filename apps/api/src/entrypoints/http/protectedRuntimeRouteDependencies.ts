@@ -17,6 +17,7 @@ import { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCas
 import { RecoverRunUseCase } from '../../application/services/recoverRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
 import { ResolveAuthorizedPreviewSelectionService } from '../../application/services/resolveAuthorizedPreviewSelection.js';
+import { RunStartDispatchResolver } from '../../application/services/runStartDispatchResolver.js';
 import { SignalRunUseCase } from '../../application/services/signalRunUseCase.js';
 import { StoredPlanRunExecutionContextRequirementResolver } from '../../application/services/StoredPlanRunExecutionContextRequirementResolver.js';
 import { ObservabilityRunStatusStalenessTelemetry } from '../../infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
@@ -50,6 +51,11 @@ export function buildProtectedRuntimeRouteDependencies(
     protectedModule.planStore,
     protectedModule.runExecutionContextBindingPolicy
   );
+  const idempotency = new IdempotencyKeyBuilder();
+  const startDispatchResolver = new RunStartDispatchResolver(
+    protectedModule.startRunIntentStore,
+    idempotency
+  );
   const getRunStatusUseCase = new GetRunStatusUseCase(
     protectedModule.engine,
     protectedModule.runEnrichmentService,
@@ -60,7 +66,8 @@ export function buildProtectedRuntimeRouteDependencies(
     protectedModule.runExecutionContextReferenceReader,
     executionContextRequirementResolver,
     protectedModule.planIntegrityValidator,
-    protectedModule.startRunTargetAdapterRegistry
+    protectedModule.startRunTargetAdapterRegistry,
+    startDispatchResolver
   );
   const previewPlanUseCase = new PreviewPlanUseCase({
     planner: {
@@ -83,7 +90,11 @@ export function buildProtectedRuntimeRouteDependencies(
   });
 
   return {
-    cancelRunUseCase: new CancelRunUseCase(protectedModule.engine, protectedModule.stateStore.read),
+    cancelRunUseCase: new CancelRunUseCase(
+      protectedModule.engine,
+      protectedModule.stateStore.read,
+      startDispatchResolver
+    ),
     compilePlanUseCase: new CompilePlanUseCase({ planner: protectedModule.planCompilePlanner }),
     getCostAttributionSummaryUseCase: new GetCostAttributionSummaryUseCase(
       protectedModule.stateStore.read
@@ -100,7 +111,8 @@ export function buildProtectedRuntimeRouteDependencies(
       executionContextRequirementResolver,
       protectedModule.planStore,
       protectedModule.planIntegrityValidator,
-      protectedModule.startRunTargetAdapterRegistry
+      protectedModule.startRunTargetAdapterRegistry,
+      startDispatchResolver
     ),
     previewPlanUseCase,
     recoverRunUseCase: new RecoverRunUseCase({
@@ -112,7 +124,7 @@ export function buildProtectedRuntimeRouteDependencies(
       commandCoordinator: protectedModule.runRecoveryCommandCoordinator,
       executionContextRequirementResolver,
       startRunIntentStore: protectedModule.startRunIntentStore,
-      idempotency: new IdempotencyKeyBuilder(),
+      idempotency,
     }),
     runtimeAuth,
     signalRunUseCase: new SignalRunUseCase(protectedModule.engine, protectedModule.stateStore.read),
