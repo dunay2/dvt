@@ -25,6 +25,16 @@ The API composition selects this adapter when `OBS_ENABLED=true` and reads:
 `/v1/traces` URL. `forceFlush()` and `shutdown()` are available on the concrete
 adapter for controlled proof and process-lifecycle composition.
 
+Run the controlled protected StartRun proof with:
+
+```bash
+pnpm --filter dvt-api proof:start-run-otel
+```
+
+The proof uses the production API, engine, and Temporal composition with an
+in-memory span exporter. It asserts trace parentage, bounded rejection, and the
+absence of request, plan-path, credential, SQL, and YAML data.
+
 References:
 
 - OpenTelemetry JS: https://opentelemetry.io/docs/languages/js/
