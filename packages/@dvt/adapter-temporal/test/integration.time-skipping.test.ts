@@ -153,7 +153,7 @@ function createBlockingExecutor(targetStepId: string): {
         markExecuting?.();
         const cancellationSignal = Context.current().cancellationSignal;
         await new Promise<void>((resolve, reject) => {
-          const onCancellation = () => {
+          const onCancellation = (): void => {
             cancellationSignal.removeEventListener('abort', onCancellation);
             reject(cancellationSignal.reason);
           };
