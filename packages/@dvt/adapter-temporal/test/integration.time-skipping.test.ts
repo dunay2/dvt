@@ -508,6 +508,7 @@ describe('temporal integration (time-skipping)', () => {
     'native Temporal handle cancellation preserves runtime-owned cancellation ordering',
     async () => {
       const plan = mkLinearPlan(10);
+      const blocker = createBlockingExecutor('s-1');
       const harness = await createSingleRunDbtTimeSkippingHarness({
         plan,
         planRefId: 'it-plan',
@@ -515,17 +516,14 @@ describe('temporal integration (time-skipping)', () => {
         taskQueue: 'dvt-it-time-skipping-native-cancel',
       });
       const { adapter, ctx, env, planRef, store } = harness;
-      const worker = await harness.startWorker();
+      const worker = await harness.startWorker({
+        stepExecutors: [blocker.executor, ...DEFAULT_STEP_EXECUTORS],
+      });
 
       try {
         const runRef = await adapter.startRun(planRef, ctx);
 
-        await waitForCondition(
-          () => store.listRunEvents(RunId.of(ctx.runId)),
-          (events) => events.some((event) => event.eventType === 'StepStarted'),
-          { timeoutMs: 30_000 }
-        );
-
+        await blocker.waitUntilExecuting;
         await env.client.workflow.getHandle(runRef.workflowId).cancel();
 
         await waitForCondition(
