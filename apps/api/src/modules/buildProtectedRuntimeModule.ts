@@ -225,6 +225,7 @@ export async function buildProtectedRuntimeModule(
       await securityRuntime.migrateAccessDecisionService();
       await securityRuntime.migrateProjectOnboardingRepository();
       await securityRuntime.migrateWorkspacePluginCatalogRepository();
+      await securityRuntime.ensureAuthAuditSchema();
       await migratePostgresRuntimeStores({
         stateStore: storageRuntime.stateStore,
         startRunIntentStore: storageRuntime.intentStore,

@@ -222,6 +222,8 @@ describe('Protected security access-decision architecture', () => {
     const securityRuntimeText = artifacts.buildProtectedSecurityRuntime.readText();
     expect(securityRuntimeText).toContain('new EmbeddedAccessDecisionService(');
     expect(securityRuntimeText).toContain('new StructuredAuditLogger(');
+    expect(securityRuntimeText).toContain('new PostgresAuthAuditAdapter(');
+    expect(securityRuntimeText).toContain('new CompositeAuthAuditPort(');
     expect(securityRuntimeText).toContain('new AuthorizeCommandScopeService(');
     expect(securityRuntimeText).toContain('new OidcAuthenticator(');
     expect(securityRuntimeText).toContain('migrateAccessDecisionService');

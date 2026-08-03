@@ -111,10 +111,12 @@ describe('AuthorizeCommandScopeService', () => {
     );
 
     expect(result).toEqual({ ok: false, reason: 'TOKEN_ASSERTION_CONFLICT' });
+    expect(auditEvents).toHaveLength(1);
     expect(auditEvents).toMatchObject([
       {
         eventType: 'AUTH_DENIED',
         action: 'run:start',
+        tenantId: 't1',
         denialReason: 'TOKEN_ASSERTION_CONFLICT',
       },
     ]);

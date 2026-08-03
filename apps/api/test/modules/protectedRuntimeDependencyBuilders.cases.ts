@@ -14,8 +14,7 @@ import {
 } from './modulesComponentDoc.support.js';
 
 const BUILD_PROTECTED_RUNTIME_MODULE_SOURCE = readModuleSource('buildProtectedRuntimeModule.ts');
-const PROTECTED_RUNTIME_BUILDERS_DOC =
-  'protected-runtime-dependency-builders-component.md';
+const PROTECTED_RUNTIME_BUILDERS_DOC = 'protected-runtime-dependency-builders-component.md';
 
 const PROTECTED_RUNTIME_BUILDER_CASES = [
   {
@@ -48,10 +47,7 @@ const PROTECTED_RUNTIME_BUILDER_CASES = [
     documentedFile: 'buildProtectedAdmissionRuntime.ts',
     importName: 'buildProtectedAdmissionRuntime',
     importPath: './protectedRuntime/buildProtectedAdmissionRuntime.js',
-    exportedIdentifiers: [
-      'BuildProtectedAdmissionRuntimeDeps',
-      'buildProtectedAdmissionRuntime',
-    ],
+    exportedIdentifiers: ['BuildProtectedAdmissionRuntimeDeps', 'buildProtectedAdmissionRuntime'],
     rootForbiddenConstructors: [
       'PostgresDuplicateRunProbe',
       'RawSqlBackpressureStore',
@@ -74,13 +70,12 @@ const PROTECTED_RUNTIME_BUILDER_CASES = [
     documentedFile: 'buildProtectedSecurityRuntime.ts',
     importName: 'buildProtectedSecurityRuntime',
     importPath: './protectedRuntime/buildProtectedSecurityRuntime.js',
-    exportedIdentifiers: [
-      'BuildProtectedSecurityRuntimeDeps',
-      'buildProtectedSecurityRuntime',
-    ],
+    exportedIdentifiers: ['BuildProtectedSecurityRuntimeDeps', 'buildProtectedSecurityRuntime'],
     rootForbiddenConstructors: [
       'EmbeddedAccessDecisionService',
       'StructuredAuditLogger',
+      'PostgresAuthAuditAdapter',
+      'CompositeAuthAuditPort',
       'AuthorizeCommandScopeService',
       'OidcAuthenticator',
       'JwksJwtVerifier',
@@ -88,6 +83,8 @@ const PROTECTED_RUNTIME_BUILDER_CASES = [
     ownedSnippets: [
       'new EmbeddedAccessDecisionService(',
       'new StructuredAuditLogger(',
+      'new PostgresAuthAuditAdapter(',
+      'new CompositeAuthAuditPort(',
       'new AuthorizeCommandScopeService(',
       'new OidcAuthenticator(',
       'new JwksJwtVerifier({',
@@ -113,10 +110,7 @@ const PROTECTED_RUNTIME_BUILDER_CASES = [
     documentedFile: 'buildProtectedExecutionRuntime.ts',
     importName: 'buildProtectedExecutionRuntime',
     importPath: './protectedRuntime/buildProtectedExecutionRuntime.js',
-    exportedIdentifiers: [
-      'BuildProtectedExecutionRuntimeDeps',
-      'buildProtectedExecutionRuntime',
-    ],
+    exportedIdentifiers: ['BuildProtectedExecutionRuntimeDeps', 'buildProtectedExecutionRuntime'],
     rootForbiddenConstructors: ['AllowAllAuthorizer'],
     ownedSnippets: [
       'const { adapters, close: closeAdapters } = await buildProviderAdapters(',
@@ -138,9 +132,7 @@ export function describeProtectedRuntimeDependencyBuildersCases(): void {
       expect(apiDocExists(PROTECTED_RUNTIME_BUILDERS_DOC)).toBe(true);
 
       const docText = readApiDoc(PROTECTED_RUNTIME_BUILDERS_DOC);
-      expect(
-        collectMissingTextSnippets(docText, REQUIRED_COMPONENT_GUIDE_SECTIONS)
-      ).toEqual([]);
+      expect(collectMissingTextSnippets(docText, REQUIRED_COMPONENT_GUIDE_SECTIONS)).toEqual([]);
       expect(hasMermaidDiagram(docText)).toBe(true);
 
       for (const runtimeBuilder of PROTECTED_RUNTIME_BUILDER_CASES) {
@@ -178,7 +170,9 @@ export function describeProtectedRuntimeDependencyBuildersCases(): void {
         ).toBe(true);
 
         for (const constructorName of runtimeBuilder.rootForbiddenConstructors) {
-          expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE.hasNewExpression(constructorName)).toBe(false);
+          expect(BUILD_PROTECTED_RUNTIME_MODULE_SOURCE.hasNewExpression(constructorName)).toBe(
+            false
+          );
         }
       }
     });
@@ -200,9 +194,7 @@ export function describeProtectedRuntimeDependencyBuildersCases(): void {
       );
 
       expect(executionRuntimeSource.sourceText).not.toContain('AllowAllAuthorizer');
-      expect(executionRuntimeSource.sourceText).toContain(
-        'new ProtectedRuntimeTenantAuthorizer()'
-      );
+      expect(executionRuntimeSource.sourceText).toContain('new ProtectedRuntimeTenantAuthorizer()');
     });
   });
 }

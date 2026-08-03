@@ -22,6 +22,7 @@ describe('buildApp protected runtime composition', () => {
           await app.ready();
 
           expect(migrationCalls()).toEqual({
+            authAuditSchema: 1,
             accessDecision: 1,
             projectOnboarding: 1,
             workspacePluginCatalog: 1,
