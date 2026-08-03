@@ -70,6 +70,7 @@ function createApiError(
 
 describe('runsService runtime contract', () => {
   beforeEach(() => {
+    localStorage.clear();
     useSessionStore.setState({
       tenantId: 'tenant-1',
       projectId: 'project-1',
@@ -243,7 +244,7 @@ describe('runsService runtime contract', () => {
     );
   });
 
-  it('reuses the recovery command identity after a lost response', async () => {
+  it('reuses the recovery command identity after a lost response and browser reload', async () => {
     const apiClient = createApiClientMock();
     vi.mocked(apiClient.postJson)
       .mockRejectedValueOnce(new Error('connection reset after dispatch'))
@@ -253,10 +254,12 @@ describe('runsService runtime contract', () => {
         recoveryRunId: 'run_recovery',
         accepted: true,
       });
-    const service = createRunsService(apiClient);
+    const serviceBeforeReload = createRunsService(apiClient);
 
-    await expect(service.recoverRun('run_failed')).rejects.toThrow('connection reset');
-    await expect(service.recoverRun('run_failed')).resolves.toMatchObject({
+    await expect(serviceBeforeReload.recoverRun('run_failed')).rejects.toThrow('connection reset');
+
+    const serviceAfterReload = createRunsService(apiClient);
+    await expect(serviceAfterReload.recoverRun('run_failed')).resolves.toMatchObject({
       recoveryRunId: 'run_recovery',
     });
 

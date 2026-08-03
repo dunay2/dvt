@@ -19,6 +19,7 @@ import { normalizeProtectedRuntimeRejection } from '../api/protectedRuntimeRejec
 import { createBrowserIdempotencyKey } from '../idempotency/createBrowserIdempotencyKey';
 import { createSessionContextPort } from '../session/sessionContextPort';
 import { parseCancelRunReceipt, parseRecoverRunReceipt } from './runsApiControlReceipts';
+import type { RecoveryIdempotencyKeyStore } from './recoveryIdempotencyKeyStore';
 import {
   extractEventsPayload,
   extractRunListPayload,
@@ -76,9 +77,9 @@ function parseRunStartReceipt(input: unknown): RunStartReceipt {
 
 export function createApiRunsService(
   apiClient: ApiClient,
-  sessionContext: SessionContextPort = createSessionContextPort()
+  sessionContext: SessionContextPort = createSessionContextPort(),
+  recoveryIdempotencyKeyStore: RecoveryIdempotencyKeyStore
 ): IRunsPort {
-  const recoveryIdempotencyKeys = new Map<string, string>();
   async function getRunSnapshotById(runId: string): Promise<RunSnapshot | null> {
     try {
       const scopeQuery = buildTenantScopeQuery(sessionContext, false);
@@ -116,9 +117,11 @@ export function createApiRunsService(
     },
     recoverRun: async (runId) => {
       const { tenantId } = sessionContext.getWorkspaceScope();
+      const recoveryIdentity = { tenantId, runId };
       const idempotencyKey =
-        recoveryIdempotencyKeys.get(runId) ?? createBrowserIdempotencyKey('recover-run');
-      recoveryIdempotencyKeys.set(runId, idempotencyKey);
+        recoveryIdempotencyKeyStore.get(recoveryIdentity) ??
+        createBrowserIdempotencyKey('recover-run');
+      recoveryIdempotencyKeyStore.set(recoveryIdentity, idempotencyKey);
       try {
         const payload = await apiClient.postJson<{ tenantId: string }, unknown>(
           `/runs/${runId}/recover`,
@@ -126,11 +129,11 @@ export function createApiRunsService(
           { headers: { 'Idempotency-Key': idempotencyKey } }
         );
         const receipt = parseRecoverRunReceipt(payload);
-        recoveryIdempotencyKeys.delete(runId);
+        recoveryIdempotencyKeyStore.delete(recoveryIdentity);
         return receipt;
       } catch (error) {
         const rejection = normalizeProtectedRuntimeRejection(error);
-        if (rejection !== null) recoveryIdempotencyKeys.delete(runId);
+        if (rejection !== null) recoveryIdempotencyKeyStore.delete(recoveryIdentity);
         throw rejection ?? error;
       }
     },
