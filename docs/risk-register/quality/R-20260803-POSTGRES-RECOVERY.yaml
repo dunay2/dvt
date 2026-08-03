@@ -1,0 +1,26 @@
+---
+id: R-20260803-POSTGRES-RECOVERY
+title: PostgreSQL interruption could strand workers or diverge run snapshots
+status: Closed
+date: 2026-08-03
+owners:
+  - packages/@dvt/adapter-postgres
+  - apps/outbox-worker
+  - apps/projector-worker
+severity: High
+probability: Low
+context: >
+  The supported runtime persists state and outbox records in PostgreSQL while standalone workers own
+  delivery and projection responsibilities.
+risk: >
+  An idle pool or dedicated ownership connection can fail asynchronously during a connectivity
+  interruption, terminating a process or leaving delivery and projection stopped after the database
+  returns.
+mitigations:
+  - 'Observe idle PostgreSQL pool errors at every production composition boundary.'
+  - 'Convert dedicated ownership-client interruption into explicit ownership loss.'
+  - 'Supervise and restart outbox and projector workers after PostgreSQL recovery.'
+  - 'Require backlog drain, ordered event delivery, and canonical replay equality.'
+  - 'Enforce measured recovery, latency, throughput, and projection-freshness budgets.'
+review_after: 2026-11-03
+---

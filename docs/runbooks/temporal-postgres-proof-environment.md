@@ -2,7 +2,7 @@
 title: Temporal Postgres Proof Environment
 status: Active
 owner: Runtime / Delivery / Docs
-last_reviewed: 2026-04-13
+last_reviewed: 2026-08-03
 ---
 
 # Temporal Postgres Proof Environment
@@ -45,6 +45,19 @@ the Docker volume first:
 ```bash
 pnpm proof:temporal:postgres:test
 ```
+
+Run the supported end-to-end runtime capacity and bounded-recovery proof:
+
+```bash
+pnpm proof:supported-runtime
+```
+
+This is the canonical acceptance command for the protected API through
+Temporal, PostgreSQL state/outbox, standalone outbox/projector processing, and
+authoritative run snapshot. It runs three repetitions of steady-state,
+worker-interruption, and PostgreSQL-interruption scenarios. Numeric budgets
+live only in
+`scripts/supported-runtime-proof/runtime-proof-profile.cjs`.
 
 Tear the environment down and remove the Docker volume:
 
@@ -105,6 +118,15 @@ binary is available.
 
 ## Canonical Repeatability Flow
 
+For the complete supported runtime proof:
+
+```bash
+pnpm proof:supported-runtime -- --output .dvt/proofs/supported-runtime.json
+```
+
+The generated JSON reports the first failed invariant and the measurements for
+every repetition. It is a local proof artifact and is not committed.
+
 For a full cold rerun:
 
 ```bash
@@ -131,6 +153,10 @@ pnpm proof:temporal:postgres:test
   [package.json](../../package.json)
 - Wrapper implementation:
   [scripts/run-temporal-postgres-proof.cjs](../../scripts/run-temporal-postgres-proof.cjs)
+- Supported runtime proof:
+  [scripts/run-supported-runtime-proof.cjs](../../scripts/run-supported-runtime-proof.cjs)
+- Versioned workload and budgets:
+  [scripts/supported-runtime-proof/runtime-proof-profile.cjs](../../scripts/supported-runtime-proof/runtime-proof-profile.cjs)
 
 ## Failure Signals
 
@@ -147,6 +173,8 @@ pnpm proof:temporal:postgres:test
   reports the leftover schema names.
 - If the Temporal Postgres capability test fails, the wrapper returns the
   failing test exit code without hiding it.
+- If a supported runtime invariant fails, the proof command exits nonzero and
+  records the first failed invariant in its JSON artifact.
 
 ## Related Docs
 
