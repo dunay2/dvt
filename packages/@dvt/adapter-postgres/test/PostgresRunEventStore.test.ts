@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { RunEventStoragePort } from '../src/PostgresRunEventStorage.js';
 import { PostgresRunEventStore } from '../src/PostgresRunEventStore.js';
-import { maxRunSeqSql, selectExistingEventSql } from '../src/PostgresRunEventStoreSql.js';
+import {
+  hasEventByIdempotencyKeySql,
+  maxRunSeqSql,
+  selectExistingEventSql,
+} from '../src/PostgresRunEventStoreSql.js';
 import {
   InvalidRunSequenceValueError,
   RUN_EVENT_STORE_ERROR_CODE,
@@ -106,6 +110,14 @@ class InMemoryRunEventStorage implements RunEventStoragePort {
   ): Promise<EventEnvelope | null> {
     this.dedupeReads.push({ tenantId, runId, idempotencyKey });
     return this.byRunAndIdempotency.get(this.key(runId, idempotencyKey)) ?? null;
+  }
+
+  async hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean> {
+    return this.byRunAndIdempotency.get(this.key(runId, idempotencyKey))?.tenantId === tenantId;
   }
 
   async listEvents(): Promise<EventEnvelope[]> {
@@ -467,6 +479,30 @@ describe('PostgresRunEventStore append invariants', () => {
       },
     ]);
   });
+
+  it('queries receipt existence through the idempotency index without loading events', async () => {
+    const storage = new InMemoryRunEventStorage();
+    const { store, executor } = makeAppendStoreHarness(storage);
+    const idempotencyKey = `${TEST_RUN_ID}:cancel-submitted`;
+
+    await expect(
+      store.hasEventByIdempotencyKey(TEST_TENANT_ID, TEST_RUN_ID, idempotencyKey)
+    ).resolves.toBe(false);
+    await store.append(executor, TEST_TENANT_ID, TEST_RUN_ID, [
+      makeEvent({
+        runId: TEST_RUN_ID,
+        idempotencyKey,
+        eventType: 'RunCancelSubmitted',
+      }),
+    ]);
+
+    await expect(
+      store.hasEventByIdempotencyKey(TEST_TENANT_ID, TEST_RUN_ID, idempotencyKey)
+    ).resolves.toBe(true);
+    await expect(
+      store.hasEventByIdempotencyKey(TEST_OTHER_TENANT_ID, TEST_RUN_ID, idempotencyKey)
+    ).resolves.toBe(false);
+  });
 });
 
 describe('PostgresRunEventStore listEvents policy', () => {
@@ -501,6 +537,10 @@ describe('PostgresRunEventStore SQL tenant predicates', () => {
     expect(normalizeSql(selectExistingEventSql(TEST_SCHEMA))).toContain(
       'WHERE tenant_id = $1 AND run_id = $2 AND idempotency_key = $3'
     );
+    expect(normalizeSql(hasEventByIdempotencyKeySql(TEST_SCHEMA))).toContain(
+      'WHERE tenant_id = $1 AND run_id = $2 AND idempotency_key = $3'
+    );
+    expect(normalizeSql(hasEventByIdempotencyKeySql(TEST_SCHEMA))).toContain('SELECT EXISTS');
   });
 });
 

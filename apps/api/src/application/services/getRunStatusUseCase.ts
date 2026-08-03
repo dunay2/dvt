@@ -1,3 +1,4 @@
+import type { IStoredPlanArtifactReader, IStoredPlanRefReader } from '@dvt/artifacts';
 import type {
   EventEnvelope,
   PlanRecord,
@@ -7,11 +8,18 @@ import type {
 } from '@dvt/contracts';
 import {
   RunMetadataNotFoundError,
+  type IPlanIntegrityValidator,
   type IRunEnrichmentService,
   type IRunStateStoreRead,
   type IWorkflowEngine,
 } from '@dvt/engine';
+import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
+import type { IStartRunTargetAdapterRegistry } from '../ports/IStartRunTargetAdapterRegistry.js';
+import type { IRunCancellationReceiptStore } from '../ports/runCancellationReceiptStore.js';
+import { toRunCancellationReceiptKey } from '../ports/runCancellationReceiptStore.js';
+import type { IRunExecutionContextReferenceReader } from '../ports/runExecutionContextReferenceReader.js';
+import type { IRunExecutionContextRequirementResolver } from '../ports/runExecutionContextRequirementResolver.js';
 import type {
   AuthorizedQueryExecutionContext,
   GetRunStatusQuery,
@@ -22,9 +30,13 @@ import type {
   RunSnapshotStaleness,
 } from '../ports/runtime.js';
 
+import { cancellationReceiptCanAffectAvailability } from './runControlPolicy.js';
 import { runMetadataToEngineRunRef } from './runMetadataToEngineRunRef.js';
 import { projectRunOperationalTruth, sanitizeCanonicalRunStatus } from './runOperationalTruth.js';
 import { deriveRunReadEvidenceModel } from './runReadEvidenceModel.js';
+import { resolveRunRecoveryContextTrust } from './runRecoveryContextTrust.js';
+import { resolveRunRecoveryPlanEvidence } from './runRecoveryPlanAvailability.js';
+import type { IRunStartDispatchResolver } from './runStartDispatchResolver.js';
 
 type SnapshotStalenessFallbackReason = 'query_not_wired' | 'query_failed';
 
@@ -33,7 +45,7 @@ interface SnapshotStalenessResolution {
   fallbackReason?: SnapshotStalenessFallbackReason;
 }
 
-interface PlanRecordReader {
+interface RunPlanReader extends Partial<IStoredPlanRefReader>, Partial<IStoredPlanArtifactReader> {
   getPlanRecord(input: ScopedPlanId): Promise<PlanRecord | undefined>;
 }
 
@@ -57,7 +69,14 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
     private readonly stateStore: IRunStateStoreRead,
     private readonly stalenessReader?: IRunSnapshotStalenessReader,
     private readonly stalenessTelemetry?: IRunStatusStalenessTelemetry,
-    private readonly planStore?: PlanRecordReader
+    private readonly planStore?: RunPlanReader,
+    private readonly executionContextReader?: IRunExecutionContextReferenceReader,
+    private readonly executionContextRequirementResolver?: IRunExecutionContextRequirementResolver,
+    private readonly planIntegrityValidator?: IPlanIntegrityValidator,
+    private readonly targetAdapterRegistry?: IStartRunTargetAdapterRegistry,
+    private readonly startDispatchResolver?: IRunStartDispatchResolver,
+    private readonly cancellationReceipts?: IRunCancellationReceiptStore,
+    private readonly planExecutabilityValidator?: IPlanExecutabilityValidator
   ) {}
 
   public async execute(
@@ -123,10 +142,38 @@ export class GetRunStatusUseCase implements IGetRunStatusUseCase {
       runtimeAdapter: metadata.providerRef.provider,
       ...(planRecord === undefined ? {} : { planRecord }),
     });
+    const recoveryPlan = await resolveRunRecoveryPlanEvidence(
+      this.planStore,
+      this.planIntegrityValidator,
+      metadata,
+      snapshot,
+      {
+        targetAdapterRegistry: this.targetAdapterRegistry,
+        planExecutabilityValidator: this.planExecutabilityValidator,
+      }
+    );
+    const [recoveryContextTrusted, startDispatch, cancellationAccepted] = await Promise.all([
+      resolveRunRecoveryContextTrust(
+        this.executionContextReader,
+        this.executionContextRequirementResolver,
+        metadata,
+        snapshot,
+        recoveryPlan.planRef
+      ),
+      this.startDispatchResolver?.resolve(metadata, snapshot),
+      this.cancellationReceipts !== undefined && cancellationReceiptCanAffectAvailability(snapshot)
+        ? this.cancellationReceipts.hasAccepted(toRunCancellationReceiptKey(metadata))
+        : false,
+    ]);
     const operationalTruth = projectRunOperationalTruth({
       metadata,
       status: snapshot,
       evidence: evidenceModel,
+      recoveryContextTrusted,
+      recoveryPlanAvailable: recoveryPlan.available,
+      recoveryAdapterAvailable: recoveryPlan.adapterAvailable,
+      cancelDispatchConfirmed: startDispatch?.kind === 'confirmed' || snapshot.status !== 'PENDING',
+      cancellationAccepted,
     });
 
     return {

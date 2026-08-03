@@ -37,6 +37,10 @@ Scenario coverage is tracked in
 - `assertStartRunAllowed(planRef, context)`
   Validates tenant/run preconditions and rate limits before deeper execution
   policy checks.
+- `assertPreparedRunAllowed(planRef, context)`
+  Revalidates access, plan, schema, run identity, and rate limits for a recovery
+  child already atomically prepared by the state store. It requires the child
+  metadata to exist and does not create a second recovery attempt.
 - `resolveAdapter(context)`
   Resolves the provider adapter selected by the run context or fails closed
   when the adapter is not registered.
@@ -54,6 +58,8 @@ Scenario coverage is tracked in
 ## Invariants
 
 - Start-run admission is pre-dispatch. It must run before provider handoff.
+- Prepared recovery admission must preserve the same fail-closed policy while
+  accepting only an existing, identity-matched recovery child.
 - `StartRunApplicationService` depends on `IStartRunAdmissionService`, not on
   the concrete admission construction graph.
 - `StartRunAdmissionService` owns scoped plan-ref conversion and plan integrity

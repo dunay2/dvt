@@ -55,6 +55,17 @@ export interface ReconcileOrphanedIntentsResult {
   deferred: string[];
 }
 
+export interface ReconcileStartRunIntentOptions {
+  tenantId: string;
+  intentId: string;
+}
+
+export type ReconcileStartRunIntentResult =
+  | Readonly<{ kind: 'confirmed' }>
+  | Readonly<{ kind: 'ready_to_dispatch' }>
+  | Readonly<{ kind: 'missing' }>
+  | Readonly<{ kind: 'blocked' }>;
+
 export interface IRunMaintenanceService {
   detectStuckRuns(options: DetectStuckRunsOptions): Promise<DetectStuckRunsResult>;
   detectStuckCancellingRuns(
@@ -63,4 +74,7 @@ export interface IRunMaintenanceService {
   reconcileOrphanedIntents(
     options: ReconcileOrphanedIntentsOptions
   ): Promise<ReconcileOrphanedIntentsResult>;
+  reconcileStartRunIntent(
+    options: ReconcileStartRunIntentOptions
+  ): Promise<ReconcileStartRunIntentResult>;
 }

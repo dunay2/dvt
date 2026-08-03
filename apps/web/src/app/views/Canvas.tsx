@@ -26,6 +26,7 @@ import {
 } from './canvas/canvasLegacyRouteIntent';
 import { resolveCanvasViewCopy } from './canvas/canvasCopyCatalog';
 import type { CanvasShellRouteIntentRequest } from './canvas/canvasShell.types';
+import { useCanvasRunControlSurface } from './canvas/useCanvasRunControlSurface';
 
 function GraphDraftCanvasContent({
   onDbtProjectImported,
@@ -37,6 +38,10 @@ function GraphDraftCanvasContent({
   const reactFlow = useReactFlow<Node, Edge>();
   const warehouseSourceImport = useWarehouseSourceImportPort();
   const controller = useCanvasController();
+  const runControls = useCanvasRunControlSurface(
+    controller.workspaceLayoutKey,
+    controller.activeRunId
+  );
   const routeViewState = deriveCanvasRouteViewState(controller);
   const { presentationState } = routeViewState;
 
@@ -45,6 +50,7 @@ function GraphDraftCanvasContent({
   const shellProps = buildCanvasShellProps({
     controller,
     routeViewState,
+    runControls,
   });
   const modalHostProps = buildCanvasModalHostProps(controller);
 

@@ -16,7 +16,8 @@ import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
-  RetryAttemptReservation,
+  RecoveryRunBootstrapFactory,
+  RecoveryRunBootstrapResult,
   RunBootstrapInput,
 } from '../ports/IRunStateStore.js';
 
@@ -45,6 +46,14 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     return this.runState.getRunMetadataByRunId(tenantId, runId);
   }
 
+  hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean> {
+    return this.runState.hasEventByIdempotencyKey(tenantId, runId, idempotencyKey);
+  }
+
   saveProviderRef(
     tenantId: string,
     runId: string,
@@ -55,6 +64,14 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
 
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult> {
     return this.runState.bootstrapRunTx(input);
+  }
+
+  bootstrapRecoveryRunTx(
+    tenantId: string,
+    sourceRunId: string,
+    buildInput: RecoveryRunBootstrapFactory
+  ): Promise<RecoveryRunBootstrapResult> {
+    return this.runState.bootstrapRecoveryRunTx(tenantId, sourceRunId, buildInput);
   }
 
   appendAndEnqueueTx(runId: string, eventsToAppend: EventInput[]): Promise<AppendResult> {
@@ -124,9 +141,5 @@ export class InMemoryTxStore implements IRunStateStore, IRunSnapshotStalenessQue
     options: Parameters<IOutboxStorage['replayDeadLetters']>[0]
   ): Promise<number> {
     return this.outbox.replayDeadLetters(options);
-  }
-
-  reserveRetryAttempt(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation> {
-    return this.runState.reserveRetryAttempt(tenantId, sourceRunId);
   }
 }

@@ -242,26 +242,50 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
       );
     }));
 
-  test('reserveRetryAttempt: allocates monotonic logical attempts from the origin run', () =>
+  test('bootstrapRecoveryRunTx: allocates monotonic logical attempts from the origin run', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-retry-root'));
 
-      const first = await adapter.reserveRetryAttempt('t1', rid('run-retry-root'));
-      const second = await adapter.reserveRetryAttempt('t1', rid('run-retry-root'));
+      const first = await adapter.bootstrapRecoveryRunTx(
+        't1',
+        rid('run-retry-root'),
+        (reservation) => ({
+          metadata: {
+            ...makeBootstrap('run-retry-child-1').metadata,
+            logicalAttemptId: reservation.logicalAttemptId,
+            parentRunId: reservation.parentRunId,
+            originRunId: reservation.originRunId,
+          },
+          firstEvents: [],
+        })
+      );
+      const second = await adapter.bootstrapRecoveryRunTx(
+        't1',
+        rid('run-retry-root'),
+        (reservation) => ({
+          metadata: {
+            ...makeBootstrap('run-retry-child-2').metadata,
+            logicalAttemptId: reservation.logicalAttemptId,
+            parentRunId: reservation.parentRunId,
+            originRunId: reservation.originRunId,
+          },
+          firstEvents: [],
+        })
+      );
 
-      expect(first).toEqual({
+      expect(first.reservation).toEqual({
         parentRunId: 'run-retry-root',
         originRunId: 'run-retry-root',
         logicalAttemptId: 2,
       });
-      expect(second).toEqual({
+      expect(second.reservation).toEqual({
         parentRunId: 'run-retry-root',
         originRunId: 'run-retry-root',
         logicalAttemptId: 3,
       });
     }));
 
-  test('reserveRetryAttempt: keeps originRunId stable across recovered children', () =>
+  test('bootstrapRecoveryRunTx: keeps originRunId stable across recovered children', () =>
     withAdapter(async (adapter) => {
       await adapter.bootstrapRunTx(makeBootstrap('run-retry-chain-root'));
       await adapter.bootstrapRunTx({
@@ -274,8 +298,20 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         firstEvents: [],
       });
 
-      const reserved = await adapter.reserveRetryAttempt('t1', rid('run-retry-chain-child'));
-      expect(reserved).toEqual({
+      const prepared = await adapter.bootstrapRecoveryRunTx(
+        't1',
+        rid('run-retry-chain-child'),
+        (reservation) => ({
+          metadata: {
+            ...makeBootstrap('run-retry-chain-grandchild').metadata,
+            logicalAttemptId: reservation.logicalAttemptId,
+            parentRunId: reservation.parentRunId,
+            originRunId: reservation.originRunId,
+          },
+          firstEvents: [],
+        })
+      );
+      expect(prepared.reservation).toEqual({
         parentRunId: 'run-retry-chain-child',
         originRunId: 'run-retry-chain-root',
         logicalAttemptId: 3,
@@ -287,6 +323,40 @@ describeIfPg('adapter-postgres integration (real PostgreSQL)', () => {
         logicalAttemptId: 2,
         parentRunId: 'run-retry-chain-root',
         originRunId: 'run-retry-chain-root',
+      });
+    }));
+
+  test('bootstrapRecoveryRunTx: rolls back lineage when child bootstrap fails', () =>
+    withAdapter(async (adapter) => {
+      await adapter.bootstrapRunTx(makeBootstrap('run-recovery-atomic-root'));
+
+      await expect(
+        adapter.bootstrapRecoveryRunTx('t1', rid('run-recovery-atomic-root'), () => {
+          throw new Error('simulated bootstrap failure');
+        })
+      ).rejects.toThrow('simulated bootstrap failure');
+
+      const prepared = await adapter.bootstrapRecoveryRunTx(
+        't1',
+        rid('run-recovery-atomic-root'),
+        (reservation) => ({
+          metadata: {
+            ...makeBootstrap('run-recovery-atomic-child').metadata,
+            logicalAttemptId: reservation.logicalAttemptId,
+            parentRunId: reservation.parentRunId,
+            originRunId: reservation.originRunId,
+          },
+          firstEvents: [],
+        })
+      );
+
+      expect(prepared.reservation.logicalAttemptId).toBe(2);
+      await expect(
+        adapter.getRunMetadataByRunId('t1', 'run-recovery-atomic-child')
+      ).resolves.toMatchObject({
+        logicalAttemptId: 2,
+        parentRunId: 'run-recovery-atomic-root',
+        originRunId: 'run-recovery-atomic-root',
       });
     }));
 

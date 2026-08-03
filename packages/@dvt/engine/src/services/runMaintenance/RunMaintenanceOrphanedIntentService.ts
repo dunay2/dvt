@@ -14,6 +14,10 @@ type ReconcileOrphanedIntentsOptions =
   import('../../ports/IRunMaintenanceService.js').ReconcileOrphanedIntentsOptions;
 type ReconcileOrphanedIntentsResult =
   import('../../ports/IRunMaintenanceService.js').ReconcileOrphanedIntentsResult;
+type ReconcileStartRunIntentOptions =
+  import('../../ports/IRunMaintenanceService.js').ReconcileStartRunIntentOptions;
+type ReconcileStartRunIntentResult =
+  import('../../ports/IRunMaintenanceService.js').ReconcileStartRunIntentResult;
 type OrphanedIntent = import('./RunMaintenanceContracts.js').OrphanedIntent;
 type ReconcileOrphanedIntentOutcome =
   import('./RunMaintenanceContracts.js').ReconcileOrphanedIntentOutcome;
@@ -31,6 +35,7 @@ export class RunMaintenanceOrphanedIntentService {
       adapters: this.deps.adapters,
       intentStore: this.deps.intentStore,
       stateStoreRead: this.deps.stateStoreRead,
+      stateStoreWrite: this.deps.stateStoreWrite,
       observability: this.observability,
     });
     this.dispatchedPolicy = new DispatchedIntentReconciliationPolicy({
@@ -73,9 +78,25 @@ export class RunMaintenanceOrphanedIntentService {
       if (outcome.cancelled !== undefined) cancelled.push(outcome.cancelled);
       if (outcome.cancelFailed !== undefined) cancelFailed.push(outcome.cancelFailed);
       if (outcome.deferred !== undefined) deferred.push(outcome.deferred);
+      if (outcome.readyToDispatch !== undefined) deferred.push(outcome.readyToDispatch);
     }
 
     return { inspected: orphaned.length, expired, resolved, cancelled, cancelFailed, deferred };
+  }
+
+  async reconcileStartRunIntent(
+    options: ReconcileStartRunIntentOptions
+  ): Promise<ReconcileStartRunIntentResult> {
+    await this.deps.authorizer.assertTenantAccess(options.tenantId);
+    const intent = await this.deps.intentStore.getIntent(options);
+    if (intent === null) return { kind: 'missing' };
+    if (intent.status === 'RESOLVED') return { kind: 'confirmed' };
+    if (intent.status === 'EXPIRED') return { kind: 'blocked' };
+
+    const outcome = await this.reconcileIntent(intent, buildMaintenanceContext(options.tenantId));
+    if (outcome.resolved !== undefined) return { kind: 'confirmed' };
+    if (outcome.readyToDispatch !== undefined) return { kind: 'ready_to_dispatch' };
+    return { kind: 'blocked' };
   }
 
   private reconcileIntent(

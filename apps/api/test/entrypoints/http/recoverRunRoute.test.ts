@@ -65,11 +65,11 @@ function createDeps(): {
       }),
     },
     useCase: {
-      execute: vi.fn().mockResolvedValue({
-        sourceRunId: 'source-run-1',
-        recoveryRunId: 'recovery-run-1',
+      execute: vi.fn(async (command: { sourceRunId: string; recoveryRunId: string }) => ({
+        contractVersion: 'v1',
+        ...command,
         accepted: true,
-      }),
+      })),
     },
   };
 }
@@ -82,18 +82,10 @@ describe('recoverRunRoute', () => {
     await recoverRunRoute(
       {
         id: 'req-1',
-        headers: {},
+        headers: { 'idempotency-key': 'recover-source-1' },
         params: { runId: 'source-run-1' },
         body: {
           tenantId: 'tenant-a',
-          recoveryRunId: 'recovery-run-1',
-          planRef: {
-            uri: 'https://plans.example/plan.json',
-            sha256: 'a'.repeat(64),
-            schemaVersion: 'v1.0',
-            planId: 'plan-a',
-            planVersion: '1.0.0',
-          },
         },
       } as never,
       reply as never,
@@ -108,13 +100,30 @@ describe('recoverRunRoute', () => {
       'req-1'
     );
     expect(deps.useCase.execute).toHaveBeenCalledWith(
-      expect.objectContaining({
+      {
         sourceRunId: 'source-run-1',
-        recoveryRunId: 'recovery-run-1',
-      }),
+        recoveryRunId: expect.stringMatching(/^run_recovery_[a-f0-9]{40}$/),
+      },
       expect.anything()
     );
     expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
+  });
+
+  it('reuses the server-owned recovery identity for repeated deliveries', async () => {
+    const deps = createDeps();
+    const request = {
+      id: 'req-repeat',
+      headers: { 'idempotency-key': 'recover-source-1' },
+      params: { runId: 'source-run-1' },
+      body: { tenantId: 'tenant-a' },
+    } as never;
+
+    await recoverRunRoute(request, createReply() as never, deps as never);
+    await recoverRunRoute(request, createReply() as never, deps as never);
+
+    expect(deps.useCase.execute.mock.calls[0]?.[0]).toEqual(
+      deps.useCase.execute.mock.calls[1]?.[0]
+    );
   });
 
   it('returns 400 for invalid request payload', async () => {
@@ -124,19 +133,11 @@ describe('recoverRunRoute', () => {
     await recoverRunRoute(
       {
         id: 'req-2',
-        headers: {},
+        headers: { 'idempotency-key': 'recover-source-1' },
         params: { runId: 'source-run-1' },
         body: {
           tenantId: 'tenant-a',
-          recoveryRunId: 'recovery-run-1',
           targetAdapter: 'invalid',
-          planRef: {
-            uri: 'https://plans.example/plan.json',
-            sha256: 'a'.repeat(64),
-            schemaVersion: 'v1.0',
-            planId: 'plan-a',
-            planVersion: '1.0.0',
-          },
         },
       } as never,
       reply as never,
@@ -145,7 +146,7 @@ describe('recoverRunRoute', () => {
 
     expect(reply.code).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith(
-      httpError('bad_request', 'invalid_target_adapter', 'targetAdapter')
+      httpError('bad_request', 'invalid_body', 'targetAdapter')
     );
     expect(deps.authorizer.authorize).not.toHaveBeenCalled();
     expect(deps.useCase.execute).not.toHaveBeenCalled();

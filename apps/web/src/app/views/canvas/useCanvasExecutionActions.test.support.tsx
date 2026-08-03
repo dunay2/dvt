@@ -6,6 +6,7 @@ import { vi } from 'vitest';
 
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import { createTestQueryClient } from '../../../testing/reactQueryHarness';
+import { createMockRunsService } from '../../../testing/runsPortDoubles';
 import type { IPlansPort } from '../../ports/plans';
 import type { IGraphDbtWorkspaceArtifactPublicationCommandPort } from '../../ports/graphDbtWorkspaceArtifactPublication';
 import type { IRunsPort } from '../../ports/runs';
@@ -482,6 +483,7 @@ export function createPlansServiceMock(plan: PlanViewModel = mockExecutionPlan):
 
 export function createRunsServiceMock(overrides: Partial<IRunsPort> = {}): IRunsPort {
   return {
+    ...createMockRunsService(),
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
     startRun: vi.fn(async () => ({ runId: 'run', accepted: true })),

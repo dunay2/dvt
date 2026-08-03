@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 
 import { usePublishedRouteBootstrap } from '../bootstrap/usePublishedRouteBootstrap';
 import type { RunWorkspaceViewModel } from '../services/runs/runWorkspaceModel';
@@ -21,6 +21,7 @@ import {
   RUNS_ROUTE_ID,
 } from './runs/runsRouteBootstrap';
 import { buildRunsWorkbenchState } from './runs/runWorkbenchStateModel';
+import { useRunControlCommands } from './runs/useRunControlCommands';
 
 type RunsWorkbenchSurfaceProps = Readonly<{
   resolveRouteBootstrapId: (runId: string | undefined) => string;
@@ -53,6 +54,12 @@ function toFocusedRunModel(workspace: RunWorkspaceViewModel): Run | null {
 
 export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchSurfaceProps) {
   const { runId } = useParams();
+  const navigate = useNavigate();
+  const runControls = useRunControlCommands({
+    onRecoveryAccepted: (recoveryRunId) => {
+      void navigate(`/runs/${recoveryRunId}`);
+    },
+  });
   const setCurrentRun = useExecutionStore((state) => state.setCurrentRun);
   const observedRunId = useExecutionStore((state) => state.currentRun?.runId);
   const {
@@ -107,7 +114,9 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
     case 'runs-empty':
       return <RunsEmptyState />;
     case 'runs-list':
-      return <RunListState runs={state.runs} isLoading={state.isLoading} />;
+      return (
+        <RunListState runs={state.runs} isLoading={state.isLoading} runControls={runControls} />
+      );
     case 'run-loading':
       return <RunDetailLoadingState runId={state.runId} />;
     case 'run-error':
@@ -118,6 +127,7 @@ export function RunsWorkbenchSurface({ resolveRouteBootstrapId }: RunsWorkbenchS
       return (
         <RunWorkspaceState
           workspace={state.workspace}
+          runControls={runControls}
           onRetryEventFeed={canRetryEventFeed ? retryEventFeed : undefined}
         />
       );

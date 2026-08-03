@@ -3,6 +3,7 @@
  * module without registering HTTP routes.
  */
 import { TRANSFORMATION_DESIGN_GRAPH_SOURCE_FAMILY } from '@dvt/contracts';
+import { IdempotencyKeyBuilder } from '@dvt/engine/runtime';
 import type { IObservability } from '@dvt/observability';
 
 import { CancelRunUseCase } from '../../application/services/cancelRunUseCase.js';
@@ -16,7 +17,10 @@ import { PreviewPlanUseCase } from '../../application/services/PreviewPlanUseCas
 import { RecoverRunUseCase } from '../../application/services/recoverRunUseCase.js';
 import { ResolveAuthorizedExecutableSubgraphService } from '../../application/services/resolveAuthorizedExecutableSubgraph.js';
 import { ResolveAuthorizedPreviewSelectionService } from '../../application/services/resolveAuthorizedPreviewSelection.js';
+import { RunStartDispatchResolver } from '../../application/services/runStartDispatchResolver.js';
 import { SignalRunUseCase } from '../../application/services/signalRunUseCase.js';
+import { StoredPlanRunExecutionContextRequirementResolver } from '../../application/services/StoredPlanRunExecutionContextRequirementResolver.js';
+import { RunEventCancellationReceiptStore } from '../../infrastructure/runControl/RunEventCancellationReceiptStore.js';
 import { ObservabilityRunStatusStalenessTelemetry } from '../../infrastructure/telemetry/ObservabilityRunStatusStalenessTelemetry.js';
 import { ObservabilityWorkspaceGraphDraftTelemetry } from '../../infrastructure/telemetry/ObservabilityWorkspaceGraphDraftTelemetry.js';
 import { SafeRunSnapshotStalenessReader } from '../../infrastructure/telemetry/SafeRunSnapshotStalenessReader.js';
@@ -44,13 +48,35 @@ export function buildProtectedRuntimeRouteDependencies(
     authenticator: protectedModule.authenticator,
     authorizer: protectedModule.authorizer,
   };
+  const executionContextRequirementResolver = new StoredPlanRunExecutionContextRequirementResolver(
+    protectedModule.planStore,
+    protectedModule.runExecutionContextBindingPolicy
+  );
+  const idempotency = new IdempotencyKeyBuilder();
+  const startDispatchResolver = new RunStartDispatchResolver(
+    protectedModule.startRunIntentStore,
+    idempotency
+  );
+  const cancellationReceipts = new RunEventCancellationReceiptStore({
+    stateStoreRead: protectedModule.stateStore.read,
+    stateStoreWrite: protectedModule.stateStore.write,
+    clock: protectedModule.systemClock,
+    idempotency,
+  });
   const getRunStatusUseCase = new GetRunStatusUseCase(
     protectedModule.engine,
     protectedModule.runEnrichmentService,
     protectedModule.stateStore.read,
     new SafeRunSnapshotStalenessReader(protectedModule.stateStore.snapshotStaleness, observability),
     new ObservabilityRunStatusStalenessTelemetry({ observability }),
-    protectedModule.planStore as unknown as ConstructorParameters<typeof GetRunStatusUseCase>[5]
+    protectedModule.planStore,
+    protectedModule.runExecutionContextReferenceReader,
+    executionContextRequirementResolver,
+    protectedModule.planIntegrityValidator,
+    protectedModule.startRunTargetAdapterRegistry,
+    startDispatchResolver,
+    cancellationReceipts,
+    protectedModule.planValidator
   );
   const previewPlanUseCase = new PreviewPlanUseCase({
     planner: {
@@ -73,7 +99,13 @@ export function buildProtectedRuntimeRouteDependencies(
   });
 
   return {
-    cancelRunUseCase: new CancelRunUseCase(protectedModule.engine, protectedModule.stateStore.read),
+    cancelRunUseCase: new CancelRunUseCase(
+      protectedModule.engine,
+      protectedModule.stateStore.read,
+      protectedModule.runControlCommandCoordinator,
+      cancellationReceipts,
+      startDispatchResolver
+    ),
     compilePlanUseCase: new CompilePlanUseCase({ planner: protectedModule.planCompilePlanner }),
     getCostAttributionSummaryUseCase: new GetCostAttributionSummaryUseCase(
       protectedModule.stateStore.read
@@ -83,12 +115,31 @@ export function buildProtectedRuntimeRouteDependencies(
     importPlanUseCase: new ImportPlanUseCase({
       planResolver: protectedModule.executablePlanResolver,
     }),
-    listRunsUseCase: new ListRunsUseCase(protectedModule.stateStore.read, protectedModule.engine),
-    previewPlanUseCase,
-    recoverRunUseCase: new RecoverRunUseCase(
+    listRunsUseCase: new ListRunsUseCase(
+      protectedModule.stateStore.read,
       protectedModule.engine,
-      protectedModule.stateStore.read
+      protectedModule.runExecutionContextReferenceReader,
+      executionContextRequirementResolver,
+      protectedModule.planStore,
+      protectedModule.planIntegrityValidator,
+      protectedModule.startRunTargetAdapterRegistry,
+      startDispatchResolver,
+      cancellationReceipts,
+      protectedModule.planValidator
     ),
+    previewPlanUseCase,
+    recoverRunUseCase: new RecoverRunUseCase({
+      engine: protectedModule.engine,
+      stateStore: protectedModule.stateStore.read,
+      planStore: protectedModule.planStore,
+      executionContextReader: protectedModule.runExecutionContextReferenceReader,
+      executionContextInheritanceWriter: protectedModule.runExecutionContextInheritanceWriter,
+      commandCoordinator: protectedModule.runControlCommandCoordinator,
+      executionContextRequirementResolver,
+      startRunIntentStore: protectedModule.startRunIntentStore,
+      runMaintenanceService: protectedModule.runMaintenanceService,
+      idempotency,
+    }),
     runtimeAuth,
     signalRunUseCase: new SignalRunUseCase(protectedModule.engine, protectedModule.stateStore.read),
     workspaceGraphDraftTelemetry: new ObservabilityWorkspaceGraphDraftTelemetry({ observability }),

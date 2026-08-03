@@ -34,6 +34,11 @@ const expectedOperationalIdentity = {
   provider: 'temporal',
 } as const;
 
+const registeredTargetAdapterRegistry = {
+  isSupported: vi.fn().mockReturnValue(true),
+  listSupported: vi.fn().mockReturnValue(['temporal']),
+};
+
 function createStateStore(): {
   getRunMetadataByRunId: ReturnType<typeof vi.fn>;
   getSnapshot: ReturnType<typeof vi.fn>;
@@ -68,6 +73,92 @@ function createStateStore(): {
 }
 
 describe('GetRunStatusUseCase', () => {
+  it('advertises cancellation when a pending run has confirmed provider dispatch', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({
+        runId: 'provider-run-1',
+        status: 'PENDING',
+      }),
+    };
+    const startDispatchResolver = {
+      resolve: vi.fn().mockResolvedValue({
+        kind: 'confirmed',
+        runRef: {
+          provider: 'temporal',
+          tenantId: 'tenant-a',
+          namespace: 'default',
+          workflowId: 'wf-1',
+          runId: 'provider-run-1',
+        },
+      }),
+    };
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      registeredTargetAdapterRegistry as never,
+      startDispatchResolver
+    );
+
+    const result = await useCase.execute(
+      { runId: 'run-1', enriched: false },
+      queryContext as never
+    );
+
+    expect(result.controls.cancel).toEqual({ available: true });
+    expect(startDispatchResolver.resolve).toHaveBeenCalledOnce();
+  });
+
+  it('projects an accepted cancellation receipt before runtime lifecycle catches up', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({
+        runId: 'provider-run-1',
+        status: 'RUNNING',
+      }),
+    };
+    const cancellationReceipts = {
+      hasAccepted: vi.fn().mockResolvedValue(true),
+      recordAccepted: vi.fn(),
+    };
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      registeredTargetAdapterRegistry as never,
+      undefined,
+      cancellationReceipts
+    );
+
+    const result = await useCase.execute(
+      { runId: 'run-1', enriched: false },
+      queryContext as never
+    );
+
+    expect(result.controls.cancel).toEqual({
+      available: false,
+      reason: 'cancellation_pending',
+    });
+    expect(cancellationReceipts.hasAccepted).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      runId: 'run-1',
+      logicalAttemptId: 1,
+      planId: 'plan-1',
+      planVersion: '1.0',
+    });
+  });
+
   it('loads metadata and returns projected engine status with FRESH staleness', async () => {
     const engine = {
       async getRunStatus(runRef: unknown) {
@@ -110,6 +201,10 @@ describe('GetRunStatusUseCase', () => {
     ).resolves.toEqual({
       ...expectedOperationalIdentity,
       status: 'RUNNING',
+      controls: {
+        cancel: { available: true },
+        recover: { available: false, reason: 'run_active' },
+      },
       enriched: false,
       snapshotStaleness: 'FRESH',
       diagnostics: {
@@ -421,6 +516,10 @@ describe('GetRunStatusUseCase', () => {
     ).resolves.toEqual({
       ...expectedOperationalIdentity,
       status: 'RUNNING',
+      controls: {
+        cancel: { available: true },
+        recover: { available: false, reason: 'run_active' },
+      },
       enriched: true,
       snapshotStaleness: 'FRESH',
       diagnostics: {
@@ -1571,6 +1670,158 @@ describe('GetRunStatusUseCase', () => {
       ...expectedOperationalIdentity,
       status: 'RUNNING',
       snapshotStaleness: 'FRESH',
+    });
+  });
+
+  it('does not advertise recovery when the stored source plan fails integrity validation', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({
+        runId: 'provider-run-1',
+        status: 'FAILED' as const,
+      }),
+      getRunEnrichment: vi.fn(),
+    };
+    const planRef = { planId: 'plan-1' };
+    const planStore = {
+      getPlanRecord: vi.fn().mockResolvedValue(undefined),
+      getStoredPlanRef: vi.fn().mockResolvedValue(planRef),
+      getStoredPlanValidationRecord: vi.fn(),
+      fetchStoredPlanArtifact: vi.fn(),
+      fetchStoredPlanArtifactForValidation: vi.fn(),
+    };
+    const planIntegrityValidator = {
+      fetchAndValidate: vi.fn().mockRejectedValue(new Error('PLAN_INTEGRITY_VALIDATION_FAILED')),
+    };
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      { isSnapshotStale: vi.fn().mockResolvedValue(false) } as never,
+      undefined,
+      planStore as never,
+      undefined,
+      undefined,
+      planIntegrityValidator as never,
+      registeredTargetAdapterRegistry as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      status: 'FAILED',
+      controls: {
+        recover: { available: false, reason: 'source_plan_unavailable' },
+      },
+    });
+    expect(planStore.getStoredPlanRef).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planId: 'plan-1',
+    });
+    expect(planIntegrityValidator.fetchAndValidate).toHaveBeenCalledWith(
+      {
+        tenantId: 'tenant-a',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        planRef,
+      },
+      planStore
+    );
+  });
+
+  it('does not advertise recovery when the source runtime adapter is not registered', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({
+        runId: 'provider-run-1',
+        status: 'FAILED' as const,
+      }),
+      getRunEnrichment: vi.fn(),
+    };
+    const planRef = { planId: 'plan-1' };
+    const planStore = {
+      getPlanRecord: vi.fn().mockResolvedValue(undefined),
+      getStoredPlanRef: vi.fn().mockResolvedValue(planRef),
+      getStoredPlanValidationRecord: vi.fn(),
+      fetchStoredPlanArtifact: vi.fn(),
+      fetchStoredPlanArtifactForValidation: vi.fn(),
+    };
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      { isSnapshotStale: vi.fn().mockResolvedValue(false) } as never,
+      undefined,
+      planStore as never,
+      undefined,
+      undefined,
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
+      { isSupported: vi.fn().mockReturnValue(false), listSupported: vi.fn() } as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      status: 'FAILED',
+      controls: {
+        recover: { available: false, reason: 'source_adapter_unavailable' },
+      },
+    });
+  });
+
+  it('does not advertise recovery when the current adapter lacks a required plan capability', async () => {
+    const engine = {
+      getRunStatus: vi.fn().mockResolvedValue({
+        runId: 'provider-run-1',
+        status: 'FAILED' as const,
+      }),
+      getRunEnrichment: vi.fn(),
+    };
+    const planRef = { planId: 'plan-1' };
+    const planStore = {
+      getPlanRecord: vi.fn().mockResolvedValue(undefined),
+      getStoredPlanRef: vi.fn().mockResolvedValue(planRef),
+      getStoredPlanValidationRecord: vi.fn(),
+      fetchStoredPlanArtifact: vi.fn(),
+      fetchStoredPlanArtifactForValidation: vi.fn(),
+    };
+    const planExecutabilityValidator = {
+      validatePlan: vi.fn().mockResolvedValue({
+        status: 'ERROR',
+        code: 'MISSING_CAPABILITY',
+        reason: 'Missing adapter capability: executor.dbt',
+      }),
+    };
+    const useCase = new GetRunStatusUseCase(
+      engine as never,
+      engine as never,
+      createStateStore() as never,
+      { isSnapshotStale: vi.fn().mockResolvedValue(false) } as never,
+      undefined,
+      planStore as never,
+      undefined,
+      undefined,
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
+      registeredTargetAdapterRegistry as never,
+      undefined,
+      undefined,
+      planExecutabilityValidator as never
+    );
+
+    await expect(
+      useCase.execute({ runId: 'run-1', enriched: false }, queryContext as never)
+    ).resolves.toMatchObject({
+      status: 'FAILED',
+      controls: {
+        recover: { available: false, reason: 'source_adapter_unavailable' },
+      },
+    });
+    expect(planExecutabilityValidator.validatePlan).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planRef,
+      adapterId: 'temporal',
     });
   });
 });

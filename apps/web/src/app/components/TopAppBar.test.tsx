@@ -83,6 +83,7 @@ describe('ShellTopBar workspace context', () => {
       runs: {
         activeRunId: null,
         canStartRun: false,
+        controls: null,
         onStartRun,
         status: 'blocked',
         summary: 'Preview required before running.',
@@ -236,6 +237,7 @@ describe('ShellTopBar workspace context', () => {
         runs: {
           activeRunId: null,
           canStartRun: true,
+          controls: null,
           onStartRun,
           status: 'ready',
           summary: 'Run is ready after the current execution preview.',

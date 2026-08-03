@@ -64,6 +64,7 @@ export type CanvasShellPropsOverrides = {
   routeIntentRequest?: CanvasShellRouteIntentRequest;
   warehouseSourceImport?: IWarehouseSourceImportPort;
   onDbtProjectImported?: CanvasShellProps['onDbtProjectImported'];
+  runControls?: CanvasShellProps['runControls'];
 };
 
 export function getCanvasShellState(): typeof shellState {
@@ -222,6 +223,7 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       onDeleteActiveCanvas: vi.fn(),
       ...overrides?.canvasCommands,
     },
+    runControls: overrides?.runControls ?? null,
     workspaceCommands: overrides?.workspaceCommands,
     routeIntentRequest: overrides?.routeIntentRequest,
     warehouseSourceImport: overrides?.warehouseSourceImport,

@@ -33,8 +33,9 @@ import type {
   EventInput,
   ListEventsOptions,
   ListRunsOptions,
+  RecoveryRunBootstrapFactory,
+  RecoveryRunBootstrapResult,
   OutboxRecord,
-  RetryAttemptReservation,
   RunBootstrapInput,
   RunId,
   RunMetadata,
@@ -96,6 +97,14 @@ export class PostgresStateStoreRuntime {
     return this.runStateCoordinator.bootstrapRunTx(input);
   }
 
+  protected async bootstrapRecoveryRunTxInternal(
+    tenantId: string,
+    sourceRunId: RunId,
+    buildInput: RecoveryRunBootstrapFactory
+  ): Promise<RecoveryRunBootstrapResult> {
+    return this.runStateCoordinator.bootstrapRecoveryRunTx(tenantId, sourceRunId, buildInput);
+  }
+
   protected async getRunMetadataByRunIdInternal(
     tenantId: string,
     runId: string
@@ -115,19 +124,20 @@ export class PostgresStateStoreRuntime {
     return this.metadataRepo.saveProviderRef(tenantId, runId, providerRef);
   }
 
-  protected async reserveRetryAttemptInternal(
-    tenantId: string,
-    sourceRunId: RunId
-  ): Promise<RetryAttemptReservation> {
-    return this.metadataRepo.reserveRetryAttempt(tenantId, sourceRunId);
-  }
-
   protected async listEventsInternal(
     tenantId: string,
     runId: string,
     options?: ListEventsOptions
   ): Promise<EventEnvelope[]> {
     return this.runEventRepository.listEvents(tenantId, runId, options);
+  }
+
+  protected async hasEventByIdempotencyKeyInternal(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean> {
+    return this.runEventRepository.hasEventByIdempotencyKey(tenantId, runId, idempotencyKey);
   }
 
   protected async getSnapshotInternal(

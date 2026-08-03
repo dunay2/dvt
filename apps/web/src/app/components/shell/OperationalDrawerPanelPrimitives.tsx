@@ -20,6 +20,7 @@ const operationalDrawerPanelClassNames = {
   codeToken: 'rounded border border-amber-400/40 px-2 py-0.5 font-mono text-[11px] text-amber-100',
   detailCode: 'mt-1 block font-mono text-[11px] text-[var(--text-muted)]',
   runSummary: 'grid gap-1',
+  runLayout: 'flex flex-wrap items-center justify-between gap-3',
   runSummaryLabel: 'text-[var(--text-muted)]',
   runSummaryValue: 'font-mono text-[var(--text-strong)]',
   runSummaryText: 'text-[var(--text-default)]',
@@ -159,6 +160,18 @@ export function OperationalDrawerRunActiveSummary({
       {summary == null ? null : (
         <span className={operationalDrawerPanelClassNames.runSummaryText}>{summary}</span>
       )}
+    </div>
+  );
+}
+
+export function OperationalDrawerRunLayout({
+  actions,
+  children,
+}: Readonly<{ actions: ReactNode; children: ReactNode }>): JSX.Element {
+  return (
+    <div className={operationalDrawerPanelClassNames.runLayout}>
+      {children}
+      {actions}
     </div>
   );
 }

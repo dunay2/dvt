@@ -65,6 +65,16 @@ function mapDbtRunToSnapshot(run: Run): RunSnapshot {
     runId: run.runId,
     planId: run.planId,
     status: run.status,
+    controls:
+      run.status === 'running'
+        ? {
+            cancel: { available: true },
+            recover: { available: false, reason: 'run_active' },
+          }
+        : {
+            cancel: { available: false, reason: 'run_completed' },
+            recover: { available: false, reason: 'run_completed' },
+          },
     environment: run.environment,
     gitSha: run.gitSha,
     startedAt: run.startTime,
@@ -84,6 +94,7 @@ function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
     runId: snapshot.runId,
     planId: snapshot.planId,
     status: snapshot.status,
+    controls: snapshot.controls,
     environment: snapshot.environment,
     gitSha: snapshot.gitSha,
     startedAt: snapshot.startedAt,
@@ -171,6 +182,19 @@ export function createMockRunsService(
       asNonBlankString(input.workspaceScope.tenantId);
       return buildRunStartReceipt(runId);
     },
+    cancelRun: async (runId) => ({
+      contractVersion: 'v1',
+      runId,
+      signalType: 'CANCEL',
+      accepted: true,
+      disposition: 'requested',
+    }),
+    recoverRun: async (sourceRunId) => ({
+      contractVersion: 'v1',
+      sourceRunId,
+      recoveryRunId: createMockRunId(),
+      accepted: true,
+    }),
     listRunEvents: async (runId) => buildMockRunEvents(sessionContext, runId),
   };
 }

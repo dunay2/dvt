@@ -1,7 +1,11 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import type { IAuthenticator } from '../../application/ports/auth.js';
-import type { ISignalRunUseCase } from '../../application/ports/runtime.js';
+import type {
+  ICancelRunUseCase,
+  ISignalRunUseCase,
+  SignalRunCommand,
+} from '../../application/ports/runtime.js';
 import { AuthorizeCommandScopeService } from '../../application/services/authorizeCommandScopeService.js';
 
 import { executeAuthorizedRunCommandRoute } from './runCommandRouteExecutor.js';
@@ -16,6 +20,7 @@ export async function signalRunRoute(
   deps: {
     authenticator: IAuthenticator;
     authorizer: AuthorizeCommandScopeService;
+    cancelUseCase: ICancelRunUseCase;
     useCase: ISignalRunUseCase;
     compatibilityPolicy: SignalRouteCompatibilityPolicy;
   }
@@ -26,7 +31,7 @@ export async function signalRunRoute(
     {
       authenticator: deps.authenticator,
       authorizer: deps.authorizer,
-      execute: (command, context) => deps.useCase.execute(command, context),
+      execute: (command, context) => executeCompatibilityAwareSignalCommand(command, context, deps),
     },
     parseSignalRunRequest({
       runId: request.params.runId,
@@ -34,4 +39,14 @@ export async function signalRunRoute(
       compatibilityPolicy: deps.compatibilityPolicy,
     })
   );
+}
+
+function executeCompatibilityAwareSignalCommand(
+  command: SignalRunCommand,
+  context: Parameters<ISignalRunUseCase['execute']>[1],
+  deps: Pick<Parameters<typeof signalRunRoute>[2], 'cancelUseCase' | 'useCase'>
+) {
+  return command.signalType === 'CANCEL'
+    ? deps.cancelUseCase.execute({ runId: command.runId, signalType: 'CANCEL' }, context)
+    : deps.useCase.execute(command, context);
 }

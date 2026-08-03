@@ -16,6 +16,7 @@ export type EventType =
   | 'RunStarted'
   | 'RunPaused'
   | 'RunResumed'
+  | 'RunCancelSubmitted'
   | 'RunCancelRequested'
   | 'RunCancelled'
   | 'RunCompleted'
@@ -181,8 +182,27 @@ export interface RetryAttemptReservation {
   logicalAttemptId: number;
 }
 
+export interface RecoveryRunBootstrapResult {
+  reservation: RetryAttemptReservation;
+  metadata: RunMetadata;
+  appendResult: AppendResult;
+}
+
+export type RecoveryRunBootstrapFactory = (
+  reservation: RetryAttemptReservation
+) => RunBootstrapInput;
+
 export interface IRunStateStoreWrite {
   bootstrapRunTx(input: RunBootstrapInput): Promise<AppendResult>;
+  /**
+   * Atomically reserves retry lineage and bootstraps the recovery child.
+   * A failed bootstrap MUST roll back the lineage reservation.
+   */
+  bootstrapRecoveryRunTx(
+    tenantId: string,
+    sourceRunId: string,
+    buildInput: RecoveryRunBootstrapFactory
+  ): Promise<RecoveryRunBootstrapResult>;
   appendAndEnqueueTx(runId: string, events: EventInput[]): Promise<AppendResult>;
   /**
    * Reconciles persisted provider identity after a pre-bootstrap estimate.
@@ -193,15 +213,16 @@ export interface IRunStateStoreWrite {
     runId: string,
     providerRef: ProviderRefUpdate
   ): Promise<RunMetadata>;
-  /**
-   * Atomically reserves the next business retry lineage slot for a new run
-   * derived from `sourceRunId`.
-   */
-  reserveRetryAttempt(tenantId: string, sourceRunId: string): Promise<RetryAttemptReservation>;
 }
 
 export interface IRunStateStoreRead {
   getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null>;
+
+  hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean>;
 
   listEvents(
     tenantId: string,

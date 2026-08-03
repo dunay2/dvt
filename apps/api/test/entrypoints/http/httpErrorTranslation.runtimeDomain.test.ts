@@ -10,6 +10,10 @@ import {
 } from '@dvt/engine';
 import { describe, expect, it } from 'vitest';
 
+import {
+  RunControlUnavailableError,
+  RunRecoveryUnavailableError,
+} from '../../../src/application/errors/runControlErrors.js';
 import { httpErrorTranslation } from '../../../src/entrypoints/http/httpErrorTranslation.js';
 
 import {
@@ -81,6 +85,33 @@ describe('httpErrorTranslation runtime domain mapping', () => {
         details: {
           runId: 'run-source',
           status: 'RUNNING',
+        },
+      },
+    },
+    {
+      description: 'maps unavailable run controls to 409',
+      buildError: () => new RunControlUnavailableError('cancel', 'COMPLETED', 'run_terminal'),
+      expected: {
+        status: 409,
+        type: 'conflict',
+        reason: 'run_control_unavailable',
+        details: {
+          action: 'cancel',
+          status: 'COMPLETED',
+          controlReason: 'run_terminal',
+        },
+      },
+    },
+    {
+      description: 'maps unavailable persisted recovery plans to 409',
+      buildError: () => new RunRecoveryUnavailableError('run-source', 'source_plan_unavailable'),
+      expected: {
+        status: 409,
+        type: 'conflict',
+        reason: 'run_recovery_unavailable',
+        details: {
+          sourceRunId: 'run-source',
+          recoveryReason: 'source_plan_unavailable',
         },
       },
     },

@@ -18,6 +18,11 @@ runtime and adapter-owned runtime execution contexts.
 
 Signal decision events remain defined by [SignalsAndAuth.v1.md](./SignalsAndAuth.v1.md).
 
+Cancellation command admission is recorded separately as
+`RunCancelSubmitted`. It is an engine-side audit fact that means the provider
+accepted the cancellation command. It is not a lifecycle transition and MUST
+NOT change the projected run status.
+
 ## Known lifecycle events
 
 - `RunQueued`
@@ -36,6 +41,15 @@ Signal decision events remain defined by [SignalsAndAuth.v1.md](./SignalsAndAuth
 For signal-driven realized lifecycle facts, the runtime execution context is the
 realized-event owner. The engine MAY validate and dispatch a command, but it
 MUST NOT append the same realized lifecycle event on submission.
+
+## Known command audit events
+
+- `RunCancelSubmitted`
+
+`RunCancelSubmitted` is engine-owned and MUST be persisted only after the
+provider accepts the cancellation command. Redelivery may use this fact as the
+durable command receipt while the runtime has not yet emitted
+`RunCancelRequested`.
 
 ## Envelope requirements
 
@@ -127,6 +141,7 @@ outcome evidence.
 
 | Event                | Canonical effect                             |
 | -------------------- | -------------------------------------------- |
+| `RunCancelSubmitted` | none; durable command receipt                |
 | `RunStarted`         | `status = RUNNING`                           |
 | `RunPaused`          | `status = PAUSED`                            |
 | `RunResumed`         | `status = RUNNING`                           |

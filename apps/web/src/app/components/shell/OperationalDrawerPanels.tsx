@@ -1,6 +1,7 @@
 /** Owned concern: render route-contributed operational drawer panels. */
 import type { ReactNode } from 'react';
 
+import { RunControlActions } from '../runs/RunControlActions';
 import {
   OperationalDrawerEmptyState,
   OperationalDrawerPanelSurface,
@@ -10,6 +11,7 @@ import {
   OperationalDrawerProblemItem,
   OperationalDrawerProblemList,
   OperationalDrawerRunActiveSummary,
+  OperationalDrawerRunLayout,
   OperationalDrawerRunStatusSummary,
   OperationalDrawerTabs,
 } from './OperationalDrawerPanelPrimitives';
@@ -69,10 +71,27 @@ export function BottomOperationalRunsPanel({
           summary={contribution.runs.summary}
         />
       ) : (
-        <OperationalDrawerRunActiveSummary
-          activeRunId={contribution.runs.activeRunId}
-          summary={contribution.runs.summary}
-        />
+        <OperationalDrawerRunLayout
+          actions={
+            contribution.runs.controls == null ? null : (
+              <RunControlActions
+                runId={contribution.runs.controls.runId}
+                availability={contribution.runs.controls.availability}
+                activity={contribution.runs.controls.activity}
+                outcome={contribution.runs.controls.outcome}
+                failure={contribution.runs.controls.failure}
+                onCancel={contribution.runs.controls.onCancel}
+                onRecover={contribution.runs.controls.onRecover}
+                compact={false}
+              />
+            )
+          }
+        >
+          <OperationalDrawerRunActiveSummary
+            activeRunId={contribution.runs.activeRunId}
+            summary={contribution.runs.summary}
+          />
+        </OperationalDrawerRunLayout>
       )}
     </OperationalDrawerPanelSurface>
   );

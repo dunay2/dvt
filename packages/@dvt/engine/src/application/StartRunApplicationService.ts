@@ -5,6 +5,7 @@ import type { IStoredPlanArtifactReader } from '@dvt/artifacts';
 import type { EngineRunRef, PlanRef, ResolvedRunContext } from '@dvt/contracts';
 import type { IObservability } from '@dvt/observability';
 
+import type { IProviderAdapter } from '../adapters/IProviderAdapter.js';
 import type { IdempotencyKeyBuilder } from '../core/idempotency.js';
 import type { StartRunTraceContext } from '../core/lifecycle/StartRunTraceContext.js';
 import type { IPlanIntegrityValidator } from '../ports/IPlanIntegrityValidator.js';
@@ -85,18 +86,53 @@ export class StartRunApplicationService {
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext
   ): Promise<EngineRunRef> {
+    return this.runWithTelemetry(planRef, resolvedContext, traceContext, false);
+  }
+
+  async startPreparedRun(
+    planRef: PlanRef,
+    resolvedContext: ResolvedRunContext,
+    traceContext: StartRunTraceContext,
+    preparedRunRef: EngineRunRef,
+    admittedAdapter: IProviderAdapter
+  ): Promise<EngineRunRef> {
+    return this.runWithTelemetry(
+      planRef,
+      resolvedContext,
+      traceContext,
+      true,
+      preparedRunRef,
+      admittedAdapter
+    );
+  }
+
+  private async runWithTelemetry(
+    planRef: PlanRef,
+    resolvedContext: ResolvedRunContext,
+    traceContext: StartRunTraceContext,
+    preparedRun: boolean,
+    preparedRunRef?: EngineRunRef,
+    admittedAdapter?: IProviderAdapter
+  ): Promise<EngineRunRef> {
     const startMs = this.telemetryPolicy.nowMs();
     const metricTags = this.telemetryPolicy.buildMetricTags(
       resolvedContext.targetAdapter,
       resolvedContext.tenantId,
       { operation: 'startRun' }
     );
-    const errorContext: StartRunErrorContext = {};
+    const errorContext: StartRunErrorContext = preparedRun ? { preparedRun: true } : {};
 
     this.telemetryPolicy.recordStart(planRef, resolvedContext, traceContext);
 
     try {
-      const runRef = await this.startRunCore(planRef, resolvedContext, traceContext, errorContext);
+      const runRef = await this.startRunCore(
+        planRef,
+        resolvedContext,
+        traceContext,
+        errorContext,
+        preparedRunRef,
+        admittedAdapter
+      );
       this.telemetryPolicy.recordStarted({ resolvedContext, startedAtMs: startMs });
       return runRef;
     } catch (error) {
@@ -114,25 +150,31 @@ export class StartRunApplicationService {
     planRef: PlanRef,
     resolvedContext: ResolvedRunContext,
     traceContext: StartRunTraceContext,
-    errorContext: StartRunErrorContext
+    errorContext: StartRunErrorContext,
+    preparedRunRef?: EngineRunRef,
+    admittedAdapter?: IProviderAdapter
   ): Promise<EngineRunRef> {
-    const admission = await this.admissionService.admit({
-      planRef,
-      resolvedContext,
-    });
-    const intentId = await this.intentService.createIntent(
-      resolvedContext,
-      admission.adapter.provider
-    );
+    const adapter =
+      admittedAdapter ??
+      (
+        await this.admissionService.admit({
+          planRef,
+          resolvedContext,
+        })
+      ).adapter;
+    const intentId = await this.intentService.createIntent(resolvedContext, adapter.provider);
     errorContext.intentId = intentId;
 
-    return this.executionService.executeStartRun({
-      adapter: admission.adapter,
+    const executionInput = {
+      adapter,
       planRef,
       resolvedContext,
       traceContext,
       intentId,
-    });
+    };
+    return preparedRunRef === undefined
+      ? this.executionService.executeStartRun(executionInput)
+      : this.executionService.executePreparedRun({ ...executionInput, preparedRunRef });
   }
 }
 

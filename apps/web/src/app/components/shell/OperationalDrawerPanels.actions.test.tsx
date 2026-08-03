@@ -42,6 +42,7 @@ function buildContribution(
     runs: {
       activeRunId: null,
       canStartRun: false,
+      controls: null,
       onStartRun: vi.fn(),
       status: 'blocked',
       summary: 'Preview required before running.',
@@ -121,6 +122,7 @@ describe('OperationalDrawerPanels action surfaces', () => {
             runs: {
               activeRunId: null,
               canStartRun: true,
+              controls: null,
               onStartRun: vi.fn(),
               status: 'ready',
               summary: 'Run is ready after the current execution preview.',
@@ -133,6 +135,40 @@ describe('OperationalDrawerPanels action surfaces', () => {
 
     expect(container.textContent).toContain('Run ready');
     expect(container.textContent).toContain('Run is ready after the current execution preview.');
+  });
+
+  it('renders backend-authoritative controls for the observed run', async () => {
+    const onCancel = vi.fn();
+    const contribution = buildContribution({
+      runs: {
+        activeRunId: 'run-active',
+        canStartRun: false,
+        onStartRun: vi.fn(),
+        status: 'active',
+        summary: 'Run run-active is active.',
+        controls: {
+          runId: 'run-active',
+          availability: {
+            cancel: { available: true },
+            recover: { available: false, reason: 'run_active' },
+          },
+          activity: null,
+          outcome: null,
+          failure: null,
+          onCancel,
+          onRecover: vi.fn(),
+        },
+      },
+    });
+
+    await act(async () => {
+      root.render(<BottomOperationalRunsPanel contribution={contribution} />);
+    });
+
+    const cancel = container.querySelector<HTMLButtonElement>('[aria-label="Cancel run"]');
+    expect(cancel).not.toBeNull();
+    act(() => cancel?.click());
+    expect(onCancel).toHaveBeenCalledTimes(1);
   });
 
   it('delegates explicit selection recovery from Preview', async () => {

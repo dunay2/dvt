@@ -13,6 +13,7 @@ import {
   parseExecutionEvidence,
   parseMaterializationEvidence,
   parsePlanExecutionSummary,
+  parseRunControlAvailability,
   parseRunDiagnostics,
   parseRunExecutor,
   parseRunProvenance,
@@ -26,6 +27,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
 
   const candidate = record as Record<string, unknown>;
   const runId = asString(candidate.runId);
+  const controls = parseRunControlAvailability(candidate.controls);
   if (runId === undefined) {
     return null;
   }
@@ -53,6 +55,7 @@ export function mapUnknownRecordToSnapshot(record: unknown): RunSnapshot | null 
     ...(logicalAttemptId === undefined ? {} : { logicalAttemptId }),
     ...(provider ? { provider } : {}),
     status: mapContractStatusToUi(parseContractRunStatus(candidate.status)),
+    ...(controls === undefined ? {} : { controls }),
     ...(executor ? { executor } : {}),
     environment: asString(candidate.environmentId) ?? asString(candidate.environment),
     gitSha: asString(candidate.gitSha),
@@ -101,5 +104,6 @@ export function mapSnapshotToSummary(snapshot: RunSnapshot): RunSummaryItem {
     ...(snapshot.currentStepId ? { currentStepId: snapshot.currentStepId } : {}),
     ...(snapshot.failedStepId ? { failedStepId: snapshot.failedStepId } : {}),
     ...(snapshot.errorReason ? { errorReason: snapshot.errorReason } : {}),
+    ...(snapshot.controls === undefined ? {} : { controls: snapshot.controls }),
   };
 }

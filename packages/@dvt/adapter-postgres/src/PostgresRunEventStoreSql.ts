@@ -101,3 +101,13 @@ export function selectExistingEventSql(schema: string): string {
     LIMIT 1
   `;
 }
+
+export function hasEventByIdempotencyKeySql(schema: string): string {
+  return `
+    SELECT EXISTS (
+      SELECT 1
+      FROM ${quoteIdentifier(schema)}.run_events
+      WHERE tenant_id = $1 AND run_id = $2 AND idempotency_key = $3
+    ) AS exists
+  `;
+}

@@ -5,15 +5,24 @@
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
 import { type ApiClient, createApiClient } from '../api/createApiClient';
+import {
+  createBrowserRecoveryIdempotencyKeyStore,
+  type RecoveryIdempotencyKeyStore,
+} from './recoveryIdempotencyKeyStore';
 import { createApiRunsService } from './runsService.api';
 
 export interface RunsServiceDependencies {
   sessionContext?: SessionContextPort;
+  recoveryIdempotencyKeyStore?: RecoveryIdempotencyKeyStore;
 }
 
 export function createRunsService(
   apiClient: ApiClient = createApiClient(),
   dependencies: RunsServiceDependencies = {}
 ): IRunsPort {
-  return createApiRunsService(apiClient, dependencies.sessionContext);
+  return createApiRunsService(
+    apiClient,
+    dependencies.sessionContext,
+    dependencies.recoveryIdempotencyKeyStore ?? createBrowserRecoveryIdempotencyKeyStore()
+  );
 }

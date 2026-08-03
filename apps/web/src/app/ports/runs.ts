@@ -26,6 +26,41 @@ export type RunStartReceipt = {
 export type UiRunStatus = 'unknown' | 'pending' | 'running' | 'completed' | 'failed' | 'cancelled';
 export type RunExecutor = 'postgres' | 'dbt';
 
+export type RunControlUnavailableReason =
+  | 'cancellation_pending'
+  | 'dispatch_pending'
+  | 'run_active'
+  | 'run_cancelled'
+  | 'run_completed'
+  | 'run_terminal'
+  | 'source_adapter_unavailable'
+  | 'source_plan_unavailable'
+  | 'source_context_untrusted';
+
+export type RunControlActionAvailability =
+  | { readonly available: true }
+  | { readonly available: false; readonly reason: RunControlUnavailableReason };
+
+export type RunControlAvailability = {
+  readonly cancel: RunControlActionAvailability;
+  readonly recover: RunControlActionAvailability;
+};
+
+export type CancelRunReceipt = {
+  readonly contractVersion: 'v1';
+  readonly runId: string;
+  readonly signalType: 'CANCEL';
+  readonly accepted: boolean;
+  readonly disposition: 'requested' | 'already_requested' | 'already_cancelled';
+};
+
+export type RecoverRunReceipt = {
+  readonly contractVersion: 'v1';
+  readonly sourceRunId: string;
+  readonly recoveryRunId: string;
+  readonly accepted: boolean;
+};
+
 export type MaterializationEvidence = {
   executor: RunExecutor;
   environmentId: string;
@@ -129,6 +164,7 @@ export type RunCommonSnapshotFields = {
   currentStepId?: string;
   failedStepId?: string;
   errorReason?: string;
+  controls?: RunControlAvailability;
 };
 
 /** Summary projection: exactly the common snapshot fields. */
@@ -162,5 +198,7 @@ export interface IRunsPort {
   listRunSummaries: () => Promise<RunSummaryItem[]>;
   getRunSnapshot: (runId: string) => Promise<RunSnapshot | null>;
   startRun: (input: StartRunInput) => Promise<RunStartReceipt>;
+  cancelRun: (runId: string) => Promise<CancelRunReceipt>;
+  recoverRun: (runId: string) => Promise<RecoverRunReceipt>;
   listRunEvents: (runId: string, afterSeq?: number) => Promise<RunEventTimelinePage>;
 }

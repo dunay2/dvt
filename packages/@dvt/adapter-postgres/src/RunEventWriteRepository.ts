@@ -41,6 +41,11 @@ export interface RunEventWriteRepository {
 }
 
 export interface RunEventReadRepository {
+  hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean>;
   listEvents(
     tenantId: string,
     runId: string,

@@ -8,7 +8,7 @@ export const PROTECTED_RUNTIME_RUN_RAIL = {
     name: 'CancelRun',
     boundedContext: 'Runtime control',
     dddObject: 'Run cancel command',
-    applicationPort: 'CancelRunUseCase',
+    applicationPort: 'CancelRunUseCase via IRunCancellationReceiptStore',
     adapterSurface: 'POST /runs/:runId/cancel',
     scopeAndAuthorization: 'run:cancel, tenant scope',
   },

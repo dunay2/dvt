@@ -24,6 +24,8 @@ import type {
   IRunStateStore,
   ListEventsOptions,
   ListRunsOptions,
+  RecoveryRunBootstrapFactory,
+  RecoveryRunBootstrapResult,
   RetryAttemptReservation,
   RunBootstrapInput,
 } from '../ports/IRunStateStore.js';
@@ -46,6 +48,7 @@ import {
 import {
   captureRetryLineageCheckpoint,
   initializeRetryLineageFromMetadata,
+  resolveRetryOriginRunId,
   restoreRetryLineageCheckpoint,
 } from './retryLineagePolicy.js';
 import {
@@ -85,6 +88,7 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
   readonly snapshotByRunId = new Map<string, WorkflowSnapshot>();
   readonly snapshotLastRunSeqByRunId = new Map<string, number>();
   readonly nextRetryAttemptByOriginRunId = new Map<string, number>();
+  private readonly recoveryBootstrapTailByOriginRunId = new Map<string, Promise<void>>();
   private readonly commitOutbox: (runId: string, events: EventEnvelope[]) => Promise<void>;
 
   constructor(options: InMemoryRunStateCoreOptions = {}) {
@@ -93,6 +97,15 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
 
   async getRunMetadataByRunId(tenantId: string, runId: string): Promise<RunMetadata | null> {
     return getInMemoryRunMetadata(this, tenantId, runId);
+  }
+
+  async hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean> {
+    if (this.metadataByRunId.get(runId)?.tenantId !== tenantId) return false;
+    return this.idempIndexByRunId.get(runId)?.has(idempotencyKey) ?? false;
   }
 
   async saveProviderRef(
@@ -131,6 +144,34 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
       restoreRetryLineageCheckpoint(this.nextRetryAttemptByOriginRunId, retryLineageCheckpoint);
       throw error;
     }
+  }
+
+  async bootstrapRecoveryRunTx(
+    tenantId: string,
+    sourceRunId: string,
+    buildInput: RecoveryRunBootstrapFactory
+  ): Promise<RecoveryRunBootstrapResult> {
+    const sourceMetadata = this.metadataByRunId.get(sourceRunId);
+    if (!sourceMetadata || sourceMetadata.tenantId !== tenantId) {
+      throw new RunNotFoundError(sourceRunId);
+    }
+    const originRunId = resolveRetryOriginRunId(sourceMetadata);
+
+    return this.withRecoveryBootstrapLock(originRunId, async () => {
+      const retryLineageCheckpoint = captureRetryLineageCheckpoint(
+        this.nextRetryAttemptByOriginRunId,
+        sourceMetadata
+      );
+      try {
+        const reservation = await this.reserveRetryAttempt(tenantId, sourceRunId);
+        const bootstrapInput = buildInput(reservation);
+        const appendResult = await this.bootstrapRunTx(bootstrapInput);
+        return { reservation, metadata: bootstrapInput.metadata, appendResult };
+      } catch (error) {
+        restoreRetryLineageCheckpoint(this.nextRetryAttemptByOriginRunId, retryLineageCheckpoint);
+        throw error;
+      }
+    });
   }
 
   /**
@@ -188,11 +229,35 @@ export class InMemoryRunStateCore implements IRunStateStore, IRunSnapshotStalene
     return isInMemorySnapshotStale(this, tenantId, runId);
   }
 
-  async reserveRetryAttempt(
+  private async reserveRetryAttempt(
     tenantId: string,
     sourceRunId: string
   ): Promise<RetryAttemptReservation> {
     return reserveInMemoryRetryAttempt(this, tenantId, sourceRunId);
+  }
+
+  private async withRecoveryBootstrapLock<T>(
+    originRunId: string,
+    operation: () => Promise<T>
+  ): Promise<T> {
+    const previousTail =
+      this.recoveryBootstrapTailByOriginRunId.get(originRunId) ?? Promise.resolve();
+    let release!: () => void;
+    const current = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const nextTail = previousTail.then(() => current);
+    this.recoveryBootstrapTailByOriginRunId.set(originRunId, nextTail);
+
+    await previousTail;
+    try {
+      return await operation();
+    } finally {
+      release();
+      if (this.recoveryBootstrapTailByOriginRunId.get(originRunId) === nextTail) {
+        this.recoveryBootstrapTailByOriginRunId.delete(originRunId);
+      }
+    }
   }
 
   private assertRunExists(runId: string): void {

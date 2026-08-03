@@ -27,7 +27,126 @@ const queryContext: AuthorizedExecutionContext<{ kind: 'query'; name: 'run:list'
   authorizedAt: new Date('2026-03-19T00:00:00Z'),
 };
 
+type PlanStoreReaderDouble = Readonly<{
+  getStoredPlanRef: ReturnType<typeof vi.fn>;
+  getStoredPlanValidationRecord: ReturnType<typeof vi.fn>;
+  fetchStoredPlanArtifact: ReturnType<typeof vi.fn>;
+  fetchStoredPlanArtifactForValidation: ReturnType<typeof vi.fn>;
+}>;
+
+function createPlanStoreReader(getStoredPlanRef: ReturnType<typeof vi.fn>): PlanStoreReaderDouble {
+  return {
+    getStoredPlanRef,
+    getStoredPlanValidationRecord: vi.fn(),
+    fetchStoredPlanArtifact: vi.fn(),
+    fetchStoredPlanArtifactForValidation: vi.fn(),
+  };
+}
+
+const registeredTargetAdapterRegistry = {
+  isSupported: vi.fn().mockReturnValue(true),
+  listSupported: vi.fn().mockReturnValue(['temporal']),
+};
+
 describe('ListRunsUseCase', () => {
+  it('advertises cancellation when a listed pending run has confirmed provider dispatch', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const startDispatchResolver = {
+      resolve: vi.fn().mockResolvedValue({
+        kind: 'confirmed',
+        runRef: metadata.providerRef,
+      }),
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'PENDING',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      registeredTargetAdapterRegistry as never,
+      startDispatchResolver
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.cancel).toEqual({ available: true });
+    expect(startDispatchResolver.resolve).toHaveBeenCalledOnce();
+  });
+
+  it('projects accepted cancellation receipts in list items before lifecycle catches up', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const cancellationReceipts = {
+      hasAccepted: vi.fn().mockResolvedValue(true),
+      recordAccepted: vi.fn(),
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'RUNNING',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      registeredTargetAdapterRegistry as never,
+      undefined,
+      cancellationReceipts
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.cancel).toEqual({
+      available: false,
+      reason: 'cancellation_pending',
+    });
+    expect(cancellationReceipts.hasAccepted).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      runId: 'run-1',
+      logicalAttemptId: 1,
+      planId: 'plan-1',
+      planVersion: '1.0',
+    });
+  });
+
   it('filters by authorized scope and projects the same canonical operational truth as detail', async () => {
     const stateStore = {
       async listRuns() {
@@ -93,7 +212,33 @@ describe('ListRunsUseCase', () => {
       })),
     };
 
-    const useCase = new ListRunsUseCase(stateStore as never, engine as never);
+    const executionContextReader = {
+      read: vi.fn().mockResolvedValue({
+        kind: 'untrusted',
+        reason: 'reference_missing',
+      }),
+    };
+    const useCase = new ListRunsUseCase(
+      stateStore as never,
+      engine as never,
+      executionContextReader as never,
+      undefined,
+      createPlanStoreReader(
+        vi.fn().mockResolvedValue({
+          uri: 'dvt-plan://postgres/plan-1',
+          sha256: 'a'.repeat(64),
+          planId: 'plan-1',
+          planVersion: '1.0',
+          schemaVersion: 'v1.0',
+          sizeBytes: 4096,
+        })
+      ) as never,
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
+      registeredTargetAdapterRegistry as never,
+      undefined,
+      undefined,
+      { validatePlan: vi.fn().mockResolvedValue({ status: 'OK' }) } as never
+    );
 
     await expect(useCase.execute({ limit: 25 }, queryContext as never)).resolves.toEqual({
       items: [
@@ -108,6 +253,10 @@ describe('ListRunsUseCase', () => {
           provider: 'temporal',
           createdAt: '2026-03-19T00:00:00Z',
           status: 'FAILED',
+          controls: {
+            cancel: { available: false, reason: 'run_terminal' },
+            recover: { available: false, reason: 'source_context_untrusted' },
+          },
           startedAt: '2026-03-19T00:00:05Z',
           completedAt: '2026-03-19T00:00:20Z',
           durationMs: 15000,
@@ -125,6 +274,19 @@ describe('ListRunsUseCase', () => {
       nextCursor: null,
     });
     expect(engine.getRunStatus).toHaveBeenCalledOnce();
+    expect(executionContextReader.read).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      runId: 'run-1',
+      expectedBinding: {
+        tenantId: 'tenant-a',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        planId: 'plan-1',
+        planVersion: '1.0',
+        planSha256: 'a'.repeat(64),
+        targetAdapter: 'temporal',
+      },
+    });
   });
 
   it('bounds canonical status reads while preserving list order', async () => {
@@ -164,5 +326,256 @@ describe('ListRunsUseCase', () => {
 
     expect(maximumActiveReads).toBeLessThanOrEqual(8);
     expect(result.items.map((item) => item.runId)).toEqual(metadata.map((item) => item.runId));
+  });
+
+  it('bounds recovery plan validation while preserving list order', async () => {
+    const metadata = Array.from({ length: 10 }, (_, index) => ({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: `run-${index}`,
+      planId: `plan-${index}`,
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: `wf-${index}`,
+        runId: `provider-run-${index}`,
+      },
+    }));
+    let activeValidations = 0;
+    let maximumActiveValidations = 0;
+    const planIntegrityValidator = {
+      async fetchAndValidate() {
+        activeValidations += 1;
+        maximumActiveValidations = Math.max(maximumActiveValidations, activeValidations);
+        await new Promise((resolve) => setTimeout(resolve, 1));
+        activeValidations -= 1;
+        return {};
+      },
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue(metadata) } as never,
+      {
+        getRunStatus: vi.fn().mockImplementation(async ({ runId }: { runId: string }) => ({
+          runId,
+          status: 'CANCELLED' as const,
+        })),
+      } as never,
+      undefined,
+      undefined,
+      createPlanStoreReader(
+        vi.fn().mockImplementation(async ({ planId }: { planId: string }) => ({ planId }))
+      ) as never,
+      planIntegrityValidator as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(maximumActiveValidations).toBeLessThanOrEqual(4);
+    expect(result.items.map((item) => item.runId)).toEqual(metadata.map((item) => item.runId));
+  });
+
+  it('fails closed when a recoverable run has no stored source plan', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const planStore = createPlanStoreReader(vi.fn().mockResolvedValue(undefined));
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'CANCELLED',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      planStore as never,
+      { fetchAndValidate: vi.fn() } as never,
+      registeredTargetAdapterRegistry as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.recover).toEqual({
+      available: false,
+      reason: 'source_plan_unavailable',
+    });
+    expect(planStore.getStoredPlanRef).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planId: 'plan-1',
+    });
+  });
+
+  it('fails closed when the stored source plan fails canonical integrity validation', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const planRef = { planId: 'plan-1' };
+    const planStore = createPlanStoreReader(vi.fn().mockResolvedValue(planRef));
+    const planIntegrityValidator = {
+      fetchAndValidate: vi.fn().mockRejectedValue(new Error('PLAN_INTEGRITY_VALIDATION_FAILED')),
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'FAILED',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      planStore as never,
+      planIntegrityValidator as never,
+      registeredTargetAdapterRegistry as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.recover).toEqual({
+      available: false,
+      reason: 'source_plan_unavailable',
+    });
+    expect(planIntegrityValidator.fetchAndValidate).toHaveBeenCalledWith(
+      {
+        tenantId: 'tenant-a',
+        projectId: 'proj-1',
+        environmentId: 'env-1',
+        planRef,
+      },
+      planStore
+    );
+  });
+
+  it('fails closed when the source runtime adapter is not registered', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const planStore = createPlanStoreReader(vi.fn().mockResolvedValue({ planId: 'plan-1' }));
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'FAILED',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      planStore as never,
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
+      { isSupported: vi.fn().mockReturnValue(false), listSupported: vi.fn() } as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.recover).toEqual({
+      available: false,
+      reason: 'source_adapter_unavailable',
+    });
+  });
+
+  it('fails closed when the current adapter lacks a required plan capability', async () => {
+    const metadata = {
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      runId: 'run-1',
+      planId: 'plan-1',
+      planVersion: '1.0',
+      logicalAttemptId: 1,
+      providerRef: {
+        provider: 'temporal' as const,
+        tenantId: 'tenant-a',
+        namespace: 'default',
+        workflowId: 'wf-1',
+        runId: 'provider-run-1',
+      },
+    };
+    const planRef = { planId: 'plan-1' };
+    const planStore = createPlanStoreReader(vi.fn().mockResolvedValue(planRef));
+    const planExecutabilityValidator = {
+      validatePlan: vi.fn().mockResolvedValue({
+        status: 'ERROR',
+        code: 'MISSING_CAPABILITY',
+        reason: 'Missing adapter capability: executor.dbt',
+      }),
+    };
+    const useCase = new ListRunsUseCase(
+      { listRuns: vi.fn().mockResolvedValue([metadata]) } as never,
+      {
+        getRunStatus: vi.fn().mockResolvedValue({
+          runId: 'provider-run-1',
+          status: 'FAILED',
+        }),
+      } as never,
+      undefined,
+      undefined,
+      planStore as never,
+      { fetchAndValidate: vi.fn().mockResolvedValue({}) } as never,
+      registeredTargetAdapterRegistry as never,
+      undefined,
+      undefined,
+      planExecutabilityValidator as never
+    );
+
+    const result = await useCase.execute({ limit: 25 }, queryContext as never);
+
+    expect(result.items[0]?.controls.recover).toEqual({
+      available: false,
+      reason: 'source_adapter_unavailable',
+    });
+    expect(planExecutabilityValidator.validatePlan).toHaveBeenCalledWith({
+      tenantId: 'tenant-a',
+      projectId: 'proj-1',
+      environmentId: 'env-1',
+      planRef,
+      adapterId: 'temporal',
+    });
   });
 });

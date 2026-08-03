@@ -47,6 +47,7 @@ export interface IStartRunAdmissionService {
 
 export interface StartRunErrorContext {
   intentId?: string;
+  preparedRun?: boolean;
 }
 
 export interface StartRunExecutionInput {
@@ -59,6 +60,9 @@ export interface StartRunExecutionInput {
 
 export interface IStartRunExecutionService {
   executeStartRun(input: StartRunExecutionInput): Promise<EngineRunRef>;
+  executePreparedRun(
+    input: StartRunExecutionInput & { preparedRunRef: EngineRunRef }
+  ): Promise<EngineRunRef>;
 }
 
 export interface IStartRunFailurePolicy {

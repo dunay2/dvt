@@ -18,13 +18,15 @@ import {
   type RunOperationalTableSort,
 } from './runOperationalTableModel';
 import { runStatesCopy as copy } from './runStatesCopy';
+import type { RunControlCommandController } from './useRunControlCommands';
 
 type RunListStateProps = {
   runs: RunSummaryItem[];
   isLoading?: boolean;
+  runControls?: RunControlCommandController;
 };
 
-export function RunListStateView({ runs, isLoading }: RunListStateProps) {
+export function RunListStateView({ runs, isLoading, runControls }: RunListStateProps) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const tableState = useMemo(
@@ -52,6 +54,7 @@ export function RunListStateView({ runs, isLoading }: RunListStateProps) {
           onOpenRun={(runId) => {
             void navigate(`/runs/${runId}`);
           }}
+          runControls={runControls}
           isLoading={isLoading}
         />
       </div>

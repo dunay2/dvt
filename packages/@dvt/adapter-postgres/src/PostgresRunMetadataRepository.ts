@@ -194,7 +194,7 @@ export class PostgresRunMetadataRepository {
     );
 
     // When inserting a retry child, advance the origin run's counter so that
-    // the next reserveRetryAttempt sees the correct next slot.
+    // the next recovery bootstrap sees the correct lineage slot.
     if (meta.originRunId && meta.originRunId !== meta.runId) {
       await client.query(
         `
@@ -422,19 +422,17 @@ export class PostgresRunMetadataRepository {
     });
   }
 
-  async reserveRetryAttempt(
+  async reserveRetryAttemptWithClient(
+    client: PoolClient,
     tenantId: string,
     sourceRunId: RunId
   ): Promise<RetryAttemptReservation> {
-    return this.withClient(async (client) => {
-      await PostgresSchemaManager.setTenantContext(client, tenantId);
-
-      const result = await client.query<{
-        parent_run_id: string;
-        origin_run_id: string;
-        logical_attempt_id: number;
-      }>(
-        `
+    const result = await client.query<{
+      parent_run_id: string;
+      origin_run_id: string;
+      logical_attempt_id: number;
+    }>(
+      `
           WITH source AS (
             SELECT run_id, COALESCE(origin_run_id, run_id) AS origin_run_id
             FROM ${quoteIdentifier(this.schema)}.run_metadata
@@ -450,19 +448,18 @@ export class PostgresRunMetadataRepository {
           SELECT source.run_id AS parent_run_id, source.origin_run_id, updated.logical_attempt_id
           FROM source, updated
         `,
-        [tenantId, sourceRunId]
-      );
+      [tenantId, sourceRunId]
+    );
 
-      const row = result.rows[0];
-      if (!row) {
-        throw new RunNotFoundError(sourceRunId);
-      }
+    const row = result.rows[0];
+    if (!row) {
+      throw new RunNotFoundError(sourceRunId);
+    }
 
-      return {
-        parentRunId: row.parent_run_id,
-        originRunId: row.origin_run_id,
-        logicalAttemptId: row.logical_attempt_id,
-      };
-    });
+    return {
+      parentRunId: row.parent_run_id,
+      originRunId: row.origin_run_id,
+      logicalAttemptId: row.logical_attempt_id,
+    };
   }
 }

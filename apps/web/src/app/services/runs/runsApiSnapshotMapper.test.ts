@@ -20,6 +20,10 @@ describe('runsApiSnapshotMapper operational truth', () => {
       durationMs: 9_000,
       failedStepId: 'step-load',
       errorReason: 'SINK_WRITE_FAILED',
+      controls: {
+        cancel: { available: false, reason: 'run_terminal' },
+        recover: { available: false, reason: 'source_plan_unavailable' },
+      },
     });
 
     expect(snapshot).not.toBeNull();
@@ -43,6 +47,10 @@ describe('runsApiSnapshotMapper operational truth', () => {
       durationMs: 9_000,
       failedStepId: 'step-load',
       errorReason: 'SINK_WRITE_FAILED',
+      controls: {
+        cancel: { available: false, reason: 'run_terminal' },
+        recover: { available: false, reason: 'source_plan_unavailable' },
+      },
     });
   });
 
@@ -51,6 +59,10 @@ describe('runsApiSnapshotMapper operational truth', () => {
       runId: 'run-1',
       createdAt: '2026-07-19T09:59:55.000Z',
       durationMs: -1,
+      controls: {
+        cancel: { available: false, reason: 'run_active' },
+        recover: { available: false, reason: 'source_adapter_unavailable' },
+      },
     });
 
     expect(snapshot).toMatchObject({
@@ -59,6 +71,20 @@ describe('runsApiSnapshotMapper operational truth', () => {
       createdAt: '2026-07-19T09:59:55.000Z',
       startedAt: undefined,
       durationMs: undefined,
+      controls: {
+        cancel: { available: false, reason: 'run_active' },
+        recover: { available: false, reason: 'source_adapter_unavailable' },
+      },
     });
+  });
+
+  it('preserves snapshots without controls while withholding run actions', () => {
+    const snapshot = mapUnknownRecordToSnapshot({ runId: 'run-1', status: 'RUNNING' });
+
+    expect(snapshot).toMatchObject({
+      runId: 'run-1',
+      status: 'running',
+    });
+    expect(snapshot?.controls).toBeUndefined();
   });
 });

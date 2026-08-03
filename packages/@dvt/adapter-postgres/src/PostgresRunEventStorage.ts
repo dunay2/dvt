@@ -2,6 +2,7 @@ import type { PoolClient } from 'pg';
 
 import {
   advisoryLockSql,
+  hasEventByIdempotencyKeySql,
   insertEventSql,
   listEventsSql,
   maxRunSeqSql,
@@ -55,6 +56,11 @@ export interface RunEventStoragePort {
     runId: RunId,
     idempotencyKey: string
   ): Promise<EventEnvelope | null>;
+  hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean>;
   listEvents(
     tenantId: string,
     runId: string,
@@ -146,6 +152,22 @@ export class PostgresRunEventStorage implements RunEventStoragePort {
       idempotencyKey,
     ]);
     return result.rows[0]?.payload ?? null;
+  }
+
+  async hasEventByIdempotencyKey(
+    tenantId: string,
+    runId: string,
+    idempotencyKey: string
+  ): Promise<boolean> {
+    const result = await this.withClient(async (client) => {
+      await PostgresSchemaManager.setTenantContext(client, tenantId);
+      return client.query<{ exists: boolean }>(hasEventByIdempotencyKeySql(this.schema), [
+        tenantId,
+        runId,
+        idempotencyKey,
+      ]);
+    });
+    return result.rows[0]?.exists ?? false;
   }
 
   async listEvents(

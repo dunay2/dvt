@@ -5,6 +5,52 @@ import { ENGINE_ERROR_CODE, RunNotFoundError } from '../../src/contracts/errors.
 import { InMemoryRunStateStore } from '../../src/state/InMemoryRunStateStore.js';
 
 describe('InMemoryRunStateStore append invariants', () => {
+  it('queries event idempotency keys within the tenant and run boundary', async () => {
+    const store = new InMemoryRunStateStore();
+    const runId = 'run-idempotency-query';
+    const idempotencyKey = `${runId}:queued`;
+
+    await store.bootstrapRunTx({
+      metadata: {
+        tenantId: 't1',
+        projectId: 'p1',
+        environmentId: 'dev',
+        runId,
+        planId: 'plan-minimal',
+        planVersion: '1.0',
+        logicalAttemptId: 1,
+        providerRef: {
+          provider: 'temporal',
+          tenantId: 't1',
+          namespace: 'default',
+          workflowId: `wf-${runId}`,
+          runId: `pr-${runId}`,
+        },
+      },
+      firstEvents: [
+        {
+          eventId: `${runId}:queued`,
+          eventType: 'RunQueued',
+          runId,
+          tenantId: 't1',
+          projectId: 'p1',
+          environmentId: 'dev',
+          planId: 'plan-minimal',
+          planVersion: '1.0',
+          logicalAttemptId: 1,
+          engineAttemptId: 1,
+          emittedAt: '2026-03-26T00:00:00.000Z',
+          idempotencyKey,
+          payloadVersion: 1,
+        },
+      ],
+    });
+
+    await expect(store.hasEventByIdempotencyKey('t1', runId, idempotencyKey)).resolves.toBe(true);
+    await expect(store.hasEventByIdempotencyKey('t1', runId, 'missing-key')).resolves.toBe(false);
+    await expect(store.hasEventByIdempotencyKey('t2', runId, idempotencyKey)).resolves.toBe(false);
+  });
+
   it('rejects append when run metadata does not exist', async () => {
     const store = new InMemoryRunStateStore();
     const runId = 'missing-run';

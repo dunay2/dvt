@@ -54,6 +54,11 @@ export class StartRunAdmissionGuard {
     this.deps.policy.checkRateLimit(context.tenantId);
   }
 
+  async assertPreparedRunAllowed(planRef: PlanRef, context: ResolvedRunContext): Promise<void> {
+    await this.validationPolicy.validatePreparedRunPreconditions(planRef, context);
+    this.deps.policy.checkRateLimit(context.tenantId);
+  }
+
   async assertExecutionPolicyAllowed(admission: StartRunExecutionPolicyAdmission): Promise<void> {
     const { plan, planRef, executionPolicy, context, adapter } = admission;
 

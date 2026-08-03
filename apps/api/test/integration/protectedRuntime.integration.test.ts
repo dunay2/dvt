@@ -105,14 +105,6 @@ describeIfPg('protected runtime integration', () => {
         url: '/runs/non-authorized-recover/recover',
         payload: {
           tenantId: TENANT_ID,
-          recoveryRunId: 'recover-target-1',
-          planRef: {
-            uri: 'https://plans.example/recover-plan.json',
-            sha256: 'a'.repeat(64),
-            schemaVersion: 'v1.0',
-            planId: 'recover-plan',
-            planVersion: '1.0.0',
-          },
         },
       },
     },
@@ -278,9 +270,11 @@ describeIfPg('protected runtime integration', () => {
     expect(flow.startResponse.statusCode).toBe(202);
     expect(flow.cancelResponse.statusCode).toBe(202);
     expect(flow.cancelResponse.json()).toEqual({
+      contractVersion: 'v1',
       runId: flow.actualRunId,
       signalType: 'CANCEL',
       accepted: true,
+      disposition: 'requested',
     });
   });
 

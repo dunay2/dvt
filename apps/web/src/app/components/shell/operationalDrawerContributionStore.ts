@@ -4,6 +4,12 @@ import type {
   CanvasExecutionSelectionRecoveryCommands,
   CanvasExecutionSelectionRecoveryReadModel,
 } from '../../types/canvasExecutionSelectionRecovery';
+import type { RunControlAvailability } from '../../ports/runs';
+import type {
+  RunControlCommandFailure,
+  RunControlCommandOutcome,
+  RunControlCommandRequest,
+} from '../../services/runs/runControlCommandModel';
 import type { OperationalDrawerSelectionRecoveryMessages } from './operationalDrawerSelectionRecoveryMessages';
 
 export type OperationalDrawerTabId = 'log' | 'problems' | 'runs' | 'preview';
@@ -25,6 +31,16 @@ export type OperationalDrawerProblem = Readonly<{
   }> | null;
 }>;
 
+export type OperationalDrawerRunControls = Readonly<{
+  runId: string;
+  availability: RunControlAvailability;
+  activity: RunControlCommandRequest | null;
+  outcome: RunControlCommandOutcome | null;
+  failure: RunControlCommandFailure | null;
+  onCancel: () => void;
+  onRecover: () => void;
+}>;
+
 export type OperationalDrawerContribution = Readonly<{
   source: 'canvas';
   title: string;
@@ -38,6 +54,7 @@ export type OperationalDrawerContribution = Readonly<{
     onStartRun: () => void;
     status: 'active' | 'ready' | 'blocked';
     summary: string;
+    controls: OperationalDrawerRunControls | null;
   }>;
   preview: Readonly<{
     status: 'ready' | 'blocked';

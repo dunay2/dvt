@@ -2,7 +2,7 @@
  * Owned concern: derive dense Runs table rows, filters, sorting, and URL state
  * from presentation-facing run summaries without owning runtime read authority.
  */
-import type { RunSummaryItem, UiRunStatus } from '../../ports/runs';
+import type { RunControlAvailability, RunSummaryItem, UiRunStatus } from '../../ports/runs';
 import { isKnownRunField } from './runStatesModel';
 
 const RUN_STATUS_FILTERS = [
@@ -55,6 +55,7 @@ export type RunOperationalRow = {
   readonly completedAtLabel: string;
   readonly durationMs: number | null;
   readonly durationLabel: string;
+  readonly controls: RunControlAvailability | undefined;
 };
 
 export const DEFAULT_RUN_OPERATIONAL_TABLE_STATE: RunOperationalTableState = {
@@ -157,6 +158,7 @@ export function buildRunOperationalRows(runs: readonly RunSummaryItem[]): RunOpe
       completedAtLabel: formatDateTime(completedAt),
       durationMs,
       durationLabel: formatDuration(durationMs),
+      controls: run.controls,
     };
   });
 }

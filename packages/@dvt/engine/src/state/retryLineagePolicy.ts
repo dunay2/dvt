@@ -12,7 +12,7 @@ export function reserveRetryAttemptFromSource(
   nextRetryAttemptByOriginRunId: Map<string, number>,
   sourceMeta: RunMetadata
 ): RetryAttemptReservation {
-  const originRunId = resolveOriginRunId(sourceMeta);
+  const originRunId = resolveRetryOriginRunId(sourceMeta);
   const nextAttempt = nextRetryAttemptByOriginRunId.get(originRunId) ?? FIRST_RETRY_LOGICAL_ATTEMPT;
   nextRetryAttemptByOriginRunId.set(originRunId, nextAttempt + 1);
 
@@ -27,7 +27,7 @@ export function initializeRetryLineageFromMetadata(
   nextRetryAttemptByOriginRunId: Map<string, number>,
   meta: RunMetadata
 ): void {
-  const originRunId = resolveOriginRunId(meta);
+  const originRunId = resolveRetryOriginRunId(meta);
   const nextAttempt = meta.logicalAttemptId + 1;
   const current = nextRetryAttemptByOriginRunId.get(originRunId) ?? FIRST_RETRY_LOGICAL_ATTEMPT;
 
@@ -45,7 +45,7 @@ export function captureRetryLineageCheckpoint(
   nextRetryAttemptByOriginRunId: Map<string, number>,
   meta: RunMetadata
 ): RetryLineageCheckpoint {
-  const originRunId = resolveOriginRunId(meta);
+  const originRunId = resolveRetryOriginRunId(meta);
   return {
     originRunId,
     previousNextAttempt: nextRetryAttemptByOriginRunId.get(originRunId),
@@ -63,6 +63,6 @@ export function restoreRetryLineageCheckpoint(
   nextRetryAttemptByOriginRunId.set(checkpoint.originRunId, checkpoint.previousNextAttempt);
 }
 
-function resolveOriginRunId(meta: RunMetadata): string {
+export function resolveRetryOriginRunId(meta: RunMetadata): string {
   return meta.originRunId ?? meta.runId;
 }

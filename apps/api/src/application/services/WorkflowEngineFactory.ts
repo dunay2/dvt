@@ -15,6 +15,7 @@ import {
   type IAuthorizer,
   type IClock,
   type IOutboxRateLimiter,
+  type IPlanIntegrityValidator,
   type IProviderAdapter,
   type IRunAccessPolicy,
   type IRunEnrichmentService,
@@ -37,6 +38,7 @@ import {
   buildWorkflowEngineFacade,
   buildWorkflowEngineUseCases,
   IdempotencyKeyBuilder,
+  PlanIntegrityValidator,
   PlanRefPolicy,
   RunAccessPolicy,
   RunEnrichmentService,
@@ -91,6 +93,7 @@ export interface EngineConfig {
 
 export interface BuiltWorkflowEngineRuntime {
   engine: IWorkflowEngine;
+  planIntegrityValidator: IPlanIntegrityValidator;
   runEnrichmentService: IRunEnrichmentService;
   runHealthService: IRunHealthService;
 }
@@ -126,6 +129,9 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
   });
   const projector = new SnapshotProjector();
   const idempotency = new IdempotencyKeyBuilder();
+  const planIntegrityValidator = new PlanIntegrityValidator({
+    clock: config.infrastructure.clock,
+  });
   const startRunApplicationService = buildStartRunApplicationService({
     guard: new StartRunAdmissionGuard({
       policy,
@@ -146,6 +152,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     clock: config.infrastructure.clock,
     intentStore: config.persistence.intentStore,
     planFetcher: config.persistence.planFetcher,
+    planIntegrityValidator,
     observability: config.infrastructure.observability,
     ...optionalConfig('timeouts', config.runtime.timeouts),
   });
@@ -183,7 +190,9 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
     adapters: protectedAdapters,
     observability: config.infrastructure.observability,
     clock: config.infrastructure.clock,
+    idempotency,
     startRunApplicationService,
+    planIntegrityValidator,
     ...optionalConfig(
       'runExecutionContextResolver',
       config.persistence.runExecutionContextResolver
@@ -211,6 +220,7 @@ export function buildWorkflowEngine(config: EngineConfig): BuiltWorkflowEngineRu
       adapters: protectedAdapters,
       ...optionalConfig('requiredProviders', config.runtime.requiredProviders),
     }),
+    planIntegrityValidator,
     runHealthService,
     runEnrichmentService: new RunEnrichmentService({
       stateStoreRead: config.persistence.stateStoreRead,

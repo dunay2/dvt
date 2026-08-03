@@ -406,6 +406,7 @@ export function useDbtProjectFileCanvasController(
 
   return {
     authorityBinding,
+    workspaceLayoutKey,
     query,
     projection,
     projectionErrorMessage: query.isError ? buildProjectionErrorMessage(query.error) : null,

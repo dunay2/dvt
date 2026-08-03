@@ -61,6 +61,10 @@ describe('projectRunOperationalTruth', () => {
       execution: status.execution,
       failedStepId: 'step-load',
       errorReason: 'SINK_WRITE_FAILED',
+      controls: {
+        cancel: { available: false, reason: 'run_terminal' },
+        recover: { available: true },
+      },
     });
   });
 
@@ -84,6 +88,119 @@ describe('projectRunOperationalTruth', () => {
       provider: 'temporal',
       createdAt: '2026-07-19T10:00:00.000Z',
       status: 'PENDING',
+      controls: {
+        cancel: { available: false, reason: 'dispatch_pending' },
+        recover: { available: false, reason: 'run_active' },
+      },
+    });
+  });
+
+  it('advertises cancellation for a pending run only after provider dispatch is confirmed', () => {
+    expect(
+      projectRunOperationalTruth({
+        metadata,
+        status: {
+          runId: 'run-provider',
+          status: 'PENDING',
+        },
+        cancelDispatchConfirmed: true,
+      }).controls.cancel
+    ).toEqual({ available: true });
+  });
+
+  it('withdraws cancellation after command acceptance while runtime lifecycle is still running', () => {
+    expect(
+      projectRunOperationalTruth({
+        metadata,
+        status: {
+          runId: 'run-provider',
+          status: 'RUNNING',
+        },
+        cancellationAccepted: true,
+      }).controls.cancel
+    ).toEqual({ available: false, reason: 'cancellation_pending' });
+  });
+
+  it.each([
+    ['COMPLETED', 'run_terminal'],
+    ['FAILED', 'run_terminal'],
+    ['CANCELLED', 'run_cancelled'],
+  ] as const)(
+    'preserves %s lifecycle precedence over durable cancellation receipts',
+    (status, reason) => {
+      expect(
+        projectRunOperationalTruth({
+          metadata,
+          status: { runId: 'run-provider', status },
+          cancellationAccepted: true,
+        }).controls.cancel
+      ).toEqual({ available: false, reason });
+    }
+  );
+
+  it.each([
+    ['RUNNING', undefined, true, undefined, false, 'run_active'],
+    ['RUNNING', 'CANCELLING', false, 'cancellation_pending', false, 'run_active'],
+    ['PAUSED', undefined, true, undefined, false, 'run_active'],
+    ['COMPLETED', undefined, false, 'run_terminal', false, 'run_completed'],
+    ['FAILED', undefined, false, 'run_terminal', true, undefined],
+    ['FAILED', 'CANCELLING', false, 'run_terminal', true, undefined],
+    ['CANCELLED', undefined, false, 'run_cancelled', true, undefined],
+  ] as const)(
+    'projects server-owned controls for %s/%s',
+    (status, substatus, canCancel, cancelReason, canRecover, recoverReason) => {
+      const truth = projectRunOperationalTruth({
+        metadata,
+        status: {
+          runId: 'run-provider',
+          status,
+          ...(substatus === undefined ? {} : { substatus }),
+        },
+      });
+
+      expect(truth.controls.cancel.available).toBe(canCancel);
+      if (!canCancel) {
+        expect(truth.controls.cancel).toEqual({ available: false, reason: cancelReason });
+      }
+      expect(truth.controls.recover.available).toBe(canRecover);
+      if (!canRecover) {
+        expect(truth.controls.recover).toEqual({
+          available: false,
+          reason: recoverReason,
+        });
+      }
+    }
+  );
+
+  it('does not advertise recovery when the source plan is unavailable', () => {
+    const truth = projectRunOperationalTruth({
+      metadata,
+      status: {
+        runId: 'run-provider',
+        status: 'FAILED',
+      },
+      recoveryPlanAvailable: false,
+    });
+
+    expect(truth.controls.recover).toEqual({
+      available: false,
+      reason: 'source_plan_unavailable',
+    });
+  });
+
+  it('does not advertise recovery when the source runtime adapter is unavailable', () => {
+    const truth = projectRunOperationalTruth({
+      metadata,
+      status: {
+        runId: 'run-provider',
+        status: 'FAILED',
+      },
+      recoveryAdapterAvailable: false,
+    });
+
+    expect(truth.controls.recover).toEqual({
+      available: false,
+      reason: 'source_adapter_unavailable',
     });
   });
 

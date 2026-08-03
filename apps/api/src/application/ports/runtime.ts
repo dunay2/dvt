@@ -8,7 +8,6 @@ import type {
   Provider,
   MaterializationEvidence,
   ProviderRunStatusView,
-  RunExecutionContextRef,
   TransformationExecutor,
   TransformationSqlFirstPlanSummary,
 } from '@dvt/contracts';
@@ -110,6 +109,27 @@ export interface RunOperationalTruthDto {
   readonly currentStepId?: string;
   readonly failedStepId?: string;
   readonly errorReason?: string;
+  readonly controls: RunControlAvailabilityDto;
+}
+
+export type RunControlUnavailableReason =
+  | 'cancellation_pending'
+  | 'dispatch_pending'
+  | 'run_active'
+  | 'run_cancelled'
+  | 'run_completed'
+  | 'run_terminal'
+  | 'source_adapter_unavailable'
+  | 'source_plan_unavailable'
+  | 'source_context_untrusted';
+
+export type RunControlActionAvailabilityDto =
+  | Readonly<{ available: true }>
+  | Readonly<{ available: false; reason: RunControlUnavailableReason }>;
+
+export interface RunControlAvailabilityDto {
+  readonly cancel: RunControlActionAvailabilityDto;
+  readonly recover: RunControlActionAvailabilityDto;
 }
 
 export type GetRunStatusResult = RunOperationalTruthDto & {
@@ -236,6 +256,16 @@ export interface SignalRunResult {
   readonly accepted: boolean;
 }
 
+export type CancelRunDisposition = 'requested' | 'already_requested' | 'already_cancelled';
+
+export const RUN_CONTROL_RESULT_CONTRACT_VERSION = 'v1' as const;
+
+export interface CancelRunResult extends SignalRunResult {
+  readonly contractVersion: typeof RUN_CONTROL_RESULT_CONTRACT_VERSION;
+  readonly signalType: 'CANCEL';
+  readonly disposition: CancelRunDisposition;
+}
+
 export interface ISignalRunUseCase {
   execute(
     command: SignalRunCommand,
@@ -247,34 +277,16 @@ export interface ICancelRunUseCase {
   execute(
     command: CancelRunCommand,
     context: AuthorizedCommandExecutionContext
-  ): Promise<SignalRunResult>;
-}
-
-export const SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS = ['temporal'] as const;
-
-export type RecoverRunTargetAdapter = (typeof SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS)[number];
-
-export function isRecoverRunTargetAdapter(value: string): value is RecoverRunTargetAdapter {
-  return (SUPPORTED_RECOVER_RUN_TARGET_ADAPTERS as readonly string[]).includes(value);
-}
-
-export interface RecoverRunPlanRef {
-  readonly uri: string;
-  readonly sha256: string;
-  readonly schemaVersion: string;
-  readonly planId: string;
-  readonly planVersion: string;
+  ): Promise<CancelRunResult>;
 }
 
 export interface RecoverRunCommand {
   readonly sourceRunId: string;
   readonly recoveryRunId: string;
-  readonly targetAdapter?: RecoverRunTargetAdapter;
-  readonly runExecutionContextRef?: RunExecutionContextRef;
-  readonly planRef: RecoverRunPlanRef;
 }
 
 export interface RecoverRunResult {
+  readonly contractVersion: typeof RUN_CONTROL_RESULT_CONTRACT_VERSION;
   readonly sourceRunId: string;
   readonly recoveryRunId: string;
   readonly accepted: boolean;

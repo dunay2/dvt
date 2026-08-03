@@ -16,6 +16,8 @@ import type {
   IRunMaintenanceService,
   ReconcileOrphanedIntentsOptions,
   ReconcileOrphanedIntentsResult,
+  ReconcileStartRunIntentOptions,
+  ReconcileStartRunIntentResult,
 } from '../ports/IRunMaintenanceService.js';
 
 import type { RunMaintenanceServiceDeps } from './runMaintenance/RunMaintenanceContracts.js';
@@ -47,5 +49,11 @@ export class RunMaintenanceService implements IRunMaintenanceService {
     options: ReconcileOrphanedIntentsOptions
   ): Promise<ReconcileOrphanedIntentsResult> {
     return this.orphanedIntentService.reconcileOrphanedIntents(options);
+  }
+
+  async reconcileStartRunIntent(
+    options: ReconcileStartRunIntentOptions
+  ): Promise<ReconcileStartRunIntentResult> {
+    return this.orphanedIntentService.reconcileStartRunIntent(options);
   }
 }

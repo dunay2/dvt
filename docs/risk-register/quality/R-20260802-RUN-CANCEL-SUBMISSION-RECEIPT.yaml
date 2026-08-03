@@ -1,0 +1,28 @@
+---
+id: R-20260802-RUN-CANCEL-SUBMISSION-RECEIPT
+title: Concurrent cancel deliveries could dispatch duplicate provider commands
+status: Closed
+date: 2026-08-02
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/engine
+  - packages/@dvt/adapter-postgres
+  - apps/api
+severity: High
+probability: Low
+context: >
+  The runtime may not emit its cancellation lifecycle event before the API releases its per-run
+  command lock.
+risk: >
+  A second delivery could observe RUNNING after the first provider command succeeded and dispatch
+  cancellation again.
+mitigations:
+  - 'Persist RunCancelSubmitted after provider acceptance and before releasing the command lock.'
+  - 'Return already_requested when a durable submission receipt exists.'
+  - 'Keep RunCancelSubmitted non-projecting so runtime lifecycle authority remains unchanged.'
+  - 'Resolve receipt existence through the indexed state-store idempotency query instead of scanning
+    event streams.'
+  - 'Skip receipt reads when a terminal lifecycle state already fixes run-control availability.'
+  - 'Cover concurrent RUNNING deliveries and receipt projection semantics with tests.'
+review_after: 2026-11-02
+---

@@ -26,6 +26,7 @@ export async function recoverRunRoute(
     },
     parseRecoverRunRequest({
       sourceRunId: request.params.runId,
+      idempotencyKey: request.headers['idempotency-key'],
       body: request.body,
     })
   );

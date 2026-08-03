@@ -50,10 +50,11 @@ function createOperationalHookApp(): {
 function createStateStoreRoleSource(): StateStoreRoleSource {
   return {
     bootstrapRunTx: async () => null as never,
+    bootstrapRecoveryRunTx: async () => null as never,
     appendAndEnqueueTx: async () => null as never,
     saveProviderRef: async () => null as never,
-    reserveRetryAttempt: async () => null as never,
     getRunMetadataByRunId: async () => null,
+    hasEventByIdempotencyKey: async () => false,
     listEvents: async () => [],
     listRuns: async () => [],
     getSnapshot: async () => null,
@@ -89,8 +90,12 @@ function createProtectedRuntimeModuleHarness(): {
       authenticator: {} as never,
       authorizer: {} as never,
       engine: {} as never,
+      planIntegrityValidator: {} as never,
       runEnrichmentService: {} as never,
       runHealthService: {} as never,
+      runMaintenanceService: {
+        reconcileStartRunIntent: async () => ({ kind: 'missing' }),
+      },
       adapters: new Map(),
       startRunTargetAdapterRegistry: {
         isSupported(_value: string): _value is 'temporal' {
@@ -101,9 +106,36 @@ function createProtectedRuntimeModuleHarness(): {
         },
       },
       stateStore: bindStateStoreRoles(createStateStoreRoleSource()),
+      startRunIntentStore: {
+        async listOrphaned() {
+          return [];
+        },
+        async getIntent() {
+          return null;
+        },
+      },
       planner: {} as never,
       planCompilePlanner: {} as never,
       planStore: {} as never,
+      runExecutionContextReferenceReader: {
+        async read() {
+          return { kind: 'absent' as const };
+        },
+      },
+      runExecutionContextInheritanceWriter: {
+        async inherit(command) {
+          return command.sourceRef;
+        },
+      },
+      runControlCommandCoordinator: {
+        async executeExclusive(_key, operation) {
+          return operation();
+        },
+      },
+      systemClock: {
+        nowIsoUtc: () => '2026-08-02T04:00:00.000Z' as never,
+      },
+      runExecutionContextBindingPolicy: { pluginRequirements: [] },
       planValidator: {} as never,
       executablePlanResolver: { fetch: async () => ({}) } as never,
       workspaceContextQuery: {

@@ -215,6 +215,7 @@ function createStack(
     adapters,
     observability: createNoopObservability(),
     clock,
+    idempotency,
     startRunApplicationService,
     ...(options?.runExecutionContextResolver === undefined
       ? {}

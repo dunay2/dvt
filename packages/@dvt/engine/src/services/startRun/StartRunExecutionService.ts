@@ -53,6 +53,33 @@ export class StartRunExecutionService implements IStartRunExecutionService {
     return this.startRunWithoutEstimatedRef(input);
   }
 
+  async executePreparedRun(input: {
+    adapter: IProviderAdapter;
+    planRef: PlanRef;
+    resolvedContext: ResolvedRunContext;
+    traceContext: StartRunTraceContext;
+    intentId: string;
+    preparedRunRef: EngineRunRef;
+  }): Promise<EngineRunRef> {
+    const runRef = await this.startAdapterAndMarkDispatched(input);
+    await this.reconcileEstimatedRunRef({
+      adapter: input.adapter,
+      resolvedContext: input.resolvedContext,
+      estimatedRef: input.preparedRunRef,
+      runRef,
+      traceContext: input.traceContext,
+      intentId: input.intentId,
+    });
+    await this.deps.failurePolicy.markIntentResolvedBestEffort({
+      intentId: input.intentId,
+      tenantId: input.resolvedContext.tenantId,
+      runId: input.resolvedContext.runId,
+      provider: input.resolvedContext.targetAdapter,
+      traceContext: input.traceContext,
+    });
+    return runRef;
+  }
+
   private async startRunWithEstimatedRef(input: {
     adapter: IProviderAdapter;
     planRef: PlanRef;

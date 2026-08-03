@@ -16,7 +16,10 @@ import type { SessionContextPort } from '../../ports/sessionContext';
 import type { RunEvent } from '../../types/engine';
 import { ApiError, type ApiClient } from '../api/createApiClient';
 import { normalizeProtectedRuntimeRejection } from '../api/protectedRuntimeRejection';
+import { createBrowserIdempotencyKey } from '../idempotency/createBrowserIdempotencyKey';
 import { createSessionContextPort } from '../session/sessionContextPort';
+import { parseCancelRunReceipt, parseRecoverRunReceipt } from './runsApiControlReceipts';
+import type { RecoveryIdempotencyKeyStore } from './recoveryIdempotencyKeyStore';
 import {
   extractEventsPayload,
   extractRunListPayload,
@@ -74,7 +77,8 @@ function parseRunStartReceipt(input: unknown): RunStartReceipt {
 
 export function createApiRunsService(
   apiClient: ApiClient,
-  sessionContext: SessionContextPort = createSessionContextPort()
+  sessionContext: SessionContextPort = createSessionContextPort(),
+  recoveryIdempotencyKeyStore: RecoveryIdempotencyKeyStore
 ): IRunsPort {
   async function getRunSnapshotById(runId: string): Promise<RunSnapshot | null> {
     try {
@@ -99,6 +103,40 @@ export function createApiRunsService(
         .map(mapSnapshotToSummary);
     },
     getRunSnapshot: getRunSnapshotById,
+    cancelRun: async (runId) => {
+      const { tenantId } = sessionContext.getWorkspaceScope();
+      try {
+        const payload = await apiClient.postJson<{ tenantId: string }, unknown>(
+          `/runs/${runId}/cancel`,
+          { tenantId }
+        );
+        return parseCancelRunReceipt(payload);
+      } catch (error) {
+        throw normalizeProtectedRuntimeRejection(error) ?? error;
+      }
+    },
+    recoverRun: async (runId) => {
+      const { tenantId } = sessionContext.getWorkspaceScope();
+      const recoveryIdentity = { tenantId, runId };
+      const idempotencyKey =
+        recoveryIdempotencyKeyStore.get(recoveryIdentity) ??
+        createBrowserIdempotencyKey('recover-run');
+      recoveryIdempotencyKeyStore.set(recoveryIdentity, idempotencyKey);
+      try {
+        const payload = await apiClient.postJson<{ tenantId: string }, unknown>(
+          `/runs/${runId}/recover`,
+          { tenantId },
+          { headers: { 'Idempotency-Key': idempotencyKey } }
+        );
+        const receipt = parseRecoverRunReceipt(payload);
+        recoveryIdempotencyKeyStore.delete(recoveryIdentity);
+        return receipt;
+      } catch (error) {
+        const rejection = normalizeProtectedRuntimeRejection(error);
+        if (rejection !== null) recoveryIdempotencyKeyStore.delete(recoveryIdentity);
+        throw rejection ?? error;
+      }
+    },
     startRun: async (input: StartRunInput) => {
       try {
         const payload = await apiClient.postJson<StartRunApiRequest, unknown>('/runs/start', {

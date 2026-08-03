@@ -3,12 +3,14 @@
  */
 import type { CanvasRouteViewState } from './canvasRouteViewState';
 import type { useCanvasController } from './useCanvasController';
+import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 
 type CanvasRouteController = ReturnType<typeof useCanvasController>;
 
 export type CanvasShellRouteComposerArgs = Readonly<{
   controller: CanvasRouteController;
   routeViewState: CanvasRouteViewState;
+  runControls: OperationalDrawerRunControls | null;
 }>;
 
 export type CanvasShellLayoutBuilderArgs = Readonly<{

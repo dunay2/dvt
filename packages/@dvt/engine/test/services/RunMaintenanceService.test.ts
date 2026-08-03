@@ -753,6 +753,88 @@ describe('RunMaintenanceService', () => {
       expect((await intentStore.getIntent(intentRef('i-p3')))?.status).toBe('EXPIRED');
     });
 
+    it('adopts a provider workflow when its PENDING intent already has bootstrapped run state', async () => {
+      const cancelLog: string[] = [];
+      const { service, store, intentStore } = createFixtureWith(
+        makeAdapterWithLookup(new Set(['recovery-run-1']), cancelLog)
+      );
+      await store.bootstrapRunTx({
+        metadata: {
+          tenantId: 't',
+          projectId: 'p',
+          environmentId: 'dev',
+          runId: 'recovery-run-1',
+          planId: 'plan',
+          planVersion: '1.0',
+          logicalAttemptId: 2,
+          providerRef: {
+            provider: 'temporal',
+            tenantId: 't',
+            namespace: 'default',
+            workflowId: 'wf-recovery-run-1',
+            runId: 'recovery-run-1',
+          },
+          createdAt: '1970-01-01T00:00:00.000Z',
+        },
+        firstEvents: [],
+      });
+      await makePendingIntent(intentStore, 'recovery-run-1', 'i-recovery');
+
+      await expect(
+        service.reconcileStartRunIntent({ tenantId: 't', intentId: 'i-recovery' })
+      ).resolves.toEqual({ kind: 'confirmed' });
+
+      expect(cancelLog).toEqual([]);
+      expect(await intentStore.getIntent(intentRef('i-recovery'))).toMatchObject({
+        status: 'RESOLVED',
+        engineRunRef: {
+          provider: 'temporal',
+          tenantId: 't',
+          workflowId: 'wf-recovery-run-1',
+          runId: 'recovery-run-1',
+        },
+      });
+    });
+
+    it('defers reconciliation when run metadata cannot be read', async () => {
+      const cancelLog: string[] = [];
+      const store = new InMemoryTxStore();
+      const intentStore = new InMemoryStartRunIntentStore();
+      const service = new RunMaintenanceService({
+        stateStoreRead: {
+          async getRunMetadataByRunId() {
+            throw new Error('state store unavailable');
+          },
+        } as never,
+        stateStoreWrite: store,
+        intentStore,
+        adapters: makeProviderMap(
+          makeAdapterWithLookup(new Set(['recovery-metadata-read-failure']), cancelLog)
+        ),
+        authorizer: new AllowAllAuthorizer(),
+        clock: new SequenceClock('2026-02-12T00:00:00.000Z'),
+        idempotency: new IdempotencyKeyBuilder(),
+        observability: createNoopObservability(),
+      });
+      await makePendingIntent(
+        intentStore,
+        'recovery-metadata-read-failure',
+        'i-metadata-read-failure'
+      );
+
+      await expect(
+        service.reconcileStartRunIntent({
+          tenantId: 't',
+          intentId: 'i-metadata-read-failure',
+        })
+      ).resolves.toEqual({ kind: 'blocked' });
+
+      expect(cancelLog).toEqual([]);
+      expect((await intentStore.getIntent(intentRef('i-metadata-read-failure')))?.status).toBe(
+        'PENDING'
+      );
+    });
+
     it('keeps PENDING intent and reports cancelFailed when workflow cancel throws', async () => {
       const { service, intentStore } = createFixtureWith(
         makeAdapterWithFailingCancel(new Set(['run-cancel-fail-1']))
@@ -803,6 +885,54 @@ describe('RunMaintenanceService', () => {
       expect(result.cancelFailed).toEqual([]);
       expect(result.deferred).toEqual(['i-p5']);
       expect((await intentStore.getIntent(intentRef('i-p5')))?.status).toBe('PENDING');
+
+      await expect(
+        service.reconcileStartRunIntent({ tenantId: 't', intentId: 'i-p5' })
+      ).resolves.toEqual({ kind: 'ready_to_dispatch' });
+    });
+
+    it('blocks redispatch when a bootstrapped recovery child is already terminal', async () => {
+      const { service, store, intentStore, clock, idempotency } = createFixtureWith(
+        makeAdapterWithLookup(new Set())
+      );
+      const metadata = {
+        tenantId: 't',
+        projectId: 'p',
+        environmentId: 'dev',
+        runId: 'failed-recovery-child',
+        planId: 'plan',
+        planVersion: '1.0',
+        logicalAttemptId: 2,
+        providerRef: {
+          provider: 'temporal' as const,
+          tenantId: 't',
+          namespace: 'default',
+          workflowId: 'wf-failed-recovery-child',
+          runId: 'failed-recovery-child',
+        },
+        createdAt: '1970-01-01T00:00:00.000Z',
+      };
+      await store.bootstrapRunTx({
+        metadata,
+        firstEvents: buildRunEvents([
+          { idempotency, clock, meta: metadata, eventType: 'RunQueued' },
+          {
+            idempotency,
+            clock,
+            meta: metadata,
+            eventType: 'RunFailed',
+            payload: { reason: 'QUEUED_TIMEOUT' },
+          },
+        ]),
+      });
+      await makePendingIntent(intentStore, metadata.runId, 'i-terminal-recovery');
+
+      await expect(
+        service.reconcileStartRunIntent({ tenantId: 't', intentId: 'i-terminal-recovery' })
+      ).resolves.toEqual({ kind: 'blocked' });
+      expect((await intentStore.getIntent(intentRef('i-terminal-recovery')))?.status).toBe(
+        'EXPIRED'
+      );
     });
 
     it('classifies DISPATCHED bootstrapped intent as resolved without cancelling', async () => {

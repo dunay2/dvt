@@ -7,13 +7,17 @@ import { randomUUID } from 'node:crypto';
 
 import type { IObservability } from '@dvt/observability';
 import type { FastifyInstance } from 'fastify';
+import { Pool } from 'pg';
 import type { Logger } from 'pino';
 
 import { getPgPool } from '../db/pool.js';
 import { ConfiguredDbtExecutionTargetResolver } from '../infrastructure/dbt/ConfiguredDbtExecutionTargetResolver.js';
 import { DbtCliProjectAnalyzer } from '../infrastructure/dbt/DbtCliProjectAnalyzer.js';
+import { FileRunExecutionContextInheritanceWriter } from '../infrastructure/dbt/FileRunExecutionContextInheritanceWriter.js';
+import { FileRunExecutionContextReferenceReader } from '../infrastructure/dbt/FileRunExecutionContextReferenceReader.js';
 import { LocalDbtProjectImportInspector } from '../infrastructure/dbt/LocalDbtProjectImportInspector.js';
 import { PostgresDbtProjectImportProcessStore } from '../infrastructure/dbt/PostgresDbtProjectImportProcessStore.js';
+import { PostgresRunControlCommandCoordinator } from '../infrastructure/runControl/PostgresRunControlCommandCoordinator.js';
 import type { Env } from '../plugins/env.js';
 
 import { buildCanvasAuthoringAuthorityRuntime } from './canvasAuthoringAuthority/buildCanvasAuthoringAuthorityRuntime.js';
@@ -28,6 +32,7 @@ import type { ProtectedRuntimeModule } from './types.js';
 import { buildWorkspaceGraphDraftRuntime } from './workspaceGraphDraft/buildWorkspaceGraphDraftRuntime.js';
 
 const MINIMUM_DBT_PROJECT_IMPORT_OPERATION_LEASE_MS = 300_000;
+const RUN_CONTROL_LOCK_POOL_SIZE = 2;
 
 async function closeAllClosers(closers: Array<() => Promise<void>>): Promise<void> {
   const results = await Promise.allSettled(closers.map((closer) => closer()));
@@ -165,6 +170,16 @@ export async function buildProtectedRuntimeModule(
     dbtBundleStore: storageRuntime.dbtBundleStore,
     dbtExecutionTargetResolver,
   });
+  const runControlLockPool = new Pool({
+    connectionString: databaseUrl,
+    max: RUN_CONTROL_LOCK_POOL_SIZE,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 5_000,
+  });
+  const runControlCommandCoordinator = new PostgresRunControlCommandCoordinator(
+    runControlLockPool,
+    RUN_CONTROL_LOCK_POOL_SIZE
+  );
 
   return {
     facade: startRunRuntime.facade,
@@ -175,14 +190,26 @@ export async function buildProtectedRuntimeModule(
     createProjectUseCase: securityRuntime.createProjectUseCase,
     listWorkspacePluginsUseCase: securityRuntime.listWorkspacePluginsUseCase,
     engine: executionRuntime.engine,
+    planIntegrityValidator: executionRuntime.planIntegrityValidator,
     runEnrichmentService: executionRuntime.runEnrichmentService,
     runHealthService: executionRuntime.runHealthService,
+    runMaintenanceService: executionRuntime.runMaintenanceService,
     adapters: executionRuntime.adapters,
     startRunTargetAdapterRegistry: executionRuntime.startRunTargetAdapterRegistry,
     stateStore: storageRuntime.stateStoreRoles,
+    startRunIntentStore: storageRuntime.intentStore,
     planner: startRunRuntime.planner,
     planCompilePlanner: startRunRuntime.planCompilePlanner,
     planStore: storageRuntime.planStore,
+    runExecutionContextReferenceReader: new FileRunExecutionContextReferenceReader(
+      storageRuntime.dbtBundleStore
+    ),
+    runExecutionContextInheritanceWriter: new FileRunExecutionContextInheritanceWriter(
+      storageRuntime.dbtBundleStore
+    ),
+    runControlCommandCoordinator,
+    systemClock: storageRuntime.systemClock,
+    runExecutionContextBindingPolicy: storageRuntime.runExecutionContextBindingPolicy,
     planValidator: startRunRuntime.planValidator,
     executablePlanResolver: storageRuntime.executablePlanResolver,
     workspaceGraphDraftStore: workspaceGraphDraftRuntime.workspaceGraphDraftStore,
@@ -216,6 +243,7 @@ export async function buildProtectedRuntimeModule(
         () => dbtProjectImportProcessStore.close(),
         () => storageRuntime.stateStore.close(),
         () => storageRuntime.intentStore.close(),
+        () => runControlLockPool.end(),
         () => pool.end(),
       ]);
     },

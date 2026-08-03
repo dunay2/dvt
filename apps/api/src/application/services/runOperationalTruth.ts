@@ -2,6 +2,8 @@ import type { CanonicalRunStatus, RunMetadata } from '@dvt/contracts';
 
 import type { RunOperationalTruthDto } from '../ports/runtime.js';
 
+import { projectRunControlAvailability } from './runControlPolicy.js';
+
 export interface RunOperationalTruthEvidence {
   readonly currentStepId?: string;
   readonly failedStepId?: string;
@@ -12,6 +14,11 @@ export interface ProjectRunOperationalTruthInput {
   readonly metadata: RunMetadata;
   readonly status: CanonicalRunStatus;
   readonly evidence?: RunOperationalTruthEvidence;
+  readonly recoveryContextTrusted?: boolean;
+  readonly recoveryPlanAvailable?: boolean;
+  readonly recoveryAdapterAvailable?: boolean;
+  readonly cancelDispatchConfirmed?: boolean;
+  readonly cancellationAccepted?: boolean;
 }
 
 export function projectRunOperationalTruth(
@@ -45,6 +52,13 @@ export function projectRunOperationalTruth(
     ...(currentStepId === undefined ? {} : { currentStepId }),
     ...(failedStepId === undefined ? {} : { failedStepId }),
     ...(errorReason === undefined ? {} : { errorReason }),
+    controls: projectRunControlAvailability(status, {
+      recoveryContextTrusted: input.recoveryContextTrusted ?? true,
+      recoveryPlanAvailable: input.recoveryPlanAvailable ?? true,
+      recoveryAdapterAvailable: input.recoveryAdapterAvailable ?? true,
+      cancelDispatchConfirmed: input.cancelDispatchConfirmed ?? false,
+      cancellationAccepted: input.cancellationAccepted ?? false,
+    }),
   };
 }
 

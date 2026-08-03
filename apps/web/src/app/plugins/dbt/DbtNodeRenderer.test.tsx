@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { createAppServicesTestOverrides } from '../../../testing/appServicesTestDoubles';
+import { createMockRunsService } from '../../../testing/runsPortDoubles';
 import { asIsoUtcString, asNonBlankString, asStepId, type EventEnvelope } from '@dvt/contracts';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { act } from 'react';
@@ -71,6 +72,7 @@ describe('DbtNodeRenderer history panel', () => {
   });
 
   const buildRunsService = (overrides: Partial<IRunsPort> = {}): IRunsPort => ({
+    ...createMockRunsService(),
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async (runId) => buildSnapshot(runId)),
     startRun: vi.fn(async () => ({

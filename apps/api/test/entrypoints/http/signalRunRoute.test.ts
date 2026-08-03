@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { HTTP_ERROR_REASON } from '../../../src/entrypoints/http/httpErrorReasonCatalog.js';
 import { signalRunRoute } from '../../../src/entrypoints/http/signalRunRoute.js';
 import { SIGNAL_COMMAND_ACTION } from '../../../src/entrypoints/http/signalRunRouteParser.js';
 import { HTTP_STATUS_CODE } from '../../../src/routes/httpStatus.js';
@@ -33,6 +34,7 @@ function httpError(
 function createDeps(): {
   authenticator: { authenticateBearerToken: ReturnType<typeof vi.fn> };
   authorizer: { authorize: ReturnType<typeof vi.fn> };
+  cancelUseCase: { execute: ReturnType<typeof vi.fn> };
   useCase: { execute: ReturnType<typeof vi.fn> };
   compatibilityPolicy: { allowCancelSignalType: boolean };
 } {
@@ -65,6 +67,15 @@ function createDeps(): {
         },
       }),
     },
+    cancelUseCase: {
+      execute: vi.fn().mockResolvedValue({
+        contractVersion: 'v1',
+        runId: 'run-1',
+        signalType: 'CANCEL',
+        accepted: true,
+        disposition: 'requested',
+      }),
+    },
     useCase: {
       execute: vi.fn().mockResolvedValue({ runId: 'run-1', signalType: 'CANCEL', accepted: true }),
     },
@@ -75,7 +86,7 @@ function createDeps(): {
 }
 
 describe('signalRunRoute', () => {
-  it('returns 202 for a valid signal request', async () => {
+  it('routes compatibility CANCEL through the canonical cancel command', async () => {
     const deps = createDeps();
     const reply = createReply();
 
@@ -84,16 +95,17 @@ describe('signalRunRoute', () => {
         id: 'req-1',
         headers: {},
         params: { runId: 'run-1' },
-        body: { tenantId: 'tenant-a', signalType: 'CANCEL', reason: 'operator cancel' },
+        body: { tenantId: 'tenant-a', signalType: 'CANCEL' },
       } as never,
       reply as never,
       deps as never
     );
 
-    expect(deps.useCase.execute).toHaveBeenCalledWith(
-      { runId: 'run-1', signalType: 'CANCEL', reason: 'operator cancel' },
+    expect(deps.cancelUseCase.execute).toHaveBeenCalledWith(
+      { runId: 'run-1', signalType: 'CANCEL' },
       expect.anything()
     );
+    expect(deps.useCase.execute).not.toHaveBeenCalled();
     expect(deps.authorizer.authorize).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({
@@ -102,6 +114,37 @@ describe('signalRunRoute', () => {
       'req-1'
     );
     expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.accepted);
+    expect(reply.send).toHaveBeenCalledWith({
+      contractVersion: 'v1',
+      runId: 'run-1',
+      signalType: 'CANCEL',
+      accepted: true,
+      disposition: 'requested',
+    });
+  });
+
+  it('rejects compatibility CANCEL reasons before authorization or execution', async () => {
+    const deps = createDeps();
+    const reply = createReply();
+
+    await signalRunRoute(
+      {
+        id: 'req-cancel-reason',
+        headers: {},
+        params: { runId: 'run-1' },
+        body: { tenantId: 'tenant-a', signalType: 'CANCEL', reason: 'operator cancel' },
+      } as never,
+      reply as never,
+      deps as never
+    );
+
+    expect(reply.code).toHaveBeenCalledWith(HTTP_STATUS_CODE.badRequest);
+    expect(reply.send).toHaveBeenCalledWith(
+      httpError('bad_request', HTTP_ERROR_REASON.cancelReasonNotSupported, 'reason')
+    );
+    expect(deps.authorizer.authorize).not.toHaveBeenCalled();
+    expect(deps.cancelUseCase.execute).not.toHaveBeenCalled();
+    expect(deps.useCase.execute).not.toHaveBeenCalled();
   });
 
   it('authorizes PAUSE using run:signal action', async () => {

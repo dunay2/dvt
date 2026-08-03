@@ -1,17 +1,28 @@
-import type { IStoredPlanArtifactStore } from '@dvt/artifacts';
-import type { ExecutionPlan, IPlanner, PlanRef } from '@dvt/contracts';
+import type {
+  IPlanStoreReader,
+  IStoredPlanArtifactStore,
+  IStoredPlanRefReader,
+} from '@dvt/artifacts';
+import type { ExecutionPlan, IPlanner, IsoUtcString, PlanRef } from '@dvt/contracts';
 import type {
   EngineRunRef,
+  IPlanIntegrityValidator,
   IProviderAdapter,
   IRunEnrichmentService,
   IRunHealthService,
+  IRunMaintenanceService,
+  IStartRunIntentQueryStore,
   IWorkflowEngine,
 } from '@dvt/engine';
+import type { IRunExecutionContextBindingPolicy } from '@dvt/engine';
 import type { IPlanExecutabilityValidator } from '@dvt/planner';
 
 import type { IAuthenticator } from '../application/ports/auth.js';
 import type { ICanvasAuthoringAuthorityStore } from '../application/ports/canvasAuthoringAuthority.js';
 import type { IStartRunTargetAdapterRegistry } from '../application/ports/IStartRunTargetAdapterRegistry.js';
+import type { IRunControlCommandCoordinator } from '../application/ports/runControlCommandCoordinator.js';
+import type { IRunExecutionContextInheritanceWriter } from '../application/ports/runExecutionContextInheritanceWriter.js';
+import type { IRunExecutionContextReferenceReader } from '../application/ports/runExecutionContextReferenceReader.js';
 import type { IWorkspaceContextQuery } from '../application/ports/workspaceContext.js';
 import type { IWorkspaceGraphDraftStore } from '../application/ports/workspaceGraphDraft.js';
 import type { AuthorizeCommandScopeService } from '../application/services/authorizeCommandScopeService.js';
@@ -36,14 +47,22 @@ export interface ProtectedRuntimeModule {
   createProjectUseCase: CreateProjectUseCase;
   listWorkspacePluginsUseCase: ListWorkspacePluginsUseCase;
   engine: IWorkflowEngine;
+  planIntegrityValidator: IPlanIntegrityValidator;
   runEnrichmentService: IRunEnrichmentService;
   runHealthService: IRunHealthService;
+  runMaintenanceService: Pick<IRunMaintenanceService, 'reconcileStartRunIntent'>;
   adapters: Map<EngineRunRef['provider'], IProviderAdapter>;
   startRunTargetAdapterRegistry: IStartRunTargetAdapterRegistry;
   stateStore: StateStoreRoleBindings;
+  startRunIntentStore: IStartRunIntentQueryStore;
   planner: IPlanner;
   planCompilePlanner: IPlanner;
-  planStore: IStoredPlanArtifactStore;
+  planStore: IStoredPlanArtifactStore & IStoredPlanRefReader & IPlanStoreReader;
+  runExecutionContextReferenceReader: IRunExecutionContextReferenceReader;
+  runExecutionContextInheritanceWriter: IRunExecutionContextInheritanceWriter;
+  runControlCommandCoordinator: IRunControlCommandCoordinator;
+  systemClock: { nowIsoUtc(): IsoUtcString };
+  runExecutionContextBindingPolicy: IRunExecutionContextBindingPolicy;
   planValidator: IPlanExecutabilityValidator;
   executablePlanResolver: {
     fetch(input: {

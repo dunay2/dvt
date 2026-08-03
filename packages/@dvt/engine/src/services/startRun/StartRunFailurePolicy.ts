@@ -140,6 +140,9 @@ export class StartRunFailurePolicy implements IStartRunFailurePolicy {
       this.reportSkipRunFailedPendingIntent(pendingIntent, traceContext);
       throw error;
     }
+    if (errorContext.preparedRun === true && errorContext.intentId === undefined) {
+      throw error;
+    }
 
     await this.emitRunFailedBestEffort(failMeta, traceContext);
     throw error;

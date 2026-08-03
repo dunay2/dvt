@@ -3,6 +3,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { RouterProvider, createMemoryRouter } from 'react-router';
+import { QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { expect, vi } from 'vitest';
 
 import { DVT_AUTHORING_NODE_KINDS } from '../plugins/dvt/dvtNodeTypeCatalog';
@@ -26,6 +27,7 @@ import { useCanvasViewMenuContributionStore } from './canvas/canvasViewMenuContr
 import { useCanvasController } from './canvas/useCanvasController';
 import { buildController, type CanvasController } from './Canvas.test.controller';
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
+import { createTestQueryClient } from '../../testing/reactQueryHarness';
 export { buildController } from './Canvas.test.controller';
 
 export const CANVAS_ROUTE_BOOTSTRAP_REGISTRATION = getRouteBootstrapRegistration('dbt.canvas', {
@@ -88,7 +90,7 @@ export function currentCanvasRouteState() {
   return canvasRouteState;
 }
 
-async function renderCanvasRoute(root: Root): Promise<void> {
+async function renderCanvasRoute(root: Root, queryClient: QueryClient): Promise<void> {
   const router = createMemoryRouter(
     [
       {
@@ -108,9 +110,11 @@ async function renderCanvasRoute(root: Root): Promise<void> {
 
   await act(async () => {
     root.render(
-      <AppServicesProvider overrides={createAppServicesTestOverrides()}>
-        <RouterProvider router={router} />
-      </AppServicesProvider>
+      <QueryClientProvider client={queryClient}>
+        <AppServicesProvider overrides={createAppServicesTestOverrides()}>
+          <RouterProvider router={router} />
+        </AppServicesProvider>
+      </QueryClientProvider>
     );
   });
 }
@@ -119,6 +123,7 @@ export function createCanvasRouteHarness() {
   const container = document.createElement('div');
   document.body.appendChild(container);
   const root = createRoot(container);
+  const queryClient = createTestQueryClient();
   (
     globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
   ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -135,7 +140,7 @@ export function createCanvasRouteHarness() {
     container,
     async render(initialEntry?: string) {
       canvasRouteState.initialEntry = initialEntry ?? '/canvas';
-      await renderCanvasRoute(root);
+      await renderCanvasRoute(root, queryClient);
     },
     cleanup() {
       act(() => {
@@ -144,6 +149,7 @@ export function createCanvasRouteHarness() {
       resetCanvasDraftPresentationState();
       resetRouteBootstrapPresentation(CANVAS_ROUTE_BOOTSTRAP_REGISTRATION);
       useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
+      queryClient.clear();
       canvasRouteState.router = null;
       container.remove();
     },

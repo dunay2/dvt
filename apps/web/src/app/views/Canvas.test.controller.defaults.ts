@@ -13,6 +13,7 @@ import type { CanvasController } from './Canvas.test.controller';
 
 type CanvasWorkbenchDefaultsDto = {
   dataSourceMode: CanvasController['dataSourceMode'];
+  workspaceLayoutKey: CanvasController['workspaceLayoutKey'];
   workspaceScope: WorkspaceScope;
   isBackendCheckPending: CanvasController['isBackendCheckPending'];
   backendReady: CanvasController['backendReady'];
@@ -127,6 +128,7 @@ function buildDefaultTransformationValidation(): CanvasControllerStateDefaults['
 function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
   return {
     dataSourceMode: 'api',
+    workspaceLayoutKey: 'tenant-a::project-a::dev',
     workspaceScope: {
       tenantId: 'tenant-a',
       projectId: 'project-orders',

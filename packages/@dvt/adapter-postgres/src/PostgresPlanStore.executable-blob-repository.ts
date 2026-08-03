@@ -186,6 +186,32 @@ export class PostgresExecutableBlobRepository {
     return result.rows[0];
   }
 
+  public async getStoredPlanRefRow(
+    client: PoolClient,
+    planId: string
+  ): Promise<
+    | Pick<
+        StoredPlanRow,
+        'plan_id' | 'plan_version' | 'plan_uri' | 'plan_sha256' | 'schema_version' | 'size_bytes'
+      >
+    | undefined
+  > {
+    const result = await client.query<
+      Pick<
+        StoredPlanRow,
+        'plan_id' | 'plan_version' | 'plan_uri' | 'plan_sha256' | 'schema_version' | 'size_bytes'
+      >
+    >(
+      `
+        SELECT plan_id, plan_version, plan_uri, plan_sha256, schema_version, size_bytes
+        FROM ${quoteIdentifier(this.schema)}.stored_plans
+        WHERE plan_id = $1
+      `,
+      [planId]
+    );
+    return result.rows[0];
+  }
+
   public async getExecutablePlanRow(
     client: PoolClient,
     planId: string

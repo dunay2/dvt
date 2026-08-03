@@ -39,6 +39,21 @@ function createStartRunInput(): StartRunInput {
   };
 }
 
+const activeRunControls = {
+  cancel: { available: true },
+  recover: { available: false, reason: 'run_active' },
+} as const;
+
+const completedRunControls = {
+  cancel: { available: false, reason: 'run_terminal' },
+  recover: { available: false, reason: 'run_completed' },
+} as const;
+
+const failedRunControls = {
+  cancel: { available: false, reason: 'run_terminal' },
+  recover: { available: true },
+} as const;
+
 function createApiError(
   statusCode: number,
   endpoint = '/runs/start',
@@ -55,6 +70,7 @@ function createApiError(
 
 describe('runsService runtime contract', () => {
   beforeEach(() => {
+    localStorage.clear();
     useSessionStore.setState({
       tenantId: 'tenant-1',
       projectId: 'project-1',
@@ -153,6 +169,10 @@ describe('runsService runtime contract', () => {
       substatus: 'WAITING_APPROVAL',
       message: 'Approval required',
       snapshotStaleness: 'FRESH',
+      controls: {
+        cancel: { available: true },
+        recover: { available: false, reason: 'run_active' },
+      },
     });
 
     const service = createRunsService(apiClient);
@@ -177,7 +197,87 @@ describe('runsService runtime contract', () => {
       message: 'Approval required',
       snapshotStaleness: 'FRESH',
       execution: undefined,
+      controls: {
+        cancel: { available: true },
+        recover: { available: false, reason: 'run_active' },
+      },
     });
+  });
+
+  it('uses backend-owned cancel and recover command contracts', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.postJson)
+      .mockResolvedValueOnce({
+        contractVersion: 'v1',
+        runId: 'run_abc',
+        signalType: 'CANCEL',
+        accepted: true,
+        disposition: 'requested',
+      })
+      .mockResolvedValueOnce({
+        contractVersion: 'v1',
+        sourceRunId: 'run_failed',
+        recoveryRunId: 'run_recovery',
+        accepted: true,
+      });
+    const service = createRunsService(apiClient);
+
+    await expect(service.cancelRun('run_abc')).resolves.toMatchObject({
+      contractVersion: 'v1',
+      disposition: 'requested',
+    });
+    await expect(service.recoverRun('run_failed')).resolves.toMatchObject({
+      contractVersion: 'v1',
+      recoveryRunId: 'run_recovery',
+    });
+
+    expect(apiClient.postJson).toHaveBeenNthCalledWith(1, '/runs/run_abc/cancel', {
+      tenantId: 'tenant-1',
+    });
+    expect(apiClient.postJson).toHaveBeenNthCalledWith(
+      2,
+      '/runs/run_failed/recover',
+      { tenantId: 'tenant-1' },
+      {
+        headers: { 'Idempotency-Key': expect.stringMatching(/^recover-run:/) },
+      }
+    );
+  });
+
+  it('reuses the recovery command identity after a lost response and browser reload', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.postJson)
+      .mockRejectedValueOnce(new Error('connection reset after dispatch'))
+      .mockResolvedValueOnce({
+        contractVersion: 'v1',
+        sourceRunId: 'run_failed',
+        recoveryRunId: 'run_recovery',
+        accepted: true,
+      });
+    const serviceBeforeReload = createRunsService(apiClient);
+
+    await expect(serviceBeforeReload.recoverRun('run_failed')).rejects.toThrow('connection reset');
+
+    const serviceAfterReload = createRunsService(apiClient);
+    await expect(serviceAfterReload.recoverRun('run_failed')).resolves.toMatchObject({
+      recoveryRunId: 'run_recovery',
+    });
+
+    expect(vi.mocked(apiClient.postJson).mock.calls[0]?.[2]).toEqual(
+      vi.mocked(apiClient.postJson).mock.calls[1]?.[2]
+    );
+  });
+
+  it('rejects malformed run-control receipts', async () => {
+    const apiClient = createApiClientMock();
+    vi.mocked(apiClient.postJson).mockResolvedValue({
+      contractVersion: 'v0',
+      runId: 'run_abc',
+      accepted: true,
+    });
+    const service = createRunsService(apiClient);
+
+    await expect(service.cancelRun('run_abc')).rejects.toThrow('RUN_CONTROL_RESPONSE_INVALID');
   });
 
   it('maps missing snapshots to null for getRunSnapshot', async () => {
@@ -213,6 +313,7 @@ describe('runsService runtime contract', () => {
           runId: 'run_1',
           planId: 'plan_1',
           status: 'RUNNING',
+          controls: activeRunControls,
           environmentId: 'dev',
           gitSha: 'abc',
           createdAt: '2026-04-04T00:00:00.000Z',
@@ -234,6 +335,7 @@ describe('runsService runtime contract', () => {
         runId: 'run_1',
         planId: 'plan_1',
         status: 'running',
+        controls: activeRunControls,
         environment: 'dev',
         gitSha: 'abc',
         createdAt: '2026-04-04T00:00:00.000Z',
@@ -242,6 +344,7 @@ describe('runsService runtime contract', () => {
         durationMs: undefined,
         substatus: 'WAITING_APPROVAL',
         message: 'Approval required',
+        hash: undefined,
         snapshotStaleness: undefined,
         execution: undefined,
       },
@@ -257,6 +360,7 @@ describe('runsService runtime contract', () => {
           planId: 'plan_1',
           environmentId: 'dev',
           createdAt: '2026-04-04T00:00:00.000Z',
+          controls: activeRunControls,
         },
       ],
       nextCursor: null,
@@ -280,6 +384,7 @@ describe('runsService runtime contract', () => {
     vi.mocked(apiClient.getJson).mockResolvedValue({
       runId: 'run_completed',
       status: 'COMPLETED',
+      controls: completedRunControls,
       executor: 'postgres',
       startedAt: '2026-04-04T00:00:00.000Z',
       completedAt: '2026-04-04T00:00:10.000Z',
@@ -319,6 +424,7 @@ describe('runsService runtime contract', () => {
     vi.mocked(apiClient.getJson).mockResolvedValue({
       runId: 'run_with_provenance',
       status: 'COMPLETED',
+      controls: completedRunControls,
       startedAt: '2026-04-04T00:00:00.000Z',
       completedAt: '2026-04-04T00:00:10.000Z',
       provenance: {
@@ -377,6 +483,7 @@ describe('runsService runtime contract', () => {
       runId: 'run_with_plan_scope',
       planId: 'plan_123',
       status: 'COMPLETED',
+      controls: completedRunControls,
       startedAt: '2026-04-04T00:00:00.000Z',
       completedAt: '2026-04-04T00:00:10.000Z',
       planSummary: {
@@ -409,6 +516,7 @@ describe('runsService runtime contract', () => {
     vi.mocked(apiClient.getJson).mockResolvedValue({
       runId: 'run_with_read_model_fields',
       status: 'COMPLETED',
+      controls: completedRunControls,
       startedAt: '2026-04-04T00:00:00.000Z',
       completedAt: '2026-04-04T00:00:10.000Z',
       currentStepId: 'step-transform',
@@ -446,6 +554,7 @@ describe('runsService runtime contract', () => {
     vi.mocked(apiClient.getJson).mockResolvedValue({
       runId: 'run_with_diagnostics',
       status: 'FAILED',
+      controls: failedRunControls,
       startedAt: '2026-04-04T00:00:00.000Z',
       completedAt: '2026-04-04T00:00:10.000Z',
       diagnostics: {
@@ -554,10 +663,14 @@ describe('runsService runtime contract', () => {
     expect(service).toHaveProperty('getRunSnapshot');
     expect(service).toHaveProperty('startRun');
     expect(service).toHaveProperty('listRunEvents');
+    expect(service).toHaveProperty('cancelRun');
+    expect(service).toHaveProperty('recoverRun');
     expect(typeof service.listRunSummaries).toBe('function');
     expect(typeof service.getRunSnapshot).toBe('function');
     expect(typeof service.startRun).toBe('function');
     expect(typeof service.listRunEvents).toBe('function');
+    expect(typeof service.cancelRun).toBe('function');
+    expect(typeof service.recoverRun).toBe('function');
   });
 
   it('keeps the explicit runs-port test double contract usable', () => {
@@ -567,10 +680,14 @@ describe('runsService runtime contract', () => {
     expect(service).toHaveProperty('getRunSnapshot');
     expect(service).toHaveProperty('startRun');
     expect(service).toHaveProperty('listRunEvents');
+    expect(service).toHaveProperty('cancelRun');
+    expect(service).toHaveProperty('recoverRun');
     expect(typeof service.listRunSummaries).toBe('function');
     expect(typeof service.getRunSnapshot).toBe('function');
     expect(typeof service.startRun).toBe('function');
     expect(typeof service.listRunEvents).toBe('function');
+    expect(typeof service.cancelRun).toBe('function');
+    expect(typeof service.recoverRun).toBe('function');
   });
 
   it.each([401, 403, 404, 409, 422, 500])(
@@ -612,6 +729,7 @@ describe('runsService runtime contract', () => {
     vi.mocked(apiClient.getJson).mockResolvedValue({
       runId: 'run_abc',
       status: 'RUNNING',
+      controls: activeRunControls,
       startedAt: '2026-04-04T00:00:00.000Z',
     });
 

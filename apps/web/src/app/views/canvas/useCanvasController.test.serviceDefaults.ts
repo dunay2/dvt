@@ -1,5 +1,7 @@
 import { vi } from 'vitest';
 
+import { createMockRunsService } from '../../../testing/runsPortDoubles';
+
 import type { IPlansPort } from '../../ports/plans';
 import type { IRunsPort } from '../../ports/runs';
 import type { SessionContextPort } from '../../ports/sessionContext';
@@ -112,6 +114,7 @@ export function buildDefaultCanvasHarnessServices(
   };
 
   const runsService: IRunsPort = {
+    ...createMockRunsService(),
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
     startRun: vi.fn(async () => ({

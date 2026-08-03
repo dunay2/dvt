@@ -2,7 +2,7 @@
 title: ADR-0039 — Hexagonal Port Hardening and SOLID Remediation
 status: Accepted
 owner: Architecture / Engine
-last_reviewed: 2026-03-22
+last_reviewed: 2026-08-02
 ---
 
 # ADR-0039 — Hexagonal Port Hardening and SOLID Remediation
@@ -144,7 +144,7 @@ This decision formalizes the split contract so that S02 has a canonical shape.
 
 | Interface              | Role                                       | Methods                                                                            |
 | ---------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `IRunWriteStore`       | Command path — write domain facts          | `bootstrapRunTx`, `appendAndEnqueueTx`, `reserveRetryAttempt`                      |
+| `IRunWriteStore`       | Command path — write domain facts          | `bootstrapRunTx`, `bootstrapRecoveryRunTx`, `appendAndEnqueueTx`                   |
 | `IRunReadStore`        | Query path — read current state            | `getRunEvents`, `getRunSnapshot`, `getRunsByTenant`, `getRunStatus`                |
 | `IRunMaintenanceStore` | Operational path — projector, purge, admin | `rebuildSnapshot`, `listStaleSnapshotRuns`, `markDelivered`, `countPendingByRunId` |
 

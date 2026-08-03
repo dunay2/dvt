@@ -934,6 +934,25 @@ units:
     fowlerSignals:
       - coverage refinement
 
+  - id: SYS-API-APPLICATION-ERRORS
+    name: API application errors
+    parent: SYS-API-ROOT
+    level: component
+    status: coverage-required
+    owns:
+      - apps/api/src/application/errors/**
+    excludes:
+      - apps/api/src/application/errors/ManifestArtifactResolutionError.ts
+    childrenRequired: false
+    dddOwner: AS
+    cqRails: API application command and query failure semantics
+    governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/api-governance-subdivision-plan-20260502.md
+      - docs/architecture/command-query-rail-governance.md
+      - docs/planning/status/system-operations-inventory-20260501.md
+    fowlerSignals:
+      - coverage refinement
+
   - id: SYS-API-APPLICATION-SERVICES
     name: API application services and use cases
     parent: SYS-API-ROOT

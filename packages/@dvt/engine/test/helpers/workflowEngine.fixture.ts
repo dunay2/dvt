@@ -186,6 +186,7 @@ export function createWorkflowEngineFixture(
     adapters,
     observability,
     clock,
+    idempotency,
     startRunApplicationService,
     ...(input?.runExecutionContextResolver === undefined
       ? {}

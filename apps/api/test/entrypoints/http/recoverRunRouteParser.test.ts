@@ -5,20 +5,11 @@ import { parseRecoverRunRequest } from '../../../src/entrypoints/http/recoverRun
 import { RUN_COMMAND_ACTION } from '../../../src/entrypoints/http/runCommandRoute.constants.js';
 
 describe('parseRecoverRunRequest', () => {
-  it('maps recover request to run:retry action', () => {
+  it('accepts only tenant scope and the server-generated recovery identity', () => {
     const parsed = parseRecoverRunRequest({
       sourceRunId: ' source-run-1 ',
-      body: {
-        tenantId: ' tenant-a ',
-        recoveryRunId: ' recovery-run-1 ',
-        planRef: {
-          uri: 'https://plans.example/plan.json',
-          sha256: 'a'.repeat(64),
-          schemaVersion: 'v1.0',
-          planId: 'plan-a',
-          planVersion: '1.0.0',
-        },
-      },
+      idempotencyKey: ' recover-source-1 ',
+      body: { tenantId: ' tenant-a ' },
     });
 
     expect(parsed).toEqual({
@@ -26,14 +17,7 @@ describe('parseRecoverRunRequest', () => {
       value: {
         command: {
           sourceRunId: 'source-run-1',
-          recoveryRunId: 'recovery-run-1',
-          planRef: {
-            uri: 'https://plans.example/plan.json',
-            sha256: 'a'.repeat(64),
-            schemaVersion: 'v1.0',
-            planId: 'plan-a',
-            planVersion: '1.0.0',
-          },
+          recoveryRunId: expect.stringMatching(/^run_recovery_[a-f0-9]{40}$/),
         },
         authorization: {
           tenantId: { value: 'tenant-a' },
@@ -43,74 +27,31 @@ describe('parseRecoverRunRequest', () => {
     });
   });
 
-  it('preserves pluginCompatibilityFingerprint in runExecutionContextRef', () => {
-    const parsed = parseRecoverRunRequest({
-      sourceRunId: 'source-run-1',
-      body: {
-        tenantId: 'tenant-a',
-        recoveryRunId: 'recovery-run-1',
-        runExecutionContextRef: {
-          uri: 'dvt-runctx://tenant-a/recovery-run-1',
-          sha256: 'b'.repeat(64),
-          schemaVersion: 'v1.0',
-          planId: 'plan-a',
-          planVersion: '1.0.0',
-          pluginCompatibilityFingerprint: 'c'.repeat(64),
-        },
-        planRef: {
-          uri: 'https://plans.example/plan.json',
-          sha256: 'a'.repeat(64),
-          schemaVersion: 'v1.0',
-          planId: 'plan-a',
-          planVersion: '1.0.0',
-        },
-      },
-    });
+  it.each(['recoveryRunId', 'planRef', 'targetAdapter', 'runExecutionContextRef'])(
+    'rejects browser-owned %s authority',
+    (field) => {
+      const parsed = parseRecoverRunRequest({
+        sourceRunId: 'source-run-1',
+        idempotencyKey: 'recover-source-1',
+        body: { tenantId: 'tenant-a', [field]: 'caller-value' },
+      });
 
-    expect(parsed).toEqual({
-      ok: true,
-      value: {
-        command: {
-          sourceRunId: 'source-run-1',
-          recoveryRunId: 'recovery-run-1',
-          runExecutionContextRef: {
-            uri: 'dvt-runctx://tenant-a/recovery-run-1',
-            sha256: 'b'.repeat(64),
-            schemaVersion: 'v1.0',
-            planId: 'plan-a',
-            planVersion: '1.0.0',
-            pluginCompatibilityFingerprint: 'c'.repeat(64),
-          },
-          planRef: {
-            uri: 'https://plans.example/plan.json',
-            sha256: 'a'.repeat(64),
-            schemaVersion: 'v1.0',
-            planId: 'plan-a',
-            planVersion: '1.0.0',
-          },
+      expect(parsed).toEqual({
+        ok: false,
+        issue: {
+          type: 'bad_request',
+          reason: HTTP_ERROR_REASON.invalidBody,
+          target: field,
         },
-        authorization: {
-          tenantId: { value: 'tenant-a' },
-          actionName: RUN_COMMAND_ACTION.RETRY,
-        },
-      },
-    });
-  });
+      });
+    }
+  );
 
   it('rejects invalid source run id', () => {
     const parsed = parseRecoverRunRequest({
       sourceRunId: '  ',
-      body: {
-        tenantId: 'tenant-a',
-        recoveryRunId: 'recovery-run-1',
-        planRef: {
-          uri: 'https://plans.example/plan.json',
-          sha256: 'a'.repeat(64),
-          schemaVersion: 'v1.0',
-          planId: 'plan-a',
-          planVersion: '1.0.0',
-        },
-      },
+      idempotencyKey: 'recover-source-1',
+      body: { tenantId: 'tenant-a' },
     });
 
     expect(parsed).toEqual({
@@ -123,96 +64,37 @@ describe('parseRecoverRunRequest', () => {
     });
   });
 
-  it('rejects invalid targetAdapter', () => {
-    const parsed = parseRecoverRunRequest({
-      sourceRunId: 'source-run-1',
-      body: {
-        tenantId: 'tenant-a',
-        recoveryRunId: 'recovery-run-1',
-        targetAdapter: 'invalid',
-        planRef: {
-          uri: 'https://plans.example/plan.json',
-          sha256: 'a'.repeat(64),
-          schemaVersion: 'v1.0',
-          planId: 'plan-a',
-          planVersion: '1.0.0',
-        },
-      },
-    });
-
-    expect(parsed).toEqual({
+  it('requires a command idempotency key', () => {
+    expect(
+      parseRecoverRunRequest({
+        sourceRunId: 'source-run-1',
+        idempotencyKey: undefined,
+        body: { tenantId: 'tenant-a' },
+      })
+    ).toEqual({
       ok: false,
       issue: {
         type: 'bad_request',
-        reason: HTTP_ERROR_REASON.invalidTargetAdapter,
-        target: 'targetAdapter',
+        reason: HTTP_ERROR_REASON.missingIdempotencyKey,
+        target: 'idempotency-key',
       },
     });
   });
 
-  it('accepts recover targetAdapter values from the configured catalog', () => {
-    const parsed = parseRecoverRunRequest({
+  it('derives one server-owned run identity for repeated deliveries', () => {
+    const request = {
       sourceRunId: 'source-run-1',
-      body: {
-        tenantId: 'tenant-a',
-        recoveryRunId: 'recovery-run-1',
-        targetAdapter: 'temporal',
-        planRef: {
-          uri: 'https://plans.example/plan.json',
-          sha256: 'a'.repeat(64),
-          schemaVersion: 'v1.0',
-          planId: 'plan-a',
-          planVersion: '1.0.0',
-        },
-      },
-    });
+      idempotencyKey: 'recover-source-1',
+      body: { tenantId: 'tenant-a' },
+    } as const;
 
-    expect(parsed).toEqual({
-      ok: true,
-      value: {
-        command: {
-          sourceRunId: 'source-run-1',
-          recoveryRunId: 'recovery-run-1',
-          targetAdapter: 'temporal',
-          planRef: {
-            uri: 'https://plans.example/plan.json',
-            sha256: 'a'.repeat(64),
-            schemaVersion: 'v1.0',
-            planId: 'plan-a',
-            planVersion: '1.0.0',
-          },
-        },
-        authorization: {
-          tenantId: { value: 'tenant-a' },
-          actionName: RUN_COMMAND_ACTION.RETRY,
-        },
-      },
-    });
-  });
+    const first = parseRecoverRunRequest(request);
+    const repeated = parseRecoverRunRequest(request);
+    const nextIntent = parseRecoverRunRequest({ ...request, idempotencyKey: 'recover-source-2' });
 
-  it('rejects when recoveryRunId equals sourceRunId', () => {
-    const parsed = parseRecoverRunRequest({
-      sourceRunId: 'same-run-id',
-      body: {
-        tenantId: 'tenant-a',
-        recoveryRunId: 'same-run-id',
-        planRef: {
-          uri: 'https://plans.example/plan.json',
-          sha256: 'a'.repeat(64),
-          schemaVersion: 'v1.0',
-          planId: 'plan-a',
-          planVersion: '1.0.0',
-        },
-      },
-    });
-
-    expect(parsed).toEqual({
-      ok: false,
-      issue: {
-        type: 'bad_request',
-        reason: HTTP_ERROR_REASON.conflictingRunIds,
-        target: 'recoveryRunId',
-      },
-    });
+    expect(first).toEqual(repeated);
+    expect(first.ok && nextIntent.ok && first.value.command.recoveryRunId).not.toBe(
+      nextIntent.ok ? nextIntent.value.command.recoveryRunId : undefined
+    );
   });
 });

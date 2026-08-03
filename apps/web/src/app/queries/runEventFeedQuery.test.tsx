@@ -5,6 +5,7 @@ import React, { act } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createAppServicesTestOverrides } from '../../testing/appServicesTestDoubles';
+import { createMockRunsService } from '../../testing/runsPortDoubles';
 import {
   createTestQueryClient,
   waitForReactQuery,
@@ -49,6 +50,7 @@ function makeEvent(runId: string, eventId: string, runSeq: number): RunEvent {
 
 function buildRunsService(listRunEvents: IRunsPort['listRunEvents']): IRunsPort {
   return {
+    ...createMockRunsService(),
     listRunSummaries: vi.fn(async () => []),
     getRunSnapshot: vi.fn(async () => null),
     startRun: vi.fn(async () => ({ runId: 'run_started', accepted: true })),
@@ -549,43 +551,51 @@ describe('useRunEventFeedQuery', () => {
     expect(listRunEvents).toHaveBeenCalledTimes(1);
   });
 
-  it('drains a terminal run until its matching terminal event is observed', async () => {
-    const terminalEvent = {
-      ...makeEvent('run_1', 'evt_terminal', 2),
-      eventType: 'RunCompleted',
-      stepId: undefined,
-    } as RunEvent;
-    const listRunEvents = vi
-      .fn<IRunsPort['listRunEvents']>()
-      .mockResolvedValueOnce({ events: [makeEvent('run_1', 'evt_1', 1)], nextAfterSeq: 1 })
-      .mockResolvedValueOnce({ events: [terminalEvent], nextAfterSeq: 2 });
-    const queryClient = createTestQueryClient();
+  it.each([
+    ['completed', 'RunCompleted'],
+    ['failed', 'RunFailed'],
+    ['cancelled', 'RunCancelled'],
+  ] satisfies ReadonlyArray<readonly [UiRunStatus, RunEvent['eventType']]>)(
+    'drains a %s run until its matching terminal event is observed',
+    async (runStatus, terminalEventType) => {
+      const consumerId = `terminal-${runStatus}`;
+      const terminalEvent = {
+        ...makeEvent('run_1', 'evt_terminal', 2),
+        eventType: terminalEventType,
+        stepId: undefined,
+      } as RunEvent;
+      const listRunEvents = vi
+        .fn<IRunsPort['listRunEvents']>()
+        .mockResolvedValueOnce({ events: [makeEvent('run_1', 'evt_1', 1)], nextAfterSeq: 1 })
+        .mockResolvedValueOnce({ events: [terminalEvent], nextAfterSeq: 2 });
+      const queryClient = createTestQueryClient();
 
-    mounted = await withTestQueryClient(
-      withServices(
-        buildRunsService(listRunEvents),
-        <FeedConsumer consumerId="terminal" runId="run_1" runStatus="completed" />
-      ),
-      queryClient
-    );
-    await waitForReactQuery(
-      () =>
-        mounted?.container.querySelector('[data-testid="terminal-phase"]')?.textContent ===
-        'terminal-draining'
-    );
+      mounted = await withTestQueryClient(
+        withServices(
+          buildRunsService(listRunEvents),
+          <FeedConsumer consumerId={consumerId} runId="run_1" runStatus={runStatus} />
+        ),
+        queryClient
+      );
+      await waitForReactQuery(
+        () =>
+          mounted?.container.querySelector(`[data-testid="${consumerId}-phase"]`)?.textContent ===
+          'terminal-draining'
+      );
 
-    await queryClient.invalidateQueries({
-      queryKey: queryKeys.runs.eventFeed(TEST_WORKSPACE_LAYOUT_KEY, 'run_1'),
-    });
-    await waitForReactQuery(
-      () =>
-        mounted?.container.querySelector('[data-testid="terminal-phase"]')?.textContent ===
-        'complete'
-    );
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.runs.eventFeed(TEST_WORKSPACE_LAYOUT_KEY, 'run_1'),
+      });
+      await waitForReactQuery(
+        () =>
+          mounted?.container.querySelector(`[data-testid="${consumerId}-phase"]`)?.textContent ===
+          'complete'
+      );
 
-    expect(listRunEvents).toHaveBeenNthCalledWith(2, 'run_1', 1);
-    expect(mounted.container.querySelector('[data-testid="terminal"]')?.textContent).toBe(
-      'evt_1,evt_terminal'
-    );
-  });
+      expect(listRunEvents).toHaveBeenNthCalledWith(2, 'run_1', 1);
+      expect(mounted.container.querySelector(`[data-testid="${consumerId}"]`)?.textContent).toBe(
+        'evt_1,evt_terminal'
+      );
+    }
+  );
 });
