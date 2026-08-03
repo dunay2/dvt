@@ -40,7 +40,6 @@ import { createApiDbtProjectGraphQueryPort } from '../dbtProject/dbtProjectGraph
 import { createApiDbtProjectImportPort } from '../dbtProject/dbtProjectImport.api';
 import { createApiDbtYamlDescriptionEditPort } from '../dbtProject/dbtYamlDescriptionEdit.api';
 import { createApiGraphDbtWorkspaceArtifactPublicationCommandPort } from '../dbtProject/graphDbtWorkspaceArtifactPublication.api';
-import { createApiWorkspacePluginCatalogQueryPort } from '../workspace/workspacePluginCatalog.api';
 import { createWorkspacePorts } from '../workspace/workspacePorts';
 
 export interface AppServices {
@@ -110,7 +109,7 @@ export function buildAppServices(overrides: AppServicesOverrides = {}): AppServi
     overrides.workspaceFileHistoryQuery ?? workspacePorts.workspaceFileHistoryQuery;
   const workspaceDiffQuery = overrides.workspaceDiffQuery ?? workspacePorts.workspaceDiffQuery;
   const workspacePluginCatalogQuery =
-    overrides.workspacePluginCatalogQuery ?? createApiWorkspacePluginCatalogQueryPort(apiClient);
+    overrides.workspacePluginCatalogQuery ?? workspacePorts.workspacePluginCatalogQuery;
   const workspaceAdminRead = overrides.workspaceAdminRead ?? workspacePorts.workspaceAdminRead;
   const warehouseSourceImport =
     overrides.warehouseSourceImport ?? workspacePorts.warehouseSourceImport;
