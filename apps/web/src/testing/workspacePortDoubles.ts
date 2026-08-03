@@ -40,10 +40,6 @@ import {
   WorkspaceFileRevisionConflictError,
 } from '../app/services/workspace/workspaceErrors';
 
-export const mockWorkspacePortCapabilities = {
-  sourceImportAvailable: true,
-} as const;
-
 export const mockGraphDraftAuthoringAuthority = {
   kind: 'resolved',
   binding: {

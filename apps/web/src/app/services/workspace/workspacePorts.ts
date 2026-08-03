@@ -13,7 +13,6 @@ import type { FrontendOperabilitySink } from '../../ports/frontendOperability';
 import type { ApiClient } from '../api/createApiClient';
 import { createApiWorkspacePluginCatalogQueryPort } from './workspacePluginCatalog.api';
 import {
-  apiWorkspacePortCapabilities,
   createApiWarehouseSourceImportPort,
   createApiWorkspaceAdminReadPort,
   createApiWorkspaceDiffQueryPort,
@@ -37,10 +36,6 @@ export type {
   WorkspaceFileEntry,
 } from '../../ports/workspace';
 
-export type WorkspacePortCapabilities = {
-  sourceImportAvailable: boolean;
-};
-
 export type WorkspacePorts = {
   readonly workspaceGraphSnapshotQuery: IWorkspaceGraphSnapshotQueryPort;
   readonly workspaceFilesQuery: IWorkspaceFilesQueryPort;
@@ -51,10 +46,6 @@ export type WorkspacePorts = {
   readonly warehouseSourceImport: IWarehouseSourceImportPort;
   readonly workspaceFileContentCommand: IWorkspaceFileContentCommandPort;
 };
-
-export function resolveWorkspacePortCapabilities(): WorkspacePortCapabilities {
-  return apiWorkspacePortCapabilities;
-}
 
 export function createWorkspacePorts(
   apiClient: ApiClient,

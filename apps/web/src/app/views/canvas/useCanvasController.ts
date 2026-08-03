@@ -42,7 +42,7 @@ export function useCanvasController() {
     workspaceFilesQuery,
     workspaceFileContentCommand,
     graphDbtWorkspaceArtifactPublicationCommand,
-    workspacePortCapabilities,
+    hasAuthorizedSourceImportContribution,
     workspaceGraphDraftAuthoringPort,
     plansService,
     runsService,
@@ -116,7 +116,7 @@ export function useCanvasController() {
     return resolveCanvasRuntimePolicy({
       activeRuntime: activeCanvasGraphStrategyResolution,
       canMutateGraph: draftAdmission.canMutateGraph,
-      canOpenSourceImport: workspacePortCapabilities.sourceImportAvailable,
+      canOpenSourceImport: hasAuthorizedSourceImportContribution,
       canPlan: draftAdmission.canPlan,
       canRun: draftAdmission.canRun,
       canReloadLatestDraft: draftAdmission.canReloadLatestDraft,
@@ -130,7 +130,7 @@ export function useCanvasController() {
     isDraftRecoveryBlocked,
     store.userPermissions.canPlan,
     store.userPermissions.canRun,
-    workspacePortCapabilities.sourceImportAvailable,
+    hasAuthorizedSourceImportContribution,
   ]);
   const canMutateActiveCanvas = runtimePolicy.commands.canMutateGraph;
   const canSelectExecution = runtimePolicy.commands.canPlan || runtimePolicy.commands.canRun;

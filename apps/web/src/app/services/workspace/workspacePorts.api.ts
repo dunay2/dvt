@@ -57,10 +57,6 @@ import {
 } from './workspaceGraphDraftHttp';
 import { projectWorkspaceGraphDraftReadResponseSnapshot } from './workspaceGraphDraftSnapshotProjection';
 
-export const apiWorkspacePortCapabilities = {
-  sourceImportAvailable: true,
-} as const;
-
 function isWorkspaceFileNotFoundApiError(error: ApiError): boolean {
   if (!isWorkspaceHttpErrorEnvelope(error.responseBody)) {
     return false;
