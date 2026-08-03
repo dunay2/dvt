@@ -26,6 +26,7 @@ import {
   MAX_TRACE_ATTRIBUTE_VALUE_LENGTH,
   normalizeResourceValue,
   parseResourceAttributes,
+  resolveTraceEndpoint,
   TRACE_ATTRIBUTE_KEYS,
 } from './otelTracePolicy.js';
 
@@ -150,9 +151,4 @@ function createOtlpExporter(endpoint: string | undefined): SpanExporter {
   return endpoint === undefined
     ? new OTLPTraceExporter()
     : new OTLPTraceExporter({ url: resolveTraceEndpoint(endpoint) });
-}
-
-function resolveTraceEndpoint(endpoint: string): string {
-  const normalized = endpoint.replace(/\/+$/, '');
-  return normalized.endsWith('/v1/traces') ? normalized : `${normalized}/v1/traces`;
 }

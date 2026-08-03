@@ -6,6 +6,7 @@ import {
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { OtelObservability } from '../src';
+import { resolveTraceEndpoint } from '../src/otelTracePolicy.js';
 
 const observabilityInstances: OtelObservability[] = [];
 
@@ -63,6 +64,15 @@ describe('OtelObservability', () => {
     expect(new Set(spans.map((span) => span.spanContext().traceId)).size).toBe(1);
     expect(engineSpan.parentSpanContext?.spanId).toBe(apiSpan.spanContext().spanId);
     expect(temporalSpan.parentSpanContext?.spanId).toBe(engineSpan.spanContext().spanId);
+  });
+
+  it('normalizes OTLP trace endpoints without a backtracking expression', () => {
+    expect(resolveTraceEndpoint('https://collector.example////')).toBe(
+      'https://collector.example/v1/traces'
+    );
+    expect(resolveTraceEndpoint('https://collector.example/v1/traces/')).toBe(
+      'https://collector.example/v1/traces'
+    );
   });
 
   it('exports only governed trace attributes and bounded exception details', async () => {

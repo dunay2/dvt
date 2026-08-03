@@ -79,3 +79,13 @@ export function parseResourceAttributes(input: string | undefined): Record<strin
 export function normalizeResourceValue(value: string): string {
   return value.slice(0, MAX_TRACE_ATTRIBUTE_VALUE_LENGTH);
 }
+
+export function resolveTraceEndpoint(endpoint: string): string {
+  let normalizedLength = endpoint.length;
+  while (normalizedLength > 0 && endpoint.charCodeAt(normalizedLength - 1) === 47) {
+    normalizedLength -= 1;
+  }
+
+  const normalized = endpoint.slice(0, normalizedLength);
+  return normalized.endsWith('/v1/traces') ? normalized : `${normalized}/v1/traces`;
+}
