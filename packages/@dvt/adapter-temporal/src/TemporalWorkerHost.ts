@@ -64,7 +64,6 @@ type WorkerLogAttributes = Attributes;
 const MODULE_DIR = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_WORKFLOW_TS_PATH = resolve(MODULE_DIR, 'workflows/RunPlanWorkflow.ts');
 const DEFAULT_WORKFLOW_JS_PATH = resolve(MODULE_DIR, 'workflows/RunPlanWorkflow.js');
-const MAX_STEP_HEARTBEAT_THROTTLE_INTERVAL = '1s';
 
 function resolveDefaultWorkflowsPath(): string {
   return existsSync(DEFAULT_WORKFLOW_TS_PATH) ? DEFAULT_WORKFLOW_TS_PATH : DEFAULT_WORKFLOW_JS_PATH;
@@ -229,7 +228,7 @@ export class TemporalWorkerHost {
       taskQueue: this.config.temporalConfig.connection.taskQueue,
       workflowsPath: this.config.workflowsPath ?? resolveDefaultWorkflowsPath(),
       activities,
-      maxHeartbeatThrottleInterval: MAX_STEP_HEARTBEAT_THROTTLE_INTERVAL,
+      maxHeartbeatThrottleInterval: '1s',
       ...(identity === undefined ? {} : { identity }),
     });
   }
