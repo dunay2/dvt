@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-08-02",
+  "generated": "2026-08-03",
   "repo": {
     "sha": "local"
   },
@@ -56,7 +56,7 @@
         "Capability-specific Postgres integration owns its runtime prerequisites",
         "Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state",
         "Finalize pause, resume, and cancellation transitions through canonical run events emitted from workflow lifecycle control",
-        "Keep workflow side effects behind Temporal activities while DVT-owned retry policy drives step execution attempts",
+        "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation",
         "Normalize workflow-side unknown errors before they become canonical failure event payloads",
         "Parse workflow cursor and control values with deterministic validation before execution",
         "Provide contract-backed Temporal fixtures for tests that exercise DVT-owned run and plan boundaries",
@@ -142,6 +142,7 @@
         "Drive Temporal layer execution from resolved DVT execution segments and canonical workflow state",
         "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
         "Engine entry-point plan integrity verification resolves the executable plan,",
+        "Every production PostgreSQL pool observes idle-client failures without terminating its host process",
         "Extract plugin-agnostic artifact references and retry policy before event emission",
         "Groups authorizer, planRefPolicy, and outboxRateLimiter into a single",
         "Implement in-memory run-state writes through event-log authority and port-owned lifecycle state",
@@ -163,7 +164,7 @@
         "Keep start-run start and success telemetry in a policy seam instead of the application coordinator.",
         "Keep the authorization role interface in the engine public ports surface.",
         "Keep the facade use-case export surface local to the component boundary.",
-        "Keep workflow side effects behind Temporal activities while DVT-owned retry policy drives step execution attempts",
+        "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation",
         "Model executable plugin runtimes behind a generic runner port",
         "Model facade operations as explicit command and query use-case ports.",
         "Normalize facade start-run input before delegating to the start application service.",
@@ -210,6 +211,7 @@
         "reconcileOrphanedIntents detects and cancels orphaned provider workflows per ADR-0030"
       ],
       "implemented_by": [
+        "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts",
         "packages/@dvt/adapter-postgres/src/PostgresSnapshotQueueAdapter.ts",
@@ -917,7 +919,7 @@
         "Emit StepStarted artifact references before executing DVT-owned step activities with explicit retry handling",
         "Extract plugin-agnostic artifact references and retry policy before event emission",
         "Keep provider-ref and retry-attempt administration behind DVT-owned in-memory run-state support",
-        "Keep workflow side effects behind Temporal activities while DVT-owned retry policy drives step execution attempts"
+        "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation"
       ],
       "implemented_by": [
         "packages/@dvt/adapter-temporal/src/workflows/runPlanWorkflow.activities.ts",

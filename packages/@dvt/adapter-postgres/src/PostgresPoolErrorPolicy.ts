@@ -1,3 +1,11 @@
+/**
+ * @file packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts
+ * @baseline ADR-0003: Execution Model
+ * @decision Every production PostgreSQL pool observes idle-client failures without terminating its host process
+ * @consequence Runtime supervisors can recover database connectivity while failures remain visible to operators
+ * @version 1.0.0
+ * @date 2026-08-03
+ */
 import { Pool, type PoolConfig } from 'pg';
 
 export interface PostgresPoolFailure {
