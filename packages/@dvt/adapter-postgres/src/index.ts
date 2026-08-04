@@ -56,6 +56,9 @@ export type {
   SqlCommandExecutor,
 } from './RunEventWriteRepository.js';
 export type {
+  PostgresObjectFileLoadInput,
+  PostgresObjectFileLoadResult,
+  PostgresObjectFileScalar,
   PostgresRelationalExecutionCapabilityConfig,
   RuntimeStepActivity,
   RuntimeStepActivityRegistry,
