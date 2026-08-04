@@ -89,6 +89,68 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.graphSearch.closeLabel',
     fallback: 'Close graph search',
   },
+  canvasGraphFilterLabel: {
+    key: 'canvas.graphFilter.label',
+    fallback: 'Filter graph',
+  },
+  canvasGraphFilterTitle: {
+    key: 'canvas.graphFilter.title',
+    fallback: 'Graph filters',
+  },
+  canvasGraphFilterMatchSummaryTemplate: {
+    key: 'canvas.graphFilter.matchSummaryTemplate',
+    fallback: '{matching} of {total} nodes visible',
+  },
+  canvasGraphFilterCompositionLabel: {
+    key: 'canvas.graphFilter.compositionLabel',
+    fallback: 'Combine filters',
+  },
+  canvasGraphFilterAndLabel: { key: 'canvas.graphFilter.andLabel', fallback: 'All (AND)' },
+  canvasGraphFilterOrLabel: { key: 'canvas.graphFilter.orLabel', fallback: 'Any (OR)' },
+  canvasGraphFilterPresentationLabel: {
+    key: 'canvas.graphFilter.presentationLabel',
+    fallback: 'Non-matching nodes',
+  },
+  canvasGraphFilterDimLabel: { key: 'canvas.graphFilter.dimLabel', fallback: 'De-emphasize' },
+  canvasGraphFilterHideLabel: { key: 'canvas.graphFilter.hideLabel', fallback: 'Hide' },
+  canvasGraphFilterDimensionLabel: {
+    key: 'canvas.graphFilter.dimensionLabel',
+    fallback: 'Dimension',
+  },
+  canvasGraphFilterValueLabel: { key: 'canvas.graphFilter.valueLabel', fallback: 'Value' },
+  canvasGraphFilterAddLabel: { key: 'canvas.graphFilter.addLabel', fallback: 'Add filter' },
+  canvasGraphFilterClearLabel: {
+    key: 'canvas.graphFilter.clearLabel',
+    fallback: 'Clear graph filters',
+  },
+  canvasGraphFilterEmptyLabel: {
+    key: 'canvas.graphFilter.emptyLabel',
+    fallback: 'No active filters',
+  },
+  canvasGraphFilterRemoveLabelTemplate: {
+    key: 'canvas.graphFilter.removeLabelTemplate',
+    fallback: 'Remove {dimension} filter {value}',
+  },
+  canvasGraphFilterPluginDimensionLabel: {
+    key: 'canvas.graphFilter.pluginDimensionLabel',
+    fallback: 'Plugin',
+  },
+  canvasGraphFilterKindDimensionLabel: {
+    key: 'canvas.graphFilter.kindDimensionLabel',
+    fallback: 'Node type',
+  },
+  canvasGraphFilterRoleDimensionLabel: {
+    key: 'canvas.graphFilter.roleDimensionLabel',
+    fallback: 'Role',
+  },
+  canvasGraphFilterStatusDimensionLabel: {
+    key: 'canvas.graphFilter.statusDimensionLabel',
+    fallback: 'Status',
+  },
+  canvasGraphFilterTagDimensionLabel: {
+    key: 'canvas.graphFilter.tagDimensionLabel',
+    fallback: 'Tag',
+  },
   canvasNodeToolbarLabelTemplate: {
     key: 'canvas.nodeToolbar.labelTemplate',
     fallback: 'Node actions: {nodeName}',

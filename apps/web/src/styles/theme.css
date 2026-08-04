@@ -86,6 +86,8 @@
   --canvas-search-relevant-edge-width: 3.5;
   --canvas-search-dimmed-opacity: 0.3;
   --canvas-search-dimmed-saturation: 0.35;
+  --canvas-filter-dimmed-opacity: 0.24;
+  --canvas-filter-dimmed-saturation: 0.28;
   --canvas-node-port-control-ring: #94a3b8;
   --canvas-node-port-control-fill: #111827;
   --canvas-node-port-source-ring: #a855f7;

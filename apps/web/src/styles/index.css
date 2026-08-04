@@ -73,6 +73,15 @@ body {
   opacity: var(--canvas-search-dimmed-opacity);
 }
 
+.react-flow__node.canvas-graph-filter-dimmed-node {
+  opacity: var(--canvas-filter-dimmed-opacity);
+  filter: saturate(var(--canvas-filter-dimmed-saturation));
+}
+
+.react-flow__edge.canvas-graph-filter-dimmed-edge {
+  opacity: var(--canvas-filter-dimmed-opacity);
+}
+
 .react-flow__controls {
   background: var(--canvas-controls-surface);
   border: 1px solid var(--canvas-controls-border);
