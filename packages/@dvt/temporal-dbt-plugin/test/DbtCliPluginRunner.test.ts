@@ -146,6 +146,36 @@ describe('DbtCliPluginRunner', () => {
     );
   });
 
+  it('passes an injected scoped environment only to the DBT subprocess', async () => {
+    const runCommand = vi.fn(async () => ({ stdout: 'ok', stderr: '' }));
+    const resolveCommandEnvironment = vi.fn(() => ({
+      DVT_OBJECT_FILE_POSTGRES_STAGING_SCHEMA: 'staging_scope_hash',
+    }));
+    const runner = new DbtCliPluginRunner({
+      bundleReader: {
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
+      },
+      materializeProject: async () => ({
+        projectDir: '/tmp/dbt-project',
+        cleanup: async () => undefined,
+      }),
+      materializeRuntimeProfile: createRuntimeProfileMaterializer(),
+      resolveCommandEnvironment,
+      runCommand,
+      dbtBin: 'dbt',
+    });
+
+    await runner.execute(INPUT);
+
+    expect(resolveCommandEnvironment).toHaveBeenCalledWith(INPUT);
+    expect(runCommand).toHaveBeenCalledWith('dbt', expect.any(Array), {
+      cwd: '/tmp/dbt-project',
+      env: {
+        DVT_OBJECT_FILE_POSTGRES_STAGING_SCHEMA: 'staging_scope_hash',
+      },
+    });
+  });
+
   it.each([
     ['DBT_MODEL', 'run'],
     ['DBT_TEST', 'test'],

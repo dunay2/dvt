@@ -24,6 +24,7 @@ import { runDbtCommand } from './dbtCliProcess.js';
 import { createDbtProjectMaterializer } from './dbtCliProjectMaterializer.js';
 import type {
   DbtCliCommandRunner,
+  DbtCommandEnvironmentResolver,
   DbtProjectMaterializer,
   DbtRuntimeProfileMaterializer,
   MaterializedDbtProject,
@@ -41,6 +42,7 @@ export interface DbtCliPluginRunnerOptions {
   materializeRuntimeProfile: DbtRuntimeProfileMaterializer;
   runCommand?: DbtCliCommandRunner;
   getCancellationSignal?: () => globalThis.AbortSignal | undefined;
+  resolveCommandEnvironment?: DbtCommandEnvironmentResolver;
 }
 
 type DbtCommandOutcome =
@@ -53,6 +55,7 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
   private readonly materializeRuntimeProfile: DbtRuntimeProfileMaterializer;
   private readonly runCommand: DbtCliCommandRunner;
   private readonly getCancellationSignal: () => globalThis.AbortSignal | undefined;
+  private readonly resolveCommandEnvironment: DbtCommandEnvironmentResolver;
 
   public constructor(options: DbtCliPluginRunnerOptions) {
     const workdirRoot = options.workdirRoot ?? join(tmpdir(), 'dvt', 'temporal-worker');
@@ -67,6 +70,7 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
     this.runCommand = options.runCommand ?? runDbtCommand;
     this.materializeRuntimeProfile = options.materializeRuntimeProfile;
     this.getCancellationSignal = options.getCancellationSignal ?? (() => undefined);
+    this.resolveCommandEnvironment = options.resolveCommandEnvironment ?? (() => ({}));
   }
 
   public async execute(input: DbtPluginExecutionInput): Promise<StepResult> {
@@ -143,8 +147,10 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
         input.pluginContext.targetProfile,
         profile.profilesDir
       );
+      const commandEnvironment = this.resolveCommandEnvironment(input);
       await this.runCommand(this.dbtBin, args, {
         cwd: project.projectDir,
+        ...(Object.keys(commandEnvironment).length === 0 ? {} : { env: commandEnvironment }),
         ...(cancellationSignal === undefined ? {} : { signal: cancellationSignal }),
       });
       if (cancellationSignal?.aborted === true) {

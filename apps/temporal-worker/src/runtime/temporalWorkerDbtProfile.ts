@@ -19,6 +19,7 @@ import { Context } from '@temporalio/activity';
 import type { Env } from '../plugins/env.js';
 
 import { EnvironmentDbtRuntimeProfileResolver } from './EnvironmentDbtRuntimeProfileResolver.js';
+import { resolveObjectFilePostgresDbtCommandEnvironment } from './objectFilePostgresDbtCommandEnvironment.js';
 import type { CreateTemporalWorkerRuntimeOptions } from './runtimeTypes.js';
 
 export interface TemporalWorkerDbtProfile {
@@ -57,6 +58,7 @@ export function createTemporalWorkerDbtProfile(
       dbtBin: env.DVT_DBT_BIN,
       workdirRoot: env.DVT_DBT_WORKDIR_ROOT,
       getCancellationSignal: () => Context.current().cancellationSignal,
+      resolveCommandEnvironment: resolveObjectFilePostgresDbtCommandEnvironment,
       materializeRuntimeProfile: createDbtRuntimeProfileMaterializer({
         resolver:
           options.dbtRuntimeProfileResolverFactory?.() ??

@@ -20,6 +20,7 @@ export const runDbtCommand: DbtCliCommandRunner = async (dbtBin, args, options) 
     cwd: options.cwd,
     encoding: 'utf8',
     maxBuffer: DBT_CLI_MAX_BUFFER_BYTES,
+    ...(options.env === undefined ? {} : { env: { ...process.env, ...options.env } }),
     ...(options.signal === undefined ? {} : { signal: options.signal }),
   });
 
