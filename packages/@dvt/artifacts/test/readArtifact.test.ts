@@ -29,4 +29,28 @@ describe('readArtifact', () => {
     });
     expect(send).toHaveBeenCalledWith(expect.anything(), { abortSignal: signal });
   });
+
+  it('maps a missing S3 object to the stable artifact-not-found code', async () => {
+    const missing = Object.assign(new Error('provider key detail'), { name: 'NoSuchKey' });
+
+    await expect(
+      readArtifact('s3://fixtures/tenants/tenant-a/missing-digest', {
+        artifactLabel: 'source object',
+        uriLabel: 'source.storageUri',
+        s3Client: { send: vi.fn(async () => Promise.reject(missing)) } as never,
+      })
+    ).rejects.toMatchObject({ code: 'ARTIFACT_NOT_FOUND' });
+  });
+
+  it('propagates an unavailable object-store failure for retry classification by its caller', async () => {
+    const unavailable = new Error('object store unavailable');
+
+    await expect(
+      readArtifact('s3://fixtures/tenants/tenant-a/digest', {
+        artifactLabel: 'source object',
+        uriLabel: 'source.storageUri',
+        s3Client: { send: vi.fn(async () => Promise.reject(unavailable)) } as never,
+      })
+    ).rejects.toBe(unavailable);
+  });
 });

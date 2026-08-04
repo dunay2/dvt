@@ -68,6 +68,27 @@ describe('PostgresObjectFileLoader', () => {
     );
     expect(database.connect).not.toHaveBeenCalled();
   });
+
+  it('rejects an invalid target identifier before acquiring a client', async () => {
+    const database = createFakeDatabase(false);
+    const loader = createLoader(database.pool);
+
+    await expect(loader.load({ ...buildInput(), relation: 'orders-import' })).rejects.toThrow();
+    expect(database.connect).not.toHaveBeenCalled();
+  });
+
+  it('rolls back a transient insert failure and can replace cleanly on retry', async () => {
+    const database = createFakeDatabase(false, () => {
+      throw Object.assign(new Error('transient database failure'), { code: '40001' });
+    });
+    const loader = createLoader(database.pool);
+
+    await expect(loader.load(buildInput())).rejects.toThrow('transient database failure');
+    await expect(loader.load(buildInput())).resolves.toMatchObject({ rowsWritten: 2 });
+
+    expect(database.sql().filter((sql) => sql === 'ROLLBACK')).toHaveLength(1);
+    expect(database.sql().filter((sql) => sql === 'COMMIT')).toHaveLength(1);
+  });
 });
 
 describeIfPg('PostgresObjectFileLoader integration', () => {
