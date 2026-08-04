@@ -45,6 +45,7 @@ const SELECTED_CLOSURE_LIVE_PROOF_ROOT = path.resolve(
   '../.dvt/live-proofs/selected-closure'
 );
 const LIVE_PROOF_DBT_PROFILE = 'dvt_live_proof';
+const GENERATED_CANVAS_DBT_PROFILE = 'default';
 const LOCAL_TEMPORAL_TEST_SERVER_ROOT = path.resolve(__dirname, '../.dvt/temporal-test-server');
 
 function quoteIdentifier(identifier) {
@@ -374,22 +375,24 @@ async function prepareLiveProofDbtAnalyzerProfile(apiEnv) {
     throw new Error('Selected-closure dbt analysis received an incomplete proof database URL.');
   }
 
-  const profile = {
-    [LIVE_PROOF_DBT_PROFILE]: {
-      target: 'analysis',
-      outputs: {
-        analysis: {
-          type: 'postgres',
-          host: parsedDatabaseUrl.hostname,
-          port: Number(parsedDatabaseUrl.port || '5432'),
-          user: decodeURIComponent(parsedDatabaseUrl.username),
-          password: decodeURIComponent(parsedDatabaseUrl.password),
-          dbname: databaseName,
-          schema,
-          threads: 1,
-        },
+  const createProfile = () => ({
+    target: 'analysis',
+    outputs: {
+      analysis: {
+        type: 'postgres',
+        host: parsedDatabaseUrl.hostname,
+        port: Number(parsedDatabaseUrl.port || '5432'),
+        user: decodeURIComponent(parsedDatabaseUrl.username),
+        password: decodeURIComponent(parsedDatabaseUrl.password),
+        dbname: databaseName,
+        schema,
+        threads: 1,
       },
     },
+  });
+  const profile = {
+    [GENERATED_CANVAS_DBT_PROFILE]: createProfile(),
+    [LIVE_PROOF_DBT_PROFILE]: createProfile(),
   };
 
   await mkdir(profilesDirectory, { recursive: true });
