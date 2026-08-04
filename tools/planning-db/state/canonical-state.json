@@ -587,7 +587,7 @@
         "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
-      "sourceContentSha256": "5c34d87d4f0f17b5f6d1367b654f80ae207dc87aaac6992d905debf734d33756",
+      "sourceContentSha256": "8348100bded81b847024aabf9e2775e8d4541724a390235a06a024639c3e0a08",
       "rawRail": {
         "name": "SearchCanvasGraph",
         "type": "query",
