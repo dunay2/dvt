@@ -242,22 +242,24 @@ test('prepareLiveProofDbtAnalyzerProfile creates an isolated server-owned analys
     });
 
     const profile = yaml.load(await readFile(path.join(profilesDirectory, 'profiles.yml'), 'utf8'));
-    assert.deepEqual(profile, {
-      dvt_live_proof: {
-        target: 'analysis',
-        outputs: {
-          analysis: {
-            type: 'postgres',
-            host: '127.0.0.1',
-            port: 5544,
-            user: 'proof-user',
-            password: 'proof-pass',
-            dbname: 'proof-db',
-            schema: 'proof_schema',
-            threads: 1,
-          },
+    const expectedProfile = {
+      target: 'analysis',
+      outputs: {
+        analysis: {
+          type: 'postgres',
+          host: '127.0.0.1',
+          port: 5544,
+          user: 'proof-user',
+          password: 'proof-pass',
+          dbname: 'proof-db',
+          schema: 'proof_schema',
+          threads: 1,
         },
       },
+    };
+    assert.deepEqual(profile, {
+      default: expectedProfile,
+      dvt_live_proof: expectedProfile,
     });
   } finally {
     await rm(proofRoot, { recursive: true, force: true });
