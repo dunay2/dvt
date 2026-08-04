@@ -1,11 +1,9 @@
-/** Owned concern: define plugin manifest vocabulary, including closed view placement variants. */
+/** Owned concern: define the static plugin contribution vocabulary consumed by the shell. */
 import type { LucideIcon } from 'lucide-react';
 import type { ReactNode } from 'react';
 import type { AppRouteHandle } from '../../bootstrap/routeBootstrapContract';
 
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
-import type { PluginContext } from './PluginContext';
-import type { PluginServices } from './PluginServices';
 
 // ---------------------------------------------------------------------------
 // Localizable strings — v1 uses fallback, v2 loads locale dictionary
@@ -77,26 +75,6 @@ export interface ViewContribution {
   handle?: AppRouteHandle;
   placement?: ShellNavigationPlacement;
 }
-
-// ---------------------------------------------------------------------------
-// Toolbar contributions
-// ---------------------------------------------------------------------------
-
-export interface ToolbarContribution {
-  id: string;
-  pluginId: string;
-  icon: LucideIcon;
-  label: LocalizableString;
-  order: number;
-  slot: 'left' | 'center' | 'right';
-  isActive?: (ctx: ToolbarContext) => boolean;
-  onClick: (ctx: ToolbarContext) => void;
-}
-
-export type ToolbarContext = {
-  selectedNodeIds: string[];
-  activeOverlayId: string | null;
-};
 
 // ---------------------------------------------------------------------------
 // Governed plugin UX dock contributions
@@ -171,100 +149,3 @@ export type InspectorPanelProps = {
   onClose: () => void;
   tagsEditor?: ReactNode;
 };
-
-// ---------------------------------------------------------------------------
-// Plugin error
-// ---------------------------------------------------------------------------
-
-export interface PluginError {
-  pluginId: string;
-  capability?: PluginCapabilityId;
-  recoverable: boolean;
-  message: string;
-  cause?: unknown;
-}
-
-// ---------------------------------------------------------------------------
-// Plugin status
-// ---------------------------------------------------------------------------
-
-export type PluginStatus = 'mounting' | 'active' | 'degraded' | 'failed';
-
-export interface RegisteredPlugin {
-  manifest: PluginManifest;
-  services: PluginServices;
-  status: PluginStatus;
-  degradedCapabilities: PluginCapabilityId[];
-  errorMessage?: string;
-}
-
-// ---------------------------------------------------------------------------
-// Plugin service dependencies (injected by shell at createServices time)
-// ---------------------------------------------------------------------------
-
-export interface PluginServiceDeps {
-  apiClient: import('../../services/api/createApiClient').ApiClient;
-}
-
-// ---------------------------------------------------------------------------
-// PluginManifest — the core contract
-//
-// INVARIANTS (validated by PluginRegistry at registration time):
-//   canvas.render   → services.nodeRenderers defined and non-empty
-//   canvas.overlay  → services.overlays defined and non-empty
-//   plan.import     → services.planHandlers.import defined
-//   plan.export     → services.planHandlers.export defined
-//   plan.preview    → services.planOperations.preview defined
-//   run.start       → services.runOperations.start defined
-//   run.observe     → services.runOperations.observe defined
-//   run.cancel      → services.runOperations.cancel defined
-//   artifact.read   → services.artifactOperations.read defined
-//   cost.analyze    → services.costOperations.analyze defined
-//   lineage.resolve → services.lineageOperations.resolve defined
-// ---------------------------------------------------------------------------
-
-export interface PluginManifest {
-  /** Unique identifier in the registry: 'dbt', 'monitoring', 'etl-designer' */
-  id: string;
-  displayName: LocalizableString;
-  /** Semver — informational in v1, enforced in v2 for external plugins */
-  version: string;
-
-  /** Hard dependencies — registry validates these are already registered before mount */
-  requires?: string[];
-
-  /**
-   * Soft dependencies — plugin adapts its behavior if present.
-   * Does NOT block registration. Plugin checks via context.getPlugin(id) at runtime.
-   */
-  optionalRequires?: string[];
-
-  capabilities: PluginCapabilityId[];
-
-  /**
-   * Only valid when 'canvas.render' is in capabilities.
-   * `previewStepKind`, when declared on a node kind entry, governs how the
-   * shell projects that kind into planner-facing generic preview nodes.
-   */
-  nodeKinds?: import('./NodeRendering').NodeKindManifestEntry[];
-
-  /** Intra-plugin connection rules. Cross-plugin connections use produces/consumes. */
-  connectionRules?: PluginConnectionRule[];
-
-  views?: ViewContribution[];
-  inspectorPanels?: InspectorPanelContribution[];
-  toolbarContributions?: ToolbarContribution[];
-  routeHeaderContributions?: RouteHeaderContribution[];
-  commandPaletteContributions?: CommandPaletteContribution[];
-  bottomDiagnosticsContributions?: BottomDiagnosticsContribution[];
-
-  /** Data ports for cross-plugin connections. Only needed for canvas.render plugins. */
-  produces?: PluginDataPort[];
-  consumes?: PluginDataPort[];
-
-  onMount?: (context: PluginContext) => void | Promise<void>;
-  onUnmount?: () => void | Promise<void>;
-  onError?: (error: PluginError) => 'recover' | 'degrade' | 'unregister';
-
-  createServices: (deps: PluginServiceDeps) => PluginServices;
-}

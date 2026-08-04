@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react';
 
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
 import type { CanonicalRunStatus } from '../../types/engine';
-import type { NodeCostData } from './PluginServices';
+import type { NodeCostData } from './NodeCostData';
 import type { GraphNodeCardStrategy } from '../graph/graphNodeCardStrategyContracts';
 
 // ---------------------------------------------------------------------------
@@ -121,7 +121,7 @@ export interface NodeBadgeContribution {
 }
 
 // ---------------------------------------------------------------------------
-// Node kind manifest entry — declared in PluginManifest.nodeKinds
+// Node kind manifest entry — declared in PluginContributions.nodeKinds
 // Describes the node's canvas appearance for the shell's legend and sidebar.
 // The actual rendering is in NodeRendererRegistration.
 // ---------------------------------------------------------------------------

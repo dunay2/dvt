@@ -7,7 +7,7 @@ import type {
 } from '../../plugins/contracts/NodeRendering';
 import type { CanvasOverlayContribution } from '../../plugins/contracts/NodeRendering';
 import { mergeDecorations } from '../../plugins/mergeDecorations';
-import type { NodeCostData } from '../../plugins/contracts/PluginServices';
+import type { NodeCostData } from '../../plugins/contracts/NodeCostData';
 import type { CanonicalNode } from '../../types/canonical';
 import type { CanonicalRunStatus } from '../../types/engine';
 
