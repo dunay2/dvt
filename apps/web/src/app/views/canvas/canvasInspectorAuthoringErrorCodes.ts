@@ -10,4 +10,12 @@ export type CanvasInspectorNodeDraftErrorCode =
   | 'dvt_table_required'
   | 'dvt_alias_required'
   | 'dvt_materialization_invalid'
-  | 'dvt_write_mode_invalid';
+  | 'dvt_write_mode_invalid'
+  | 'object_file_storage_uri_invalid'
+  | 'object_file_sha256_invalid'
+  | 'object_file_size_invalid'
+  | 'object_file_max_bytes_invalid'
+  | 'object_file_source_credential_ref_invalid'
+  | 'object_file_target_relation_invalid'
+  | 'object_file_target_credential_ref_invalid'
+  | 'object_file_column_mapping_invalid';

@@ -163,4 +163,41 @@ export const canvasViewAuthoringCopyEs = {
   inspectorErrorDvtAliasRequired: 'El alias es obligatorio.',
   inspectorErrorDvtMaterializationInvalid: 'La materializacion debe ser tabla o vista.',
   inspectorErrorDvtWriteModeInvalid: 'El modo de escritura debe ser reemplazar o anadir.',
+  inspectorObjectFileTitle: 'Carga de fichero de objetos',
+  inspectorObjectFileDescription:
+    'Carga un objeto CSV o JSON Lines inmutable en un staging PostgreSQL gobernado.',
+  inspectorObjectFileStorageUriLabel: 'URI de almacenamiento direccionada por contenido',
+  inspectorObjectFileSha256Label: 'Hash SHA-256',
+  inspectorObjectFileSizeBytesLabel: 'Tamano del objeto (bytes)',
+  inspectorObjectFileMaxBytesLabel: 'Tamano maximo admitido (bytes)',
+  inspectorObjectFileFormatLabel: 'Formato',
+  inspectorObjectFileCsvLabel: 'CSV con cabecera',
+  inspectorObjectFileJsonLinesLabel: 'JSON Lines',
+  inspectorObjectFileSourceCredentialLabel: 'Referencia de credencial del almacen de objetos',
+  inspectorObjectFileTargetTitle: 'Destino PostgreSQL',
+  inspectorObjectFileTargetSummary: 'esquema staging · modo replace',
+  inspectorObjectFileTargetRelationLabel: 'Relacion de staging',
+  inspectorObjectFileTargetCredentialLabel: 'Referencia de credencial PostgreSQL',
+  inspectorObjectFileColumnsTitle: 'Mapeo de columnas',
+  inspectorObjectFileAddColumnLabel: 'Anadir mapeo de columna',
+  inspectorObjectFileRemoveColumnLabel: 'Eliminar mapeo de columna',
+  inspectorObjectFileSourceFieldLabel: 'Campo origen',
+  inspectorObjectFileTargetColumnLabel: 'Columna destino',
+  inspectorObjectFileDataTypeLabel: 'Tipo PostgreSQL',
+  inspectorObjectFileNullableLabel: 'Permite nulos',
+  inspectorErrorObjectFileStorageUriInvalid:
+    'Usa s3://<bucket>/tenants/<tenant>/<sha256> para el objeto inmutable.',
+  inspectorErrorObjectFileSha256Invalid:
+    'El SHA-256 debe contener exactamente 64 caracteres hexadecimales.',
+  inspectorErrorObjectFileSizeInvalid: 'El tamano debe ser un numero de bytes positivo y admitido.',
+  inspectorErrorObjectFileMaxBytesInvalid:
+    'El maximo debe ser positivo, acotado y no inferior al tamano del objeto.',
+  inspectorErrorObjectFileSourceCredentialInvalid:
+    'Usa una referencia de credencial opaca object-store:<id>.',
+  inspectorErrorObjectFileTargetRelationInvalid:
+    'La relacion debe ser un identificador PostgreSQL valido en minusculas.',
+  inspectorErrorObjectFileTargetCredentialInvalid:
+    'Usa una referencia de credencial opaca postgres:<id>.',
+  inspectorErrorObjectFileColumnMappingInvalid:
+    'Anade al menos un mapeo origen-destino valido y sin duplicados.',
 } satisfies Partial<CanvasViewCopy>;

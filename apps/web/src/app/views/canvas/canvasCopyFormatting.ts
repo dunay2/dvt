@@ -102,6 +102,22 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorDvtMaterializationInvalid;
     case 'dvt_write_mode_invalid':
       return copy.inspectorErrorDvtWriteModeInvalid;
+    case 'object_file_storage_uri_invalid':
+      return copy.inspectorErrorObjectFileStorageUriInvalid;
+    case 'object_file_sha256_invalid':
+      return copy.inspectorErrorObjectFileSha256Invalid;
+    case 'object_file_size_invalid':
+      return copy.inspectorErrorObjectFileSizeInvalid;
+    case 'object_file_max_bytes_invalid':
+      return copy.inspectorErrorObjectFileMaxBytesInvalid;
+    case 'object_file_source_credential_ref_invalid':
+      return copy.inspectorErrorObjectFileSourceCredentialInvalid;
+    case 'object_file_target_relation_invalid':
+      return copy.inspectorErrorObjectFileTargetRelationInvalid;
+    case 'object_file_target_credential_ref_invalid':
+      return copy.inspectorErrorObjectFileTargetCredentialInvalid;
+    case 'object_file_column_mapping_invalid':
+      return copy.inspectorErrorObjectFileColumnMappingInvalid;
   }
 }
 

@@ -13,6 +13,11 @@ import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftErrors,
 } from './canvasInspectorAuthoring.types';
+import {
+  applyObjectFilePostgresAuthoringDraft,
+  createObjectFilePostgresAuthoringDraft,
+  validateObjectFilePostgresAuthoringDraft,
+} from './objectFilePostgresAuthoringModel';
 
 function normalizeNodeName(value: string): string {
   return value.trim();
@@ -25,6 +30,7 @@ function normalizeNodeDescription(value: string): string | undefined {
 
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
   const dvtMetadata = createDvtNodeAuthoringMetadata(node);
+  const objectFilePostgresDraft = createObjectFilePostgresAuthoringDraft(node);
   const tags = Array.from(
     new Set(node.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
   );
@@ -35,6 +41,7 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
     tags,
     ...(node.pluginId === 'dbt' ? { dbt: createDbtNodeAuthoringMetadata(node) } : {}),
     ...(dvtMetadata ? { dvt: dvtMetadata } : {}),
+    ...(objectFilePostgresDraft == null ? {} : { objectFilePostgres: objectFilePostgresDraft }),
   };
 }
 
@@ -87,6 +94,13 @@ export function validateCanvasInspectorNodeDraft(
     }
   }
 
+  if (draft.objectFilePostgres) {
+    const validation = validateObjectFilePostgresAuthoringDraft(draft.objectFilePostgres);
+    if (!validation.ok) {
+      return { objectFilePostgres: validation.errors };
+    }
+  }
+
   return {};
 }
 
@@ -104,7 +118,9 @@ export function hasCanvasInspectorNodeDraftChanges(
     (node.description ?? undefined) !== normalizeNodeDescription(draft.description) ||
     JSON.stringify(originalDraft.tags) !== JSON.stringify(draftTags) ||
     JSON.stringify(originalDraft.dbt ?? null) !== JSON.stringify(draft.dbt ?? null) ||
-    JSON.stringify(originalDraft.dvt ?? null) !== JSON.stringify(draft.dvt ?? null)
+    JSON.stringify(originalDraft.dvt ?? null) !== JSON.stringify(draft.dvt ?? null) ||
+    JSON.stringify(originalDraft.objectFilePostgres ?? null) !==
+      JSON.stringify(draft.objectFilePostgres ?? null)
   );
 }
 
@@ -128,6 +144,10 @@ export function applyCanvasInspectorNodeDraft(
 
   if (draft.dvt) {
     return applyDvtNodeAuthoringMetadata(baseNode, draft.dvt);
+  }
+
+  if (draft.objectFilePostgres) {
+    return applyObjectFilePostgresAuthoringDraft(baseNode, draft.objectFilePostgres);
   }
 
   return baseNode;

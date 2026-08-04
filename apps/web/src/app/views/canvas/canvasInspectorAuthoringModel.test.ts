@@ -450,4 +450,29 @@ describe('canvasInspectorAuthoringModel', () => {
       },
     });
   });
+
+  it('routes object-file load drafts through their plugin-owned authoring model', () => {
+    const node: CanonicalNode = {
+      id: 'load-orders',
+      name: 'Load orders',
+      pluginId: 'dvt.object-file-postgres',
+      kind: 'dvt:object_file_load',
+      role: 'input',
+      status: 'idle',
+      tags: ['authoring'],
+    };
+    const draft = createCanvasInspectorNodeDraft(node);
+
+    expect(draft.objectFilePostgres).toEqual(
+      expect.objectContaining({
+        format: 'csv',
+        columns: [expect.objectContaining({ dataType: 'text' })],
+      })
+    );
+    expect(validateCanvasInspectorNodeDraft(draft)).toEqual({
+      objectFilePostgres: expect.objectContaining({
+        storageUri: 'object_file_storage_uri_invalid',
+      }),
+    });
+  });
 });

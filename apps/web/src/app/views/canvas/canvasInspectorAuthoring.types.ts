@@ -5,6 +5,10 @@ import type {
   DvtNodeAuthoringMetadataErrors,
 } from './canvasDvtAuthoringModel';
 import type { CanvasInspectorNodeDraftErrorCode } from './canvasInspectorAuthoringErrorCodes';
+import type {
+  ObjectFilePostgresAuthoringDraft,
+  ObjectFilePostgresAuthoringErrors,
+} from './objectFilePostgresAuthoringModel';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -12,12 +16,14 @@ export type CanvasInspectorNodeDraft = Readonly<{
   tags: readonly string[];
   dbt?: DbtNodeAuthoringMetadata;
   dvt?: DvtNodeAuthoringMetadata;
+  objectFilePostgres?: ObjectFilePostgresAuthoringDraft;
 }>;
 
 export type CanvasInspectorNodeDraftErrors = Readonly<{
   name?: CanvasInspectorNodeDraftErrorCode;
   dbt?: Partial<Record<keyof DbtNodeAuthoringMetadata, CanvasInspectorNodeDraftErrorCode>>;
   dvt?: DvtNodeAuthoringMetadataErrors;
+  objectFilePostgres?: ObjectFilePostgresAuthoringErrors;
 }>;
 
 export type CanvasInspectorNodeModelerActions = Readonly<{
