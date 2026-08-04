@@ -34,7 +34,11 @@ export function verifyStepTypeConfigsOrThrow(params: StepTypeConfigVerificationP
       continue;
     }
 
-    const validationResult = registry.validate(step.kind, step.stepTypeConfig);
+    const validationResult = registry.validate(step.kind, step.stepTypeConfig, {
+      ...(params.plan.metadata.ownership === undefined
+        ? {}
+        : { planOwnership: params.plan.metadata.ownership }),
+    });
     if (!validationResult.success) {
       throw new PlanVerifierError(
         'INVALID_STEP_TYPE_CONFIG',

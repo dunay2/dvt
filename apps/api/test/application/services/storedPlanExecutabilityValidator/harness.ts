@@ -2,6 +2,7 @@ import type { IStoredPlanArtifactReader, StoredPlanArtifact } from '@dvt/artifac
 import type {
   IStepTypeRegistry,
   PlanRefSchemaT,
+  PlanOwnership,
   RunExecutionPolicy,
   ScopedPlanRef,
   StepKindExecutionProfile,
@@ -57,6 +58,7 @@ export function storedPlanArtifact(
     stepKind: string;
     stepTypeConfig: Record<string, unknown>;
     executionPolicy: RunExecutionPolicy;
+    ownership: PlanOwnership;
   }>
 ): { bytes: Uint8Array; executionPolicy: RunExecutionPolicy } {
   return {
@@ -70,6 +72,7 @@ export function storedPlanArtifact(
           contractVersion: '1.0.0',
           inputHashSha256: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
           createdAtIso: '2026-03-01T00:00:00.000Z',
+          ...(overrides?.ownership === undefined ? {} : { ownership: overrides.ownership }),
         },
         steps: [
           {

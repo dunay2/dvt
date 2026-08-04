@@ -162,7 +162,7 @@ export class Planner {
 
       // 6) Build steps + validate configs via registry (G9)
       const normalizedSteps = this.buildNormalizedSteps(graph.nodesById, topo, resolvedPolicies);
-      this.validateStepConfigs(normalizedSteps);
+      this.validateStepConfigs(normalizedSteps, normalizedInput.ownership);
 
       // 7) Assemble plan
       const requiredCapabilities = collectRequiredCapabilitiesForSteps(
@@ -245,9 +245,14 @@ export class Planner {
       .map((s) => ({ ...s, dependsOn: [...s.dependsOn].sort(binaryCompare) }));
   }
 
-  private validateStepConfigs(steps: PlanCore['steps']): void {
+  private validateStepConfigs(
+    steps: PlanCore['steps'],
+    planOwnership: NormalizedPlannerInput['ownership']
+  ): void {
     for (const step of steps) {
-      const result = this.stepTypeRegistry.validate(step.kind, step.stepTypeConfig);
+      const result = this.stepTypeRegistry.validate(step.kind, step.stepTypeConfig, {
+        ...(planOwnership === undefined ? {} : { planOwnership }),
+      });
       if (!result.success) {
         throw new PlannerError(PlannerErrorCode.INVALID_STEP_CONFIG, result.error);
       }
