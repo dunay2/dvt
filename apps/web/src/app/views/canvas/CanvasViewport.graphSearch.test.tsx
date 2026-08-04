@@ -18,10 +18,16 @@ import {
 
 describe('CanvasViewport graph search', () => {
   let harness: ReturnType<typeof createCanvasViewportHarness>;
+  let onNodesChange: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
     harness = createCanvasViewportHarness();
-    await harness.render({ nodesWithImpact: searchNodes(), edges: searchEdges() });
+    onNodesChange = vi.fn();
+    await harness.render({
+      nodesWithImpact: searchNodes(),
+      edges: searchEdges(),
+      onNodesChange,
+    });
   });
   afterEach(() => harness.unmount());
 
@@ -58,6 +64,9 @@ describe('CanvasViewport graph search', () => {
         expect.objectContaining({ nodes: [expect.objectContaining({ id: 'orders-a' })] })
       )
     );
+    expect(onNodesChange).toHaveBeenLastCalledWith([
+      { id: 'orders-a', type: 'select', selected: true },
+    ]);
     expect(activeSearchNode()?.id).toBe('orders-a');
     expect(searchNode('orders-b')?.className).toContain('canvas-graph-search-matching-node');
     expect(searchNode('customers')?.className).toContain('canvas-graph-search-dimmed-node');
@@ -76,6 +85,9 @@ describe('CanvasViewport graph search', () => {
         expect.objectContaining({ nodes: [expect.objectContaining({ id: 'orders-b' })] })
       )
     );
+    expect(onNodesChange).toHaveBeenLastCalledWith([
+      { id: 'orders-b', type: 'select', selected: true },
+    ]);
     expect(activeSearchNode()?.id).toBe('orders-b');
     expect(searchNode('orders-a')?.className).toContain('canvas-graph-search-matching-node');
     expect(searchEdge('orders-a-customers')?.className).toContain(
