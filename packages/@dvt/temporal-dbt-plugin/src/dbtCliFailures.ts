@@ -38,6 +38,9 @@ export function classifyDbtCliFailure(error: unknown): string {
   }
 
   const message = toErrorMessage(error);
+  if (message === 'DBT_STEP_SELECTOR_INVALID') {
+    return message;
+  }
   if (message === 'DBT_PROJECT_DIRECTORY_NOT_FOUND') {
     return message;
   }
@@ -54,6 +57,7 @@ export function toDbtCliFailureMessage(failureReason: string): string {
     return 'DBT CLI executable is unavailable.';
   }
   if (
+    failureReason === 'DBT_STEP_SELECTOR_INVALID' ||
     failureReason === 'DBT_PROJECT_DIRECTORY_NOT_FOUND' ||
     failureReason.startsWith('DBT_CLI_STEP_KIND_UNSUPPORTED:')
   ) {

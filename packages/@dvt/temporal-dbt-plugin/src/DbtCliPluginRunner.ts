@@ -12,6 +12,7 @@ import { join } from 'node:path';
 
 import type { StepResult } from '@dvt/adapter-temporal';
 import type { IDbtProjectBundleReader } from '@dvt/artifacts';
+import { resolveDbtStepSelector } from '@dvt/contracts';
 
 import { buildDbtCliArgs } from './dbtCliArguments.js';
 import {
@@ -143,7 +144,7 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
     try {
       const args = buildDbtCliArgs(
         input.step.kind,
-        input.step.stepId,
+        resolveDbtCommandSelector(input.step.stepId, input.step.stepTypeConfig),
         input.pluginContext.targetProfile,
         profile.profilesDir
       );
@@ -222,6 +223,14 @@ export class DbtCliPluginRunner implements DbtPluginRunner {
         )
       : undefined;
   }
+}
+
+function resolveDbtCommandSelector(stepId: string, stepTypeConfig: unknown): string {
+  const resolution = resolveDbtStepSelector(stepTypeConfig);
+  if (resolution.status === 'invalid') {
+    throw new Error('DBT_STEP_SELECTOR_INVALID');
+  }
+  return resolution.status === 'valid' ? resolution.target.selector : stepId;
 }
 
 function asAbortedSignal(
