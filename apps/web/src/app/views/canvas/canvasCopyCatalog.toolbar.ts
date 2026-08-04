@@ -61,6 +61,34 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.canvasSettingsLabel',
     fallback: 'Canvas settings',
   },
+  canvasGraphSearchLabel: {
+    key: 'canvas.graphSearch.label',
+    fallback: 'Search graph',
+  },
+  canvasGraphSearchInputLabel: {
+    key: 'canvas.graphSearch.inputLabel',
+    fallback: 'Search graph nodes',
+  },
+  canvasGraphSearchPlaceholder: {
+    key: 'canvas.graphSearch.placeholder',
+    fallback: 'Search nodes',
+  },
+  canvasGraphSearchNoResultsLabel: {
+    key: 'canvas.graphSearch.noResultsLabel',
+    fallback: 'No results',
+  },
+  canvasGraphSearchPreviousLabel: {
+    key: 'canvas.graphSearch.previousLabel',
+    fallback: 'Previous result',
+  },
+  canvasGraphSearchNextLabel: {
+    key: 'canvas.graphSearch.nextLabel',
+    fallback: 'Next result',
+  },
+  canvasGraphSearchCloseLabel: {
+    key: 'canvas.graphSearch.closeLabel',
+    fallback: 'Close graph search',
+  },
   canvasNodeToolbarLabelTemplate: {
     key: 'canvas.nodeToolbar.labelTemplate',
     fallback: 'Node actions: {nodeName}',

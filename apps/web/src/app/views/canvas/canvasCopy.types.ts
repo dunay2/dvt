@@ -80,6 +80,13 @@ export type CanvasViewCopy = {
   readonly toolbarGridColorLabel: string;
   readonly toolbarSnapToGridLabel: string;
   readonly toolbarCanvasSettingsLabel: string;
+  readonly canvasGraphSearchLabel: string;
+  readonly canvasGraphSearchInputLabel: string;
+  readonly canvasGraphSearchPlaceholder: string;
+  readonly canvasGraphSearchNoResultsLabel: string;
+  readonly canvasGraphSearchPreviousLabel: string;
+  readonly canvasGraphSearchNextLabel: string;
+  readonly canvasGraphSearchCloseLabel: string;
   readonly canvasNodeToolbarLabelTemplate: string;
   readonly canvasNodeToolbarCodeLabel: string;
   readonly canvasNodeToolbarCodeDescription: string;
