@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { fireEvent } from '@testing-library/dom';
+import { fireEvent, waitFor } from '@testing-library/dom';
 import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -73,6 +73,64 @@ describe('CanvasViewport graph filtering', () => {
     expect(viewportNodes()).toHaveLength(3);
   });
 
+  it('recomputes active search and filters after graph changes without mutating graph input', async () => {
+    const initialNodes = graphNodes();
+    const initialEdges = graphEdges();
+    const initialNodesSnapshot = structuredClone(initialNodes);
+    const initialEdgesSnapshot = structuredClone(initialEdges);
+    const onNodesChange = vi.fn();
+    await harness.render({ nodesWithImpact: initialNodes, edges: initialEdges, onNodesChange });
+
+    openFilter();
+    addFilter('status', 'failed');
+    openSearch('orders');
+
+    expect(searchControl().textContent).toContain('1 / 1');
+    expect(viewportNode('orders-failed')?.className).toContain('canvas-graph-search-active-node');
+
+    const replacementFailedNode = {
+      ...graphNodes()[0]!,
+      id: 'orders-retry-failed',
+      data: { ...graphNodes()[0]!.data, name: 'Orders retry failed' },
+    };
+    const changedNodes = [graphNodes()[1]!, graphNodes()[2]!, replacementFailedNode];
+    const changedEdges = [
+      { id: 'retry-customers', source: replacementFailedNode.id, target: 'customers' },
+    ];
+    await harness.render({
+      nodesWithImpact: changedNodes,
+      edges: changedEdges,
+      onNodesChange,
+    });
+
+    await waitFor(() => {
+      expect(searchControl().textContent).toContain('1 / 1');
+      expect(viewportNode(replacementFailedNode.id)?.className).toContain(
+        'canvas-graph-search-active-node'
+      );
+    });
+    expect(viewportNode('orders-failed')).toBeUndefined();
+
+    const graphWithoutFailedNodes = changedNodes.filter(
+      (node) => node.id !== replacementFailedNode.id
+    );
+    await harness.render({
+      nodesWithImpact: graphWithoutFailedNodes,
+      edges: [],
+      onNodesChange,
+    });
+
+    await waitFor(() => expect(searchControl().textContent).toContain('No results'));
+    expect(viewportNodes()).toHaveLength(2);
+    expect(initialNodes).toEqual(initialNodesSnapshot);
+    expect(initialEdges).toEqual(initialEdgesSnapshot);
+    expect(
+      onNodesChange.mock.calls
+        .flatMap(([changes]) => changes)
+        .every((change) => change.type === 'select')
+    ).toBe(true);
+  });
+
   function viewportNodes(): CanvasViewportProps['nodesWithImpact'] {
     return getCanvasViewportXyflowState().lastReactFlowProps
       ?.nodes as CanvasViewportProps['nodesWithImpact'];
@@ -81,6 +139,44 @@ describe('CanvasViewport graph filtering', () => {
     nodeId: string
   ): CanvasViewportProps['nodesWithImpact'][number] | undefined {
     return viewportNodes().find((node) => node.id === nodeId);
+  }
+
+  function openFilter(): void {
+    act(() => {
+      fireEvent.click(document.querySelector('button[aria-label="Filter graph"]')!);
+    });
+  }
+
+  function addFilter(dimension: string, value: string): void {
+    const control = document.querySelector<HTMLElement>(
+      '[data-slot="canvas-graph-filter-control"]'
+    )!;
+    const selects = control.querySelectorAll<HTMLSelectElement>('select');
+    act(() => {
+      fireEvent.change(selects[0]!, { target: { value: dimension } });
+      fireEvent.change(selects[1]!, { target: { value } });
+      fireEvent.click(control.querySelector('button[aria-label="Add filter"]')!);
+    });
+  }
+
+  function openSearch(query: string): void {
+    const surface = harness.container.querySelector<HTMLElement>(
+      '[data-slot="canvas-viewport-context-surface"]'
+    )!;
+    act(() => {
+      fireEvent.keyDown(surface, { key: 'f', ctrlKey: true });
+    });
+    act(() => {
+      fireEvent.change(harness.container.querySelector('input[type="search"]')!, {
+        target: { value: query },
+      });
+    });
+  }
+
+  function searchControl(): HTMLElement {
+    return harness.container.querySelector<HTMLElement>(
+      '[data-slot="canvas-graph-search-control"]'
+    )!;
   }
 });
 
