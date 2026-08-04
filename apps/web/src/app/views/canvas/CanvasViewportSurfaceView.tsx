@@ -15,12 +15,14 @@ import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCa
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type { CanvasPaletteId } from './canvasPalette';
 import { CanvasContextMenuView } from './CanvasContextMenuView';
+import { CanvasGraphFilterControl } from './CanvasGraphFilterControl';
 import { CanvasGraphSearchControl } from './CanvasGraphSearchControl';
 import { CanvasNodeFloatingToolbarView } from './CanvasNodeFloatingToolbarView';
 import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
 import type { CanvasGraphSearchController } from './useCanvasGraphSearchController';
+import type { CanvasGraphFilterController } from './useCanvasGraphFilterController';
 
 type CanvasViewportSurfaceViewProps = Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
@@ -58,6 +60,7 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   } | null;
   onCloseNodeHealthPopover: (restoreTriggerFocus?: boolean) => void;
   graphSearchController: CanvasGraphSearchController;
+  graphFilterController: CanvasGraphFilterController;
   copy: CanvasViewCopy;
 }>;
 
@@ -100,6 +103,7 @@ function CanvasViewportReactFlowSurface({
   | 'contextMenuLabel'
   | 'nodeFloatingToolbarModel'
   | 'nodeHealthPopoverModel'
+  | 'graphFilterController'
   | 'copy'
 >): JSX.Element {
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
@@ -235,6 +239,7 @@ export function CanvasViewportSurfaceView({
   nodeHealthPopoverModel,
   onCloseNodeHealthPopover,
   graphSearchController,
+  graphFilterController,
   copy,
   ...reactFlowSurfaceProps
 }: CanvasViewportSurfaceViewProps): JSX.Element {
@@ -262,6 +267,18 @@ export function CanvasViewportSurfaceView({
         onClose={graphSearchController.close}
         onKeyDown={graphSearchController.onControlKeyDown}
         onQueryKeyDown={graphSearchController.onQueryKeyDown}
+      />
+      <CanvasGraphFilterControl
+        model={graphFilterController.model}
+        copy={copy}
+        onOpenChange={graphFilterController.setOpen}
+        onSelectDimension={graphFilterController.selectDimension}
+        onSelectValue={graphFilterController.selectValue}
+        onAddPredicate={graphFilterController.addDraftPredicate}
+        onRemovePredicate={graphFilterController.removePredicate}
+        onSetComposition={graphFilterController.setComposition}
+        onSetPresentation={graphFilterController.setPresentation}
+        onClear={graphFilterController.clear}
       />
       {nodeFloatingToolbarModel == null ? null : (
         <CanvasNodeFloatingToolbarView model={nodeFloatingToolbarModel} />

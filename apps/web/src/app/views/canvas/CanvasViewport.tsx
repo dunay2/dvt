@@ -14,6 +14,7 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import { projectCanvasGraphFilterPresentation } from './canvasGraphFilterPresentation';
 import { projectCanvasGraphSearchPresentation } from './canvasGraphSearchPresentation';
 import { buildCanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
 import {
@@ -27,6 +28,7 @@ import {
   type CanvasContextMenuPresenter,
 } from './useCanvasContextMenuPresenter';
 import { useCanvasGraphSearchActivation } from './useCanvasGraphSearchActivation';
+import { useCanvasGraphFilterController } from './useCanvasGraphFilterController';
 import { useCanvasGraphSearchController } from './useCanvasGraphSearchController';
 import { useCanvasViewportLifecycle } from './useCanvasViewportLifecycle';
 
@@ -81,7 +83,6 @@ function CanvasViewportWithPresenter({
 }: CanvasViewportWithPresenterProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const copy = resolveCanvasViewCopy();
-  const graphSearchController = useCanvasGraphSearchController({ nodes: props.nodesWithImpact });
   const canSelectNodes = props.canSelectNodes ?? props.canEditEdges;
   const graphSearchActivationPort = useMemo(
     () => ({ fitView: reactFlow.fitView, onNodesChange: props.onNodesChange }),
@@ -184,11 +185,36 @@ function CanvasViewportWithPresenter({
     [closeNodeFloatingToolbar, closeNodeHealthPopover, openNodeHealthPopover, props.nodesWithImpact]
   );
 
+  const graphFilterController = useCanvasGraphFilterController({
+    nodes: nodesWithOperationalDetails,
+  });
+  const graphFilterPresentation = useMemo(
+    () =>
+      projectCanvasGraphFilterPresentation({
+        nodes: nodesWithOperationalDetails,
+        edges: props.edges,
+        result: graphFilterController.result,
+      }),
+    [graphFilterController.result, nodesWithOperationalDetails, props.edges]
+  );
+  const graphFilterMatchingNodeIds = useMemo(
+    () => new Set(graphFilterController.result.matchingNodeIds),
+    [graphFilterController.result.matchingNodeIds]
+  );
+  const graphSearchNodes = useMemo(
+    () =>
+      graphFilterController.result.status === 'idle'
+        ? nodesWithOperationalDetails
+        : nodesWithOperationalDetails.filter((node) => graphFilterMatchingNodeIds.has(node.id)),
+    [graphFilterController.result.status, graphFilterMatchingNodeIds, nodesWithOperationalDetails]
+  );
+  const graphSearchController = useCanvasGraphSearchController({ nodes: graphSearchNodes });
+
   const graphSearchPresentation = useMemo(
     () =>
       projectCanvasGraphSearchPresentation({
-        nodes: nodesWithOperationalDetails,
-        edges: props.edges,
+        nodes: graphFilterPresentation.nodes,
+        edges: graphFilterPresentation.edges,
         status: graphSearchController.model.status,
         matchingNodeIds: graphSearchController.matchingNodeIds,
         activeNodeId: graphSearchController.model.activeNodeId,
@@ -197,8 +223,8 @@ function CanvasViewportWithPresenter({
       graphSearchController.matchingNodeIds,
       graphSearchController.model.activeNodeId,
       graphSearchController.model.status,
-      nodesWithOperationalDetails,
-      props.edges,
+      graphFilterPresentation.edges,
+      graphFilterPresentation.nodes,
     ]
   );
 
@@ -421,6 +447,7 @@ function CanvasViewportWithPresenter({
       nodeHealthPopoverModel={nodeHealthPopoverModel}
       onCloseNodeHealthPopover={closeNodeHealthPopover}
       graphSearchController={graphSearchController}
+      graphFilterController={graphFilterController}
       copy={copy}
     />
   );
