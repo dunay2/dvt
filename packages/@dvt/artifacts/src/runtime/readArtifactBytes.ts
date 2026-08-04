@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath, URL } from 'node:url';
 
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -11,6 +11,7 @@ export interface ArtifactReadRuntimeOptions {
   readonly nodeEnv?: string;
   readonly s3Client?: S3LikeClient;
   readonly abortSignal?: globalThis.AbortSignal;
+  readonly maxBytes?: number;
 }
 
 export interface ReadArtifactBytesOptions extends ArtifactReadRuntimeOptions {
@@ -44,7 +45,13 @@ export async function readArtifact(
   const scheme = normalizeScheme(parsedUri.protocol);
 
   if (scheme === 's3') {
-    return readS3Artifact(parsedUri, s3Client, options.artifactLabel, options.abortSignal);
+    return readS3Artifact(
+      parsedUri,
+      s3Client,
+      options.artifactLabel,
+      options.abortSignal,
+      options.maxBytes
+    );
   }
 
   if (scheme === 'file') {
@@ -55,7 +62,12 @@ export async function readArtifact(
       );
     }
 
-    return readFileArtifact(parsedUri, options.artifactLabel, options.abortSignal);
+    return readFileArtifact(
+      parsedUri,
+      options.artifactLabel,
+      options.abortSignal,
+      options.maxBytes
+    );
   }
 
   throw new ArtifactReadError(
@@ -84,10 +96,15 @@ function parseArtifactUri(uri: string, uriLabel: string): URL {
 async function readFileArtifact(
   uri: URL,
   artifactLabel: string,
-  abortSignal?: globalThis.AbortSignal
+  abortSignal?: globalThis.AbortSignal,
+  maxBytes?: number
 ): Promise<ReadArtifactResult> {
   try {
-    const bytes = await readFile(fileURLToPath(uri), { signal: abortSignal });
+    const path = fileURLToPath(uri);
+    const fileStat = await stat(path);
+    assertWithinSizeLimit(fileStat.size, maxBytes, artifactLabel);
+    const bytes = await readFile(path, { signal: abortSignal });
+    assertWithinSizeLimit(bytes.byteLength, maxBytes, artifactLabel);
     return {
       bytes,
       contentLength: bytes.byteLength,
@@ -109,7 +126,8 @@ async function readS3Artifact(
   uri: URL,
   s3Client: S3LikeClient,
   artifactLabel: string,
-  abortSignal?: globalThis.AbortSignal
+  abortSignal?: globalThis.AbortSignal,
+  maxBytes?: number
 ): Promise<ReadArtifactResult> {
   const bucket = uri.hostname;
   const key = uri.pathname.slice(1);
@@ -136,7 +154,13 @@ async function readS3Artifact(
     const response = abortSignal
       ? await s3Client.send(command, { abortSignal })
       : await s3Client.send(command);
-    const bytes = await readS3ResponseBody(response.Body, artifactLabel);
+    assertWithinSizeLimit(response.ContentLength, maxBytes, artifactLabel);
+    const bytes = await readS3ResponseBody(
+      response.Body,
+      artifactLabel,
+      maxBytes,
+      response.ContentLength
+    );
     return {
       bytes,
       ...(response.ContentLength === undefined ? {} : { contentLength: response.ContentLength }),
@@ -155,27 +179,99 @@ async function readS3Artifact(
   }
 }
 
-async function readS3ResponseBody(body: unknown, artifactLabel: string): Promise<Uint8Array> {
-  if (body && typeof body === 'object' && 'transformToByteArray' in body) {
-    const transformToByteArray = (body as { transformToByteArray?: () => Promise<Uint8Array> })
-      .transformToByteArray;
-    if (typeof transformToByteArray === 'function') {
-      return transformToByteArray.call(body);
-    }
+async function readS3ResponseBody(
+  body: unknown,
+  artifactLabel: string,
+  maxBytes?: number,
+  contentLength?: number
+): Promise<Uint8Array> {
+  if (isAsyncIterable(body)) {
+    return readBoundedChunks(body, artifactLabel, maxBytes);
   }
 
   if (body instanceof Uint8Array) {
+    assertWithinSizeLimit(body.byteLength, maxBytes, artifactLabel);
     return body;
   }
 
   if (typeof body === 'string') {
-    return Buffer.from(body, 'utf8');
+    const bytes = Buffer.from(body, 'utf8');
+    assertWithinSizeLimit(bytes.byteLength, maxBytes, artifactLabel);
+    return bytes;
+  }
+
+  if (body && typeof body === 'object' && 'transformToByteArray' in body) {
+    const transformToByteArray = (body as { transformToByteArray?: () => Promise<Uint8Array> })
+      .transformToByteArray;
+    if (typeof transformToByteArray === 'function') {
+      if (maxBytes !== undefined && contentLength === undefined) {
+        throw new ArtifactReadError(
+          'ARTIFACT_SIZE_LIMIT_UNVERIFIABLE',
+          `${artifactLabel} artifact size cannot be bounded before materialization`
+        );
+      }
+      const bytes = await transformToByteArray.call(body);
+      assertWithinSizeLimit(bytes.byteLength, maxBytes, artifactLabel);
+      return bytes;
+    }
   }
 
   throw new ArtifactReadError(
     'ARTIFACT_PAYLOAD_INVALID',
     `${artifactLabel} artifact payload is invalid`
   );
+}
+
+function isAsyncIterable(value: unknown): value is AsyncIterable<unknown> {
+  return (
+    value !== null &&
+    typeof value === 'object' &&
+    typeof (value as { [Symbol.asyncIterator]?: unknown })[Symbol.asyncIterator] === 'function'
+  );
+}
+
+async function readBoundedChunks(
+  body: AsyncIterable<unknown>,
+  artifactLabel: string,
+  maxBytes?: number
+): Promise<Uint8Array> {
+  const chunks: Uint8Array[] = [];
+  let byteLength = 0;
+
+  for await (const value of body) {
+    const chunk = toByteChunk(value, artifactLabel);
+    byteLength += chunk.byteLength;
+    assertWithinSizeLimit(byteLength, maxBytes, artifactLabel);
+    chunks.push(chunk);
+  }
+
+  return Buffer.concat(chunks, byteLength);
+}
+
+function toByteChunk(value: unknown, artifactLabel: string): Uint8Array {
+  if (value instanceof Uint8Array) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    return Buffer.from(value, 'utf8');
+  }
+  throw new ArtifactReadError(
+    'ARTIFACT_PAYLOAD_INVALID',
+    `${artifactLabel} artifact payload is invalid`
+  );
+}
+
+function assertWithinSizeLimit(
+  byteLength: number | undefined,
+  maxBytes: number | undefined,
+  artifactLabel: string
+): void {
+  if (byteLength !== undefined && maxBytes !== undefined && byteLength > maxBytes) {
+    throw new ArtifactReadError(
+      'ARTIFACT_SIZE_LIMIT_EXCEEDED',
+      `${artifactLabel} artifact exceeds its governed size limit`
+    );
+  }
 }
 
 function normalizeScheme(protocol: string): string {

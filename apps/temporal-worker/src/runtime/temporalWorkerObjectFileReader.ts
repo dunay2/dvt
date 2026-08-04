@@ -2,8 +2,11 @@
  * @ownedConcern Adapt governed artifact URIs to the object-file plugin reader port.
  */
 import { S3Client } from '@aws-sdk/client-s3';
-import { readArtifact } from '@dvt/artifacts';
-import type { ContentAddressedObjectReader } from '@dvt/temporal-object-file-postgres-plugin';
+import { ArtifactReadError, readArtifact } from '@dvt/artifacts';
+import {
+  ObjectFileIngestionRejectedError,
+  type ContentAddressedObjectReader,
+} from '@dvt/temporal-object-file-postgres-plugin';
 
 import type { Env } from '../plugins/env.js';
 
@@ -19,13 +22,26 @@ export function createTemporalWorkerObjectFileReader(env: Env): ContentAddressed
   });
 
   return {
-    read: (input) =>
-      readArtifact(input.uri, {
-        artifactLabel: 'object-file source',
-        uriLabel: 'source.storageUri',
-        nodeEnv: env.NODE_ENV,
-        s3Client,
-        ...(input.signal === undefined ? {} : { abortSignal: input.signal }),
-      }),
+    read: async (input) => {
+      try {
+        return await readArtifact(input.uri, {
+          artifactLabel: 'object-file source',
+          uriLabel: 'source.storageUri',
+          nodeEnv: env.NODE_ENV,
+          s3Client,
+          maxBytes: input.maxBytes,
+          ...(input.signal === undefined ? {} : { abortSignal: input.signal }),
+        });
+      } catch (error) {
+        if (
+          error instanceof ArtifactReadError &&
+          (error.code === 'ARTIFACT_SIZE_LIMIT_EXCEEDED' ||
+            error.code === 'ARTIFACT_SIZE_LIMIT_UNVERIFIABLE')
+        ) {
+          throw new ObjectFileIngestionRejectedError('OBJECT_SOURCE_SIZE_MISMATCH');
+        }
+        throw error;
+      }
+    },
   };
 }

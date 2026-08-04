@@ -13,6 +13,25 @@ import type {
 import { RUN_CONTEXT, SOURCE_BYTES, STEP_CONFIG } from './objectFilePostgresTestFixtures.js';
 
 describe('ObjectFilePostgresPluginRunner', () => {
+  it('passes the governed source bound to the object reader', async () => {
+    const read = vi.fn(async () => ({
+      bytes: SOURCE_BYTES,
+      contentLength: SOURCE_BYTES.byteLength,
+      contentType: 'text/csv',
+    }));
+    const runner = createRunner(
+      { read },
+      {
+        load: vi.fn(async () => ({ rowsWritten: 2, publicationOutcome: 'created' as const })),
+      }
+    );
+
+    await runner.execute(buildInput());
+
+    expect(read).toHaveBeenCalledWith(
+      expect.objectContaining({ maxBytes: buildInput().config.source.maxBytes })
+    );
+  });
   it('loads verified rows and returns a typed replacement receipt', async () => {
     const read = vi.fn(async () => ({
       bytes: SOURCE_BYTES,

@@ -30,6 +30,47 @@ describe('readArtifact', () => {
     expect(send).toHaveBeenCalledWith(expect.anything(), { abortSignal: signal });
   });
 
+  it('rejects an oversized S3 object before materializing its body', async () => {
+    const transformToByteArray = vi.fn(async () => new Uint8Array(128));
+
+    await expect(
+      readArtifact('s3://fixtures/tenants/tenant-a/oversized', {
+        artifactLabel: 'source object',
+        uriLabel: 'source.storageUri',
+        maxBytes: 64,
+        s3Client: {
+          send: vi.fn(async () => ({
+            Body: { transformToByteArray },
+            ContentLength: 128,
+          })),
+        } as never,
+      })
+    ).rejects.toMatchObject({ code: 'ARTIFACT_SIZE_LIMIT_EXCEEDED' });
+    expect(transformToByteArray).not.toHaveBeenCalled();
+  });
+
+  it('stops an S3 stream as soon as its bounded size is exceeded', async () => {
+    const consumedChunks: number[] = [];
+    const body = {
+      async *[Symbol.asyncIterator]() {
+        for (const [index, chunk] of [new Uint8Array(4), new Uint8Array(5)].entries()) {
+          consumedChunks.push(index);
+          yield chunk;
+        }
+      },
+    };
+
+    await expect(
+      readArtifact('s3://fixtures/tenants/tenant-a/streamed', {
+        artifactLabel: 'source object',
+        uriLabel: 'source.storageUri',
+        maxBytes: 8,
+        s3Client: { send: vi.fn(async () => ({ Body: body })) } as never,
+      })
+    ).rejects.toMatchObject({ code: 'ARTIFACT_SIZE_LIMIT_EXCEEDED' });
+    expect(consumedChunks).toEqual([0, 1]);
+  });
+
   it('maps a missing S3 object to the stable artifact-not-found code', async () => {
     const missing = Object.assign(new Error('provider key detail'), { name: 'NoSuchKey' });
 

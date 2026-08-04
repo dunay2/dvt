@@ -10,6 +10,7 @@ export type ObjectFilePostgresRow = Readonly<Record<string, ObjectFilePostgresSc
 
 export interface ContentAddressedObjectReadInput {
   readonly uri: string;
+  readonly maxBytes: number;
   readonly signal?: globalThis.AbortSignal;
 }
 

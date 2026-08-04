@@ -153,6 +153,7 @@ async function readSourceSafely(
   try {
     return await reader.read({
       uri: input.config.source.storageUri,
+      maxBytes: input.config.source.maxBytes,
       ...(signal === undefined ? {} : { signal }),
     });
   } catch (error) {
