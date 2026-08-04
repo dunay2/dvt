@@ -72,6 +72,23 @@ describe('object-file PostgreSQL authoring model', () => {
     });
   });
 
+  it('projects only canonical ownership fields from the wider workspace session scope', () => {
+    const workspaceScope = {
+      ...scope,
+      targetAdapter: 'temporal',
+    } as const;
+
+    const result = projectObjectFilePostgresStepTypeConfig({
+      node: objectFileNode,
+      executionScope: workspaceScope,
+    });
+
+    expect(result).toEqual({
+      ok: true,
+      stepTypeConfig: expect.objectContaining({ scope }),
+    });
+  });
+
   it('fails closed without an authorized scope or complete canonical metadata', () => {
     expect(
       projectObjectFilePostgresStepTypeConfig({

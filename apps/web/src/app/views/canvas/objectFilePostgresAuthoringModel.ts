@@ -92,7 +92,11 @@ export function projectObjectFilePostgresStepTypeConfig(args: {
   const metadata = args.node.metadata?.objectFilePostgres;
   const parsed = LoadObjectFileToPostgresStepTypeConfigSchema.safeParse({
     ...(isRecord(metadata) ? metadata : {}),
-    scope: args.executionScope,
+    scope: {
+      tenantId: args.executionScope.tenantId,
+      projectId: args.executionScope.projectId,
+      environmentId: args.executionScope.environmentId,
+    },
   });
   if (!parsed.success) {
     return {
