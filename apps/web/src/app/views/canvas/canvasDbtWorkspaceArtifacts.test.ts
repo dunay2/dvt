@@ -109,7 +109,9 @@ describe('canvas dbt workspace artifacts', () => {
     if (!result.ok) return;
     expect(result.artifacts[1]?.content).toContain("from {{ source('staging', 'orders') }}");
     expect(result.artifacts[2]?.content).toContain('  - name: staging');
-    expect(result.artifacts[2]?.content).toContain('    schema: staging');
+    expect(result.artifacts[2]?.content).toContain(
+      `    schema: "{{ env_var('DVT_OBJECT_FILE_POSTGRES_STAGING_SCHEMA', 'staging') }}"`
+    );
     expect(result.artifacts[2]?.content).toContain('      - name: orders');
   });
 

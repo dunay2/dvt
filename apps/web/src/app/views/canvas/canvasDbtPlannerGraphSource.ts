@@ -1,6 +1,9 @@
 /** Owned concern: project authored dbt canvas state into planner-generic-v1 graph source. */
 import type { ExecutionSelection, GenericGraphSourceV1, GenericGraphNodeV1 } from '@dvt/contracts';
-import { parseExecutionSelection } from '@dvt/contracts';
+import {
+  OBJECT_FILE_POSTGRES_DBT_BRIDGE_CUSTOM_KEY,
+  parseExecutionSelection,
+} from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
@@ -88,6 +91,7 @@ function buildGenericGraphNode(args: {
   edges: readonly CanonicalEdge[];
   executableNodeIdSet: ReadonlySet<string>;
   executionScope: ObjectFilePostgresExecutionScope | undefined;
+  usesObjectFilePostgresStaging: boolean;
 }): GenericGraphNodeProjection {
   const stepKind = resolveDbtExecutableStepKind(args.node);
   if (stepKind == null) {
@@ -115,7 +119,15 @@ function buildGenericGraphNode(args: {
       dependsOn: resolveExecutableDependencies(args),
       ...(objectFileProjection?.ok === true
         ? { stepTypeConfig: objectFileProjection.stepTypeConfig }
-        : {}),
+        : args.usesObjectFilePostgresStaging
+          ? {
+              stepTypeConfig: {
+                custom: {
+                  [OBJECT_FILE_POSTGRES_DBT_BRIDGE_CUSTOM_KEY]: { version: 'v1' },
+                },
+              },
+            }
+          : {}),
       metadata: {
         displayName: args.node.name,
         ...(nodeMetadata?.selectedSourceId
@@ -152,12 +164,14 @@ export function buildDbtPlannerGraphSource(args: {
   }
 
   const executableNodeIdSet = new Set(executableNodes.map((node) => node.id));
+  const usesObjectFilePostgresStaging = executableNodes.some(isObjectFilePostgresNode);
   const graphNodeProjections = executableNodes.map((node) =>
     buildGenericGraphNode({
       node,
       edges: args.edges,
       executableNodeIdSet,
       executionScope: args.executionScope,
+      usesObjectFilePostgresStaging,
     })
   );
   const rejectedProjection = graphNodeProjections.find((projection) => !projection.ok);
