@@ -69,6 +69,7 @@ describe('useCanvasGraphSearchController', () => {
               open: controller.model.open,
               status: controller.model.status,
               active: controller.model.activeNodeId,
+              matches: controller.matchingNodeIds,
               position: controller.model.activeMatchPosition,
               count: controller.model.matchCount,
             })}
@@ -93,6 +94,7 @@ describe('useCanvasGraphSearchController', () => {
       open: true,
       status: 'matched',
       active: 'orders-a',
+      matches: ['orders-a', 'orders-b'],
       position: 1,
       count: 2,
     });
@@ -127,6 +129,7 @@ describe('useCanvasGraphSearchController', () => {
       open: false,
       status: 'idle',
       active: null,
+      matches: [],
       position: null,
       count: 0,
     });

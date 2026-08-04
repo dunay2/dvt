@@ -81,6 +81,11 @@
   --canvas-panel-toggle-border: #31445f;
   --canvas-panel-toggle-foreground: #f8fafc;
   --canvas-search-active-ring: var(--focus-ring);
+  --canvas-search-match-ring: #93c5fd;
+  --canvas-search-relevant-edge: #60a5fa;
+  --canvas-search-relevant-edge-width: 3.5;
+  --canvas-search-dimmed-opacity: 0.3;
+  --canvas-search-dimmed-saturation: 0.35;
   --canvas-node-port-control-ring: #94a3b8;
   --canvas-node-port-control-fill: #111827;
   --canvas-node-port-source-ring: #a855f7;

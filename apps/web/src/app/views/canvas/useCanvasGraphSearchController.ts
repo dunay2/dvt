@@ -27,6 +27,7 @@ export type CanvasGraphSearchControlModel = Readonly<{
 
 export type CanvasGraphSearchController = Readonly<{
   model: CanvasGraphSearchControlModel;
+  matchingNodeIds: readonly string[];
   open: () => void;
   close: () => void;
   setQuery: (query: string) => void;
@@ -90,6 +91,10 @@ export function useCanvasGraphSearchController({
   const result = useMemo(
     () => searchCanvasGraph(searchNodes, createCanvasGraphSearchRequest(query), activeNodeId),
     [activeNodeId, query, searchNodes]
+  );
+  const matchingNodeIds = useMemo(
+    () => result.matches.map((match) => match.nodeId),
+    [result.matches]
   );
 
   const openSearch = useCallback(() => setOpen(true), []);
@@ -157,6 +162,7 @@ export function useCanvasGraphSearchController({
       activeMatchPosition: result.status === 'matched' ? result.activeMatchIndex + 1 : null,
       activeNodeId: result.activeNodeId,
     },
+    matchingNodeIds,
     open: openSearch,
     close,
     setQuery,
