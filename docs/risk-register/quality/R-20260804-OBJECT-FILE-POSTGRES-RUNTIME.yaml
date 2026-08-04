@@ -1,0 +1,31 @@
+---
+id: R-20260804-OBJECT-FILE-POSTGRES-RUNTIME
+title: Bounded object parsing can pressure Temporal worker memory
+status: Open
+date: 2026-08-04
+owners:
+  - packages/@dvt/temporal-object-file-postgres-plugin
+  - apps/temporal-worker
+severity: Medium
+probability: Low
+context: >
+  HET1.2 verifies and parses each admitted CSV or JSON Lines object in memory before atomically
+  replacing a PostgreSQL staging relation.
+risk: >
+  Concurrent loads near the admitted object-size ceiling could increase worker memory pressure or
+  extend activity duration even though each individual payload is bounded.
+mitigations:
+  - Enforce the contract-level maximum byte size before parsing.
+  - Verify reported and actual object size, media type, and SHA-256 before database mutation.
+  - Keep object ingestion behind an explicit worker feature flag and readiness capability.
+  - Propagate cancellation through object reads and PostgreSQL batch insertion.
+  - Keep PostgreSQL publication transactional so retries cannot leave partial or duplicate state.
+  - Exercise the production composition against real MinIO, Temporal Server, and PostgreSQL in CI.
+monitoring:
+  - Track object byte size, activity duration, retry count, cancellation, and worker memory
+    pressure.
+follow_up:
+  - Introduce streaming only when measured workload evidence shows the bounded in-memory profile is
+    insufficient; do not add a second ingestion framework pre-emptively.
+review_after: 2026-11-04
+---

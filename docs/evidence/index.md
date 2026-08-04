@@ -110,6 +110,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260803 Dbt Runtime Credential Resolution](ED-20260803-dbt-runtime-credential-resolution.md)
 - [ED 20260803 Protected Start Run Opentelemetry](ED-20260803-protected-start-run-opentelemetry.md)
 - [ED 20260803 Supported Runtime Recovery](ED-20260803-supported-runtime-recovery.md)
+- [ED 20260804 Object File Postgres Runtime](ED-20260804-object-file-postgres-runtime.md)
 - [ED 20260804 Object File Postgres Step Admission](ED-20260804-object-file-postgres-step-admission.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
