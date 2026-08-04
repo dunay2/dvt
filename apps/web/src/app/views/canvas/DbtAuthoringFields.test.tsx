@@ -46,7 +46,23 @@ function buildDbtModelNode(): CanonicalNode {
         packageName: 'analytics',
         materialized: 'view',
       },
+      columns: [
+        { name: 'order_id', type: 'bigint' },
+        { name: 'amount', type: 'numeric' },
+      ],
     },
+  };
+}
+
+function buildDbtTestNode(): CanonicalNode {
+  return {
+    id: 'test-orders-key',
+    name: 'Orders key required',
+    pluginId: 'dbt',
+    kind: 'dbt:test',
+    role: 'check',
+    status: 'idle',
+    tags: [],
   };
 }
 
@@ -73,7 +89,7 @@ function DbtAuthoringFieldsHarness({
         errors={errors}
         onChange={setDraft}
       />
-      <output data-slot="dbt-draft-json">{JSON.stringify(draft.dbt)}</output>
+      <output data-slot="dbt-draft-json">{JSON.stringify(draft)}</output>
     </>
   );
 }
@@ -159,5 +175,35 @@ describe('DbtAuthoringFields', () => {
 
     expect(draftJson()).toContain('"selectedSourceId":"source-b"');
     expect(draftJson()).toContain('"materialized":"table"');
+  });
+
+  it('authors an executable DBT validation against connected model columns', () => {
+    const model = buildDbtModelNode();
+    const test = buildDbtTestNode();
+    const edges: readonly CanonicalEdge[] = [
+      { id: 'edge-model-test', sourceId: model.id, targetId: test.id, relation: 'validation' },
+    ];
+
+    renderFields(test, [model, test], edges);
+
+    const targetSelect = container.querySelector('select[name="dbt-test-target"]');
+    const typeSelect = container.querySelector('select[name="dbt-test-type"]');
+    const columnInput = container.querySelector('input[name="dbt-test-column"]');
+    const severitySelect = container.querySelector('select[name="dbt-test-severity"]');
+
+    expect(targetSelect).toBeInstanceOf(HTMLSelectElement);
+    expect((targetSelect as HTMLSelectElement).value).toBe(model.id);
+    expect(container.querySelector('option[value="order_id"]')).not.toBeNull();
+    expect(container.querySelector('input[name="dbt-package"]')).toBeNull();
+
+    act(() => {
+      fireEvent.change(typeSelect as HTMLSelectElement, { target: { value: 'unique' } });
+      fireEvent.input(columnInput as HTMLInputElement, { target: { value: 'order_id' } });
+      fireEvent.change(severitySelect as HTMLSelectElement, { target: { value: 'warn' } });
+    });
+
+    expect(draftJson()).toContain(
+      '"dbtTest":{"testType":"unique","targetModelId":"model-orders","targetColumn":"order_id","severity":"warn"}'
+    );
   });
 });

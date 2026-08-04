@@ -10,7 +10,9 @@ import { canvasViewCopy } from './copy';
 import { DbtModelCodeAuthoringSection } from './DbtModelCodeAuthoringSection';
 import { DbtModelAuthoringSection } from './DbtModelAuthoringSection';
 import { DbtSourceAuthoringSection } from './DbtSourceAuthoringSection';
+import { DbtTestAuthoringSection } from './DbtTestAuthoringSection';
 import { buildDbtAuthoringModelProjection } from './dbtAuthoringFieldsModel';
+import { buildDbtTestAuthoringFieldsModel } from './dbtTestAuthoringFieldsModel';
 
 type DbtAuthoringFieldsProps = Readonly<{
   node: CanonicalNode;
@@ -33,6 +35,26 @@ export function DbtAuthoringFields({
   section = 'general',
   onChange,
 }: DbtAuthoringFieldsProps): JSX.Element | null {
+  if (node.kind === 'dbt:test' && draft.dbtTest) {
+    if (section === 'code') return null;
+
+    return (
+      <DbtTestAuthoringSection
+        node={node}
+        disabled={disabled}
+        draft={draft.dbtTest}
+        errors={errors.dbtTest}
+        projection={buildDbtTestAuthoringFieldsModel({
+          node,
+          nodes,
+          edges,
+          targetModelId: draft.dbtTest.targetModelId,
+        })}
+        onChange={onChange}
+      />
+    );
+  }
+
   if (!draft.dbt) {
     return null;
   }

@@ -92,6 +92,14 @@ export function formatCanvasInspectorNodeDraftError(
       return copy.inspectorErrorDbtTableRequired;
     case 'dbt_materialization_invalid':
       return copy.inspectorErrorDbtMaterializationInvalid;
+    case 'dbt_test_type_invalid':
+      return copy.inspectorErrorDbtTestTypeInvalid;
+    case 'dbt_test_target_required':
+      return copy.inspectorErrorDbtTestTargetRequired;
+    case 'dbt_test_column_invalid':
+      return copy.inspectorErrorDbtTestColumnInvalid;
+    case 'dbt_test_severity_invalid':
+      return copy.inspectorErrorDbtTestSeverityInvalid;
     case 'dvt_schema_required':
       return copy.inspectorErrorDvtSchemaRequired;
     case 'dvt_table_required':

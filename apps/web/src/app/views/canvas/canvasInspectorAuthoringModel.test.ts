@@ -145,6 +145,38 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual({});
   });
 
+  it('uses a dedicated DBT test draft without irrelevant source or model fields', () => {
+    const node: CanonicalNode = {
+      id: 'dbt-test-1',
+      name: 'Orders key required',
+      pluginId: 'dbt',
+      kind: 'dbt:test',
+      role: 'check',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        dbtTest: {
+          testType: 'not_null',
+          targetModelId: 'dbt-model-1',
+          targetColumn: 'order_id',
+          severity: 'error',
+        },
+      },
+    };
+
+    const draft = createCanvasInspectorNodeDraft(node);
+
+    expect(draft.dbt).toBeUndefined();
+    expect(draft.dbtTest).toEqual({
+      testType: 'not_null',
+      targetModelId: 'dbt-model-1',
+      targetColumn: 'order_id',
+      severity: 'error',
+    });
+    expect(validateCanvasInspectorNodeDraft(draft)).toEqual({});
+    expect(applyCanvasInspectorNodeDraft(node, draft)).toEqual(node);
+  });
+
   it('projects a submitted draft through the same canonical rules as the authoring command', () => {
     const explicitEmptyDraft = {
       name: '  Orders Model  ',

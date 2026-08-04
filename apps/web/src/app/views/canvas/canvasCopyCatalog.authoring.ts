@@ -299,6 +299,46 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dbtMaterializedEphemeralLabel',
     fallback: 'ephemeral',
   },
+  inspectorDbtTestTitle: {
+    key: 'canvas.inspector.authoring.dbtTestTitle',
+    fallback: 'DBT validation',
+  },
+  inspectorDbtTestTypeLabel: {
+    key: 'canvas.inspector.authoring.dbtTestTypeLabel',
+    fallback: 'Validation rule',
+  },
+  inspectorDbtTestTargetLabel: {
+    key: 'canvas.inspector.authoring.dbtTestTargetLabel',
+    fallback: 'Connected model',
+  },
+  inspectorDbtTestColumnLabel: {
+    key: 'canvas.inspector.authoring.dbtTestColumnLabel',
+    fallback: 'Target column',
+  },
+  inspectorDbtTestSeverityLabel: {
+    key: 'canvas.inspector.authoring.dbtTestSeverityLabel',
+    fallback: 'Severity',
+  },
+  inspectorDbtTestNotNullLabel: {
+    key: 'canvas.inspector.authoring.dbtTestNotNullLabel',
+    fallback: 'Required value (not null)',
+  },
+  inspectorDbtTestUniqueLabel: {
+    key: 'canvas.inspector.authoring.dbtTestUniqueLabel',
+    fallback: 'Unique value',
+  },
+  inspectorDbtTestSeverityErrorLabel: {
+    key: 'canvas.inspector.authoring.dbtTestSeverityErrorLabel',
+    fallback: 'Block execution',
+  },
+  inspectorDbtTestSeverityWarnLabel: {
+    key: 'canvas.inspector.authoring.dbtTestSeverityWarnLabel',
+    fallback: 'Report warning',
+  },
+  inspectorDbtTestNoConnectedTargetMessage: {
+    key: 'canvas.inspector.authoring.dbtTestNoConnectedTargetMessage',
+    fallback: 'Connect this validation to a DBT model before configuring it.',
+  },
   inspectorDvtSourceTitle: {
     key: 'canvas.inspector.authoring.dvtSourceTitle',
     fallback: 'DVT source',
@@ -542,6 +582,22 @@ export const canvasViewAuthoringCopyByKey = {
   inspectorErrorDbtMaterializationInvalid: {
     key: 'canvas.inspector.authoring.errorDbtMaterializationInvalid',
     fallback: 'Materialization must be view, table, incremental, or ephemeral.',
+  },
+  inspectorErrorDbtTestTypeInvalid: {
+    key: 'canvas.inspector.authoring.errorDbtTestTypeInvalid',
+    fallback: 'Choose a supported DBT validation rule.',
+  },
+  inspectorErrorDbtTestTargetRequired: {
+    key: 'canvas.inspector.authoring.errorDbtTestTargetRequired',
+    fallback: 'Connect and select the DBT model validated by this test.',
+  },
+  inspectorErrorDbtTestColumnInvalid: {
+    key: 'canvas.inspector.authoring.errorDbtTestColumnInvalid',
+    fallback: 'Enter a valid target column identifier.',
+  },
+  inspectorErrorDbtTestSeverityInvalid: {
+    key: 'canvas.inspector.authoring.errorDbtTestSeverityInvalid',
+    fallback: 'Severity must block execution or report a warning.',
   },
   inspectorErrorDvtSchemaRequired: {
     key: 'canvas.inspector.authoring.errorDvtSchemaRequired',
