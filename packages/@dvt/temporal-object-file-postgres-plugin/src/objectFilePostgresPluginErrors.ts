@@ -8,3 +8,11 @@ export class ObjectFileIngestionRejectedError extends Error {
     super(message);
   }
 }
+
+export class ObjectFileIngestionRuntimeError extends Error {
+  public readonly name = 'ObjectFileIngestionRuntimeError';
+
+  public constructor(public readonly code: string) {
+    super(code);
+  }
+}

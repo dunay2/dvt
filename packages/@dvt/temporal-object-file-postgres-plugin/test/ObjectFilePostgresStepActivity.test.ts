@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   createObjectFilePostgresPluginProfile,
+  ObjectFileIngestionRuntimeError,
   OBJECT_FILE_POSTGRES_PLUGIN_ID,
 } from '../src/index.js';
 
@@ -38,6 +39,19 @@ describe('object-file PostgreSQL Temporal profile', () => {
       nonRetryable: true,
     });
     expect(execute).not.toHaveBeenCalled();
+  });
+
+  it('keeps a sanitized runtime failure retryable', async () => {
+    const execute = vi.fn(async () => {
+      throw new ObjectFileIngestionRuntimeError('OBJECT_SOURCE_READ_FAILED');
+    });
+    const profile = createObjectFilePostgresPluginProfile({ execute });
+    const activity = profile.stepActivitiesByKind.get('LOAD_OBJECT_FILE_TO_POSTGRES');
+
+    await expect(activity?.execute(buildStep(STEP_CONFIG), buildContext())).rejects.toMatchObject({
+      code: 'OBJECT_SOURCE_READ_FAILED',
+      message: 'OBJECT_SOURCE_READ_FAILED',
+    });
   });
 });
 

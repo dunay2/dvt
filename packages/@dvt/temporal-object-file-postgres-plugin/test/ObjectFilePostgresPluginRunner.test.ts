@@ -69,7 +69,13 @@ describe('ObjectFilePostgresPluginRunner', () => {
     expect(createHash('sha256').update(bytes).digest('hex')).not.toBe(STEP_CONFIG.source.sha256);
     const load = vi.fn();
     const runner = createRunner(
-      { read: vi.fn(async () => ({ bytes, contentLength: bytes.byteLength })) },
+      {
+        read: vi.fn(async () => ({
+          bytes,
+          contentLength: bytes.byteLength,
+          contentType: 'text/csv',
+        })),
+      },
       { load }
     );
 
@@ -77,6 +83,79 @@ describe('ObjectFilePostgresPluginRunner', () => {
       code: 'OBJECT_SOURCE_INTEGRITY_MISMATCH',
     });
     expect(load).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      'reported size drift',
+      {
+        bytes: SOURCE_BYTES,
+        contentLength: SOURCE_BYTES.byteLength + 1,
+        contentType: 'text/csv',
+      },
+      'OBJECT_SOURCE_SIZE_MISMATCH',
+    ],
+    [
+      'reported media-type drift',
+      {
+        bytes: SOURCE_BYTES,
+        contentLength: SOURCE_BYTES.byteLength,
+        contentType: 'application/json',
+      },
+      'OBJECT_SOURCE_MEDIA_TYPE_MISMATCH',
+    ],
+    [
+      'missing media-type evidence',
+      {
+        bytes: SOURCE_BYTES,
+        contentLength: SOURCE_BYTES.byteLength,
+      },
+      'OBJECT_SOURCE_MEDIA_TYPE_MISMATCH',
+    ],
+  ])('rejects %s before relational mutation', async (_label, source, code) => {
+    const load = vi.fn();
+    const runner = createRunner({ read: vi.fn(async () => source) }, { load });
+
+    await expect(runner.execute(buildInput())).rejects.toMatchObject({ code });
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('sanitizes a transient object-store failure and succeeds on retry', async () => {
+    const read = vi
+      .fn(async () => ({
+        bytes: SOURCE_BYTES,
+        contentLength: SOURCE_BYTES.byteLength,
+        contentType: 'text/csv',
+      }))
+      .mockRejectedValueOnce(new Error('s3://user:secret@source/orders.csv'));
+    const load = vi.fn(async () => ({ rowsWritten: 2, publicationOutcome: 'created' as const }));
+    const runner = createRunner({ read }, { load });
+
+    await expect(runner.execute(buildInput())).rejects.toMatchObject({
+      code: 'OBJECT_SOURCE_READ_FAILED',
+      message: 'OBJECT_SOURCE_READ_FAILED',
+    });
+    await expect(runner.execute(buildInput())).resolves.toMatchObject({ status: 'COMPLETED' });
+    expect(load).toHaveBeenCalledTimes(1);
+  });
+
+  it('sanitizes a transient database failure and publishes only on retry', async () => {
+    const read = vi.fn(async () => ({
+      bytes: SOURCE_BYTES,
+      contentLength: SOURCE_BYTES.byteLength,
+      contentType: 'text/csv',
+    }));
+    const load = vi
+      .fn(async () => ({ rowsWritten: 2, publicationOutcome: 'created' as const }))
+      .mockRejectedValueOnce(new Error('invalid input value from source payload'));
+    const runner = createRunner({ read }, { load });
+
+    await expect(runner.execute(buildInput())).rejects.toMatchObject({
+      code: 'POSTGRES_OBJECT_LOAD_FAILED',
+      message: 'POSTGRES_OBJECT_LOAD_FAILED',
+    });
+    await expect(runner.execute(buildInput())).resolves.toMatchObject({ status: 'COMPLETED' });
+    expect(load).toHaveBeenCalledTimes(2);
   });
 
   it('rejects plan/runtime scope drift before object access', async () => {
@@ -104,6 +183,28 @@ describe('ObjectFilePostgresPluginRunner', () => {
     );
 
     await expect(runner.execute(buildInput())).rejects.toThrow('cancelled');
+    expect(load).not.toHaveBeenCalled();
+  });
+
+  it('propagates cancellation during object read without beginning relational mutation', async () => {
+    const controller = new globalThis.AbortController();
+    const load = vi.fn();
+    const read = vi.fn(
+      async ({ signal }: { signal?: globalThis.AbortSignal }) =>
+        new Promise<never>((_resolve, reject) => {
+          signal?.addEventListener('abort', () => reject(signal.reason), { once: true });
+        })
+    );
+    const runner = createRunner(
+      { read },
+      { load },
+      { getCancellationSignal: () => controller.signal }
+    );
+
+    const execution = runner.execute(buildInput());
+    controller.abort(new Error('cancelled'));
+
+    await expect(execution).rejects.toThrow('cancelled');
     expect(load).not.toHaveBeenCalled();
   });
 });

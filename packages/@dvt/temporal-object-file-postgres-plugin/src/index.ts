@@ -7,7 +7,10 @@ export {
   ObjectFilePostgresPluginRunner,
   type ObjectFilePostgresPluginRunnerOptions,
 } from './ObjectFilePostgresPluginRunner.js';
-export { ObjectFileIngestionRejectedError } from './objectFilePostgresPluginErrors.js';
+export {
+  ObjectFileIngestionRejectedError,
+  ObjectFileIngestionRuntimeError,
+} from './objectFilePostgresPluginErrors.js';
 export type {
   ContentAddressedObjectReadInput,
   ContentAddressedObjectReadResult,

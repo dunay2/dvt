@@ -3,7 +3,10 @@ import { createHash } from 'node:crypto';
 import type { StepResult } from '@dvt/adapter-temporal';
 import { MaterializationEvidenceSchema } from '@dvt/contracts';
 
-import { ObjectFileIngestionRejectedError } from './objectFilePostgresPluginErrors.js';
+import {
+  ObjectFileIngestionRejectedError,
+  ObjectFileIngestionRuntimeError,
+} from './objectFilePostgresPluginErrors.js';
 import type {
   ContentAddressedObjectReader,
   ObjectFilePostgresPluginExecutionInput,
@@ -36,10 +39,7 @@ export class ObjectFilePostgresPluginRunnerImpl implements ObjectFilePostgresPlu
     const signal = this.getCancellationSignal();
     assertNotAborted(signal);
     const startedAt = this.now();
-    const source = await this.options.objectReader.read({
-      uri: input.config.source.storageUri,
-      ...(signal === undefined ? {} : { signal }),
-    });
+    const source = await readSourceSafely(this.options.objectReader, input, signal);
 
     this.assertSourceIntegrity(input, source);
     assertNotAborted(signal);
@@ -50,13 +50,7 @@ export class ObjectFilePostgresPluginRunnerImpl implements ObjectFilePostgresPlu
       signal
     );
     assertNotAborted(signal);
-    const loaded = await this.options.relationalLoader.load({
-      schema: input.config.target.schema,
-      relation: input.config.target.relation,
-      columns: input.config.columns,
-      rows,
-      ...(signal === undefined ? {} : { signal }),
-    });
+    const loaded = await loadRowsSafely(this.options.relationalLoader, input, rows, signal);
     assertNotAborted(signal);
     const completedAt = this.now();
 
@@ -122,7 +116,7 @@ export class ObjectFilePostgresPluginRunnerImpl implements ObjectFilePostgresPlu
     }
 
     if (
-      source.contentType !== undefined &&
+      source.contentType === undefined ||
       normalizeMediaType(source.contentType) !== input.config.source.mediaType
     ) {
       reject('OBJECT_SOURCE_MEDIA_TYPE_MISMATCH');
@@ -148,5 +142,62 @@ function reject(code: string): never {
 function assertNotAborted(signal: globalThis.AbortSignal | undefined): void {
   if (signal?.aborted === true) {
     throw signal.reason ?? new Error('Object-file ingestion was cancelled.');
+  }
+}
+
+async function readSourceSafely(
+  reader: ContentAddressedObjectReader,
+  input: ObjectFilePostgresPluginExecutionInput,
+  signal: globalThis.AbortSignal | undefined
+): Promise<Awaited<ReturnType<ContentAddressedObjectReader['read']>>> {
+  try {
+    return await reader.read({
+      uri: input.config.source.storageUri,
+      ...(signal === undefined ? {} : { signal }),
+    });
+  } catch (error) {
+    rethrowCancellation(signal, error);
+    if (
+      error instanceof ObjectFileIngestionRejectedError ||
+      error instanceof ObjectFileIngestionRuntimeError
+    ) {
+      throw error;
+    }
+    throw new ObjectFileIngestionRuntimeError('OBJECT_SOURCE_READ_FAILED');
+  }
+}
+
+async function loadRowsSafely(
+  loader: ObjectFilePostgresRelationalLoader,
+  input: ObjectFilePostgresPluginExecutionInput,
+  rows: Parameters<ObjectFilePostgresRelationalLoader['load']>[0]['rows'],
+  signal: globalThis.AbortSignal | undefined
+): Promise<Awaited<ReturnType<ObjectFilePostgresRelationalLoader['load']>>> {
+  try {
+    return await loader.load({
+      schema: input.config.target.schema,
+      relation: input.config.target.relation,
+      columns: input.config.columns,
+      rows,
+      ...(signal === undefined ? {} : { signal }),
+    });
+  } catch (error) {
+    rethrowCancellation(signal, error);
+    if (
+      error instanceof ObjectFileIngestionRejectedError ||
+      error instanceof ObjectFileIngestionRuntimeError
+    ) {
+      throw error;
+    }
+    throw new ObjectFileIngestionRuntimeError('POSTGRES_OBJECT_LOAD_FAILED');
+  }
+}
+
+function rethrowCancellation(
+  signal: globalThis.AbortSignal | undefined,
+  operationError: unknown
+): void {
+  if (signal?.aborted === true) {
+    throw signal.reason ?? operationError;
   }
 }
