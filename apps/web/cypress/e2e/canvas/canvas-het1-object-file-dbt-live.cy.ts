@@ -11,6 +11,12 @@ import {
 import { skipWhenFirstAuthoringLiveEnvIsMissing } from '../../support/canvasFirstAuthoring';
 import { connectCanvasNodes, openNodeWorkbenchSection } from '../../support/canvasGraphAuthoring';
 import {
+  assertObjectLoadEvidence,
+  assertRunEvidenceDoesNotLeak,
+  assertStepEventSet,
+  readHet1RunEvents,
+} from '../../support/het1PublicRunProof';
+import {
   applyNodeWorkbench,
   assertLiveDraftScopeIsClean,
   closeNodeWorkbench,
@@ -21,10 +27,9 @@ import {
   readDraftEdges,
   readDraftNodes,
   waitForPersistedDraft,
-  waitForTerminalRun,
+  waitForRunStatus,
 } from '../../support/het1PublicVertical';
 import {
-  readLiveRunEvents,
   readLiveWorkspaceFile,
   resolveLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
@@ -235,23 +240,30 @@ describe('HET1 public object-file DBT vertical', () => {
         const runId = pathname.split('/').pop();
         expect(runId).to.be.a('string').and.not.equal('');
 
-        waitForTerminalRun(runId!).then((snapshot) => {
+        waitForRunStatus(runId!, 'completed').then((snapshot) => {
           expect(String(snapshot.status).toLowerCase()).to.equal('completed');
         });
-        readLiveRunEvents(runId!).then((response) => {
-          expect(response.status).to.equal(200);
-          const items =
-            (response.body as { items?: Array<{ eventType?: string; stepId?: string }> }).items ??
-            [];
-          const completedStepIds = items
-            .filter((event) => event.eventType === 'StepCompleted')
-            .map((event) => event.stepId);
-          expect(completedStepIds).to.include.members([
+        readHet1RunEvents(runId!).then((events) => {
+          assertStepEventSet(events, 'StepCompleted', [
             OBJECT_NODE_ID,
             MODEL_NODE_ID,
             TEST_NODE_ID,
           ]);
-          expect(items.map((event) => event.eventType)).to.include('RunCompleted');
+          assertObjectLoadEvidence({
+            events,
+            stepId: OBJECT_NODE_ID,
+            expectedRows: 2,
+            expectedSha256: manifest.sha256,
+            expectedSizeBytes: manifest.sizeBytes,
+            expectedPublicationOutcome: 'created',
+          });
+          expect(events.map((event) => event.eventType)).to.include('RunCompleted');
+          assertRunEvidenceDoesNotLeak(events, [
+            'minioadmin',
+            'order_id,amount',
+            '1,10.25',
+            '2,20.50',
+          ]);
         });
       });
 
