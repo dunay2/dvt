@@ -41,6 +41,49 @@ function buildWarehouseSourceNode(id: string, name: string): CanonicalNode {
   };
 }
 
+function buildObjectFileLoadNode(id: string, name: string): CanonicalNode {
+  return {
+    id,
+    name,
+    pluginId: 'dvt.object-file-postgres',
+    kind: 'dvt:object_file_load',
+    role: 'input',
+    status: 'idle',
+    tags: [],
+    metadata: {
+      objectFilePostgres: {
+        source: {
+          storageUri: `s3://fixtures/tenants/tenant/${'a'.repeat(64)}`,
+          sha256: 'a'.repeat(64),
+          sizeBytes: 128,
+          maxBytes: 1024,
+          format: 'csv',
+          mediaType: 'text/csv',
+          encoding: 'utf-8',
+          credentialRef: 'object-store:fixture',
+          header: true,
+          delimiter: ',',
+        },
+        target: {
+          dialect: 'postgres',
+          schema: 'staging',
+          relation: 'orders',
+          loadMode: 'replace',
+          credentialRef: 'postgres:target',
+        },
+        columns: [
+          {
+            sourceField: 'order_id',
+            targetColumn: 'order_id',
+            dataType: 'bigint',
+            nullable: false,
+          },
+        ],
+      },
+    },
+  };
+}
+
 function buildDbtModelNode(id = 'model-orders', name = 'Orders Model'): CanonicalNode {
   return {
     id,
@@ -119,6 +162,35 @@ describe('dbtAuthoringFieldsModel', () => {
     expect(projection.modelArtifact?.body).toBe(
       "select *\nfrom {{ source('warehouse_prod_analytics_erp', 'orders') }}"
     );
+  });
+
+  it('projects a connected object-file load as the exact PostgreSQL staging origin', () => {
+    const source = buildObjectFileLoadNode('object-orders', 'Orders file load');
+    const model = buildDbtModelNode();
+
+    const projection = buildDbtAuthoringModelProjection({
+      node: model,
+      nodes: [source, model],
+      edges: [
+        {
+          id: 'edge-object-model',
+          sourceId: source.id,
+          targetId: model.id,
+          relation: 'lineage',
+        },
+      ],
+      authoringMetadata: createDbtNodeAuthoringMetadata(model),
+      kindLabels: {
+        'dbt:source': 'Source',
+        'dbt:model': 'Model',
+      },
+    });
+
+    expect(projection.originOptions).toEqual([
+      { value: 'object-orders', label: 'Orders file load (Source)' },
+    ]);
+    expect(projection.selectedOriginId).toBe('object-orders');
+    expect(projection.modelArtifact?.body).toBe("select *\nfrom {{ source('staging', 'orders') }}");
   });
 
   it('generates ref SQL from connected dbt model origins without React presentation state', () => {

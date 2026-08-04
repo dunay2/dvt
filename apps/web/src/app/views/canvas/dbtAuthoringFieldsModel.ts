@@ -5,6 +5,7 @@ import {
   projectDbtModelArtifact,
   type DbtModelArtifactProjection,
 } from './canvasDbtModelArtifactProjection';
+import { isObjectFilePostgresNode } from './objectFilePostgresAuthoringModel';
 
 export type DbtOriginNode = CanonicalNode;
 
@@ -36,6 +37,7 @@ function isDbtOriginNode(candidate: CanonicalNode | undefined): candidate is Dbt
   return (
     isDbtSourceOrigin(candidate) ||
     isWarehouseSourceOrigin(candidate) ||
+    (candidate != null && isObjectFilePostgresNode(candidate)) ||
     isDbtModelOrigin(candidate)
   );
 }
