@@ -50,6 +50,7 @@ describe('CanvasGraphSearchControl', () => {
           onNext={onNext}
           onClose={onClose}
           onKeyDown={vi.fn()}
+          onQueryKeyDown={vi.fn()}
         />
       );
     });
@@ -97,6 +98,7 @@ describe('CanvasGraphSearchControl', () => {
           onNext={vi.fn()}
           onClose={vi.fn()}
           onKeyDown={vi.fn()}
+          onQueryKeyDown={vi.fn()}
         />
       );
     });

@@ -154,9 +154,15 @@ function CanvasViewportWithPresenter({
           typeof nodeData.onInspectNode === 'function'
             ? (nodeData.onInspectNode as (...args: unknown[]) => void)
             : null;
+        const searchActiveClassName =
+          graphSearchController.model.activeNodeId === node.id
+            ? 'canvas-graph-search-active-node'
+            : null;
+        const className = [node.className, searchActiveClassName].filter(Boolean).join(' ');
 
         return {
           ...node,
+          ...(className.length > 0 ? { className } : {}),
           data: {
             ...node.data,
             ...(inspectNode == null
@@ -175,7 +181,13 @@ function CanvasViewportWithPresenter({
           },
         };
       }),
-    [closeNodeFloatingToolbar, closeNodeHealthPopover, openNodeHealthPopover, props.nodesWithImpact]
+    [
+      closeNodeFloatingToolbar,
+      closeNodeHealthPopover,
+      graphSearchController.model.activeNodeId,
+      openNodeHealthPopover,
+      props.nodesWithImpact,
+    ]
   );
 
   const nodeFloatingToolbarModel = useMemo(() => {
@@ -352,6 +364,7 @@ function CanvasViewportWithPresenter({
     canvasStyle,
     viewport: props.viewport,
     importedNodeFocusIds: props.importedNodeFocusIds,
+    activeSearchNodeId: graphSearchController.model.activeNodeId,
     nodesWithImpact: props.nodesWithImpact,
     onImportedNodeFocusComplete: props.onImportedNodeFocusComplete,
     reactFlow,

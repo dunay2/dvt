@@ -21,6 +21,7 @@ type CanvasGraphSearchControlProps = Readonly<{
   onNext: () => void;
   onClose: () => void;
   onKeyDown: KeyboardEventHandler<HTMLElement>;
+  onQueryKeyDown: KeyboardEventHandler<HTMLInputElement>;
 }>;
 
 export function CanvasGraphSearchControl({
@@ -31,6 +32,7 @@ export function CanvasGraphSearchControl({
   onNext,
   onClose,
   onKeyDown,
+  onQueryKeyDown,
 }: CanvasGraphSearchControlProps): JSX.Element | null {
   const inputId = useId();
   const restoreFocusRef = useRef<HTMLElement | null>(null);
@@ -82,6 +84,7 @@ export function CanvasGraphSearchControl({
         placeholder={copy.canvasGraphSearchPlaceholder}
         className="h-8 border-0 bg-transparent shadow-none focus-visible:ring-0"
         onChange={(event) => onQueryChange(event.currentTarget.value)}
+        onKeyDown={onQueryKeyDown}
       />
       {resultStatus == null ? null : (
         <output

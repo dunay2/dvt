@@ -12,6 +12,7 @@ vi.mock(
 
 import {
   createCanvasViewportHarness,
+  getCanvasViewportXyflowState,
   type CanvasViewportProps,
 } from './CanvasViewport.testHarness';
 
@@ -44,10 +45,22 @@ describe('CanvasViewport graph search', () => {
       fireEvent.change(input, { target: { value: 'orders' } });
     });
     expect(searchControl().textContent).toContain('1 / 2');
+    await waitFor(() =>
+      expect(getCanvasViewportXyflowState().fitView).toHaveBeenLastCalledWith(
+        expect.objectContaining({ nodes: [expect.objectContaining({ id: 'orders-a' })] })
+      )
+    );
+    expect(activeSearchNode()?.id).toBe('orders-a');
     act(() => {
       fireEvent.keyDown(input, { key: 'Enter' });
     });
     expect(searchControl().textContent).toContain('2 / 2');
+    await waitFor(() =>
+      expect(getCanvasViewportXyflowState().fitView).toHaveBeenLastCalledWith(
+        expect.objectContaining({ nodes: [expect.objectContaining({ id: 'orders-b' })] })
+      )
+    );
+    expect(activeSearchNode()?.id).toBe('orders-b');
     act(() => {
       fireEvent.keyDown(input, { key: 'Escape' });
     });
@@ -65,6 +78,14 @@ describe('CanvasViewport graph search', () => {
     return harness.container.querySelector<HTMLElement>(
       '[data-slot="canvas-graph-search-control"]'
     )!;
+  }
+
+  function activeSearchNode(): CanvasViewportProps['nodesWithImpact'][number] | undefined {
+    const reactFlowNodes = getCanvasViewportXyflowState().lastReactFlowProps?.nodes as
+      CanvasViewportProps['nodesWithImpact'] | undefined;
+    return reactFlowNodes?.find((node) =>
+      node.className?.split(' ').includes('canvas-graph-search-active-node')
+    );
   }
 
   function searchNodes(): CanvasViewportProps['nodesWithImpact'] {

@@ -257,6 +257,7 @@ export function CanvasViewportSurfaceView({
         onNext={graphSearchController.showNext}
         onClose={graphSearchController.close}
         onKeyDown={graphSearchController.onControlKeyDown}
+        onQueryKeyDown={graphSearchController.onQueryKeyDown}
       />
       {nodeFloatingToolbarModel == null ? null : (
         <CanvasNodeFloatingToolbarView model={nodeFloatingToolbarModel} />

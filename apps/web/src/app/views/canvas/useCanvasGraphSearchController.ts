@@ -33,6 +33,7 @@ export type CanvasGraphSearchController = Readonly<{
   showNext: () => void;
   onViewportKeyDown: KeyboardEventHandler<HTMLElement>;
   onControlKeyDown: KeyboardEventHandler<HTMLElement>;
+  onQueryKeyDown: KeyboardEventHandler<HTMLInputElement>;
 }>;
 
 type UseCanvasGraphSearchControllerArgs = Readonly<{
@@ -126,16 +127,21 @@ export function useCanvasGraphSearchController({
         close();
         return;
       }
-      if (event.key === 'Enter' && result.status === 'matched') {
-        event.preventDefault();
-        navigate(event.shiftKey ? -1 : 1);
-        return;
-      }
       if (isOpenShortcut(event)) {
         event.preventDefault();
       }
     },
-    [close, navigate, result.status]
+    [close]
+  );
+  const onQueryKeyDown = useCallback<KeyboardEventHandler<HTMLInputElement>>(
+    (event) => {
+      if (event.key !== 'Enter' || result.status !== 'matched') {
+        return;
+      }
+      event.preventDefault();
+      navigate(event.shiftKey ? -1 : 1);
+    },
+    [navigate, result.status]
   );
 
   return {
@@ -154,5 +160,6 @@ export function useCanvasGraphSearchController({
     showNext,
     onViewportKeyDown,
     onControlKeyDown,
+    onQueryKeyDown,
   };
 }

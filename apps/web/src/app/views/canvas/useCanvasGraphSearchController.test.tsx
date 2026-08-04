@@ -50,12 +50,20 @@ describe('useCanvasGraphSearchController', () => {
 
       return (
         <div data-testid="host" onKeyDown={controller.onViewportKeyDown}>
-          <input
-            aria-label="query"
-            value={controller.model.query}
-            onChange={(event) => controller.setQuery(event.currentTarget.value)}
-            onKeyDown={controller.onControlKeyDown}
-          />
+          <section onKeyDown={controller.onControlKeyDown}>
+            <input
+              aria-label="query"
+              value={controller.model.query}
+              onChange={(event) => controller.setQuery(event.currentTarget.value)}
+              onKeyDown={controller.onQueryKeyDown}
+            />
+            <button type="button" onClick={controller.showPrevious}>
+              Previous
+            </button>
+            <button type="button" onClick={controller.close}>
+              Close
+            </button>
+          </section>
           <output data-testid="state">
             {JSON.stringify({
               open: controller.model.open,
@@ -93,14 +101,24 @@ describe('useCanvasGraphSearchController', () => {
       fireEvent.keyDown(input, { key: 'Enter' });
     });
     expect(state()).toMatchObject({ active: 'orders-b', position: 2, count: 2 });
+    const previousButton = container.querySelector<HTMLButtonElement>('button')!;
+    previousButton.focus();
     act(() => {
-      fireEvent.keyDown(input, { key: 'Enter' });
+      fireEvent.keyDown(previousButton, { key: 'Enter' });
+    });
+    expect(state()).toMatchObject({ active: 'orders-b', position: 2, count: 2 });
+    act(() => {
+      previousButton.click();
     });
     expect(state()).toMatchObject({ active: 'orders-a', position: 1, count: 2 });
     act(() => {
-      fireEvent.keyDown(input, { key: 'Enter', shiftKey: true });
+      fireEvent.keyDown(input, { key: 'Enter' });
     });
     expect(state()).toMatchObject({ active: 'orders-b', position: 2, count: 2 });
+    act(() => {
+      fireEvent.keyDown(input, { key: 'Enter', shiftKey: true });
+    });
+    expect(state()).toMatchObject({ active: 'orders-a', position: 1, count: 2 });
 
     act(() => {
       fireEvent.keyDown(input, { key: 'Escape' });
