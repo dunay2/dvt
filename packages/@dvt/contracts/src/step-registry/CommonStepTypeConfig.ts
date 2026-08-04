@@ -1,3 +1,12 @@
+/**
+ * Owned concern: define transport-neutral configuration shared by registered step types.
+ *
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Keep common timeout, concurrency, and compiled-code fields independent of DBT.
+ * @consequence Step contracts can reuse one strict schema without depending on another step family.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/u);
