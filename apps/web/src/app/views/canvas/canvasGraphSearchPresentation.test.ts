@@ -1,4 +1,6 @@
 import type { Edge, Node } from '@xyflow/react';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import { projectCanvasGraphSearchPresentation } from './canvasGraphSearchPresentation';
@@ -13,6 +15,11 @@ const edges: Edge[] = [
   edge('active-downstream', 'active', 'match', 'domain-edge'),
   edge('irrelevant', 'match', 'other', 'domain-edge'),
 ];
+const globalStyles = readFileSync(
+  resolve(import.meta.dirname, '../../../styles/index.css'),
+  'utf8'
+);
+const themeStyles = readFileSync(resolve(import.meta.dirname, '../../../styles/theme.css'), 'utf8');
 
 describe('projectCanvasGraphSearchPresentation', () => {
   it('classifies active, matching, and non-matching nodes without changing its inputs', () => {
@@ -81,6 +88,16 @@ describe('projectCanvasGraphSearchPresentation', () => {
 
     expect(projection.nodes).toBe(nodes);
     expect(projection.edges).toBe(edges);
+  });
+
+  it('uses tokenized visual states that remain distinct without relying on colour alone', () => {
+    expect(globalStyles).toContain('outline: 3px solid var(--canvas-search-active-ring)');
+    expect(globalStyles).toContain('outline: 2px dashed var(--canvas-search-match-ring)');
+    expect(globalStyles).toContain('opacity: var(--canvas-search-dimmed-opacity)');
+    expect(globalStyles).toContain('stroke-width: var(--canvas-search-relevant-edge-width)');
+    expect(themeStyles).toContain('--canvas-search-match-ring');
+    expect(themeStyles).toContain('--canvas-search-dimmed-opacity');
+    expect(themeStyles).toContain('--canvas-search-relevant-edge-width');
   });
 });
 

@@ -49,8 +49,28 @@ body {
   outline-offset: 5px;
 }
 
+.react-flow__node.canvas-graph-search-matching-node {
+  border-radius: var(--radius);
+  outline: 2px dashed var(--canvas-search-match-ring);
+  outline-offset: 4px;
+}
+
+.react-flow__node.canvas-graph-search-dimmed-node {
+  opacity: var(--canvas-search-dimmed-opacity);
+  filter: saturate(var(--canvas-search-dimmed-saturation));
+}
+
 .react-flow__edge-path {
   stroke-width: 2;
+}
+
+.react-flow__edge.canvas-graph-search-relevant-edge .react-flow__edge-path {
+  stroke: var(--canvas-search-relevant-edge);
+  stroke-width: var(--canvas-search-relevant-edge-width);
+}
+
+.react-flow__edge.canvas-graph-search-dimmed-edge {
+  opacity: var(--canvas-search-dimmed-opacity);
 }
 
 .react-flow__controls {
