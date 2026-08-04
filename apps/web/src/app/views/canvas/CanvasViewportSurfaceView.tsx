@@ -195,7 +195,11 @@ function CanvasViewportReactFlowSurface({
         fitViewOptions={{ padding: 0.2, maxZoom: 0.82 }}
         minZoom={0.35}
         defaultViewport={viewport ?? undefined}
-        onMoveEnd={(_event, nextViewport) => onViewportChange(nextViewport)}
+        onMoveEnd={(event, nextViewport) => {
+          if (event != null) {
+            onViewportChange(nextViewport);
+          }
+        }}
         onNodeDrag={handleNodeDrag}
         onDrop={onDrop}
         onDragOver={onDragOver}

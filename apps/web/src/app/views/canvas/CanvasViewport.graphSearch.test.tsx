@@ -82,6 +82,41 @@ describe('CanvasViewport graph search', () => {
     expect(reopenedInput?.value).toBe('');
   });
 
+  it('keeps search reveals ephemeral while persisting operator viewport moves', async () => {
+    const onViewportChange = vi.fn();
+    await harness.render({ nodesWithImpact: searchNodes(), onViewportChange });
+    const surface = harness.container.querySelector<HTMLElement>(
+      '[data-slot="canvas-viewport-context-surface"]'
+    )!;
+
+    act(() => {
+      fireEvent.keyDown(surface, { key: 'f', ctrlKey: true });
+    });
+    const input = await waitFor(() => {
+      const candidate = harness.container.querySelector<HTMLInputElement>('input[type="search"]');
+      expect(candidate).not.toBeNull();
+      return candidate!;
+    });
+    act(() => {
+      fireEvent.change(input, { target: { value: 'orders' } });
+    });
+    await waitFor(() => expect(getCanvasViewportXyflowState().fitView).toHaveBeenCalled());
+
+    const onMoveEnd = getCanvasViewportXyflowState().lastReactFlowProps?.onMoveEnd as (
+      event: MouseEvent | null,
+      viewport: { x: number; y: number; zoom: number }
+    ) => void;
+    act(() => {
+      onMoveEnd(null, { x: -400, y: -200, zoom: 0.9 });
+    });
+    expect(onViewportChange).not.toHaveBeenCalled();
+
+    act(() => {
+      onMoveEnd(new MouseEvent('mouseup'), { x: -120, y: -80, zoom: 0.75 });
+    });
+    expect(onViewportChange).toHaveBeenCalledWith({ x: -120, y: -80, zoom: 0.75 });
+  });
+
   function searchControl(): HTMLElement {
     return harness.container.querySelector<HTMLElement>(
       '[data-slot="canvas-graph-search-control"]'
