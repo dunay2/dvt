@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-08-03",
+  "generated": "2026-08-04",
   "repo": {
     "sha": "local"
   },
@@ -114,6 +114,7 @@
       "decisions": [
         "ADR-0030 section 3.3 - lookupRunRef derives workflowId from runId and probes Temporal to detect orphans",
         "Administrative schema lifecycle stays separate from run-state and delivery port delegation",
+        "Admit one UTF-8 CSV or JSON Lines object and one scoped staging relation.",
         "All adapter methods enforce tenant scope per ADR-0031",
         "AllowAllAuthorizer can reject instantiation in production mode via explicit constructor options",
         "Batch maintenance operations (detectStuckRuns) separated from IWorkflowEngine lifecycle",
@@ -152,6 +153,7 @@
         "Isolate signal transition checks and dispatch from the combined run-control delegator.",
         "Keep cancel command behavior behind a command-specific runtime port.",
         "Keep combined run-control delegation without owning cancel or signal semantics.",
+        "Keep common timeout, concurrency, and compiled-code fields independent of DBT.",
         "Keep deterministic start-run intent creation in a named phase service.",
         "Keep implementation composition behind a governed entrypoint instead of the root barrel.",
         "Keep layer cursor, skipped-step emission, and continue-as-new handoff derived from DVT workflow state",
@@ -165,6 +167,7 @@
         "Keep the authorization role interface in the engine public ports surface.",
         "Keep the facade use-case export surface local to the component boundary.",
         "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation",
+        "Map verified execution scope to a deterministic physical schema and replace one relation atomically",
         "Model executable plugin runtimes behind a generic runner port",
         "Model facade operations as explicit command and query use-case ports.",
         "Normalize facade start-run input before delegating to the start application service.",
@@ -211,6 +214,7 @@
         "reconcileOrphanedIntents detects and cancels orphaned provider workflows per ADR-0030"
       ],
       "implemented_by": [
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
         "packages/@dvt/adapter-postgres/src/PostgresPoolErrorPolicy.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRelationalExecutionCapability.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts",
@@ -258,6 +262,8 @@
         "packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts",
         "packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts",
         "packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts",
+        "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts",
+        "packages/@dvt/contracts/src/step-registry/CommonStepTypeConfig.ts",
         "packages/@dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts",
         "packages/@dvt/engine/src/adapters/IProviderAdapter.ts",
         "packages/@dvt/engine/src/adapters/inMemory/InMemoryProviderAdapter.ts",
@@ -716,6 +722,7 @@
         "Groups authorizer, planRefPolicy, and outboxRateLimiter into a single",
         "Keep run access policy as a public role interface instead of exporting security implementation details.",
         "Keep the authorization role interface in the engine public ports surface.",
+        "Map verified execution scope to a deterministic physical schema and replace one relation atomically",
         "Normalize lineage outbox claim, tenant, and query bounds at the PostgreSQL adapter boundary",
         "Run metadata persistence extracted from PostgresStateStoreAdapter",
         "Run-state contract delegation is isolated from snapshot-queue and delivery concerns",
@@ -733,6 +740,7 @@
         "packages/@dvt/adapter-postgres/src/PostgresAdapterClientSessionConstants.ts",
         "packages/@dvt/adapter-postgres/src/PostgresAdapterConstants.ts",
         "packages/@dvt/adapter-postgres/src/PostgresMaintenanceAccess.ts",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunMetadataRepository.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateCoordinator.ts",
         "packages/@dvt/adapter-postgres/src/PostgresRunStateStoreAdapter.ts",
@@ -837,7 +845,9 @@
     {
       "number": "ADR-0035",
       "decisions": [
+        "Admit one UTF-8 CSV or JSON Lines object and one scoped staging relation.",
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
+        "Keep common timeout, concurrency, and compiled-code fields independent of DBT.",
         "Keep executable-selection intent as a canonical planner contract instead of UI-local state.",
         "Keep execution decisions in the persisted plan artifact so Web renders planner truth without reconstructing selection semantics.",
         "Model workspace graph edits as aggregate commands instead of transport-specific patches.",
@@ -852,6 +862,7 @@
       "implemented_by": [
         "packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanExecutionDecision.v1.ts",
@@ -860,7 +871,8 @@
         "packages/@dvt/contracts/src/contracts/planner/index.ts",
         "packages/@dvt/contracts/src/schema-packs/execution-selection.ts",
         "packages/@dvt/contracts/src/schema-packs/plan-admission-finding.ts",
-        "packages/@dvt/contracts/src/schema-packs/plan-compile.ts"
+        "packages/@dvt/contracts/src/schema-packs/plan-compile.ts",
+        "packages/@dvt/contracts/src/step-registry/CommonStepTypeConfig.ts"
       ],
       "title": "ADR-0035 - Planner Public Contract Evolution Protocol"
     },
