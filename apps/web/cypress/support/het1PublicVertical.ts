@@ -15,6 +15,8 @@ export type Het1ObjectFileManifest = Readonly<{
   targetCredentialRef: string;
 }>;
 
+export type Het1RunStatus = 'completed' | 'failed' | 'cancelled';
+
 type LiveDraftBody = Readonly<{
   record?: Readonly<{
     draft?: Readonly<{
@@ -133,8 +135,9 @@ export function assertLiveDraftScopeIsClean(session: E2eWorkspaceSession): Cypre
   });
 }
 
-export function waitForTerminalRun(
+export function waitForRunStatus(
   runId: string,
+  expectedStatus: Het1RunStatus,
   attempt = 0
 ): Cypress.Chainable<Record<string, unknown>> {
   return readLiveRunSnapshot(runId).then((response) => {
@@ -142,21 +145,22 @@ export function waitForTerminalRun(
     const snapshot = response.body as Record<string, unknown>;
     const status = String(snapshot.status ?? '').toLowerCase();
 
-    if (status === 'completed') {
+    if (status === expectedStatus) {
       return snapshot;
     }
-    if (status === 'failed' || status === 'cancelled') {
+    if (['completed', 'failed', 'cancelled'].includes(status)) {
       return readLiveRunEvents(runId).then((eventsResponse) => {
         throw new Error(
-          `HET1 live run ${runId} reached ${status}: ${JSON.stringify(eventsResponse.body)}`
+          `HET1 live run ${runId} reached ${status} while waiting for ${expectedStatus}: ` +
+            JSON.stringify(eventsResponse.body)
         );
       });
     }
     if (attempt >= 120) {
-      throw new Error(`Timed out waiting for HET1 live run ${runId} to complete.`);
+      throw new Error(`Timed out waiting for HET1 live run ${runId} to become ${expectedStatus}.`);
     }
 
-    return cy.wait(500).then(() => waitForTerminalRun(runId, attempt + 1));
+    return cy.wait(500).then(() => waitForRunStatus(runId, expectedStatus, attempt + 1));
   });
 }
 
