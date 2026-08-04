@@ -146,6 +146,90 @@ describe('DbtCliPluginRunner', () => {
     );
   });
 
+  it('uses the governed DBT resource selector without changing the graph step identity', async () => {
+    const runCommand = vi.fn(async () => ({ stdout: 'ok', stderr: '' }));
+    const runner = new DbtCliPluginRunner({
+      bundleReader: {
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
+      },
+      materializeProject: async () => ({
+        projectDir: '/tmp/dbt-project',
+        cleanup: async () => undefined,
+      }),
+      materializeRuntimeProfile: createRuntimeProfileMaterializer(),
+      runCommand,
+      dbtBin: 'dbt',
+    });
+
+    const result = await runner.execute({
+      ...INPUT,
+      step: {
+        stepId: 'dbt-test-1',
+        kind: 'DBT_TEST',
+        dependsOn: ['dbt-model-1'],
+        stepTypeConfig: {
+          custom: {
+            dbtStepSelector: {
+              version: 'v1',
+              selector: 'not_null_orders_model_order_id',
+            },
+          },
+        },
+      },
+    });
+
+    expect(result).toEqual({ stepId: 'dbt-test-1', status: 'COMPLETED' });
+    expect(runCommand).toHaveBeenCalledWith(
+      'dbt',
+      [
+        'test',
+        '--select',
+        'not_null_orders_model_order_id',
+        '--target',
+        'analytics',
+        '--profiles-dir',
+        '/tmp/dbt-profile',
+      ],
+      { cwd: '/tmp/dbt-project' }
+    );
+  });
+
+  it('fails closed before process execution when the DBT selector is malformed', async () => {
+    const runCommand = vi.fn(async () => ({ stdout: 'ok', stderr: '' }));
+    const runner = new DbtCliPluginRunner({
+      bundleReader: {
+        read: vi.fn(async (_ref, _options) => new Uint8Array()),
+      },
+      materializeProject: async () => ({
+        projectDir: '/tmp/dbt-project',
+        cleanup: async () => undefined,
+      }),
+      materializeRuntimeProfile: createRuntimeProfileMaterializer(),
+      runCommand,
+      dbtBin: 'dbt',
+    });
+
+    const result = await runner.execute({
+      ...INPUT,
+      step: {
+        ...INPUT.step,
+        stepTypeConfig: {
+          custom: {
+            dbtStepSelector: { version: 'v1', selector: '  ' },
+          },
+        },
+      },
+    });
+
+    expect(result).toEqual({
+      stepId: INPUT.step.stepId,
+      status: 'FAILED',
+      failureReason: 'DBT_STEP_SELECTOR_INVALID',
+      error: 'DBT_STEP_SELECTOR_INVALID',
+    });
+    expect(runCommand).not.toHaveBeenCalled();
+  });
+
   it('passes an injected scoped environment only to the DBT subprocess', async () => {
     const runCommand = vi.fn(async () => ({ stdout: 'ok', stderr: '' }));
     const resolveCommandEnvironment = vi.fn(() => ({
