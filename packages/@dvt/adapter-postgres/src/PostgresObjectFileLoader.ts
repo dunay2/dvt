@@ -1,5 +1,12 @@
 /**
+ * @file packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts
+ * @baseline ADR-0003: Execution Model
+ * @baseline ADR-0031: Storage Adapter Tenant Isolation Strategy
  * @ownedConcern Publish bounded object-file rows into a PostgreSQL staging relation atomically.
+ * @decision Map verified execution scope to a deterministic physical schema and replace one relation atomically
+ * @consequence Shared database credentials cannot overwrite another admitted tenant, project, or environment target
+ * @version 1.0.0
+ * @date 2026-08-04
  */
 import { createHash } from 'node:crypto';
 
