@@ -220,7 +220,8 @@ describe('resolveCanvasRuntimePolicy', () => {
         canvasKind: 'dbt',
         executionStrategy: {
           kind: 'planner_generic_preview',
-          plannerProfile: 'dbt-planner-backed-v1',
+          previewProfile: 'planner-generic-v1',
+          sourceFamily: 'dbt',
         },
         nodeKinds: [...DBT_NODE_KINDS, ...OBJECT_FILE_POSTGRES_NODE_KINDS],
       },

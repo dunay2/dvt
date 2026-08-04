@@ -314,6 +314,7 @@ export type CanvasViewCopy = {
   readonly inspectorDbtTableLabel: string;
   readonly inspectorDbtMaterializedLabel: string;
   readonly inspectorDbtOriginLabel: string;
+  readonly inspectorDbtOriginPlaceholder: string;
   readonly inspectorDbtModelSqlLabel: string;
   readonly inspectorDbtModelSqlGeneratedDetailTemplate: string;
   readonly inspectorDbtModelSqlAuthoredDetailTemplate: string;
