@@ -124,6 +124,1438 @@
   ],
   "featureMechanizationRails": [
     {
+      "railId": "local#CANVAS-GRAPH-FILTER-2069#query#filtercanvasgraph",
+      "featureId": "CANVAS-GRAPH-FILTER-2069",
+      "mechanizationStatus": "implemented",
+      "railName": "FilterCanvasGraph",
+      "normalizedRailName": "filtercanvasgraph",
+      "railType": "query",
+      "dddOwner": "CanvasGraphFilter",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph"
+      ],
+      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2069"],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas/**"],
+      "architectureGuards": [
+        "Search and filters remain independent over the same Canvas node projection"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm --filter @dvt/web lint",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+      "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+      "rawRail": {
+        "name": "FilterCanvasGraph",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CanvasGraphFilter"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "filterCanvasGraph",
+            "path": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Pure read model projection with explicit published language"
+            ],
+            "cypressCoverage": "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+            "architectureGuard": "Search and filters remain independent over the same Canvas node projection"
+          }
+        ],
+        "version": 1,
+        "featureId": "CANVAS-GRAPH-FILTER-2069",
+        "userStories": ["https://github.com/dunay2/dvt/issues/173"],
+        "cypressFlows": [
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+        ],
+        "domainObjects": ["CanvasGraphFilterQuery"],
+        "fowlerSignals": [
+          "Pure read model projection with explicit published language"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "filtercanvasgraph-record",
+            "redTest": "Composed predicates and clearing behavior fail before the filter query exists.",
+            "greenTest": "FilterCanvasGraph deterministically returns matching ids without mutating nodes or edges.",
+            "patchSurfaces": ["apps/web/src/app/views/canvas/**"],
+            "expectedFailure": "No Canvas filter contract or query currently exists."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "FilterCanvasGraph",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CanvasGraphFilter"
+          }
+        ],
+        "architectureGuards": [
+          "Search and filters remain independent over the same Canvas node projection"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2069",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas/**"],
+        "forbiddenImplementationSurfaces": [
+          "Persisted graph content and execution state"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-04T06:14:05.920Z"
+    },
+    {
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#command#activatecanvasgraphsearchresult",
+      "featureId": "CANVAS-GRAPH-SEARCH-2064",
+      "mechanizationStatus": "implemented",
+      "railName": "ActivateCanvasGraphSearchResult",
+      "normalizedRailName": "activatecanvasgraphsearchresult",
+      "railType": "command",
+      "dddOwner": "CanvasGraphSearch",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#useCanvasGraphSearchActivation",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#CanvasGraphSearchActivationPort",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#UseCanvasGraphSearchActivationArgs",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#buildSelectionChanges"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#useCanvasGraphSearchActivation",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#CanvasGraphSearchActivationPort",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#UseCanvasGraphSearchActivationArgs",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#buildSelectionChanges"
+      ],
+      "documentationRefs": [
+        "https://github.com/dunay2/dvt/issues/2068",
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts"
+      ],
+      "architectureGuards": [
+        "Use existing React Flow selection and viewport ports without a parallel selection store",
+        "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+      ],
+      "completionGate": [
+        "pnpm verify:prepush",
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm --filter @dvt/web lint"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2068",
+      "sourceContentSha256": "9024b80ac9879eaed3b1860091871003e57133ad016b5be598ef16a0c803f311",
+      "rawRail": {
+        "name": "ActivateCanvasGraphSearchResult",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "CanvasGraphSearch"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "useCanvasGraphSearchActivation",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+            "cqRails": ["ActivateCanvasGraphSearchResult"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Extract search-result activation from generic viewport lifecycle",
+              "Active search result activation is isolated behind normal Canvas selection and viewport ports."
+            ],
+            "cypressCoverage": "Cypress live Canvas graph search focus and selection proof",
+            "architectureGuard": "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "CanvasGraphSearchActivationPort",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+            "cqRails": ["ActivateCanvasGraphSearchResult"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Active search result activation is isolated behind normal Canvas selection and viewport ports."
+            ],
+            "cypressCoverage": "Cypress live Canvas graph search focus and selection proof",
+            "architectureGuard": "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "UseCanvasGraphSearchActivationArgs",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+            "cqRails": ["ActivateCanvasGraphSearchResult"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Active search result activation is isolated behind normal Canvas selection and viewport ports."
+            ],
+            "cypressCoverage": "Cypress live Canvas graph search focus and selection proof",
+            "architectureGuard": "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "buildSelectionChanges",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+            "cqRails": ["ActivateCanvasGraphSearchResult"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Active search result activation is isolated behind normal Canvas selection and viewport ports."
+            ],
+            "cypressCoverage": "Cypress live Canvas graph search focus and selection proof",
+            "architectureGuard": "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          }
+        ],
+        "version": 1,
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2068"],
+        "cypressFlows": [
+          "Canvas search active-result focus and selection",
+          "Cypress live Canvas graph search focus and selection proof"
+        ],
+        "domainObjects": ["CanvasGraphSearchActivation"],
+        "fowlerSignals": [
+          "Extract search-result activation from generic viewport lifecycle",
+          "Active search result activation is isolated behind normal Canvas selection and viewport ports."
+        ],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "activatecanvasgraphsearchresult-record",
+            "redTest": "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+              "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx"
+            ],
+            "expectedFailure": "Active search results do not select and focus through normal Canvas ports."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ActivateCanvasGraphSearchResult",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "CanvasGraphSearch"
+          }
+        ],
+        "architectureGuards": [
+          "Use existing React Flow selection and viewport ports without a parallel selection store",
+          "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2068",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+          "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/stores/**",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-08-04T05:14:23.930Z"
+    },
+    {
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "featureId": "CANVAS-GRAPH-SEARCH-2064",
+      "mechanizationStatus": "implemented",
+      "railName": "SearchCanvasGraph",
+      "normalizedRailName": "searchcanvasgraph",
+      "railType": "query",
+      "dddOwner": "CanvasGraphSearch",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_FIELDS",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_MATCH_PRIORITY",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_ORDERING",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchEmptyResultSet",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchField",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatch",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchKind",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchedResultSet",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchNode",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchRequest",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchResultSet",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#SearchCanvasGraphQuery",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchRequest",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchMatchedResultSet",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#searchCanvasGraph",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#RankedMatch",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#normalizeSearchValue",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#valuesForField",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#classifyMatch",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#matchPriority",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#rankNode",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#compareText",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#compareRankedMatches",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#CanvasGraphSearchControlModel",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#CanvasGraphSearchController",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#useCanvasGraphSearchController",
+        "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#CanvasGraphSearchControl",
+        "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#CanvasGraphSearchControlProps",
+        "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#SearchAction",
+        "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#SearchActionProps",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#UseCanvasGraphSearchControllerArgs",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asNodeRole",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asOptionalString",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asPluginNodeKind",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asTags",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#isOpenShortcut",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#toSearchNode",
+        "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts#useCanvasViewportLifecycle",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#projectCanvasGraphSearchPresentation",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#CanvasGraphSearchPresentationInput",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#CanvasGraphSearchPresentation",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#ACTIVE_NODE_CLASS",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#DIMMED_EDGE_CLASS",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#DIMMED_NODE_CLASS",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#MATCHING_NODE_CLASS",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#RELEVANT_EDGE_CLASS",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#appendClassName",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#isActiveConnectivity",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#resolveNodeClassName"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_FIELDS",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_MATCH_PRIORITY",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_ORDERING",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchEmptyResultSet",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchField",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatch",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchKind",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchedResultSet",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchNode",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchRequest",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchResultSet",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#SearchCanvasGraphQuery",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchRequest",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchMatchedResultSet",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#searchCanvasGraph",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#RankedMatch",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#normalizeSearchValue",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#valuesForField",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#classifyMatch",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#matchPriority",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#rankNode",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#compareText",
+        "apps/web/src/app/views/canvas/canvasGraphSearch.ts#compareRankedMatches",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#CanvasGraphSearchControlModel",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#CanvasGraphSearchController",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#useCanvasGraphSearchController",
+        "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#CanvasGraphSearchControl",
+        "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#CanvasGraphSearchControlProps",
+        "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#SearchAction",
+        "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#SearchActionProps",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#UseCanvasGraphSearchControllerArgs",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asNodeRole",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asOptionalString",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asPluginNodeKind",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asTags",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#isOpenShortcut",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#toSearchNode",
+        "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts#useCanvasViewportLifecycle",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#projectCanvasGraphSearchPresentation",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#CanvasGraphSearchPresentationInput",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#CanvasGraphSearchPresentation",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#ACTIVE_NODE_CLASS",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#DIMMED_EDGE_CLASS",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#DIMMED_NODE_CLASS",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#MATCHING_NODE_CLASS",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#RELEVANT_EDGE_CLASS",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#appendClassName",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#isActiveConnectivity",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#resolveNodeClassName"
+      ],
+      "documentationRefs": [
+        "https://github.com/dunay2/dvt/issues/2064",
+        "https://github.com/dunay2/dvt/issues/2065",
+        "docs/architecture/command-query-rail-governance.md",
+        "https://github.com/dunay2/dvt/issues/2066"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/state/github-mvp-issue-workflow.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/views/canvas",
+        "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+        "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+        "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts",
+        "apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+        "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+        "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+        "apps/web/src/styles/index.css",
+        "apps/web/src/styles/theme.css",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+        "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm --filter @dvt/web lint",
+        "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+      ],
+      "completionGate": [
+        "pnpm verify:prepush",
+        "pnpm --filter @dvt/web lint",
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064"
+      ],
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2067",
+      "sourceContentSha256": "56191b9fdc4d60fc1028729f7ae4ca22a25f59b2cde556da1d2a67f913f1321b",
+      "rawRail": {
+        "name": "SearchCanvasGraph",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CanvasGraphSearch"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "CANVAS_GRAPH_SEARCH_FIELDS",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CANVAS_GRAPH_SEARCH_MATCH_PRIORITY",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CANVAS_GRAPH_SEARCH_ORDERING",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CanvasGraphSearchEmptyResultSet",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CanvasGraphSearchField",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CanvasGraphSearchMatch",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CanvasGraphSearchMatchKind",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CanvasGraphSearchMatchedResultSet",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CanvasGraphSearchNode",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CanvasGraphSearchRequest",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CanvasGraphSearchResultSet",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "SearchCanvasGraphQuery",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "createCanvasGraphSearchRequest",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "createCanvasGraphSearchMatchedResultSet",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "searchCanvasGraph",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "RankedMatch",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "normalizeSearchValue",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "valuesForField",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "classifyMatch",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "matchPriority",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "rankNode",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "compareText",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "compareRankedMatches",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model"
+            ],
+            "cypressCoverage": "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+            "architectureGuard": "pnpm --filter @dvt/web typecheck"
+          },
+          {
+            "name": "CanvasGraphSearchControlModel",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model",
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "CanvasGraphSearchController",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model",
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "useCanvasGraphSearchController",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model",
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "CanvasGraphSearchControl",
+            "path": "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model",
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "CanvasGraphSearchControlProps",
+            "path": "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Published Language",
+              "Pure Function",
+              "Presentation Model",
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "SearchAction",
+            "path": "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "SearchActionProps",
+            "path": "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "UseCanvasGraphSearchControllerArgs",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "asNodeRole",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "asOptionalString",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "asPluginNodeKind",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "asTags",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "isOpenShortcut",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "toSearchNode",
+            "path": "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "A session controller owns keyboard and result navigation while a pure view owns rendering."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "useCanvasViewportLifecycle",
+            "path": "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": [
+              "The query session reveals its active result through an imperative viewport adapter without mutating canonical graph state."
+            ],
+            "cypressCoverage": "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "projectCanvasGraphSearchPresentation",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": ["Pure Function", "Presentation Model"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "CanvasGraphSearchPresentationInput",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": ["Pure Function", "Presentation Model"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "CanvasGraphSearchPresentation",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+            ],
+            "fowlerSignals": ["Pure Function", "Presentation Model"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "ACTIVE_NODE_CLASS",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+            ],
+            "fowlerSignals": ["Pure Function"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "DIMMED_EDGE_CLASS",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+            ],
+            "fowlerSignals": ["Pure Function"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "DIMMED_NODE_CLASS",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+            ],
+            "fowlerSignals": ["Pure Function"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "MATCHING_NODE_CLASS",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+            ],
+            "fowlerSignals": ["Pure Function"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "RELEVANT_EDGE_CLASS",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+            ],
+            "fowlerSignals": ["Pure Function"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "appendClassName",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+            ],
+            "fowlerSignals": ["Pure Function"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "isActiveConnectivity",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+            ],
+            "fowlerSignals": ["Pure Function"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          },
+          {
+            "name": "resolveNodeClassName",
+            "path": "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+            "cqRails": ["SearchCanvasGraph"],
+            "dddOwner": "CanvasGraphSearch",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+            ],
+            "fowlerSignals": ["Pure Function"],
+            "cypressCoverage": "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+          }
+        ],
+        "version": 1,
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/173",
+          "https://github.com/dunay2/dvt/issues/2066",
+          "https://github.com/dunay2/dvt/issues/2067"
+        ],
+        "cypressFlows": [
+          "not-applicable: contract-only issue #2064; browser flow begins at #2066",
+          "not-applicable: pure query issue #2065; browser flow begins at #2066",
+          "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
+          "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
+          "N/A - focused ReactFlow integration and live browser proof cover issue #2067."
+        ],
+        "domainObjects": [
+          "CanvasGraphSearchResultSet",
+          "SearchCanvasGraphQuery",
+          "CanvasGraphSearchControlModel",
+          "CanvasGraphSearchSession",
+          "CanvasGraphSearchPresentation"
+        ],
+        "fowlerSignals": [
+          "Published Language",
+          "Pure Function",
+          "Presentation Model",
+          "A session controller owns keyboard and result navigation while a pure view owns rendering.",
+          "The query session reveals its active result through an imperative viewport adapter without mutating canonical graph state."
+        ],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web lint",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "searchcanvasgraph-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+              "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+              "apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts",
+              "apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+              "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+              "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+              "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+              "apps/web/src/styles/index.css",
+              "apps/web/src/styles/theme.css"
+            ],
+            "expectedFailure": "Private presentation helpers were absent from feature mechanization."
+          }
+        ],
+        "componentGuides": [
+          "SYS-WEB-CANVAS-GRAPH-SEARCH",
+          "SYS-WEB-CANVAS-GRAPH-SEARCH-CONTROLLER",
+          "SYS-WEB-CANVAS-GRAPH-SEARCH-CONTROL",
+          "SYS-WEB-CANVAS-GRAPH-SEARCH-PRESENTATION"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "SearchCanvasGraph",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CanvasGraphSearch"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2067",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+          "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+          "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+          "apps/web/src/styles/index.css",
+          "apps/web/src/styles/theme.css",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/stores",
+          "packages",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "revision": 9,
+      "createdBy": "codex",
+      "createdAt": "2026-08-04T01:29:12.684Z"
+    },
+    {
       "railId": "local#DOCS-CANONICAL-FILENAME-GATE-20260731#query#validatechangeddocumentfilenames",
       "featureId": "DOCS-CANONICAL-FILENAME-GATE-20260731",
       "mechanizationStatus": "implemented",
@@ -33569,6 +35001,1136 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-04T00:05:01.287Z"
+    },
+    {
+      "operationId": "7968d775-a292-49cb-90cf-942f7d3119a3",
+      "idempotencyKey": "issue-2064-search-canvas-graph-rail",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2064",
+      "sourceContentSha256": "9d07aaf2c0523d7e67fe56528c51ec9c68fd804e3712d07de49a7f5706efdc4f",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2064",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts"
+        ],
+        "railStatus": "declared",
+        "userStories": ["https://github.com/dunay2/dvt/issues/173"],
+        "cypressFlows": [
+          "not-applicable: contract-only issue #2064; browser flow begins at #2066"
+        ],
+        "domainObjects": ["CanvasGraphSearchResultSet"],
+        "fowlerSignals": ["Published Language"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web lint"
+        ],
+        "componentGuides": ["SYS-WEB-CANVAS-GRAPH-SEARCH"],
+        "expectedFailure": "The Canvas graph search contract module did not exist.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2064"],
+        "architectureGuards": ["pnpm --filter @dvt/web typecheck"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2064",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_FIELDS",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_MATCH_PRIORITY",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_ORDERING",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchEmptyResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchField",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatch",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchKind",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchedResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchNode",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchRequest",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#SearchCanvasGraphQuery",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchRequest"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9d07aaf2c0523d7e67fe56528c51ec9c68fd804e3712d07de49a7f5706efdc4f",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/stores",
+          "packages"
+        ]
+      },
+      "createdAt": "2026-08-04T01:29:12.684Z"
+    },
+    {
+      "operationId": "98719101-3a78-4642-85dc-f56eca69e7ca",
+      "idempotencyKey": "issue-2064-search-canvas-graph-rail-fowler-governance",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2064",
+      "sourceContentSha256": "9d07aaf2c0523d7e67fe56528c51ec9c68fd804e3712d07de49a7f5706efdc4f",
+      "expectedRevision": null,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2064",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts"
+        ],
+        "railStatus": "declared",
+        "userStories": ["https://github.com/dunay2/dvt/issues/173"],
+        "cypressFlows": [
+          "not-applicable: contract-only issue #2064; browser flow begins at #2066"
+        ],
+        "domainObjects": ["CanvasGraphSearchResultSet"],
+        "fowlerSignals": ["Published Language"],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web lint"
+        ],
+        "componentGuides": ["SYS-WEB-CANVAS-GRAPH-SEARCH"],
+        "expectedFailure": "The Canvas graph search contract module did not exist.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2064"],
+        "architectureGuards": ["pnpm --filter @dvt/web typecheck"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2064",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_FIELDS",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_MATCH_PRIORITY",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_ORDERING",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchEmptyResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchField",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatch",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchKind",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchedResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchNode",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchRequest",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#SearchCanvasGraphQuery",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchRequest"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9d07aaf2c0523d7e67fe56528c51ec9c68fd804e3712d07de49a7f5706efdc4f",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/stores",
+          "packages"
+        ]
+      },
+      "createdAt": "2026-08-04T01:29:53.863Z"
+    },
+    {
+      "operationId": "04108801-1b89-455b-ac7e-75e3ccf1191c",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-SEARCH-2064:query:searchcanvasgraph:latest:af4a90752f363f92",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2064",
+      "sourceContentSha256": "9d07aaf2c0523d7e67fe56528c51ec9c68fd804e3712d07de49a7f5706efdc4f",
+      "expectedRevision": null,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2064",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts"
+        ],
+        "railStatus": "declared",
+        "userStories": ["https://github.com/dunay2/dvt/issues/173"],
+        "cypressFlows": [
+          "not-applicable: contract-only issue #2064; browser flow begins at #2066"
+        ],
+        "domainObjects": ["CanvasGraphSearchResultSet"],
+        "fowlerSignals": ["Published Language"],
+        "patchSurfaces": ["apps/web/src/app/views/canvas"],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web lint"
+        ],
+        "componentGuides": ["SYS-WEB-CANVAS-GRAPH-SEARCH"],
+        "expectedFailure": "The Canvas graph search contract module did not exist.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2064"],
+        "architectureGuards": ["pnpm --filter @dvt/web typecheck"],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2064",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_FIELDS",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_MATCH_PRIORITY",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_ORDERING",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchEmptyResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchField",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatch",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchKind",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchedResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchNode",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchRequest",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#SearchCanvasGraphQuery",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchRequest",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchMatchedResultSet"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9d07aaf2c0523d7e67fe56528c51ec9c68fd804e3712d07de49a7f5706efdc4f",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/stores",
+          "packages"
+        ]
+      },
+      "createdAt": "2026-08-04T01:45:53.781Z"
+    },
+    {
+      "operationId": "8bbb3d8a-f612-4498-837c-5a27e1e57148",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-SEARCH-2064:query:searchcanvasgraph:latest:48b7b568c414ea8e",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2065",
+      "sourceContentSha256": "5b574e928d26b060087ab5da59bba57ec5ac6f4e2ba8259394957dc8b52cf997",
+      "expectedRevision": null,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.test.ts",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2065",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/173"],
+        "cypressFlows": [
+          "not-applicable: pure query issue #2065; browser flow begins at #2066"
+        ],
+        "domainObjects": [
+          "CanvasGraphSearchResultSet",
+          "SearchCanvasGraphQuery"
+        ],
+        "fowlerSignals": ["Published Language", "Pure Function"],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts"
+        ],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web lint"
+        ],
+        "componentGuides": ["SYS-WEB-CANVAS-GRAPH-SEARCH"],
+        "expectedFailure": "The Canvas graph search engine module did not exist.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2064",
+          "https://github.com/dunay2/dvt/issues/2065"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/173",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_FIELDS",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_MATCH_PRIORITY",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_ORDERING",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchEmptyResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchField",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatch",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchKind",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchedResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchNode",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchRequest",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#SearchCanvasGraphQuery",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchRequest",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchMatchedResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#searchCanvasGraph"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "5b574e928d26b060087ab5da59bba57ec5ac6f4e2ba8259394957dc8b52cf997",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/stores",
+          "packages"
+        ]
+      },
+      "createdAt": "2026-08-04T02:08:26.292Z"
+    },
+    {
+      "operationId": "df874c55-7075-4977-a349-8442ea1543ac",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-SEARCH-2064:query:searchcanvasgraph:latest:c68d51487409290f",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2065",
+      "sourceContentSha256": "5b574e928d26b060087ab5da59bba57ec5ac6f4e2ba8259394957dc8b52cf997",
+      "expectedRevision": null,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.test.ts",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2065",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/173"],
+        "cypressFlows": [
+          "not-applicable: pure query issue #2065; browser flow begins at #2066"
+        ],
+        "domainObjects": [
+          "CanvasGraphSearchResultSet",
+          "SearchCanvasGraphQuery"
+        ],
+        "fowlerSignals": ["Published Language", "Pure Function"],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts"
+        ],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web lint"
+        ],
+        "componentGuides": ["SYS-WEB-CANVAS-GRAPH-SEARCH"],
+        "expectedFailure": "The Canvas graph search engine module did not exist.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2064",
+          "https://github.com/dunay2/dvt/issues/2065"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/173",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_FIELDS",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_MATCH_PRIORITY",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_ORDERING",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchEmptyResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchField",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatch",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchKind",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchedResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchNode",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchRequest",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#SearchCanvasGraphQuery",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchRequest",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchMatchedResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#RankedMatch",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#normalizeSearchValue",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#valuesForField",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#classifyMatch",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#matchPriority",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#rankNode",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#compareText",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#compareRankedMatches",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#searchCanvasGraph"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "5b574e928d26b060087ab5da59bba57ec5ac6f4e2ba8259394957dc8b52cf997",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/stores",
+          "packages"
+        ]
+      },
+      "createdAt": "2026-08-04T02:09:12.076Z"
+    },
+    {
+      "operationId": "4a327b40-0479-4d91-83fd-b89d142bf5fd",
+      "idempotencyKey": "canvas-graph-search-2066-revision-5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2066",
+      "sourceContentSha256": "33dc742c4e2a6e86baa1ac5fbb7e0e0a16cd4ee80116b1ba61cdb084858f1b2a",
+      "expectedRevision": 4,
+      "previousRevision": 4,
+      "resultingRevision": 5,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2066",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.test.ts",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2066"],
+        "cypressFlows": [
+          "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067"
+        ],
+        "domainObjects": [
+          "CanvasGraphSearchResultSet",
+          "SearchCanvasGraphQuery",
+          "CanvasGraphSearchControlModel"
+        ],
+        "fowlerSignals": [
+          "Published Language",
+          "Pure Function",
+          "Presentation Model"
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web lint",
+          "pnpm --filter @dvt/web typecheck"
+        ],
+        "componentGuides": [
+          "SYS-WEB-CANVAS-GRAPH-SEARCH",
+          "SYS-WEB-CANVAS-GRAPH-SEARCH-CONTROLLER",
+          "SYS-WEB-CANVAS-GRAPH-SEARCH-CONTROL"
+        ],
+        "expectedFailure": "The Canvas search controller and accessible control modules did not exist.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/173",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_FIELDS",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_MATCH_PRIORITY",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_ORDERING",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchEmptyResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchField",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatch",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchKind",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchMatchedResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchNode",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchRequest",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CanvasGraphSearchResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#SearchCanvasGraphQuery",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchRequest",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#createCanvasGraphSearchMatchedResultSet",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#searchCanvasGraph",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#RankedMatch",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#normalizeSearchValue",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#valuesForField",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#classifyMatch",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#matchPriority",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#rankNode",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#compareText",
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#compareRankedMatches",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#CanvasGraphSearchControlModel",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#CanvasGraphSearchController",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#useCanvasGraphSearchController",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#CanvasGraphSearchControl",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#CanvasGraphSearchControlProps"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "33dc742c4e2a6e86baa1ac5fbb7e0e0a16cd4ee80116b1ba61cdb084858f1b2a",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/stores",
+          "packages"
+        ]
+      },
+      "createdAt": "2026-08-04T03:02:00.028Z"
+    },
+    {
+      "operationId": "e967b233-16ee-4cfc-a4b0-d129333b4276",
+      "idempotencyKey": "issue-2066-graph-search-manifest-20260804042454",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2066",
+      "sourceContentSha256": "808671d8e8b834e947e41bf3e906501f9fb8e95840604e9a3c051df25a63b6f2",
+      "expectedRevision": null,
+      "previousRevision": 5,
+      "resultingRevision": 6,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2066",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2066"],
+        "cypressFlows": [
+          "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow."
+        ],
+        "domainObjects": ["CanvasGraphSearchSession"],
+        "fowlerSignals": [
+          "A session controller owns keyboard and result navigation while a pure view owns rendering."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "SYS-WEB-CANVAS-GRAPH-SEARCH-CONTROLLER",
+          "SYS-WEB-CANVAS-GRAPH-SEARCH-CONTROL"
+        ],
+        "expectedFailure": "The Canvas lacks an accessible keyboard-driven search session and contextual control.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2066"],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearch.contract.test.ts src/app/views/canvas/canvasGraphSearch.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2066",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#SearchAction",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#SearchActionProps",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#CanvasGraphSearchControl",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx#CanvasGraphSearchControlProps",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#UseCanvasGraphSearchControllerArgs",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#CanvasGraphSearchControlModel",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#CanvasGraphSearchController",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asNodeRole",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asOptionalString",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asPluginNodeKind",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#asTags",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#isOpenShortcut",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#toSearchNode",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts#useCanvasGraphSearchController"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "808671d8e8b834e947e41bf3e906501f9fb8e95840604e9a3c051df25a63b6f2",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+          "apps/web/src/app/views/canvas/canvasCopy.types.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.es.ts",
+          "apps/web/src/app/views/canvas/canvasCopyCatalog.toolbar.ts",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-04T03:24:57.166Z"
+    },
+    {
+      "operationId": "14386162-2c95-4883-b369-9ddc6e30b31f",
+      "idempotencyKey": "issue-2066-review-manifest-639214152897848083",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2066",
+      "sourceContentSha256": "808671d8e8b834e947e41bf3e906501f9fb8e95840604e9a3c051df25a63b6f2",
+      "expectedRevision": null,
+      "previousRevision": 6,
+      "resultingRevision": 7,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2066",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasGraphSearchControl.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2066"],
+        "cypressFlows": [
+          "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow."
+        ],
+        "domainObjects": ["CanvasGraphSearchSession"],
+        "fowlerSignals": [
+          "The query session reveals its active result through an imperative viewport adapter without mutating canonical graph state."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+          "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "SYS-WEB-CANVAS-GRAPH-SEARCH-CONTROLLER",
+          "SYS-WEB-CANVAS-GRAPH-SEARCH-CONTROL"
+        ],
+        "expectedFailure": "Search navigation did not reveal its active node and intercepted Enter on action buttons.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2066"],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2066",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts#useCanvasViewportLifecycle"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "808671d8e8b834e947e41bf3e906501f9fb8e95840604e9a3c051df25a63b6f2",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts",
+          "apps/web/src/styles/index.css",
+          "apps/web/src/styles/theme.css"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-04T03:41:32.093Z"
+    },
+    {
+      "operationId": "08612da5-8fae-4675-b2fe-8592d2315d7a",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-SEARCH-2064:query:searchcanvasgraph:latest:210bfb5183f28d23",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2067",
+      "sourceContentSha256": "56191b9fdc4d60fc1028729f7ae4ca22a25f59b2cde556da1d2a67f913f1321b",
+      "expectedRevision": null,
+      "previousRevision": 7,
+      "resultingRevision": 8,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2067",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2067"],
+        "cypressFlows": [
+          "N/A - focused ReactFlow integration and live browser proof cover issue #2067."
+        ],
+        "domainObjects": ["CanvasGraphSearchPresentation"],
+        "fowlerSignals": ["Pure Function", "Presentation Model"],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/styles/index.css",
+          "apps/web/src/styles/theme.css"
+        ],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web lint",
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064"
+        ],
+        "componentGuides": [
+          "SYS-WEB-CANVAS-GRAPH-SEARCH",
+          "SYS-WEB-CANVAS-GRAPH-SEARCH-PRESENTATION"
+        ],
+        "expectedFailure": "Only the active node was decorated; other matches, non-matches, and relevant edges were indistinguishable.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2067",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#projectCanvasGraphSearchPresentation",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#CanvasGraphSearchPresentationInput",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#CanvasGraphSearchPresentation"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "56191b9fdc4d60fc1028729f7ae4ca22a25f59b2cde556da1d2a67f913f1321b",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchController.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+          "apps/web/src/styles/index.css",
+          "apps/web/src/styles/theme.css"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/stores",
+          "packages",
+          "tools/planning-db/migrations/**"
+        ]
+      },
+      "createdAt": "2026-08-04T04:31:06.518Z"
+    },
+    {
+      "operationId": "928dd7da-66c1-446f-8df8-fc42cb126625",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-SEARCH-2064:query:searchcanvasgraph:latest:e3fd3af9f9475fe9",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2067",
+      "sourceContentSha256": "56191b9fdc4d60fc1028729f7ae4ca22a25f59b2cde556da1d2a67f913f1321b",
+      "expectedRevision": null,
+      "previousRevision": 8,
+      "resultingRevision": 9,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2067",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2067"],
+        "cypressFlows": [
+          "N/A - focused ReactFlow integration and live browser proof cover issue #2067."
+        ],
+        "domainObjects": ["CanvasGraphSearchPresentation"],
+        "fowlerSignals": ["Pure Function"],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts"
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": ["SYS-WEB-CANVAS-GRAPH-SEARCH-PRESENTATION"],
+        "expectedFailure": "Private presentation helpers were absent from feature mechanization.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2067",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#ACTIVE_NODE_CLASS",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#DIMMED_EDGE_CLASS",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#DIMMED_NODE_CLASS",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#MATCHING_NODE_CLASS",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#RELEVANT_EDGE_CLASS",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#appendClassName",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#isActiveConnectivity",
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#resolveNodeClassName"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "56191b9fdc4d60fc1028729f7ae4ca22a25f59b2cde556da1d2a67f913f1321b",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-04T04:33:37.083Z"
+    },
+    {
+      "operationId": "178e8f0a-529e-4d6c-9653-d630903f0303",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-SEARCH-2064:command:activatecanvasgraphsearchresult:latest:bae9d0cbe7d2ad15",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#command#activatecanvasgraphsearchresult",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2068",
+      "sourceContentSha256": "9024b80ac9879eaed3b1860091871003e57133ad016b5be598ef16a0c803f311",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "ActivateCanvasGraphSearchResult",
+        "railType": "command",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2068",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx"
+        ],
+        "railStatus": "planned",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2068"],
+        "cypressFlows": ["Canvas search active-result focus and selection"],
+        "domainObjects": ["CanvasGraphSearchActivation"],
+        "fowlerSignals": [
+          "Extract search-result activation from generic viewport lifecycle"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx"
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-fowler-canon-component.md"
+        ],
+        "expectedFailure": "Active search results are focused but are not selected through the normal Canvas selection port",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2068"],
+        "architectureGuards": [
+          "Use existing React Flow selection and viewport ports without a parallel selection store"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2068",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#useCanvasGraphSearchActivation"
+        ],
+        "normalizedRailName": "activatecanvasgraphsearchresult",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9024b80ac9879eaed3b1860091871003e57133ad016b5be598ef16a0c803f311",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+          "apps/web/src/app/views/canvas/useCanvasViewportLifecycle.ts"
+        ],
+        "forbiddenImplementationSurfaces": ["apps/web/src/app/stores/**"]
+      },
+      "createdAt": "2026-08-04T05:14:23.930Z"
+    },
+    {
+      "operationId": "302f44e9-a7d0-47b7-9efe-377ee3d95e42",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-SEARCH-2064:command:activatecanvasgraphsearchresult:0:7d63a474881a80fa",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#command#activatecanvasgraphsearchresult",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2068",
+      "sourceContentSha256": "9024b80ac9879eaed3b1860091871003e57133ad016b5be598ef16a0c803f311",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "ActivateCanvasGraphSearchResult",
+        "railType": "command",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2068",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2068"],
+        "cypressFlows": [
+          "Cypress live Canvas graph search focus and selection proof"
+        ],
+        "domainObjects": ["CanvasGraphSearchActivation"],
+        "fowlerSignals": [
+          "Active search result activation is isolated behind normal Canvas selection and viewport ports."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Active search results do not select and focus through normal Canvas ports.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2068",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#useCanvasGraphSearchActivation"
+        ],
+        "normalizedRailName": "activatecanvasgraphsearchresult",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9024b80ac9879eaed3b1860091871003e57133ad016b5be598ef16a0c803f311",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-04T05:36:01.780Z"
+    },
+    {
+      "operationId": "13a91401-3804-45bd-a483-8ef2c0c682b7",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-SEARCH-2064:command:activatecanvasgraphsearchresult:1:a988574fafd813ac",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#command#activatecanvasgraphsearchresult",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2068",
+      "sourceContentSha256": "9024b80ac9879eaed3b1860091871003e57133ad016b5be598ef16a0c803f311",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "ActivateCanvasGraphSearchResult",
+        "railType": "command",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2068",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2068"],
+        "cypressFlows": [
+          "Cypress live Canvas graph search focus and selection proof"
+        ],
+        "domainObjects": ["CanvasGraphSearchActivation"],
+        "fowlerSignals": [
+          "Active search result activation is isolated behind normal Canvas selection and viewport ports."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Active search results do not select and focus through normal Canvas ports.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web test -- src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2068",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#CanvasGraphSearchActivationPort",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#UseCanvasGraphSearchActivationArgs",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#buildSelectionChanges",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts#useCanvasGraphSearchActivation"
+        ],
+        "normalizedRailName": "activatecanvasgraphsearchresult",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "9024b80ac9879eaed3b1860091871003e57133ad016b5be598ef16a0c803f311",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.ts",
+          "apps/web/src/app/views/canvas/useCanvasGraphSearchActivation.test.tsx"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-04T05:38:47.325Z"
+    },
+    {
+      "operationId": "292851cb-abbd-44c9-ba23-e3fcd18f4424",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-FILTER-2069:query:filtercanvasgraph:latest:5d0dde3a047eb64d",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-FILTER-2069#query#filtercanvasgraph",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2069",
+      "sourceContentSha256": "92d95857e7704af2ffeadde1e58d694ec11a2008ba9a5ce376acf3a7c499d1fb",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "Composed predicates and clearing behavior fail before the filter query exists.",
+        "dddOwner": "CanvasGraphFilter",
+        "railName": "FilterCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-FILTER-2069",
+        "greenTest": "FilterCanvasGraph deterministically returns matching ids without mutating nodes or edges.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2069",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts"
+        ],
+        "railStatus": "planned",
+        "userStories": ["https://github.com/dunay2/dvt/issues/173"],
+        "cypressFlows": [
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+        ],
+        "domainObjects": ["CanvasGraphFilterQuery"],
+        "fowlerSignals": [
+          "Pure read model projection with explicit published language"
+        ],
+        "patchSurfaces": ["apps/web/src/app/views/canvas/**"],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "No Canvas filter contract or query currently exists.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2069"],
+        "architectureGuards": [
+          "Search and filters remain independent over the same Canvas node projection"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2069",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph"
+        ],
+        "normalizedRailName": "filtercanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "92d95857e7704af2ffeadde1e58d694ec11a2008ba9a5ce376acf3a7c499d1fb",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas/**"],
+        "forbiddenImplementationSurfaces": [
+          "Persisted graph content and execution state"
+        ]
+      },
+      "createdAt": "2026-08-04T06:14:05.920Z"
+    },
+    {
+      "operationId": "6259706b-2245-4cab-a4d0-e9287854f893",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:CANVAS-GRAPH-FILTER-2069:query:filtercanvasgraph:0:61e1003d997bfa55",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-FILTER-2069#query#filtercanvasgraph",
+      "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+      "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "Composed predicates and clearing behavior fail before the filter query exists.",
+        "dddOwner": "CanvasGraphFilter",
+        "railName": "FilterCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-FILTER-2069",
+        "greenTest": "FilterCanvasGraph deterministically returns matching ids without mutating nodes or edges.",
+        "sourceRef": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/173"],
+        "cypressFlows": [
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+        ],
+        "domainObjects": ["CanvasGraphFilterQuery"],
+        "fowlerSignals": [
+          "Pure read model projection with explicit published language"
+        ],
+        "patchSurfaces": ["apps/web/src/app/views/canvas/**"],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "No Canvas filter contract or query currently exists.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2069"],
+        "architectureGuards": [
+          "Search and filters remain independent over the same Canvas node projection"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2069",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph"
+        ],
+        "normalizedRailName": "filtercanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas/**"],
+        "forbiddenImplementationSurfaces": [
+          "Persisted graph content and execution state"
+        ]
+      },
+      "createdAt": "2026-08-04T06:32:57.254Z"
     }
   ]
 }
