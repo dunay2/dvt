@@ -3,7 +3,7 @@
  * Owned concern: boot a live protected-runtime browser proof lane for selected closure.
  */
 const { spawn, spawnSync } = require('node:child_process');
-const { existsSync } = require('node:fs');
+const { existsSync, readdirSync } = require('node:fs');
 const { mkdir, rm, writeFile } = require('node:fs/promises');
 const http = require('node:http');
 const https = require('node:https');
@@ -45,6 +45,7 @@ const SELECTED_CLOSURE_LIVE_PROOF_ROOT = path.resolve(
   '../.dvt/live-proofs/selected-closure'
 );
 const LIVE_PROOF_DBT_PROFILE = 'dvt_live_proof';
+const LOCAL_TEMPORAL_TEST_SERVER_ROOT = path.resolve(__dirname, '../.dvt/temporal-test-server');
 
 function quoteIdentifier(identifier) {
   return `"${identifier.replaceAll('"', '""')}"`;
@@ -146,6 +147,36 @@ async function loadTemporalTesting() {
   });
 
   return import(pathToFileURL(temporalTestingEntry).href);
+}
+
+function resolveLiveProofTemporalTestServerPath(sourceEnv = process.env) {
+  const configuredPath = readNonEmptyEnv(sourceEnv.DVT_TEMPORAL_TEST_SERVER_PATH);
+  if (configuredPath !== undefined) {
+    return configuredPath;
+  }
+  if (!existsSync(LOCAL_TEMPORAL_TEST_SERVER_ROOT)) {
+    return undefined;
+  }
+
+  return readdirSync(LOCAL_TEMPORAL_TEST_SERVER_ROOT, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /^temporal-test-server.*\.exe$/u.test(entry.name))
+    .map((entry) => path.join(LOCAL_TEMPORAL_TEST_SERVER_ROOT, entry.name))
+    .sort()
+    .at(-1);
+}
+
+function buildLiveProofTemporalTimeSkippingOptions(sourceEnv = process.env) {
+  const executablePath = resolveLiveProofTemporalTestServerPath(sourceEnv);
+  return executablePath === undefined
+    ? undefined
+    : {
+        server: {
+          executable: {
+            type: 'existing-path',
+            path: executablePath,
+          },
+        },
+      };
 }
 
 async function terminateProcess(processHandle) {
@@ -503,7 +534,10 @@ async function main() {
   ensureLocalPostgresReady();
 
   const { TestWorkflowEnvironment } = await loadTemporalTesting();
-  const temporalEnv = await TestWorkflowEnvironment.createTimeSkipping();
+  const timeSkippingOptions = buildLiveProofTemporalTimeSkippingOptions();
+  const temporalEnv = timeSkippingOptions
+    ? await TestWorkflowEnvironment.createTimeSkipping(timeSkippingOptions)
+    : await TestWorkflowEnvironment.createTimeSkipping();
   const localProtectedRuntimeAuth = await startLocalProtectedRuntimeAuth({
     env: process.env,
     host: LOCAL_AUTH_HOST,
@@ -651,6 +685,7 @@ module.exports = {
   buildLiveProofCypressDockerInvocation,
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
+  buildLiveProofTemporalTimeSkippingOptions,
   prepareLiveProofDbtAnalyzerProfile,
   resolveLiveProofDbtExecutable,
   resolveLiveProofSpecPath,
@@ -658,8 +693,11 @@ module.exports = {
 };
 
 if (require.main === module) {
-  main().catch((error) => {
-    console.error(error instanceof Error ? error.message : error);
-    process.exitCode = 1;
-  });
+  const keepAlive = setInterval(() => undefined, 1_000);
+  main()
+    .catch((error) => {
+      console.error(error instanceof Error ? error.message : error);
+      process.exitCode = 1;
+    })
+    .finally(() => clearInterval(keepAlive));
 }
