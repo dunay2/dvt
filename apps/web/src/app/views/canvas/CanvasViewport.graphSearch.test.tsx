@@ -41,6 +41,14 @@ describe('CanvasViewport graph search', () => {
       return candidate!;
     });
 
+    const searchActions = Array.from(searchControl().querySelectorAll<HTMLButtonElement>('button'));
+    const closeButton = searchActions.at(-1)!;
+    closeButton.focus();
+    act(() => {
+      fireEvent.keyDown(closeButton, { key: 'f', ctrlKey: true });
+    });
+    expect(document.activeElement).toBe(input);
+
     act(() => {
       fireEvent.change(input, { target: { value: 'orders' } });
     });

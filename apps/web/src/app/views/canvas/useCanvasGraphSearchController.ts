@@ -17,6 +17,7 @@ import { searchCanvasGraph } from './canvasGraphSearch';
 
 export type CanvasGraphSearchControlModel = Readonly<{
   open: boolean;
+  focusRequestId: number;
   query: string;
   status: 'idle' | 'no-match' | 'matched';
   matchCount: number;
@@ -82,6 +83,7 @@ export function useCanvasGraphSearchController({
   nodes,
 }: UseCanvasGraphSearchControllerArgs): CanvasGraphSearchController {
   const [open, setOpen] = useState(false);
+  const [focusRequestId, setFocusRequestId] = useState(0);
   const [query, setQueryState] = useState('');
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
   const searchNodes = useMemo(() => nodes.map(toSearchNode), [nodes]);
@@ -129,6 +131,7 @@ export function useCanvasGraphSearchController({
       }
       if (isOpenShortcut(event)) {
         event.preventDefault();
+        setFocusRequestId((currentRequestId) => currentRequestId + 1);
       }
     },
     [close]
@@ -147,6 +150,7 @@ export function useCanvasGraphSearchController({
   return {
     model: {
       open,
+      focusRequestId,
       query,
       status: result.status,
       matchCount: result.matches.length,

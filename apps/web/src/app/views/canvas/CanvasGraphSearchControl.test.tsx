@@ -38,6 +38,7 @@ describe('CanvasGraphSearchControl', () => {
         <CanvasGraphSearchControl
           model={{
             open: true,
+            focusRequestId: 0,
             query: 'orders',
             status: 'matched',
             matchCount: 3,
@@ -86,6 +87,7 @@ describe('CanvasGraphSearchControl', () => {
         <CanvasGraphSearchControl
           model={{
             open: true,
+            focusRequestId: 0,
             query: 'missing',
             status: 'no-match',
             matchCount: 0,

@@ -44,7 +44,6 @@ export function CanvasGraphSearchControl({
 
     restoreFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    document.getElementById(inputId)?.focus();
 
     return () => {
       const restoreFocusTarget = restoreFocusRef.current;
@@ -54,6 +53,12 @@ export function CanvasGraphSearchControl({
       }
     };
   }, [inputId, model.open]);
+
+  useEffect(() => {
+    if (model.open) {
+      document.getElementById(inputId)?.focus();
+    }
+  }, [inputId, model.focusRequestId, model.open]);
 
   if (!model.open) {
     return null;
