@@ -60,6 +60,15 @@ export type {
   ObjectFilePostgresDbtBridgeResolution,
 } from './contracts/planner/ObjectFilePostgresDbtBridge.v1.js';
 export {
+  DBT_STEP_SELECTOR_CUSTOM_KEY,
+  DbtStepSelectorSchema,
+  resolveDbtStepSelector,
+} from './contracts/planner/DbtStepSelector.v1.js';
+export type {
+  DbtStepSelector,
+  DbtStepSelectorResolution,
+} from './contracts/planner/DbtStepSelector.v1.js';
+export {
   CURRENT_EXECUTION_PLAN_VERSION,
   EXECUTION_PLAN_VERSION_REGISTRY,
   isSupportedExecutionPlanVersion,
