@@ -50,6 +50,16 @@ export {
 } from './contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
 export type { LoadObjectFileToPostgresStepTypeConfig } from './contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
 export {
+  OBJECT_FILE_POSTGRES_DBT_BRIDGE_CUSTOM_KEY,
+  OBJECT_FILE_POSTGRES_DBT_STAGING_SCHEMA_ENV,
+  ObjectFilePostgresDbtBridgeSchema,
+  resolveObjectFilePostgresDbtBridge,
+} from './contracts/planner/ObjectFilePostgresDbtBridge.v1.js';
+export type {
+  ObjectFilePostgresDbtBridge,
+  ObjectFilePostgresDbtBridgeResolution,
+} from './contracts/planner/ObjectFilePostgresDbtBridge.v1.js';
+export {
   CURRENT_EXECUTION_PLAN_VERSION,
   EXECUTION_PLAN_VERSION_REGISTRY,
   isSupportedExecutionPlanVersion,
