@@ -165,7 +165,8 @@ describe('DbtAuthoringFields', () => {
     ) as HTMLSelectElement;
 
     expect(container.querySelector('[data-slot="dbt-generated-model-sql"]')).toBeNull();
-    expect(originSelect.value).toBe(sourceA.id);
+    expect(originSelect.value).toBe('');
+    expect(originSelect.selectedOptions[0]?.textContent).toBe('Select a connected origin');
     expect(materializedSelect.value).toBe('view');
 
     act(() => {

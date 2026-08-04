@@ -82,6 +82,7 @@ export const canvasViewAuthoringCopyEs = {
   inspectorDbtTableLabel: 'Tabla',
   inspectorDbtMaterializedLabel: 'Materializacion',
   inspectorDbtOriginLabel: 'Entrada',
+  inspectorDbtOriginPlaceholder: 'Selecciona un origen conectado',
   inspectorDbtModelSqlLabel: 'SQL del modelo',
   inspectorDbtModelSqlGeneratedDetailTemplate:
     'Artefacto DBT generado: {path}. Editalo para asumir su autoria.',

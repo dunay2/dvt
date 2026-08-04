@@ -254,6 +254,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.dbtOriginLabel',
     fallback: 'Origin',
   },
+  inspectorDbtOriginPlaceholder: {
+    key: 'canvas.inspector.authoring.dbtOriginPlaceholder',
+    fallback: 'Select a connected origin',
+  },
   inspectorDbtModelSqlLabel: {
     key: 'canvas.inspector.authoring.dbtModelSqlLabel',
     fallback: 'Model SQL',
