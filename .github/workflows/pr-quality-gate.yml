@@ -466,6 +466,9 @@ jobs:
           docker logs dvt-het1-temporal
           exit 1
 
+      - name: Prepare HET1 worker runtime dependencies
+        run: node scripts/build-workspace-runtime-deps.cjs dvt-temporal-worker
+
       - name: Prove object-file to PostgreSQL worker vertical
         run: >-
           pnpm --filter dvt-temporal-worker exec vitest run --config vitest.config.ts
