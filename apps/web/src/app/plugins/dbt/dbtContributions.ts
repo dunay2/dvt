@@ -8,6 +8,7 @@ import { DbtNodeRenderer, dbtInspectorPanels, mapRunToCanonical } from './DbtNod
 import { dbtCanvasSurfaceStrategy } from './dbtCanvasSurfaceStrategy';
 import { dbtCanvasGraphStrategy } from './dbtNodeAdapter';
 import { dbtGraphNodeCardStrategy } from './dbtGraphNodeCardStrategy';
+import { OBJECT_FILE_POSTGRES_NODE_KINDS } from '../objectFilePostgres/objectFilePostgresNodeTypeCatalog';
 
 /**
  * Static v1 contribution manifest for the built-in dbt plugin.
@@ -89,7 +90,7 @@ export const dbtContributions: PluginContributions = {
         editableMessage:
           'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
       },
-      nodeKinds: DBT_NODE_KINDS,
+      nodeKinds: [...DBT_NODE_KINDS, ...OBJECT_FILE_POSTGRES_NODE_KINDS],
     },
   ],
   // Connection rules express dbt-local authoring policy; shell-level graph

@@ -171,6 +171,7 @@ const graphNodeKindToneByKind: Partial<Record<PluginNodeKind, GraphNodeKindTone>
   'dbt:metric': graphNodeKindToneClasses.metric,
   'dbt:macro': graphNodeKindToneClasses.control,
   'dvt:source': graphNodeKindToneClasses.input,
+  'dvt:object_file_load': graphNodeKindToneClasses.input,
   'dvt:sql_transform': graphNodeKindToneClasses.transform,
   'dvt:sink': graphNodeKindToneClasses.output,
   'dvt:unknown': graphNodeKindToneClasses.control,
