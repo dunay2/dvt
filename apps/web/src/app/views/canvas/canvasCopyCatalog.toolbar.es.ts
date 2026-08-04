@@ -16,6 +16,13 @@ export const canvasViewToolbarCopyEs = {
   toolbarGridColorLabel: 'Color de rejilla',
   toolbarSnapToGridLabel: 'Ajustar',
   toolbarCanvasSettingsLabel: 'Configuracion de canvas',
+  canvasGraphSearchLabel: 'Buscar en el grafo',
+  canvasGraphSearchInputLabel: 'Buscar nodos del grafo',
+  canvasGraphSearchPlaceholder: 'Buscar nodos',
+  canvasGraphSearchNoResultsLabel: 'Sin resultados',
+  canvasGraphSearchPreviousLabel: 'Resultado anterior',
+  canvasGraphSearchNextLabel: 'Resultado siguiente',
+  canvasGraphSearchCloseLabel: 'Cerrar busqueda del grafo',
   canvasNodeToolbarLabelTemplate: 'Acciones del nodo: {nodeName}',
   canvasNodeToolbarCodeLabel: 'Abrir codigo del nodo',
   canvasNodeToolbarCodeDescription:

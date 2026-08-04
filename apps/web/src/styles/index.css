@@ -27,7 +27,11 @@ body {
     radial-gradient(circle at 82% 14%, rgba(255, 255, 255, 0.025), transparent 28%),
     linear-gradient(var(--canvas-grid, rgba(148, 163, 184, 0.16)) 1px, transparent 1px),
     linear-gradient(90deg, var(--canvas-grid, rgba(148, 163, 184, 0.16)) 1px, transparent 1px);
-  background-position: 0 0, 0 0, 0 0, 0 0;
+  background-position:
+    0 0,
+    0 0,
+    0 0,
+    0 0;
   background-size:
     100% 100%,
     100% 100%,
@@ -37,6 +41,12 @@ body {
 
 .react-flow__node {
   cursor: pointer;
+}
+
+.react-flow__node.canvas-graph-search-active-node {
+  border-radius: var(--radius);
+  outline: 3px solid var(--canvas-search-active-ring);
+  outline-offset: 5px;
 }
 
 .react-flow__edge-path {
