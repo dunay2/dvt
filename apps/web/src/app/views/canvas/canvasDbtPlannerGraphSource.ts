@@ -1,6 +1,7 @@
 /** Owned concern: project authored dbt canvas state into planner-generic-v1 graph source. */
 import type { ExecutionSelection, GenericGraphSourceV1, GenericGraphNodeV1 } from '@dvt/contracts';
 import {
+  DBT_STEP_SELECTOR_CUSTOM_KEY,
   OBJECT_FILE_POSTGRES_DBT_BRIDGE_CUSTOM_KEY,
   parseExecutionSelection,
 } from '@dvt/contracts';
@@ -18,6 +19,8 @@ import {
   type ObjectFilePostgresExecutionScope,
 } from './objectFilePostgresAuthoringModel';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
+import { normalizeDbtArtifactIdentifier } from './canvasDbtModelArtifactProjection';
+import { projectDbtTestArtifact } from './canvasDbtTestArtifactProjection';
 
 export type DbtPlannerGraphSourceResult =
   | Readonly<{
@@ -88,6 +91,7 @@ type GenericGraphNodeProjection =
 
 function buildGenericGraphNode(args: {
   node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   executableNodeIdSet: ReadonlySet<string>;
   executionScope: ObjectFilePostgresExecutionScope | undefined;
@@ -108,9 +112,41 @@ function buildGenericGraphNode(args: {
     return objectFileProjection;
   }
 
-  const nodeMetadata = isObjectFilePostgresNode(args.node)
-    ? null
-    : createDbtNodeAuthoringMetadata(args.node);
+  const testProjection =
+    args.node.pluginId === 'dbt' && args.node.kind === 'dbt:test'
+      ? projectDbtTestArtifact({
+          testNode: args.node,
+          nodes: args.nodes,
+          edges: args.edges,
+        })
+      : null;
+  if (testProjection?.ok === false) {
+    return testProjection;
+  }
+
+  const selector =
+    testProjection?.ok === true
+      ? testProjection.artifact.selector
+      : args.node.pluginId === 'dbt' &&
+          (args.node.kind === 'dbt:model' || args.node.kind === 'dbt:snapshot')
+        ? normalizeDbtArtifactIdentifier(args.node.name, args.node.id)
+        : null;
+  const dbtStepTypeConfig =
+    selector !== null
+      ? {
+          custom: {
+            ...(args.usesObjectFilePostgresStaging
+              ? { [OBJECT_FILE_POSTGRES_DBT_BRIDGE_CUSTOM_KEY]: { version: 'v1' } }
+              : {}),
+            [DBT_STEP_SELECTOR_CUSTOM_KEY]: { version: 'v1', selector },
+          },
+        }
+      : undefined;
+
+  const nodeMetadata =
+    args.node.pluginId === 'dbt' && args.node.kind === 'dbt:model'
+      ? createDbtNodeAuthoringMetadata(args.node)
+      : null;
   return {
     ok: true,
     node: {
@@ -119,14 +155,8 @@ function buildGenericGraphNode(args: {
       dependsOn: resolveExecutableDependencies(args),
       ...(objectFileProjection?.ok === true
         ? { stepTypeConfig: objectFileProjection.stepTypeConfig }
-        : args.usesObjectFilePostgresStaging
-          ? {
-              stepTypeConfig: {
-                custom: {
-                  [OBJECT_FILE_POSTGRES_DBT_BRIDGE_CUSTOM_KEY]: { version: 'v1' },
-                },
-              },
-            }
+        : dbtStepTypeConfig
+          ? { stepTypeConfig: dbtStepTypeConfig }
           : {}),
       metadata: {
         displayName: args.node.name,
@@ -168,6 +198,7 @@ export function buildDbtPlannerGraphSource(args: {
   const graphNodeProjections = executableNodes.map((node) =>
     buildGenericGraphNode({
       node,
+      nodes: args.nodes,
       edges: args.edges,
       executableNodeIdSet,
       executionScope: args.executionScope,

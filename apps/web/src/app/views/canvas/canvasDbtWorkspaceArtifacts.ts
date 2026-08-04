@@ -10,6 +10,10 @@ import {
   type DbtModelArtifactSource,
 } from './canvasDbtModelArtifactProjection';
 import { createGraphDraftMarkedDbtModelSql } from './dbtGraphModelSqlPublicationPolicy';
+import {
+  projectDbtTestArtifact,
+  type DbtTestArtifactProjection,
+} from './canvasDbtTestArtifactProjection';
 
 export type DbtWorkspaceArtifact = Readonly<{
   path: string;
@@ -46,6 +50,20 @@ function resolveScopedModelNodes(args: {
   );
 }
 
+function resolveScopedTestNodes(args: {
+  nodes: readonly CanonicalNode[];
+  scopedNodeIds: readonly string[];
+}): CanonicalNode[] {
+  const scopedNodeIdSet =
+    args.scopedNodeIds.length > 0
+      ? new Set(args.scopedNodeIds)
+      : new Set(args.nodes.map((node) => node.id));
+
+  return args.nodes.filter(
+    (node) => scopedNodeIdSet.has(node.id) && node.pluginId === 'dbt' && node.kind === 'dbt:test'
+  );
+}
+
 function appendSourceYaml(lines: string[], sources: readonly DbtModelArtifactSource[]): void {
   const uniqueSources = new Map<string, DbtModelArtifactSource>();
   for (const source of sources) {
@@ -71,7 +89,41 @@ function serializeYamlString(value: string): string {
   return JSON.stringify(value);
 }
 
-function buildSchemaYaml(models: readonly DbtModelProjection[]): string {
+function appendModelTests(
+  lines: string[],
+  modelId: string,
+  tests: readonly DbtTestArtifactProjection[]
+): void {
+  const modelTests = tests
+    .filter((test) => test.targetModelId === modelId)
+    .slice()
+    .sort((a, b) => `${a.columnName}.${a.selector}`.localeCompare(`${b.columnName}.${b.selector}`));
+  if (modelTests.length === 0) return;
+
+  const testsByColumn = new Map<string, DbtTestArtifactProjection[]>();
+  for (const test of modelTests) {
+    const columnTests = testsByColumn.get(test.columnName) ?? [];
+    columnTests.push(test);
+    testsByColumn.set(test.columnName, columnTests);
+  }
+
+  lines.push('    columns:');
+  for (const [columnName, columnTests] of testsByColumn) {
+    lines.push(`      - name: ${columnName}`);
+    lines.push('        data_tests:');
+    for (const test of columnTests) {
+      lines.push(`          - ${test.testType}:`);
+      lines.push(`              name: ${test.selector}`);
+      lines.push('              config:');
+      lines.push(`                severity: ${test.severity}`);
+    }
+  }
+}
+
+function buildSchemaYaml(
+  models: readonly DbtModelProjection[],
+  tests: readonly DbtTestArtifactProjection[]
+): string {
   const lines = ['version: 2', ''];
   const sources = models
     .map((model) => model.artifact.source)
@@ -87,6 +139,7 @@ function buildSchemaYaml(models: readonly DbtModelProjection[]): string {
     lines.push(`  - name: ${model.artifact.name}`);
     const description = model.node.description ?? `Generated from canvas node ${model.node.id}`;
     lines.push(`    description: ${serializeYamlString(description)}`);
+    appendModelTests(lines, model.node.id, tests);
   }
   lines.push('');
 
@@ -113,6 +166,10 @@ export function buildDbtWorkspaceArtifacts(args: {
   scopedNodeIds: readonly string[];
 }): DbtWorkspaceArtifactsResult {
   const modelNodes = resolveScopedModelNodes({
+    nodes: args.nodes,
+    scopedNodeIds: args.scopedNodeIds,
+  });
+  const testNodes = resolveScopedTestNodes({
     nodes: args.nodes,
     scopedNodeIds: args.scopedNodeIds,
   });
@@ -143,6 +200,26 @@ export function buildDbtWorkspaceArtifacts(args: {
     });
   }
 
+  const tests: DbtTestArtifactProjection[] = [];
+  const scopedModelIds = new Set(modelNodes.map((node) => node.id));
+  for (const testNode of testNodes) {
+    const projection = projectDbtTestArtifact({
+      testNode,
+      nodes: args.nodes,
+      edges: args.edges,
+    });
+    if (!projection.ok) {
+      return projection;
+    }
+    if (!scopedModelIds.has(projection.artifact.targetModelId)) {
+      return {
+        ok: false,
+        message: `DBT test "${testNode.name}" requires its target model in execution scope.`,
+      };
+    }
+    tests.push(projection.artifact);
+  }
+
   const firstPackageName = createDbtNodeAuthoringMetadata(modelNodes[0]!).packageName;
   const artifacts: DbtWorkspaceArtifact[] = [
     {
@@ -160,7 +237,7 @@ export function buildDbtWorkspaceArtifacts(args: {
       })),
     {
       path: 'models/schema.yml',
-      content: buildSchemaYaml(models),
+      content: buildSchemaYaml(models, tests),
       language: 'yaml',
     },
   ];

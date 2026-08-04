@@ -46,6 +46,31 @@ const sourceEdge: CanonicalEdge = {
   relation: 'lineage',
 };
 
+const testNode: CanonicalNode = {
+  id: 'test-orders-key',
+  name: 'Orders key required',
+  pluginId: 'dbt',
+  kind: 'dbt:test',
+  role: 'check',
+  status: 'idle',
+  tags: [],
+  metadata: {
+    dbtTest: {
+      testType: 'not_null',
+      targetModelId: modelNode.id,
+      targetColumn: 'order_id',
+      severity: 'error',
+    },
+  },
+};
+
+const testEdge: CanonicalEdge = {
+  id: 'edge-model-test',
+  sourceId: modelNode.id,
+  targetId: testNode.id,
+  relation: 'validation',
+};
+
 describe('canvas dbt workspace artifacts', () => {
   it('publishes an object-file staging relation into executable DBT workspace artifacts', () => {
     const objectFileLoad: CanonicalNode = {
@@ -265,5 +290,41 @@ describe('canvas dbt workspace artifacts', () => {
     expect(result.artifacts[2]?.content).toContain(
       '    description: "Revenue: by channel\\nIncludes wholesale \\"partner\\" orders"'
     );
+  });
+
+  it('publishes connected DBT tests with stable selectors into schema YAML', () => {
+    const result = buildDbtWorkspaceArtifacts({
+      nodes: [sourceNode, modelNode, testNode],
+      edges: [sourceEdge, testEdge],
+      scopedNodeIds: [sourceNode.id, modelNode.id, testNode.id],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.artifacts[2]?.content).toContain(
+      [
+        '    columns:',
+        '      - name: order_id',
+        '        data_tests:',
+        '          - not_null:',
+        '              name: test_orders_key',
+        '              config:',
+        '                severity: error',
+      ].join('\n')
+    );
+  });
+
+  it('blocks scoped DBT tests that do not resolve to a connected model', () => {
+    expect(
+      buildDbtWorkspaceArtifacts({
+        nodes: [sourceNode, modelNode, testNode],
+        edges: [sourceEdge],
+        scopedNodeIds: [sourceNode.id, modelNode.id, testNode.id],
+      })
+    ).toEqual({
+      ok: false,
+      message: 'DBT test "Orders key required" targets a model that is not connected.',
+    });
   });
 });

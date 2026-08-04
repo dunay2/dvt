@@ -81,6 +81,14 @@ const testNode: CanonicalNode = {
   role: 'check',
   status: 'idle',
   tags: [],
+  metadata: {
+    dbtTest: {
+      testType: 'not_null',
+      targetModelId: modelNode.id,
+      targetColumn: 'order_id',
+      severity: 'error',
+    },
+  },
 };
 
 const downstreamModelNode: CanonicalNode = {
@@ -191,6 +199,7 @@ describe('canvas dbt planner graph source', () => {
         stepTypeConfig: {
           custom: {
             objectFilePostgresStagingBridge: { version: 'v1' },
+            dbtStepSelector: { version: 'v1', selector: 'orders_model' },
           },
         },
       }),
@@ -201,6 +210,7 @@ describe('canvas dbt planner graph source', () => {
         stepTypeConfig: {
           custom: {
             objectFilePostgresStagingBridge: { version: 'v1' },
+            dbtStepSelector: { version: 'v1', selector: 'test_orders' },
           },
         },
       }),
@@ -230,6 +240,11 @@ describe('canvas dbt planner graph source', () => {
           nodeId: 'model-orders',
           stepKind: 'DBT_MODEL',
           dependsOn: [],
+          stepTypeConfig: {
+            custom: {
+              dbtStepSelector: { version: 'v1', selector: 'orders_model' },
+            },
+          },
           metadata: {
             displayName: 'Orders Model',
             sourceRef: 'source-orders',
@@ -244,6 +259,11 @@ describe('canvas dbt planner graph source', () => {
           nodeId: 'test-orders',
           stepKind: 'DBT_TEST',
           dependsOn: ['model-orders'],
+          stepTypeConfig: {
+            custom: {
+              dbtStepSelector: { version: 'v1', selector: 'test_orders' },
+            },
+          },
           metadata: {
             displayName: 'Orders Not Null',
             tags: {
