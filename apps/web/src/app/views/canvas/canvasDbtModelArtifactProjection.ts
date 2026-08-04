@@ -5,6 +5,10 @@ import {
   type DbtNodeAuthoringMetadata,
 } from './canvasDbtAuthoringModel';
 import { createDvtNodeAuthoringMetadata } from './canvasDvtAuthoringModel';
+import {
+  isObjectFilePostgresNode,
+  resolveObjectFilePostgresAuthoringMetadata,
+} from './objectFilePostgresAuthoringModel';
 
 export type DbtModelArtifactSource = Readonly<{
   sourceName: string;
@@ -76,7 +80,12 @@ function isDbtModel(node: CanonicalNode): boolean {
 }
 
 function isCompatibleOrigin(node: CanonicalNode): boolean {
-  return isDbtSource(node) || isWarehouseSource(node) || isDbtModel(node);
+  return (
+    isDbtSource(node) ||
+    isWarehouseSource(node) ||
+    isObjectFilePostgresNode(node) ||
+    isDbtModel(node)
+  );
 }
 
 function resolveIncomingOrigins(args: ProjectDbtModelArtifactArgs): readonly CanonicalNode[] {
@@ -99,6 +108,27 @@ function projectSourceOrigin(
         sourceName: metadata.sourceName,
         schemaName: metadata.schemaName,
         tableName: metadata.tableName,
+      },
+    };
+  }
+
+  if (isObjectFilePostgresNode(origin)) {
+    const metadata = resolveObjectFilePostgresAuthoringMetadata(origin);
+    if (metadata == null) {
+      return {
+        ok: false,
+        reason: 'origin_metadata_unavailable',
+        message: `DBT source origin "${origin.name}" has incomplete object-file staging metadata.`,
+      };
+    }
+    const sourceName = metadata.target.schema;
+    return {
+      nodeId: origin.id,
+      sql: `{{ source('${sourceName}', '${metadata.target.relation}') }}`,
+      source: {
+        sourceName,
+        schemaName: metadata.target.schema,
+        tableName: metadata.target.relation,
       },
     };
   }
@@ -135,6 +165,7 @@ function resolveOriginProjection(
   const origin =
     selectedOrigin ??
     incomingOrigins.find(isDbtSource) ??
+    incomingOrigins.find(isObjectFilePostgresNode) ??
     incomingOrigins.find(isWarehouseSource) ??
     incomingOrigins.find(isDbtModel);
 
@@ -146,7 +177,7 @@ function resolveOriginProjection(
     };
   }
 
-  if (isDbtSource(origin) || isWarehouseSource(origin)) {
+  if (isDbtSource(origin) || isWarehouseSource(origin) || isObjectFilePostgresNode(origin)) {
     return projectSourceOrigin(origin);
   }
 

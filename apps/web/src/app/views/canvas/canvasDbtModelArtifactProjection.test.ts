@@ -19,6 +19,47 @@ const warehouseSource: CanonicalNode = {
   },
 };
 
+const objectFileLoad: CanonicalNode = {
+  id: 'load-orders',
+  name: 'Load orders',
+  pluginId: 'dvt.object-file-postgres',
+  kind: 'dvt:object_file_load',
+  role: 'input',
+  status: 'idle',
+  tags: [],
+  metadata: {
+    objectFilePostgres: {
+      source: {
+        storageUri: `s3://fixtures/tenants/tenant/${'a'.repeat(64)}`,
+        sha256: 'a'.repeat(64),
+        sizeBytes: 62,
+        maxBytes: 1_000,
+        encoding: 'utf-8',
+        format: 'csv',
+        mediaType: 'text/csv',
+        header: true,
+        delimiter: ',',
+        credentialRef: 'object-store:fixture',
+      },
+      target: {
+        dialect: 'postgres',
+        schema: 'staging',
+        relation: 'orders',
+        loadMode: 'replace',
+        credentialRef: 'postgres:target',
+      },
+      columns: [
+        {
+          sourceField: 'order_id',
+          targetColumn: 'order_id',
+          dataType: 'bigint',
+          nullable: false,
+        },
+      ],
+    },
+  },
+};
+
 const upstreamModel: CanonicalNode = {
   id: 'stg-orders',
   name: 'Staging Orders',
@@ -57,6 +98,41 @@ function edge(sourceId: string): CanonicalEdge {
 }
 
 describe('canvas DBT model artifact projection', () => {
+  it('projects the exact object-file staging relation as a DBT source', () => {
+    const modelFromObject = {
+      ...model,
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'table',
+          selectedSourceId: objectFileLoad.id,
+        },
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: modelFromObject,
+        nodes: [objectFileLoad, modelFromObject],
+        edges: [edge(objectFileLoad.id)],
+      })
+    ).toMatchObject({
+      ok: true,
+      artifact: {
+        body: "select *\nfrom {{ source('staging', 'orders') }}",
+        origin: {
+          nodeId: objectFileLoad.id,
+          sql: "{{ source('staging', 'orders') }}",
+        },
+        source: {
+          sourceName: 'staging',
+          schemaName: 'staging',
+          tableName: 'orders',
+        },
+      },
+    });
+  });
+
   it('projects one generated artifact with explicit provenance from a warehouse source', () => {
     expect(
       projectDbtModelArtifact({

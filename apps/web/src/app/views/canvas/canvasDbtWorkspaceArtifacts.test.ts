@@ -47,6 +47,72 @@ const sourceEdge: CanonicalEdge = {
 };
 
 describe('canvas dbt workspace artifacts', () => {
+  it('publishes an object-file staging relation into executable DBT workspace artifacts', () => {
+    const objectFileLoad: CanonicalNode = {
+      id: 'load-orders',
+      name: 'Load orders',
+      pluginId: 'dvt.object-file-postgres',
+      kind: 'dvt:object_file_load',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+      metadata: {
+        objectFilePostgres: {
+          source: {
+            storageUri: `s3://fixtures/tenants/tenant/${'a'.repeat(64)}`,
+            sha256: 'a'.repeat(64),
+            sizeBytes: 62,
+            maxBytes: 1_000,
+            encoding: 'utf-8',
+            format: 'csv',
+            mediaType: 'text/csv',
+            header: true,
+            delimiter: ',',
+            credentialRef: 'object-store:fixture',
+          },
+          target: {
+            dialect: 'postgres',
+            schema: 'staging',
+            relation: 'orders',
+            loadMode: 'replace',
+            credentialRef: 'postgres:target',
+          },
+          columns: [
+            {
+              sourceField: 'order_id',
+              targetColumn: 'order_id',
+              dataType: 'bigint',
+              nullable: false,
+            },
+          ],
+        },
+      },
+    };
+    const modelFromObject: CanonicalNode = {
+      ...modelNode,
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'table',
+          selectedSourceId: objectFileLoad.id,
+        },
+      },
+    };
+
+    const result = buildDbtWorkspaceArtifacts({
+      nodes: [objectFileLoad, modelFromObject],
+      edges: [{ ...sourceEdge, sourceId: objectFileLoad.id }],
+      scopedNodeIds: [objectFileLoad.id, modelFromObject.id],
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.artifacts[1]?.content).toContain("from {{ source('staging', 'orders') }}");
+    expect(result.artifacts[2]?.content).toContain('  - name: staging');
+    expect(result.artifacts[2]?.content).toContain('    schema: staging');
+    expect(result.artifacts[2]?.content).toContain('      - name: orders');
+  });
+
   it('projects imported warehouse sources into dbt source artifacts for connected models', () => {
     const warehouseSourceNode: CanonicalNode = {
       id: 'warehouse-orders',

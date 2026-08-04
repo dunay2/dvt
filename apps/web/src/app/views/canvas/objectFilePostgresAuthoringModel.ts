@@ -221,6 +221,15 @@ export function applyObjectFilePostgresAuthoringDraft(
   };
 }
 
+export function resolveObjectFilePostgresAuthoringMetadata(
+  node: CanonicalNode
+): ObjectFilePostgresAuthoringMetadata | null {
+  const draft = createObjectFilePostgresAuthoringDraft(node);
+  if (draft == null) return null;
+  const validation = validateObjectFilePostgresAuthoringDraft(draft);
+  return validation.ok ? validation.metadata : null;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
