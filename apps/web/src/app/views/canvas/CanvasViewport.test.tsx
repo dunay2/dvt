@@ -10,6 +10,7 @@ vi.mock(
 );
 
 import { deriveCanvasPaletteTokens, normalizeCanvasPaletteId } from './canvasPalette';
+import { canvasViewCopy } from './canvasCopyCatalog';
 import {
   buildCanvasViewportProps,
   createCanvasViewportHarness,
@@ -60,7 +61,9 @@ describe('CanvasViewport', () => {
     const viewportStyle = (viewport as HTMLDivElement).style;
     const viewportDataset = (viewport as HTMLDivElement | null)?.dataset;
 
-    expect(container.querySelectorAll('button')).toHaveLength(0);
+    expect(Array.from(container.querySelectorAll('button'), (button) => button.ariaLabel)).toEqual([
+      canvasViewCopy.canvasGraphFilterLabel,
+    ]);
     expect(viewportDataset?.canvasPalette).toBe(normalizedCanvasPalette);
     expect(viewportStyle.getPropertyValue('--canvas-surface')).toBe(expectedPaletteTokens.surface);
     expect(viewportStyle.getPropertyValue('--canvas-grid')).toBe('rgba(148, 163, 184, 0.18)');
