@@ -563,4 +563,120 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.inspector.authoring.errorDvtWriteModeInvalid',
     fallback: 'Write mode must be replace or append.',
   },
+  inspectorObjectFileTitle: {
+    key: 'canvas.inspector.objectFile.title',
+    fallback: 'Object-file load',
+  },
+  inspectorObjectFileDescription: {
+    key: 'canvas.inspector.objectFile.description',
+    fallback: 'Load one immutable CSV or JSON Lines object into governed PostgreSQL staging.',
+  },
+  inspectorObjectFileStorageUriLabel: {
+    key: 'canvas.inspector.objectFile.storageUriLabel',
+    fallback: 'Content-addressed storage URI',
+  },
+  inspectorObjectFileSha256Label: {
+    key: 'canvas.inspector.objectFile.sha256Label',
+    fallback: 'SHA-256 digest',
+  },
+  inspectorObjectFileSizeBytesLabel: {
+    key: 'canvas.inspector.objectFile.sizeBytesLabel',
+    fallback: 'Object size (bytes)',
+  },
+  inspectorObjectFileMaxBytesLabel: {
+    key: 'canvas.inspector.objectFile.maxBytesLabel',
+    fallback: 'Maximum admitted size (bytes)',
+  },
+  inspectorObjectFileFormatLabel: {
+    key: 'canvas.inspector.objectFile.formatLabel',
+    fallback: 'Format',
+  },
+  inspectorObjectFileCsvLabel: {
+    key: 'canvas.inspector.objectFile.csvLabel',
+    fallback: 'CSV with header',
+  },
+  inspectorObjectFileJsonLinesLabel: {
+    key: 'canvas.inspector.objectFile.jsonLinesLabel',
+    fallback: 'JSON Lines',
+  },
+  inspectorObjectFileSourceCredentialLabel: {
+    key: 'canvas.inspector.objectFile.sourceCredentialLabel',
+    fallback: 'Object-store credential reference',
+  },
+  inspectorObjectFileTargetTitle: {
+    key: 'canvas.inspector.objectFile.targetTitle',
+    fallback: 'PostgreSQL target',
+  },
+  inspectorObjectFileTargetSummary: {
+    key: 'canvas.inspector.objectFile.targetSummary',
+    fallback: 'staging schema · replace mode',
+  },
+  inspectorObjectFileTargetRelationLabel: {
+    key: 'canvas.inspector.objectFile.targetRelationLabel',
+    fallback: 'Staging relation',
+  },
+  inspectorObjectFileTargetCredentialLabel: {
+    key: 'canvas.inspector.objectFile.targetCredentialLabel',
+    fallback: 'PostgreSQL credential reference',
+  },
+  inspectorObjectFileColumnsTitle: {
+    key: 'canvas.inspector.objectFile.columnsTitle',
+    fallback: 'Column mappings',
+  },
+  inspectorObjectFileAddColumnLabel: {
+    key: 'canvas.inspector.objectFile.addColumnLabel',
+    fallback: 'Add column mapping',
+  },
+  inspectorObjectFileRemoveColumnLabel: {
+    key: 'canvas.inspector.objectFile.removeColumnLabel',
+    fallback: 'Remove column mapping',
+  },
+  inspectorObjectFileSourceFieldLabel: {
+    key: 'canvas.inspector.objectFile.sourceFieldLabel',
+    fallback: 'Source field',
+  },
+  inspectorObjectFileTargetColumnLabel: {
+    key: 'canvas.inspector.objectFile.targetColumnLabel',
+    fallback: 'Target column',
+  },
+  inspectorObjectFileDataTypeLabel: {
+    key: 'canvas.inspector.objectFile.dataTypeLabel',
+    fallback: 'PostgreSQL type',
+  },
+  inspectorObjectFileNullableLabel: {
+    key: 'canvas.inspector.objectFile.nullableLabel',
+    fallback: 'Nullable',
+  },
+  inspectorErrorObjectFileStorageUriInvalid: {
+    key: 'canvas.inspector.objectFile.errorStorageUriInvalid',
+    fallback: 'Use s3://<bucket>/tenants/<tenant>/<sha256> for the immutable object.',
+  },
+  inspectorErrorObjectFileSha256Invalid: {
+    key: 'canvas.inspector.objectFile.errorSha256Invalid',
+    fallback: 'SHA-256 must contain exactly 64 hexadecimal characters.',
+  },
+  inspectorErrorObjectFileSizeInvalid: {
+    key: 'canvas.inspector.objectFile.errorSizeInvalid',
+    fallback: 'Object size must be a positive admitted byte count.',
+  },
+  inspectorErrorObjectFileMaxBytesInvalid: {
+    key: 'canvas.inspector.objectFile.errorMaxBytesInvalid',
+    fallback: 'Maximum size must be positive, bounded, and not smaller than object size.',
+  },
+  inspectorErrorObjectFileSourceCredentialInvalid: {
+    key: 'canvas.inspector.objectFile.errorSourceCredentialInvalid',
+    fallback: 'Use an opaque object-store:<id> credential reference.',
+  },
+  inspectorErrorObjectFileTargetRelationInvalid: {
+    key: 'canvas.inspector.objectFile.errorTargetRelationInvalid',
+    fallback: 'Staging relation must be a valid lowercase PostgreSQL identifier.',
+  },
+  inspectorErrorObjectFileTargetCredentialInvalid: {
+    key: 'canvas.inspector.objectFile.errorTargetCredentialInvalid',
+    fallback: 'Use an opaque postgres:<id> credential reference.',
+  },
+  inspectorErrorObjectFileColumnMappingInvalid: {
+    key: 'canvas.inspector.objectFile.errorColumnMappingInvalid',
+    fallback: 'Add at least one unique, valid source-to-target column mapping.',
+  },
 } satisfies CanvasCopySection;

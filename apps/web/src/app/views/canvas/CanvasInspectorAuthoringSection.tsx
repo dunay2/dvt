@@ -17,6 +17,7 @@ import { canvasViewCopy } from './copy';
 import { DbtAuthoringFields } from './DbtAuthoringFields';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 import type { CanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
+import { ObjectFilePostgresAuthoringFields } from '../../plugins/objectFilePostgres/ObjectFilePostgresAuthoringFields';
 
 type CanvasInspectorAuthoringSectionProps = Readonly<{
   node: CanonicalNode;
@@ -56,9 +57,11 @@ export function CanvasInspectorAuthoringSection({
     (section === 'all' ||
       section === 'general' ||
       (section === 'code' && node.kind === 'dbt:model'));
+  const showObjectFilePostgresAuthoring =
+    draft.objectFilePostgres != null && (section === 'all' || section === 'general');
   const dvtAuthoringSection = section === 'sink' ? 'general' : section;
 
-  if (!showGeneral && !showDvtAuthoring && !showDbtAuthoring) {
+  if (!showGeneral && !showDvtAuthoring && !showDbtAuthoring && !showObjectFilePostgresAuthoring) {
     return null;
   }
 
@@ -142,6 +145,18 @@ export function CanvasInspectorAuthoringSection({
             errors={errors}
             section={dvtAuthoringSection}
             onChange={setDraft}
+          />
+        ) : null}
+
+        {showObjectFilePostgresAuthoring && draft.objectFilePostgres ? (
+          <ObjectFilePostgresAuthoringFields
+            nodeId={node.id}
+            disabled={!authoring.canEditNode}
+            draft={draft.objectFilePostgres}
+            errors={errors.objectFilePostgres}
+            onChange={(objectFilePostgres) =>
+              setDraft((currentDraft) => ({ ...currentDraft, objectFilePostgres }))
+            }
           />
         ) : null}
 

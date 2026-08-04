@@ -2,8 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import {
+  applyObjectFilePostgresAuthoringDraft,
+  createObjectFilePostgresAuthoringDraft,
   isObjectFilePostgresNode,
   projectObjectFilePostgresStepTypeConfig,
+  validateObjectFilePostgresAuthoringDraft,
 } from './objectFilePostgresAuthoringModel';
 
 const scope = {
@@ -97,5 +100,47 @@ describe('object-file PostgreSQL authoring model', () => {
     expect(isObjectFilePostgresNode(objectFileNode)).toBe(true);
     expect(isObjectFilePostgresNode({ ...objectFileNode, pluginId: 'dbt' })).toBe(false);
     expect(isObjectFilePostgresNode({ ...objectFileNode, kind: 'dvt:source' })).toBe(false);
+  });
+
+  it('round-trips the editable draft without persisting execution scope', () => {
+    const draft = createObjectFilePostgresAuthoringDraft(objectFileNode);
+    expect(draft).not.toBeNull();
+    if (draft == null) return;
+
+    expect(validateObjectFilePostgresAuthoringDraft(draft)).toEqual({
+      ok: true,
+      metadata: expect.objectContaining({
+        source: expect.objectContaining({ sha256: 'a'.repeat(64) }),
+        target: expect.objectContaining({ relation: 'orders' }),
+      }),
+    });
+    expect(
+      (
+        applyObjectFilePostgresAuthoringDraft(objectFileNode, draft).metadata
+          ?.objectFilePostgres as Record<string, unknown>
+      ).scope
+    ).toBeUndefined();
+  });
+
+  it('maps incomplete editable values to stable field errors', () => {
+    const draft = createObjectFilePostgresAuthoringDraft({
+      ...objectFileNode,
+      metadata: {},
+    });
+    expect(draft).not.toBeNull();
+    if (draft == null) return;
+
+    expect(validateObjectFilePostgresAuthoringDraft(draft)).toEqual({
+      ok: false,
+      errors: expect.objectContaining({
+        storageUri: 'object_file_storage_uri_invalid',
+        sha256: 'object_file_sha256_invalid',
+        sizeBytes: 'object_file_size_invalid',
+        sourceCredentialRef: 'object_file_source_credential_ref_invalid',
+        targetRelation: 'object_file_target_relation_invalid',
+        targetCredentialRef: 'object_file_target_credential_ref_invalid',
+        columns: 'object_file_column_mapping_invalid',
+      }),
+    });
   });
 });
