@@ -13,6 +13,7 @@ export {
 } from './DbtStepTypeConfig.js';
 export {
   DBT_STEP_REQUIRED_CAPABILITY,
+  LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE,
   LOAD_OBJECT_FILE_TO_POSTGRES_STEP_REQUIRED_CAPABILITY,
 } from './BuiltInStepTypeEntries.js';
 export type { DbtStepTypeConfig } from './DbtStepTypeConfig.js';

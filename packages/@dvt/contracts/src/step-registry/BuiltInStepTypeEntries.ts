@@ -25,6 +25,10 @@ type BuiltInStepTypeEntry = {
 export const DBT_STEP_REQUIRED_CAPABILITY = 'executor.dbt';
 export const LOAD_OBJECT_FILE_TO_POSTGRES_STEP_REQUIRED_CAPABILITY =
   LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY;
+export const LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE = {
+  supportedAdapters: ['temporal'],
+  requiredCapabilities: [LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY],
+} as const satisfies StepKindExecutionProfile;
 
 export function createBuiltInStepTypeEntries(
   defaultProfile: StepKindExecutionProfile
@@ -39,10 +43,7 @@ export function createBuiltInStepTypeEntries(
       KNOWN_STEP_KINDS.LOAD_OBJECT_FILE_TO_POSTGRES,
       {
         schema: LoadObjectFileToPostgresStepTypeConfigSchema,
-        profile: {
-          supportedAdapters: ['temporal'],
-          requiredCapabilities: [LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY],
-        },
+        profile: LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE,
         validateContext: (config, context) =>
           validateLoadObjectFileToPostgresPlanOwnership(config, context?.planOwnership),
       },

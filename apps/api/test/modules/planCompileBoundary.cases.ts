@@ -1,4 +1,8 @@
-import { SUPPORTED_START_RUN_TARGET_ADAPTERS } from '@dvt/contracts';
+import {
+  LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE,
+  LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND,
+  SUPPORTED_START_RUN_TARGET_ADAPTERS,
+} from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -13,11 +17,17 @@ import {
  */
 export function describePlanCompileBoundaryCases(): void {
   describe('planCompileBoundary', () => {
-    it('reuses the canonical startRun adapter set', () => {
+    it('reuses canonical execution profiles for every exposed step kind', () => {
       for (const definition of PLAN_COMPILE_BOUNDARY.catalog.stepKinds) {
-        expect(definition.executionProfile.supportedAdapters).toEqual(
-          SUPPORTED_START_RUN_TARGET_ADAPTERS
-        );
+        if (definition.kind === LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND) {
+          expect(definition.executionProfile).toEqual(
+            LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE
+          );
+        } else {
+          expect(definition.executionProfile.supportedAdapters).toEqual(
+            SUPPORTED_START_RUN_TARGET_ADAPTERS
+          );
+        }
       }
     });
 
