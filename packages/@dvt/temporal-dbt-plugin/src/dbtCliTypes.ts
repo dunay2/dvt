@@ -30,6 +30,7 @@ export type DbtRuntimeProfileMaterializer = (
 export interface DbtCliCommandOptions {
   readonly cwd: string;
   readonly signal?: globalThis.AbortSignal;
+  readonly env?: Readonly<Record<string, string>>;
 }
 
 export interface DbtCliCommandOutput {
@@ -42,3 +43,7 @@ export type DbtCliCommandRunner = (
   args: readonly string[],
   options: DbtCliCommandOptions
 ) => Promise<DbtCliCommandOutput>;
+
+export type DbtCommandEnvironmentResolver = (
+  input: DbtPluginExecutionInput
+) => Readonly<Record<string, string>>;
