@@ -1,6 +1,8 @@
 /**
  * @ownedConcern Publish bounded object-file rows into a PostgreSQL staging relation atomically.
  */
+import { createHash } from 'node:crypto';
+
 import type { LoadObjectFileToPostgresStepTypeConfig } from '@dvt/contracts';
 import type { PoolClient, QueryResult } from 'pg';
 
@@ -11,6 +13,7 @@ export type PostgresObjectFileScalar = string | number | boolean | null;
 
 export interface PostgresObjectFileLoadInput {
   readonly schema: 'staging';
+  readonly scope: LoadObjectFileToPostgresStepTypeConfig['scope'];
   readonly relation: string;
   readonly columns: LoadObjectFileToPostgresStepTypeConfig['columns'];
   readonly rows: readonly Readonly<Record<string, PostgresObjectFileScalar>>[];
@@ -20,6 +23,8 @@ export interface PostgresObjectFileLoadInput {
 export interface PostgresObjectFileLoadResult {
   readonly rowsWritten: number;
   readonly publicationOutcome: 'created' | 'replaced';
+  readonly targetSchema: string;
+  readonly targetRelation: string;
 }
 
 interface NormalizedObjectFileColumn {
@@ -36,7 +41,7 @@ export class PostgresObjectFileLoader {
 
   public async load(input: PostgresObjectFileLoadInput): Promise<PostgresObjectFileLoadResult> {
     assertNotAborted(input.signal);
-    const schema = normalizeObjectFileSchema(input.schema);
+    const schema = resolvePostgresObjectFileScopeSchema(input.schema, input.scope);
     const relation = normalizeSchema(input.relation);
     const columns = normalizeObjectFileColumns(input.columns);
     const target = `${quoteIdentifier(schema)}.${quoteIdentifier(relation)}`;
@@ -71,16 +76,29 @@ export class PostgresObjectFileLoader {
       return {
         rowsWritten: input.rows.length,
         publicationOutcome,
+        targetSchema: schema,
+        targetRelation: relation,
       };
     });
   }
 }
 
-function normalizeObjectFileSchema(schema: string): 'staging' {
+export function resolvePostgresObjectFileScopeSchema(
+  schema: string,
+  scope: LoadObjectFileToPostgresStepTypeConfig['scope']
+): string {
   if (schema !== 'staging') {
     throw new Error('POSTGRES_OBJECT_FILE_SCHEMA_INVALID');
   }
-  return schema;
+  const scopeParts = [scope.tenantId, scope.projectId, scope.environmentId];
+  if (scopeParts.some((value) => value.trim().length === 0)) {
+    throw new Error('POSTGRES_OBJECT_FILE_SCOPE_INVALID');
+  }
+  const scopeDigest = createHash('sha256')
+    .update(JSON.stringify(scopeParts))
+    .digest('hex')
+    .slice(0, 32);
+  return `${schema}_${scopeDigest}`;
 }
 
 function normalizeObjectFileColumns(

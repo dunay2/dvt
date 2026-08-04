@@ -1,7 +1,11 @@
 import { Client, Pool } from 'pg';
 import { describe, expect, it, vi } from 'vitest';
 
-import { PostgresObjectFileLoader, type PostgresObjectFileLoadInput } from '../src/index.js';
+import {
+  PostgresObjectFileLoader,
+  resolvePostgresObjectFileScopeSchema,
+  type PostgresObjectFileLoadInput,
+} from '../src/index.js';
 import { PostgresAdapterClientSession } from '../src/PostgresAdapterClientSession.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
 
@@ -11,23 +15,41 @@ describe('PostgresObjectFileLoader', () => {
   it('replaces a staging relation atomically using parameterized rows', async () => {
     const database = createFakeDatabase(false);
     const loader = createLoader(database.pool);
+    const physicalSchema = resolvePostgresObjectFileScopeSchema('staging', buildInput().scope);
 
     await expect(loader.load(buildInput())).resolves.toEqual({
       rowsWritten: 2,
       publicationOutcome: 'created',
+      targetSchema: physicalSchema,
+      targetRelation: 'orders_import',
     });
 
     expect(database.sql()).toEqual([
       'BEGIN',
       "SELECT set_config('statement_timeout', $1, true)",
-      'CREATE SCHEMA IF NOT EXISTS "staging"',
+      `CREATE SCHEMA IF NOT EXISTS "${physicalSchema}"`,
       'SELECT to_regclass($1) AS target_relation',
-      'DROP TABLE IF EXISTS "staging"."orders_import"',
-      'CREATE TABLE "staging"."orders_import" ("order_id" BIGINT NOT NULL, "amount" NUMERIC, "active" BOOLEAN NOT NULL)',
-      'INSERT INTO "staging"."orders_import" ("order_id", "amount", "active") VALUES ($1, $2, $3), ($4, $5, $6)',
+      `DROP TABLE IF EXISTS "${physicalSchema}"."orders_import"`,
+      `CREATE TABLE "${physicalSchema}"."orders_import" ("order_id" BIGINT NOT NULL, "amount" NUMERIC, "active" BOOLEAN NOT NULL)`,
+      `INSERT INTO "${physicalSchema}"."orders_import" ("order_id", "amount", "active") VALUES ($1, $2, $3), ($4, $5, $6)`,
       'COMMIT',
     ]);
     expect(database.valuesFor('INSERT INTO')).toEqual(['1', '10.25', true, '2', null, false]);
+  });
+
+  it('maps the same logical relation to distinct schemas for distinct scopes', async () => {
+    const tenantA = createFakeDatabase(false);
+    const tenantB = createFakeDatabase(false);
+
+    const first = await createLoader(tenantA.pool).load(buildInput());
+    const second = await createLoader(tenantB.pool).load({
+      ...buildInput(),
+      scope: { ...buildInput().scope, tenantId: 'tenant-b' },
+    });
+
+    expect(first.targetSchema).not.toBe(second.targetSchema);
+    expect(first.targetRelation).toBe('orders_import');
+    expect(second.targetRelation).toBe('orders_import');
   });
 
   it('reports replacement when the target relation already exists', async () => {
@@ -116,12 +138,16 @@ describeIfPg('PostgresObjectFileLoader integration', () => {
         })
       ).resolves.toMatchObject({ publicationOutcome: 'replaced', rowsWritten: 1 });
 
+      const physicalSchema = resolvePostgresObjectFileScopeSchema('staging', buildInput().scope);
       const result = await client.query<{ order_id: string }>(
-        `SELECT order_id::text FROM "staging".${quoteIdentifier(relation)} ORDER BY order_id`
+        `SELECT order_id::text FROM ${quoteIdentifier(physicalSchema)}.${quoteIdentifier(relation)} ORDER BY order_id`
       );
       expect(result.rows).toEqual([{ order_id: '3' }]);
     } finally {
-      await client.query(`DROP TABLE IF EXISTS "staging".${quoteIdentifier(relation)}`);
+      const physicalSchema = resolvePostgresObjectFileScopeSchema('staging', buildInput().scope);
+      await client.query(
+        `DROP TABLE IF EXISTS ${quoteIdentifier(physicalSchema)}.${quoteIdentifier(relation)}`
+      );
       await client.end();
       await session.close(true);
     }
@@ -141,6 +167,11 @@ function buildInput(
 ): PostgresObjectFileLoadInput {
   return {
     schema: 'staging',
+    scope: {
+      tenantId: 'tenant-a',
+      projectId: 'project-a',
+      environmentId: 'dev',
+    },
     relation: 'orders_import',
     columns: [
       { sourceField: 'order_id', targetColumn: 'order_id', dataType: 'bigint', nullable: false },

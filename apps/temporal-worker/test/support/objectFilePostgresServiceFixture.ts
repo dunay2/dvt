@@ -4,6 +4,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { resolvePostgresObjectFileScopeSchema } from '@dvt/adapter-postgres';
 import {
   LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
   MaterializationEvidenceSchema,
@@ -32,6 +33,7 @@ type MaterializationEvidence = ReturnType<typeof MaterializationEvidenceSchema.p
 
 export interface ObjectFilePostgresServiceFixture {
   readonly relation: string;
+  readonly targetSchema: string;
   readonly sha256: string;
   readonly sizeBytes: number;
   execute(runLabel: string): Promise<MaterializationEvidence>;
@@ -55,6 +57,11 @@ export async function withObjectFilePostgresServiceFixture(
   const sha256 = sha256Hex(csvBytes);
   const objectKey = `tenants/${config.tenantId}/${sha256}`;
   const storageUri = `s3://${config.bucket}/${objectKey}`;
+  const physicalSchema = resolvePostgresObjectFileScopeSchema('staging', {
+    tenantId: config.tenantId,
+    projectId: config.projectId,
+    environmentId: config.environmentId,
+  });
   const s3 = createS3Client(config);
   const postgres = new Client({ connectionString: config.connectionString });
   const shutdown = new globalThis.AbortController();
@@ -134,6 +141,7 @@ export async function withObjectFilePostgresServiceFixture(
 
     await verify({
       relation,
+      targetSchema: physicalSchema,
       sha256,
       sizeBytes: csvBytes.byteLength,
       execute: (runLabel) =>
@@ -150,7 +158,7 @@ export async function withObjectFilePostgresServiceFixture(
         }),
       readRows: async () => {
         const result = await postgres.query<ObjectFilePostgresResultRow>(
-          `SELECT order_id::text, amount::text, active FROM "staging"."${relation}" ORDER BY order_id`
+          `SELECT order_id::text, amount::text, active FROM "${physicalSchema}"."${relation}" ORDER BY order_id`
         );
         return result.rows;
       },
@@ -159,7 +167,9 @@ export async function withObjectFilePostgresServiceFixture(
     shutdown.abort();
     await workerRun;
     await temporal?.teardown();
-    await postgres.query(`DROP TABLE IF EXISTS "staging"."${relation}"`).catch(() => undefined);
+    await postgres
+      .query(`DROP TABLE IF EXISTS "${physicalSchema}"."${relation}"`)
+      .catch(() => undefined);
     await postgres.end().catch(() => undefined);
     await s3
       .send(new DeleteObjectCommand({ Bucket: config.bucket, Key: objectKey }))

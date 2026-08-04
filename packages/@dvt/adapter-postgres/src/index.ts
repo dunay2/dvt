@@ -98,6 +98,7 @@ export { PostgresDeliveryBufferPurgeStore } from './PostgresDeliveryBufferPurgeS
 export { PostgresRelationalExecutionCapability } from './PostgresRelationalExecutionCapability.js';
 export {
   PostgresObjectFileLoader,
+  resolvePostgresObjectFileScopeSchema,
   type PostgresObjectFileLoadInput,
   type PostgresObjectFileLoadResult,
   type PostgresObjectFileScalar,

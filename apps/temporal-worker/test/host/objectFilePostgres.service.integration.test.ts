@@ -10,7 +10,7 @@ describeIfServices('object-file PostgreSQL worker vertical', () => {
     await withObjectFilePostgresServiceFixture(async (fixture) => {
       await expect(fixture.execute('created')).resolves.toMatchObject({
         executor: 'postgres',
-        sinkTable: `staging.${fixture.relation}`,
+        sinkTable: `${fixture.targetSchema}.${fixture.relation}`,
         rowsWritten: 2,
         publicationOutcome: 'created',
         sourceArtifact: {

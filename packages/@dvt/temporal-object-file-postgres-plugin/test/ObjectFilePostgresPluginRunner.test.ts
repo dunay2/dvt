@@ -22,7 +22,7 @@ describe('ObjectFilePostgresPluginRunner', () => {
     const runner = createRunner(
       { read },
       {
-        load: vi.fn(async () => ({ rowsWritten: 2, publicationOutcome: 'created' as const })),
+        load: vi.fn(async () => buildLoadResult('created')),
       }
     );
 
@@ -38,7 +38,12 @@ describe('ObjectFilePostgresPluginRunner', () => {
       contentLength: SOURCE_BYTES.byteLength,
       contentType: 'text/csv',
     }));
-    const load = vi.fn(async () => ({ rowsWritten: 2, publicationOutcome: 'replaced' as const }));
+    const load = vi.fn(async () => ({
+      rowsWritten: 2,
+      publicationOutcome: 'replaced' as const,
+      targetSchema: 'staging_scope_a',
+      targetRelation: 'orders_import',
+    }));
     const runner = createRunner({ read }, { load });
 
     await expect(runner.execute(buildInput())).resolves.toMatchObject({
@@ -47,7 +52,7 @@ describe('ObjectFilePostgresPluginRunner', () => {
       resultEvidence: {
         executor: 'postgres',
         environmentId: 'dev',
-        sinkTable: 'staging.orders_import',
+        sinkTable: 'staging_scope_a.orders_import',
         rowsWritten: 2,
         sourceArtifact: {
           sha256: STEP_CONFIG.source.sha256,
@@ -60,6 +65,7 @@ describe('ObjectFilePostgresPluginRunner', () => {
     expect(load).toHaveBeenCalledWith(
       expect.objectContaining({
         schema: 'staging',
+        scope: STEP_CONFIG.scope,
         relation: 'orders_import',
         rows: [
           { order_id: '1', amount: '10.25', active: true },
@@ -147,7 +153,7 @@ describe('ObjectFilePostgresPluginRunner', () => {
         contentType: 'text/csv',
       }))
       .mockRejectedValueOnce(new Error('s3://user:secret@source/orders.csv'));
-    const load = vi.fn(async () => ({ rowsWritten: 2, publicationOutcome: 'created' as const }));
+    const load = vi.fn(async () => buildLoadResult('created'));
     const runner = createRunner({ read }, { load });
 
     await expect(runner.execute(buildInput())).rejects.toMatchObject({
@@ -165,7 +171,7 @@ describe('ObjectFilePostgresPluginRunner', () => {
       contentType: 'text/csv',
     }));
     const load = vi
-      .fn(async () => ({ rowsWritten: 2, publicationOutcome: 'created' as const }))
+      .fn(async () => buildLoadResult('created'))
       .mockRejectedValueOnce(new Error('invalid input value from source payload'));
     const runner = createRunner({ read }, { load });
 
@@ -259,5 +265,14 @@ function buildInput(): ObjectFilePostgresPluginExecutionInput {
       environmentId: 'dev',
     },
     runContext: RUN_CONTEXT,
+  };
+}
+
+function buildLoadResult(publicationOutcome: 'created' | 'replaced') {
+  return {
+    rowsWritten: 2,
+    publicationOutcome,
+    targetSchema: 'staging_scope_a',
+    targetRelation: 'orders_import',
   };
 }

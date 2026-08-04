@@ -26,6 +26,7 @@ export interface ContentAddressedObjectReader {
 
 export interface ObjectFilePostgresLoadInput {
   readonly schema: 'staging';
+  readonly scope: LoadObjectFileToPostgresStepTypeConfig['scope'];
   readonly relation: string;
   readonly columns: LoadObjectFileToPostgresStepTypeConfig['columns'];
   readonly rows: readonly ObjectFilePostgresRow[];
@@ -35,6 +36,8 @@ export interface ObjectFilePostgresLoadInput {
 export interface ObjectFilePostgresLoadResult {
   readonly rowsWritten: number;
   readonly publicationOutcome: 'created' | 'replaced';
+  readonly targetSchema: string;
+  readonly targetRelation: string;
 }
 
 export interface ObjectFilePostgresRelationalLoader {

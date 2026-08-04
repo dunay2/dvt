@@ -60,7 +60,7 @@ export class ObjectFilePostgresPluginRunnerImpl implements ObjectFilePostgresPlu
       resultEvidence: MaterializationEvidenceSchema.parse({
         executor: 'postgres',
         environmentId: input.runContext.environmentId,
-        sinkTable: `${input.config.target.schema}.${input.config.target.relation}`,
+        sinkTable: `${loaded.targetSchema}.${loaded.targetRelation}`,
         rowsWritten: loaded.rowsWritten,
         sourceArtifact: {
           sha256: input.config.source.sha256,
@@ -177,6 +177,7 @@ async function loadRowsSafely(
   try {
     return await loader.load({
       schema: input.config.target.schema,
+      scope: input.config.scope,
       relation: input.config.target.relation,
       columns: input.config.columns,
       rows,

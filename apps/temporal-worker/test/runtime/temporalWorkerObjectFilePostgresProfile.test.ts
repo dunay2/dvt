@@ -39,6 +39,8 @@ describe('createTemporalWorkerObjectFilePostgresProfile', () => {
     const load = vi.fn(async () => ({
       rowsWritten: 1,
       publicationOutcome: 'created' as const,
+      targetSchema: 'staging_scope_1',
+      targetRelation: 'orders',
     }));
     const profile = createTemporalWorkerObjectFilePostgresProfile(
       createEnv({
@@ -127,10 +129,16 @@ describe('createTemporalWorkerObjectFilePostgresProfile', () => {
       uri: `s3://het1-fixtures/tenants/tenant-1/${createHash('sha256')
         .update(csvBytes)
         .digest('hex')}`,
+      maxBytes: 1024,
     });
     expect(load).toHaveBeenCalledWith(
       expect.objectContaining({
         schema: 'staging',
+        scope: {
+          tenantId: 'tenant-1',
+          projectId: 'project-1',
+          environmentId: 'environment-1',
+        },
         relation: 'orders',
         rows: [{ order_id: 1, amount: '12.50' }],
       })

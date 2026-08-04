@@ -165,6 +165,8 @@ describe('createTemporalWorkerRuntime', () => {
         load: vi.fn(async (input) => ({
           rowsWritten: input.rows.length,
           publicationOutcome: 'created' as const,
+          targetSchema: 'staging_scope_test',
+          targetRelation: input.relation,
         })),
         close: closePostgresCapability,
       }),
