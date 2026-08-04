@@ -92,6 +92,7 @@ export function connectCanvasNodes(sourceName: string, targetName: string): void
 }
 
 export function openNodeWorkbenchSection(sectionId: string): void {
+  cy.get('[data-slot="canvas-node-workbench-tabs-list"]').scrollIntoView().should('be.visible');
   cy.get('body').then(($body) => {
     const directTab = $body.find(`[data-slot="canvas-node-workbench-tab-${sectionId}"]:visible`);
 
