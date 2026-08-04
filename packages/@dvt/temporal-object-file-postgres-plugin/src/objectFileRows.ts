@@ -146,6 +146,9 @@ function parseInteger(value: unknown, column: ObjectFileColumn): number {
 }
 
 function parseBigInt(value: unknown, column: ObjectFileColumn): string {
+  if (typeof value === 'number' && !Number.isSafeInteger(value)) {
+    rejectField(column, 'bigint encoded as a safe integer or decimal string');
+  }
   const token = String(value);
   if (!/^-?\d+$/u.test(token)) {
     rejectField(column, 'bigint');

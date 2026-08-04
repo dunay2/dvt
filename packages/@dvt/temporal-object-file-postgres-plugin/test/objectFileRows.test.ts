@@ -32,6 +32,24 @@ describe('parseObjectFileRows', () => {
     ).resolves.toEqual([{ order_id: '7', amount: '3.50', active: true }]);
   });
 
+  it('rejects unsafe JSON numbers before they can corrupt bigint identity', async () => {
+    const source = {
+      ...STEP_CONFIG.source,
+      format: 'jsonl' as const,
+      mediaType: 'application/x-ndjson' as const,
+    };
+    delete (source as Partial<typeof STEP_CONFIG.source>).header;
+    delete (source as Partial<typeof STEP_CONFIG.source>).delimiter;
+
+    await expect(
+      parseObjectFileRows(
+        Buffer.from('{"order_id":9007199254740993,"amount":"3.50","active":true}\n'),
+        source,
+        STEP_CONFIG.columns
+      )
+    ).rejects.toMatchObject({ name: 'ObjectFileIngestionRejectedError' });
+  });
+
   it.each([
     ['missing required field', 'order_id,amount,active\n,10.25,true\n'],
     ['invalid bigint', 'order_id,amount,active\n1.5,10.25,true\n'],
