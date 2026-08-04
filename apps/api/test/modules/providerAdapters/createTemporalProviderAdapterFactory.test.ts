@@ -149,6 +149,23 @@ describe('createTemporalProviderAdapterFactory', () => {
       })
     );
   });
+
+  it('declares object-file PostgreSQL capability only when its worker profile is enabled', async () => {
+    const factory = createTemporalProviderAdapterFactory();
+
+    await factory.build(
+      createContext({
+        TEMPORAL_ADDRESS: 'temporal.test:7233',
+        DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: 'true',
+      })
+    );
+
+    expect(temporalAdapterDepsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        additionalCapabilities: ['executor.object-file-postgres-load'],
+      })
+    );
+  });
 });
 
 function createContext(envOverrides: Record<string, string>): ProviderAdapterFactoryContext {
