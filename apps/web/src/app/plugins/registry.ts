@@ -95,6 +95,7 @@ import { costContributions } from './cost/costContributions';
 import { dbtContributions } from './dbt/dbtContributions';
 import { dvtContributions, dvtWarehouseSourceContributions } from './dvt/dvtContributions';
 import { monitoringContributions } from './monitoring/monitoringContributions';
+import { objectFilePostgresContributions } from './objectFilePostgres/objectFilePostgresContributions';
 
 export type RuntimeCapabilities = {
   plugins: Record<string, { available: boolean; reason?: string }>;
@@ -167,6 +168,7 @@ function isPluginAvailableAtRuntime(
 
 const ALL_PLUGIN_CONTRIBUTIONS: PluginContributions[] = [
   dbtContributions,
+  objectFilePostgresContributions,
   dvtWarehouseSourceContributions,
   dvtContributions,
   monitoringContributions,
