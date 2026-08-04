@@ -4,10 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { PostgresPlanStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import {
-  asIsoUtcString,
-  asNonBlankString,
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
@@ -16,7 +13,6 @@ import {
   parseRunExecutionContextRef,
   RUN_PLAN_WORKFLOW,
   type ExecutionPlan,
-  type PlanRef,
 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
@@ -27,6 +23,11 @@ import { runTemporalWorkerHost } from '../../src/host/runTemporalWorkerHost.js';
 import { createOperationalServer } from '../../src/ops/OperationalServer.js';
 import { TemporalWorkerMonitor } from '../../src/ops/TemporalWorkerMonitor.js';
 import { loadEnv } from '../../src/plugins/env.js';
+import {
+  bootstrapRunMetadata,
+  storeValidPlanArtifact,
+  waitForRunCompleted,
+} from '../support/temporalWorkerServiceTestSupport.js';
 
 describe('runTemporalWorkerHost', () => {
   it('starts runtime, waits for abort, and stops cleanly', async () => {
@@ -390,50 +391,6 @@ async function createDbtProjectBundle(args: {
   };
 }
 
-async function storeValidPlanArtifact(args: {
-  connectionString: string;
-  schema: string;
-  plan: ExecutionPlan;
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-}): Promise<PlanRef> {
-  const store = new PostgresPlanStore({
-    connectionString: args.connectionString,
-    schema: args.schema,
-    toExecutablePlan: (buildResult) => ({
-      schemaVersion: buildResult.plan.metadata.schemaVersion,
-      text: JSON.stringify(buildResult.plan),
-    }),
-  });
-
-  try {
-    await store.migrate();
-    const planRef = await store.storePlanArtifact({
-      buildResult: {
-        plan: args.plan,
-        executionPolicy: {},
-        canonicalPlanCoreJson: jcsCanonicalize({
-          metadata: {
-            planVersion: args.plan.metadata.planVersion,
-            inputHashSha256: args.plan.metadata.inputHashSha256,
-          },
-          steps: args.plan.steps,
-        }),
-      },
-    });
-    await store.markStoredPlanArtifactValid({
-      tenantId: args.tenantId,
-      projectId: args.projectId,
-      environmentId: args.environmentId,
-      planRef,
-    });
-    return planRef;
-  } finally {
-    await store.close();
-  }
-}
-
 function createDbtExecutionPlan(args: {
   tenantId: string;
   projectId: string;
@@ -482,73 +439,6 @@ function createDbtExecutionPlan(args: {
     },
     steps,
   });
-}
-
-async function bootstrapRunMetadata(args: {
-  connectionString: string;
-  schema: string;
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  namespace: string;
-  taskQueue: string;
-  runId: string;
-  planRef: PlanRef;
-}): Promise<void> {
-  const stateStore = new PostgresStateStoreAdapter({
-    connectionString: args.connectionString,
-    schema: args.schema,
-  });
-
-  try {
-    await stateStore.migrate();
-    await stateStore.bootstrapRunTx({
-      metadata: {
-        tenantId: args.tenantId,
-        projectId: args.projectId,
-        environmentId: args.environmentId,
-        runId: args.runId,
-        planId: args.planRef.planId,
-        planVersion: args.planRef.planVersion,
-        logicalAttemptId: 1,
-        originRunId: args.runId,
-        providerRef: {
-          provider: 'temporal',
-          tenantId: asNonBlankString(args.tenantId),
-          namespace: asNonBlankString(args.namespace),
-          workflowId: asNonBlankString(args.runId),
-          runId: asNonBlankString(args.runId),
-          taskQueue: asNonBlankString(args.taskQueue),
-        },
-        createdAt: asIsoUtcString('2026-05-14T00:00:00.000Z'),
-      },
-      firstEvents: [],
-    });
-  } finally {
-    await stateStore.close();
-  }
-}
-
-async function waitForRunCompleted(args: {
-  connectionString: string;
-  schema: string;
-  tenantId: string;
-  runId: string;
-}): Promise<Array<{ eventType: string; stepId?: string }>> {
-  const stateStore = new PostgresStateStoreAdapter({
-    connectionString: args.connectionString,
-    schema: args.schema,
-    assumeSchemaReady: true,
-  });
-
-  try {
-    return await waitForAsync(async () => {
-      const events = await stateStore.listEvents(args.tenantId, args.runId);
-      return events.some((event) => event.eventType === 'RunCompleted') ? events : false;
-    });
-  } finally {
-    await stateStore.close();
-  }
 }
 
 async function getOperationalJson(
