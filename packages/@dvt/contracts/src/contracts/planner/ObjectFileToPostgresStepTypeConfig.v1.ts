@@ -10,7 +10,7 @@
  */
 import { z } from 'zod';
 
-import { CommonStepTypeConfigSchema } from '../../step-registry/DbtStepTypeConfig.js';
+import { CommonStepTypeConfigSchema } from '../../step-registry/CommonStepTypeConfig.js';
 import {
   CREDENTIAL_REFERENCE_MESSAGE,
   isCredentialReference,
