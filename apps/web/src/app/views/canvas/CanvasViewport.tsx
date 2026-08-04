@@ -26,6 +26,7 @@ import {
   useCanvasContextMenuPresenter,
   type CanvasContextMenuPresenter,
 } from './useCanvasContextMenuPresenter';
+import { useCanvasGraphSearchActivation } from './useCanvasGraphSearchActivation';
 import { useCanvasGraphSearchController } from './useCanvasGraphSearchController';
 import { useCanvasViewportLifecycle } from './useCanvasViewportLifecycle';
 
@@ -81,6 +82,11 @@ function CanvasViewportWithPresenter({
   const reactFlow = useReactFlow<Node, Edge>();
   const copy = resolveCanvasViewCopy();
   const graphSearchController = useCanvasGraphSearchController({ nodes: props.nodesWithImpact });
+  const canSelectNodes = props.canSelectNodes ?? props.canEditEdges;
+  const graphSearchActivationPort = useMemo(
+    () => ({ fitView: reactFlow.fitView, onNodesChange: props.onNodesChange }),
+    [props.onNodesChange, reactFlow.fitView]
+  );
   const viewportRef = useRef<HTMLDivElement>(null);
   const [nodeContextSurfaceState, dispatchNodeContextSurface] = useReducer(
     reduceCanvasNodeContextSurface,
@@ -365,12 +371,18 @@ function CanvasViewportWithPresenter({
     [closeNodeHealthPopover, props.onNodeClick]
   );
 
+  useCanvasGraphSearchActivation({
+    activeNodeId: graphSearchController.model.activeNodeId,
+    nodes: props.nodesWithImpact,
+    canSelectNodes,
+    port: graphSearchActivationPort,
+  });
+
   useCanvasViewportLifecycle({
     viewportRef,
     canvasStyle,
     viewport: props.viewport,
     importedNodeFocusIds: props.importedNodeFocusIds,
-    activeSearchNodeId: graphSearchController.model.activeNodeId,
     nodesWithImpact: props.nodesWithImpact,
     onImportedNodeFocusComplete: props.onImportedNodeFocusComplete,
     reactFlow,
@@ -382,7 +394,7 @@ function CanvasViewportWithPresenter({
       resolvedCanvasPalette={resolvedCanvasPalette}
       canEditEdges={props.canEditEdges}
       canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
-      canSelectNodes={props.canSelectNodes ?? props.canEditEdges}
+      canSelectNodes={canSelectNodes}
       nodesWithImpact={graphSearchPresentation.nodes}
       edges={graphSearchPresentation.edges}
       nodeTypes={props.nodeTypes}

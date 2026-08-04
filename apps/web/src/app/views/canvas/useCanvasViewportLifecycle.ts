@@ -26,7 +26,6 @@ type CanvasViewportLifecycleArgs = Readonly<{
   canvasStyle: CSSProperties;
   viewport: CanvasViewportPosition | null;
   importedNodeFocusIds: readonly string[];
-  activeSearchNodeId: string | null;
   nodesWithImpact: Node[];
   onImportedNodeFocusComplete: () => void;
   reactFlow: CanvasViewportReactFlowApi;
@@ -37,7 +36,6 @@ export function useCanvasViewportLifecycle({
   canvasStyle,
   viewport,
   importedNodeFocusIds,
-  activeSearchNodeId,
   nodesWithImpact,
   onImportedNodeFocusComplete,
   reactFlow,
@@ -57,26 +55,6 @@ export function useCanvasViewportLifecycle({
 
     reactFlow.setViewport(viewport, { duration: 0 }).catch(() => undefined);
   }, [reactFlow, viewport]);
-
-  useEffect(() => {
-    if (activeSearchNodeId == null) {
-      return;
-    }
-
-    const activeSearchNode = nodesWithImpact.find((node) => node.id === activeSearchNodeId);
-    if (activeSearchNode == null) {
-      return;
-    }
-
-    reactFlow
-      .fitView({
-        nodes: [activeSearchNode],
-        padding: 0.5,
-        maxZoom: 0.9,
-        duration: 180,
-      })
-      .catch(() => undefined);
-  }, [activeSearchNodeId, nodesWithImpact, reactFlow]);
 
   useEffect(() => {
     if (importedNodeFocusIds.length === 0) {
