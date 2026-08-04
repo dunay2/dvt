@@ -1,5 +1,60 @@
 # Changelog
 
+## 0.6.0 (2026-08-04)
+
+## What's Changed
+* fix(dbt): Publish graph workspace artifacts atomically by @dunay2 in https://github.com/dunay2/dvt/pull/2040
+* fix(ci): Recover canonical Planning DB state by @dunay2 in https://github.com/dunay2/dvt/pull/2109
+* feat(ci): Project Planning DB status to GitHub by @dunay2 in https://github.com/dunay2/dvt/pull/2110
+* fix(web): Normalize generated template SQL terminators by @dunay2 in https://github.com/dunay2/dvt/pull/2111
+* refactor(ci): Retire duplicate local planning authority by @dunay2 in https://github.com/dunay2/dvt/pull/2112
+* fix(web): Enforce canonical DBT authoring authority by @dunay2 in https://github.com/dunay2/dvt/pull/2113
+* feat(contracts): Define canonical plan admission findings by @dunay2 in https://github.com/dunay2/dvt/pull/2114
+* test(web): Align canvas draft tests with canonical authority by @dunay2 in https://github.com/dunay2/dvt/pull/2115
+* feat(contracts): Publish typed plan preview outcomes by @dunay2 in https://github.com/dunay2/dvt/pull/2116
+* feat(web): Map preview outcomes into Canvas readiness by @dunay2 in https://github.com/dunay2/dvt/pull/2117
+* feat(web): Render typed Plan Preview rejection outcomes by @dunay2 in https://github.com/dunay2/dvt/pull/2118
+* test(web): Prove typed Plan Preview outcomes end to end by @dunay2 in https://github.com/dunay2/dvt/pull/2119
+* feat(api): Add server-authoritative selected DBT analysis by @dunay2 in https://github.com/dunay2/dvt/pull/2120
+* feat(api): Apply lossless DBT dependency patches by @dunay2 in https://github.com/dunay2/dvt/pull/2121
+* feat(web): Replace peer Canvas routes with contextual surfaces by @dunay2 in https://github.com/dunay2/dvt/pull/2122
+* feat(web): Define canonical RunEventFeed state model by @dunay2 in https://github.com/dunay2/dvt/pull/2123
+* feat(web): Share incremental run event feed by @dunay2 in https://github.com/dunay2/dvt/pull/2124
+* feat(web): Add recoverable run event feed semantics by @dunay2 in https://github.com/dunay2/dvt/pull/2125
+* feat(web): Share RunEventFeed health across Console and Runs by @dunay2 in https://github.com/dunay2/dvt/pull/2126
+* test(web): Prove recoverable RunEventFeed evidence by @dunay2 in https://github.com/dunay2/dvt/pull/2127
+* feat(planner): Expose execution decisions in Plan Preview by @dunay2 in https://github.com/dunay2/dvt/pull/2128
+* fix(web): Contain active plugin failures by @dunay2 in https://github.com/dunay2/dvt/pull/2129
+* feat(web): Reconcile plugin catalog runtime states by @dunay2 in https://github.com/dunay2/dvt/pull/2130
+* feat(web): Emit privacy-safe frontend operability telemetry by @dunay2 in https://github.com/dunay2/dvt/pull/2131
+* feat(web): Close critical shell and Canvas keyboard focus gaps by @dunay2 in https://github.com/dunay2/dvt/pull/2132
+* perf(web): Protect critical Canvas operations at 1,000 nodes by @dunay2 in https://github.com/dunay2/dvt/pull/2133
+* fix(web): Keep Canvas render rail active by @dunay2 in https://github.com/dunay2/dvt/pull/2134
+* docs(docs): Reconcile active MVP repository truth by @dunay2 in https://github.com/dunay2/dvt/pull/2142
+* feat(api): Add authoritative run cancellation and recovery by @dunay2 in https://github.com/dunay2/dvt/pull/2151
+* feat(temporal): Resolve DBT credentials at runtime by @dunay2 in https://github.com/dunay2/dvt/pull/2172
+* feat(adapters): Export protected StartRun traces by @dunay2 in https://github.com/dunay2/dvt/pull/2175
+* feat(ci): Prove supported runtime recovery by @dunay2 in https://github.com/dunay2/dvt/pull/2198
+* refactor(web): Remove exhausted data-source strategy by @dunay2 in https://github.com/dunay2/dvt/pull/2199
+* refactor(web): Converge startup readiness state by @dunay2 in https://github.com/dunay2/dvt/pull/2200
+* refactor(web): Remove exhausted source import capability state by @dunay2 in https://github.com/dunay2/dvt/pull/2202
+* refactor(web): Converge workspace plugin catalog composition ownership by @dunay2 in https://github.com/dunay2/dvt/pull/2204
+* refactor(web): Remove exhausted frontend query declarations by @dunay2 in https://github.com/dunay2/dvt/pull/2206
+* refactor(web): Converge runtime capability query ownership by @dunay2 in https://github.com/dunay2/dvt/pull/2208
+* refactor(web): Remove exhausted plugin registry facades by @dunay2 in https://github.com/dunay2/dvt/pull/2210
+* refactor(web): Remove exhausted dynamic plugin lifecycle by @dunay2 in https://github.com/dunay2/dvt/pull/2212
+* refactor(web): Remove exhausted transformation connection guard shell by @dunay2 in https://github.com/dunay2/dvt/pull/2214
+* feat(web): Define Canvas graph search contract by @dunay2 in https://github.com/dunay2/dvt/pull/2215
+* feat(web): Implement deterministic Canvas graph search by @dunay2 in https://github.com/dunay2/dvt/pull/2216
+* feat(web): Add Canvas graph search keyboard control by @dunay2 in https://github.com/dunay2/dvt/pull/2217
+* feat(web): Highlight Canvas graph search results by @dunay2 in https://github.com/dunay2/dvt/pull/2218
+* feat(web): Focus active Canvas graph search results by @dunay2 in https://github.com/dunay2/dvt/pull/2219
+* feat(web): Add composable Canvas graph filters by @dunay2 in https://github.com/dunay2/dvt/pull/2220
+* test(web): Align Canvas chrome expectation with graph filter by @dunay2 in https://github.com/dunay2/dvt/pull/2221
+
+
+**Full Changelog**: https://github.com/dunay2/dvt/compare/v0.5.3...v0.6.0
+
 ## 0.5.3 (2026-07-21)
 
 ## What's Changed
