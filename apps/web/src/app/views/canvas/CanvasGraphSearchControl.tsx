@@ -1,6 +1,6 @@
 /** Owned concern: render the accessible Canvas graph search control from a presentation model. */
 import { ChevronDown, ChevronUp, Search, X } from 'lucide-react';
-import { useEffect, useId, type KeyboardEventHandler, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type KeyboardEventHandler, type ReactNode } from 'react';
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -33,11 +33,24 @@ export function CanvasGraphSearchControl({
   onKeyDown,
 }: CanvasGraphSearchControlProps): JSX.Element | null {
   const inputId = useId();
+  const restoreFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (model.open) {
-      document.getElementById(inputId)?.focus();
+    if (!model.open) {
+      return;
     }
+
+    restoreFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    document.getElementById(inputId)?.focus();
+
+    return () => {
+      const restoreFocusTarget = restoreFocusRef.current;
+      restoreFocusRef.current = null;
+      if (restoreFocusTarget?.isConnected) {
+        restoreFocusTarget.focus();
+      }
+    };
   }, [inputId, model.open]);
 
   if (!model.open) {

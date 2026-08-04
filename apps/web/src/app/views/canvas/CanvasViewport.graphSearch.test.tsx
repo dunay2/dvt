@@ -52,6 +52,7 @@ describe('CanvasViewport graph search', () => {
       fireEvent.keyDown(input, { key: 'Escape' });
     });
     expect(harness.container.querySelector('[data-slot="canvas-graph-search-control"]')).toBeNull();
+    expect(document.activeElement).toBe(surface);
 
     act(() => {
       fireEvent.keyDown(surface, { key: 'f', metaKey: true });
