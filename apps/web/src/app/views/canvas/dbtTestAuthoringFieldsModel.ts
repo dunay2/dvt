@@ -1,5 +1,6 @@
 /** Owned concern: project connected DBT model targets and their columns for test authoring. */
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { resolveConnectedDbtTestTargets } from './canvasDbtTestTargetPolicy';
 
 export type DbtTestTargetOption = Readonly<{
   value: string;
@@ -19,12 +20,8 @@ type BuildDbtTestAuthoringFieldsModelArgs = Readonly<{
   targetModelId: string;
 }>;
 
-function isDbtModel(node: CanonicalNode | undefined): node is CanonicalNode {
-  return node?.pluginId === 'dbt' && node.kind === 'dbt:model';
-}
-
 function readColumnNames(node: CanonicalNode | undefined): readonly string[] {
-  if (!isDbtModel(node) || !Array.isArray(node.metadata?.columns)) return [];
+  if (!node || !Array.isArray(node.metadata?.columns)) return [];
 
   const names = node.metadata.columns.flatMap((column) => {
     if (column === null || typeof column !== 'object' || Array.isArray(column)) return [];
@@ -39,16 +36,16 @@ export function buildDbtTestAuthoringFieldsModel(
   args: BuildDbtTestAuthoringFieldsModelArgs
 ): DbtTestAuthoringFieldsModel {
   const nodeById = new Map(args.nodes.map((node) => [node.id, node]));
-  const targetNodes = args.edges
-    .filter((edge) => edge.targetId === args.node.id)
-    .map((edge) => nodeById.get(edge.sourceId))
-    .filter(isDbtModel);
-  const uniqueTargetNodes = [...new Map(targetNodes.map((node) => [node.id, node])).values()];
-  const targetOptions = uniqueTargetNodes.map((node) => ({ value: node.id, label: node.name }));
+  const targetNodes = resolveConnectedDbtTestTargets({
+    testNodeId: args.node.id,
+    nodes: args.nodes,
+    edges: args.edges,
+  });
+  const targetOptions = targetNodes.map((node) => ({ value: node.id, label: node.name }));
   const requestedTargetId = args.targetModelId.trim();
-  const selectedTargetModelId = uniqueTargetNodes.some((node) => node.id === requestedTargetId)
+  const selectedTargetModelId = targetNodes.some((node) => node.id === requestedTargetId)
     ? requestedTargetId
-    : (uniqueTargetNodes[0]?.id ?? '');
+    : (targetNodes[0]?.id ?? '');
 
   return {
     targetOptions,
