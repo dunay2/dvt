@@ -133,24 +133,45 @@
       "dddOwner": "CanvasGraphFilter",
       "railStatus": "implemented",
       "symbolRefs": [
-        "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph"
+        "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphFilters",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#DraftSnapshot",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#addDbtNode",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#waitForDraftNodeCount",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch"
       ],
       "implementationRefs": [
-        "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph"
+        "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphFilters",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#DraftSnapshot",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#addDbtNode",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#waitForDraftNodeCount",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch"
       ],
-      "documentationRefs": ["https://github.com/dunay2/dvt/issues/2069"],
+      "documentationRefs": [
+        "https://github.com/dunay2/dvt/issues/2069",
+        "https://github.com/dunay2/dvt/issues/2070"
+      ],
       "governingSources": [
         "docs/architecture/command-query-rail-governance.md",
         "docs/architecture/fowler-opportunity-planning-governance.md"
       ],
-      "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas/**"],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/views/canvas/**",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+        "tools/planning-db/state/canonical-state.json"
+      ],
       "architectureGuards": [
-        "Search and filters remain independent over the same Canvas node projection"
+        "Search and filters remain independent over the same Canvas node projection",
+        "Search and filter browser proof must not mutate the workspace graph draft",
+        "Filter-specific executable evidence belongs to FilterCanvasGraph"
       ],
       "completionGate": [
         "pnpm --filter @dvt/web typecheck",
         "pnpm --filter @dvt/web lint",
-        "pnpm verify:prepush"
+        "pnpm verify:prepush",
+        "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-FILTER-2069",
+        "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
       "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
@@ -168,37 +189,137 @@
             "cqRails": ["FilterCanvasGraph"],
             "dddOwner": "CanvasGraphFilter",
             "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Pure read model projection with explicit published language",
+              "Protected browser evidence exercises the existing filter query without mutating the persisted graph",
+              "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
+              "DB-first ownership evidence is exported through canonical state",
+              "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+          },
+          {
+            "name": "openGraphFilters",
+            "path": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Pure read model projection with explicit published language",
+              "Protected browser evidence exercises the existing filter query without mutating the persisted graph",
+              "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
+              "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+          },
+          {
+            "name": "DraftSnapshot",
+            "path": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
               "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts"
             ],
             "fowlerSignals": [
-              "Pure read model projection with explicit published language"
+              "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
+              "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
             ],
-            "cypressCoverage": "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
-            "architectureGuard": "Search and filters remain independent over the same Canvas node projection"
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+          },
+          {
+            "name": "addDbtNode",
+            "path": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
+              "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+          },
+          {
+            "name": "waitForDraftNodeCount",
+            "path": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts"
+            ],
+            "fowlerSignals": [
+              "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
+              "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
+          },
+          {
+            "name": "openGraphSearch",
+            "path": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "cqRails": ["FilterCanvasGraph"],
+            "dddOwner": "CanvasGraphFilter",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+            ],
+            "fowlerSignals": [
+              "Protected browser evidence exercises the composed query flow without mutating the persisted graph"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
           }
         ],
         "version": 1,
         "featureId": "CANVAS-GRAPH-FILTER-2069",
-        "userStories": ["https://github.com/dunay2/dvt/issues/173"],
+        "userStories": [
+          "https://github.com/dunay2/dvt/issues/173",
+          "https://github.com/dunay2/dvt/issues/2070"
+        ],
         "cypressFlows": [
-          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
         ],
         "domainObjects": ["CanvasGraphFilterQuery"],
         "fowlerSignals": [
-          "Pure read model projection with explicit published language"
+          "Pure read model projection with explicit published language",
+          "Protected browser evidence exercises the existing filter query without mutating the persisted graph",
+          "Protected browser evidence exercises the composed query flow without mutating the persisted graph",
+          "DB-first ownership evidence is exported through canonical state",
+          "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
         ],
         "completionGate": [
           "pnpm --filter @dvt/web typecheck",
           "pnpm --filter @dvt/web lint",
-          "pnpm verify:prepush"
+          "pnpm verify:prepush",
+          "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-FILTER-2069",
+          "pnpm docs:feature-mechanization:implementation"
         ],
         "redGreenCycles": [
           {
             "id": "filtercanvasgraph-record",
-            "redTest": "Composed predicates and clearing behavior fail before the filter query exists.",
-            "greenTest": "FilterCanvasGraph deterministically returns matching ids without mutating nodes or edges.",
-            "patchSurfaces": ["apps/web/src/app/views/canvas/**"],
-            "expectedFailure": "No Canvas filter contract or query currently exists."
+            "redTest": "The combined protected-browser proof attributes search-specific actions to FilterCanvasGraph.",
+            "greenTest": "pnpm docs:feature-mechanization:implementation",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/**",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+              "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+              "tools/planning-db/state/canonical-state.json"
+            ],
+            "expectedFailure": "FilterCanvasGraph owns openGraphSearch instead of only its filter action and neutral proof harness."
           }
         ],
         "componentGuides": [
@@ -217,17 +338,23 @@
           }
         ],
         "architectureGuards": [
-          "Search and filters remain independent over the same Canvas node projection"
+          "Search and filters remain independent over the same Canvas node projection",
+          "Search and filter browser proof must not mutate the workspace graph draft",
+          "Filter-specific executable evidence belongs to FilterCanvasGraph"
         ],
         "implementationPlan": "https://github.com/dunay2/dvt/issues/2069",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
-        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas/**"],
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "tools/planning-db/state/canonical-state.json"
+        ],
         "forbiddenImplementationSurfaces": [
           "Persisted graph content and execution state"
         ]
       },
-      "revision": 1,
+      "revision": 5,
       "createdBy": "codex",
       "createdAt": "2026-08-04T06:14:05.920Z"
     },
@@ -475,11 +602,7 @@
         "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#appendClassName",
         "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#isActiveConnectivity",
         "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#resolveNodeClassName",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#DraftSnapshot",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#addDbtNode",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#waitForDraftNodeCount",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphFilters"
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch"
       ],
       "implementationRefs": [
         "apps/web/src/app/views/canvas/canvasGraphSearch.contract.ts#CANVAS_GRAPH_SEARCH_FIELDS",
@@ -531,11 +654,7 @@
         "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#appendClassName",
         "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#isActiveConnectivity",
         "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts#resolveNodeClassName",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#DraftSnapshot",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#addDbtNode",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#waitForDraftNodeCount",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphFilters"
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch"
       ],
       "documentationRefs": [
         "https://github.com/dunay2/dvt/issues/2064",
@@ -566,9 +685,9 @@
         "apps/web/src/styles/theme.css",
         "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
         "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts",
-        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-        "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
-        "tools/planning-db/state/canonical-state.json"
+        "tools/planning-db/state/canonical-state.json",
+        "apps/web/src/app/views/canvas/**",
+        "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
       ],
       "architectureGuards": [
         "pnpm --filter @dvt/web typecheck",
@@ -577,17 +696,19 @@
         "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
         "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
         "Search and filter browser proof must not mutate the workspace graph draft",
-        "DB-first feature evidence is exported without migration history"
+        "DB-first feature evidence is exported without migration history",
+        "Filter-specific executable evidence belongs to FilterCanvasGraph"
       ],
       "completionGate": [
         "pnpm verify:prepush",
         "pnpm --filter @dvt/web lint",
         "pnpm --filter @dvt/web typecheck",
         "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064",
-        "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+        "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+        "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
-      "sourceContentSha256": "8348100bded81b847024aabf9e2775e8d4541724a390235a06a024639c3e0a08",
+      "sourceContentSha256": "5c34d87d4f0f17b5f6d1367b654f80ae207dc87aaac6992d905debf734d33756",
       "rawRail": {
         "name": "SearchCanvasGraph",
         "type": "query",
@@ -937,10 +1058,12 @@
               "Presentation Model",
               "A session controller owns keyboard and result navigation while a pure view owns rendering.",
               "The query session reveals its active result through an imperative viewport adapter without mutating canonical graph state.",
-              "Canonical DB export keeps feature evidence reproducible across workspaces"
+              "Canonical DB export keeps feature evidence reproducible across workspaces",
+              "Search remains a pure query over the Canvas graph read model",
+              "Search-specific behavior is owned by SearchCanvasGraph while the protected proof composes independent queries"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "DB-first feature evidence is exported without migration history"
+            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
           },
           {
             "name": "RankedMatch",
@@ -1725,71 +1848,16 @@
             "architectureGuard": "pnpm --filter @dvt/web typecheck"
           },
           {
-            "name": "DraftSnapshot",
-            "path": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "cqRails": ["SearchCanvasGraph"],
-            "dddOwner": "CanvasGraphSearch",
-            "unitTests": [
-              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
-            ],
-            "fowlerSignals": [
-              "Executable protected-browser evidence over the existing query rails"
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
-          },
-          {
-            "name": "addDbtNode",
-            "path": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "cqRails": ["SearchCanvasGraph"],
-            "dddOwner": "CanvasGraphSearch",
-            "unitTests": [
-              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
-            ],
-            "fowlerSignals": [
-              "Executable protected-browser evidence over the existing query rails"
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
-          },
-          {
-            "name": "waitForDraftNodeCount",
-            "path": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "cqRails": ["SearchCanvasGraph"],
-            "dddOwner": "CanvasGraphSearch",
-            "unitTests": [
-              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
-            ],
-            "fowlerSignals": [
-              "Executable protected-browser evidence over the existing query rails"
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
-          },
-          {
             "name": "openGraphSearch",
             "path": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
             "cqRails": ["SearchCanvasGraph"],
             "dddOwner": "CanvasGraphSearch",
             "unitTests": [
-              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+              "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+              "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
             ],
             "fowlerSignals": [
-              "Executable protected-browser evidence over the existing query rails"
-            ],
-            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
-          },
-          {
-            "name": "openGraphFilters",
-            "path": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-            "cqRails": ["SearchCanvasGraph"],
-            "dddOwner": "CanvasGraphSearch",
-            "unitTests": [
-              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
-            ],
-            "fowlerSignals": [
-              "Executable protected-browser evidence over the existing query rails"
+              "Search-specific behavior is owned by SearchCanvasGraph while the protected proof composes independent queries"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
             "architectureGuard": "Search and filter browser proof must not mutate the workspace graph draft"
@@ -1809,6 +1877,7 @@
           "not-applicable: issue #2066 keyboard behavior is covered by ReactFlow viewport integration; visual browser presentation belongs to #2067",
           "N/A - ReactFlow viewport integration and live browser proof cover the issue 2066 keyboard flow.",
           "N/A - focused ReactFlow integration and live browser proof cover issue #2067.",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
           "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
         ],
         "domainObjects": [
@@ -1816,8 +1885,7 @@
           "SearchCanvasGraphQuery",
           "CanvasGraphSearchControlModel",
           "CanvasGraphSearchSession",
-          "CanvasGraphSearchPresentation",
-          "CanvasGraphFilterQuery"
+          "CanvasGraphSearchPresentation"
         ],
         "fowlerSignals": [
           "Published Language",
@@ -1826,20 +1894,23 @@
           "A session controller owns keyboard and result navigation while a pure view owns rendering.",
           "The query session reveals its active result through an imperative viewport adapter without mutating canonical graph state.",
           "Executable protected-browser evidence over the existing query rails",
-          "Canonical DB export keeps feature evidence reproducible across workspaces"
+          "Canonical DB export keeps feature evidence reproducible across workspaces",
+          "Search remains a pure query over the Canvas graph read model",
+          "Search-specific behavior is owned by SearchCanvasGraph while the protected proof composes independent queries"
         ],
         "completionGate": [
           "pnpm verify:prepush",
           "pnpm --filter @dvt/web lint",
           "pnpm --filter @dvt/web typecheck",
           "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064",
-          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+          "node scripts/run-selected-closure-live-proof.cjs --spec apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "pnpm docs:feature-mechanization:implementation"
         ],
         "redGreenCycles": [
           {
             "id": "searchcanvasgraph-record",
-            "redTest": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064",
-            "greenTest": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064",
+            "redTest": "The combined protected-browser proof omits search-specific action ownership after separating filter evidence.",
+            "greenTest": "pnpm docs:feature-mechanization:implementation",
             "patchSurfaces": [
               "apps/web/src/app/views/canvas",
               "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
@@ -1858,11 +1929,10 @@
               "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
               "apps/web/src/styles/index.css",
               "apps/web/src/styles/theme.css",
-              "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-              "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
-              "tools/planning-db/state/canonical-state.json"
+              "tools/planning-db/state/canonical-state.json",
+              "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
             ],
-            "expectedFailure": "The canonical DB export was not included in the feature evidence surface."
+            "expectedFailure": "openGraphSearch is not attributed to SearchCanvasGraph in the shared proof."
           }
         ],
         "componentGuides": [
@@ -1892,9 +1962,10 @@
           "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasGraphSearchControl.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
           "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/canvasGraphSearchPresentation.test.ts src/app/views/canvas/useCanvasGraphSearchController.test.tsx src/app/views/canvas/CanvasViewport.graphSearch.test.tsx",
           "Search and filter browser proof must not mutate the workspace graph draft",
-          "DB-first feature evidence is exported without migration history"
+          "DB-first feature evidence is exported without migration history",
+          "Filter-specific executable evidence belongs to FilterCanvasGraph"
         ],
-        "implementationPlan": "https://github.com/dunay2/dvt/issues/2070",
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2064",
         "mechanizationStatus": "implemented",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
@@ -1914,17 +1985,20 @@
           "apps/web/src/styles/theme.css",
           "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.ts",
           "apps/web/src/app/views/canvas/canvasGraphSearchPresentation.test.ts",
-          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
-          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
-          "tools/planning-db/state/canonical-state.json"
+          "tools/planning-db/state/canonical-state.json",
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "apps/web/src/app/stores",
           "packages",
-          "tools/planning-db/migrations/**"
+          "tools/planning-db/migrations/**",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+          "CanvasGraphFilterQuery",
+          "Persisted graph content and execution state"
         ]
       },
-      "revision": 12,
+      "revision": 14,
       "createdBy": "codex",
       "createdAt": "2026-08-04T01:29:12.684Z"
     },
@@ -36904,6 +36978,442 @@
         "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
       },
       "createdAt": "2026-08-04T08:11:19.680Z"
+    },
+    {
+      "operationId": "d5607b65-b39a-4c6d-9749-b380677a3386",
+      "idempotencyKey": "codex-2070-filter-evidence-owner",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-FILTER-2069#query#filtercanvasgraph",
+      "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+      "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "The owning FilterCanvasGraph rail does not expose the protected browser evidence that exercises filtering.",
+        "dddOwner": "CanvasGraphFilter",
+        "railName": "FilterCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-FILTER-2069",
+        "greenTest": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-FILTER-2069",
+        "sourceRef": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2070"],
+        "cypressFlows": [
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+        ],
+        "domainObjects": ["CanvasGraphFilterQuery"],
+        "fowlerSignals": [
+          "Pure read model projection with explicit published language",
+          "Protected browser evidence exercises the existing filter query without mutating the persisted graph"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "Planning DB attributes the live filter helper and browser flow only to SearchCanvasGraph.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2069",
+          "https://github.com/dunay2/dvt/issues/2070"
+        ],
+        "architectureGuards": [
+          "Search and filters remain independent over the same Canvas node projection",
+          "Search and filter browser proof must not mutate the workspace graph draft"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2069",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphFilters"
+        ],
+        "normalizedRailName": "filtercanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Persisted graph content and execution state"
+        ]
+      },
+      "createdAt": "2026-08-04T09:25:50.079Z"
+    },
+    {
+      "operationId": "098b7ea2-5627-4390-a745-8b7919e23e60",
+      "idempotencyKey": "codex-2070-search-filter-ownership-boundary",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+      "sourceContentSha256": "5c34d87d4f0f17b5f6d1367b654f80ae207dc87aaac6992d905debf734d33756",
+      "expectedRevision": 12,
+      "previousRevision": 12,
+      "resultingRevision": 13,
+      "payload": {
+        "redTest": "SearchCanvasGraph incorrectly owns filter-specific helper and domain evidence.",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064",
+        "sourceRef": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2070"],
+        "cypressFlows": [
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "domainObjects": ["SearchCanvasGraphQuery"],
+        "fowlerSignals": [
+          "Search remains a pure query over the Canvas graph read model"
+        ],
+        "patchSurfaces": ["tools/planning-db/state/canonical-state.json"],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-SEARCH-2064",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["SYS-WEB-CANVAS-GRAPH-SEARCH"],
+        "expectedFailure": "SearchCanvasGraph retains CanvasGraphFilterQuery or the filter-specific live helper as implementation ownership.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2064",
+          "https://github.com/dunay2/dvt/issues/2070"
+        ],
+        "architectureGuards": [
+          "Filter-specific executable evidence belongs to FilterCanvasGraph"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2064",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#searchCanvasGraph"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "5c34d87d4f0f17b5f6d1367b654f80ae207dc87aaac6992d905debf734d33756",
+        "allowedImplementationSurfaces": ["apps/web/src/app/views/canvas"],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx",
+          "CanvasGraphFilterQuery"
+        ]
+      },
+      "createdAt": "2026-08-04T09:26:14.237Z"
+    },
+    {
+      "operationId": "d0929c68-836a-4352-aac6-b56e117c5f61",
+      "idempotencyKey": "codex-2070-filter-evidence-complete",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-FILTER-2069#query#filtercanvasgraph",
+      "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+      "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "The owning FilterCanvasGraph rail does not declare the complete protected-browser evidence harness.",
+        "dddOwner": "CanvasGraphFilter",
+        "railName": "FilterCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-FILTER-2069",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2070"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+        ],
+        "domainObjects": ["CanvasGraphFilterQuery"],
+        "fowlerSignals": [
+          "Protected browser evidence exercises the composed query flow without mutating the persisted graph"
+        ],
+        "patchSurfaces": [
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "A new helper in the combined browser proof is outside FilterCanvasGraph mechanization symbols.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2069",
+          "https://github.com/dunay2/dvt/issues/2070"
+        ],
+        "architectureGuards": [
+          "Search and filter browser proof must not mutate the workspace graph draft"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2069",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#DraftSnapshot",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#addDbtNode",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#waitForDraftNodeCount",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphFilters"
+        ],
+        "normalizedRailName": "filtercanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Persisted graph content and execution state"
+        ]
+      },
+      "createdAt": "2026-08-04T09:29:19.756Z"
+    },
+    {
+      "operationId": "2719bf1e-f2ea-4f03-980a-c3ce4ccdc319",
+      "idempotencyKey": "codex-2070-filter-canonical-export",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-FILTER-2069#query#filtercanvasgraph",
+      "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+      "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+      "expectedRevision": 3,
+      "previousRevision": 3,
+      "resultingRevision": 4,
+      "payload": {
+        "redTest": "The owning filter feature cannot validate its DB-first canonical evidence export.",
+        "dddOwner": "CanvasGraphFilter",
+        "railName": "FilterCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-FILTER-2069",
+        "greenTest": "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-FILTER-2069",
+        "sourceRef": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2070"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+        ],
+        "domainObjects": ["CanvasGraphFilterQuery"],
+        "fowlerSignals": [
+          "DB-first ownership evidence is exported through canonical state"
+        ],
+        "patchSurfaces": ["tools/planning-db/state/canonical-state.json"],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation -- --feature CANVAS-GRAPH-FILTER-2069",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "canonical-state.json is outside FilterCanvasGraph allowed implementation surfaces.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2070"],
+        "architectureGuards": [
+          "Filter-specific executable evidence belongs to FilterCanvasGraph"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2069",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph"
+        ],
+        "normalizedRailName": "filtercanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Persisted graph content and execution state"
+        ]
+      },
+      "createdAt": "2026-08-04T09:30:01.267Z"
+    },
+    {
+      "operationId": "42b6bb4f-15fa-4834-9057-4f0ed9e0ce15",
+      "idempotencyKey": "codex-2070-filter-semantic-ownership",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-FILTER-2069#query#filtercanvasgraph",
+      "sourcePath": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+      "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+      "expectedRevision": 4,
+      "previousRevision": 4,
+      "resultingRevision": 5,
+      "payload": {
+        "redTest": "The combined protected-browser proof attributes search-specific actions to FilterCanvasGraph.",
+        "dddOwner": "CanvasGraphFilter",
+        "railName": "FilterCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-FILTER-2069",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "apps/web/src/app/views/canvas/canvasGraphFilter.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.test.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphFilter.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2070"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+        ],
+        "domainObjects": ["CanvasGraphFilterQuery"],
+        "fowlerSignals": [
+          "Filter-specific behavior is owned by FilterCanvasGraph while the protected proof composes independent queries"
+        ],
+        "patchSurfaces": [
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "FilterCanvasGraph owns openGraphSearch instead of only its filter action and neutral proof harness.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2069",
+          "https://github.com/dunay2/dvt/issues/2070"
+        ],
+        "architectureGuards": [
+          "Search and filter browser proof must not mutate the workspace graph draft"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2069",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphFilter.ts#filterCanvasGraph",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphFilters",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#DraftSnapshot",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#addDbtNode",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#waitForDraftNodeCount"
+        ],
+        "normalizedRailName": "filtercanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "e839ad03106f9c80b4041535b08b3ec1aeae9c5cbe71979373f0dbd06ee4a77e",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Persisted graph content and execution state"
+        ]
+      },
+      "createdAt": "2026-08-04T09:34:06.492Z"
+    },
+    {
+      "operationId": "0ec78ff7-472f-4b79-ab69-ec50606ee5d0",
+      "idempotencyKey": "codex-2070-search-semantic-ownership",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#CANVAS-GRAPH-SEARCH-2064#query#searchcanvasgraph",
+      "sourcePath": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+      "sourceContentSha256": "5c34d87d4f0f17b5f6d1367b654f80ae207dc87aaac6992d905debf734d33756",
+      "expectedRevision": 13,
+      "previousRevision": 13,
+      "resultingRevision": 14,
+      "payload": {
+        "redTest": "The combined protected-browser proof omits search-specific action ownership after separating filter evidence.",
+        "dddOwner": "CanvasGraphSearch",
+        "railName": "SearchCanvasGraph",
+        "railType": "query",
+        "featureId": "CANVAS-GRAPH-SEARCH-2064",
+        "greenTest": "pnpm docs:feature-mechanization:implementation",
+        "sourceRef": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.test.ts",
+          "apps/web/src/app/views/canvas/CanvasViewport.graphSearch.test.tsx"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2070"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts"
+        ],
+        "domainObjects": ["SearchCanvasGraphQuery"],
+        "fowlerSignals": [
+          "Search-specific behavior is owned by SearchCanvasGraph while the protected proof composes independent queries"
+        ],
+        "patchSurfaces": [
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["SYS-WEB-CANVAS-GRAPH-SEARCH"],
+        "expectedFailure": "openGraphSearch is not attributed to SearchCanvasGraph in the shared proof.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "https://github.com/dunay2/dvt/issues/2064",
+          "https://github.com/dunay2/dvt/issues/2070"
+        ],
+        "architectureGuards": [
+          "Search and filter browser proof must not mutate the workspace graph draft"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2064",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasGraphSearch.ts#searchCanvasGraph",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts#openGraphSearch"
+        ],
+        "normalizedRailName": "searchcanvasgraph",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "5c34d87d4f0f17b5f6d1367b654f80ae207dc87aaac6992d905debf734d33756",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/cypress/e2e/canvas/canvas-graph-search-filter-live.cy.ts",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "Persisted graph content and execution state"
+        ]
+      },
+      "createdAt": "2026-08-04T09:34:24.959Z"
     }
   ]
 }

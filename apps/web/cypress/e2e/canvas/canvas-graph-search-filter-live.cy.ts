@@ -8,6 +8,7 @@ import {
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import {
+  hasLiveProtectedRuntimeEnv,
   readLiveGraphDraft,
   resolveLiveWorkspaceSession,
   visitWithLiveWorkspaceSession,
@@ -73,6 +74,12 @@ function openGraphFilters(): Cypress.Chainable<JQuery<HTMLElement>> {
 }
 
 describe('Canvas graph search and filtering live protected runtime', () => {
+  beforeEach(function () {
+    if (!hasLiveProtectedRuntimeEnv()) {
+      this.skip();
+    }
+  });
+
   it('authors, searches, navigates, filters, and clears without mutating the draft', () => {
     visitWithLiveWorkspaceSession('/canvas');
 
