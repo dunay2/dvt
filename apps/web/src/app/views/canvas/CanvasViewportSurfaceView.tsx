@@ -15,9 +15,12 @@ import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCa
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
 import type { CanvasPaletteId } from './canvasPalette';
 import { CanvasContextMenuView } from './CanvasContextMenuView';
+import { CanvasGraphSearchControl } from './CanvasGraphSearchControl';
 import { CanvasNodeFloatingToolbarView } from './CanvasNodeFloatingToolbarView';
+import type { CanvasViewCopy } from './canvasCopy.types';
 import type { CanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
 import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter';
+import type { CanvasGraphSearchController } from './useCanvasGraphSearchController';
 
 type CanvasViewportSurfaceViewProps = Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
@@ -54,6 +57,8 @@ type CanvasViewportSurfaceViewProps = Readonly<{
     position: { x: number; y: number };
   } | null;
   onCloseNodeHealthPopover: (restoreTriggerFocus?: boolean) => void;
+  graphSearchController: CanvasGraphSearchController;
+  copy: CanvasViewCopy;
 }>;
 
 function resolveMiniMapNodeColor(node: { data?: unknown }): string {
@@ -86,6 +91,7 @@ function CanvasViewportReactFlowSurface({
   contextSurfaceLabel,
   onCloseNodeFloatingToolbar,
   onCloseNodeHealthPopover,
+  graphSearchController,
 }: Omit<
   CanvasViewportSurfaceViewProps,
   | 'viewportRef'
@@ -94,6 +100,7 @@ function CanvasViewportReactFlowSurface({
   | 'contextMenuLabel'
   | 'nodeFloatingToolbarModel'
   | 'nodeHealthPopoverModel'
+  | 'copy'
 >): JSX.Element {
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
     onCloseNodeFloatingToolbar();
@@ -153,7 +160,12 @@ function CanvasViewportReactFlowSurface({
       tabIndex={0}
       className="h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
       onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
-      onKeyDown={contextMenuPresenter.handleViewportContextMenuKeyDown}
+      onKeyDown={(event) => {
+        graphSearchController.onViewportKeyDown(event);
+        if (!event.defaultPrevented) {
+          contextMenuPresenter.handleViewportContextMenuKeyDown(event);
+        }
+      }}
     >
       <ReactFlow
         nodes={nodesWithImpact}
@@ -218,6 +230,8 @@ export function CanvasViewportSurfaceView({
   onCloseNodeFloatingToolbar,
   nodeHealthPopoverModel,
   onCloseNodeHealthPopover,
+  graphSearchController,
+  copy,
   ...reactFlowSurfaceProps
 }: CanvasViewportSurfaceViewProps): JSX.Element {
   return (
@@ -233,6 +247,16 @@ export function CanvasViewportSurfaceView({
         contextSurfaceLabel={contextSurfaceLabel}
         onCloseNodeFloatingToolbar={onCloseNodeFloatingToolbar}
         onCloseNodeHealthPopover={onCloseNodeHealthPopover}
+        graphSearchController={graphSearchController}
+      />
+      <CanvasGraphSearchControl
+        model={graphSearchController.model}
+        copy={copy}
+        onQueryChange={graphSearchController.setQuery}
+        onPrevious={graphSearchController.showPrevious}
+        onNext={graphSearchController.showNext}
+        onClose={graphSearchController.close}
+        onKeyDown={graphSearchController.onControlKeyDown}
       />
       {nodeFloatingToolbarModel == null ? null : (
         <CanvasNodeFloatingToolbarView model={nodeFloatingToolbarModel} />

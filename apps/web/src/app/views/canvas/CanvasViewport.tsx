@@ -25,6 +25,7 @@ import {
   useCanvasContextMenuPresenter,
   type CanvasContextMenuPresenter,
 } from './useCanvasContextMenuPresenter';
+import { useCanvasGraphSearchController } from './useCanvasGraphSearchController';
 import { useCanvasViewportLifecycle } from './useCanvasViewportLifecycle';
 
 type CanvasViewportProps = {
@@ -78,6 +79,7 @@ function CanvasViewportWithPresenter({
 }: CanvasViewportWithPresenterProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
   const copy = resolveCanvasViewCopy();
+  const graphSearchController = useCanvasGraphSearchController({ nodes: props.nodesWithImpact });
   const viewportRef = useRef<HTMLDivElement>(null);
   const [nodeContextSurfaceState, dispatchNodeContextSurface] = useReducer(
     reduceCanvasNodeContextSurface,
@@ -387,6 +389,8 @@ function CanvasViewportWithPresenter({
       onCloseNodeFloatingToolbar={closeNodeFloatingToolbar}
       nodeHealthPopoverModel={nodeHealthPopoverModel}
       onCloseNodeHealthPopover={closeNodeHealthPopover}
+      graphSearchController={graphSearchController}
+      copy={copy}
     />
   );
 }
