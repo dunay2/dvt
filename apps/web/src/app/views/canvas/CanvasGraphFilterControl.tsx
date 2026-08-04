@@ -2,7 +2,7 @@
 import { ListFilter, Plus, X } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
-import { Popover, PopoverAnchor, PopoverContent } from '../../components/ui/popover';
+import { Popover, PopoverContent, PopoverTrigger } from '../../components/ui/popover';
 import {
   Tooltip,
   TooltipContent,
@@ -51,16 +51,14 @@ export function CanvasGraphFilterControl({
   return (
     <TooltipProvider delayDuration={250}>
       <Popover open={model.open} onOpenChange={onOpenChange}>
-        <PopoverAnchor asChild>
-          <span className="absolute top-3 right-3 z-20">
-            <Tooltip>
-              <TooltipTrigger asChild>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="absolute top-3 right-3 z-20 inline-flex">
+              <PopoverTrigger asChild>
                 <button
                   type="button"
                   aria-label={copy.canvasGraphFilterLabel}
-                  aria-expanded={model.open}
                   className="bg-popover text-popover-foreground border-border hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-ring/50 relative inline-flex size-9 cursor-pointer items-center justify-center rounded-md border shadow-lg outline-none focus-visible:ring-[3px]"
-                  onClick={() => onOpenChange(!model.open)}
                 >
                   <ListFilter className="size-4" aria-hidden="true" />
                   {activeCount === 0 ? null : (
@@ -69,11 +67,11 @@ export function CanvasGraphFilterControl({
                     </span>
                   )}
                 </button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{copy.canvasGraphFilterLabel}</TooltipContent>
-            </Tooltip>
-          </span>
-        </PopoverAnchor>
+              </PopoverTrigger>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">{copy.canvasGraphFilterLabel}</TooltipContent>
+        </Tooltip>
 
         <PopoverContent
           data-slot="canvas-graph-filter-control"

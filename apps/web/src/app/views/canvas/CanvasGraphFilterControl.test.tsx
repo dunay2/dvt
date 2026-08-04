@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { fireEvent } from '@testing-library/dom';
-import React, { act } from 'react';
+import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -73,5 +73,53 @@ describe('CanvasGraphFilterControl', () => {
     expect(onSelectDimension).toHaveBeenCalledWith('status');
     expect(onSelectValue).toHaveBeenCalledWith('success');
     expect(onAddPredicate).toHaveBeenCalledTimes(1);
+  });
+
+  it('opens and closes from the same trigger', () => {
+    function Harness(): JSX.Element {
+      const [open, setOpen] = useState(false);
+      return (
+        <CanvasGraphFilterControl
+          model={{
+            open,
+            predicates: [],
+            composition: 'and',
+            presentation: 'dim',
+            status: 'idle',
+            matchCount: 2,
+            totalCount: 2,
+            draftDimension: 'status',
+            draftValue: 'failed',
+            optionGroups: [{ dimension: 'status', values: ['failed', 'success'] }],
+          }}
+          copy={resolveCanvasViewCopy('es-ES')}
+          onOpenChange={setOpen}
+          onSelectDimension={vi.fn()}
+          onSelectValue={vi.fn()}
+          onAddPredicate={vi.fn()}
+          onRemovePredicate={vi.fn()}
+          onSetComposition={vi.fn()}
+          onSetPresentation={vi.fn()}
+          onClear={vi.fn()}
+        />
+      );
+    }
+
+    act(() => root.render(<Harness />));
+    const trigger = document.querySelector<HTMLButtonElement>(
+      'button[aria-label="Filtrar grafo"]'
+    )!;
+
+    act(() => {
+      fireEvent.click(trigger);
+    });
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(document.body.textContent).toContain('Filtros del grafo');
+
+    act(() => {
+      fireEvent.click(trigger);
+    });
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(document.querySelector('[data-slot="canvas-graph-filter-control"]')).toBeNull();
   });
 });
