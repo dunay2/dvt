@@ -202,12 +202,49 @@ function parseTimestamp(
 ): string {
   const token = String(value);
   const pattern = timeZoneRequired
-    ? /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u
-    : /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?$/u;
-  if (!pattern.test(token) || Number.isNaN(Date.parse(timeZoneRequired ? token : `${token}Z`))) {
+    ? /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/u
+    : /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2}):(\d{2})(?:\.\d+)?$/u;
+  const match = pattern.exec(token);
+  const parseToken = timeZoneRequired ? token : `${token.replace(' ', 'T')}Z`;
+  if (match === null || !hasValidCalendarAndClock(match) || Number.isNaN(Date.parse(parseToken))) {
     rejectField(column, timeZoneRequired ? 'timestamp-with-time-zone' : 'timestamp');
   }
   return token;
+}
+
+function hasValidCalendarAndClock(match: RegExpExecArray): boolean {
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  const daysInMonth = readDaysInMonth(year, month);
+
+  return (
+    year >= 1 &&
+    year <= 9_999 &&
+    daysInMonth !== undefined &&
+    day >= 1 &&
+    day <= daysInMonth &&
+    hour >= 0 &&
+    hour <= 23 &&
+    minute >= 0 &&
+    minute <= 59 &&
+    second >= 0 &&
+    second <= 59
+  );
+}
+
+function readDaysInMonth(year: number, month: number): number | undefined {
+  if (month < 1 || month > 12) {
+    return undefined;
+  }
+  if (month === 2) {
+    const leapYear = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    return leapYear ? 29 : 28;
+  }
+  return [4, 6, 9, 11].includes(month) ? 30 : 31;
 }
 
 function assertRecord(value: unknown): Readonly<Record<string, unknown>> {

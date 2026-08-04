@@ -60,4 +60,44 @@ describe('parseObjectFileRows', () => {
       parseObjectFileRows(Buffer.from(csv), STEP_CONFIG.source, STEP_CONFIG.columns)
     ).rejects.toMatchObject({ name: 'ObjectFileIngestionRejectedError' });
   });
+
+  it.each([
+    ['timestamp', '2026-02-31T10:30:00'],
+    ['timestamp-with-time-zone', '2026-02-31T10:30:00Z'],
+    ['timestamp', '2026-04-30T24:00:00'],
+    ['timestamp-with-time-zone', '2026-04-30T10:60:00+01:00'],
+  ] as const)(
+    'rejects calendar-invalid %s values before database access',
+    async (dataType, value) => {
+      await expect(
+        parseObjectFileRows(Buffer.from(`occurred_at\n${value}\n`), STEP_CONFIG.source, [
+          {
+            sourceField: 'occurred_at',
+            targetColumn: 'occurred_at',
+            dataType,
+            nullable: false,
+          },
+        ])
+      ).rejects.toMatchObject({
+        name: 'ObjectFileIngestionRejectedError',
+        code: 'OBJECT_SOURCE_FIELD_INVALID',
+      });
+    }
+  );
+
+  it.each([
+    ['timestamp', '2024-02-29T10:30:00.123456'],
+    ['timestamp-with-time-zone', '2024-02-29T10:30:00.123456+01:00'],
+  ] as const)('accepts calendar-valid %s values', async (dataType, value) => {
+    await expect(
+      parseObjectFileRows(Buffer.from(`occurred_at\n${value}\n`), STEP_CONFIG.source, [
+        {
+          sourceField: 'occurred_at',
+          targetColumn: 'occurred_at',
+          dataType,
+          nullable: false,
+        },
+      ])
+    ).resolves.toEqual([{ occurred_at: value }]);
+  });
 });
