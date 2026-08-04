@@ -52,11 +52,16 @@ describe('TemporalWorker OperationalServer', () => {
     expect(healthz.statusCode).toBe(200);
     expect(JSON.parse(healthz.body)).toMatchObject({
       ok: true,
+      dbtEnabled: true,
       capabilities: ['executor.dbt', 'executor.object-file-postgres-load'],
       runStateCircuitState: 'open',
     });
     expect(readyz.statusCode).toBe(200);
-    expect(JSON.parse(readyz.body)).toMatchObject({ ready: true, runStateCircuitState: 'open' });
+    expect(JSON.parse(readyz.body)).toMatchObject({
+      ready: true,
+      dbtEnabled: true,
+      runStateCircuitState: 'open',
+    });
     expect(metrics.body).toContain('dvt_temporal_worker_ready 1');
     expect(metrics.body).toContain(
       'dvt_temporal_worker_capability_enabled{capability="executor.object-file-postgres-load"} 1'
