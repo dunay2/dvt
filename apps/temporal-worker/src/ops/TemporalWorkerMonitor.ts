@@ -1,14 +1,15 @@
 import type { RunStateCommandCircuitSnapshot } from '@dvt/adapter-temporal';
 import type { Logger } from 'pino';
 
-export type TemporalWorkerRuntimeState = 'starting' | 'running' | 'stopping' | 'failing' | 'stopped';
+export type TemporalWorkerRuntimeState =
+  'starting' | 'running' | 'stopping' | 'failing' | 'stopped';
 
 export interface TemporalWorkerHealthSnapshot {
   ok: boolean;
   ready: boolean;
   state: TemporalWorkerRuntimeState;
   service: string;
-  dbtEnabled: boolean;
+  capabilities: readonly string[];
   lastErrorMessage: string | null;
   lastErrorAt: string | null;
   startedAt: string | null;
@@ -18,7 +19,7 @@ export interface TemporalWorkerHealthSnapshot {
 interface TemporalWorkerMonitorOptions {
   serviceName: string;
   logger: Pick<Logger, 'info' | 'error'>;
-  dbtEnabled: boolean;
+  enabledCapabilities: readonly string[];
   nowMs?: () => number;
 }
 
@@ -33,7 +34,7 @@ const STATES: readonly TemporalWorkerRuntimeState[] = [
 export class TemporalWorkerMonitor {
   private readonly serviceName: string;
   private readonly logger: Pick<Logger, 'info' | 'error'>;
-  private readonly dbtEnabled: boolean;
+  private readonly enabledCapabilities: readonly string[];
   private readonly nowMs: () => number;
 
   private state: TemporalWorkerRuntimeState = 'starting';
@@ -48,7 +49,7 @@ export class TemporalWorkerMonitor {
   public constructor(options: TemporalWorkerMonitorOptions) {
     this.serviceName = options.serviceName;
     this.logger = options.logger;
-    this.dbtEnabled = options.dbtEnabled;
+    this.enabledCapabilities = Object.freeze([...new Set(options.enabledCapabilities)].sort());
     this.nowMs = options.nowMs ?? (() => Date.now());
   }
 
@@ -87,7 +88,7 @@ export class TemporalWorkerMonitor {
       ready: this.state === 'running',
       state: this.state,
       service: this.serviceName,
-      dbtEnabled: this.dbtEnabled,
+      capabilities: this.enabledCapabilities,
       lastErrorMessage: this.lastErrorMessage,
       lastErrorAt: toIso(this.lastErrorAtMs),
       startedAt: toIso(this.startedAtMs),
@@ -112,9 +113,12 @@ export class TemporalWorkerMonitor {
       '# HELP dvt_temporal_worker_ready Whether the worker is ready to poll Temporal.',
       '# TYPE dvt_temporal_worker_ready gauge',
       `dvt_temporal_worker_ready ${snapshot.ready ? 1 : 0}`,
-      '# HELP dvt_temporal_worker_dbt_enabled Whether DBT runtime support is enabled for this worker.',
-      '# TYPE dvt_temporal_worker_dbt_enabled gauge',
-      `dvt_temporal_worker_dbt_enabled ${this.dbtEnabled ? 1 : 0}`,
+      '# HELP dvt_temporal_worker_capability_enabled Configured execution capabilities exposed by this worker.',
+      '# TYPE dvt_temporal_worker_capability_enabled gauge',
+      ...this.enabledCapabilities.map(
+        (capability) =>
+          `dvt_temporal_worker_capability_enabled{capability="${escapeMetricLabel(capability)}"} 1`
+      ),
       '# HELP dvt_temporal_worker_state Worker runtime state as a labelled gauge.',
       '# TYPE dvt_temporal_worker_state gauge',
       ...STATES.map(
@@ -171,8 +175,15 @@ export class TemporalWorkerMonitor {
 
     const previousState = this.state;
     this.state = nextState;
-    this.logger.info({ from: previousState, to: nextState, reason }, 'temporal worker state changed');
+    this.logger.info(
+      { from: previousState, to: nextState, reason },
+      'temporal worker state changed'
+    );
   }
+}
+
+function escapeMetricLabel(value: string): string {
+  return value.replaceAll('\\', '\\\\').replaceAll('"', '\\"').replaceAll('\n', '\\n');
 }
 
 function toIso(epochMs: number | null): string | null {

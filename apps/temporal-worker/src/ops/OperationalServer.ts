@@ -17,7 +17,9 @@ export interface OperationalServerHandle {
   getAddress(): { host: string; port: number } | null;
 }
 
-export function createOperationalServer(options: OperationalServerOptions): OperationalServerHandle {
+export function createOperationalServer(
+  options: OperationalServerOptions
+): OperationalServerHandle {
   let server: Server | null = null;
 
   return {
@@ -93,7 +95,7 @@ async function handleRequest(
         ok: health.ok,
         state: health.state,
         service: health.service,
-        dbtEnabled: health.dbtEnabled,
+        capabilities: health.capabilities,
         runStateCircuitState: health.runStateCircuitState,
       });
       return;
@@ -103,7 +105,7 @@ async function handleRequest(
         ready: health.ready,
         state: health.state,
         service: health.service,
-        dbtEnabled: health.dbtEnabled,
+        capabilities: health.capabilities,
         runStateCircuitState: health.runStateCircuitState,
         lastErrorMessage: health.lastErrorMessage,
         lastErrorAt: health.lastErrorAt,

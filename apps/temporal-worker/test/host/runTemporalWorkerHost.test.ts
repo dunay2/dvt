@@ -225,7 +225,7 @@ describeIfPg('runTemporalWorkerHost DBT canary', () => {
       const monitor = new TemporalWorkerMonitor({
         serviceName: env.SERVICE_NAME,
         logger: { info() {}, error() {} },
-        dbtEnabled: env.DVT_TEMPORAL_DBT_ENABLED,
+        enabledCapabilities: ['executor.dbt'],
       });
       const operationalServer = createOperationalServer({
         host: env.DVT_TEMPORAL_ADMIN_HOST,
@@ -246,7 +246,11 @@ describeIfPg('runTemporalWorkerHost DBT canary', () => {
       );
       const readyz = await waitForAsync(async () => {
         const response = await getOperationalJson(adminPort, '/readyz');
-        return response.status === 200 && response.body.dbtEnabled === true ? response : false;
+        return response.status === 200 &&
+          Array.isArray(response.body.capabilities) &&
+          response.body.capabilities.includes('executor.dbt')
+          ? response
+          : false;
       });
       const metricsBefore = await getOperationalText(adminPort, '/metrics');
       const errorCountBefore = metricValue(metricsBefore.body, 'dvt_temporal_worker_error_total');
@@ -279,11 +283,13 @@ describeIfPg('runTemporalWorkerHost DBT canary', () => {
       expect(readyz.body).toMatchObject({
         ready: true,
         state: 'running',
-        dbtEnabled: true,
+        capabilities: ['executor.dbt'],
       });
       expect(metricValue(metricsAfter.body, 'dvt_temporal_worker_up')).toBe(1);
       expect(metricValue(metricsAfter.body, 'dvt_temporal_worker_ready')).toBe(1);
-      expect(metricValue(metricsAfter.body, 'dvt_temporal_worker_dbt_enabled')).toBe(1);
+      expect(metricsAfter.body).toContain(
+        'dvt_temporal_worker_capability_enabled{capability="executor.dbt"} 1'
+      );
       expect(metricValue(metricsAfter.body, 'dvt_temporal_worker_error_total')).toBe(
         errorCountBefore
       );
@@ -583,7 +589,7 @@ function createMonitor(): TemporalWorkerMonitor {
   return new TemporalWorkerMonitor({
     serviceName: 'dvt-temporal-worker',
     logger: { info() {}, error() {} },
-    dbtEnabled: false,
+    enabledCapabilities: [],
   });
 }
 

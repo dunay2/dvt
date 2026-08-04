@@ -17,7 +17,7 @@ describe('TemporalWorker OperationalServer', () => {
     const monitor = new TemporalWorkerMonitor({
       serviceName: 'dvt-temporal-worker',
       logger: { info() {}, error() {} },
-      dbtEnabled: true,
+      enabledCapabilities: ['executor.dbt', 'executor.object-file-postgres-load'],
     });
     monitor.setRunStateCircuitSnapshotProvider(() => ({
       state: 'open',
@@ -52,12 +52,15 @@ describe('TemporalWorker OperationalServer', () => {
     expect(healthz.statusCode).toBe(200);
     expect(JSON.parse(healthz.body)).toMatchObject({
       ok: true,
-      dbtEnabled: true,
+      capabilities: ['executor.dbt', 'executor.object-file-postgres-load'],
       runStateCircuitState: 'open',
     });
     expect(readyz.statusCode).toBe(200);
     expect(JSON.parse(readyz.body)).toMatchObject({ ready: true, runStateCircuitState: 'open' });
     expect(metrics.body).toContain('dvt_temporal_worker_ready 1');
+    expect(metrics.body).toContain(
+      'dvt_temporal_worker_capability_enabled{capability="executor.object-file-postgres-load"} 1'
+    );
     expect(metrics.body).toContain('dvt_temporal_worker_run_state_circuit_state{state="open"} 1');
   });
 });
