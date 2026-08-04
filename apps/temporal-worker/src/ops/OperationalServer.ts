@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 
+import { DBT_STEP_REQUIRED_CAPABILITY } from '@dvt/contracts';
 import type { Logger } from 'pino';
 
 import type { TemporalWorkerMonitor } from './TemporalWorkerMonitor.js';
@@ -17,7 +18,9 @@ export interface OperationalServerHandle {
   getAddress(): { host: string; port: number } | null;
 }
 
-export function createOperationalServer(options: OperationalServerOptions): OperationalServerHandle {
+export function createOperationalServer(
+  options: OperationalServerOptions
+): OperationalServerHandle {
   let server: Server | null = null;
 
   return {
@@ -86,6 +89,7 @@ async function handleRequest(
 ): Promise<void> {
   const url = new globalThis.URL(request.url ?? '/', 'http://127.0.0.1');
   const health = monitor.getHealthSnapshot();
+  const dbtEnabled = health.capabilities.includes(DBT_STEP_REQUIRED_CAPABILITY);
 
   switch (url.pathname) {
     case '/healthz':
@@ -93,7 +97,8 @@ async function handleRequest(
         ok: health.ok,
         state: health.state,
         service: health.service,
-        dbtEnabled: health.dbtEnabled,
+        dbtEnabled,
+        capabilities: health.capabilities,
         runStateCircuitState: health.runStateCircuitState,
       });
       return;
@@ -103,7 +108,8 @@ async function handleRequest(
         ready: health.ready,
         state: health.state,
         service: health.service,
-        dbtEnabled: health.dbtEnabled,
+        dbtEnabled,
+        capabilities: health.capabilities,
         runStateCircuitState: health.runStateCircuitState,
         lastErrorMessage: health.lastErrorMessage,
         lastErrorAt: health.lastErrorAt,

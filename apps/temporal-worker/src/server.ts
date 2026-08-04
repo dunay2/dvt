@@ -1,5 +1,9 @@
 import process from 'node:process';
 
+import {
+  DBT_STEP_REQUIRED_CAPABILITY,
+  LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
+} from '@dvt/contracts';
 import pino from 'pino';
 
 import { runTemporalWorkerHost } from './host/runTemporalWorkerHost.js';
@@ -17,7 +21,12 @@ async function main(): Promise<void> {
   const monitor = new TemporalWorkerMonitor({
     serviceName: env.SERVICE_NAME,
     logger,
-    dbtEnabled: env.DVT_TEMPORAL_DBT_ENABLED,
+    enabledCapabilities: [
+      ...(env.DVT_TEMPORAL_DBT_ENABLED ? [DBT_STEP_REQUIRED_CAPABILITY] : []),
+      ...(env.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED
+        ? [LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY]
+        : []),
+    ],
   });
   const operationalServer = createOperationalServer({
     host: env.DVT_TEMPORAL_ADMIN_HOST,

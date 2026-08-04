@@ -4,7 +4,10 @@
  * This module is the only protected-runtime provider factory allowed to know
  * how the Temporal adapter package is configured and closed.
  */
-import { DBT_STEP_REQUIRED_CAPABILITY } from '@dvt/contracts';
+import {
+  DBT_STEP_REQUIRED_CAPABILITY,
+  LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
+} from '@dvt/contracts';
 
 import type { ProviderAdapterFactory } from './providerAdapterFactory.js';
 
@@ -36,9 +39,12 @@ export function createTemporalProviderAdapterFactory(): ProviderAdapterFactory {
         TEMPORAL_STEP_ACTIVITY_ROUTES: context.env.TEMPORAL_STEP_ACTIVITY_ROUTES,
       });
       const clientManager = new TemporalClientManager(temporalConfig, context.observability);
-      const additionalCapabilities = context.env.DVT_TEMPORAL_DBT_ENABLED
-        ? [DBT_STEP_REQUIRED_CAPABILITY]
-        : [];
+      const additionalCapabilities = [
+        ...(context.env.DVT_TEMPORAL_DBT_ENABLED ? [DBT_STEP_REQUIRED_CAPABILITY] : []),
+        ...(context.env.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED
+          ? [LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY]
+          : []),
+      ];
 
       const adapter = new TemporalAdapter({
         clientManager,

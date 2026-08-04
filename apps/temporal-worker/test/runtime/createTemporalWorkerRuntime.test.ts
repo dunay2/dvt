@@ -162,6 +162,12 @@ describe('createTemporalWorkerRuntime', () => {
           ['POSTGRES_SQL_TRANSFORM', postgresActivity],
           ['CAPTURE_MATERIALIZATION_EVIDENCE', postgresActivity],
         ]),
+        load: vi.fn(async (input) => ({
+          rowsWritten: input.rows.length,
+          publicationOutcome: 'created' as const,
+          targetSchema: 'staging_scope_test',
+          targetRelation: input.relation,
+        })),
         close: closePostgresCapability,
       }),
     } satisfies Parameters<typeof createTemporalWorkerRuntime>[2];
@@ -314,6 +320,12 @@ function buildBaseEnv(): {
   DVT_TEMPORAL_ADMIN_HOST: string;
   DVT_TEMPORAL_ADMIN_PORT: number;
   DVT_TEMPORAL_DBT_ENABLED: boolean;
+  DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: boolean;
+  DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: string | undefined;
+  DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: string | undefined;
+  DVT_OBJECT_FILE_S3_ENDPOINT: string | undefined;
+  DVT_OBJECT_FILE_S3_REGION: string | undefined;
+  DVT_OBJECT_FILE_S3_FORCE_PATH_STYLE: boolean;
   DVT_DBT_BIN: string;
   DVT_DBT_WORKDIR_ROOT: string;
   DVT_DBT_BUNDLE_STORE_BACKEND: 'file' | 's3' | undefined;
@@ -344,6 +356,12 @@ function buildBaseEnv(): {
     DVT_TEMPORAL_ADMIN_HOST: '127.0.0.1',
     DVT_TEMPORAL_ADMIN_PORT: 9468,
     DVT_TEMPORAL_DBT_ENABLED: false,
+    DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: false,
+    DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: undefined,
+    DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: undefined,
+    DVT_OBJECT_FILE_S3_ENDPOINT: undefined,
+    DVT_OBJECT_FILE_S3_REGION: undefined,
+    DVT_OBJECT_FILE_S3_FORCE_PATH_STYLE: false,
     DVT_DBT_BIN: 'dbt',
     DVT_DBT_WORKDIR_ROOT: '/tmp/dvt',
     DVT_DBT_BUNDLE_STORE_BACKEND: undefined,

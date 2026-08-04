@@ -1230,6 +1230,24 @@ units:
       - package boundary
       - semantic encapsulation
 
+  - id: SYS-ADAPTERS-TEMPORAL-OBJECT-FILE-POSTGRES-PLUGIN
+    name: Temporal object-file PostgreSQL plugin package
+    parent: SYS-ADAPTERS-ROOT
+    level: source
+    status: review
+    owns:
+      - packages/@dvt/temporal-object-file-postgres-plugin/**
+    childrenRequired: false
+    dddOwner: ADP
+    cqRails: WorkflowEngine.startRun object-file PostgreSQL execution
+    governance:
+      - docs/architecture/components/engine/adapters/temporal/temporal-step-plugin-profile.md
+      - docs/evidence/ED-20260804-object-file-postgres-runtime.md
+    fowlerSignals:
+      - package boundary
+      - single step-kind ownership
+      - static typed plugin composition
+
   - id: SYS-WORKERS
     name: Worker domain
     parent: SYS-DVT

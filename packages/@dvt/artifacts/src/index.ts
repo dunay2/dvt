@@ -42,6 +42,13 @@ export {
   validateArtifactIntegrity,
   type ArtifactIntegrityInput,
 } from './runtime/validateArtifactIntegrity.js';
+export {
+  readArtifact,
+  readArtifactBytes,
+  type ArtifactReadRuntimeOptions,
+  type ReadArtifactBytesOptions,
+  type ReadArtifactResult,
+} from './runtime/readArtifactBytes.js';
 export { computeSha256 } from './compiledCode/sha256.js';
 export {
   attachCompiledCodeRefs,

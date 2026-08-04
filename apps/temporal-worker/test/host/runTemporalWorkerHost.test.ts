@@ -4,10 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { PostgresPlanStore, PostgresStateStoreAdapter } from '@dvt/adapter-postgres';
 import {
-  asIsoUtcString,
-  asNonBlankString,
   CURRENT_EXECUTION_PLAN_CONTRACT_VERSION,
   CURRENT_EXECUTION_PLAN_SCHEMA_VERSION,
   CURRENT_EXECUTION_PLAN_VERSION,
@@ -16,7 +13,6 @@ import {
   parseRunExecutionContextRef,
   RUN_PLAN_WORKFLOW,
   type ExecutionPlan,
-  type PlanRef,
 } from '@dvt/contracts';
 import { jcsCanonicalize } from '@dvt/crypto';
 import { TestWorkflowEnvironment } from '@temporalio/testing';
@@ -27,6 +23,11 @@ import { runTemporalWorkerHost } from '../../src/host/runTemporalWorkerHost.js';
 import { createOperationalServer } from '../../src/ops/OperationalServer.js';
 import { TemporalWorkerMonitor } from '../../src/ops/TemporalWorkerMonitor.js';
 import { loadEnv } from '../../src/plugins/env.js';
+import {
+  bootstrapRunMetadata,
+  storeValidPlanArtifact,
+  waitForRunCompleted,
+} from '../support/temporalWorkerServiceTestSupport.js';
 
 describe('runTemporalWorkerHost', () => {
   it('starts runtime, waits for abort, and stops cleanly', async () => {
@@ -225,7 +226,7 @@ describeIfPg('runTemporalWorkerHost DBT canary', () => {
       const monitor = new TemporalWorkerMonitor({
         serviceName: env.SERVICE_NAME,
         logger: { info() {}, error() {} },
-        dbtEnabled: env.DVT_TEMPORAL_DBT_ENABLED,
+        enabledCapabilities: ['executor.dbt'],
       });
       const operationalServer = createOperationalServer({
         host: env.DVT_TEMPORAL_ADMIN_HOST,
@@ -246,7 +247,11 @@ describeIfPg('runTemporalWorkerHost DBT canary', () => {
       );
       const readyz = await waitForAsync(async () => {
         const response = await getOperationalJson(adminPort, '/readyz');
-        return response.status === 200 && response.body.dbtEnabled === true ? response : false;
+        return response.status === 200 &&
+          Array.isArray(response.body.capabilities) &&
+          response.body.capabilities.includes('executor.dbt')
+          ? response
+          : false;
       });
       const metricsBefore = await getOperationalText(adminPort, '/metrics');
       const errorCountBefore = metricValue(metricsBefore.body, 'dvt_temporal_worker_error_total');
@@ -279,11 +284,13 @@ describeIfPg('runTemporalWorkerHost DBT canary', () => {
       expect(readyz.body).toMatchObject({
         ready: true,
         state: 'running',
-        dbtEnabled: true,
+        capabilities: ['executor.dbt'],
       });
       expect(metricValue(metricsAfter.body, 'dvt_temporal_worker_up')).toBe(1);
       expect(metricValue(metricsAfter.body, 'dvt_temporal_worker_ready')).toBe(1);
-      expect(metricValue(metricsAfter.body, 'dvt_temporal_worker_dbt_enabled')).toBe(1);
+      expect(metricsAfter.body).toContain(
+        'dvt_temporal_worker_capability_enabled{capability="executor.dbt"} 1'
+      );
       expect(metricValue(metricsAfter.body, 'dvt_temporal_worker_error_total')).toBe(
         errorCountBefore
       );
@@ -384,50 +391,6 @@ async function createDbtProjectBundle(args: {
   };
 }
 
-async function storeValidPlanArtifact(args: {
-  connectionString: string;
-  schema: string;
-  plan: ExecutionPlan;
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-}): Promise<PlanRef> {
-  const store = new PostgresPlanStore({
-    connectionString: args.connectionString,
-    schema: args.schema,
-    toExecutablePlan: (buildResult) => ({
-      schemaVersion: buildResult.plan.metadata.schemaVersion,
-      text: JSON.stringify(buildResult.plan),
-    }),
-  });
-
-  try {
-    await store.migrate();
-    const planRef = await store.storePlanArtifact({
-      buildResult: {
-        plan: args.plan,
-        executionPolicy: {},
-        canonicalPlanCoreJson: jcsCanonicalize({
-          metadata: {
-            planVersion: args.plan.metadata.planVersion,
-            inputHashSha256: args.plan.metadata.inputHashSha256,
-          },
-          steps: args.plan.steps,
-        }),
-      },
-    });
-    await store.markStoredPlanArtifactValid({
-      tenantId: args.tenantId,
-      projectId: args.projectId,
-      environmentId: args.environmentId,
-      planRef,
-    });
-    return planRef;
-  } finally {
-    await store.close();
-  }
-}
-
 function createDbtExecutionPlan(args: {
   tenantId: string;
   projectId: string;
@@ -478,73 +441,6 @@ function createDbtExecutionPlan(args: {
   });
 }
 
-async function bootstrapRunMetadata(args: {
-  connectionString: string;
-  schema: string;
-  tenantId: string;
-  projectId: string;
-  environmentId: string;
-  namespace: string;
-  taskQueue: string;
-  runId: string;
-  planRef: PlanRef;
-}): Promise<void> {
-  const stateStore = new PostgresStateStoreAdapter({
-    connectionString: args.connectionString,
-    schema: args.schema,
-  });
-
-  try {
-    await stateStore.migrate();
-    await stateStore.bootstrapRunTx({
-      metadata: {
-        tenantId: args.tenantId,
-        projectId: args.projectId,
-        environmentId: args.environmentId,
-        runId: args.runId,
-        planId: args.planRef.planId,
-        planVersion: args.planRef.planVersion,
-        logicalAttemptId: 1,
-        originRunId: args.runId,
-        providerRef: {
-          provider: 'temporal',
-          tenantId: asNonBlankString(args.tenantId),
-          namespace: asNonBlankString(args.namespace),
-          workflowId: asNonBlankString(args.runId),
-          runId: asNonBlankString(args.runId),
-          taskQueue: asNonBlankString(args.taskQueue),
-        },
-        createdAt: asIsoUtcString('2026-05-14T00:00:00.000Z'),
-      },
-      firstEvents: [],
-    });
-  } finally {
-    await stateStore.close();
-  }
-}
-
-async function waitForRunCompleted(args: {
-  connectionString: string;
-  schema: string;
-  tenantId: string;
-  runId: string;
-}): Promise<Array<{ eventType: string; stepId?: string }>> {
-  const stateStore = new PostgresStateStoreAdapter({
-    connectionString: args.connectionString,
-    schema: args.schema,
-    assumeSchemaReady: true,
-  });
-
-  try {
-    return await waitForAsync(async () => {
-      const events = await stateStore.listEvents(args.tenantId, args.runId);
-      return events.some((event) => event.eventType === 'RunCompleted') ? events : false;
-    });
-  } finally {
-    await stateStore.close();
-  }
-}
-
 async function getOperationalJson(
   port: number,
   path: string
@@ -583,7 +479,7 @@ function createMonitor(): TemporalWorkerMonitor {
   return new TemporalWorkerMonitor({
     serviceName: 'dvt-temporal-worker',
     logger: { info() {}, error() {} },
-    dbtEnabled: false,
+    enabledCapabilities: [],
   });
 }
 
@@ -610,6 +506,12 @@ function createEnv(): {
   DVT_TEMPORAL_ADMIN_HOST: string;
   DVT_TEMPORAL_ADMIN_PORT: number;
   DVT_TEMPORAL_DBT_ENABLED: boolean;
+  DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: boolean;
+  DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: string | undefined;
+  DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: string | undefined;
+  DVT_OBJECT_FILE_S3_ENDPOINT: string | undefined;
+  DVT_OBJECT_FILE_S3_REGION: string | undefined;
+  DVT_OBJECT_FILE_S3_FORCE_PATH_STYLE: boolean;
   DVT_DBT_BIN: string;
   DVT_DBT_WORKDIR_ROOT: string;
   DVT_DBT_BUNDLE_STORE_BACKEND: 'file' | 's3' | undefined;
@@ -639,6 +541,12 @@ function createEnv(): {
     DVT_TEMPORAL_ADMIN_HOST: '127.0.0.1',
     DVT_TEMPORAL_ADMIN_PORT: 9468,
     DVT_TEMPORAL_DBT_ENABLED: false,
+    DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: false,
+    DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: undefined,
+    DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: undefined,
+    DVT_OBJECT_FILE_S3_ENDPOINT: undefined,
+    DVT_OBJECT_FILE_S3_REGION: undefined,
+    DVT_OBJECT_FILE_S3_FORCE_PATH_STYLE: false,
     DVT_DBT_BIN: 'dbt',
     DVT_DBT_WORKDIR_ROOT: '/tmp/dvt',
     DVT_DBT_BUNDLE_STORE_BACKEND: undefined,

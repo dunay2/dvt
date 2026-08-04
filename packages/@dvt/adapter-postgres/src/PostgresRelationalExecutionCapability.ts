@@ -14,6 +14,11 @@ import type { Pool } from 'pg';
 import { PostgresAdapterClientSession } from './PostgresAdapterClientSession.js';
 import { resolvePostgresConnectionString } from './PostgresAdapterConnectionString.js';
 import { POSTGRES_ADAPTER_RUNTIME_CONSTANTS as C } from './PostgresAdapterConstants.js';
+import {
+  PostgresObjectFileLoader,
+  type PostgresObjectFileLoadInput,
+  type PostgresObjectFileLoadResult,
+} from './PostgresObjectFileLoader.js';
 import { createObservedPostgresPool } from './PostgresPoolErrorPolicy.js';
 import { normalizeSchema, quoteIdentifier } from './sqlUtils.js';
 
@@ -89,6 +94,7 @@ export class PostgresRelationalExecutionCapability {
   private readonly pool: Pool;
   private readonly ownsPool: boolean;
   private readonly clientSession: PostgresAdapterClientSession;
+  private readonly objectFileLoader: PostgresObjectFileLoader;
   private readonly nowIsoUtc: () => string;
 
   constructor(config: PostgresRelationalExecutionCapabilityConfig) {
@@ -111,6 +117,7 @@ export class PostgresRelationalExecutionCapability {
     }
 
     this.clientSession = new PostgresAdapterClientSession(this.pool, statementTimeoutMs);
+    this.objectFileLoader = new PostgresObjectFileLoader(this.clientSession);
     this.nowIsoUtc = config.nowIsoUtc ?? (() => new Date().toISOString());
     this.stepActivitiesByKind = new Map([
       [
@@ -136,6 +143,10 @@ export class PostgresRelationalExecutionCapability {
 
   async close(): Promise<void> {
     await this.clientSession.close(this.ownsPool);
+  }
+
+  public async load(input: PostgresObjectFileLoadInput): Promise<PostgresObjectFileLoadResult> {
+    return this.objectFileLoader.load(input);
   }
 
   private async prepareTransform(

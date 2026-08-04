@@ -13,11 +13,56 @@ describe('temporal worker env', () => {
 
     expect(env.SERVICE_NAME).toBe('dvt-temporal-worker');
     expect(env.DVT_TEMPORAL_DBT_ENABLED).toBe(false);
+    expect(env.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED).toBe(false);
+    expect(env.DVT_OBJECT_FILE_S3_ENDPOINT).toBeUndefined();
+    expect(env.DVT_OBJECT_FILE_S3_REGION).toBeUndefined();
+    expect(env.DVT_OBJECT_FILE_S3_FORCE_PATH_STYLE).toBe(false);
     expect(env.DVT_TEMPORAL_WORKER_RUN_MIGRATIONS).toBe(false);
     expect(env.DVT_DBT_BIN).toBe('dbt');
     expect(env.DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD).toBe(3);
     expect(env.DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS).toBe(10000);
     expect(env.DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS).toBe(2000);
+  });
+
+  it('accepts an explicit S3-compatible object-file endpoint', () => {
+    const env = loadEnv({
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+      DVT_OBJECT_FILE_S3_ENDPOINT: 'http://127.0.0.1:9000',
+      DVT_OBJECT_FILE_S3_REGION: 'us-east-1',
+      DVT_OBJECT_FILE_S3_FORCE_PATH_STYLE: 'true',
+    });
+
+    expect(env.DVT_OBJECT_FILE_S3_ENDPOINT).toBe('http://127.0.0.1:9000');
+    expect(env.DVT_OBJECT_FILE_S3_REGION).toBe('us-east-1');
+    expect(env.DVT_OBJECT_FILE_S3_FORCE_PATH_STYLE).toBe(true);
+  });
+
+  it('requires opaque source and target bindings when object-file PostgreSQL mode is enabled', () => {
+    const baseEnv = {
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+      DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: 'true',
+    };
+
+    expect(() => loadEnv(baseEnv)).toThrow(/DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF/);
+    expect(() =>
+      loadEnv({
+        ...baseEnv,
+        DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: 'object-store:het1-source',
+      })
+    ).toThrow(/DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF/);
+    expect(() =>
+      loadEnv({
+        ...baseEnv,
+        DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: 'vault:wrong-source',
+        DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: 'postgres:het1-staging',
+      })
+    ).toThrow(/object-store/);
   });
 
   it('requires bundle store config when DBT mode is enabled', () => {

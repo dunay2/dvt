@@ -82,6 +82,18 @@ test('computeBooleanScope marks temporal_postgres_changed for adapter-postgres c
   );
   assert.equal(fromPostgresIntegrationFile.temporal_postgres_changed, true);
   assert.equal(fromPostgresIntegrationFile.temporal_changed, false);
+
+  const fromObjectFileWorker = computeBooleanScope(
+    ['apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts'],
+    PR_QUALITY_SCOPE_PATTERNS
+  );
+  assert.equal(fromObjectFileWorker.temporal_postgres_changed, true);
+
+  const fromObjectFilePlugin = computeBooleanScope(
+    ['packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts'],
+    PR_QUALITY_SCOPE_PATTERNS
+  );
+  assert.equal(fromObjectFilePlugin.temporal_postgres_changed, true);
 });
 
 test('computeBooleanScope isolates transformation-specific integration changes', () => {

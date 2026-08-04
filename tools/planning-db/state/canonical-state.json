@@ -708,7 +708,7 @@
         "pnpm docs:feature-mechanization:implementation"
       ],
       "sourcePath": "apps/web/src/app/views/canvas/canvasGraphSearch.ts",
-      "sourceContentSha256": "5c34d87d4f0f17b5f6d1367b654f80ae207dc87aaac6992d905debf734d33756",
+      "sourceContentSha256": "8348100bded81b847024aabf9e2775e8d4541724a390235a06a024639c3e0a08",
       "rawRail": {
         "name": "SearchCanvasGraph",
         "type": "query",
@@ -20515,6 +20515,1674 @@
       "createdAt": "2026-08-02T09:29:37.877Z"
     },
     {
+      "railId": "local#TASK-HET1-2#command#workflowengine.startrun",
+      "featureId": "TASK-HET1-2",
+      "mechanizationStatus": "implemented",
+      "railName": "WorkflowEngine.startRun",
+      "normalizedRailName": "workflowengine.startrun",
+      "railType": "command",
+      "dddOwner": "engine start-run lifecycle",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/temporal-worker/src/ops/OperationalServer.ts#createOperationalServer",
+        "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts#escapeMetricLabel",
+        "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts#TemporalWorkerRuntimeState",
+        "apps/temporal-worker/src/plugins/env.ts#validateCredentialBinding",
+        "apps/temporal-worker/src/runtime/runtimeTypes.ts#TemporalWorkerPostgresCapability",
+        "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#createTemporalWorkerObjectFilePostgresProfile",
+        "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#requireBinding",
+        "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#TemporalWorkerObjectFilePostgresProfile",
+        "apps/temporal-worker/src/runtime/temporalWorkerObjectFileReader.ts#createTemporalWorkerObjectFileReader",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#assertNotAborted",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#formatColumnDefinition",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#insertRows",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#MAX_BIND_PARAMETERS",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#MAX_ROWS_PER_BATCH",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#NormalizedObjectFileColumn",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#normalizeObjectFileColumns",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#normalizeObjectFileSchema",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoader",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoadInput",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoadResult",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileScalar",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#queryWithSignal",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#toPostgresColumnType",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readArtifact",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#ReadArtifactResult",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readFileArtifact",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts#ObjectFileIngestionRejectedError",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts#ObjectFileIngestionRuntimeError",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#assertNotAborted",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#loadRowsSafely",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#normalizeMediaType",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunner",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunnerImpl",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunnerOptions",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#readSourceSafely",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#reject",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#rethrowCancellation",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReader",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReadInput",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReadResult",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresLoadInput",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresLoadResult",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresPluginExecutionInput",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresPluginRunner",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresRelationalLoader",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresRow",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresScalar",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#createObjectFilePostgresPluginProfile",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#OBJECT_FILE_POSTGRES_PLUGIN_ID",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#ObjectFilePostgresStepActivity",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertNotAborted",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertRecord",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertUniqueHeader",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#decodeUtf8",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#mapField",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#mapRecord",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#ObjectFileColumn",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#ObjectFileSource",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseBigInt",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseBoolean",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseCsvRecords",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseDate",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseInteger",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseJsonLinesRecords",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseNumeric",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseObjectFileRows",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseTimestamp",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#rejectField",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#resolvePostgresObjectFileScopeSchema",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#assertWithinSizeLimit",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#isAsyncIterable",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readBoundedChunks",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readS3ResponseBody",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#toByteChunk",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#hasValidCalendarAndClock",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#readDaysInMonth"
+      ],
+      "implementationRefs": [
+        "apps/temporal-worker/src/ops/OperationalServer.ts#createOperationalServer",
+        "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts#escapeMetricLabel",
+        "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts#TemporalWorkerRuntimeState",
+        "apps/temporal-worker/src/plugins/env.ts#validateCredentialBinding",
+        "apps/temporal-worker/src/runtime/runtimeTypes.ts#TemporalWorkerPostgresCapability",
+        "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#createTemporalWorkerObjectFilePostgresProfile",
+        "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#requireBinding",
+        "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#TemporalWorkerObjectFilePostgresProfile",
+        "apps/temporal-worker/src/runtime/temporalWorkerObjectFileReader.ts#createTemporalWorkerObjectFileReader",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#assertNotAborted",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#formatColumnDefinition",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#insertRows",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#MAX_BIND_PARAMETERS",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#MAX_ROWS_PER_BATCH",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#NormalizedObjectFileColumn",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#normalizeObjectFileColumns",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#normalizeObjectFileSchema",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoader",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoadInput",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoadResult",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileScalar",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#queryWithSignal",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#toPostgresColumnType",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readArtifact",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#ReadArtifactResult",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readFileArtifact",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts#ObjectFileIngestionRejectedError",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts#ObjectFileIngestionRuntimeError",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#assertNotAborted",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#loadRowsSafely",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#normalizeMediaType",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunner",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunnerImpl",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunnerOptions",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#readSourceSafely",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#reject",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#rethrowCancellation",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReader",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReadInput",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReadResult",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresLoadInput",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresLoadResult",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresPluginExecutionInput",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresPluginRunner",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresRelationalLoader",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresRow",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresScalar",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#createObjectFilePostgresPluginProfile",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#OBJECT_FILE_POSTGRES_PLUGIN_ID",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#ObjectFilePostgresStepActivity",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertNotAborted",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertRecord",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertUniqueHeader",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#decodeUtf8",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#mapField",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#mapRecord",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#ObjectFileColumn",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#ObjectFileSource",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseBigInt",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseBoolean",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseCsvRecords",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseDate",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseInteger",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseJsonLinesRecords",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseNumeric",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseObjectFileRows",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseTimestamp",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#rejectField",
+        "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#resolvePostgresObjectFileScopeSchema",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#assertWithinSizeLimit",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#isAsyncIterable",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readBoundedChunks",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readS3ResponseBody",
+        "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#toByteChunk",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#hasValidCalendarAndClock",
+        "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#readDaysInMonth"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260804-object-file-postgres-runtime.md",
+        "docs/risk-register/quality/R-20260804-OBJECT-FILE-POSTGRES-RUNTIME.yaml"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/temporal-object-file-postgres-plugin/**",
+        ".github/workflows/pr-quality-gate.yml",
+        "apps/api/**",
+        "apps/temporal-worker/**",
+        "packages/@dvt/adapter-postgres/**",
+        "packages/@dvt/artifacts/**",
+        "packages/@dvt/contracts/**",
+        "docs/evidence/**",
+        "docs/risk-register/quality/**",
+        "tools/ci/**",
+        "pnpm-lock.yaml"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+        "pnpm --filter @dvt/adapter-postgres test -- PostgresObjectFileLoad.test.ts",
+        "pnpm --filter dvt-temporal-worker exec vitest run --config vitest.config.ts test/host/objectFilePostgres.service.integration.test.ts"
+      ],
+      "completionGate": [
+        "pnpm verify:prepush",
+        "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+        "pnpm --filter @dvt/adapter-postgres test",
+        "pnpm --filter dvt-temporal-worker test",
+        "pnpm docs:feature-mechanization:implementation"
+      ],
+      "sourcePath": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+      "sourceContentSha256": "db8162fd0bd4379d7367f8f45202c2195014be1c1c7b2fc224b9c60f6ce224d8",
+      "rawRail": {
+        "name": "WorkflowEngine.startRun",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "engine start-run lifecycle"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "createOperationalServer",
+            "path": "apps/temporal-worker/src/ops/OperationalServer.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "escapeMetricLabel",
+            "path": "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "TemporalWorkerRuntimeState",
+            "path": "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "validateCredentialBinding",
+            "path": "apps/temporal-worker/src/plugins/env.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "TemporalWorkerPostgresCapability",
+            "path": "apps/temporal-worker/src/runtime/runtimeTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "createTemporalWorkerObjectFilePostgresProfile",
+            "path": "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "requireBinding",
+            "path": "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "TemporalWorkerObjectFilePostgresProfile",
+            "path": "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "createTemporalWorkerObjectFileReader",
+            "path": "apps/temporal-worker/src/runtime/temporalWorkerObjectFileReader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "assertNotAborted",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "formatColumnDefinition",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "insertRows",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "MAX_BIND_PARAMETERS",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "MAX_ROWS_PER_BATCH",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "NormalizedObjectFileColumn",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "normalizeObjectFileColumns",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "normalizeObjectFileSchema",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "PostgresObjectFileLoader",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "PostgresObjectFileLoadInput",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "PostgresObjectFileLoadResult",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "PostgresObjectFileScalar",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "queryWithSignal",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "toPostgresColumnType",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "readArtifact",
+            "path": "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ReadArtifactResult",
+            "path": "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "readFileArtifact",
+            "path": "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFileIngestionRejectedError",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFileIngestionRuntimeError",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "assertNotAborted",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "loadRowsSafely",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "normalizeMediaType",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresPluginRunner",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresPluginRunnerImpl",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresPluginRunnerOptions",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "readSourceSafely",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "reject",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "rethrowCancellation",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ContentAddressedObjectReader",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ContentAddressedObjectReadInput",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ContentAddressedObjectReadResult",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresLoadInput",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresLoadResult",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresPluginExecutionInput",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresPluginRunner",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresRelationalLoader",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresRow",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresScalar",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "createObjectFilePostgresPluginProfile",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "OBJECT_FILE_POSTGRES_PLUGIN_ID",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFilePostgresStepActivity",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "assertNotAborted",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "assertRecord",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "assertUniqueHeader",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "decodeUtf8",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "mapField",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "mapRecord",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFileColumn",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "ObjectFileSource",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "parseBigInt",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "parseBoolean",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "parseCsvRecords",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "parseDate",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "parseInteger",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "parseJsonLinesRecords",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "parseNumeric",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "parseObjectFileRows",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "parseTimestamp",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "rejectField",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "resolvePostgresObjectFileScopeSchema",
+            "path": "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "assertWithinSizeLimit",
+            "path": "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "isAsyncIterable",
+            "path": "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "readBoundedChunks",
+            "path": "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "readS3ResponseBody",
+            "path": "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "toByteChunk",
+            "path": "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "hasValidCalendarAndClock",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          },
+          {
+            "name": "readDaysInMonth",
+            "path": "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts",
+            "cqRails": ["WorkflowEngine.startRun"],
+            "dddOwner": "engine start-run lifecycle",
+            "unitTests": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+              "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+              "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+              "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+              "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+            ],
+            "fowlerSignals": [
+              "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+            ],
+            "cypressCoverage": "N/A - server-side runtime vertical has no browser surface in issue 2179",
+            "architectureGuard": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+          }
+        ],
+        "version": 1,
+        "featureId": "TASK-HET1-2",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2179"],
+        "cypressFlows": [
+          "N/A - server-side runtime vertical has no browser surface in issue 2179"
+        ],
+        "domainObjects": [
+          "ObjectFilePostgresPluginProfile",
+          "LoadObjectFileToPostgresStep",
+          "PostgresObjectFileLoad",
+          "MaterializationEvidence"
+        ],
+        "fowlerSignals": [
+          "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+        ],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+          "pnpm --filter @dvt/adapter-postgres test",
+          "pnpm --filter dvt-temporal-worker test",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "workflowengine.startrun-record",
+            "redTest": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+            "greenTest": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test && pnpm --filter @dvt/adapter-postgres test && pnpm --filter dvt-temporal-worker test",
+            "patchSurfaces": [
+              "packages/@dvt/temporal-object-file-postgres-plugin/**",
+              ".github/workflows/pr-quality-gate.yml",
+              "apps/api/**",
+              "apps/temporal-worker/**",
+              "packages/@dvt/adapter-postgres/**",
+              "packages/@dvt/artifacts/**",
+              "packages/@dvt/contracts/**",
+              "docs/evidence/**",
+              "docs/risk-register/quality/**",
+              "tools/ci/**",
+              "pnpm-lock.yaml"
+            ],
+            "expectedFailure": "The object-file PostgreSQL step has no runtime plugin, verified object reader, atomic PostgreSQL loader, or service-level Temporal execution proof."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "WorkflowEngine.startRun",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "engine start-run lifecycle"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+          "pnpm --filter @dvt/adapter-postgres test -- PostgresObjectFileLoad.test.ts",
+          "pnpm --filter dvt-temporal-worker exec vitest run --config vitest.config.ts test/host/objectFilePostgres.service.integration.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2179",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/**",
+          ".github/workflows/pr-quality-gate.yml",
+          "apps/api/**",
+          "apps/temporal-worker/**",
+          "packages/@dvt/adapter-postgres/**",
+          "packages/@dvt/artifacts/**",
+          "packages/@dvt/contracts/**",
+          "docs/evidence/**",
+          "docs/risk-register/quality/**",
+          "tools/ci/**",
+          "pnpm-lock.yaml"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-temporal/src/workflows/**"
+        ]
+      },
+      "revision": 3,
+      "createdBy": "codex",
+      "createdAt": "2026-08-04T14:04:27.496Z"
+    },
+    {
       "railId": "local#US-F4-3-RUN-CONTROLS#command#cancelrun",
       "featureId": "US-F4-3-RUN-CONTROLS",
       "mechanizationStatus": "implemented",
@@ -37414,6 +39082,473 @@
         ]
       },
       "createdAt": "2026-08-04T09:34:24.959Z"
+    },
+    {
+      "operationId": "d079da04-3387-4185-bee7-80c9aeba3456",
+      "idempotencyKey": "codex-task-het1-2-workflow-engine-start-v1a",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#TASK-HET1-2#command#workflowengine.startrun",
+      "sourcePath": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+      "sourceContentSha256": "db8162fd0bd4379d7367f8f45202c2195014be1c1c7b2fc224b9c60f6ce224d8",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+        "dddOwner": "engine start-run lifecycle",
+        "railName": "WorkflowEngine.startRun",
+        "railType": "command",
+        "featureId": "TASK-HET1-2",
+        "greenTest": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test && pnpm --filter @dvt/adapter-postgres test && pnpm --filter dvt-temporal-worker test",
+        "sourceRef": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+        "unitTests": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+          "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+          "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+          "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+          "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2179"],
+        "cypressFlows": [
+          "N/A - server-side runtime vertical has no browser surface in issue 2179"
+        ],
+        "domainObjects": [
+          "ObjectFilePostgresPluginProfile",
+          "LoadObjectFileToPostgresStep",
+          "PostgresObjectFileLoad",
+          "MaterializationEvidence"
+        ],
+        "fowlerSignals": [
+          "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+        ],
+        "patchSurfaces": [],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+          "pnpm --filter @dvt/adapter-postgres test",
+          "pnpm --filter dvt-temporal-worker test",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The object-file PostgreSQL step has no runtime plugin, verified object reader, atomic PostgreSQL loader, or service-level Temporal execution proof.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260804-object-file-postgres-runtime.md",
+          "docs/risk-register/quality/R-20260804-OBJECT-FILE-POSTGRES-RUNTIME.yaml"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+          "pnpm --filter @dvt/adapter-postgres test -- PostgresObjectFileLoad.test.ts",
+          "pnpm --filter dvt-temporal-worker exec vitest run --config vitest.config.ts test/host/objectFilePostgres.service.integration.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2179",
+        "implementationRefs": [
+          "apps/temporal-worker/src/ops/OperationalServer.ts#createOperationalServer",
+          "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts#escapeMetricLabel",
+          "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts#TemporalWorkerRuntimeState",
+          "apps/temporal-worker/src/plugins/env.ts#validateCredentialBinding",
+          "apps/temporal-worker/src/runtime/runtimeTypes.ts#TemporalWorkerPostgresCapability",
+          "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#createTemporalWorkerObjectFilePostgresProfile",
+          "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#requireBinding",
+          "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#TemporalWorkerObjectFilePostgresProfile",
+          "apps/temporal-worker/src/runtime/temporalWorkerObjectFileReader.ts#createTemporalWorkerObjectFileReader",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#assertNotAborted",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#formatColumnDefinition",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#insertRows",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#MAX_BIND_PARAMETERS",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#MAX_ROWS_PER_BATCH",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#NormalizedObjectFileColumn",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#normalizeObjectFileColumns",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#normalizeObjectFileSchema",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoader",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoadInput",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoadResult",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileScalar",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#queryWithSignal",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#toPostgresColumnType"
+        ],
+        "normalizedRailName": "workflowengine.startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "db8162fd0bd4379d7367f8f45202c2195014be1c1c7b2fc224b9c60f6ce224d8",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/**",
+          ".github/workflows/pr-quality-gate.yml",
+          "apps/api/**",
+          "apps/temporal-worker/**",
+          "packages/@dvt/adapter-postgres/**",
+          "packages/@dvt/artifacts/**",
+          "packages/@dvt/contracts/**",
+          "docs/evidence/**",
+          "docs/risk-register/quality/**",
+          "tools/ci/**",
+          "pnpm-lock.yaml"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-temporal/src/workflows/**"
+        ]
+      },
+      "createdAt": "2026-08-04T14:04:27.496Z"
+    },
+    {
+      "operationId": "7b4c60da-138e-4351-9b83-89cdaf85e941",
+      "idempotencyKey": "codex-task-het1-2-workflow-engine-start-v1b",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#TASK-HET1-2#command#workflowengine.startrun",
+      "sourcePath": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+      "sourceContentSha256": "db8162fd0bd4379d7367f8f45202c2195014be1c1c7b2fc224b9c60f6ce224d8",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+        "dddOwner": "engine start-run lifecycle",
+        "railName": "WorkflowEngine.startRun",
+        "railType": "command",
+        "featureId": "TASK-HET1-2",
+        "greenTest": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test && pnpm --filter @dvt/adapter-postgres test && pnpm --filter dvt-temporal-worker test",
+        "sourceRef": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+        "unitTests": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2179"],
+        "cypressFlows": [
+          "N/A - server-side runtime vertical has no browser surface in issue 2179"
+        ],
+        "domainObjects": ["ObjectFilePostgresPluginProfile"],
+        "fowlerSignals": [
+          "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+        ],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The object-file PostgreSQL step has no runtime plugin, verified object reader, atomic PostgreSQL loader, or service-level Temporal execution proof.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260804-object-file-postgres-runtime.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2179",
+        "implementationRefs": [
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readArtifact",
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#ReadArtifactResult",
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readFileArtifact",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts#ObjectFileIngestionRejectedError",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts#ObjectFileIngestionRuntimeError",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#assertNotAborted",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#loadRowsSafely",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#normalizeMediaType",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunner",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunnerImpl",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunnerOptions",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#readSourceSafely",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#reject",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#rethrowCancellation",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReader",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReadInput",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReadResult",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresLoadInput",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresLoadResult",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresPluginExecutionInput",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresPluginRunner",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresRelationalLoader",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresRow"
+        ],
+        "normalizedRailName": "workflowengine.startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "db8162fd0bd4379d7367f8f45202c2195014be1c1c7b2fc224b9c60f6ce224d8",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-temporal/src/workflows/**"
+        ]
+      },
+      "createdAt": "2026-08-04T14:04:29.808Z"
+    },
+    {
+      "operationId": "6d5baac7-0aa2-48fa-bb17-01bac46e0f78",
+      "idempotencyKey": "codex-task-het1-2-workflow-engine-start-v1c",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#TASK-HET1-2#command#workflowengine.startrun",
+      "sourcePath": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+      "sourceContentSha256": "db8162fd0bd4379d7367f8f45202c2195014be1c1c7b2fc224b9c60f6ce224d8",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+        "dddOwner": "engine start-run lifecycle",
+        "railName": "WorkflowEngine.startRun",
+        "railType": "command",
+        "featureId": "TASK-HET1-2",
+        "greenTest": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test && pnpm --filter @dvt/adapter-postgres test && pnpm --filter dvt-temporal-worker test",
+        "sourceRef": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+        "unitTests": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2179"],
+        "cypressFlows": [
+          "N/A - server-side runtime vertical has no browser surface in issue 2179"
+        ],
+        "domainObjects": ["ObjectFilePostgresPluginProfile"],
+        "fowlerSignals": [
+          "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+        ],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The object-file PostgreSQL step has no runtime plugin, verified object reader, atomic PostgreSQL loader, or service-level Temporal execution proof.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260804-object-file-postgres-runtime.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/temporal-object-file-postgres-plugin test"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2179",
+        "implementationRefs": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresScalar",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#createObjectFilePostgresPluginProfile",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#OBJECT_FILE_POSTGRES_PLUGIN_ID",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#ObjectFilePostgresStepActivity",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertNotAborted",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertRecord",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertUniqueHeader",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#decodeUtf8",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#mapField",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#mapRecord",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#ObjectFileColumn",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#ObjectFileSource",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseBigInt",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseBoolean",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseCsvRecords",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseDate",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseInteger",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseJsonLinesRecords",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseNumeric",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseObjectFileRows",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseTimestamp",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#rejectField"
+        ],
+        "normalizedRailName": "workflowengine.startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "db8162fd0bd4379d7367f8f45202c2195014be1c1c7b2fc224b9c60f6ce224d8",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-temporal/src/workflows/**"
+        ]
+      },
+      "createdAt": "2026-08-04T14:04:32.090Z"
+    },
+    {
+      "operationId": "60d39c4e-c40e-47a1-967a-8a7a02fd8e31",
+      "idempotencyKey": "codex-task-het1-2-workflow-engine-start-v1d",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#TASK-HET1-2#command#workflowengine.startrun",
+      "sourcePath": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+      "sourceContentSha256": "db8162fd0bd4379d7367f8f45202c2195014be1c1c7b2fc224b9c60f6ce224d8",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+        "dddOwner": "engine start-run lifecycle",
+        "railName": "WorkflowEngine.startRun",
+        "railType": "command",
+        "featureId": "TASK-HET1-2",
+        "greenTest": "pnpm --filter @dvt/temporal-object-file-postgres-plugin test && pnpm --filter @dvt/adapter-postgres test && pnpm --filter dvt-temporal-worker test",
+        "sourceRef": "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts",
+        "unitTests": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/test/ObjectFilePostgresPluginRunner.test.ts",
+          "packages/@dvt/temporal-object-file-postgres-plugin/test/objectFileRows.test.ts",
+          "packages/@dvt/adapter-postgres/test/PostgresObjectFileLoad.test.ts",
+          "apps/temporal-worker/test/runtime/temporalWorkerObjectFilePostgresProfile.test.ts",
+          "apps/temporal-worker/test/host/objectFilePostgres.service.integration.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2179"],
+        "cypressFlows": [
+          "N/A - server-side runtime vertical has no browser surface in issue 2179"
+        ],
+        "domainObjects": [
+          "ObjectFilePostgresPluginProfile",
+          "LoadObjectFileToPostgresStep",
+          "PostgresObjectFileLoad",
+          "MaterializationEvidence"
+        ],
+        "fowlerSignals": [
+          "A statically composed typed Temporal plugin owns one step kind and reuses the existing workflow, artifact reader, PostgreSQL capability, and WorkflowEngine.startRun rail."
+        ],
+        "patchSurfaces": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/**",
+          ".github/workflows/pr-quality-gate.yml",
+          "apps/api/**",
+          "apps/temporal-worker/**",
+          "packages/@dvt/adapter-postgres/**",
+          "packages/@dvt/artifacts/**",
+          "packages/@dvt/contracts/**",
+          "docs/evidence/**",
+          "docs/risk-register/quality/**",
+          "tools/ci/**",
+          "pnpm-lock.yaml"
+        ],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+          "pnpm --filter @dvt/adapter-postgres test",
+          "pnpm --filter dvt-temporal-worker test",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "componentGuides": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "expectedFailure": "The object-file PostgreSQL step has no runtime plugin, verified object reader, atomic PostgreSQL loader, or service-level Temporal execution proof.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260804-object-file-postgres-runtime.md",
+          "docs/risk-register/quality/R-20260804-OBJECT-FILE-POSTGRES-RUNTIME.yaml"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/temporal-object-file-postgres-plugin test",
+          "pnpm --filter @dvt/adapter-postgres test -- PostgresObjectFileLoad.test.ts",
+          "pnpm --filter dvt-temporal-worker exec vitest run --config vitest.config.ts test/host/objectFilePostgres.service.integration.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2179",
+        "implementationRefs": [
+          "apps/temporal-worker/src/ops/OperationalServer.ts#createOperationalServer",
+          "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts#escapeMetricLabel",
+          "apps/temporal-worker/src/ops/TemporalWorkerMonitor.ts#TemporalWorkerRuntimeState",
+          "apps/temporal-worker/src/plugins/env.ts#validateCredentialBinding",
+          "apps/temporal-worker/src/runtime/runtimeTypes.ts#TemporalWorkerPostgresCapability",
+          "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#createTemporalWorkerObjectFilePostgresProfile",
+          "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#requireBinding",
+          "apps/temporal-worker/src/runtime/temporalWorkerObjectFilePostgresProfile.ts#TemporalWorkerObjectFilePostgresProfile",
+          "apps/temporal-worker/src/runtime/temporalWorkerObjectFileReader.ts#createTemporalWorkerObjectFileReader",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#assertNotAborted",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#formatColumnDefinition",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#insertRows",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#MAX_BIND_PARAMETERS",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#MAX_ROWS_PER_BATCH",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#NormalizedObjectFileColumn",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#normalizeObjectFileColumns",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoader",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoadInput",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileLoadResult",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#PostgresObjectFileScalar",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#queryWithSignal",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#resolvePostgresObjectFileScopeSchema",
+          "packages/@dvt/adapter-postgres/src/PostgresObjectFileLoader.ts#toPostgresColumnType",
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#assertWithinSizeLimit",
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#isAsyncIterable",
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readArtifact",
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#ReadArtifactResult",
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readBoundedChunks",
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readFileArtifact",
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#readS3ResponseBody",
+          "packages/@dvt/artifacts/src/runtime/readArtifactBytes.ts#toByteChunk",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts#ObjectFileIngestionRejectedError",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginErrors.ts#ObjectFileIngestionRuntimeError",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#assertNotAborted",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#loadRowsSafely",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#normalizeMediaType",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunner",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunnerImpl",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#ObjectFilePostgresPluginRunnerOptions",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#readSourceSafely",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#reject",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresPluginRunner.ts#rethrowCancellation",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReader",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReadInput",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ContentAddressedObjectReadResult",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresLoadInput",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresLoadResult",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresPluginExecutionInput",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresPluginRunner",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresRelationalLoader",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresRow",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFilePostgresPluginTypes.ts#ObjectFilePostgresScalar",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#createObjectFilePostgresPluginProfile",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#OBJECT_FILE_POSTGRES_PLUGIN_ID",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/ObjectFilePostgresStepActivity.ts#ObjectFilePostgresStepActivity",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertNotAborted",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertRecord",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#assertUniqueHeader",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#decodeUtf8",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#hasValidCalendarAndClock",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#mapField",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#mapRecord",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#ObjectFileColumn",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#ObjectFileSource",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseBigInt",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseBoolean",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseCsvRecords",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseDate",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseInteger",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseJsonLinesRecords",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseNumeric",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseObjectFileRows",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#parseTimestamp",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#readDaysInMonth",
+          "packages/@dvt/temporal-object-file-postgres-plugin/src/objectFileRows.ts#rejectField"
+        ],
+        "normalizedRailName": "workflowengine.startrun",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "db8162fd0bd4379d7367f8f45202c2195014be1c1c7b2fc224b9c60f6ce224d8",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/temporal-object-file-postgres-plugin/**",
+          ".github/workflows/pr-quality-gate.yml",
+          "apps/api/**",
+          "apps/temporal-worker/**",
+          "packages/@dvt/adapter-postgres/**",
+          "packages/@dvt/artifacts/**",
+          "packages/@dvt/contracts/**",
+          "docs/evidence/**",
+          "docs/risk-register/quality/**",
+          "tools/ci/**",
+          "pnpm-lock.yaml"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/**",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-temporal/src/workflows/**"
+        ]
+      },
+      "createdAt": "2026-08-04T15:07:01.706Z"
     }
   ]
 }

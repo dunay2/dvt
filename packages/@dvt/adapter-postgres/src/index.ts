@@ -97,6 +97,13 @@ export { PostgresArchiveLeaseStore } from './PostgresArchiveLeaseStore.js';
 export { PostgresDeliveryBufferPurgeStore } from './PostgresDeliveryBufferPurgeStore.js';
 export { PostgresRelationalExecutionCapability } from './PostgresRelationalExecutionCapability.js';
 export {
+  PostgresObjectFileLoader,
+  resolvePostgresObjectFileScopeSchema,
+  type PostgresObjectFileLoadInput,
+  type PostgresObjectFileLoadResult,
+  type PostgresObjectFileScalar,
+} from './PostgresObjectFileLoader.js';
+export {
   createObservedPostgresPool,
   type PostgresPoolFailure,
   type PostgresPoolFailureReporter,

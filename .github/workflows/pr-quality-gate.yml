@@ -412,6 +412,12 @@ jobs:
         postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
       DATABASE_URL:
         postgresql://dvt_test:${{ github.run_id }}-${{ github.run_attempt }}@localhost:5432/dvt_test
+      DVT_HET1_SERVICE_INTEGRATION: '1'
+      DVT_HET1_MINIO_ENDPOINT: http://127.0.0.1:9000
+      DVT_HET1_TEMPORAL_ADDRESS: 127.0.0.1:7233
+      AWS_ACCESS_KEY_ID: dvt_het1
+      AWS_SECRET_ACCESS_KEY: ${{ github.run_id }}-${{ github.run_attempt }}-minio
+      AWS_REGION: us-east-1
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -437,6 +443,36 @@ jobs:
 
       - name: Run Temporal adapter integration (postgres capability)
         run: pnpm --filter @dvt/adapter-temporal run test:integration:postgres
+
+      - name: Start HET1 object-store and Temporal services
+        run: |
+          docker run --rm -d --name dvt-het1-minio -p 9000:9000 \
+            -e MINIO_ROOT_USER="$AWS_ACCESS_KEY_ID" \
+            -e MINIO_ROOT_PASSWORD="$AWS_SECRET_ACCESS_KEY" \
+            minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e \
+            server /data
+          docker run --rm -d --name dvt-het1-temporal -p 7233:7233 \
+            temporalio/temporal@sha256:cf86707827fac99e4d1c4a47dc11b105382d796199c7bd41fb3213fb0471628e \
+            server start-dev --ip 0.0.0.0
+          for attempt in {1..60}; do
+            if curl --fail --silent http://127.0.0.1:9000/minio/health/ready >/dev/null && \
+              docker exec dvt-het1-temporal temporal operator namespace describe \
+                --namespace default --address 127.0.0.1:7233 >/dev/null 2>&1; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs dvt-het1-minio
+          docker logs dvt-het1-temporal
+          exit 1
+
+      - name: Prepare HET1 worker runtime dependencies
+        run: node scripts/build-workspace-runtime-deps.cjs dvt-temporal-worker
+
+      - name: Prove object-file to PostgreSQL worker vertical
+        run: >-
+          pnpm --filter dvt-temporal-worker exec vitest run --config vitest.config.ts
+          test/host/objectFilePostgres.service.integration.test.ts
 
   temporal-transformation-integration:
     name: Temporal adapter integration (transformation runtime)

@@ -8,13 +8,14 @@ import type { Env } from '../plugins/env.js';
 
 import type {
   CreateTemporalWorkerRuntimeOptions,
-  TemporalWorkerStepCapability,
+  TemporalWorkerPostgresCapability,
 } from './runtimeTypes.js';
 
 const POSTGRES_RELATIONAL_PLUGIN_ID = 'postgres-relational';
 
 export interface TemporalWorkerPostgresProfile {
   pluginProfile: TemporalStepPluginProfile;
+  relationalLoader: TemporalWorkerPostgresCapability;
   close: () => Promise<void>;
 }
 
@@ -31,11 +32,12 @@ export function createTemporalWorkerPostgresProfile(
       pluginId: POSTGRES_RELATIONAL_PLUGIN_ID,
       stepActivitiesByKind: capability.stepActivitiesByKind,
     },
+    relationalLoader: capability,
     close: () => capability.close(),
   };
 }
 
-function createDefaultPostgresRelationalCapability(env: Env): TemporalWorkerStepCapability {
+function createDefaultPostgresRelationalCapability(env: Env): TemporalWorkerPostgresCapability {
   return new PostgresRelationalExecutionCapability({
     connectionString: env.DATABASE_URL,
     statementTimeoutMs: env.DVT_PG_STATEMENT_TIMEOUT_MS,
