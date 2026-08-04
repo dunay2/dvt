@@ -6202,7 +6202,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
-      "sourceContentSha256": "e2e96080b5fa79be8db8dc08c570fe06ab0603d8da7c72eb22c9e44bd64c5938",
+      "sourceContentSha256": "1334275563ca4e458a3469aedd584a682ab30aafeb17c8df2cfa18a6f320bed6",
       "rawRail": {
         "name": "AuthorCanvasGraphEdge",
         "type": "command",
