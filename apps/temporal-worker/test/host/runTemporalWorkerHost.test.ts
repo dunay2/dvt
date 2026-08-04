@@ -619,6 +619,9 @@ function createEnv(): {
   DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: boolean;
   DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: string | undefined;
   DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: string | undefined;
+  DVT_OBJECT_FILE_S3_ENDPOINT: string | undefined;
+  DVT_OBJECT_FILE_S3_REGION: string | undefined;
+  DVT_OBJECT_FILE_S3_FORCE_PATH_STYLE: boolean;
   DVT_DBT_BIN: string;
   DVT_DBT_WORKDIR_ROOT: string;
   DVT_DBT_BUNDLE_STORE_BACKEND: 'file' | 's3' | undefined;
@@ -651,6 +654,9 @@ function createEnv(): {
     DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: false,
     DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: undefined,
     DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: undefined,
+    DVT_OBJECT_FILE_S3_ENDPOINT: undefined,
+    DVT_OBJECT_FILE_S3_REGION: undefined,
+    DVT_OBJECT_FILE_S3_FORCE_PATH_STYLE: false,
     DVT_DBT_BIN: 'dbt',
     DVT_DBT_WORKDIR_ROOT: '/tmp/dvt',
     DVT_DBT_BUNDLE_STORE_BACKEND: undefined,

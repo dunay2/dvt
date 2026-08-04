@@ -320,6 +320,9 @@ importers:
 
   apps/temporal-worker:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.1019.0
+        version: 3.1019.0
       '@dvt/adapter-postgres':
         specifier: workspace:*
         version: link:../../packages/@dvt/adapter-postgres
