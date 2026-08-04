@@ -10,11 +10,18 @@ type S3LikeClient = Pick<S3Client, 'send'>;
 export interface ArtifactReadRuntimeOptions {
   readonly nodeEnv?: string;
   readonly s3Client?: S3LikeClient;
+  readonly abortSignal?: globalThis.AbortSignal;
 }
 
 export interface ReadArtifactBytesOptions extends ArtifactReadRuntimeOptions {
   readonly artifactLabel: string;
   readonly uriLabel: string;
+}
+
+export interface ReadArtifactResult {
+  readonly bytes: Uint8Array;
+  readonly contentLength?: number;
+  readonly contentType?: string;
 }
 
 const DEFAULT_NODE_ENV = 'development';
@@ -24,13 +31,20 @@ export async function readArtifactBytes(
   uri: string,
   options: ReadArtifactBytesOptions
 ): Promise<Uint8Array> {
+  return (await readArtifact(uri, options)).bytes;
+}
+
+export async function readArtifact(
+  uri: string,
+  options: ReadArtifactBytesOptions
+): Promise<ReadArtifactResult> {
   const parsedUri = parseArtifactUri(uri, options.uriLabel);
   const nodeEnv = options.nodeEnv ?? process.env['NODE_ENV'] ?? DEFAULT_NODE_ENV;
   const s3Client = options.s3Client ?? getDefaultS3Client();
   const scheme = normalizeScheme(parsedUri.protocol);
 
   if (scheme === 's3') {
-    return readS3Artifact(parsedUri, s3Client, options.artifactLabel);
+    return readS3Artifact(parsedUri, s3Client, options.artifactLabel, options.abortSignal);
   }
 
   if (scheme === 'file') {
@@ -41,7 +55,7 @@ export async function readArtifactBytes(
       );
     }
 
-    return readFileArtifact(parsedUri, options.artifactLabel);
+    return readFileArtifact(parsedUri, options.artifactLabel, options.abortSignal);
   }
 
   throw new ArtifactReadError(
@@ -67,9 +81,17 @@ function parseArtifactUri(uri: string, uriLabel: string): URL {
   }
 }
 
-async function readFileArtifact(uri: URL, artifactLabel: string): Promise<Uint8Array> {
+async function readFileArtifact(
+  uri: URL,
+  artifactLabel: string,
+  abortSignal?: globalThis.AbortSignal
+): Promise<ReadArtifactResult> {
   try {
-    return await readFile(fileURLToPath(uri));
+    const bytes = await readFile(fileURLToPath(uri), { signal: abortSignal });
+    return {
+      bytes,
+      contentLength: bytes.byteLength,
+    };
   } catch (error) {
     if (isMissingFileError(error)) {
       throw new ArtifactReadError(
@@ -86,8 +108,9 @@ async function readFileArtifact(uri: URL, artifactLabel: string): Promise<Uint8A
 async function readS3Artifact(
   uri: URL,
   s3Client: S3LikeClient,
-  artifactLabel: string
-): Promise<Uint8Array> {
+  artifactLabel: string,
+  abortSignal?: globalThis.AbortSignal
+): Promise<ReadArtifactResult> {
   const bucket = uri.hostname;
   const key = uri.pathname.slice(1);
 
@@ -106,13 +129,19 @@ async function readS3Artifact(
   }
 
   try {
-    const response = await s3Client.send(
-      new GetObjectCommand({
-        Bucket: bucket,
-        Key: key,
-      })
-    );
-    return readS3ResponseBody(response.Body, artifactLabel);
+    const command = new GetObjectCommand({
+      Bucket: bucket,
+      Key: key,
+    });
+    const response = abortSignal
+      ? await s3Client.send(command, { abortSignal })
+      : await s3Client.send(command);
+    const bytes = await readS3ResponseBody(response.Body, artifactLabel);
+    return {
+      bytes,
+      ...(response.ContentLength === undefined ? {} : { contentLength: response.ContentLength }),
+      ...(response.ContentType === undefined ? {} : { contentType: response.ContentType }),
+    };
   } catch (error) {
     if (isS3NotFoundError(error)) {
       throw new ArtifactReadError(

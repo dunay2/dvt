@@ -140,6 +140,15 @@ export const MaterializationEvidenceSchema = z
     environmentId: NonBlankStringSchema,
     sinkTable: NonBlankStringSchema,
     rowsWritten: z.number().int().nonnegative(),
+    sourceArtifact: z
+      .object({
+        sha256: Sha256HexStringSchema,
+        sizeBytes: z.number().int().nonnegative(),
+        mediaType: NonBlankStringSchema,
+      })
+      .strict()
+      .optional(),
+    publicationOutcome: z.enum(['created', 'replaced']).optional(),
     startedAt: IsoUtcStringSchema,
     completedAt: IsoUtcStringSchema,
     durationMs: z.number().int().nonnegative(),

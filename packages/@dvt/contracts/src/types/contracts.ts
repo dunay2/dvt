@@ -91,6 +91,12 @@ export interface MaterializationEvidence {
   environmentId: NonBlankString;
   sinkTable: NonBlankString;
   rowsWritten: number;
+  sourceArtifact?: {
+    sha256: Sha256HexString;
+    sizeBytes: number;
+    mediaType: NonBlankString;
+  };
+  publicationOutcome?: 'created' | 'replaced';
   startedAt: IsoUtcString;
   completedAt: IsoUtcString;
   durationMs: number;
