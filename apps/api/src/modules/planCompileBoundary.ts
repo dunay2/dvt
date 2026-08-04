@@ -5,13 +5,17 @@
  */
 import {
   CaptureMaterializationEvidenceStepTypeConfigSchema,
+  LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE,
+  LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND,
+  LoadObjectFileToPostgresStepTypeConfigSchema,
   PostgresSqlTransformStepTypeConfigSchema,
   PreparePostgresTransformStepTypeConfigSchema,
   SparkJobStepTypeConfigSchema,
   StepTypeRegistry,
   SUPPORTED_START_RUN_TARGET_ADAPTERS,
+  validateLoadObjectFileToPostgresPlanOwnership,
 } from '@dvt/contracts';
-import type { StepKindExecutionProfile } from '@dvt/contracts';
+import type { StepKindContextValidator, StepKindExecutionProfile } from '@dvt/contracts';
 import { PlannerFacade } from '@dvt/planner';
 import type { PlannerFacadeOptions } from '@dvt/planner';
 
@@ -21,7 +25,8 @@ type PlanCompileStepSchema =
   | typeof PreparePostgresTransformStepTypeConfigSchema
   | typeof PostgresSqlTransformStepTypeConfigSchema
   | typeof CaptureMaterializationEvidenceStepTypeConfigSchema
-  | typeof SparkJobStepTypeConfigSchema;
+  | typeof SparkJobStepTypeConfigSchema
+  | typeof LoadObjectFileToPostgresStepTypeConfigSchema;
 
 const DEFAULT_EXECUTION_PROFILE = {
   supportedAdapters: PLAN_COMPILE_SUPPORTED_ADAPTERS,
@@ -57,6 +62,12 @@ const BUILT_IN_STEP_FAMILY_DEFINITIONS = [
     sourceFamilies: ['spark-job-graph'],
     owner: 'built-in',
     pluginExtendable: true,
+  },
+  {
+    family: 'object_file_load',
+    sourceFamilies: ['het-object-file'],
+    owner: 'built-in',
+    pluginExtendable: false,
   },
 ] as const satisfies readonly {
   readonly family: string;
@@ -106,11 +117,21 @@ const BUILT_IN_STEP_KIND_DEFINITIONS = [
     },
     source: 'built-in',
   },
+  {
+    kind: LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND,
+    family: 'object_file_load',
+    schema: LoadObjectFileToPostgresStepTypeConfigSchema,
+    executionProfile: LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE,
+    validateContext: (config, context) =>
+      validateLoadObjectFileToPostgresPlanOwnership(config, context?.planOwnership),
+    source: 'built-in',
+  },
 ] as const satisfies readonly {
   readonly kind: string;
   readonly family: PlanCompileFamilyId;
   readonly schema: PlanCompileStepSchema;
   readonly executionProfile: StepKindExecutionProfile;
+  readonly validateContext?: StepKindContextValidator;
   readonly source: 'built-in';
 }[];
 
@@ -121,6 +142,7 @@ export interface StepKindDefinition {
   readonly family: PlanCompileFamilyId;
   readonly schema: PlanCompileStepSchema;
   readonly executionProfile: StepKindExecutionProfile;
+  readonly validateContext?: StepKindContextValidator;
   readonly source: 'built-in';
 }
 
@@ -181,7 +203,10 @@ export function buildPlanCompilePlanner(
 ): PlannerFacade {
   const plannerOptions: PlannerFacadeOptions = {
     stepFactory: planCompileStepFactory,
-    stepTypeRegistry: resolvePlanCompileStepRegistry(boundary.profile, resolvePlanCompileCatalog(boundary)),
+    stepTypeRegistry: resolvePlanCompileStepRegistry(
+      boundary.profile,
+      resolvePlanCompileCatalog(boundary)
+    ),
   };
 
   return new PlannerFacade(plannerOptions);
@@ -213,6 +238,9 @@ function resolvePlanCompileStepRegistry(
         {
           schema: definition.schema,
           profile: definition.executionProfile,
+          ...(definition.validateContext === undefined
+            ? {}
+            : { validateContext: definition.validateContext }),
         },
       ] as const;
     })

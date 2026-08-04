@@ -9,7 +9,7 @@
  */
 import { z } from 'zod';
 
-import { CommonStepTypeConfigSchema } from '../../step-registry/DbtStepTypeConfig.js';
+import { CommonStepTypeConfigSchema } from '../../step-registry/CommonStepTypeConfig.js';
 
 export const SparkJobRuntimeSchema = z.enum(['python', 'scala']);
 export const SparkJobDeployModeSchema = z.enum(['client', 'cluster']);

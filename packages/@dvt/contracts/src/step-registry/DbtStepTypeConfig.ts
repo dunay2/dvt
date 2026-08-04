@@ -1,15 +1,10 @@
 import { z } from 'zod';
 
-const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/u);
+import { CommonStepTypeConfigSchema } from './CommonStepTypeConfig.js';
 
-export const CompiledCodeRefSchema = z
-  .object({
-    sha256: HexSha256Schema,
-    storageUri: z.string().min(1),
-    sizeBytes: z.number().int().nonnegative(),
-    encoding: z.literal('utf-8').optional(),
-  })
-  .strict();
+export { CommonStepTypeConfigSchema, CompiledCodeRefSchema } from './CommonStepTypeConfig.js';
+
+const HexSha256Schema = z.string().regex(/^[a-f0-9]{64}$/u);
 
 export const StepArtifactRefSchema = z
   .object({
@@ -34,19 +29,5 @@ export interface DbtStepTypeConfig extends Record<string, unknown> {
     encoding?: 'utf-8';
   };
 }
-
-export const CommonStepTypeConfigSchema = z
-  .object({
-    stepTimeoutMs: z.number().positive().optional(),
-    concurrency: z
-      .object({
-        maxInFlight: z.number().int().positive(),
-      })
-      .strict()
-      .optional(),
-    custom: z.record(z.string(), z.unknown()).optional(),
-    compiledCodeRef: CompiledCodeRefSchema.optional(),
-  })
-  .strict();
 
 export const DbtStepTypeConfigSchema = CommonStepTypeConfigSchema;

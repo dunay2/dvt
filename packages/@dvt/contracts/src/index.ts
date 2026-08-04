@@ -42,6 +42,14 @@ export {
   GENERIC_GRAPH_SOURCE_KIND,
 } from './contracts/planner/ExecutionPlan.v1.js';
 export {
+  LOAD_OBJECT_FILE_TO_POSTGRES_MAX_BYTES,
+  LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
+  LoadObjectFileToPostgresStepTypeConfigSchema,
+  OBJECT_FILE_POSTGRES_COLUMN_TYPE,
+  validateLoadObjectFileToPostgresPlanOwnership,
+} from './contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
+export type { LoadObjectFileToPostgresStepTypeConfig } from './contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
+export {
   CURRENT_EXECUTION_PLAN_VERSION,
   EXECUTION_PLAN_VERSION_REGISTRY,
   isSupportedExecutionPlanVersion,

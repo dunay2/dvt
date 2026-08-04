@@ -1,4 +1,4 @@
-import { asNonBlankString } from '@dvt/contracts';
+import { LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND, asNonBlankString } from '@dvt/contracts';
 import type { IProviderAdapter } from '@dvt/engine';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -16,6 +16,67 @@ import {
  */
 export function describeStoredPlanExecutabilityValidatorCapabilitiesCases(): void {
   describe('StoredPlanExecutabilityValidator capability checks', () => {
+    it('rejects object-file loading until the runtime executor capability is registered', async () => {
+      const sha256 = 'a'.repeat(64);
+      const validator = new StoredPlanExecutabilityValidator({
+        fetcher: makeValidationReader(() =>
+          storedPlanArtifact({
+            stepKind: LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND,
+            ownership: {
+              tenantId: 'tenant-a',
+              projectId: 'project-a',
+              environmentId: 'prod',
+            },
+            stepTypeConfig: {
+              scope: {
+                tenantId: 'tenant-a',
+                projectId: 'project-a',
+                environmentId: 'prod',
+              },
+              source: {
+                storageUri: `s3://dvt-fixtures/tenants/tenant-a/${sha256}`,
+                sha256,
+                sizeBytes: 128,
+                maxBytes: 1_000_000,
+                format: 'csv',
+                mediaType: 'text/csv',
+                encoding: 'utf-8',
+                header: true,
+                delimiter: ',',
+                credentialRef: 'object-store:het1-fixture',
+              },
+              target: {
+                dialect: 'postgres',
+                schema: 'staging',
+                relation: 'orders_import',
+                loadMode: 'replace',
+                credentialRef: 'postgres:het1-staging',
+              },
+              columns: [
+                {
+                  sourceField: 'order_id',
+                  targetColumn: 'order_id',
+                  dataType: 'bigint',
+                  nullable: false,
+                },
+              ],
+            },
+          })
+        ),
+        adapters: new Map([['temporal', makeAdapter(['basic-execution', 'executor.dbt'])]]),
+      });
+
+      await expect(validator.validatePlan(validationInput())).resolves.toEqual({
+        status: 'ERROR',
+        planId: 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        adapterId: 'temporal',
+        code: 'MISSING_CAPABILITY',
+        degradable: false,
+        reason: 'Missing adapter capability: executor.object-file-postgres-load',
+        cause: 'executor.object-file-postgres-load',
+      });
+    });
+
     it('returns OK when the stored executable plan matches the ref and capabilities', async () => {
       const validator = new StoredPlanExecutabilityValidator({
         fetcher: makeValidationReader(() => storedPlanArtifact()),

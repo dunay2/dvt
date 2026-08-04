@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+import {
+  LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
+  LoadObjectFileToPostgresStepTypeConfigSchema,
+  validateLoadObjectFileToPostgresPlanOwnership,
+} from '../contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
 import { KNOWN_STEP_KINDS } from '../contracts/planner/StepKindRegistry.v1.js';
 import { TRANSFORMATION_STEP_KIND } from '../contracts/planner/TransformationFlowStepKinds.v1.js';
 import {
@@ -9,14 +14,21 @@ import {
 } from '../contracts/planner/TransformationFlowStepTypeConfigs.v1.js';
 
 import { DbtStepTypeConfigSchema } from './DbtStepTypeConfig.js';
-import type { StepKindExecutionProfile } from './StepTypeRegistry.js';
+import type { StepKindContextValidator, StepKindExecutionProfile } from './StepTypeRegistry.js';
 
 type BuiltInStepTypeEntry = {
   readonly schema: z.ZodType;
   readonly profile: StepKindExecutionProfile;
+  readonly validateContext?: StepKindContextValidator;
 };
 
 export const DBT_STEP_REQUIRED_CAPABILITY = 'executor.dbt';
+export const LOAD_OBJECT_FILE_TO_POSTGRES_STEP_REQUIRED_CAPABILITY =
+  LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY;
+export const LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE = {
+  supportedAdapters: ['temporal'],
+  requiredCapabilities: [LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY],
+} as const satisfies StepKindExecutionProfile;
 
 export function createBuiltInStepTypeEntries(
   defaultProfile: StepKindExecutionProfile
@@ -27,6 +39,15 @@ export function createBuiltInStepTypeEntries(
     [KNOWN_STEP_KINDS.DBT_MODEL, { schema: DbtStepTypeConfigSchema, profile: dbtProfile }],
     [KNOWN_STEP_KINDS.DBT_TEST, { schema: DbtStepTypeConfigSchema, profile: dbtProfile }],
     [KNOWN_STEP_KINDS.DBT_SNAPSHOT, { schema: DbtStepTypeConfigSchema, profile: dbtProfile }],
+    [
+      KNOWN_STEP_KINDS.LOAD_OBJECT_FILE_TO_POSTGRES,
+      {
+        schema: LoadObjectFileToPostgresStepTypeConfigSchema,
+        profile: LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE,
+        validateContext: (config, context) =>
+          validateLoadObjectFileToPostgresPlanOwnership(config, context?.planOwnership),
+      },
+    ],
     [
       TRANSFORMATION_STEP_KIND.preparePostgresTransform,
       { schema: PreparePostgresTransformStepTypeConfigSchema, profile: defaultProfile },

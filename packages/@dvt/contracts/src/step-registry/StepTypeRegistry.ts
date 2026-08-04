@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import type { PlanOwnership } from '../contracts/planner/ExecutionPlan.v1.js';
 import { KNOWN_STEP_KINDS } from '../contracts/planner/StepKindRegistry.v1.js';
 import { RUNTIME_PROVIDER_VALUES, type Provider } from '../types/contracts.js';
 
@@ -10,12 +11,24 @@ export {
   DbtStepTypeConfigSchema,
   StepArtifactRefSchema,
 } from './DbtStepTypeConfig.js';
-export { DBT_STEP_REQUIRED_CAPABILITY } from './BuiltInStepTypeEntries.js';
+export {
+  DBT_STEP_REQUIRED_CAPABILITY,
+  LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE,
+  LOAD_OBJECT_FILE_TO_POSTGRES_STEP_REQUIRED_CAPABILITY,
+} from './BuiltInStepTypeEntries.js';
 export type { DbtStepTypeConfig } from './DbtStepTypeConfig.js';
 
 export type StepTypeValidationResult =
-  | { success: true; data: Record<string, unknown> }
-  | { success: false; error: string };
+  { success: true; data: Record<string, unknown> } | { success: false; error: string };
+
+export interface StepTypeValidationContext {
+  readonly planOwnership?: PlanOwnership;
+}
+
+export type StepKindContextValidator = (
+  config: Record<string, unknown>,
+  context: StepTypeValidationContext | undefined
+) => string | undefined;
 
 export interface StepKindExecutionProfile {
   /**
@@ -30,7 +43,11 @@ export interface StepKindExecutionProfile {
 }
 
 export interface IStepTypeRegistry {
-  validate(kind: string, config: unknown): StepTypeValidationResult;
+  validate(
+    kind: string,
+    config: unknown,
+    context?: StepTypeValidationContext
+  ): StepTypeValidationResult;
   isKnown(kind: string): boolean;
   getKinds(): readonly string[];
   /**
@@ -42,6 +59,7 @@ export interface IStepTypeRegistry {
 type StepKindRegistryEntry = {
   readonly schema: z.ZodType;
   readonly profile: StepKindExecutionProfile;
+  readonly validateContext?: StepKindContextValidator;
 };
 
 const DEFAULT_PROFILE: StepKindExecutionProfile = {
@@ -80,6 +98,9 @@ export class StepTypeRegistry implements IStepTypeRegistry {
         normalized.set(kind, {
           schema: value.schema,
           profile: normalizeProfile(value.profile),
+          ...(value.validateContext === undefined
+            ? {}
+            : { validateContext: value.validateContext }),
         });
         continue;
       }
@@ -91,7 +112,11 @@ export class StepTypeRegistry implements IStepTypeRegistry {
     this.entries = normalized;
   }
 
-  validate(kind: string, config: unknown): StepTypeValidationResult {
+  validate(
+    kind: string,
+    config: unknown,
+    context?: StepTypeValidationContext
+  ): StepTypeValidationResult {
     const entry = this.entries.get(kind);
     if (entry === undefined) {
       return {
@@ -102,6 +127,16 @@ export class StepTypeRegistry implements IStepTypeRegistry {
 
     const result = entry.schema.safeParse(config ?? {});
     if (result.success) {
+      const contextualError = entry.validateContext?.(
+        result.data as Record<string, unknown>,
+        context
+      );
+      if (contextualError !== undefined) {
+        return {
+          success: false,
+          error: `INVALID_STEP_TYPE_CONFIG[${kind}]: ${contextualError}`,
+        };
+      }
       return { success: true, data: result.data as Record<string, unknown> };
     }
 
@@ -127,6 +162,7 @@ export class StepTypeRegistry implements IStepTypeRegistry {
 export const DBT_MODEL = KNOWN_STEP_KINDS.DBT_MODEL;
 export const DBT_TEST = KNOWN_STEP_KINDS.DBT_TEST;
 export const DBT_SNAPSHOT = KNOWN_STEP_KINDS.DBT_SNAPSHOT;
+export const LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND = KNOWN_STEP_KINDS.LOAD_OBJECT_FILE_TO_POSTGRES;
 
 export function createDefaultStepTypeRegistry(
   extensions?: ReadonlyMap<string, z.ZodType>,

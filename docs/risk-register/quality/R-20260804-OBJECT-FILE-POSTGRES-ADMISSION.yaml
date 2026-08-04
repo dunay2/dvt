@@ -1,0 +1,27 @@
+---
+id: R-20260804-OBJECT-FILE-POSTGRES-ADMISSION
+title: Object-file load admission could cross scope or imply unavailable execution
+status: Closed
+date: 2026-08-04
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/planner
+  - packages/@dvt/plan-verifier
+severity: High
+probability: Low
+context: >
+  The HET1 vertical introduces a plan step that will read an object-store payload and replace one
+  PostgreSQL staging relation through a runtime capability implemented by a later slice.
+risk: >
+  A permissive locator, embedded credential, ownership mismatch, or prematurely advertised runtime
+  capability could admit cross-scope data access or a plan that cannot execute.
+mitigations:
+  - 'Require one canonical tenant-scoped and SHA-256-addressed S3 URI.'
+  - 'Reject inline bytes, secrets, raw connection strings, arbitrary paths, and unknown fields.'
+  - 'Revalidate tenant, project, and environment ownership during compile and stored-plan admission.'
+  - 'Bound object bytes, formats, encoding, mappings, target namespace, and replacement policy.'
+  - 'Require executor.object-file-postgres-load and keep it absent until issue 2179 owns production
+    execution.'
+  - 'Preserve existing DBT and PostgreSQL admission profiles through regression tests.'
+review_after: 2026-11-04
+---

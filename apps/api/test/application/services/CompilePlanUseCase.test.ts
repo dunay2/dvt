@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { CompilePlanUseCase } from '../../../src/application/services/CompilePlanUseCase.js';
 import { EnvironmentId, ProjectId, TenantId } from '../../../src/domain/auth/types.js';
+import { buildPlanCompilePlanner } from '../../../src/modules/planCompileBoundary.js';
 
 const AUTHORIZED_CONTEXT = {
   principal: {
@@ -76,7 +77,81 @@ const COMPILE_COMMAND = {
   observability: undefined,
 } as const;
 
+const OBJECT_FILE_SHA256 = 'a'.repeat(64);
+
+const OBJECT_FILE_COMPILE_COMMAND = {
+  graphSource: {
+    kind: 'generic-graph-v1' as const,
+    sourceFamily: 'het-object-file',
+    sourceVersion: 'object-file-postgres-v1',
+    nodes: [
+      {
+        nodeId: 'load-orders',
+        stepKind: 'LOAD_OBJECT_FILE_TO_POSTGRES',
+        dependsOn: [],
+        stepTypeConfig: {
+          scope: {
+            tenantId: 'tenant-1',
+            projectId: 'project-1',
+            environmentId: 'env-1',
+          },
+          source: {
+            storageUri: `s3://dvt-fixtures/tenants/tenant-1/${OBJECT_FILE_SHA256}`,
+            sha256: OBJECT_FILE_SHA256,
+            sizeBytes: 128,
+            maxBytes: 1_000_000,
+            format: 'csv',
+            mediaType: 'text/csv',
+            encoding: 'utf-8',
+            header: true,
+            delimiter: ',',
+            credentialRef: 'object-store:het1-fixture',
+          },
+          target: {
+            dialect: 'postgres',
+            schema: 'staging',
+            relation: 'orders_import',
+            loadMode: 'replace',
+            credentialRef: 'postgres:het1-staging',
+          },
+          columns: [
+            {
+              sourceField: 'order_id',
+              targetColumn: 'order_id',
+              dataType: 'bigint',
+              nullable: false,
+            },
+          ],
+        },
+      },
+    ],
+  },
+  selection: { selectedNodeIds: ['load-orders'] },
+  policies: undefined,
+  environment: undefined,
+  observability: undefined,
+} as const;
+
 describe('CompilePlanUseCase', () => {
+  it('admits a scoped object-file load through the production compile planner', async () => {
+    const useCase = new CompilePlanUseCase({ planner: buildPlanCompilePlanner() });
+
+    const result = await useCase.execute(OBJECT_FILE_COMPILE_COMMAND, AUTHORIZED_CONTEXT);
+
+    expect(result.plan.metadata.ownership).toEqual({
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+    });
+    expect(result.plan.steps).toMatchObject([
+      {
+        stepId: 'load-orders',
+        kind: 'LOAD_OBJECT_FILE_TO_POSTGRES',
+        dependsOn: [],
+      },
+    ]);
+  });
+
   it('delegates compile-only planning through the canonical planner envelope', async () => {
     const planner = {
       buildPlan: vi.fn(async () => ({
