@@ -14,6 +14,7 @@ import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
+import { projectCanvasGraphSearchPresentation } from './canvasGraphSearchPresentation';
 import { buildCanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
 import {
   createCanvasNodeContextSurfaceState,
@@ -154,15 +155,8 @@ function CanvasViewportWithPresenter({
           typeof nodeData.onInspectNode === 'function'
             ? (nodeData.onInspectNode as (...args: unknown[]) => void)
             : null;
-        const searchActiveClassName =
-          graphSearchController.model.activeNodeId === node.id
-            ? 'canvas-graph-search-active-node'
-            : null;
-        const className = [node.className, searchActiveClassName].filter(Boolean).join(' ');
-
         return {
           ...node,
-          ...(className.length > 0 ? { className } : {}),
           data: {
             ...node.data,
             ...(inspectNode == null
@@ -181,12 +175,24 @@ function CanvasViewportWithPresenter({
           },
         };
       }),
+    [closeNodeFloatingToolbar, closeNodeHealthPopover, openNodeHealthPopover, props.nodesWithImpact]
+  );
+
+  const graphSearchPresentation = useMemo(
+    () =>
+      projectCanvasGraphSearchPresentation({
+        nodes: nodesWithOperationalDetails,
+        edges: props.edges,
+        status: graphSearchController.model.status,
+        matchingNodeIds: graphSearchController.matchingNodeIds,
+        activeNodeId: graphSearchController.model.activeNodeId,
+      }),
     [
-      closeNodeFloatingToolbar,
-      closeNodeHealthPopover,
+      graphSearchController.matchingNodeIds,
       graphSearchController.model.activeNodeId,
-      openNodeHealthPopover,
-      props.nodesWithImpact,
+      graphSearchController.model.status,
+      nodesWithOperationalDetails,
+      props.edges,
     ]
   );
 
@@ -377,8 +383,8 @@ function CanvasViewportWithPresenter({
       canEditEdges={props.canEditEdges}
       canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
       canSelectNodes={props.canSelectNodes ?? props.canEditEdges}
-      nodesWithImpact={nodesWithOperationalDetails}
-      edges={props.edges}
+      nodesWithImpact={graphSearchPresentation.nodes}
+      edges={graphSearchPresentation.edges}
       nodeTypes={props.nodeTypes}
       gridSize={props.gridSize}
       canvasSnapToGrid={props.canvasSnapToGrid}

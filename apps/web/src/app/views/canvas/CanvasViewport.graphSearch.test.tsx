@@ -21,7 +21,7 @@ describe('CanvasViewport graph search', () => {
 
   beforeEach(async () => {
     harness = createCanvasViewportHarness();
-    await harness.render({ nodesWithImpact: searchNodes() });
+    await harness.render({ nodesWithImpact: searchNodes(), edges: searchEdges() });
   });
   afterEach(() => harness.unmount());
 
@@ -43,8 +43,8 @@ describe('CanvasViewport graph search', () => {
 
     const searchActions = Array.from(searchControl().querySelectorAll<HTMLButtonElement>('button'));
     const closeButton = searchActions.at(-1)!;
-    closeButton.focus();
     act(() => {
+      closeButton.focus();
       fireEvent.keyDown(closeButton, { key: 'f', ctrlKey: true });
     });
     expect(document.activeElement).toBe(input);
@@ -59,6 +59,14 @@ describe('CanvasViewport graph search', () => {
       )
     );
     expect(activeSearchNode()?.id).toBe('orders-a');
+    expect(searchNode('orders-b')?.className).toContain('canvas-graph-search-matching-node');
+    expect(searchNode('customers')?.className).toContain('canvas-graph-search-dimmed-node');
+    expect(searchEdge('orders-a-customers')?.className).toContain(
+      'canvas-graph-search-relevant-edge'
+    );
+    expect(searchEdge('orders-b-customers')?.className).toContain(
+      'canvas-graph-search-dimmed-edge'
+    );
     act(() => {
       fireEvent.keyDown(input, { key: 'Enter' });
     });
@@ -69,11 +77,23 @@ describe('CanvasViewport graph search', () => {
       )
     );
     expect(activeSearchNode()?.id).toBe('orders-b');
+    expect(searchNode('orders-a')?.className).toContain('canvas-graph-search-matching-node');
+    expect(searchEdge('orders-a-customers')?.className).toContain(
+      'canvas-graph-search-dimmed-edge'
+    );
+    expect(searchEdge('orders-b-customers')?.className).toContain(
+      'canvas-graph-search-relevant-edge'
+    );
     act(() => {
       fireEvent.keyDown(input, { key: 'Escape' });
     });
     expect(harness.container.querySelector('[data-slot="canvas-graph-search-control"]')).toBeNull();
     expect(document.activeElement).toBe(surface);
+    expect(searchNode('orders-a')?.className).toBe('domain-orders-a');
+    expect(searchNode('orders-b')?.className).toBe('domain-orders-b');
+    expect(searchNode('customers')?.className).toBe('domain-customers');
+    expect(searchEdge('orders-a-customers')?.className).toBe('domain-edge-a');
+    expect(searchEdge('orders-b-customers')?.className).toBe('domain-edge-b');
 
     act(() => {
       fireEvent.keyDown(surface, { key: 'f', metaKey: true });
@@ -124,17 +144,31 @@ describe('CanvasViewport graph search', () => {
   }
 
   function activeSearchNode(): CanvasViewportProps['nodesWithImpact'][number] | undefined {
-    const reactFlowNodes = getCanvasViewportXyflowState().lastReactFlowProps?.nodes as
-      CanvasViewportProps['nodesWithImpact'] | undefined;
-    return reactFlowNodes?.find((node) =>
+    return searchNodesFromViewport()?.find((node) =>
       node.className?.split(' ').includes('canvas-graph-search-active-node')
     );
+  }
+
+  function searchNode(nodeId: string): CanvasViewportProps['nodesWithImpact'][number] | undefined {
+    return searchNodesFromViewport()?.find((node) => node.id === nodeId);
+  }
+
+  function searchNodesFromViewport(): CanvasViewportProps['nodesWithImpact'] | undefined {
+    return getCanvasViewportXyflowState().lastReactFlowProps?.nodes as
+      CanvasViewportProps['nodesWithImpact'] | undefined;
+  }
+
+  function searchEdge(edgeId: string): CanvasViewportProps['edges'][number] | undefined {
+    const reactFlowEdges = getCanvasViewportXyflowState().lastReactFlowProps?.edges as
+      CanvasViewportProps['edges'] | undefined;
+    return reactFlowEdges?.find((edge) => edge.id === edgeId);
   }
 
   function searchNodes(): CanvasViewportProps['nodesWithImpact'] {
     return [
       {
         id: 'orders-a',
+        className: 'domain-orders-a',
         position: { x: 0, y: 0 },
         data: {
           name: 'Orders A',
@@ -146,6 +180,7 @@ describe('CanvasViewport graph search', () => {
       },
       {
         id: 'orders-b',
+        className: 'domain-orders-b',
         position: { x: 200, y: 0 },
         data: {
           name: 'Orders B',
@@ -154,6 +189,35 @@ describe('CanvasViewport graph search', () => {
           role: 'transform',
           tags: [],
         },
+      },
+      {
+        id: 'customers',
+        className: 'domain-customers',
+        position: { x: 400, y: 0 },
+        data: {
+          name: 'Customers',
+          pluginKind: 'dbt:model',
+          pluginId: 'dbt',
+          role: 'transform',
+          tags: [],
+        },
+      },
+    ];
+  }
+
+  function searchEdges(): CanvasViewportProps['edges'] {
+    return [
+      {
+        id: 'orders-a-customers',
+        source: 'orders-a',
+        target: 'customers',
+        className: 'domain-edge-a',
+      },
+      {
+        id: 'orders-b-customers',
+        source: 'orders-b',
+        target: 'customers',
+        className: 'domain-edge-b',
       },
     ];
   }
