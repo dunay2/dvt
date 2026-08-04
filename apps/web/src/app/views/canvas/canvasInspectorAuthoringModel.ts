@@ -5,6 +5,11 @@ import {
   createDbtNodeAuthoringMetadata,
 } from './canvasDbtAuthoringModel';
 import {
+  applyDbtTestAuthoringMetadata,
+  createDbtTestAuthoringMetadata,
+  validateDbtTestAuthoringMetadata,
+} from './canvasDbtTestAuthoringModel';
+import {
   applyDvtNodeAuthoringMetadata,
   createDvtNodeAuthoringMetadata,
   validateDvtNodeAuthoringMetadata,
@@ -39,7 +44,12 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
     name: node.name,
     description: node.description ?? '',
     tags,
-    ...(node.pluginId === 'dbt' ? { dbt: createDbtNodeAuthoringMetadata(node) } : {}),
+    ...(node.pluginId === 'dbt' && node.kind !== 'dbt:test'
+      ? { dbt: createDbtNodeAuthoringMetadata(node) }
+      : {}),
+    ...(node.pluginId === 'dbt' && node.kind === 'dbt:test'
+      ? { dbtTest: createDbtTestAuthoringMetadata(node) }
+      : {}),
     ...(dvtMetadata ? { dvt: dvtMetadata } : {}),
     ...(objectFilePostgresDraft == null ? {} : { objectFilePostgres: objectFilePostgresDraft }),
   };
@@ -85,6 +95,13 @@ export function validateCanvasInspectorNodeDraft(
     }
   }
 
+  if (draft.dbtTest) {
+    const dbtTestErrors = validateDbtTestAuthoringMetadata(draft.dbtTest);
+    if (Object.keys(dbtTestErrors).length > 0) {
+      return { dbtTest: dbtTestErrors };
+    }
+  }
+
   if (draft.dvt) {
     const dvtErrors = validateDvtNodeAuthoringMetadata(draft.dvt);
     if (Object.keys(dvtErrors).length > 0) {
@@ -118,6 +135,7 @@ export function hasCanvasInspectorNodeDraftChanges(
     (node.description ?? undefined) !== normalizeNodeDescription(draft.description) ||
     JSON.stringify(originalDraft.tags) !== JSON.stringify(draftTags) ||
     JSON.stringify(originalDraft.dbt ?? null) !== JSON.stringify(draft.dbt ?? null) ||
+    JSON.stringify(originalDraft.dbtTest ?? null) !== JSON.stringify(draft.dbtTest ?? null) ||
     JSON.stringify(originalDraft.dvt ?? null) !== JSON.stringify(draft.dvt ?? null) ||
     JSON.stringify(originalDraft.objectFilePostgres ?? null) !==
       JSON.stringify(draft.objectFilePostgres ?? null)
@@ -137,6 +155,10 @@ export function applyCanvasInspectorNodeDraft(
     description: normalizeNodeDescription(draft.description),
     tags,
   };
+
+  if (draft.dbtTest) {
+    return applyDbtTestAuthoringMetadata(baseNode, draft.dbtTest);
+  }
 
   if (draft.dbt) {
     return applyDbtNodeAuthoringMetadata(baseNode, draft.dbt);

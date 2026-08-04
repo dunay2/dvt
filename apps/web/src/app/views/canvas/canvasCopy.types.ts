@@ -325,6 +325,16 @@ export type CanvasViewCopy = {
   readonly inspectorDbtMaterializedTableLabel: string;
   readonly inspectorDbtMaterializedIncrementalLabel: string;
   readonly inspectorDbtMaterializedEphemeralLabel: string;
+  readonly inspectorDbtTestTitle: string;
+  readonly inspectorDbtTestTypeLabel: string;
+  readonly inspectorDbtTestTargetLabel: string;
+  readonly inspectorDbtTestColumnLabel: string;
+  readonly inspectorDbtTestSeverityLabel: string;
+  readonly inspectorDbtTestNotNullLabel: string;
+  readonly inspectorDbtTestUniqueLabel: string;
+  readonly inspectorDbtTestSeverityErrorLabel: string;
+  readonly inspectorDbtTestSeverityWarnLabel: string;
+  readonly inspectorDbtTestNoConnectedTargetMessage: string;
   readonly inspectorDvtSourceTitle: string;
   readonly inspectorDvtSqlTransformTitle: string;
   readonly inspectorDvtSinkTitle: string;
@@ -386,6 +396,10 @@ export type CanvasViewCopy = {
   readonly inspectorErrorDbtSchemaRequired: string;
   readonly inspectorErrorDbtTableRequired: string;
   readonly inspectorErrorDbtMaterializationInvalid: string;
+  readonly inspectorErrorDbtTestTypeInvalid: string;
+  readonly inspectorErrorDbtTestTargetRequired: string;
+  readonly inspectorErrorDbtTestColumnInvalid: string;
+  readonly inspectorErrorDbtTestSeverityInvalid: string;
   readonly inspectorErrorDvtSchemaRequired: string;
   readonly inspectorErrorDvtTableRequired: string;
   readonly inspectorErrorDvtAliasRequired: string;
