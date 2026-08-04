@@ -284,23 +284,22 @@ describe('temporal integration (time-skipping)', () => {
   it(
     'executes startRun -> status -> cancel against TestWorkflowEnvironment',
     async () => {
-      const plan = mkLinearPlan(250);
+      const plan = mkLinearPlan(1);
+      const blocker = createBlockingExecutor('s-1');
       const harness = await createSingleRunDbtTimeSkippingHarness({
         plan,
         planRefId: 'it-plan',
         runId: 'run-it-1',
         taskQueue: 'dvt-it-time-skipping',
       });
-      const { adapter, ctx, env, planRef, store } = harness;
-      const worker = await harness.startWorker();
+      const { adapter, ctx, env, planRef } = harness;
+      const worker = await harness.startWorker({
+        stepExecutors: [blocker.executor, ...DEFAULT_STEP_EXECUTORS],
+      });
 
       try {
         const runRef = await adapter.startRun(planRef, ctx);
-        await waitForCondition(
-          () => store.listRunEvents(RunId.of(ctx.runId)),
-          (events) => events.some((event) => event.eventType === 'StepStarted'),
-          { timeoutMs: 30_000 }
-        );
+        await blocker.waitUntilExecuting;
 
         const status = await adapter.getProviderStatusView(runRef);
         // After the provider-native status fix, describe() returns Temporal-native
