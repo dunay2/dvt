@@ -17,6 +17,47 @@ const sourceNode: CanonicalNode = {
   tags: ['raw'],
 };
 
+const objectFileLoadNode: CanonicalNode = {
+  id: 'load-orders',
+  name: 'Load orders fixture',
+  pluginId: 'dvt.object-file-postgres',
+  kind: 'dvt:object_file_load',
+  role: 'input',
+  status: 'idle',
+  tags: ['ingestion'],
+  metadata: {
+    objectFilePostgres: {
+      source: {
+        storageUri: `s3://dvt-fixtures/tenants/tenant/${'a'.repeat(64)}`,
+        sha256: 'a'.repeat(64),
+        sizeBytes: 62,
+        maxBytes: 1_000,
+        encoding: 'utf-8',
+        format: 'csv',
+        mediaType: 'text/csv',
+        header: true,
+        delimiter: ',',
+        credentialRef: 'object-store:het1-fixture',
+      },
+      target: {
+        dialect: 'postgres',
+        schema: 'staging',
+        relation: 'orders',
+        loadMode: 'replace',
+        credentialRef: 'postgres:het1-target',
+      },
+      columns: [
+        {
+          sourceField: 'order_id',
+          targetColumn: 'order_id',
+          dataType: 'bigint',
+          nullable: false,
+        },
+      ],
+    },
+  },
+};
+
 const modelNode: CanonicalNode = {
   id: 'model-orders',
   name: 'Orders Model',
@@ -99,6 +140,63 @@ const dependencyEdges: CanonicalEdge[] = [
 ];
 
 describe('canvas dbt planner graph source', () => {
+  it('projects an object-file load as the executable dependency of DBT model and test steps', () => {
+    const heterogeneousEdges: CanonicalEdge[] = [
+      {
+        id: 'edge-load-model',
+        sourceId: objectFileLoadNode.id,
+        targetId: modelNode.id,
+        relation: 'lineage',
+      },
+      {
+        id: 'edge-model-test',
+        sourceId: modelNode.id,
+        targetId: testNode.id,
+        relation: 'validation',
+      },
+    ];
+
+    const result = buildDbtPlannerGraphSource({
+      nodes: [objectFileLoadNode, modelNode, testNode],
+      edges: heterogeneousEdges,
+      scopedNodeIds: [objectFileLoadNode.id, modelNode.id, testNode.id],
+      executionScope: {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'dev',
+      },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+
+    expect(result.selection.nodeIds).toEqual(['load-orders', 'model-orders', 'test-orders']);
+    expect(result.graphSource.nodes).toEqual([
+      expect.objectContaining({
+        nodeId: 'load-orders',
+        stepKind: 'LOAD_OBJECT_FILE_TO_POSTGRES',
+        dependsOn: [],
+        stepTypeConfig: expect.objectContaining({
+          scope: {
+            tenantId: 'tenant',
+            projectId: 'project',
+            environmentId: 'dev',
+          },
+        }),
+      }),
+      expect.objectContaining({
+        nodeId: 'model-orders',
+        stepKind: 'DBT_MODEL',
+        dependsOn: ['load-orders'],
+      }),
+      expect.objectContaining({
+        nodeId: 'test-orders',
+        stepKind: 'DBT_TEST',
+        dependsOn: ['model-orders'],
+      }),
+    ]);
+  });
+
   it('projects only executable dbt nodes into planner-generic-v1 graph source', () => {
     const result = buildDbtPlannerGraphSource({
       nodes: [sourceNode, modelNode, testNode, macroNode],

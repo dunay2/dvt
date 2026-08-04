@@ -152,6 +152,7 @@ export async function executeCanvasPlanAction({
         canonicalEdges,
         selectionIntent,
         workspaceNodeIds,
+        executionScope: sessionContext.getWorkspaceScopeSnapshot(),
       });
       if (!plannerProjection.ok) {
         return { ok: false, message: plannerProjection.message };

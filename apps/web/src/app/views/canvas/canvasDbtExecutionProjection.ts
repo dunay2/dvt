@@ -13,6 +13,7 @@ import {
 } from './dbtProjectFileExecutionStrategy';
 import { buildDbtExecutionIntentDraftSignature } from './dbtExecutionScopePolicy';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
+import type { ObjectFilePostgresExecutionScope } from './objectFilePostgresAuthoringModel';
 
 type DbtPreviewExecutionStrategy = Extract<
   CanvasExecutionStrategy,
@@ -25,6 +26,7 @@ export function buildCanvasDbtExecutionProjection(args: {
   readonly canonicalEdges: readonly CanonicalEdge[];
   readonly selectionIntent: CanvasExecutionSelectionIntent;
   readonly workspaceNodeIds: readonly string[];
+  readonly executionScope?: ObjectFilePostgresExecutionScope;
 }) {
   if (args.strategy.kind === 'dbt_project_file_preview') {
     const projection = buildDbtProjectFilePlannerProjection({
@@ -66,6 +68,7 @@ export function buildCanvasDbtExecutionProjection(args: {
     nodes: args.canonicalNodes,
     edges: args.canonicalEdges,
     scopedNodeIds: executionScope.nodeIds,
+    executionScope: args.executionScope,
   });
   return projection.ok
     ? {
