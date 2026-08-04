@@ -9,6 +9,11 @@ import {
   resolveDbtExecutionScope,
 } from './dbtExecutionScopePolicy';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
+import {
+  isObjectFilePostgresNode,
+  projectObjectFilePostgresStepTypeConfig,
+  type ObjectFilePostgresExecutionScope,
+} from './objectFilePostgresAuthoringModel';
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 
 export type DbtPlannerGraphSourceResult =
@@ -75,32 +80,54 @@ function resolveExecutableDependencies(args: {
     .sort();
 }
 
+type GenericGraphNodeProjection =
+  Readonly<{ ok: true; node: GenericGraphNodeV1 }> | Readonly<{ ok: false; message: string }>;
+
 function buildGenericGraphNode(args: {
   node: CanonicalNode;
   edges: readonly CanonicalEdge[];
   executableNodeIdSet: ReadonlySet<string>;
-}): GenericGraphNodeV1 {
+  executionScope: ObjectFilePostgresExecutionScope | undefined;
+}): GenericGraphNodeProjection {
   const stepKind = resolveDbtExecutableStepKind(args.node);
   if (stepKind == null) {
-    throw new Error(`Node ${args.node.id} is not an executable dbt node.`);
+    return { ok: false, message: `Node ${args.node.id} is not executable.` };
   }
 
-  const nodeMetadata = createDbtNodeAuthoringMetadata(args.node);
+  const objectFileProjection = isObjectFilePostgresNode(args.node)
+    ? projectObjectFilePostgresStepTypeConfig({
+        node: args.node,
+        executionScope: args.executionScope,
+      })
+    : null;
+  if (objectFileProjection?.ok === false) {
+    return objectFileProjection;
+  }
+
+  const nodeMetadata = isObjectFilePostgresNode(args.node)
+    ? null
+    : createDbtNodeAuthoringMetadata(args.node);
   return {
-    nodeId: args.node.id,
-    stepKind,
-    dependsOn: resolveExecutableDependencies(args),
-    metadata: {
-      displayName: args.node.name,
-      ...(nodeMetadata.selectedSourceId
-        ? {
-            sourceRef: nodeMetadata.selectedSourceId,
-          }
+    ok: true,
+    node: {
+      nodeId: args.node.id,
+      stepKind,
+      dependsOn: resolveExecutableDependencies(args),
+      ...(objectFileProjection?.ok === true
+        ? { stepTypeConfig: objectFileProjection.stepTypeConfig }
         : {}),
-      tags: {
-        kind: args.node.kind,
-        pluginId: args.node.pluginId,
-        role: args.node.role,
+      metadata: {
+        displayName: args.node.name,
+        ...(nodeMetadata?.selectedSourceId
+          ? {
+              sourceRef: nodeMetadata.selectedSourceId,
+            }
+          : {}),
+        tags: {
+          kind: args.node.kind,
+          pluginId: args.node.pluginId,
+          role: args.node.role,
+        },
       },
     },
   };
@@ -110,6 +137,7 @@ export function buildDbtPlannerGraphSource(args: {
   nodes: readonly CanonicalNode[];
   edges: readonly CanonicalEdge[];
   scopedNodeIds: readonly string[];
+  executionScope?: ObjectFilePostgresExecutionScope;
 }): DbtPlannerGraphSourceResult {
   const executableNodes = resolveExecutableDbtNodes({
     nodes: args.nodes,
@@ -124,12 +152,20 @@ export function buildDbtPlannerGraphSource(args: {
   }
 
   const executableNodeIdSet = new Set(executableNodes.map((node) => node.id));
-  const graphNodes = executableNodes.map((node) =>
+  const graphNodeProjections = executableNodes.map((node) =>
     buildGenericGraphNode({
       node,
       edges: args.edges,
       executableNodeIdSet,
+      executionScope: args.executionScope,
     })
+  );
+  const rejectedProjection = graphNodeProjections.find((projection) => !projection.ok);
+  if (rejectedProjection?.ok === false) {
+    return rejectedProjection;
+  }
+  const graphNodes = graphNodeProjections.flatMap((projection) =>
+    projection.ok ? [projection.node] : []
   );
   const selection = parseExecutionSelection({
     mode: 'explicit',

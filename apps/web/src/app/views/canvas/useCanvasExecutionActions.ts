@@ -100,6 +100,7 @@ export function useCanvasExecutionActions({
     selectionIntent,
     workspaceNodeIds,
     latestPreviewOutcome,
+    executionScope: executionSessionContext.getWorkspaceScopeSnapshot(),
   });
   const {
     transformationValidation,

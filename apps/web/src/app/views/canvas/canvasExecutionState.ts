@@ -18,6 +18,7 @@ import { isDbtProjectFilePreviewProvenanceCurrent } from './dbtProjectFileExecut
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import type { PlanPreviewOutcome } from '../../ports/plans';
 import { projectCanvasPreviewOutcome } from './canvasPreviewOutcomeProjection';
+import type { ObjectFilePostgresExecutionScope } from './objectFilePostgresAuthoringModel';
 
 type DeriveCanvasExecutionStateArgs = {
   canRun: boolean;
@@ -29,6 +30,7 @@ type DeriveCanvasExecutionStateArgs = {
   selectionIntent: CanvasExecutionSelectionIntent;
   workspaceNodeIds: string[];
   latestPreviewOutcome: PlanPreviewOutcome | null;
+  executionScope?: ObjectFilePostgresExecutionScope;
 };
 
 export type CanvasExecutionState = {
@@ -70,6 +72,7 @@ export function deriveCanvasExecutionState({
   selectionIntent,
   workspaceNodeIds,
   latestPreviewOutcome,
+  executionScope,
 }: DeriveCanvasExecutionStateArgs): CanvasExecutionState {
   const previewOutcomeProjection =
     latestPreviewOutcome == null ? null : projectCanvasPreviewOutcome(latestPreviewOutcome);
@@ -91,6 +94,7 @@ export function deriveCanvasExecutionState({
         canonicalEdges,
         selectionIntent,
         workspaceNodeIds,
+        executionScope,
       })
     : null;
   const activeDraftSignature =
