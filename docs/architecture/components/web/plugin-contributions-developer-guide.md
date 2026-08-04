@@ -2,7 +2,7 @@
 title: Plugin Contributions Developer Guide
 status: Active
 owner: Frontend / Docs
-last_reviewed: 2026-04-20
+last_reviewed: 2026-08-03
 ---
 
 # Plugin Contributions Developer Guide
@@ -23,16 +23,14 @@ Explain the active frontend plugin authoring model for `apps/web` and provide th
 The active public authoring surface is `PluginContributions` in
 [registry.ts](../../../../apps/web/src/app/plugins/registry.ts).
 
-`PluginManifest` in
-[PluginManifest.ts](../../../../apps/web/src/app/plugins/contracts/PluginManifest.ts)
-remains the typed source for shared contribution shapes such as
+`PluginManifest.ts` is the typed source for shared contribution shapes such as
 `ViewContribution`, `InspectorPanelContribution`, and
 `PluginConnectionRule`. For the current static frontend composition model:
 
 - plugin authors implement `PluginContributions`
 - plugin authors reuse shared types from the `contracts/` files
-- plugin authors do not instantiate `PluginManifest` directly
-- plugin authors do not create alternate registries or parallel retired manifests
+- plugin authors do not create lifecycle hosts or service locators
+- plugin authors do not create alternate registries or parallel contribution models
 
 ## Authoring Flow
 
@@ -175,7 +173,7 @@ Do not add alternate registration flows, lazy discovery outside `PLUGIN_REGISTRY
 - Do not turn plugins into alternate shell ownership.
 - Prefer `node.metadata` and canonical view models over ad-hoc local state.
 - Use route views for real workbenches; use inspector panels for contextual detail.
-- Treat `PluginManifest` lifecycle fields as non-authoritative for current v1 authoring.
+- Do not add lifecycle hooks or service locators to static plugin contributions.
 - Remove replaced paths instead of keeping parallel retired routes or fallback
   contribution wiring.
 - If two plugins start copying the same renderer, mapper, or panel logic,

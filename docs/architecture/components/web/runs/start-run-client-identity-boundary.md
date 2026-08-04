@@ -2,7 +2,7 @@
 title: Start-run client identity boundary
 status: Active
 owner: Frontend / API / Architecture
-last_reviewed: 2026-04-23
+last_reviewed: 2026-08-03
 domain: frontend
 ---
 
@@ -33,7 +33,7 @@ Use this guide with:
 
 The component owns exactly one concern:
 
-- adapt Canvas and plugin-facing start-run intent into a caller-owned
+- adapt Canvas start-run intent into a caller-owned
   `StartRunInput` without creating, guessing, or preserving canonical runtime
   `runId`
 
@@ -66,9 +66,6 @@ It does **not** own:
 - `collectPlanSelection(plan)`
   Semantic seam that derives caller-owned plan-node selection from the
   persisted plan view.
-- `RunOperations.start(input)`
-  Plugin-facing optional run-start operation using the same caller-owned
-  `StartRunInput` shape.
 
 ## Invariants
 
@@ -113,7 +110,6 @@ sequenceDiagram
 flowchart LR
   Canvas["executeCanvasRunStartAction"] --> Selection["collectPlanSelection"]
   Canvas --> Port["IRunsPort.startRun"]
-  Plugins["PluginServices.RunOperations.start"] --> Port
   Port --> ApiService["runsService.api"]
   Port --> MockService["runsService.mock"]
   ApiService --> Http["POST /runs/start"]
@@ -147,7 +143,6 @@ stateDiagram-v2
 - [runsService.ts](../../../../../apps/web/src/app/services/runs/runsService.ts)
 - [canvasRunStartAction.ts](../../../../../apps/web/src/app/views/canvas/canvasRunStartAction.ts)
 - [canvasRunSelection.ts](../../../../../apps/web/src/app/views/canvas/canvasRunSelection.ts)
-- [PluginServices.ts](../../../../../apps/web/src/app/plugins/contracts/PluginServices.ts)
 - [canvasRunStartIdentity.architecture.test.ts](../../../../../apps/web/src/app/views/canvas/canvasRunStartIdentity.architecture.test.ts)
 
 ## Fitness Function
