@@ -20,6 +20,7 @@
     "@dvt/contracts": "workspace:*",
     "@dvt/engine": "workspace:*",
     "@dvt/temporal-dbt-plugin": "workspace:*",
+    "@dvt/temporal-object-file-postgres-plugin": "workspace:*",
     "@temporalio/activity": "1.20.3",
     "@temporalio/worker": "1.20.3",
     "pino": "^10.3.1",

@@ -12,6 +12,10 @@ import type {
 import type { IDbtProjectBundleReader, IRunExecutionContextReader } from '@dvt/artifacts';
 import type { AppendResult, EventInput, RunBootstrapInput } from '@dvt/engine';
 import type { DbtPluginRunner, IDbtRuntimeProfileResolver } from '@dvt/temporal-dbt-plugin';
+import type {
+  ContentAddressedObjectReader,
+  ObjectFilePostgresRelationalLoader,
+} from '@dvt/temporal-object-file-postgres-plugin';
 
 import type { Env } from '../plugins/env.js';
 
@@ -48,7 +52,8 @@ export interface CreateTemporalWorkerRuntimeOptions {
     bundleReader: IDbtProjectBundleReader;
   }) => DbtPluginRunner;
   planArtifactReaderFactory?: (env: Env) => TemporalPlanArtifactReader;
-  postgresRelationalCapabilityFactory?: (env: Env) => TemporalWorkerStepCapability;
+  postgresRelationalCapabilityFactory?: (env: Env) => TemporalWorkerPostgresCapability;
+  objectFileReaderFactory?: (env: Env) => ContentAddressedObjectReader;
   hostFactory?: (config: TemporalWorkerHostConfig) => TemporalWorkerHostLike;
   connectionFactory?: (config: TemporalAdapterConfig) => Promise<TemporalConnectionLike>;
   dbtAvailabilityProbe?: (dbtBin: string) => Promise<void>;
@@ -58,6 +63,9 @@ export interface TemporalWorkerStepCapability {
   stepActivitiesByKind: StepActivityRegistry;
   close(): Promise<void>;
 }
+
+export interface TemporalWorkerPostgresCapability
+  extends TemporalWorkerStepCapability, ObjectFilePostgresRelationalLoader {}
 
 export interface TemporalWorkerRuntimeResources {
   runMigrations: boolean;

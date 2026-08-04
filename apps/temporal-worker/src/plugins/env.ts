@@ -54,6 +54,9 @@ const EnvSchema = z
     DVT_TEMPORAL_ADMIN_HOST: z.string().default('0.0.0.0'),
     DVT_TEMPORAL_ADMIN_PORT: z.coerce.number().int().min(1).max(65535).default(9468),
     DVT_TEMPORAL_DBT_ENABLED: envBoolean.default(false),
+    DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: envBoolean.default(false),
+    DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: z.string().optional(),
+    DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: z.string().optional(),
     DVT_DBT_BIN: z.string().default('dbt'),
     DVT_DBT_WORKDIR_ROOT: z.string().default(join(tmpdir(), 'dvt', 'temporal-worker')),
     DVT_DBT_BUNDLE_STORE_BACKEND: z.enum(['file', 's3']).optional(),
@@ -61,6 +64,21 @@ const EnvSchema = z
     DVT_DBT_BUNDLE_FILE_ROOT: z.string().optional(),
   })
   .superRefine((input, ctx) => {
+    if (input.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED) {
+      validateCredentialBinding(
+        input.DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF,
+        'DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF',
+        'object-store:',
+        ctx
+      );
+      validateCredentialBinding(
+        input.DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF,
+        'DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF',
+        'postgres:',
+        ctx
+      );
+    }
+
     if (!input.DVT_TEMPORAL_DBT_ENABLED) {
       return;
     }
@@ -99,6 +117,30 @@ const EnvSchema = z
       });
     }
   });
+
+function validateCredentialBinding(
+  value: string | undefined,
+  field: 'DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF' | 'DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF',
+  namespace: 'object-store:' | 'postgres:',
+  ctx: z.RefinementCtx
+): void {
+  if (value === undefined || value.trim().length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [field],
+      message: `required when DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED=true`,
+    });
+    return;
+  }
+
+  if (!value.startsWith(namespace)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [field],
+      message: `must use the ${namespace.slice(0, -1)} namespace`,
+    });
+  }
+}
 
 export type Env = z.infer<typeof EnvSchema>;
 

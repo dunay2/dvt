@@ -338,6 +338,9 @@ importers:
       '@dvt/temporal-dbt-plugin':
         specifier: workspace:*
         version: link:../../packages/@dvt/temporal-dbt-plugin
+      '@dvt/temporal-object-file-postgres-plugin':
+        specifier: workspace:*
+        version: link:../../packages/@dvt/temporal-object-file-postgres-plugin
       '@temporalio/activity':
         specifier: 1.20.3
         version: 1.20.3
