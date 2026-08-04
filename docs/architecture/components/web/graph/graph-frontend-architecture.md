@@ -269,9 +269,9 @@ Runtime projection rule:
 
 ```mermaid
 flowchart LR
-  Manifest["PluginManifest.ts"] --> Registry["registry.ts"]
-  Manifest --> Rules["ConnectionRules.ts"]
-  Manifest --> Copy["copy.ts consumers"]
+  Contracts["PluginManifest.ts"] --> Registry["registry.ts"]
+  Contracts --> Rules["ConnectionRules.ts"]
+  Contracts --> Copy["copy.ts consumers"]
   Capabilities["RuntimeCapabilities"] --> Registry
   Registry --> PortMap["plugin port maps"]
   PortMap --> Rules

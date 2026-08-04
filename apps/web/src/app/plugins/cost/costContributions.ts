@@ -3,7 +3,7 @@ import React from 'react';
 import { DollarSign } from 'lucide-react';
 
 import type { PluginContributions } from '../registry';
-import type { NodeCostData } from '../contracts/PluginServices';
+import type { NodeCostData } from '../contracts/NodeCostData';
 import { COST_ROUTE_BOOTSTRAP_HANDLE } from './costRouteHandle';
 
 const COST_PLUGIN_ID = 'cost';

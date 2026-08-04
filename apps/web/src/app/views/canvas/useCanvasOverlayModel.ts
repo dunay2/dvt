@@ -8,7 +8,7 @@ import {
   type RuntimeCapabilities,
 } from '../../plugins/registry';
 import type { CanonicalNode, CanonicalRun } from '../../types/canonical';
-import type { NodeCostData } from '../../plugins/contracts/PluginServices';
+import type { NodeCostData } from '../../plugins/contracts/NodeCostData';
 import type { Edge } from '@xyflow/react';
 
 function buildRunStatusByNodeId(canonicalRun: CanonicalRun | null): ReadonlyMap<string, string> {

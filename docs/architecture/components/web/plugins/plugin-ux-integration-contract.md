@@ -65,7 +65,7 @@ route-specific rendering.
 
 ```mermaid
 flowchart LR
-  Manifest["PluginManifest dock types"] --> Contribution["PluginContributions"]
+  Contracts["Plugin contribution contracts"] --> Contribution["PluginContributions"]
   Contribution --> Registry["getRuntimePlugins"]
   Registry --> Header["getRouteHeaderContributions"]
   Registry --> Palette["getCommandPaletteContributions"]

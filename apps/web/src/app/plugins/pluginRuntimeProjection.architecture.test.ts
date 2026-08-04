@@ -178,7 +178,7 @@ describe('plugin runtime projection architecture', () => {
   });
 
   it('keeps governed plugin UX docks as explicit runtime rails with component documentation', () => {
-    const manifest = readAppSource('src/app/plugins/contracts/PluginManifest.ts');
+    const contributionContracts = readAppSource('src/app/plugins/contracts/PluginManifest.ts');
     const registry = readAppSource('src/app/plugins/registry.ts');
     const componentGuide = readRepoDoc(
       'docs/architecture/components/web/plugins/plugin-ux-integration-contract.md'
@@ -189,7 +189,7 @@ describe('plugin runtime projection architecture', () => {
       'CommandPaletteContribution',
       'BottomDiagnosticsContribution',
     ]) {
-      expect(manifest).toContain(`interface ${dock}`);
+      expect(contributionContracts).toContain(`interface ${dock}`);
     }
 
     for (const rail of [
