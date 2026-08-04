@@ -6202,7 +6202,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
-      "sourceContentSha256": "76654f483e8094249470490ed4d064a35bb18320df9562bbe43bb010e6ac9a57",
+      "sourceContentSha256": "e2e96080b5fa79be8db8dc08c570fe06ab0603d8da7c72eb22c9e44bd64c5938",
       "rawRail": {
         "name": "AuthorCanvasGraphEdge",
         "type": "command",
@@ -15525,6 +15525,235 @@
       "revision": 4,
       "createdBy": "codex",
       "createdAt": "2026-08-01T12:12:11.979Z"
+    },
+    {
+      "railId": "local#MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE#query#getcostattributionsummary",
+      "featureId": "MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE",
+      "mechanizationStatus": "implemented",
+      "railName": "GetCostAttributionSummary",
+      "normalizedRailName": "getcostattributionsummary",
+      "railType": "query",
+      "dddOwner": "CostAttributionProjection",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/plugins/contracts/NodeCostData.ts#NodeCostData",
+        "apps/web/src/app/plugins/contracts/PluginManifest.ts#PluginContributions",
+        "apps/web/src/app/plugins/registry.ts#PLUGIN_REGISTRY",
+        "apps/web/src/app/plugins/cost/costContributions.ts#costContributions",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/plugins/contracts/NodeCostData.ts#NodeCostData",
+        "apps/web/src/app/plugins/contracts/PluginManifest.ts#PluginContributions",
+        "apps/web/src/app/plugins/registry.ts#PLUGIN_REGISTRY",
+        "apps/web/src/app/plugins/cost/costContributions.ts#costContributions",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext"
+      ],
+      "documentationRefs": [
+        "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+        "docs/architecture/components/web/plugin-contributions-developer-guide.md"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/planning/state/github-mvp-issue-workflow.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/plugins/PluginEventBus.ts",
+        "apps/web/src/app/plugins/contracts/PluginContext.ts",
+        "apps/web/src/app/plugins/contracts/PluginServices.ts",
+        "apps/web/src/app/plugins/contracts/PluginManifest.ts",
+        "apps/web/src/app/plugins/contracts/NodeCostData.ts",
+        "apps/web/src/app/plugins/contracts/NodeRendering.ts",
+        "apps/web/src/app/plugins/cost/costContributions.ts",
+        "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+        "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+        "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+        "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+        "docs/architecture/components/web/plugin-contributions-developer-guide.md",
+        "docs/architecture/components/web/plugins/plugin-ux-integration-contract.md",
+        "docs/architecture/components/web/runs/start-run-client-identity-boundary.md",
+        "tools/planning-db/state/canonical-state.json"
+      ],
+      "architectureGuards": [
+        "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web typecheck",
+        "pnpm --filter @dvt/web lint",
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+      "sourceContentSha256": "1334275563ca4e458a3469aedd584a682ab30aafeb17c8df2cfa18a6f320bed6",
+      "rawRail": {
+        "name": "GetCostAttributionSummary",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CostAttributionProjection"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "NodeCostData",
+            "path": "apps/web/src/app/plugins/contracts/NodeCostData.ts",
+            "cqRails": ["GetCostAttributionSummary"],
+            "dddOwner": "CostAttributionProjection",
+            "unitTests": [
+              "apps/web/src/app/plugins/registry.test.ts",
+              "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Dead dynamic lifecycle and service-locator contracts are removed while static contribution ownership remains explicit."
+            ],
+            "cypressCoverage": "N/A - internal contract hardcut preserves existing Canvas behavior",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+          },
+          {
+            "name": "PluginContributions",
+            "path": "apps/web/src/app/plugins/contracts/PluginManifest.ts",
+            "cqRails": ["GetCostAttributionSummary"],
+            "dddOwner": "CostAttributionProjection",
+            "unitTests": [
+              "apps/web/src/app/plugins/registry.test.ts",
+              "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Dead dynamic lifecycle and service-locator contracts are removed while static contribution ownership remains explicit."
+            ],
+            "cypressCoverage": "N/A - internal contract hardcut preserves existing Canvas behavior",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+          },
+          {
+            "name": "PLUGIN_REGISTRY",
+            "path": "apps/web/src/app/plugins/registry.ts",
+            "cqRails": ["GetCostAttributionSummary"],
+            "dddOwner": "CostAttributionProjection",
+            "unitTests": [
+              "apps/web/src/app/plugins/registry.test.ts",
+              "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Dead dynamic lifecycle and service-locator contracts are removed while static contribution ownership remains explicit."
+            ],
+            "cypressCoverage": "N/A - internal contract hardcut preserves existing Canvas behavior",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+          },
+          {
+            "name": "costContributions",
+            "path": "apps/web/src/app/plugins/cost/costContributions.ts",
+            "cqRails": ["GetCostAttributionSummary"],
+            "dddOwner": "CostAttributionProjection",
+            "unitTests": [
+              "apps/web/src/app/plugins/registry.test.ts",
+              "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Dead dynamic lifecycle and service-locator contracts are removed while static contribution ownership remains explicit."
+            ],
+            "cypressCoverage": "N/A - internal contract hardcut preserves existing Canvas behavior",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+          },
+          {
+            "name": "buildOverlayContext",
+            "path": "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+            "cqRails": ["GetCostAttributionSummary"],
+            "dddOwner": "CostAttributionProjection",
+            "unitTests": [
+              "apps/web/src/app/plugins/registry.test.ts",
+              "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+            ],
+            "fowlerSignals": [
+              "Dead dynamic lifecycle and service-locator contracts are removed while static contribution ownership remains explicit."
+            ],
+            "cypressCoverage": "N/A - internal contract hardcut preserves existing Canvas behavior",
+            "architectureGuard": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2211"],
+        "cypressFlows": [
+          "N/A - internal contract hardcut preserves existing Canvas behavior"
+        ],
+        "domainObjects": [
+          "NodeCostData",
+          "PluginContributions",
+          "CostAttributionProjection"
+        ],
+        "fowlerSignals": [
+          "Dead dynamic lifecycle and service-locator contracts are removed while static contribution ownership remains explicit."
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "getcostattributionsummary-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/plugins/PluginEventBus.ts",
+              "apps/web/src/app/plugins/contracts/PluginContext.ts",
+              "apps/web/src/app/plugins/contracts/PluginServices.ts",
+              "apps/web/src/app/plugins/contracts/PluginManifest.ts",
+              "apps/web/src/app/plugins/contracts/NodeCostData.ts"
+            ],
+            "expectedFailure": "Dynamic lifecycle and service-locator contracts remain reachable from the static plugin composition boundary."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GetCostAttributionSummary",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CostAttributionProjection"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2211",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/PluginEventBus.ts",
+          "apps/web/src/app/plugins/contracts/PluginContext.ts",
+          "apps/web/src/app/plugins/contracts/PluginServices.ts",
+          "apps/web/src/app/plugins/contracts/PluginManifest.ts",
+          "apps/web/src/app/plugins/contracts/NodeCostData.ts",
+          "apps/web/src/app/plugins/contracts/NodeRendering.ts",
+          "apps/web/src/app/plugins/cost/costContributions.ts",
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md",
+          "docs/architecture/components/web/plugins/plugin-ux-integration-contract.md",
+          "docs/architecture/components/web/runs/start-run-client-identity-boundary.md",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-08-03T23:59:15.418Z"
     },
     {
       "railId": "local#MVP-F6-2A-PLAN-ADMISSION-FINDINGS#command#previewexecutionplan",
@@ -33058,6 +33287,288 @@
         "forbiddenImplementationSurfaces": ["apps/web/src/app/views/**"]
       },
       "createdAt": "2026-08-03T22:43:10.589Z"
+    },
+    {
+      "operationId": "3ffcd21f-9a24-45c6-986a-f3c49b8721d7",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE:query:getcostattributionsummary:latest:0edaaf3cd4302ff2",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE#query#getcostattributionsummary",
+      "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+      "sourceContentSha256": "2c54284e29ff1a5214c965c9cbdafd585f3e549262a4c4a79f005b84eb9fecf6",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+        "dddOwner": "CostAttributionProjection",
+        "railName": "GetCostAttributionSummary",
+        "railType": "query",
+        "featureId": "MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+        "sourceRef": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+        "unitTests": [
+          "apps/web/src/app/plugins/registry.test.ts",
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2211"],
+        "cypressFlows": [
+          "N/A - internal contract hardcut preserves existing Canvas behavior"
+        ],
+        "domainObjects": ["NodeCostData", "PluginContributions"],
+        "fowlerSignals": [
+          "Dead dynamic lifecycle and service-locator contracts are removed while static contribution ownership remains explicit."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/plugins/PluginEventBus.ts",
+          "apps/web/src/app/plugins/contracts/PluginContext.ts",
+          "apps/web/src/app/plugins/contracts/PluginServices.ts",
+          "apps/web/src/app/plugins/contracts/PluginManifest.ts",
+          "apps/web/src/app/plugins/contracts/NodeCostData.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md"
+        ],
+        "expectedFailure": "Dynamic lifecycle and service-locator contracts remain reachable from the static plugin composition boundary.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2211",
+        "implementationRefs": [
+          "apps/web/src/app/plugins/contracts/NodeCostData.ts#NodeCostData",
+          "apps/web/src/app/plugins/contracts/PluginManifest.ts#PluginContributions",
+          "apps/web/src/app/plugins/registry.ts#PLUGIN_REGISTRY"
+        ],
+        "normalizedRailName": "getcostattributionsummary",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2c54284e29ff1a5214c965c9cbdafd585f3e549262a4c4a79f005b84eb9fecf6",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/PluginEventBus.ts",
+          "apps/web/src/app/plugins/contracts/PluginContext.ts",
+          "apps/web/src/app/plugins/contracts/PluginServices.ts",
+          "apps/web/src/app/plugins/contracts/PluginManifest.ts",
+          "apps/web/src/app/plugins/contracts/NodeCostData.ts",
+          "apps/web/src/app/plugins/contracts/NodeRendering.ts",
+          "apps/web/src/app/plugins/cost/costContributions.ts",
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md",
+          "docs/architecture/components/web/plugins/plugin-ux-integration-contract.md",
+          "docs/architecture/components/web/runs/start-run-client-identity-boundary.md",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-03T23:59:15.418Z"
+    },
+    {
+      "operationId": "8fe17a81-5aba-4273-bc8f-95402f13c50a",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE:query:getcostattributionsummary:0:0486ff8d3c05afbf",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE#query#getcostattributionsummary",
+      "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+      "sourceContentSha256": "2c54284e29ff1a5214c965c9cbdafd585f3e549262a4c4a79f005b84eb9fecf6",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+        "dddOwner": "CostAttributionProjection",
+        "railName": "GetCostAttributionSummary",
+        "railType": "query",
+        "featureId": "MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+        "sourceRef": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+        "unitTests": [
+          "apps/web/src/app/plugins/registry.test.ts",
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2211"],
+        "cypressFlows": [
+          "N/A - internal contract hardcut preserves existing Canvas behavior"
+        ],
+        "domainObjects": ["NodeCostData", "CostAttributionProjection"],
+        "fowlerSignals": [
+          "Dead dynamic lifecycle and service-locator contracts are removed while static contribution ownership remains explicit."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/plugins/PluginEventBus.ts",
+          "apps/web/src/app/plugins/contracts/PluginContext.ts",
+          "apps/web/src/app/plugins/contracts/PluginServices.ts",
+          "apps/web/src/app/plugins/contracts/PluginManifest.ts",
+          "apps/web/src/app/plugins/contracts/NodeCostData.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md"
+        ],
+        "expectedFailure": "Dynamic lifecycle and service-locator contracts remain reachable from the static plugin composition boundary.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2211",
+        "implementationRefs": [
+          "apps/web/src/app/plugins/contracts/NodeCostData.ts#NodeCostData",
+          "apps/web/src/app/plugins/cost/costContributions.ts#costContributions",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext"
+        ],
+        "normalizedRailName": "getcostattributionsummary",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "2c54284e29ff1a5214c965c9cbdafd585f3e549262a4c4a79f005b84eb9fecf6",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/PluginEventBus.ts",
+          "apps/web/src/app/plugins/contracts/PluginContext.ts",
+          "apps/web/src/app/plugins/contracts/PluginServices.ts",
+          "apps/web/src/app/plugins/contracts/PluginManifest.ts",
+          "apps/web/src/app/plugins/contracts/NodeCostData.ts",
+          "apps/web/src/app/plugins/contracts/NodeRendering.ts",
+          "apps/web/src/app/plugins/cost/costContributions.ts",
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md",
+          "docs/architecture/components/web/plugins/plugin-ux-integration-contract.md",
+          "docs/architecture/components/web/runs/start-run-client-identity-boundary.md",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-04T00:02:25.959Z"
+    },
+    {
+      "operationId": "8ee389a1-d6d4-4116-924e-caae59cee266",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE:query:getcostattributionsummary:1:5cdd87dad565ecb5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE#query#getcostattributionsummary",
+      "sourcePath": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+      "sourceContentSha256": "1334275563ca4e458a3469aedd584a682ab30aafeb17c8df2cfa18a6f320bed6",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+        "dddOwner": "CostAttributionProjection",
+        "railName": "GetCostAttributionSummary",
+        "railType": "query",
+        "featureId": "MVP-2211-DYNAMIC-PLUGIN-LIFECYCLE",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+        "sourceRef": "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+        "unitTests": [
+          "apps/web/src/app/plugins/registry.test.ts",
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2211"],
+        "cypressFlows": [
+          "N/A - internal contract hardcut preserves existing Canvas behavior"
+        ],
+        "domainObjects": ["NodeCostData", "CostAttributionProjection"],
+        "fowlerSignals": [
+          "Dead dynamic lifecycle and service-locator contracts are removed while static contribution ownership remains explicit."
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/plugins/PluginEventBus.ts",
+          "apps/web/src/app/plugins/contracts/PluginContext.ts",
+          "apps/web/src/app/plugins/contracts/PluginServices.ts",
+          "apps/web/src/app/plugins/contracts/PluginManifest.ts",
+          "apps/web/src/app/plugins/contracts/NodeCostData.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web typecheck",
+          "pnpm --filter @dvt/web lint",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md"
+        ],
+        "expectedFailure": "Dynamic lifecycle and service-locator contracts remain reachable from the static plugin composition boundary.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/planning/state/github-mvp-issue-workflow.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md"
+        ],
+        "architectureGuards": [
+          "pnpm --filter @dvt/web exec vitest run src/app/plugins/registry.test.ts src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2211",
+        "implementationRefs": [
+          "apps/web/src/app/plugins/contracts/NodeCostData.ts#NodeCostData",
+          "apps/web/src/app/plugins/cost/costContributions.ts#costContributions",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts#buildOverlayContext"
+        ],
+        "normalizedRailName": "getcostattributionsummary",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1334275563ca4e458a3469aedd584a682ab30aafeb17c8df2cfa18a6f320bed6",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/PluginEventBus.ts",
+          "apps/web/src/app/plugins/contracts/PluginContext.ts",
+          "apps/web/src/app/plugins/contracts/PluginServices.ts",
+          "apps/web/src/app/plugins/contracts/PluginManifest.ts",
+          "apps/web/src/app/plugins/contracts/NodeCostData.ts",
+          "apps/web/src/app/plugins/contracts/NodeRendering.ts",
+          "apps/web/src/app/plugins/cost/costContributions.ts",
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts",
+          "apps/web/src/app/views/canvas/canvasOverlayContext.ts",
+          "apps/web/src/app/views/canvas/useCanvasOverlayModel.ts",
+          "docs/architecture/components/web/graph/graph-frontend-architecture.md",
+          "docs/architecture/components/web/plugin-contributions-developer-guide.md",
+          "docs/architecture/components/web/plugins/plugin-ux-integration-contract.md",
+          "docs/architecture/components/web/runs/start-run-client-identity-boundary.md",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": ["tools/planning-db/migrations/**"]
+      },
+      "createdAt": "2026-08-04T00:05:01.287Z"
     }
   ]
 }
