@@ -49,9 +49,11 @@ describe('PostgresAdapterClientSession', () => {
 
     expect(result).toBe('ok');
     expect(client.query).toHaveBeenNthCalledWith(1, 'BEGIN');
-    expect(client.query).toHaveBeenNthCalledWith(2, 'SET LOCAL statement_timeout = $1', [
-      DEFAULT_STATEMENT_TIMEOUT_MS,
-    ]);
+    expect(client.query).toHaveBeenNthCalledWith(
+      2,
+      "SELECT set_config('statement_timeout', $1, true)",
+      [DEFAULT_STATEMENT_TIMEOUT_MS]
+    );
     expect(client.query).toHaveBeenNthCalledWith(3, 'COMMIT');
     expect(client.release).toHaveBeenCalledWith(false);
   });

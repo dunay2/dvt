@@ -20,5 +20,5 @@ export function rollbackTransactionSql(): string {
 }
 
 export function setLocalStatementTimeoutSql(): string {
-  return 'SET LOCAL statement_timeout = $1';
+  return "SELECT set_config('statement_timeout', $1, true)";
 }

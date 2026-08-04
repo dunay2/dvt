@@ -21,7 +21,7 @@ class RecordingPoolClient {
       statement === 'BEGIN' ||
       statement === 'COMMIT' ||
       statement === 'ROLLBACK' ||
-      statement.startsWith('SET LOCAL statement_timeout')
+      statement.startsWith("SELECT set_config('statement_timeout'")
     ) {
       return { rows: [], rowCount: 0 };
     }
