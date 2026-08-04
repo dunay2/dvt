@@ -422,6 +422,7 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     ...ROOT_CONFIG_PATTERNS,
   ],
   temporal_postgres_changed: [
+    'apps/temporal-worker/**',
     'packages/@dvt/adapter-postgres/**',
     'packages/@dvt/adapter-temporal/src/activities/**',
     'packages/@dvt/adapter-temporal/src/workflows/**',
@@ -433,6 +434,7 @@ export const PR_QUALITY_SCOPE_PATTERNS = {
     'packages/@dvt/adapter-temporal/package.json',
     'packages/@dvt/engine/**',
     'packages/@dvt/contracts/**',
+    'packages/@dvt/temporal-object-file-postgres-plugin/**',
     'scripts/build-workspace-runtime-deps.cjs',
     'tools/ci/**',
     ...ROOT_CONFIG_PATTERNS,
