@@ -1,30 +1,25 @@
-import { Client, type Pool } from 'pg';
+import { Client, Pool } from 'pg';
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  PostgresRelationalExecutionCapability,
-  type PostgresObjectFileLoadInput,
-} from '../src/index.js';
+import { PostgresObjectFileLoader, type PostgresObjectFileLoadInput } from '../src/index.js';
+import { PostgresAdapterClientSession } from '../src/PostgresAdapterClientSession.js';
 import { quoteIdentifier } from '../src/sqlUtils.js';
 
 const describeIfPg = process.env.DVT_PG_INTEGRATION === '1' ? describe : describe.skip;
 
-describe('PostgresRelationalExecutionCapability object-file load', () => {
+describe('PostgresObjectFileLoader', () => {
   it('replaces a staging relation atomically using parameterized rows', async () => {
     const database = createFakeDatabase(false);
-    const capability = new PostgresRelationalExecutionCapability({
-      pool: database.pool,
-      statementTimeoutMs: 1_000,
-    });
+    const loader = createLoader(database.pool);
 
-    await expect(capability.load(buildInput())).resolves.toEqual({
+    await expect(loader.load(buildInput())).resolves.toEqual({
       rowsWritten: 2,
       publicationOutcome: 'created',
     });
 
     expect(database.sql()).toEqual([
       'BEGIN',
-      'SET LOCAL statement_timeout = $1',
+      "SELECT set_config('statement_timeout', $1, true)",
       'CREATE SCHEMA IF NOT EXISTS "staging"',
       'SELECT to_regclass($1) AS target_relation',
       'DROP TABLE IF EXISTS "staging"."orders_import"',
@@ -37,12 +32,9 @@ describe('PostgresRelationalExecutionCapability object-file load', () => {
 
   it('reports replacement when the target relation already exists', async () => {
     const database = createFakeDatabase(true);
-    const capability = new PostgresRelationalExecutionCapability({
-      pool: database.pool,
-      statementTimeoutMs: 1_000,
-    });
+    const loader = createLoader(database.pool);
 
-    await expect(capability.load(buildInput())).resolves.toMatchObject({
+    await expect(loader.load(buildInput())).resolves.toMatchObject({
       publicationOutcome: 'replaced',
     });
   });
@@ -50,10 +42,7 @@ describe('PostgresRelationalExecutionCapability object-file load', () => {
   it('rolls back instead of committing when cancellation arrives between batches', async () => {
     const controller = new globalThis.AbortController();
     const database = createFakeDatabase(false, () => controller.abort(new Error('cancelled')));
-    const capability = new PostgresRelationalExecutionCapability({
-      pool: database.pool,
-      statementTimeoutMs: 1_000,
-    });
+    const loader = createLoader(database.pool);
     const input = buildInput(
       Array.from({ length: 1_001 }, (_, index) => ({
         order_id: String(index + 1),
@@ -63,7 +52,7 @@ describe('PostgresRelationalExecutionCapability object-file load', () => {
       controller.signal
     );
 
-    await expect(capability.load(input)).rejects.toThrow('cancelled');
+    await expect(loader.load(input)).rejects.toThrow('cancelled');
     expect(database.sql()).toContain('ROLLBACK');
     expect(database.sql()).not.toContain('COMMIT');
   });
@@ -72,36 +61,35 @@ describe('PostgresRelationalExecutionCapability object-file load', () => {
     const controller = new globalThis.AbortController();
     controller.abort(new Error('cancelled'));
     const database = createFakeDatabase(false);
-    const capability = new PostgresRelationalExecutionCapability({
-      pool: database.pool,
-      statementTimeoutMs: 1_000,
-    });
+    const loader = createLoader(database.pool);
 
-    await expect(capability.load(buildInput(undefined, controller.signal))).rejects.toThrow(
+    await expect(loader.load(buildInput(undefined, controller.signal))).rejects.toThrow(
       'cancelled'
     );
     expect(database.connect).not.toHaveBeenCalled();
   });
 });
 
-describeIfPg('PostgresRelationalExecutionCapability object-file load integration', () => {
+describeIfPg('PostgresObjectFileLoader integration', () => {
   it('replaces on retry without duplicating accepted rows', async () => {
     const connectionString = process.env.DVT_PG_URL ?? process.env.DATABASE_URL;
     if (!connectionString) {
       throw new Error('DVT_PG_URL or DATABASE_URL is required for integration tests');
     }
     const relation = `het1_load_${process.pid}_${Date.now()}`.slice(0, 63);
-    const capability = new PostgresRelationalExecutionCapability({ connectionString });
+    const pool = new Pool({ connectionString });
+    const session = new PostgresAdapterClientSession(pool, 30_000);
+    const loader = new PostgresObjectFileLoader(session);
     const client = new Client({ connectionString });
     await client.connect();
 
     try {
-      await expect(capability.load({ ...buildInput(), relation })).resolves.toMatchObject({
+      await expect(loader.load({ ...buildInput(), relation })).resolves.toMatchObject({
         publicationOutcome: 'created',
         rowsWritten: 2,
       });
       await expect(
-        capability.load({
+        loader.load({
           ...buildInput([{ order_id: '3', amount: '30.75', active: true }]),
           relation,
         })
@@ -114,10 +102,14 @@ describeIfPg('PostgresRelationalExecutionCapability object-file load integration
     } finally {
       await client.query(`DROP TABLE IF EXISTS "staging".${quoteIdentifier(relation)}`);
       await client.end();
-      await capability.close();
+      await session.close(true);
     }
   });
 });
+
+function createLoader(pool: Pool): PostgresObjectFileLoader {
+  return new PostgresObjectFileLoader(new PostgresAdapterClientSession(pool, 1_000));
+}
 
 function buildInput(
   rows: PostgresObjectFileLoadInput['rows'] = [
