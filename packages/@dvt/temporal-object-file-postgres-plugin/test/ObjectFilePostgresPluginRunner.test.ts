@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ObjectFilePostgresPluginRunner } from '../src/ObjectFilePostgresPluginRunner.js';
 import type {
   ContentAddressedObjectReader,
+  ObjectFilePostgresLoadResult,
   ObjectFilePostgresPluginExecutionInput,
   ObjectFilePostgresRelationalLoader,
 } from '../src/objectFilePostgresPluginTypes.js';
@@ -268,7 +269,7 @@ function buildInput(): ObjectFilePostgresPluginExecutionInput {
   };
 }
 
-function buildLoadResult(publicationOutcome: 'created' | 'replaced') {
+function buildLoadResult(publicationOutcome: 'created' | 'replaced'): ObjectFilePostgresLoadResult {
   return {
     rowsWritten: 2,
     publicationOutcome,
