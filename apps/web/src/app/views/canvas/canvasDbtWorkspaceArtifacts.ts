@@ -1,4 +1,6 @@
 /** Owned concern: project authored dbt canvas state into deterministic workspace files. */
+import { OBJECT_FILE_POSTGRES_DBT_STAGING_SCHEMA_ENV } from '@dvt/contracts';
+
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { createDbtNodeAuthoringMetadata } from './canvasDbtAuthoringModel';
 import {
@@ -55,7 +57,11 @@ function appendSourceYaml(lines: string[], sources: readonly DbtModelArtifactSou
     `${a.sourceName}.${a.tableName}`.localeCompare(`${b.sourceName}.${b.tableName}`)
   )) {
     lines.push(`  - name: ${source.sourceName}`);
-    lines.push(`    schema: ${source.schemaName}`);
+    lines.push(
+      source.schemaBinding === 'object-file-postgres-scope'
+        ? `    schema: "{{ env_var('${OBJECT_FILE_POSTGRES_DBT_STAGING_SCHEMA_ENV}', '${source.schemaName}') }}"`
+        : `    schema: ${source.schemaName}`
+    );
     lines.push('    tables:');
     lines.push(`      - name: ${source.tableName}`);
   }

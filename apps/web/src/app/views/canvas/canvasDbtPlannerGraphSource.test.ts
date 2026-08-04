@@ -188,11 +188,21 @@ describe('canvas dbt planner graph source', () => {
         nodeId: 'model-orders',
         stepKind: 'DBT_MODEL',
         dependsOn: ['load-orders'],
+        stepTypeConfig: {
+          custom: {
+            objectFilePostgresStagingBridge: { version: 'v1' },
+          },
+        },
       }),
       expect.objectContaining({
         nodeId: 'test-orders',
         stepKind: 'DBT_TEST',
         dependsOn: ['model-orders'],
+        stepTypeConfig: {
+          custom: {
+            objectFilePostgresStagingBridge: { version: 'v1' },
+          },
+        },
       }),
     ]);
   });

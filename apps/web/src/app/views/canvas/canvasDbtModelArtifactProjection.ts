@@ -14,6 +14,7 @@ export type DbtModelArtifactSource = Readonly<{
   sourceName: string;
   schemaName: string;
   tableName: string;
+  schemaBinding?: 'object-file-postgres-scope';
 }>;
 
 export type DbtModelArtifactProjection = Readonly<{
@@ -129,6 +130,7 @@ function projectSourceOrigin(
         sourceName,
         schemaName: metadata.target.schema,
         tableName: metadata.target.relation,
+        schemaBinding: 'object-file-postgres-scope',
       },
     };
   }
