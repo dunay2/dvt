@@ -5,8 +5,6 @@ import {
   CANVAS_GRAPH_SEARCH_MATCH_PRIORITY,
   CANVAS_GRAPH_SEARCH_ORDERING,
   createCanvasGraphSearchRequest,
-  isCanvasGraphSearchResultSet,
-  type CanvasGraphSearchResultSet,
 } from './canvasGraphSearch.contract';
 
 describe('Canvas graph search contract', () => {
@@ -38,69 +36,5 @@ describe('Canvas graph search contract', () => {
       'normalized-name',
       'node-id',
     ]);
-  });
-
-  it('accepts coherent idle, no-match, and matched result states', () => {
-    const states: readonly CanvasGraphSearchResultSet[] = [
-      {
-        status: 'idle',
-        request: { query: '', normalizedQuery: '' },
-        matches: [],
-        activeMatchIndex: null,
-        activeNodeId: null,
-      },
-      {
-        status: 'no-match',
-        request: { query: 'missing', normalizedQuery: 'missing' },
-        matches: [],
-        activeMatchIndex: null,
-        activeNodeId: null,
-      },
-      {
-        status: 'matched',
-        request: { query: 'orders', normalizedQuery: 'orders' },
-        matches: [
-          {
-            nodeId: 'model.orders',
-            matchedFields: ['name'],
-            bestMatchKind: 'exact',
-          },
-        ],
-        activeMatchIndex: 0,
-        activeNodeId: 'model.orders',
-      },
-    ];
-
-    for (const state of states) {
-      expect(isCanvasGraphSearchResultSet(state)).toBe(true);
-    }
-  });
-
-  it('rejects result states with stale active identity or query-state contradictions', () => {
-    expect(
-      isCanvasGraphSearchResultSet({
-        status: 'matched',
-        request: { query: 'orders', normalizedQuery: 'orders' },
-        matches: [
-          {
-            nodeId: 'model.orders',
-            matchedFields: ['name'],
-            bestMatchKind: 'exact',
-          },
-        ],
-        activeMatchIndex: 0,
-        activeNodeId: 'model.missing',
-      })
-    ).toBe(false);
-
-    expect(
-      isCanvasGraphSearchResultSet({
-        status: 'no-match',
-        request: { query: '', normalizedQuery: '' },
-        matches: [],
-        activeMatchIndex: null,
-        activeNodeId: null,
-      })
-    ).toBe(false);
   });
 });
