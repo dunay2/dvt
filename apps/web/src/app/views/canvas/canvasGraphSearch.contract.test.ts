@@ -4,6 +4,7 @@ import {
   CANVAS_GRAPH_SEARCH_FIELDS,
   CANVAS_GRAPH_SEARCH_MATCH_PRIORITY,
   CANVAS_GRAPH_SEARCH_ORDERING,
+  createCanvasGraphSearchMatchedResultSet,
   createCanvasGraphSearchRequest,
 } from './canvasGraphSearch.contract';
 
@@ -36,5 +37,47 @@ describe('Canvas graph search contract', () => {
       'normalized-name',
       'node-id',
     ]);
+  });
+
+  it('constructs matched results with a coherent active identity', () => {
+    const request = createCanvasGraphSearchRequest('orders');
+    const matches = [
+      {
+        nodeId: 'orders-source',
+        matchedFields: ['name'] as const,
+        bestMatchKind: 'exact' as const,
+      },
+      {
+        nodeId: 'orders-model',
+        matchedFields: ['name'] as const,
+        bestMatchKind: 'prefix' as const,
+      },
+    ];
+
+    expect(createCanvasGraphSearchMatchedResultSet(request, matches, 'orders-model')).toEqual({
+      status: 'matched',
+      request,
+      matches,
+      activeMatchIndex: 1,
+      activeNodeId: 'orders-model',
+    });
+  });
+
+  it('rejects contradictory matched result states', () => {
+    const request = createCanvasGraphSearchRequest('orders');
+    const matches = [
+      {
+        nodeId: 'orders-source',
+        matchedFields: ['name'] as const,
+        bestMatchKind: 'exact' as const,
+      },
+    ];
+
+    expect(() => createCanvasGraphSearchMatchedResultSet(request, [], 'orders-source')).toThrow(
+      'requires at least one match'
+    );
+    expect(() => createCanvasGraphSearchMatchedResultSet(request, matches, 'missing-node')).toThrow(
+      'must belong to the result set'
+    );
   });
 });

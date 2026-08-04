@@ -48,10 +48,10 @@ type CanvasGraphSearchEmptyResultSet = Readonly<{
   activeNodeId: null;
 }>;
 
-type CanvasGraphSearchMatchedResultSet = Readonly<{
+export type CanvasGraphSearchMatchedResultSet = Readonly<{
   status: 'matched';
   request: CanvasGraphSearchRequest;
-  matches: readonly CanvasGraphSearchMatch[];
+  matches: readonly [CanvasGraphSearchMatch, ...CanvasGraphSearchMatch[]];
   activeMatchIndex: number;
   activeNodeId: string;
 }>;
@@ -70,5 +70,30 @@ export function createCanvasGraphSearchRequest(query: string): CanvasGraphSearch
   return {
     query: trimmedQuery,
     normalizedQuery: trimmedQuery.toLowerCase(),
+  };
+}
+
+export function createCanvasGraphSearchMatchedResultSet(
+  request: CanvasGraphSearchRequest,
+  matches: readonly CanvasGraphSearchMatch[],
+  activeNodeId: string
+): CanvasGraphSearchMatchedResultSet {
+  const [firstMatch, ...remainingMatches] = matches;
+  if (!firstMatch) {
+    throw new Error('A matched Canvas graph search result requires at least one match.');
+  }
+
+  const nonEmptyMatches = [firstMatch, ...remainingMatches] as const;
+  const activeMatchIndex = nonEmptyMatches.findIndex((match) => match.nodeId === activeNodeId);
+  if (activeMatchIndex < 0) {
+    throw new Error('The active Canvas graph search node must belong to the result set.');
+  }
+
+  return {
+    status: 'matched',
+    request,
+    matches: nonEmptyMatches,
+    activeMatchIndex,
+    activeNodeId,
   };
 }
