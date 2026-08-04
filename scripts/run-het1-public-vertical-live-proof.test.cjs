@@ -1,12 +1,14 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { readFileSync } = require('node:fs');
+const { EventEmitter } = require('node:events');
 const path = require('node:path');
 
 const {
   buildHet1ObjectFileEnv,
   buildMinioDockerArgs,
   buildSelectedClosureArgs,
+  waitForChildExit,
   validateObjectFileFixture,
 } = require('./run-het1-public-vertical-live-proof.cjs');
 
@@ -90,4 +92,11 @@ test('delegates the stack to one public HET1 Cypress spec', () => {
     '--spec',
     'apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts',
   ]);
+});
+
+test('observes a selected-closure process that already exited', async () => {
+  const child = new EventEmitter();
+  child.exitCode = 0;
+
+  await assert.doesNotReject(() => waitForChildExit(child));
 });

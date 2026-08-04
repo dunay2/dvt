@@ -4,7 +4,6 @@ const { spawn, spawnSync } = require('node:child_process');
 const { createHash } = require('node:crypto');
 const { readFile } = require('node:fs/promises');
 const path = require('node:path');
-const { pathToFileURL } = require('node:url');
 
 const { allocateFreePort } = require('./run-dev-stack.temporal.cjs');
 
@@ -113,7 +112,9 @@ async function waitForMinio(endpoint, timeoutMs = 120_000) {
 
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      const response = await fetch(`${endpoint}/minio/health/live`);
+      const response = await fetch(`${endpoint}/minio/health/live`, {
+        signal: AbortSignal.timeout(5_000),
+      });
       if (response.ok) {
         return;
       }
@@ -131,15 +132,17 @@ async function waitForMinio(endpoint, timeoutMs = 120_000) {
   );
 }
 
-async function loadS3Module() {
+function loadS3Module() {
   const entry = require.resolve('@aws-sdk/client-s3', {
     paths: [path.resolve(__dirname, '../apps/temporal-worker')],
   });
-  return import(pathToFileURL(entry).href);
+  return require(entry);
 }
 
 async function uploadFixture({ endpoint, manifest, content }) {
-  const { CreateBucketCommand, PutObjectCommand, S3Client } = await loadS3Module();
+  const { CreateBucketCommand, PutObjectCommand, S3Client } = loadS3Module();
+  const abortController = new AbortController();
+  const timeout = setTimeout(() => abortController.abort(), 30_000);
   const client = new S3Client({
     endpoint,
     region: S3_REGION,
@@ -151,7 +154,9 @@ async function uploadFixture({ endpoint, manifest, content }) {
   });
 
   try {
-    await client.send(new CreateBucketCommand({ Bucket: manifest.bucket }));
+    await client.send(new CreateBucketCommand({ Bucket: manifest.bucket }), {
+      abortSignal: abortController.signal,
+    });
     await client.send(
       new PutObjectCommand({
         Bucket: manifest.bucket,
@@ -159,11 +164,34 @@ async function uploadFixture({ endpoint, manifest, content }) {
         Body: content,
         ContentType: 'text/csv',
         Metadata: { sha256: manifest.sha256 },
-      })
+      }),
+      { abortSignal: abortController.signal }
     );
   } finally {
+    clearTimeout(timeout);
     client.destroy();
   }
+}
+
+function waitForChildExit(child) {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const resolveExit = (code, signal) => {
+      if (settled) return;
+      settled = true;
+      if (signal !== null) {
+        reject(new Error(`HET1 selected-closure proof exited from signal ${signal}.`));
+        return;
+      }
+      resolve(code);
+    };
+
+    child.once('error', reject);
+    child.once('exit', resolveExit);
+    if (child.exitCode !== null) {
+      queueMicrotask(() => resolveExit(child.exitCode, null));
+    }
+  });
 }
 
 async function runSelectedClosure(env) {
@@ -173,16 +201,7 @@ async function runSelectedClosure(env) {
     stdio: 'inherit',
     windowsHide: true,
   });
-  const exitCode = await new Promise((resolve, reject) => {
-    child.once('error', reject);
-    child.once('exit', (code, signal) => {
-      if (signal !== null) {
-        reject(new Error(`HET1 selected-closure proof exited from signal ${signal}.`));
-        return;
-      }
-      resolve(code);
-    });
-  });
+  const exitCode = await waitForChildExit(child);
 
   if (exitCode !== 0) {
     throw new Error(`HET1 selected-closure proof failed with exit code ${exitCode}.`);
@@ -201,6 +220,7 @@ async function main() {
   let minioStarted = false;
 
   try {
+    console.log(`[het1-public-live] Starting pinned MinIO at ${endpoint}`);
     runDocker(
       buildMinioDockerArgs({
         containerName,
@@ -211,7 +231,9 @@ async function main() {
     );
     minioStarted = true;
     await waitForMinio(endpoint);
+    console.log('[het1-public-live] MinIO ready; publishing content-addressed fixture');
     await uploadFixture({ endpoint, manifest, content });
+    console.log('[het1-public-live] Fixture published; starting protected application proof');
     await runSelectedClosure(buildHet1ObjectFileEnv({ endpoint, manifest }));
   } finally {
     if (minioStarted) {
@@ -225,11 +247,15 @@ module.exports = {
   buildMinioDockerArgs,
   buildSelectedClosureArgs,
   validateObjectFileFixture,
+  waitForChildExit,
 };
 
 if (require.main === module) {
-  main().catch((error) => {
-    console.error(error instanceof Error ? error.message : error);
-    process.exitCode = 1;
-  });
+  const keepAlive = setInterval(() => undefined, 1_000);
+  main()
+    .catch((error) => {
+      console.error(error instanceof Error ? error.message : error);
+      process.exitCode = 1;
+    })
+    .finally(() => clearInterval(keepAlive));
 }

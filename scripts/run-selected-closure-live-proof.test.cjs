@@ -9,6 +9,7 @@ const {
   buildLiveProofCypressDockerInvocation,
   buildLiveProofApiEnv,
   buildLiveProofTemporalWorkerEnv,
+  buildLiveProofTemporalTimeSkippingOptions,
   prepareLiveProofDbtAnalyzerProfile,
   resolveLiveProofDbtExecutable,
   resolveLiveProofSpecPath,
@@ -20,6 +21,22 @@ test('resolveLiveProofSpecPath keeps the selected-closure proof as the default',
   assert.equal(
     resolveLiveProofSpecPath([]),
     '/repo/apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts'
+  );
+});
+
+test('uses the configured Temporal test server binary for the live proof', () => {
+  assert.deepEqual(
+    buildLiveProofTemporalTimeSkippingOptions({
+      DVT_TEMPORAL_TEST_SERVER_PATH: 'C:\\tools\\temporal-test-server.exe',
+    }),
+    {
+      server: {
+        executable: {
+          type: 'existing-path',
+          path: 'C:\\tools\\temporal-test-server.exe',
+        },
+      },
+    }
   );
 });
 
