@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import { DVT_AUTHORING_NODE_KINDS } from '../../plugins/dvt/dvtNodeTypeCatalog';
+import { OBJECT_FILE_POSTGRES_NODE_KINDS } from '../../plugins/objectFilePostgres/objectFilePostgresNodeTypeCatalog';
 import type { CanonicalNode } from '../../types/canonical';
 import {
   applyCanvasDraftPostureToRuntimePolicyInput,
@@ -210,6 +211,35 @@ describe('resolveCanvasRuntimePolicy', () => {
         })
       )
     ).toBe(false);
+  });
+
+  it('admits a composed plugin node by its explicit catalog ownership', () => {
+    const policy = resolveCanvasRuntimePolicy({
+      activeRuntime: {
+        kind: 'ready',
+        canvasKind: 'dbt',
+        executionStrategy: {
+          kind: 'planner_generic_preview',
+          plannerProfile: 'dbt-planner-backed-v1',
+        },
+        nodeKinds: [...DBT_NODE_KINDS, ...OBJECT_FILE_POSTGRES_NODE_KINDS],
+      },
+      canMutateGraph: true,
+      canOpenSourceImport: true,
+      canPlan: true,
+      canRun: true,
+      canReloadLatestDraft: false,
+    });
+
+    expect(
+      policy.admission.allowsCanonicalNode(
+        buildCanonicalNode({
+          pluginId: 'dvt.object-file-postgres',
+          kind: 'dvt:object_file_load',
+          role: 'input',
+        })
+      )
+    ).toBe(true);
   });
 
   it('blocks plan and run when draft posture is read-only', () => {

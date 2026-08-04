@@ -2,7 +2,6 @@
 import type { CanvasExecutionStrategy } from '../../plugins/canvasExecutionStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import type { CanonicalNode, PluginNodeKind } from '../../types/canonical';
-import { parsePluginNodeKind } from '../../types/canonicalGuards';
 
 export type CanvasRuntimePolicyInput =
   | {
@@ -181,11 +180,7 @@ function buildRuntimeAdmissionPolicy(
       return false;
     }
 
-    return (
-      node.pluginId === registration.pluginId &&
-      node.pluginId === parsePluginNodeKind(node.kind).pluginId &&
-      node.role === registration.role
-    );
+    return node.pluginId === registration.pluginId && node.role === registration.role;
   }
 
   return {
