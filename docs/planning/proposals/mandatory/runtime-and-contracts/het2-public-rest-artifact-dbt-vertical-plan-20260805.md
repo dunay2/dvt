@@ -171,6 +171,29 @@ the externally observable intent is still previewing and starting a stored plan.
   guards; ARC check; docs synchronization; governance refresh; live Cypress
   proof; and `pnpm verify:prepush` after hook-normalized commits.
 
+## Pre-PR Acceptance Review
+
+The issue-to-code review performed before publication found three release
+blockers that must be corrected before the combined HET1/HET2 branch can merge:
+
+1. the worker network tests did not explicitly prove same-origin redirect
+   re-resolution, DNS rebinding refusal, redirect exhaustion, identity-encoding
+   enforcement, wrong status/media type, malformed JSON, optional-auth behavior,
+   or secret-safe transport failure mapping;
+2. the IPv6 policy rejected IPv4-mapped addresses but did not reject the
+   deprecated IPv4-compatible dotted form, which can encode a loopback or
+   metadata destination outside the mapped-address branch;
+3. the protected HET2 proof exercised endpoint denial and cancellation during
+   dbt, while issues #2183 and #2184 require real HTTP failure, response/artifact
+   integrity refusal, and a cancel request while acquisition is active.
+
+The accepted correction keeps the same command/query rails and implementation
+surfaces. It strengthens the existing worker policy and proof fixture; it does
+not add a connector, route, artifact model, loader, or orchestration mechanism.
+The combined PR must also run the retained HET1 live proof because that is the
+service-backed evidence that the downstream loader rejects a tampered artifact
+before PostgreSQL mutation.
+
 ```feature-mechanization
 version: 1
 featureId: E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805
@@ -294,6 +317,7 @@ completionGate:
   - pnpm --filter @dvt/plan-verifier test
   - pnpm --filter dvt-api test
   - pnpm --filter @dvt/web test
+  - pnpm test:web:e2e:het1-public:live
   - pnpm test:web:e2e:het2-public:live
   - pnpm docs:feature-mechanization:implementation -- --base 2eb393a4a --feature E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805
   - pnpm verify:prepush
@@ -348,6 +372,21 @@ redGreenCycles:
       - scripts/run-het2-public-vertical-live-proof.cjs
       - scripts/run-het2-public-vertical-live-proof.test.cjs
       - package.json
+    greenTest: pnpm test:web:e2e:het2-public:live
+  - id: review-http-network-negative-coverage
+    redTest: pnpm --filter dvt-temporal-worker test -- test/runtime/nodeHttpsJsonClient.test.ts
+    expectedFailure: IPv4-compatible IPv6 and required per-hop, timeout, encoding, status, media, payload, optional-auth, and redaction cases are not all proven.
+    patchSurfaces:
+      - apps/temporal-worker/src/runtime/nodeHttpsJsonClient.ts
+      - apps/temporal-worker/test/runtime/nodeHttpsJsonClient.test.ts
+    greenTest: pnpm --filter dvt-temporal-worker test -- test/runtime/nodeHttpsJsonClient.test.ts
+  - id: review-live-acquisition-failure-and-cancellation
+    redTest: pnpm test:web:e2e:het2-public:live
+    expectedFailure: The live proof does not exercise real HTTP status failure, response integrity mismatch, or cancellation requested while acquisition is active.
+    patchSurfaces:
+      - apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts
+      - scripts/run-het2-public-vertical-live-proof.cjs
+      - scripts/run-het2-public-vertical-live-proof.test.cjs
     greenTest: pnpm test:web:e2e:het2-public:live
 symbols:
   - name: HttpJsonArtifactStepTypeConfigSchema
