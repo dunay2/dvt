@@ -2,6 +2,8 @@ import {
   ACQUIRE_HTTP_JSON_ARTIFACT_STEP_KIND,
   GENERIC_GRAPH_SOURCE_KIND,
   LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND,
+  type HttpJsonArtifactStepTypeConfig,
+  type LoadObjectFileToPostgresStepTypeConfig,
   type PlannerInputEnvelopeV1,
 } from '@dvt/contracts';
 import { describe, expect, it } from 'vitest';
@@ -16,7 +18,7 @@ const OWNERSHIP = {
 const SHA256 = 'a'.repeat(64);
 const STORAGE_URI = `s3://het2-artifacts/tenants/${OWNERSHIP.tenantId}/${SHA256}`;
 
-function acquisitionConfig() {
+function acquisitionConfig(): HttpJsonArtifactStepTypeConfig {
   return {
     scope: OWNERSHIP,
     request: {
@@ -46,7 +48,7 @@ function acquisitionConfig() {
   };
 }
 
-function loadConfig(storageUri = STORAGE_URI) {
+function loadConfig(storageUri = STORAGE_URI): LoadObjectFileToPostgresStepTypeConfig {
   return {
     scope: OWNERSHIP,
     source: {
