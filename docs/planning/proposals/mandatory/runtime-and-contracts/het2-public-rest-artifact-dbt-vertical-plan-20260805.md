@@ -135,7 +135,7 @@ the externally observable intent is still previewing and starting a stored plan.
 
 | Intent                                     | Rail                                           | DDD owner                   | Port / adapter                            | Scope and authorization                 | Negative proof                                                           |
 | ------------------------------------------ | ---------------------------------------------- | --------------------------- | ----------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------ |
-| Preview the four-step plan                 | `PreviewExecutionPlan` query                   | planner preview read model  | existing planner/API/Web rail             | existing protected workspace scope      | unavailable HTTP capability fails closed                                 |
+| Preview the four-step plan                 | `PreviewExecutionPlan` command                 | Canvas preview/readiness    | existing planner/API/Web rail             | existing protected workspace scope      | unavailable HTTP capability fails closed                                 |
 | Execute acquisition, load, model, and test | `StartRun` / `WorkflowEngine.startRun` command | run execution aggregate     | existing engine port and Temporal adapter | stored plan ownership and runtime scope | malformed config, missing capability, endpoint denial, artifact conflict |
 | Observe receipt-only progress              | `GetRunStatus`, `GetRunEvents` queries         | run operational read models | existing state-store/API/Web rails        | tenant/project/environment scope        | response bytes and credentials absent                                    |
 | Execute the governed live proof            | `RunHet2PublicVerticalLiveProof` command       | delivery runtime proofs     | repository proof runner                   | local controlled stack only             | no preseed, security refusal, tamper, dbt failure, cancel/recover        |
@@ -267,8 +267,8 @@ forbiddenImplementationSurfaces:
   - packages/@dvt/temporal-dbt-plugin/src/**
 commandQueryRails:
   - name: PreviewExecutionPlan
-    type: query
-    dddOwner: PlannerPreviewReadModel
+    type: command
+    dddOwner: Canvas execution preview/readiness presentation
   - name: StartRun
     type: command
     dddOwner: RunExecutionAggregate

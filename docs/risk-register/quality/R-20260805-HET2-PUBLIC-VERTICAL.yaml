@@ -24,13 +24,15 @@ mitigations:
     arbitrary URLs, methods, bodies, headers and dynamic output binding.'
   - 'Validate every initial and redirected host through DNS/IP policy, pin the selected address,
     require same-origin redirects, and reject loopback/private/link-local/metadata/multicast and
-    unspecified destinations outside the controlled non-production fixture.'
+    unspecified destinations outside the controlled non-production fixture, including mapped and
+    compatible IPv4-in-IPv6 forms and the well-known NAT64 prefix.'
   - 'Bound connect/request time, redirect count, decoded bytes, identity encoding, status, media
     type, UTF-8, JSON/JSONL syntax, expected size and SHA-256.'
   - 'Publish by conditional create to the exact tenant-scoped content address; verify identical
     retries and refuse conflicts or loader handoff drift.'
   - 'Keep activity results receipt-only and run a protected live proof that asserts tokens, URLs and
-    payload bytes are absent across success, refusal, failure, cancellation and recovery.'
+    payload bytes are absent across success, HTTP status failure, digest mismatch, timeout,
+    cancellation during acquisition and recovery.'
   - 'Guard the engine and generic Temporal adapter against HTTP-specific ownership and keep the
     network implementation in the worker adapter.'
 residual_risk: >
