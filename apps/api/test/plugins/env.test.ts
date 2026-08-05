@@ -62,6 +62,16 @@ describe('loadEnv', () => {
     ).toBe(false);
   });
 
+  it('exposes HTTP JSON acquisition runtime support only for explicit true', async () => {
+    expect(loadEnv({}).DVT_TEMPORAL_HTTP_JSON_ENABLED).toBe(false);
+    expect(loadEnv({ DVT_TEMPORAL_HTTP_JSON_ENABLED: 'true' }).DVT_TEMPORAL_HTTP_JSON_ENABLED).toBe(
+      true
+    );
+    expect(
+      loadEnv({ DVT_TEMPORAL_HTTP_JSON_ENABLED: 'false' }).DVT_TEMPORAL_HTTP_JSON_ENABLED
+    ).toBe(false);
+  });
+
   it('accepts the Temporal continue-as-new payload budget env', async () => {
     const env = loadEnv({
       TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: '64000',

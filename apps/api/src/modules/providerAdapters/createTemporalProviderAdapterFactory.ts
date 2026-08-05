@@ -5,6 +5,7 @@
  * how the Temporal adapter package is configured and closed.
  */
 import {
+  ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY,
   DBT_STEP_REQUIRED_CAPABILITY,
   LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
 } from '@dvt/contracts';
@@ -16,7 +17,10 @@ import type { ProviderAdapterFactory } from './providerAdapterFactory.js';
 export function resolveTemporalProviderAdapterCapabilities(
   env: Pick<
     Env,
-    'TEMPORAL_ADDRESS' | 'DVT_TEMPORAL_DBT_ENABLED' | 'DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED'
+    | 'TEMPORAL_ADDRESS'
+    | 'DVT_TEMPORAL_DBT_ENABLED'
+    | 'DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED'
+    | 'DVT_TEMPORAL_HTTP_JSON_ENABLED'
   >
 ): readonly string[] {
   if (!env.TEMPORAL_ADDRESS) {
@@ -27,6 +31,9 @@ export function resolveTemporalProviderAdapterCapabilities(
     ...(env.DVT_TEMPORAL_DBT_ENABLED ? [DBT_STEP_REQUIRED_CAPABILITY] : []),
     ...(env.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED
       ? [LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY]
+      : []),
+    ...(env.DVT_TEMPORAL_HTTP_JSON_ENABLED
+      ? [ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY]
       : []),
   ];
 }
