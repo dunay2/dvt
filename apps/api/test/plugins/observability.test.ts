@@ -38,6 +38,7 @@ function baseEnv(overrides?: Partial<ObservabilityEnv>): ObservabilityEnv {
     DVT_DB_READY_ENABLED: false,
     DVT_TEMPORAL_DBT_ENABLED: false,
     DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: false,
+    DVT_TEMPORAL_HTTP_JSON_ENABLED: false,
     DVT_DBT_ANALYZER_BIN: 'dbt',
     DVT_DBT_ANALYZER_TIMEOUT_MS: 30000,
     DVT_DBT_ANALYZER_MAX_OUTPUT_BYTES: 1000000,

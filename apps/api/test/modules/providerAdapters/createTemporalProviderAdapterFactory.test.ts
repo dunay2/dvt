@@ -166,6 +166,23 @@ describe('createTemporalProviderAdapterFactory', () => {
       })
     );
   });
+
+  it('declares HTTP JSON acquisition capability only when its worker profile is enabled', async () => {
+    const factory = createTemporalProviderAdapterFactory();
+
+    await factory.build(
+      createContext({
+        TEMPORAL_ADDRESS: 'temporal.test:7233',
+        DVT_TEMPORAL_HTTP_JSON_ENABLED: 'true',
+      })
+    );
+
+    expect(temporalAdapterDepsMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        additionalCapabilities: ['executor.http-json-acquisition'],
+      })
+    );
+  });
 });
 
 function createContext(envOverrides: Record<string, string>): ProviderAdapterFactoryContext {
