@@ -19,6 +19,7 @@ import {
   collectRequiredCapabilitiesForSteps,
   createDefaultStepTypeRegistry,
   type IStepTypeRegistry,
+  validateHttpJsonArtifactHandoffs,
 } from '@dvt/contracts';
 
 import { nowMs } from '../runtime/time.js';
@@ -163,6 +164,7 @@ export class Planner {
       // 6) Build steps + validate configs via registry (G9)
       const normalizedSteps = this.buildNormalizedSteps(graph.nodesById, topo, resolvedPolicies);
       this.validateStepConfigs(normalizedSteps, normalizedInput.ownership);
+      this.validateArtifactHandoffs(normalizedSteps);
 
       // 7) Assemble plan
       const requiredCapabilities = collectRequiredCapabilitiesForSteps(
@@ -256,6 +258,13 @@ export class Planner {
       if (!result.success) {
         throw new PlannerError(PlannerErrorCode.INVALID_STEP_CONFIG, result.error);
       }
+    }
+  }
+
+  private validateArtifactHandoffs(steps: PlanCore['steps']): void {
+    const error = validateHttpJsonArtifactHandoffs(steps);
+    if (error !== undefined) {
+      throw new PlannerError(PlannerErrorCode.INVALID_STEP_CONFIG, error);
     }
   }
 
