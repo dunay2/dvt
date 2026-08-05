@@ -16,16 +16,18 @@ import {
 import {
   type Het1PublicGraphIdentity,
   proveControlledHet1DbtTestFailure,
-  proveHet1CancellationAndRecovery,
 } from '../../support/het1PublicFailureRecoveryProof';
 import {
   assertHet1RunUsesPlan,
   assertObjectLoadEvidence,
   assertRunEvidenceDoesNotLeak,
   assertStepEventSet,
+  cancelHet1Run,
   findRequiredStepEvent,
   readHet1RunEvents,
+  recoverHet1Run,
   startPreviewedHet1Run,
+  waitForHet1RunEvent,
   waitForHet1RunStatus,
 } from '../../support/het1PublicRunProof';
 import {
@@ -58,6 +60,10 @@ const TEST_NODE_ID = 'dbt-test-1';
 const TEST_NODE_NAME = 'Test 1';
 const TARGET_RELATION = 'het2_orders_stage';
 const DENIED_ENDPOINT_REF = 'http-endpoint:het2-denied';
+const STATUS_FAILURE_ENDPOINT_REF = 'http-endpoint:het2-status-failure';
+const INTEGRITY_MISMATCH_ENDPOINT_REF = 'http-endpoint:het2-integrity-mismatch';
+const TIMEOUT_ENDPOINT_REF = 'http-endpoint:het2-timeout';
+const SLOW_ONCE_ENDPOINT_REF = 'http-endpoint:het2-slow-once';
 const HET2_FORBIDDEN_EVIDENCE = [
   'het2-fixture-bearer-token',
   'https://127.0.0.1',
@@ -98,6 +104,7 @@ function assertAcquisitionEvidence(args: {
   events: Parameters<typeof assertRunEvidenceDoesNotLeak>[0];
   manifest: Het2HttpJsonManifest;
   publicationOutcome: 'created' | 'verified-existing';
+  endpointRef?: string;
 }): void {
   const event = findRequiredStepEvent(args.events, 'StepCompleted', ACQUISITION_NODE_ID);
   expect(event).to.have.nested.property(
@@ -106,7 +113,7 @@ function assertAcquisitionEvidence(args: {
   );
   expect(event).to.have.nested.property(
     'payload.resultEvidence.endpointRef',
-    args.manifest.endpointRef
+    args.endpointRef ?? args.manifest.endpointRef
   );
   expect(event).to.have.nested.property(
     'payload.resultEvidence.artifact.storageUri',
@@ -171,7 +178,7 @@ describe('HET2 public REST artifact DBT vertical', () => {
     if (skipWhenFirstAuthoringLiveEnvIsMissing(this)) return;
   });
 
-  it('authors and proves acquisition, idempotency, controlled failure, cancellation, and recovery', () => {
+  it('proves acquisition, idempotency, HTTP refusal, integrity, cancellation, and recovery', () => {
     const session = resolveLiveWorkspaceSession();
 
     cy.fixture<Het2HttpJsonManifest>('het2-http-json-orders.manifest.json').then((manifest) => {
@@ -293,7 +300,7 @@ describe('HET2 public REST artifact DBT vertical', () => {
             acquisition.artifact?.storageUri === manifest.storageUri &&
             acquisition.artifact.credentialRef === manifest.artifactCredentialRef &&
             acquisition.limits?.connectTimeoutMs === 2_000 &&
-            acquisition.limits.requestTimeoutMs === 10_000 &&
+            acquisition.limits.requestTimeoutMs === 20_000 &&
             acquisition.limits.maxRedirects === 0 &&
             objectLoad?.source?.format === 'jsonl' &&
             model?.materialized === 'table' &&
@@ -312,60 +319,128 @@ describe('HET2 public REST artifact DBT vertical', () => {
       visitHet1DbtCanvas();
       runSuccessfulRoute(manifest, 'verified-existing', ['replaced']);
 
-      visitHet1DbtCanvas();
-      updateHttpJsonEndpointRef({
-        nodeId: ACQUISITION_NODE_ID,
-        nodeName: ACQUISITION_NODE_NAME,
-        endpointRef: DENIED_ENDPOINT_REF,
-      });
-      waitForPersistedDraft({
-        session,
-        description: 'denied HET2 endpoint reference',
-        predicate: (body) => {
-          const acquisition = readDraftNodes(body).find((node) => node.id === ACQUISITION_NODE_ID)
-            ?.metadata?.httpJsonArtifact as { request?: { endpointRef?: unknown } } | undefined;
-          return acquisition?.request?.endpointRef === DENIED_ENDPOINT_REF;
-        },
-      });
-      openHet2PlanPreview();
-      startPreviewedHet1Run().then(({ runId, planId }) => {
-        assertHet1RunUsesPlan(runId, planId);
-        waitForHet1RunStatus(runId, 'failed');
-        readHet1RunEvents(runId).then((events) => {
-          assertStepEventSet(events, 'StepFailed', [ACQUISITION_NODE_ID]);
-          assertStepStartedAbsent(events, [OBJECT_NODE_ID, MODEL_NODE_ID, TEST_NODE_ID]);
-          expect(JSON.stringify(events)).to.contain('HTTP_JSON_ENDPOINT_REF_DENIED');
-          assertRunEvidenceDoesNotLeak(events, HET2_FORBIDDEN_EVIDENCE);
+      const persistEndpoint = (endpointRef: string, description: string): void => {
+        visitHet1DbtCanvas();
+        updateHttpJsonEndpointRef({
+          nodeId: ACQUISITION_NODE_ID,
+          nodeName: ACQUISITION_NODE_NAME,
+          endpointRef,
         });
+        waitForPersistedDraft({
+          session,
+          description,
+          predicate: (body) => {
+            const acquisition = readDraftNodes(body).find((node) => node.id === ACQUISITION_NODE_ID)
+              ?.metadata?.httpJsonArtifact as { request?: { endpointRef?: unknown } } | undefined;
+            return acquisition?.request?.endpointRef === endpointRef;
+          },
+        });
+      };
+      const proveAcquisitionFailure = (
+        endpointRef: string,
+        description: string,
+        expectedCode: string
+      ): void => {
+        persistEndpoint(endpointRef, description);
+        openHet2PlanPreview();
+        startPreviewedHet1Run().then(({ runId, planId }) => {
+          assertHet1RunUsesPlan(runId, planId);
+          return waitForHet1RunStatus(runId, 'failed')
+            .then(() => readHet1RunEvents(runId))
+            .then((events) => {
+              assertStepEventSet(events, 'StepFailed', [ACQUISITION_NODE_ID]);
+              assertStepStartedAbsent(events, [OBJECT_NODE_ID, MODEL_NODE_ID, TEST_NODE_ID]);
+              expect(JSON.stringify(events)).to.contain(expectedCode);
+              assertRunEvidenceDoesNotLeak(events, HET2_FORBIDDEN_EVIDENCE);
+            });
+        });
+      };
+
+      proveAcquisitionFailure(
+        DENIED_ENDPOINT_REF,
+        'denied HET2 endpoint reference',
+        'HTTP_JSON_ENDPOINT_REF_DENIED'
+      );
+      proveAcquisitionFailure(
+        STATUS_FAILURE_ENDPOINT_REF,
+        'controlled HET2 HTTP status failure',
+        'HTTP_JSON_STATUS_MISMATCH'
+      );
+      proveAcquisitionFailure(
+        INTEGRITY_MISMATCH_ENDPOINT_REF,
+        'controlled HET2 response integrity mismatch',
+        'HTTP_JSON_INTEGRITY_MISMATCH'
+      );
+      proveAcquisitionFailure(
+        TIMEOUT_ENDPOINT_REF,
+        'controlled HET2 request timeout',
+        'HTTP_JSON_ACQUISITION_FAILED'
+      );
+
+      persistEndpoint(SLOW_ONCE_ENDPOINT_REF, 'slow first acquisition for cancellation proof');
+      openHet2PlanPreview();
+      startPreviewedHet1Run().then(({ runId: sourceRunId, planId }) => {
+        assertHet1RunUsesPlan(sourceRunId, planId);
+        return waitForHet1RunEvent({
+          runId: sourceRunId,
+          eventType: 'StepStarted',
+          stepId: ACQUISITION_NODE_ID,
+        })
+          .then(() => cancelHet1Run(sourceRunId))
+          .then(() => readHet1RunEvents(sourceRunId))
+          .then((events) => {
+            assertStepEventSet(events, 'StepCompleted', [ACQUISITION_NODE_ID]);
+            assertAcquisitionEvidence({
+              events,
+              manifest,
+              endpointRef: SLOW_ONCE_ENDPOINT_REF,
+              publicationOutcome: 'verified-existing',
+            });
+            assertStepStartedAbsent(events, [OBJECT_NODE_ID, MODEL_NODE_ID, TEST_NODE_ID]);
+            expect(events.map((event) => event.eventType)).to.include.members([
+              'RunCancelRequested',
+              'RunCancelled',
+            ]);
+            assertRunEvidenceDoesNotLeak(events, HET2_FORBIDDEN_EVIDENCE);
+          })
+          .then(() => recoverHet1Run(sourceRunId))
+          .then((recoveryRunId) => {
+            assertHet1RunUsesPlan(recoveryRunId, planId);
+            return waitForHet1RunStatus(recoveryRunId, 'completed')
+              .then(() => readHet1RunEvents(recoveryRunId))
+              .then((events) => {
+                assertStepEventSet(events, 'StepCompleted', [
+                  ACQUISITION_NODE_ID,
+                  OBJECT_NODE_ID,
+                  MODEL_NODE_ID,
+                  TEST_NODE_ID,
+                ]);
+                assertAcquisitionEvidence({
+                  events,
+                  manifest,
+                  endpointRef: SLOW_ONCE_ENDPOINT_REF,
+                  publicationOutcome: 'verified-existing',
+                });
+                assertObjectLoadEvidence({
+                  events,
+                  stepId: OBJECT_NODE_ID,
+                  expectedRows: 2,
+                  expectedSha256: manifest.sha256,
+                  expectedSizeBytes: manifest.sizeBytes,
+                  expectedPublicationOutcomes: ['replaced'],
+                });
+                expect(events.map((event) => event.eventType)).to.include('RunCompleted');
+                assertRunEvidenceDoesNotLeak(events, HET2_FORBIDDEN_EVIDENCE);
+              });
+          });
       });
 
-      visitHet1DbtCanvas();
-      updateHttpJsonEndpointRef({
-        nodeId: ACQUISITION_NODE_ID,
-        nodeName: ACQUISITION_NODE_NAME,
-        endpointRef: manifest.endpointRef,
-      });
-      waitForPersistedDraft({
-        session,
-        description: 'restored approved HET2 endpoint reference',
-        predicate: (body) => {
-          const acquisition = readDraftNodes(body).find((node) => node.id === ACQUISITION_NODE_ID)
-            ?.metadata?.httpJsonArtifact as { request?: { endpointRef?: unknown } } | undefined;
-          return acquisition?.request?.endpointRef === manifest.endpointRef;
-        },
-      });
-
+      persistEndpoint(manifest.endpointRef, 'restored approved HET2 endpoint reference');
       const compatibleManifest = asHet1CompatibleManifest(manifest);
       proveControlledHet1DbtTestFailure({
         identity: DBT_GRAPH_IDENTITY,
         manifest: compatibleManifest,
         objectSourceIdentityIsCurrent: true,
-        upstreamCompletedStepIds: [ACQUISITION_NODE_ID],
-        additionalForbiddenValues: HET2_FORBIDDEN_EVIDENCE,
-      });
-      proveHet1CancellationAndRecovery({
-        identity: DBT_GRAPH_IDENTITY,
-        manifest: compatibleManifest,
         upstreamCompletedStepIds: [ACQUISITION_NODE_ID],
         additionalForbiddenValues: HET2_FORBIDDEN_EVIDENCE,
       });

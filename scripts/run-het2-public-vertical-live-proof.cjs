@@ -65,10 +65,17 @@ function buildMinioDockerArgs({ containerName, port }) {
 }
 
 function buildHet2Env({ minioEndpoint, fixtureEndpoint, manifest, sourceEnv = process.env }) {
+  const fixtureOrigin = new URL(fixtureEndpoint).origin;
   return {
     ...sourceEnv,
     DVT_TEMPORAL_HTTP_JSON_ENABLED: 'true',
-    DVT_HTTP_JSON_ENDPOINTS: JSON.stringify({ [manifest.endpointRef]: fixtureEndpoint }),
+    DVT_HTTP_JSON_ENDPOINTS: JSON.stringify({
+      [manifest.endpointRef]: `${fixtureOrigin}/orders`,
+      'http-endpoint:het2-status-failure': `${fixtureOrigin}/status-failure`,
+      'http-endpoint:het2-integrity-mismatch': `${fixtureOrigin}/integrity-mismatch`,
+      'http-endpoint:het2-timeout': `${fixtureOrigin}/timeout`,
+      'http-endpoint:het2-slow-once': `${fixtureOrigin}/slow-once`,
+    }),
     DVT_HTTP_JSON_AUTH_TOKENS: JSON.stringify({
       [manifest.authCredentialRef]: FIXTURE_TOKEN,
     }),
@@ -160,8 +167,23 @@ async function createArtifactBucket({ endpoint, bucket }) {
 }
 
 async function startHttpsFixture({ content, cert, key, port }) {
+  let slowRequestCount = 0;
+  const mismatchedContent = Buffer.from(content.toString('utf8').replace('10.25', '99.99'));
   const server = createServer({ cert, key }, (request, response) => {
-    if (request.method !== 'GET' || request.url !== '/orders') {
+    const respondWithContent = (body = content) => {
+      response.writeHead(200, {
+        'content-type': 'application/x-ndjson; charset=utf-8',
+        'content-length': body.byteLength,
+        'cache-control': 'no-store',
+      });
+      response.end(body);
+    };
+    if (
+      request.method !== 'GET' ||
+      !['/orders', '/status-failure', '/integrity-mismatch', '/timeout', '/slow-once'].includes(
+        request.url
+      )
+    ) {
       response.writeHead(404, { 'content-type': 'application/json' });
       response.end('{"error":"not_found"}');
       return;
@@ -171,12 +193,26 @@ async function startHttpsFixture({ content, cert, key, port }) {
       response.end('{"error":"unauthorized"}');
       return;
     }
-    response.writeHead(200, {
-      'content-type': 'application/x-ndjson; charset=utf-8',
-      'content-length': content.byteLength,
-      'cache-control': 'no-store',
-    });
-    response.end(content);
+    if (request.url === '/status-failure') {
+      response.writeHead(503, { 'content-type': 'application/json' });
+      response.end('{"error":"controlled_unavailable"}');
+      return;
+    }
+    if (request.url === '/integrity-mismatch') {
+      respondWithContent(mismatchedContent);
+      return;
+    }
+    if (request.url === '/timeout') {
+      const timer = setTimeout(respondWithContent, 25_000);
+      response.once('close', () => clearTimeout(timer));
+      return;
+    }
+    if (request.url === '/slow-once' && slowRequestCount++ === 0) {
+      const timer = setTimeout(respondWithContent, 15_000);
+      response.once('close', () => clearTimeout(timer));
+      return;
+    }
+    respondWithContent();
   });
   await new Promise((resolve, reject) => {
     server.once('error', reject);
