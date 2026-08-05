@@ -125,7 +125,14 @@ describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
       writeRequired: false,
     }));
     const request: PublishGraphDbtWorkspaceArtifactsRequest = { ...REQUEST, artifacts };
-    const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>();
+    const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>(async (_scope, mutation) => ({
+      kind: 'applied',
+      idempotencyKey: mutation.idempotencyKey,
+      requestHash: 'e'.repeat(64),
+      deduplicated: false,
+      writes: [],
+      deletes: [],
+    }));
     const command = new PublishGraphDbtWorkspaceArtifactsCommand(
       allowedAuthorityPolicy(),
       workspaceFiles(
@@ -147,7 +154,15 @@ describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
       deduplicated: false,
       writes: [],
     });
-    expect(apply).not.toHaveBeenCalled();
+    expect(apply).toHaveBeenCalledWith(SCOPE, {
+      expectedFiles: artifacts.map((artifact) => ({
+        path: artifact.path,
+        expectedContentSha256: sha256HexUtf8(artifact.content),
+      })),
+      writes: [],
+      deletes: [],
+      idempotencyKey: request.idempotencyKey,
+    });
   });
 
   it('derives writes from proposed content instead of trusting caller write flags', async () => {
