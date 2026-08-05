@@ -35,6 +35,7 @@ evidence:
     - pnpm --filter @dvt/plan-verifier test
     - pnpm --filter dvt-api test
     - pnpm --filter @dvt/web test
+    - pnpm test:web:e2e:het1-public:live
     - pnpm test:web:e2e:het2-public:live
     - pnpm docs:feature-mechanization:implementation -- --base 2eb393a4a --feature E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805
     - pnpm planning:db:integrity:check
@@ -67,7 +68,8 @@ flowchart LR
   PostgreSQL references, never a URL, token or secret header.
 - The worker performs HTTPS-only GET, per-hop DNS/IP validation, address
   pinning, same-origin bounded redirects, timeout, byte, encoding, media-type,
-  status, SHA-256 and JSON/JSONL checks.
+  status, SHA-256 and JSON/JSONL checks. Its address policy covers mapped and
+  compatible IPv4-in-IPv6 forms plus the well-known NAT64 prefix.
 - The artifact store conditionally creates the tenant-scoped content address,
   verifies an identical retry, and rejects conflicting bytes.
 - Activity results and run events carry only `ArtifactAcquisitionEvidence` and
@@ -79,11 +81,18 @@ flowchart LR
 
 The protected browser proof starts with an empty MinIO bucket and an
 authenticated TLS fixture. It proves initial publication, verified-existing
-retry, two-row JSONL load, DBT success, endpoint-reference denial with no
-downstream start, controlled DBT-test failure, cancellation after the active
-layer settles, and recovery to a distinct completed run. Evidence assertions
-also reject fixture bytes, URL fragments and the bearer token.
+retry, two-row JSONL load, DBT success, endpoint-reference denial, real HTTP 503
+refusal, same-size response digest mismatch, request timeout, and controlled
+DBT-test failure, all with no invalid downstream start. It requests
+cancellation while acquisition is active, proves the active layer settles
+without starting the loader, and recovers to a distinct completed run. Evidence
+assertions also reject fixture bytes, URL fragments and the bearer token.
+
+The retained HET1 live proof independently exercises source-object integrity
+refusal before PostgreSQL mutation, so the combined HET1/HET2 route demonstrates
+both acquisition-side and loader-side tamper rejection.
 
 The controlled loopback exception exists only in the non-production proof
 configuration; production address policy rejects loopback, private, link-local,
-metadata, multicast and unspecified addresses, including IPv4-mapped IPv6.
+metadata, multicast and unspecified addresses, including IPv4-mapped,
+IPv4-compatible and well-known NAT64 representations.
