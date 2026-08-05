@@ -19,6 +19,7 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/index.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts`
