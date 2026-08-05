@@ -74,7 +74,7 @@ export function clickCanvasAddCatalogAction(action: string, registrationKind?: s
     ? `[data-slot="canvas-context-menu-add-catalog-item"][data-menu-action="${action}"][data-registration-kind="${registrationKind}"]`
     : `[data-slot="canvas-context-menu-add-catalog-item"][data-menu-action="${action}"]`;
 
-  cy.get(selector).should('be.visible').should('be.enabled').click();
+  cy.get(selector).scrollIntoView().should('be.visible').should('be.enabled').click();
 }
 
 export function revealOperationalDrawer(): void {
@@ -89,10 +89,14 @@ export function revealOperationalDrawer(): void {
       .then(($item) => {
         if ($item.attr('aria-checked') !== 'true') {
           cy.wrap($item).click();
+          return;
         }
+
+        cy.get('body').type('{esc}', { force: true });
       });
   });
 
+  cy.get('[role="menu"]', { timeout: 20_000 }).should('not.exist');
   cy.get('[data-slot="bottom-operational-drawer-tab"]', { timeout: 20_000 }).should('be.visible');
 }
 

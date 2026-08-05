@@ -62,6 +62,7 @@
     "test:web:e2e:source-import:live": "pnpm --filter @dvt/web test:e2e:source-import:live",
     "test:web:e2e:dbt-author-code-run:live": "pnpm --filter @dvt/web test:e2e:dbt-author-code-run:live",
     "test:web:e2e:het1-public:live": "pnpm --filter @dvt/web test:e2e:het1-public:live",
+    "test:web:e2e:het2-public:live": "pnpm --filter @dvt/web test:e2e:het2-public:live",
     "ci:affected:build": "node scripts/run-turbo-workspace-task.cjs build",
     "ci:affected:lint": "node scripts/run-turbo-workspace-task.cjs lint",
     "ci:affected:test": "node scripts/run-turbo-workspace-task.cjs test",

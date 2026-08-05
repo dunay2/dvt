@@ -79,9 +79,16 @@ function assertStepEventAbsent(
 }
 
 function assertNoSensitiveEvidence(
-  events: Parameters<typeof assertRunEvidenceDoesNotLeak>[0]
+  events: Parameters<typeof assertRunEvidenceDoesNotLeak>[0],
+  additionalForbiddenValues: readonly string[] = []
 ): void {
-  assertRunEvidenceDoesNotLeak(events, ['minioadmin', 'order_id,amount', '1,10.25', '2,20.50']);
+  assertRunEvidenceDoesNotLeak(events, [
+    'minioadmin',
+    'order_id,amount',
+    '1,10.25',
+    '2,20.50',
+    ...additionalForbiddenValues,
+  ]);
 }
 
 export function proveControlledHet1IngestionFailure(args: {
@@ -125,15 +132,20 @@ export function proveControlledHet1IngestionFailure(args: {
 export function proveControlledHet1DbtTestFailure(args: {
   identity: Het1PublicGraphIdentity;
   manifest: Het1ObjectFileManifest;
+  objectSourceIdentityIsCurrent?: boolean;
+  upstreamCompletedStepIds?: readonly string[];
+  additionalForbiddenValues?: readonly string[];
 }): void {
   const { identity, manifest } = args;
   visitHet1DbtCanvas();
-  updateObjectFileSourceIdentity({
-    nodeId: identity.objectNodeId,
-    nodeName: identity.objectNodeName,
-    storageUri: manifest.storageUri,
-    sha256: manifest.sha256,
-  });
+  if (args.objectSourceIdentityIsCurrent !== true) {
+    updateObjectFileSourceIdentity({
+      nodeId: identity.objectNodeId,
+      nodeName: identity.objectNodeName,
+      storageUri: manifest.storageUri,
+      sha256: manifest.sha256,
+    });
+  }
   updateDbtTestColumn({
     nodeName: identity.testNodeName,
     targetColumn: FAILING_DBT_TEST_COLUMN,
@@ -153,7 +165,11 @@ export function proveControlledHet1DbtTestFailure(args: {
     assertHet1RunUsesPlan(runId, planId);
     waitForHet1RunStatus(runId, 'failed');
     readHet1RunEvents(runId).then((events) => {
-      assertStepEventSet(events, 'StepCompleted', [identity.objectNodeId, identity.modelNodeId]);
+      assertStepEventSet(events, 'StepCompleted', [
+        ...(args.upstreamCompletedStepIds ?? []),
+        identity.objectNodeId,
+        identity.modelNodeId,
+      ]);
       assertStepEventSet(events, 'StepFailed', [identity.testNodeId]);
       assertObjectLoadEvidence({
         events,
@@ -164,7 +180,7 @@ export function proveControlledHet1DbtTestFailure(args: {
         expectedPublicationOutcomes: ['replaced'],
       });
       expect(events.map((event) => event.eventType)).to.include('RunFailed');
-      assertNoSensitiveEvidence(events);
+      assertNoSensitiveEvidence(events, args.additionalForbiddenValues);
     });
   });
   assertRunTimeline('RunFailed');
@@ -173,6 +189,8 @@ export function proveControlledHet1DbtTestFailure(args: {
 export function proveHet1CancellationAndRecovery(args: {
   identity: Het1PublicGraphIdentity;
   manifest: Het1ObjectFileManifest;
+  upstreamCompletedStepIds?: readonly string[];
+  additionalForbiddenValues?: readonly string[];
 }): void {
   const { identity, manifest } = args;
   const longRunningModelSql = `with delayed as (
@@ -205,7 +223,11 @@ cross join delayed`;
       expect(cancelledSnapshot).to.have.property('planId', planId);
     });
     readHet1RunEvents(sourceRunId).then((events) => {
-      assertStepEventSet(events, 'StepCompleted', [identity.objectNodeId, identity.modelNodeId]);
+      assertStepEventSet(events, 'StepCompleted', [
+        ...(args.upstreamCompletedStepIds ?? []),
+        identity.objectNodeId,
+        identity.modelNodeId,
+      ]);
       assertStepEventSet(events, 'StepStarted', [identity.modelNodeId]);
       assertStepEventAbsent(events, 'StepCompleted', [identity.testNodeId]);
       assertStepEventAbsent(events, 'StepStarted', [identity.testNodeId]);
@@ -235,7 +257,7 @@ cross join delayed`;
       expect(cancelledIndex, 'runtime cancellation reaches its terminal fact').to.be.greaterThan(
         cancelRequestedIndex
       );
-      assertNoSensitiveEvidence(events);
+      assertNoSensitiveEvidence(events, args.additionalForbiddenValues);
     });
 
     recoverHet1Run(sourceRunId).then((recoveryRunId) => {
@@ -249,6 +271,7 @@ cross join delayed`;
       waitForHet1RunStatus(recoveryRunId, 'completed');
       readHet1RunEvents(recoveryRunId).then((events) => {
         assertStepEventSet(events, 'StepCompleted', [
+          ...(args.upstreamCompletedStepIds ?? []),
           identity.objectNodeId,
           identity.modelNodeId,
           identity.testNodeId,
@@ -262,7 +285,7 @@ cross join delayed`;
           expectedPublicationOutcomes: ['replaced'],
         });
         expect(events.map((event) => event.eventType)).to.include('RunCompleted');
-        assertNoSensitiveEvidence(events);
+        assertNoSensitiveEvidence(events, args.additionalForbiddenValues);
       });
     });
   });
