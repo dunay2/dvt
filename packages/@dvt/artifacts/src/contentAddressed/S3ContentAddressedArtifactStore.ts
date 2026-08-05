@@ -2,6 +2,7 @@ import { PutObjectCommand, type S3Client } from '@aws-sdk/client-s3';
 import { ArtifactStoreError } from '@dvt/contracts';
 
 import { computeSha256 } from '../compiledCode/sha256.js';
+import { ArtifactReadError } from '../runtime/ArtifactReadError.js';
 import { readArtifact } from '../runtime/readArtifactBytes.js';
 
 import type {
@@ -45,15 +46,29 @@ export class S3ContentAddressedArtifactStore implements IContentAddressedArtifac
       if (!isAlreadyExistsError(error)) throw error;
     }
 
-    const existing = await readArtifact(input.storageUri, {
+    const existing = await readExistingArtifact(input, this.options.client);
+    validateExistingArtifact(input, existing);
+    return receipt(input, 'verified-existing');
+  }
+}
+
+async function readExistingArtifact(
+  input: PublishContentAddressedArtifactInput,
+  s3Client: S3LikeClient
+): ReturnType<typeof readArtifact> {
+  try {
+    return await readArtifact(input.storageUri, {
       artifactLabel: 'content-addressed output',
       uriLabel: 'artifact.storageUri',
-      s3Client: this.options.client,
+      s3Client,
       maxBytes: input.sizeBytes,
       ...(input.abortSignal === undefined ? {} : { abortSignal: input.abortSignal }),
     });
-    validateExistingArtifact(input, existing);
-    return receipt(input, 'verified-existing');
+  } catch (error) {
+    if (error instanceof ArtifactReadError && error.code === 'ARTIFACT_SIZE_LIMIT_EXCEEDED') {
+      throw ArtifactStoreError.integritySizeMismatch(input.sizeBytes, input.sizeBytes + 1);
+    }
+    throw error;
   }
 }
 
