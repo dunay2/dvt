@@ -1,7 +1,7 @@
 /**
  * @ownedConcern Define plugin-free Temporal activity contracts and dispatch types.
  */
-import type { MaterializationEvidence, PlanRef, ResolvedRunContext } from '@dvt/contracts';
+import type { PlanRef, ResolvedRunContext, StepResultEvidence } from '@dvt/contracts';
 
 import type {
   EventType,
@@ -47,7 +47,7 @@ export interface StepResult {
   stepId: string;
   status: 'COMPLETED' | 'FAILED';
   gatewayDecision?: boolean;
-  resultEvidence?: MaterializationEvidence;
+  resultEvidence?: StepResultEvidence;
   failureReason?: string;
   retriable?: boolean;
   error?: string;

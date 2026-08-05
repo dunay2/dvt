@@ -9,7 +9,7 @@
  * @version 1.2.0
  */
 import type { RunPlanWorkflowInput, WorkflowControlInput } from './runPlanWorkflow.types.js';
-import { resolveMaterializationEvidence } from './workflowArtifactHelpers.js';
+import { resolveStepResultEvidence } from './workflowArtifactHelpers.js';
 import {
   parseOptionalNonNegativeInt,
   parseOptionalStringArray,
@@ -55,7 +55,7 @@ function parseWorkflowCursor(
       cursor?.processedControlSignalIds,
       'processedControlSignalIds'
     ),
-    latestResultEvidence: resolveMaterializationEvidence(cursor?.latestResultEvidence),
+    latestResultEvidence: resolveStepResultEvidence(cursor?.latestResultEvidence),
   };
 }
 

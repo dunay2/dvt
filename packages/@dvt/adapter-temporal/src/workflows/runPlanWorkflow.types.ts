@@ -7,7 +7,7 @@
  * @consequence Workflow helpers share typed state without leaking provider authority into engine contracts
  * @version 1.2.0
  */
-import type { MaterializationEvidence, PlanRef } from '@dvt/contracts';
+import type { PlanRef, StepResultEvidence } from '@dvt/contracts';
 
 import type { EventType, ExecutionStep, ResolvedRunContext } from '../engine-types.js';
 
@@ -31,7 +31,7 @@ export type ExecutedStepResult = {
   stepId: string;
   status: 'COMPLETED' | 'FAILED';
   gatewayDecision?: boolean;
-  resultEvidence?: MaterializationEvidence;
+  resultEvidence?: StepResultEvidence;
   failureReason?: string;
   retriable?: boolean;
   error?: string;
@@ -92,7 +92,7 @@ export interface WorkflowControlInput {
   gatewayDependencyFacts: Record<string, Record<string, unknown>>;
   skippedStepIds: string[];
   processedControlSignalIds: string[];
-  latestResultEvidence?: MaterializationEvidence;
+  latestResultEvidence?: StepResultEvidence;
 }
 
 export interface LayerRuntimeState {
@@ -100,7 +100,7 @@ export interface LayerRuntimeState {
   skippedSteps: Set<string>;
   completedSteps: number;
   processedLayersInCurrentExecution: number;
-  latestResultEvidence?: MaterializationEvidence;
+  latestResultEvidence?: StepResultEvidence;
   stepActivityRouting?: WorkflowStepActivityRouting;
 }
 

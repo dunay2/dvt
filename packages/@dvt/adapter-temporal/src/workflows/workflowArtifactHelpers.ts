@@ -12,13 +12,13 @@ import type {
   CompiledCodeRef,
   ExecutionPlan,
   ExecutionStep,
-  MaterializationEvidence,
+  StepResultEvidence,
   StepArtifactRef,
   TransformationExecutor,
 } from '@dvt/contracts';
 import {
   CompiledCodeRefSchema,
-  MaterializationEvidenceSchema,
+  StepResultEvidenceSchema,
   TransformationFlowRuntimeBindingSchema,
 } from '@dvt/contracts';
 
@@ -74,10 +74,8 @@ export function resolveStepActivityRetryPolicy(
   };
 }
 
-export function resolveMaterializationEvidence(
-  value: unknown
-): MaterializationEvidence | undefined {
-  const parsed = MaterializationEvidenceSchema.safeParse(value);
+export function resolveStepResultEvidence(value: unknown): StepResultEvidence | undefined {
+  const parsed = StepResultEvidenceSchema.safeParse(value);
   return parsed.success ? parsed.data : undefined;
 }
 

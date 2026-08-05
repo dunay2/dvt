@@ -8,7 +8,7 @@
  * @consequence Temporal history rollover preserves deterministic layer, gateway, and control-signal state
  * @version 1.2.0
  */
-import type { MaterializationEvidence } from '@dvt/contracts';
+import type { StepResultEvidence } from '@dvt/contracts';
 
 import { retainRecentControlSignalIds } from './workflowControlSignalRetentionPolicy.js';
 
@@ -19,7 +19,7 @@ export interface WorkflowExecutionCursor {
   gatewayDependencyFacts: Record<string, Record<string, unknown>>;
   skippedStepIds: string[];
   processedControlSignalIds: string[];
-  latestResultEvidence?: MaterializationEvidence;
+  latestResultEvidence?: StepResultEvidence;
 }
 
 type ContinueAsNewState = {
@@ -61,7 +61,7 @@ export function buildContinueAsNewInput<T extends object>(args: {
   gatewayDependencyFacts: Record<string, Record<string, unknown>>;
   skippedStepIds: ReadonlySet<string>;
   processedControlSignalIds: ReadonlySet<string>;
-  latestResultEvidence?: MaterializationEvidence;
+  latestResultEvidence?: StepResultEvidence;
 }): ContinueAsNewInput<T> {
   const nextInput: ContinueAsNewInput<T> = {
     ...args.input,
