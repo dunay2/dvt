@@ -237,6 +237,11 @@ function isForbiddenIpv6(address: string, allowLoopback: boolean): boolean {
     const mappedIpv4 = parseMappedIpv4(normalized.slice('::ffff:'.length));
     return mappedIpv4 === undefined || isForbiddenIpv4(mappedIpv4, allowLoopback);
   }
+  if (normalized.startsWith('::') && normalized.includes('.')) return true;
+  if (normalized.startsWith('64:ff9b::')) {
+    const translatedIpv4 = parseMappedIpv4(normalized.slice('64:ff9b::'.length));
+    return translatedIpv4 === undefined || isForbiddenIpv4(translatedIpv4, allowLoopback);
+  }
   const first = Number.parseInt(normalized.split(':', 1)[0] ?? '', 16);
   return (
     normalized.startsWith('fc') ||
