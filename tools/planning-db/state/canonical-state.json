@@ -2758,6 +2758,248 @@
       "createdAt": "2026-08-02T09:29:37.877Z"
     },
     {
+      "railId": "local#E-HET1-PUBLIC-OBJECT-FILE-DBT-20260805#command#runhet1publicverticalliveproof",
+      "featureId": "E-HET1-PUBLIC-OBJECT-FILE-DBT-20260805",
+      "mechanizationStatus": "implemented",
+      "railName": "RunHet1PublicVerticalLiveProof",
+      "normalizedRailName": "runhet1publicverticalliveproof",
+      "railType": "command",
+      "dddOwner": "DeliveryRuntimeProofs",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/run-het1-public-vertical-live-proof.cjs#main",
+        "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts#HET1 public object-file DBT vertical",
+        "apps/web/cypress/support/het1PublicFailureRecoveryProof.ts#proveHet1CancellationAndRecovery"
+      ],
+      "implementationRefs": [
+        "scripts/run-het1-public-vertical-live-proof.cjs#main",
+        "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts#HET1 public object-file DBT vertical",
+        "apps/web/cypress/support/het1PublicFailureRecoveryProof.ts#proveHet1CancellationAndRecovery"
+      ],
+      "documentationRefs": [
+        "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+        "docs/risk-register/quality/R-20260805-HET1-PUBLIC-VERTICAL.yaml"
+      ],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/adr/ADR-0007_RunCancellation.md",
+        "docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md",
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+        "apps/web/src/app/plugins/objectFilePostgres",
+        "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts",
+        "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+        "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+        "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+        "apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts",
+        "packages/@dvt/temporal-dbt-plugin",
+        "scripts/run-het1-public-vertical-live-proof.cjs",
+        "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+        "apps/web/cypress/support/het1PublicFailureRecoveryProof.ts"
+      ],
+      "architectureGuards": [
+        "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+        "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+        "no route intercepts, direct plan construction, run-state seeding, or staging-row seeding"
+      ],
+      "completionGate": [
+        "node --test scripts/run-het1-public-vertical-live-proof.test.cjs",
+        "pnpm test:web:e2e:het1-public:live",
+        "pnpm docs:feature-mechanization:implementation",
+        "pnpm planning:db:integrity:check",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+      "sourceContentSha256": "6eae89c40a873424440556810f50fc6c45f123e2b00dfca3cd039bd5a4df7eb3",
+      "rawRail": {
+        "name": "RunHet1PublicVerticalLiveProof",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "DeliveryRuntimeProofs"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "main",
+            "path": "scripts/run-het1-public-vertical-live-proof.cjs",
+            "cqRails": ["RunHet1PublicVerticalLiveProof"],
+            "dddOwner": "DeliveryRuntimeProofs",
+            "unitTests": [
+              "scripts/run-het1-public-vertical-live-proof.test.cjs",
+              "packages/@dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts",
+              "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/temporal-worker/test/runtime/objectFilePostgresDbtCommandEnvironment.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "unit_of_work",
+              "idempotent_receiver",
+              "executable_specification"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts"
+          },
+          {
+            "name": "HET1 public object-file DBT vertical",
+            "path": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "cqRails": ["RunHet1PublicVerticalLiveProof"],
+            "dddOwner": "DeliveryRuntimeProofs",
+            "unitTests": [
+              "scripts/run-het1-public-vertical-live-proof.test.cjs",
+              "packages/@dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts",
+              "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/temporal-worker/test/runtime/objectFilePostgresDbtCommandEnvironment.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "unit_of_work",
+              "idempotent_receiver",
+              "executable_specification"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts"
+          },
+          {
+            "name": "proveHet1CancellationAndRecovery",
+            "path": "apps/web/cypress/support/het1PublicFailureRecoveryProof.ts",
+            "cqRails": ["RunHet1PublicVerticalLiveProof"],
+            "dddOwner": "DeliveryRuntimeProofs",
+            "unitTests": [
+              "scripts/run-het1-public-vertical-live-proof.test.cjs",
+              "packages/@dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts",
+              "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+              "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+              "apps/temporal-worker/test/runtime/objectFilePostgresDbtCommandEnvironment.test.ts",
+              "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "service_layer",
+              "gateway",
+              "registry",
+              "unit_of_work",
+              "idempotent_receiver",
+              "executable_specification"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "E-HET1-PUBLIC-OBJECT-FILE-DBT-20260805",
+        "userStories": [
+          "An operator observes honest success, ingestion rejection, DBT test failure, cancellation and recovery through public controls."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts"
+        ],
+        "domainObjects": [
+          "ObjectFilePostgresAuthoringDraft",
+          "ObjectFilePostgresDbtBridge",
+          "Het1PublicVerticalLiveProofRun"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "service_layer",
+          "gateway",
+          "registry",
+          "unit_of_work",
+          "idempotent_receiver",
+          "executable_specification"
+        ],
+        "completionGate": [
+          "node --test scripts/run-het1-public-vertical-live-proof.test.cjs",
+          "pnpm test:web:e2e:het1-public:live",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm planning:db:integrity:check",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "runhet1publicverticalliveproof-record",
+            "redTest": "pnpm test:web:e2e:het1-public:live",
+            "greenTest": "pnpm test:web:e2e:het1-public:live",
+            "patchSurfaces": [
+              "apps/web/cypress/support/het1PublicFailureRecoveryProof.ts",
+              "apps/web/cypress/support/het1PublicRunProof.ts",
+              "apps/web/cypress/support/het1PublicVertical.ts",
+              "scripts/run-het1-public-vertical-live-proof.cjs",
+              "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts"
+            ],
+            "expectedFailure": "The public happy-path proof omitted ingestion rejection, DBT test failure, cooperative cancellation, recovery and unchanged DBT publication."
+          }
+        ],
+        "componentGuides": [
+          "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0007_RunCancellation.md",
+          "docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RunHet1PublicVerticalLiveProof",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "DeliveryRuntimeProofs"
+          }
+        ],
+        "architectureGuards": [
+          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+          "no route intercepts, direct plan construction, run-state seeding, or staging-row seeding"
+        ],
+        "implementationPlan": "Reuse SaveWorkspaceGraphDraft, BuildDbtPlannerGraphSource, PublishGraphDbtWorkspaceArtifacts, PreviewExecutionPlan, StartRun, GetRunStatus, GetRunEvents, CancelRun and RecoverRun to prove one public LOAD_OBJECT_FILE_TO_POSTGRES to DBT_MODEL to DBT_TEST plan and run.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+          "apps/web/src/app/plugins/objectFilePostgres",
+          "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+          "apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts",
+          "packages/@dvt/temporal-dbt-plugin",
+          "scripts/run-het1-public-vertical-live-proof.cjs",
+          "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+          "apps/web/cypress/support/het1PublicFailureRecoveryProof.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/engine step-family conditionals",
+          "packages/@dvt/adapter-temporal step-family conditionals",
+          "Cypress route-intercept success or direct plan/run/staging-row seeding"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-05T14:29:27.427Z"
+    },
+    {
       "railId": "local#E-WEB-DBT-ATOMIC-PUBLICATION-1#command#publishgraphdbtworkspaceartifacts",
       "featureId": "E-WEB-DBT-ATOMIC-PUBLICATION-1",
       "mechanizationStatus": "implemented",
@@ -22183,6 +22425,292 @@
       "createdAt": "2026-08-04T14:04:27.496Z"
     },
     {
+      "railId": "local#TASK-HET1-3#command#configureobjectfilepostgresload",
+      "featureId": "TASK-HET1-3",
+      "mechanizationStatus": "implemented",
+      "railName": "ConfigureObjectFilePostgresLoad",
+      "normalizedRailName": "configureobjectfilepostgresload",
+      "railType": "command",
+      "dddOwner": "Canvas Authoring",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts#createObjectFilePostgresAuthoringMetadata",
+        "apps/web/src/app/views/canvas/ObjectFilePostgresAuthoringFields.tsx#ObjectFilePostgresAuthoringFields",
+        "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts#buildDbtPlannerGraphSource",
+        "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts#projectObjectFilePostgresStepTypeConfig",
+        "apps/web/src/app/plugins/objectFilePostgres/ObjectFilePostgresAuthoringFields.tsx#ObjectFilePostgresAuthoringFields",
+        "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts#resolveObjectFilePostgresDbtBridge"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts#createObjectFilePostgresAuthoringMetadata",
+        "apps/web/src/app/views/canvas/ObjectFilePostgresAuthoringFields.tsx#ObjectFilePostgresAuthoringFields",
+        "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts#buildDbtPlannerGraphSource",
+        "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts#projectObjectFilePostgresStepTypeConfig",
+        "apps/web/src/app/plugins/objectFilePostgres/ObjectFilePostgresAuthoringFields.tsx#ObjectFilePostgresAuthoringFields",
+        "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts#resolveObjectFilePostgresDbtBridge"
+      ],
+      "documentationRefs": [
+        "https://github.com/dunay2/dvt/issues/2180",
+        "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+        "docs/risk-register/quality/R-20260805-HET1-PUBLIC-VERTICAL.yaml"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/reference-architecture.md",
+        "AGENTS.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "apps/web/src/app/plugins/objectFilePostgres/**",
+        "apps/web/src/app/views/canvas/**",
+        "apps/web/cypress/e2e/canvas/**",
+        "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+        "apps/web/src/app/plugins/objectFilePostgres",
+        "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts",
+        "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+        "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+        "apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts",
+        "packages/@dvt/temporal-dbt-plugin",
+        "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts"
+      ],
+      "architectureGuards": [
+        "No second planner, plugin registry, credential store, or step-family workflow conditional.",
+        "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+        "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web test",
+        "pnpm verify:prepush",
+        "pnpm --filter @dvt/contracts test",
+        "pnpm test:web:e2e:het1-public:live",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+      "sourceContentSha256": "6eae89c40a873424440556810f50fc6c45f123e2b00dfca3cd039bd5a4df7eb3",
+      "rawRail": {
+        "name": "ConfigureObjectFilePostgresLoad",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Canvas Authoring"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "createObjectFilePostgresAuthoringMetadata",
+            "path": "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts",
+            "cqRails": ["ConfigureObjectFilePostgresLoad"],
+            "dddOwner": "Canvas Authoring",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "evolutionary_architecture"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-object-file-dbt-vertical.cy.ts",
+            "architectureGuard": "No second planner, plugin registry, credential store, or step-family workflow conditional."
+          },
+          {
+            "name": "ObjectFilePostgresAuthoringFields",
+            "path": "apps/web/src/app/views/canvas/ObjectFilePostgresAuthoringFields.tsx",
+            "cqRails": ["ConfigureObjectFilePostgresLoad"],
+            "dddOwner": "Canvas Authoring",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "evolutionary_architecture"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-object-file-dbt-vertical.cy.ts",
+            "architectureGuard": "No second planner, plugin registry, credential store, or step-family workflow conditional."
+          },
+          {
+            "name": "buildDbtPlannerGraphSource",
+            "path": "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+            "cqRails": ["ConfigureObjectFilePostgresLoad"],
+            "dddOwner": "Canvas Authoring",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+              "packages/@dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "evolutionary_architecture",
+              "mapper",
+              "service_layer",
+              "registry"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts"
+          },
+          {
+            "name": "projectObjectFilePostgresStepTypeConfig",
+            "path": "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts",
+            "cqRails": ["ConfigureObjectFilePostgresLoad"],
+            "dddOwner": "Canvas Authoring",
+            "unitTests": [
+              "packages/@dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts",
+              "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "mapper",
+              "service_layer",
+              "registry",
+              "evolutionary_architecture"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts"
+          },
+          {
+            "name": "ObjectFilePostgresAuthoringFields",
+            "path": "apps/web/src/app/plugins/objectFilePostgres/ObjectFilePostgresAuthoringFields.tsx",
+            "cqRails": ["ConfigureObjectFilePostgresLoad"],
+            "dddOwner": "Canvas Authoring",
+            "unitTests": [
+              "packages/@dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts",
+              "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "mapper",
+              "service_layer",
+              "registry",
+              "evolutionary_architecture"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts"
+          },
+          {
+            "name": "resolveObjectFilePostgresDbtBridge",
+            "path": "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+            "cqRails": ["ConfigureObjectFilePostgresLoad"],
+            "dddOwner": "Canvas Authoring",
+            "unitTests": [
+              "packages/@dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts",
+              "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts"
+            ],
+            "fowlerSignals": [
+              "published_language",
+              "mapper",
+              "service_layer",
+              "registry",
+              "evolutionary_architecture"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts"
+          }
+        ],
+        "version": 1,
+        "featureId": "TASK-HET1-3",
+        "userStories": [
+          "As a data engineer I can author a content-addressed object load into PostgreSQL and execute downstream dbt model and test steps.",
+          "A data engineer authors a content-addressed object load into PostgreSQL and executes the connected DBT model and test from Canvas."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-object-file-dbt-vertical.cy.ts",
+          "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts"
+        ],
+        "domainObjects": [
+          "ObjectFilePostgresAuthoring",
+          "DbtCanvasGraphSourceProjection",
+          "ObjectFilePostgresAuthoringDraft",
+          "ObjectFilePostgresDbtBridge",
+          "LoadObjectFileToPostgresStepTypeConfig"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "evolutionary_architecture",
+          "mapper",
+          "service_layer",
+          "registry"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web test",
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/contracts test",
+          "pnpm test:web:e2e:het1-public:live",
+          "pnpm planning:db:integrity:check"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "configureobjectfilepostgresload-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+            "greenTest": "pnpm test:web:e2e:het1-public:live",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+              "apps/web/src/app/plugins/objectFilePostgres",
+              "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts"
+            ],
+            "expectedFailure": "The prior Canvas projection omitted the object-file load node and its execution dependency from the DBT selected closure."
+          }
+        ],
+        "componentGuides": [
+          "https://github.com/dunay2/dvt/issues/2180",
+          "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md"
+        ],
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/reference-architecture.md",
+          "AGENTS.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ConfigureObjectFilePostgresLoad",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Canvas Authoring"
+          }
+        ],
+        "architectureGuards": [
+          "No second planner, plugin registry, credential store, or step-family workflow conditional.",
+          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts"
+        ],
+        "implementationPlan": "Configure the bounded object-file/PostgreSQL authoring model through SaveWorkspaceGraphDraft, then reuse BuildDbtPlannerGraphSource, PublishGraphDbtWorkspaceArtifacts, PreviewExecutionPlan, StartRun and the existing run lifecycle rails for the HET1 public vertical.",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/objectFilePostgres/**",
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/cypress/e2e/canvas/**",
+          "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+          "apps/web/src/app/plugins/objectFilePostgres",
+          "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+          "apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts",
+          "packages/@dvt/temporal-dbt-plugin",
+          "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-temporal/**",
+          "warehouse-source node repurposing",
+          "second planner, plugin registry, credential store, or orchestration rail",
+          "engine, RunPlanWorkflow, or dispatcher step-family conditionals"
+        ]
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-04T16:40:22.562Z"
+    },
+    {
       "railId": "local#US-F4-3-RUN-CONTROLS#command#cancelrun",
       "featureId": "US-F4-3-RUN-CONTROLS",
       "mechanizationStatus": "implemented",
@@ -39549,6 +40077,298 @@
         ]
       },
       "createdAt": "2026-08-04T15:07:01.706Z"
+    },
+    {
+      "operationId": "06ee8db7-c4a4-4835-96be-f5f2f7c91f31",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:TASK-HET1-3:command:configureobjectfilepostgresload:latest:13e4a3042a5868a5",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#TASK-HET1-3#command#configureobjectfilepostgresload",
+      "sourcePath": "https://github.com/dunay2/dvt/issues/2180",
+      "sourceContentSha256": "7a5608e20abb8ae78f2f60b3bb845aee5a15afb9c92fd36cd854257dc8fab19f",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "canvasDbtPlannerGraphSource projects object-file load before DBT_MODEL and DBT_TEST",
+        "dddOwner": "Canvas Authoring",
+        "railName": "ConfigureObjectFilePostgresLoad",
+        "railType": "command",
+        "featureId": "TASK-HET1-3",
+        "greenTest": "The public Canvas projection emits the exact heterogeneous selected closure.",
+        "sourceRef": "https://github.com/dunay2/dvt/issues/2180",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts"
+        ],
+        "railStatus": "planned",
+        "userStories": [
+          "As a data engineer I can author a content-addressed object load into PostgreSQL and execute downstream dbt model and test steps."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-object-file-dbt-vertical.cy.ts"
+        ],
+        "domainObjects": [
+          "ObjectFilePostgresAuthoring",
+          "DbtCanvasGraphSourceProjection"
+        ],
+        "fowlerSignals": ["published_language", "evolutionary_architecture"],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web test",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["https://github.com/dunay2/dvt/issues/2180"],
+        "expectedFailure": "The current projection omits the object-file load node and its execution dependency.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/reference-architecture.md"
+        ],
+        "documentationRefs": ["https://github.com/dunay2/dvt/issues/2180"],
+        "architectureGuards": [
+          "No second planner, plugin registry, credential store, or step-family workflow conditional."
+        ],
+        "implementationPlan": "https://github.com/dunay2/dvt/issues/2180#issuecomment-5181965405",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts#createObjectFilePostgresAuthoringMetadata",
+          "apps/web/src/app/views/canvas/ObjectFilePostgresAuthoringFields.tsx#ObjectFilePostgresAuthoringFields",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts#buildDbtPlannerGraphSource"
+        ],
+        "normalizedRailName": "configureobjectfilepostgresload",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "7a5608e20abb8ae78f2f60b3bb845aee5a15afb9c92fd36cd854257dc8fab19f",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/plugins/objectFilePostgres/**",
+          "apps/web/src/app/views/canvas/**",
+          "apps/web/cypress/e2e/canvas/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/engine/**",
+          "packages/@dvt/adapter-temporal/**"
+        ]
+      },
+      "createdAt": "2026-08-04T16:40:22.562Z"
+    },
+    {
+      "operationId": "0b93d097-20d1-4357-a57d-a9e077e6e21d",
+      "idempotencyKey": "codex-20260805-het1-public-vertical",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#E-HET1-PUBLIC-OBJECT-FILE-DBT-20260805#command#runhet1publicverticalliveproof",
+      "sourcePath": "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+      "sourceContentSha256": "6eae89c40a873424440556810f50fc6c45f123e2b00dfca3cd039bd5a4df7eb3",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm test:web:e2e:het1-public:live",
+        "dddOwner": "DeliveryRuntimeProofs",
+        "railName": "RunHet1PublicVerticalLiveProof",
+        "railType": "command",
+        "featureId": "E-HET1-PUBLIC-OBJECT-FILE-DBT-20260805",
+        "greenTest": "pnpm test:web:e2e:het1-public:live",
+        "sourceRef": "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+        "unitTests": [
+          "scripts/run-het1-public-vertical-live-proof.test.cjs",
+          "packages/@dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts",
+          "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+          "apps/api/test/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.test.ts",
+          "apps/temporal-worker/test/runtime/objectFilePostgresDbtCommandEnvironment.test.ts",
+          "packages/@dvt/temporal-dbt-plugin/test/DbtCliPluginRunner.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "An operator observes honest success, ingestion rejection, DBT test failure, cancellation and recovery through public controls."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts"
+        ],
+        "domainObjects": [
+          "ObjectFilePostgresAuthoringDraft",
+          "ObjectFilePostgresDbtBridge",
+          "Het1PublicVerticalLiveProofRun"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "service_layer",
+          "gateway",
+          "registry",
+          "unit_of_work",
+          "idempotent_receiver",
+          "executable_specification"
+        ],
+        "patchSurfaces": [
+          "apps/web/cypress/support/het1PublicFailureRecoveryProof.ts",
+          "apps/web/cypress/support/het1PublicRunProof.ts",
+          "apps/web/cypress/support/het1PublicVertical.ts",
+          "scripts/run-het1-public-vertical-live-proof.cjs",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts"
+        ],
+        "completionGate": [
+          "node --test scripts/run-het1-public-vertical-live-proof.test.cjs",
+          "pnpm test:web:e2e:het1-public:live",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm planning:db:integrity:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md"
+        ],
+        "expectedFailure": "The public happy-path proof omitted ingestion rejection, DBT test failure, cooperative cancellation, recovery and unchanged DBT publication.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0007_RunCancellation.md",
+          "docs/adr/ADR-0047-runtime-owned-realized-lifecycle-for-signal-driven-transitions.md",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+          "docs/risk-register/quality/R-20260805-HET1-PUBLIC-VERTICAL.yaml"
+        ],
+        "architectureGuards": [
+          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+          "no route intercepts, direct plan construction, run-state seeding, or staging-row seeding"
+        ],
+        "implementationPlan": "Reuse SaveWorkspaceGraphDraft, BuildDbtPlannerGraphSource, PublishGraphDbtWorkspaceArtifacts, PreviewExecutionPlan, StartRun, GetRunStatus, GetRunEvents, CancelRun and RecoverRun to prove one public LOAD_OBJECT_FILE_TO_POSTGRES to DBT_MODEL to DBT_TEST plan and run.",
+        "implementationRefs": [
+          "scripts/run-het1-public-vertical-live-proof.cjs#main",
+          "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts#HET1 public object-file DBT vertical",
+          "apps/web/cypress/support/het1PublicFailureRecoveryProof.ts#proveHet1CancellationAndRecovery"
+        ],
+        "normalizedRailName": "runhet1publicverticalliveproof",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6eae89c40a873424440556810f50fc6c45f123e2b00dfca3cd039bd5a4df7eb3",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+          "apps/web/src/app/plugins/objectFilePostgres",
+          "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+          "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
+          "apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts",
+          "packages/@dvt/temporal-dbt-plugin",
+          "scripts/run-het1-public-vertical-live-proof.cjs",
+          "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+          "apps/web/cypress/support/het1PublicFailureRecoveryProof.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/engine step-family conditionals",
+          "packages/@dvt/adapter-temporal step-family conditionals",
+          "Cypress route-intercept success or direct plan/run/staging-row seeding"
+        ]
+      },
+      "createdAt": "2026-08-05T14:29:27.427Z"
+    },
+    {
+      "operationId": "34056f66-96ad-46ce-b4b5-b8ee20c35ffb",
+      "idempotencyKey": "codex-20260805-het1-configure-object-file-postgres-load-closeout",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#TASK-HET1-3#command#configureobjectfilepostgresload",
+      "sourcePath": "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+      "sourceContentSha256": "6eae89c40a873424440556810f50fc6c45f123e2b00dfca3cd039bd5a4df7eb3",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+        "dddOwner": "Canvas Authoring",
+        "railName": "ConfigureObjectFilePostgresLoad",
+        "railType": "command",
+        "featureId": "TASK-HET1-3",
+        "greenTest": "pnpm test:web:e2e:het1-public:live",
+        "sourceRef": "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+        "unitTests": [
+          "packages/@dvt/contracts/test/object-file-postgres-dbt-bridge.contract.test.ts",
+          "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "A data engineer authors a content-addressed object load into PostgreSQL and executes the connected DBT model and test from Canvas."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts"
+        ],
+        "domainObjects": [
+          "ObjectFilePostgresAuthoringDraft",
+          "ObjectFilePostgresDbtBridge",
+          "LoadObjectFileToPostgresStepTypeConfig"
+        ],
+        "fowlerSignals": [
+          "published_language",
+          "mapper",
+          "service_layer",
+          "registry",
+          "evolutionary_architecture"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/plugins/objectFilePostgres",
+          "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/web test",
+          "pnpm test:web:e2e:het1-public:live",
+          "pnpm planning:db:integrity:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md"
+        ],
+        "expectedFailure": "The prior Canvas projection omitted the object-file load node and its execution dependency from the DBT selected closure.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+          "docs/risk-register/quality/R-20260805-HET1-PUBLIC-VERTICAL.yaml"
+        ],
+        "architectureGuards": [
+          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+          "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
+          "No second planner, plugin registry, credential store, or step-family workflow conditional."
+        ],
+        "implementationPlan": "Configure the bounded object-file/PostgreSQL authoring model through SaveWorkspaceGraphDraft, then reuse BuildDbtPlannerGraphSource, PublishGraphDbtWorkspaceArtifacts, PreviewExecutionPlan, StartRun and the existing run lifecycle rails for the HET1 public vertical.",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts#projectObjectFilePostgresStepTypeConfig",
+          "apps/web/src/app/plugins/objectFilePostgres/ObjectFilePostgresAuthoringFields.tsx#ObjectFilePostgresAuthoringFields",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts#buildDbtPlannerGraphSource",
+          "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts#resolveObjectFilePostgresDbtBridge"
+        ],
+        "normalizedRailName": "configureobjectfilepostgresload",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6eae89c40a873424440556810f50fc6c45f123e2b00dfca3cd039bd5a4df7eb3",
+        "allowedImplementationSurfaces": [
+          "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
+          "apps/web/src/app/plugins/objectFilePostgres",
+          "apps/web/src/app/views/canvas/objectFilePostgresAuthoringModel.ts",
+          "apps/web/src/app/views/canvas/canvasDbtPlannerGraphSource.ts",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.ts",
+          "apps/temporal-worker/src/runtime/objectFilePostgresDbtCommandEnvironment.ts",
+          "packages/@dvt/temporal-dbt-plugin",
+          "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "warehouse-source node repurposing",
+          "second planner, plugin registry, credential store, or orchestration rail",
+          "engine, RunPlanWorkflow, or dispatcher step-family conditionals"
+        ]
+      },
+      "createdAt": "2026-08-05T14:31:14.921Z"
     }
   ]
 }

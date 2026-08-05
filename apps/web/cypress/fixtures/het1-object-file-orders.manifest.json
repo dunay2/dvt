@@ -3,6 +3,11 @@
   "objectKey": "tenants/tenant/3ff52e79a7b084a0ad5bb48a3250c85645e12435caecc84950cffbe1cc88b88f",
   "storageUri": "s3://het1-fixtures/tenants/tenant/3ff52e79a7b084a0ad5bb48a3250c85645e12435caecc84950cffbe1cc88b88f",
   "sha256": "3ff52e79a7b084a0ad5bb48a3250c85645e12435caecc84950cffbe1cc88b88f",
+  "integrityMismatchObject": {
+    "objectKey": "tenants/tenant/0000000000000000000000000000000000000000000000000000000000000000",
+    "storageUri": "s3://het1-fixtures/tenants/tenant/0000000000000000000000000000000000000000000000000000000000000000",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
   "sizeBytes": 32,
   "sourceCredentialRef": "object-store:het1-source",
   "targetCredentialRef": "postgres:het1-staging"

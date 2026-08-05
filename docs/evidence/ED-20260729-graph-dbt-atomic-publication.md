@@ -43,10 +43,12 @@ The minimum viable publication boundary contains:
 - every managed `models/**/*.sql` artifact produced by the Canvas plan.
 
 The request carries the expected revision for every artifact, including unchanged
-files, and marks only changed or absent artifacts as writes. The API sends all
-expectations and writes to one `IWorkspaceFileBatchMutationPort.apply` call.
-It returns the batch receipt on success or one typed conflict without performing
-a partial client-side sequence.
+files, and marks only changed or absent artifacts as writes. When at least one
+write remains, the API sends all expectations and writes to one
+`IWorkspaceFileBatchMutationPort.apply` call. When the authorized artifact set is
+already current, the command returns a deterministic applied no-op receipt without
+calling the generic batch gateway, whose contract correctly rejects an empty
+mutation. Both outcomes avoid a partial client-side sequence.
 
 The web publisher derives one deterministic idempotency key from the full
 publication intent. It does not invoke the command when local preflight detects
@@ -59,6 +61,8 @@ the server accepts the publication.
 - A failure while replacing a later artifact restores every original file.
 - An equivalent retry replays the stored receipt rather than applying the writes
   again.
+- A repeated Preview whose complete artifact set is unchanged succeeds without
+  fabricating a write or weakening the generic batch-mutation contract.
 - The endpoint is `/workspace/dbt/graph-artifacts/publications`; the existing
   single-file editor route remains available for its separate use case.
 - No Planning DB migration, generic browser batch endpoint, saga, second store,

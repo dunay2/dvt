@@ -42,6 +42,19 @@ function validateObjectFileFixture(content, manifest) {
   if (manifest.storageUri !== `s3://${manifest.bucket}/${manifest.objectKey}`) {
     throw new Error('HET1 storage URI must identify the manifest bucket and object key.');
   }
+  const mismatchObject = manifest.integrityMismatchObject;
+  if (
+    mismatchObject.objectKey === manifest.objectKey ||
+    mismatchObject.sha256 === sha256 ||
+    !mismatchObject.objectKey.endsWith(`/${mismatchObject.sha256}`)
+  ) {
+    throw new Error(
+      'HET1 integrity-mismatch object must declare a distinct content-addressed key.'
+    );
+  }
+  if (mismatchObject.storageUri !== `s3://${manifest.bucket}/${mismatchObject.objectKey}`) {
+    throw new Error('HET1 integrity-mismatch URI must identify its declared bucket object key.');
+  }
 
   return manifest;
 }
@@ -161,6 +174,16 @@ async function uploadFixture({ endpoint, manifest, content }) {
       new PutObjectCommand({
         Bucket: manifest.bucket,
         Key: manifest.objectKey,
+        Body: content,
+        ContentType: 'text/csv',
+        Metadata: { sha256: manifest.sha256 },
+      }),
+      { abortSignal: abortController.signal }
+    );
+    await client.send(
+      new PutObjectCommand({
+        Bucket: manifest.bucket,
+        Key: manifest.integrityMismatchObject.objectKey,
         Body: content,
         ContentType: 'text/csv',
         Metadata: { sha256: manifest.sha256 },

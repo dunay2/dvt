@@ -9,12 +9,25 @@ import {
   openCanvasContextMenuAt,
 } from '../../support/canvasExecutionSelection';
 import { skipWhenFirstAuthoringLiveEnvIsMissing } from '../../support/canvasFirstAuthoring';
-import { connectCanvasNodes, openNodeWorkbenchSection } from '../../support/canvasGraphAuthoring';
 import {
+  connectCanvasNodes,
+  dragCanvasNodeByViewportDelta,
+  openNodeWorkbenchSection,
+} from '../../support/canvasGraphAuthoring';
+import {
+  type Het1PublicGraphIdentity,
+  proveControlledHet1DbtTestFailure,
+  proveControlledHet1IngestionFailure,
+  proveHet1CancellationAndRecovery,
+} from '../../support/het1PublicFailureRecoveryProof';
+import {
+  assertHet1RunUsesPlan,
   assertObjectLoadEvidence,
   assertRunEvidenceDoesNotLeak,
   assertStepEventSet,
   readHet1RunEvents,
+  startPreviewedHet1Run,
+  waitForHet1RunStatus,
 } from '../../support/het1PublicRunProof';
 import {
   applyNodeWorkbench,
@@ -26,14 +39,13 @@ import {
   openNodeWorkbench,
   readDraftEdges,
   readDraftNodes,
+  visitHet1DbtCanvas,
   waitForPersistedDraft,
-  waitForRunStatus,
 } from '../../support/het1PublicVertical';
 import {
   readLiveWorkspaceFile,
   resolveLiveWorkspaceSession,
 } from '../../support/liveProtectedRuntime';
-import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
 const OBJECT_NODE_ID = 'dvt.object-file-postgres-object-file-load-1';
 const OBJECT_NODE_CARD_TITLE = 'Object File Load 1';
@@ -42,16 +54,15 @@ const MODEL_NODE_NAME = 'Model 1';
 const TEST_NODE_ID = 'dbt-test-1';
 const TEST_NODE_NAME = 'Test 1';
 const TARGET_RELATION = 'het1_orders_stage';
-
-function visitCleanDbtCanvas(): void {
-  const session = resolveLiveWorkspaceSession();
-  cy.visit('/canvas', {
-    onBeforeLoad(window) {
-      window.localStorage.clear();
-      seedE2eWorkspaceSession(window, session);
-    },
-  });
-}
+const HET1_GRAPH_IDENTITY: Het1PublicGraphIdentity = {
+  objectNodeId: OBJECT_NODE_ID,
+  objectNodeName: OBJECT_NODE_CARD_TITLE,
+  modelNodeId: MODEL_NODE_ID,
+  modelNodeName: MODEL_NODE_NAME,
+  testNodeId: TEST_NODE_ID,
+  testNodeName: TEST_NODE_NAME,
+  targetRelation: TARGET_RELATION,
+};
 
 function addCatalogNode(x: number, y: number, kind: string): void {
   openCanvasContextMenuAt(x, y);
@@ -70,7 +81,7 @@ describe('HET1 public object-file DBT vertical', () => {
     cy.fixture<Het1ObjectFileManifest>('het1-object-file-orders.manifest.json').then((manifest) => {
       assertLiveDraftScopeIsClean(session);
       cy.viewport(1500, 900);
-      visitCleanDbtCanvas();
+      visitHet1DbtCanvas({ resetBrowserState: true });
 
       cy.get('[data-slot="canvas-playground-empty-state"]', { timeout: 20_000 }).within(() => {
         cy.contains('button', 'dbt').should('be.enabled').click();
@@ -81,6 +92,7 @@ describe('HET1 public object-file DBT vertical', () => {
       cy.contains('.react-flow__node', OBJECT_NODE_CARD_TITLE, { timeout: 20_000 }).should(
         'be.visible'
       );
+      dragCanvasNodeByViewportDelta(OBJECT_NODE_CARD_TITLE, { x: -300, y: 140 });
       openNodeWorkbench(OBJECT_NODE_CARD_TITLE);
       configureObjectFileLoad({
         nodeId: OBJECT_NODE_ID,
@@ -91,6 +103,7 @@ describe('HET1 public object-file DBT vertical', () => {
 
       addCatalogNode(650, 260, 'dbt:model');
       cy.contains('.react-flow__node', MODEL_NODE_NAME, { timeout: 20_000 }).should('be.visible');
+      dragCanvasNodeByViewportDelta(MODEL_NODE_NAME, { x: 0, y: -140 });
       connectCanvasNodes(OBJECT_NODE_CARD_TITLE, MODEL_NODE_NAME);
       confirmCanvasDependency();
 
@@ -106,6 +119,7 @@ describe('HET1 public object-file DBT vertical', () => {
 
       addCatalogNode(980, 260, 'dbt:test');
       cy.contains('.react-flow__node', TEST_NODE_NAME, { timeout: 20_000 }).should('be.visible');
+      dragCanvasNodeByViewportDelta(TEST_NODE_NAME, { x: 300, y: 0 });
       connectCanvasNodes(MODEL_NODE_NAME, TEST_NODE_NAME);
       confirmCanvasDependency();
 
@@ -228,22 +242,12 @@ describe('HET1 public object-file DBT vertical', () => {
         expect(content).to.contain('name: order_id');
       });
 
-      cy.get('[data-testid="plan-preview-modal"]').within(() => {
-        cy.contains('button', 'Close').click();
-      });
-      cy.get('[data-slot="shell-run-command"]')
-        .should('be.enabled')
-        .then(($button) => ($button.get(0) as HTMLButtonElement).click());
-
-      cy.location('pathname', { timeout: 30_000 }).should('match', /^\/runs\/[^/]+$/u);
-      cy.location('pathname').then((pathname) => {
-        const runId = pathname.split('/').pop();
-        expect(runId).to.be.a('string').and.not.equal('');
-
-        waitForRunStatus(runId!, 'completed').then((snapshot) => {
+      startPreviewedHet1Run().then(({ runId, planId }) => {
+        assertHet1RunUsesPlan(runId, planId);
+        waitForHet1RunStatus(runId, 'completed').then((snapshot) => {
           expect(String(snapshot.status).toLowerCase()).to.equal('completed');
         });
-        readHet1RunEvents(runId!).then((events) => {
+        readHet1RunEvents(runId).then((events) => {
           assertStepEventSet(events, 'StepCompleted', [
             OBJECT_NODE_ID,
             MODEL_NODE_ID,
@@ -255,7 +259,7 @@ describe('HET1 public object-file DBT vertical', () => {
             expectedRows: 2,
             expectedSha256: manifest.sha256,
             expectedSizeBytes: manifest.sizeBytes,
-            expectedPublicationOutcome: 'created',
+            expectedPublicationOutcomes: ['created', 'replaced'],
           });
           expect(events.map((event) => event.eventType)).to.include('RunCompleted');
           assertRunEvidenceDoesNotLeak(events, [
@@ -273,6 +277,10 @@ describe('HET1 public object-file DBT vertical', () => {
         .should('be.visible')
         .and('contain.text', 'StepCompleted')
         .and('contain.text', 'RunCompleted');
+
+      proveControlledHet1IngestionFailure({ identity: HET1_GRAPH_IDENTITY, manifest });
+      proveControlledHet1DbtTestFailure({ identity: HET1_GRAPH_IDENTITY, manifest });
+      proveHet1CancellationAndRecovery({ identity: HET1_GRAPH_IDENTITY, manifest });
     });
   });
 });

@@ -115,6 +115,41 @@ function workspaceFiles(
 }
 
 describe('PublishGraphDbtWorkspaceArtifactsCommand', () => {
+  it('accepts an authorized revision-consistent publication when every artifact is unchanged', async () => {
+    const artifacts = REQUEST.artifacts.map((artifact) => ({
+      ...artifact,
+      expectedRevision: {
+        kind: 'content_sha256' as const,
+        value: sha256HexUtf8(artifact.content),
+      },
+      writeRequired: false,
+    }));
+    const request: PublishGraphDbtWorkspaceArtifactsRequest = { ...REQUEST, artifacts };
+    const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>();
+    const command = new PublishGraphDbtWorkspaceArtifactsCommand(
+      allowedAuthorityPolicy(),
+      workspaceFiles(
+        Object.fromEntries(
+          artifacts.map((artifact) => [
+            artifact.path,
+            workspaceFile(artifact.path, artifact.content, sha256HexUtf8(artifact.content)),
+          ])
+        )
+      ),
+      { apply }
+    );
+
+    await expect(command.execute({ scope: SCOPE, ...request })).resolves.toMatchObject({
+      schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
+      kind: 'applied',
+      idempotencyKey: request.idempotencyKey,
+      requestHash: expect.stringMatching(/^[a-f0-9]{64}$/u),
+      deduplicated: false,
+      writes: [],
+    });
+    expect(apply).not.toHaveBeenCalled();
+  });
+
   it('derives writes from proposed content instead of trusting caller write flags', async () => {
     const apply = vi.fn<IWorkspaceFileBatchMutationPort['apply']>(async (_scope, mutation) => ({
       kind: 'applied',

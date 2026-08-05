@@ -33,6 +33,17 @@ test('validates the content-addressed HET1 fixture before infrastructure startup
       }),
     /object key must end with the fixture SHA-256/
   );
+  assert.throws(
+    () =>
+      validateObjectFileFixture(fixtureContent, {
+        ...fixtureManifest,
+        integrityMismatchObject: {
+          ...fixtureManifest.integrityMismatchObject,
+          sha256: fixtureManifest.sha256,
+        },
+      }),
+    /integrity-mismatch object must declare a distinct content-addressed key/
+  );
 });
 
 test('starts the pinned MinIO image on loopback only', () => {
