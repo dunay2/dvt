@@ -41,7 +41,7 @@ export function configureHttpJsonAcquisition(args: {
   replaceInput(field('storage-uri'), args.manifest.storageUri);
   replaceInput(field('artifact-credential'), args.manifest.artifactCredentialRef);
   replaceInput(field('connect-timeout'), '2000');
-  replaceInput(field('request-timeout'), '10000');
+  replaceInput(field('request-timeout'), '20000');
   replaceInput(field('redirects'), '0');
   applyNodeWorkbench();
 }

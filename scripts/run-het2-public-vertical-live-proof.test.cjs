@@ -57,6 +57,10 @@ test('enables acquisition and loader against the same real content-addressed sto
   assert.equal(env.DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF, fixtureManifest.artifactCredentialRef);
   assert.deepEqual(JSON.parse(env.DVT_HTTP_JSON_ENDPOINTS), {
     [fixtureManifest.endpointRef]: 'https://127.0.0.1:19443/orders',
+    'http-endpoint:het2-status-failure': 'https://127.0.0.1:19443/status-failure',
+    'http-endpoint:het2-integrity-mismatch': 'https://127.0.0.1:19443/integrity-mismatch',
+    'http-endpoint:het2-timeout': 'https://127.0.0.1:19443/timeout',
+    'http-endpoint:het2-slow-once': 'https://127.0.0.1:19443/slow-once',
   });
   assert.equal(env.DVT_HTTP_JSON_ALLOW_LOOPBACK_FIXTURE, 'true');
 });
@@ -75,15 +79,34 @@ test('serves only the authorized JSONL fixture over TLS', async (context) => {
   assert.equal(createHash('sha256').update(bytes).digest('hex'), fixtureManifest.sha256);
   const denied = await requestFixture({ port, cert, token: 'wrong' });
   assert.equal(denied.statusCode, 401);
+  const failed = await requestFixture({
+    port,
+    cert,
+    token: 'het2-fixture-bearer-token',
+    requestPath: '/status-failure',
+  });
+  assert.equal(failed.statusCode, 503);
+  const mismatched = await requestFixture({
+    port,
+    cert,
+    token: 'het2-fixture-bearer-token',
+    requestPath: '/integrity-mismatch',
+  });
+  assert.equal(mismatched.statusCode, 200);
+  assert.notEqual(
+    createHash('sha256').update(mismatched.body).digest('hex'),
+    fixtureManifest.sha256
+  );
+  assert.equal(mismatched.body.byteLength, fixtureManifest.sizeBytes);
 });
 
-function requestFixture({ port, cert, token }) {
+function requestFixture({ port, cert, token, requestPath = '/orders' }) {
   return new Promise((resolve, reject) => {
     const req = request(
       {
         hostname: '127.0.0.1',
         port,
-        path: '/orders',
+        path: requestPath,
         method: 'GET',
         ca: cert,
         headers: { authorization: `Bearer ${token}` },
