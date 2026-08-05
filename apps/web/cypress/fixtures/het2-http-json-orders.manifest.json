@@ -1,0 +1,11 @@
+{
+  "bucket": "het2-artifacts",
+  "objectKey": "tenants/tenant/2bc4bcd1fa28c941e211ee853f08c6d09bb8db1fa182e9961ac39d9bb525082c",
+  "storageUri": "s3://het2-artifacts/tenants/tenant/2bc4bcd1fa28c941e211ee853f08c6d09bb8db1fa182e9961ac39d9bb525082c",
+  "sha256": "2bc4bcd1fa28c941e211ee853f08c6d09bb8db1fa182e9961ac39d9bb525082c",
+  "sizeBytes": 60,
+  "endpointRef": "http-endpoint:het2-orders",
+  "authCredentialRef": "http-auth:het2-orders",
+  "artifactCredentialRef": "object-store:het2-artifacts",
+  "targetCredentialRef": "postgres:het2-staging"
+}
