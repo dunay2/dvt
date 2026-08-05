@@ -139,6 +139,9 @@
   "workspace_projector_worker": ["apps/projector-worker/**"],
   "workspace_temporal_worker": ["apps/temporal-worker/**"],
   "workspace_temporal_dbt_plugin": ["packages/@dvt/temporal-dbt-plugin/**"],
+  "workspace_temporal_http_json_plugin": [
+    "packages/@dvt/temporal-http-json-plugin/**"
+  ],
   "workspace_temporal_object_file_postgres_plugin": [
     "packages/@dvt/temporal-object-file-postgres-plugin/**"
   ],
