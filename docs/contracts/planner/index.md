@@ -14,12 +14,14 @@ ExecutionPlan and planner-related schemas and admission contracts.
 - `packages/@dvt/contracts/src/contracts/planner/CanvasAuthoringAuthorityBinding.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/CustomPolicyNamespaceRegistry.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/DbtProjectGraphProjection.v1.ts`
+- `packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionBindingVerification.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionPlan.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/IExecutionPlanner.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/index.ts`
+- `packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmission.v1.ts`
 - `packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts`

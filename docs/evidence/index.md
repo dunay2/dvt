@@ -154,6 +154,7 @@ Evidence documents that justify or validate relevant changes.
 - [Summary](ED-20260801-lossless-dbt-dependency-edit.md)
 - [Summary](ED-20260801-plan-execution-decisions.md)
 - [Summary](ED-20260801-selected-dbt-model-analysis.md)
+- [Summary](ED-20260805-het1-public-object-file-dbt-vertical.md)
 - [Summary](ed-20260423-access-decision-vocabulary-hardening.md)
 - [Summary](ed-20260423-rc-c2-turbo-ci-governance.md)
 - [Summary](ed-20260423-runtime-boundary-hardening.md)

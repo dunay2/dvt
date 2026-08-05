@@ -1,21 +1,24 @@
 /** Owned concern: drive and observe the public HET1 authoring vertical without seeding graph state. */
 import { canvasViewCopy } from '../../src/app/views/canvas/copy';
 
-import { getVisibleCanvasNodeByCardTitle } from './canvasGraphAuthoring';
-import { readLiveGraphDraft, readLiveRunEvents, readLiveRunSnapshot } from './liveProtectedRuntime';
-import type { E2eWorkspaceSession } from './workspaceSession';
+import { getVisibleCanvasNodeByCardTitle, openNodeWorkbenchSection } from './canvasGraphAuthoring';
+import { readLiveGraphDraft, resolveLiveWorkspaceSession } from './liveProtectedRuntime';
+import { seedE2eWorkspaceSession, type E2eWorkspaceSession } from './workspaceSession';
 
 export type Het1ObjectFileManifest = Readonly<{
   bucket: string;
   objectKey: string;
   storageUri: string;
   sha256: string;
+  integrityMismatchObject: Readonly<{
+    objectKey: string;
+    storageUri: string;
+    sha256: string;
+  }>;
   sizeBytes: number;
   sourceCredentialRef: string;
   targetCredentialRef: string;
 }>;
-
-export type Het1RunStatus = 'completed' | 'failed' | 'cancelled';
 
 type LiveDraftBody = Readonly<{
   record?: Readonly<{
@@ -46,6 +49,18 @@ function selectMappingDataType(mappingIndex: number, dataType: string): void {
   cy.contains('[role="option"]', new RegExp(`^${dataType}$`, 'u'))
     .should('be.visible')
     .click();
+}
+
+export function visitHet1DbtCanvas(options?: Readonly<{ resetBrowserState?: boolean }>): void {
+  const session = resolveLiveWorkspaceSession();
+  cy.visit('/canvas', {
+    onBeforeLoad(window) {
+      if (options?.resetBrowserState === true) {
+        window.localStorage.clear();
+      }
+      seedE2eWorkspaceSession(window, session);
+    },
+  });
 }
 
 export function openNodeWorkbench(nodeName: string): void {
@@ -90,6 +105,49 @@ export function configureObjectFileLoad(args: {
   applyNodeWorkbench();
 }
 
+export function updateObjectFileSourceIdentity(args: {
+  nodeId: string;
+  nodeName: string;
+  storageUri: string;
+  sha256: string;
+}): void {
+  openNodeWorkbench(args.nodeName);
+  replaceInput(`[id="${args.nodeId}-object-uri"]`, args.storageUri);
+  replaceInput(`[id="${args.nodeId}-object-sha256"]`, args.sha256);
+  applyNodeWorkbench();
+  closeNodeWorkbench();
+}
+
+export function updateDbtTestColumn(args: { nodeName: string; targetColumn: string }): void {
+  openNodeWorkbench(args.nodeName);
+  replaceInput('input[name="dbt-test-column"]', args.targetColumn);
+  applyNodeWorkbench();
+  closeNodeWorkbench();
+}
+
+export function updateDbtModelSql(args: { nodeName: string; sql: string }): void {
+  if (args.sql.length === 0) throw new Error('HET1 cancellation SQL must not be empty.');
+
+  openNodeWorkbench(args.nodeName);
+  openNodeWorkbenchSection('code');
+  cy.get('textarea[name="dbt-model-sql"]')
+    .should('be.visible')
+    .and('be.enabled')
+    .then(($editor) => {
+      const editor = $editor.get(0);
+      if (editor?.tagName !== 'TEXTAREA') {
+        throw new Error('HET1 DBT model editor must be a textarea.');
+      }
+      const textarea = editor as HTMLTextAreaElement;
+      textarea.focus();
+      textarea.setSelectionRange(0, textarea.value.length);
+    })
+    .type(args.sql, { parseSpecialCharSequences: false, delay: 0 })
+    .should('have.value', args.sql);
+  applyNodeWorkbench();
+  closeNodeWorkbench();
+}
+
 export function confirmCanvasDependency(): void {
   cy.get('[role="alertdialog"]', { timeout: 20_000 }).should('be.visible');
   cy.get('[role="alertdialog"] button').filter(':enabled').last().click();
@@ -108,7 +166,10 @@ export function waitForPersistedDraft(args: {
       return body;
     }
     if ((args.attempt ?? 0) >= 60) {
-      throw new Error(`Timed out waiting for persisted HET1 state: ${args.description}.`);
+      throw new Error(
+        `Timed out waiting for persisted HET1 state: ${args.description}. Observed nodes: ` +
+          JSON.stringify(readDraftNodes(body))
+      );
     }
 
     return cy.wait(250).then(() =>
@@ -132,35 +193,6 @@ export function assertLiveDraftScopeIsClean(session: E2eWorkspaceSession): Cypre
     expect((response.body as { error?: { reason?: string } }).error?.reason).to.equal(
       'workspace_graph_draft_not_found'
     );
-  });
-}
-
-export function waitForRunStatus(
-  runId: string,
-  expectedStatus: Het1RunStatus,
-  attempt = 0
-): Cypress.Chainable<Record<string, unknown>> {
-  return readLiveRunSnapshot(runId).then((response) => {
-    expect(response.status).to.equal(200);
-    const snapshot = response.body as Record<string, unknown>;
-    const status = String(snapshot.status ?? '').toLowerCase();
-
-    if (status === expectedStatus) {
-      return snapshot;
-    }
-    if (['completed', 'failed', 'cancelled'].includes(status)) {
-      return readLiveRunEvents(runId).then((eventsResponse) => {
-        throw new Error(
-          `HET1 live run ${runId} reached ${status} while waiting for ${expectedStatus}: ` +
-            JSON.stringify(eventsResponse.body)
-        );
-      });
-    }
-    if (attempt >= 120) {
-      throw new Error(`Timed out waiting for HET1 live run ${runId} to become ${expectedStatus}.`);
-    }
-
-    return cy.wait(500).then(() => waitForRunStatus(runId, expectedStatus, attempt + 1));
   });
 }
 

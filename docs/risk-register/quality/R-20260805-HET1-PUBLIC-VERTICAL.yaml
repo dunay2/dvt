@@ -1,0 +1,43 @@
+---
+id: R-20260805-HET1-PUBLIC-VERTICAL
+title: Heterogeneous plan projection can drift across authoring and runtime plugins
+status: Open
+date: 2026-08-05
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/temporal-worker
+  - packages/@dvt/temporal-dbt-plugin
+  - apps/web
+severity: High
+probability: Low
+context: >
+  HET1 projects a bounded object-file load, a dbt model, and a dbt test from one Canvas draft into
+  one persisted execution plan dispatched through two retained production worker profiles.
+risk: >
+  A regression in authoring metadata, bridge projection, artifact publication, dependency closure,
+  runtime composition, or lifecycle observation could execute a relation other than the one the user
+  reviewed, start downstream DBT work after an ingestion rejection or accepted cancellation, or
+  expose credential or source-payload material in execution evidence.
+mitigations:
+  - 'Validate the strict v1 object-file/PostgreSQL contract and bridge as a published language;
+    persist only scoped configuration and opaque credential references.'
+  - 'Reuse BuildDbtPlannerGraphSource, PublishGraphDbtWorkspaceArtifacts, PreviewExecutionPlan,
+    StartRun, GetRunStatus, GetRunEvents, CancelRun, and RecoverRun instead of adding parallel
+    product rails.'
+  - 'Bind the dbt source to the exact staging relation projected from the load node and preserve the
+    load-to-model edge as an execution dependency.'
+  - 'Keep runtime selection in the existing worker plugin registries and guard the engine,
+    RunPlanWorkflow, and dispatcher against step-family conditionals.'
+  - 'Run the protected browser vertical against pinned MinIO, PostgreSQL, Temporal, the production
+    worker, dbt, API, and Web without route interception, direct plan construction, run-state
+    seeding, or staging-row seeding.'
+  - 'Cover success, integrity rejection, dbt-test failure, cooperative cancellation, recovery,
+    repeated replace/idempotency behavior, and secret/payload non-disclosure in one executable
+    proof.'
+residual_risk: >
+  The MVP freezes one bounded CSV fixture and one PostgreSQL/dbt project. Additional object formats,
+  mapping breadth, scale, and remote object-store implementations remain outside this HET1 proof and
+  require their own contract and live evidence before being claimed.
+review_after: 2026-09-05
+---

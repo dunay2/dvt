@@ -91,6 +91,43 @@ export function connectCanvasNodes(sourceName: string, targetName: string): void
   });
 }
 
+export function dragCanvasNodeByViewportDelta(nodeName: string, delta: DragPoint): void {
+  getVisibleCanvasNodeByCardTitle(nodeName).then(($node) => {
+    const node = $node[0]!;
+    const rect = node.getBoundingClientRect();
+    const startPoint = {
+      x: rect.left + rect.width / 2,
+      y: rect.top + rect.height / 2,
+    };
+    const targetPoint = {
+      x: startPoint.x + delta.x,
+      y: startPoint.y + delta.y,
+    };
+    const middlePoint = {
+      x: (startPoint.x + targetPoint.x) / 2,
+      y: (startPoint.y + targetPoint.y) / 2,
+    };
+
+    cy.window().then((window) => {
+      dispatchMouseDragEvent(node, window, 'mousedown', startPoint, 1);
+      dispatchMouseDragEvent(window, window, 'mousemove', middlePoint, 1);
+      dispatchMouseDragEvent(window, window, 'mousemove', targetPoint, 1);
+      dispatchMouseDragEvent(window, window, 'mouseup', targetPoint, 0);
+    });
+
+    getVisibleCanvasNodeByCardTitle(nodeName).should(($movedNode) => {
+      const movedRect = $movedNode[0]!.getBoundingClientRect();
+      const movedCenter = {
+        x: movedRect.left + movedRect.width / 2,
+        y: movedRect.top + movedRect.height / 2,
+      };
+      const distance =
+        Math.abs(movedCenter.x - startPoint.x) + Math.abs(movedCenter.y - startPoint.y);
+      expect(distance, `${nodeName} public drag distance`).to.be.greaterThan(40);
+    });
+  });
+}
+
 export function openNodeWorkbenchSection(sectionId: string): void {
   cy.get('[data-slot="canvas-node-workbench-tabs-list"]').scrollIntoView().should('be.visible');
   cy.get('body').then(($body) => {
