@@ -24,6 +24,11 @@ import {
   validateObjectFilePostgresAuthoringDraft,
 } from './objectFilePostgresAuthoringModel';
 import { resolveCompatibleDbtModelOrigins } from './canvasDbtModelArtifactProjection';
+import {
+  applyHttpJsonArtifactAuthoringDraft,
+  createHttpJsonArtifactAuthoringDraft,
+  validateHttpJsonArtifactAuthoringDraft,
+} from './httpJsonArtifactAuthoringModel';
 
 export type CanvasInspectorNodeDraftValidationContext = Readonly<{
   node: CanonicalNode;
@@ -43,6 +48,7 @@ function normalizeNodeDescription(value: string): string | undefined {
 export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspectorNodeDraft {
   const dvtMetadata = createDvtNodeAuthoringMetadata(node);
   const objectFilePostgresDraft = createObjectFilePostgresAuthoringDraft(node);
+  const httpJsonArtifactDraft = createHttpJsonArtifactAuthoringDraft(node);
   const tags = Array.from(
     new Set(node.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
   );
@@ -59,6 +65,7 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
       : {}),
     ...(dvtMetadata ? { dvt: dvtMetadata } : {}),
     ...(objectFilePostgresDraft == null ? {} : { objectFilePostgres: objectFilePostgresDraft }),
+    ...(httpJsonArtifactDraft == null ? {} : { httpJsonArtifact: httpJsonArtifactDraft }),
   };
 }
 
@@ -139,6 +146,11 @@ export function validateCanvasInspectorNodeDraft(
     }
   }
 
+  if (draft.httpJsonArtifact) {
+    const validation = validateHttpJsonArtifactAuthoringDraft(draft.httpJsonArtifact);
+    if (!validation.ok) return { httpJsonArtifact: validation.errors };
+  }
+
   return {};
 }
 
@@ -159,7 +171,9 @@ export function hasCanvasInspectorNodeDraftChanges(
     JSON.stringify(originalDraft.dbtTest ?? null) !== JSON.stringify(draft.dbtTest ?? null) ||
     JSON.stringify(originalDraft.dvt ?? null) !== JSON.stringify(draft.dvt ?? null) ||
     JSON.stringify(originalDraft.objectFilePostgres ?? null) !==
-      JSON.stringify(draft.objectFilePostgres ?? null)
+      JSON.stringify(draft.objectFilePostgres ?? null) ||
+    JSON.stringify(originalDraft.httpJsonArtifact ?? null) !==
+      JSON.stringify(draft.httpJsonArtifact ?? null)
   );
 }
 
@@ -191,6 +205,10 @@ export function applyCanvasInspectorNodeDraft(
 
   if (draft.objectFilePostgres) {
     return applyObjectFilePostgresAuthoringDraft(baseNode, draft.objectFilePostgres);
+  }
+
+  if (draft.httpJsonArtifact) {
+    return applyHttpJsonArtifactAuthoringDraft(baseNode, draft.httpJsonArtifact);
   }
 
   return baseNode;

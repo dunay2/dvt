@@ -237,7 +237,7 @@ describe('resolveCanvasRuntimePolicy', () => {
         buildCanonicalNode({
           pluginId: 'dvt.object-file-postgres',
           kind: 'dvt:object_file_load',
-          role: 'input',
+          role: 'transform',
         })
       )
     ).toBe(true);

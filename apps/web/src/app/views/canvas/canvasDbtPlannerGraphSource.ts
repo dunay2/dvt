@@ -21,6 +21,10 @@ import {
 import type { CanvasExecutionSelectionIntent } from '../../types/canvasExecutionSelection';
 import { normalizeDbtArtifactIdentifier } from './canvasDbtModelArtifactProjection';
 import { projectDbtTestArtifact } from './canvasDbtTestArtifactProjection';
+import {
+  isHttpJsonArtifactNode,
+  projectHttpJsonArtifactStepTypeConfig,
+} from './httpJsonArtifactAuthoringModel';
 
 export type DbtPlannerGraphSourceResult =
   | Readonly<{
@@ -111,6 +115,15 @@ function buildGenericGraphNode(args: {
   if (objectFileProjection?.ok === false) {
     return objectFileProjection;
   }
+  const httpJsonProjection = isHttpJsonArtifactNode(args.node)
+    ? projectHttpJsonArtifactStepTypeConfig({
+        node: args.node,
+        executionScope: args.executionScope,
+      })
+    : null;
+  if (httpJsonProjection?.ok === false) {
+    return httpJsonProjection;
+  }
 
   const testProjection =
     args.node.pluginId === 'dbt' && args.node.kind === 'dbt:test'
@@ -155,9 +168,11 @@ function buildGenericGraphNode(args: {
       dependsOn: resolveExecutableDependencies(args),
       ...(objectFileProjection?.ok === true
         ? { stepTypeConfig: objectFileProjection.stepTypeConfig }
-        : dbtStepTypeConfig
-          ? { stepTypeConfig: dbtStepTypeConfig }
-          : {}),
+        : httpJsonProjection?.ok === true
+          ? { stepTypeConfig: httpJsonProjection.stepTypeConfig }
+          : dbtStepTypeConfig
+            ? { stepTypeConfig: dbtStepTypeConfig }
+            : {}),
       metadata: {
         displayName: args.node.name,
         ...(nodeMetadata?.selectedSourceId

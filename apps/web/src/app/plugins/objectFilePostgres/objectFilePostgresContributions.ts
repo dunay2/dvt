@@ -32,6 +32,6 @@ export const objectFilePostgresContributions: PluginContributions = {
       reason: 'Object-file loads do not accept incoming object-file load edges',
     },
   ],
-  produces: [{ portType: 'data.tabular', forRoles: ['input'] }],
-  consumes: [],
+  produces: [{ portType: 'data.tabular', forRoles: ['transform'] }],
+  consumes: [{ portType: 'data.artifacts', forRoles: ['transform'] }],
 };
