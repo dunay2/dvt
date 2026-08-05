@@ -93,6 +93,28 @@ describe('S3ContentAddressedArtifactStore', () => {
     });
   });
 
+  it('classifies an oversized existing object as a permanent integrity conflict', async () => {
+    const alreadyExists = Object.assign(new Error('provider detail'), {
+      name: 'PreconditionFailed',
+    });
+    const oversized = Buffer.concat([BYTES, Buffer.from('x', 'utf8')]);
+    const send = vi.fn(async (command: unknown) => {
+      if (command instanceof PutObjectCommand) throw alreadyExists;
+      return {
+        Body: { transformToByteArray: async () => Uint8Array.from(oversized) },
+        ContentLength: oversized.byteLength,
+        ContentType: 'application/x-ndjson',
+      };
+    });
+    const store = new S3ContentAddressedArtifactStore({ client: { send } as never });
+
+    await expect(store.publish(input())).rejects.toMatchObject({
+      name: 'ArtifactStoreError',
+      code: 'ARTIFACT_INTEGRITY_ERROR',
+    });
+    expect(send).toHaveBeenCalledTimes(2);
+  });
+
   it('rejects URI scope or digest drift before contacting S3', async () => {
     const send = vi.fn(async () => ({}));
     const store = new S3ContentAddressedArtifactStore({ client: { send } as never });
