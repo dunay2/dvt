@@ -13,6 +13,7 @@ import type {
   TemporalWorkerRuntimeResources,
 } from './runtimeTypes.js';
 import { createTemporalWorkerDbtProfile } from './temporalWorkerDbtProfile.js';
+import { createTemporalWorkerHttpJsonProfile } from './temporalWorkerHttpJsonProfile.js';
 import { createTemporalWorkerObjectFilePostgresProfile } from './temporalWorkerObjectFilePostgresProfile.js';
 import { createTemporalWorkerPostgresProfile } from './temporalWorkerPostgresProfile.js';
 import {
@@ -54,12 +55,14 @@ export function createTemporalWorkerRuntimeResources(
     options,
     postgresProfile.relationalLoader
   );
+  const httpJsonProfile = createTemporalWorkerHttpJsonProfile(env, options);
   const pluginProfiles = [
     postgresProfile.pluginProfile,
     ...(dbtProfile.pluginProfile === undefined ? [] : [dbtProfile.pluginProfile]),
     ...(objectFilePostgresProfile.pluginProfile === undefined
       ? []
       : [objectFilePostgresProfile.pluginProfile]),
+    ...(httpJsonProfile.pluginProfile === undefined ? [] : [httpJsonProfile.pluginProfile]),
   ];
   const stepActivitiesByKind =
     pluginProfiles.length === 0 ? undefined : composeTemporalStepPluginRegistries(pluginProfiles);

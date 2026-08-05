@@ -55,6 +55,12 @@ const EnvSchema = z
     DVT_TEMPORAL_ADMIN_PORT: z.coerce.number().int().min(1).max(65535).default(9468),
     DVT_TEMPORAL_DBT_ENABLED: envBoolean.default(false),
     DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: envBoolean.default(false),
+    DVT_TEMPORAL_HTTP_JSON_ENABLED: envBoolean.default(false),
+    DVT_HTTP_JSON_ENDPOINTS: z.string().optional(),
+    DVT_HTTP_JSON_AUTH_TOKENS: z.string().optional(),
+    DVT_HTTP_JSON_ARTIFACT_CREDENTIAL_REF: z.string().optional(),
+    DVT_HTTP_JSON_ALLOW_LOOPBACK_FIXTURE: envBoolean.default(false),
+    DVT_HTTP_JSON_CA_FILE: z.string().optional(),
     DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF: z.string().optional(),
     DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF: z.string().optional(),
     DVT_OBJECT_FILE_S3_ENDPOINT: z.string().url().optional(),
@@ -67,6 +73,39 @@ const EnvSchema = z
     DVT_DBT_BUNDLE_FILE_ROOT: z.string().optional(),
   })
   .superRefine((input, ctx) => {
+    if (input.DVT_HTTP_JSON_ALLOW_LOOPBACK_FIXTURE && input.NODE_ENV === 'production') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['DVT_HTTP_JSON_ALLOW_LOOPBACK_FIXTURE'],
+        message: 'loopback fixture access is forbidden in production',
+      });
+    }
+
+    if (input.DVT_TEMPORAL_HTTP_JSON_ENABLED) {
+      validateJsonBindings(
+        input.DVT_HTTP_JSON_ENDPOINTS,
+        'DVT_HTTP_JSON_ENDPOINTS',
+        'http-endpoint:',
+        true,
+        ctx
+      );
+      if (input.DVT_HTTP_JSON_AUTH_TOKENS !== undefined) {
+        validateJsonBindings(
+          input.DVT_HTTP_JSON_AUTH_TOKENS,
+          'DVT_HTTP_JSON_AUTH_TOKENS',
+          'http-auth:',
+          false,
+          ctx
+        );
+      }
+      validateCredentialBinding(
+        input.DVT_HTTP_JSON_ARTIFACT_CREDENTIAL_REF,
+        'DVT_HTTP_JSON_ARTIFACT_CREDENTIAL_REF',
+        'object-store:',
+        ctx
+      );
+    }
+
     if (input.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED) {
       validateCredentialBinding(
         input.DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF,
@@ -123,7 +162,10 @@ const EnvSchema = z
 
 function validateCredentialBinding(
   value: string | undefined,
-  field: 'DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF' | 'DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF',
+  field:
+    | 'DVT_OBJECT_FILE_SOURCE_CREDENTIAL_REF'
+    | 'DVT_OBJECT_FILE_POSTGRES_TARGET_CREDENTIAL_REF'
+    | 'DVT_HTTP_JSON_ARTIFACT_CREDENTIAL_REF',
   namespace: 'object-store:' | 'postgres:',
   ctx: z.RefinementCtx
 ): void {
@@ -142,6 +184,69 @@ function validateCredentialBinding(
       path: [field],
       message: `must use the ${namespace.slice(0, -1)} namespace`,
     });
+  }
+}
+
+function validateJsonBindings(
+  value: string | undefined,
+  field: 'DVT_HTTP_JSON_ENDPOINTS' | 'DVT_HTTP_JSON_AUTH_TOKENS',
+  keyPrefix: 'http-endpoint:' | 'http-auth:',
+  requireHttps: boolean,
+  ctx: z.RefinementCtx
+): void {
+  if (value === undefined || value.trim().length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [field],
+      message: `required when DVT_TEMPORAL_HTTP_JSON_ENABLED=true`,
+    });
+    return;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    parsed = undefined;
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: 'must be a JSON object' });
+    return;
+  }
+
+  const entries = Object.entries(parsed as Record<string, unknown>);
+  if (entries.length === 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: 'must not be empty' });
+    return;
+  }
+  for (const [key, binding] of entries) {
+    if (!key.startsWith(keyPrefix) || typeof binding !== 'string' || binding.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [field],
+        message: `keys must use ${keyPrefix} and values must be non-empty strings`,
+      });
+      continue;
+    }
+    if (requireHttps) {
+      try {
+        const endpoint = new globalThis.URL(binding);
+        if (
+          endpoint.protocol !== 'https:' ||
+          endpoint.username.length > 0 ||
+          endpoint.password.length > 0 ||
+          endpoint.hash.length > 0
+        ) {
+          throw new Error('invalid HTTPS endpoint');
+        }
+      } catch {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [field],
+          message: 'endpoint bindings must be credential-free https URLs',
+        });
+      }
+    }
   }
 }
 
