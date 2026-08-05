@@ -22,7 +22,7 @@ const objectFileLoadNode: CanonicalNode = {
   name: 'Load orders fixture',
   pluginId: 'dvt.object-file-postgres',
   kind: 'dvt:object_file_load',
-  role: 'input',
+  role: 'transform',
   status: 'idle',
   tags: ['ingestion'],
   metadata: {
@@ -54,6 +54,39 @@ const objectFileLoadNode: CanonicalNode = {
           nullable: false,
         },
       ],
+    },
+  },
+};
+
+const httpJsonAcquisitionNode: CanonicalNode = {
+  id: 'acquire-orders',
+  name: 'Acquire orders snapshot',
+  pluginId: 'dvt.http-json',
+  kind: 'dvt:http_json_acquisition',
+  role: 'input',
+  status: 'idle',
+  tags: ['acquisition'],
+  metadata: {
+    httpJsonArtifact: {
+      request: {
+        method: 'GET',
+        endpointRef: 'http-endpoint:orders',
+        headers: { accept: 'application/x-ndjson' },
+      },
+      response: {
+        acceptedStatus: 200,
+        format: 'jsonl',
+        mediaType: 'application/x-ndjson',
+        encoding: 'utf-8',
+        expectedSha256: 'a'.repeat(64),
+        expectedSizeBytes: 62,
+        maxBytes: 1_000,
+      },
+      artifact: {
+        storageUri: `s3://dvt-fixtures/tenants/tenant/${'a'.repeat(64)}`,
+        credentialRef: 'object-store:het1-fixture',
+      },
+      limits: { connectTimeoutMs: 1_000, requestTimeoutMs: 5_000, maxRedirects: 1 },
     },
   },
 };
@@ -148,6 +181,53 @@ const dependencyEdges: CanonicalEdge[] = [
 ];
 
 describe('canvas dbt planner graph source', () => {
+  it('projects the public HET2 acquisition, HET1 load, model, and test chain', () => {
+    const result = buildDbtPlannerGraphSource({
+      nodes: [httpJsonAcquisitionNode, objectFileLoadNode, modelNode, testNode],
+      edges: [
+        {
+          id: 'edge-acquire-load',
+          sourceId: httpJsonAcquisitionNode.id,
+          targetId: objectFileLoadNode.id,
+          relation: 'lineage',
+        },
+        {
+          id: 'edge-load-model',
+          sourceId: objectFileLoadNode.id,
+          targetId: modelNode.id,
+          relation: 'lineage',
+        },
+        {
+          id: 'edge-model-test',
+          sourceId: modelNode.id,
+          targetId: testNode.id,
+          relation: 'validation',
+        },
+      ],
+      scopedNodeIds: [httpJsonAcquisitionNode.id, objectFileLoadNode.id, modelNode.id, testNode.id],
+      executionScope: { tenantId: 'tenant', projectId: 'project', environmentId: 'dev' },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(
+      result.graphSource.nodes.map(({ nodeId, stepKind, dependsOn }) => ({
+        nodeId,
+        stepKind,
+        dependsOn,
+      }))
+    ).toEqual([
+      { nodeId: 'acquire-orders', stepKind: 'ACQUIRE_HTTP_JSON_ARTIFACT', dependsOn: [] },
+      {
+        nodeId: 'load-orders',
+        stepKind: 'LOAD_OBJECT_FILE_TO_POSTGRES',
+        dependsOn: ['acquire-orders'],
+      },
+      { nodeId: 'model-orders', stepKind: 'DBT_MODEL', dependsOn: ['load-orders'] },
+      { nodeId: 'test-orders', stepKind: 'DBT_TEST', dependsOn: ['model-orders'] },
+    ]);
+  });
+
   it('projects an object-file load as the executable dependency of DBT model and test steps', () => {
     const heterogeneousEdges: CanonicalEdge[] = [
       {

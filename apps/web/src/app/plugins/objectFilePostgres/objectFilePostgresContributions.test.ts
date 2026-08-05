@@ -14,7 +14,7 @@ const objectFileNode: CanonicalNode = {
   name: 'Load orders',
   pluginId: OBJECT_FILE_POSTGRES_PLUGIN_ID,
   kind: 'dvt:object_file_load',
-  role: 'input',
+  role: 'transform',
   status: 'idle',
   tags: [],
 };
@@ -36,15 +36,15 @@ describe('object-file PostgreSQL plugin contributions', () => {
     },
   } as const;
 
-  it('publishes one executable input node kind owned by the plugin', () => {
+  it('publishes one executable artifact-to-tabular transform kind owned by the plugin', () => {
     expect(objectFilePostgresContributions.backendPluginId).toBe(OBJECT_FILE_POSTGRES_PLUGIN_ID);
     expect(objectFilePostgresContributions.nodeKinds).toEqual([
       expect.objectContaining({
         kind: 'dvt:object_file_load',
         pluginId: OBJECT_FILE_POSTGRES_PLUGIN_ID,
-        role: 'input',
+        role: 'transform',
         previewStepKind: 'LOAD_OBJECT_FILE_TO_POSTGRES',
-        allowsIncoming: false,
+        allowsIncoming: true,
         allowsOutgoing: true,
       }),
     ]);

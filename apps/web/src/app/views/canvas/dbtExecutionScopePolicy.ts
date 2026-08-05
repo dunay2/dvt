@@ -1,8 +1,12 @@
 import type { ExecutionSelection, GenericGraphSourceV1 } from '@dvt/contracts';
-import { LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND } from '@dvt/contracts';
+import {
+  ACQUIRE_HTTP_JSON_ARTIFACT_STEP_KIND,
+  LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND,
+} from '@dvt/contracts';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { isObjectFilePostgresNode } from './objectFilePostgresAuthoringModel';
+import { isHttpJsonArtifactNode } from './httpJsonArtifactAuthoringModel';
 import {
   createCanvasExecutionSelectionIntent,
   type CanvasExecutionSelectionIntent,
@@ -22,6 +26,9 @@ export const DBT_EXECUTABLE_STEP_KIND_BY_NODE_KIND = {
 } as const;
 
 export function resolveDbtExecutableStepKind(node: Pick<CanonicalNode, 'pluginId' | 'kind'>) {
+  if (isHttpJsonArtifactNode(node)) {
+    return ACQUIRE_HTTP_JSON_ARTIFACT_STEP_KIND;
+  }
   if (isObjectFilePostgresNode(node)) {
     return LOAD_OBJECT_FILE_TO_POSTGRES_STEP_KIND;
   }

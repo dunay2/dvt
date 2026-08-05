@@ -18,6 +18,7 @@ import { DbtAuthoringFields } from './DbtAuthoringFields';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 import type { CanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
 import { ObjectFilePostgresAuthoringFields } from '../../plugins/objectFilePostgres/ObjectFilePostgresAuthoringFields';
+import { HttpJsonArtifactAuthoringFields } from '../../plugins/httpJson/HttpJsonArtifactAuthoringFields';
 
 type CanvasInspectorAuthoringSectionProps = Readonly<{
   node: CanonicalNode;
@@ -62,9 +63,17 @@ export function CanvasInspectorAuthoringSection({
       (section === 'code' && node.kind === 'dbt:model'));
   const showObjectFilePostgresAuthoring =
     draft.objectFilePostgres != null && (section === 'all' || section === 'general');
+  const showHttpJsonArtifactAuthoring =
+    draft.httpJsonArtifact != null && (section === 'all' || section === 'general');
   const dvtAuthoringSection = section === 'sink' ? 'general' : section;
 
-  if (!showGeneral && !showDvtAuthoring && !showDbtAuthoring && !showObjectFilePostgresAuthoring) {
+  if (
+    !showGeneral &&
+    !showDvtAuthoring &&
+    !showDbtAuthoring &&
+    !showObjectFilePostgresAuthoring &&
+    !showHttpJsonArtifactAuthoring
+  ) {
     return null;
   }
 
@@ -159,6 +168,18 @@ export function CanvasInspectorAuthoringSection({
             errors={errors.objectFilePostgres}
             onChange={(objectFilePostgres) =>
               setDraft((currentDraft) => ({ ...currentDraft, objectFilePostgres }))
+            }
+          />
+        ) : null}
+
+        {showHttpJsonArtifactAuthoring && draft.httpJsonArtifact ? (
+          <HttpJsonArtifactAuthoringFields
+            nodeId={node.id}
+            disabled={!authoring.canEditNode}
+            draft={draft.httpJsonArtifact}
+            errors={errors.httpJsonArtifact}
+            onChange={(httpJsonArtifact) =>
+              setDraft((currentDraft) => ({ ...currentDraft, httpJsonArtifact }))
             }
           />
         ) : null}
