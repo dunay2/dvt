@@ -14,6 +14,8 @@ describe('temporal worker env', () => {
     expect(env.SERVICE_NAME).toBe('dvt-temporal-worker');
     expect(env.DVT_TEMPORAL_DBT_ENABLED).toBe(false);
     expect(env.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED).toBe(false);
+    expect(env.DVT_TEMPORAL_HTTP_JSON_ENABLED).toBe(false);
+    expect(env.DVT_HTTP_JSON_ALLOW_LOOPBACK_FIXTURE).toBe(false);
     expect(env.DVT_OBJECT_FILE_S3_ENDPOINT).toBeUndefined();
     expect(env.DVT_OBJECT_FILE_S3_REGION).toBeUndefined();
     expect(env.DVT_OBJECT_FILE_S3_FORCE_PATH_STYLE).toBe(false);
@@ -22,6 +24,34 @@ describe('temporal worker env', () => {
     expect(env.DVT_RUNSTATE_CIRCUIT_BREAKER_FAILURE_THRESHOLD).toBe(3);
     expect(env.DVT_RUNSTATE_CIRCUIT_BREAKER_OPEN_DURATION_MS).toBe(10000);
     expect(env.DVT_RUNSTATE_CIRCUIT_BREAKER_OPERATION_TIMEOUT_MS).toBe(2000);
+  });
+
+  it('requires governed HTTP acquisition bindings and never permits the loopback fixture in production', () => {
+    const baseEnv = {
+      DATABASE_URL: 'postgres://user:pass@localhost:5432/dvt',
+      TEMPORAL_ADDRESS: 'temporal:7233',
+      TEMPORAL_NAMESPACE: 'default',
+      TEMPORAL_TASK_QUEUE: 'dvt-temporal',
+      DVT_TEMPORAL_HTTP_JSON_ENABLED: 'true',
+    };
+
+    expect(() => loadEnv(baseEnv)).toThrow(/DVT_HTTP_JSON_ENDPOINTS/);
+    expect(() =>
+      loadEnv({
+        ...baseEnv,
+        DVT_HTTP_JSON_ENDPOINTS: '{"http-endpoint:orders":"http://unsafe.test"}',
+        DVT_HTTP_JSON_ARTIFACT_CREDENTIAL_REF: 'object-store:het2-artifacts',
+      })
+    ).toThrow(/https/i);
+    expect(() =>
+      loadEnv({
+        ...baseEnv,
+        NODE_ENV: 'production',
+        DVT_HTTP_JSON_ENDPOINTS: '{"http-endpoint:orders":"https://orders.example.test"}',
+        DVT_HTTP_JSON_ARTIFACT_CREDENTIAL_REF: 'object-store:het2-artifacts',
+        DVT_HTTP_JSON_ALLOW_LOOPBACK_FIXTURE: 'true',
+      })
+    ).toThrow(/loopback/i);
   });
 
   it('accepts an explicit S3-compatible object-file endpoint', () => {

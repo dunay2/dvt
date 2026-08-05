@@ -9,9 +9,14 @@ import type {
   TemporalPlanArtifactReader,
   TemporalWorkerHostConfig,
 } from '@dvt/adapter-temporal';
-import type { IDbtProjectBundleReader, IRunExecutionContextReader } from '@dvt/artifacts';
+import type {
+  IContentAddressedArtifactStore,
+  IDbtProjectBundleReader,
+  IRunExecutionContextReader,
+} from '@dvt/artifacts';
 import type { AppendResult, EventInput, RunBootstrapInput } from '@dvt/engine';
 import type { DbtPluginRunner, IDbtRuntimeProfileResolver } from '@dvt/temporal-dbt-plugin';
+import type { HttpJsonAcquisitionClient } from '@dvt/temporal-http-json-plugin';
 import type {
   ContentAddressedObjectReader,
   ObjectFilePostgresRelationalLoader,
@@ -54,6 +59,8 @@ export interface CreateTemporalWorkerRuntimeOptions {
   planArtifactReaderFactory?: (env: Env) => TemporalPlanArtifactReader;
   postgresRelationalCapabilityFactory?: (env: Env) => TemporalWorkerPostgresCapability;
   objectFileReaderFactory?: (env: Env) => ContentAddressedObjectReader;
+  httpJsonClientFactory?: (env: Env) => HttpJsonAcquisitionClient;
+  contentAddressedArtifactStoreFactory?: (env: Env) => IContentAddressedArtifactStore;
   hostFactory?: (config: TemporalWorkerHostConfig) => TemporalWorkerHostLike;
   connectionFactory?: (config: TemporalAdapterConfig) => Promise<TemporalConnectionLike>;
   dbtAvailabilityProbe?: (dbtBin: string) => Promise<void>;
