@@ -8,7 +8,7 @@
  * @consequence Temporal continuation remains an implementation detail while DVT lifecycle state stays authoritative
  * @version 1.2.0
  */
-import type { MaterializationEvidence, TransformationExecutor } from '@dvt/contracts';
+import type { StepResultEvidence, TransformationExecutor } from '@dvt/contracts';
 import { continueAsNew, sleep } from '@temporalio/workflow';
 
 import { eventActivities } from './runPlanWorkflow.activities.js';
@@ -34,7 +34,7 @@ export async function resolveLayerLoopOutcome(args: {
   state: RuntimeWorkflowState;
   continuedAsNewCount: number;
   runtimeExecutor?: TransformationExecutor;
-  latestResultEvidence?: MaterializationEvidence;
+  latestResultEvidence?: StepResultEvidence;
 }): Promise<RunPlanWorkflowResult> {
   if (args.layerOutcome.kind === 'terminal') {
     return args.layerOutcome.result;
@@ -73,7 +73,7 @@ async function completeRunAfterLayerLoop(args: {
   state: RuntimeWorkflowState;
   continuedAsNewCount: number;
   runtimeExecutor?: TransformationExecutor;
-  latestResultEvidence?: MaterializationEvidence;
+  latestResultEvidence?: StepResultEvidence;
 }): Promise<RunPlanWorkflowResult> {
   await eventActivities.emitEvent({
     ctx: args.ctx,

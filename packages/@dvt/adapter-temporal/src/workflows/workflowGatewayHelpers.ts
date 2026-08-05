@@ -7,7 +7,7 @@
  * @consequence Temporal workflows cannot invent gateway semantics outside DVT plan interpretation
  * @version 1.2.0
  */
-import type { MaterializationEvidence } from '@dvt/contracts';
+import type { StepResultEvidence } from '@dvt/contracts';
 
 export function normalizeDependsOn(dependsOn: unknown): string[] {
   if (!Array.isArray(dependsOn)) {
@@ -72,7 +72,7 @@ export function resolveGatewayDependencyContext(
 export function buildCompletedStepFact(
   stepId: string,
   gatewayDecision?: boolean,
-  resultEvidence?: MaterializationEvidence
+  resultEvidence?: StepResultEvidence
 ): Record<string, unknown> {
   const fact: Record<string, unknown> = { stepId, status: 'COMPLETED' };
 

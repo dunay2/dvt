@@ -8,7 +8,7 @@
  * @consequence Provider continuation mechanics preserve canonical DVT layer progress and lifecycle evidence
  * @version 1.2.0
  */
-import type { MaterializationEvidence } from '@dvt/contracts';
+import type { StepResultEvidence } from '@dvt/contracts';
 
 import { eventActivities } from './runPlanWorkflow.activities.js';
 import type {
@@ -31,7 +31,7 @@ export function maybeBuildContinueAsNewOutcome(args: {
   processedLayersInCurrentExecution: number;
   gatewayDecisions: Record<string, boolean>;
   gatewayDependencyFacts: Record<string, Record<string, unknown>>;
-  latestResultEvidence?: MaterializationEvidence;
+  latestResultEvidence?: StepResultEvidence;
   skippedStepIds: ReadonlySet<string>;
   processedControlSignalIds: ReadonlySet<string>;
 }): LayerLoopOutcome | null {

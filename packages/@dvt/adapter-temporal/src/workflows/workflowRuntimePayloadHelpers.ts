@@ -8,13 +8,13 @@
  * @consequence Event-sourced terminal state remains portable and replayable across orchestration adapters
  * @version 1.2.0
  */
-import type { MaterializationEvidence, TransformationExecutor } from '@dvt/contracts';
+import type { StepResultEvidence, TransformationExecutor } from '@dvt/contracts';
 
 import { resolveContinuationFailureReason } from './workflowFailureReasonPolicy.js';
 
 export function buildRunCompletedPayload(
   runtimeExecutor: TransformationExecutor | undefined,
-  latestResultEvidence: MaterializationEvidence | undefined
+  latestResultEvidence: StepResultEvidence | undefined
 ): Record<string, unknown> | undefined {
   if (runtimeExecutor === undefined && latestResultEvidence === undefined) {
     return undefined;
