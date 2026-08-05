@@ -100,8 +100,10 @@ export class LocalWorkspaceFileBatchMutationGateway implements IWorkspaceFileBat
       }
 
       const currentByPath = await readCurrentRevisions(resolved.expectedFiles);
+      const validationOnly = resolved.writes.length === 0 && resolved.deletes.length === 0;
       if (
         previousReceipt !== null &&
+        !validationOnly &&
         workspaceFileBatchPostconditionsMatch(previousReceipt, currentByPath)
       ) {
         return toWorkspaceFileBatchReceipt(previousReceipt, true);
@@ -114,6 +116,9 @@ export class LocalWorkspaceFileBatchMutationGateway implements IWorkspaceFileBat
           : [{ path: file.workspacePath, currentContentSha256 }];
       });
       if (conflicts.length > 0) return { kind: 'conflict', conflicts };
+      if (previousReceipt !== null && validationOnly) {
+        return toWorkspaceFileBatchReceipt(previousReceipt, true);
+      }
 
       const receipt = buildStoredWorkspaceFileBatchReceipt(resolved, requestHash);
       const receiptContent = `${JSON.stringify(receipt)}\n`;

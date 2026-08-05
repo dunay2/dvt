@@ -78,23 +78,6 @@ export class PublishGraphDbtWorkspaceArtifactsCommand implements IPublishGraphDb
           current === null || sha256HexUtf8(proposed.content) !== current.contentSha256
       )
       .map(({ proposed }) => ({ path: proposed.path, content: proposed.content }));
-    if (writes.length === 0) {
-      return GraphDbtWorkspaceArtifactPublicationResultSchema.parse({
-        schemaVersion: 'graph-dbt-workspace-artifact-publication.v1',
-        kind: 'applied',
-        idempotencyKey: input.idempotencyKey,
-        requestHash: sha256HexUtf8(
-          JSON.stringify({
-            canvasId: input.canvasId,
-            artifacts: input.artifacts,
-            idempotencyKey: input.idempotencyKey,
-          })
-        ),
-        deduplicated: false,
-        writes: [],
-      });
-    }
-
     const result = await this.batchMutation.apply(input.scope, {
       expectedFiles: observedArtifacts.map(({ proposed, current }) => ({
         path: proposed.path,

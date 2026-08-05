@@ -193,6 +193,48 @@ describe('LocalWorkspaceFileBatchMutationGateway', () => {
     ).rejects.toBeInstanceOf(WorkspaceFileBatchIdempotencyConflictError);
   });
 
+  it('atomically revalidates validation-only batches instead of trusting an earlier receipt', async () => {
+    const firstPath = 'analytics/models/orders.sql';
+    const secondPath = 'analytics/models/schema.yml';
+    const firstContent = 'select 1\n';
+    const secondContent = 'version: 2\n';
+    await seed(firstPath, firstContent);
+    await seed(secondPath, secondContent);
+    const gateway = new LocalWorkspaceFileBatchMutationGateway({ root: namespaceRoot });
+    const validation: WorkspaceFileBatchMutation = {
+      idempotencyKey: 'graph-publication-validation',
+      expectedFiles: [
+        { path: firstPath, expectedContentSha256: sha256(firstContent) },
+        { path: secondPath, expectedContentSha256: sha256(secondContent) },
+      ],
+      writes: [],
+      deletes: [],
+    };
+
+    await expect(gateway.apply(SCOPE, validation)).resolves.toMatchObject({
+      kind: 'applied',
+      deduplicated: false,
+      writes: [],
+      deletes: [],
+    });
+    await expect(gateway.apply(SCOPE, validation)).resolves.toMatchObject({
+      kind: 'applied',
+      deduplicated: true,
+    });
+
+    await seed(secondPath, 'version: 3\n');
+
+    await expect(gateway.apply(SCOPE, validation)).resolves.toEqual({
+      kind: 'conflict',
+      conflicts: [
+        {
+          path: secondPath,
+          currentContentSha256: sha256('version: 3\n'),
+        },
+      ],
+    });
+  });
+
   it('rejects idempotency-key reuse when the expected revision changes', async () => {
     const gateway = new LocalWorkspaceFileBatchMutationGateway({ root: namespaceRoot });
     const workspacePath = 'analytics/models/sources/new.yml';

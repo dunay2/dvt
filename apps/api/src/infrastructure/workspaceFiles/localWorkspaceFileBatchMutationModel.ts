@@ -52,9 +52,14 @@ export function resolveLocalWorkspaceFileBatchMutation(input: {
       `A batch idempotency key between 1 and ${MAX_IDEMPOTENCY_KEY_LENGTH} characters is required.`
     );
   }
-  if (input.mutation.writes.length + input.mutation.deletes.length === 0) {
+  if (
+    input.mutation.expectedFiles.length +
+      input.mutation.writes.length +
+      input.mutation.deletes.length ===
+    0
+  ) {
     throw new InvalidWorkspaceFileBatchMutationError(
-      'A batch must write or delete at least one file.'
+      'A batch must validate, write, or delete at least one file.'
     );
   }
   if (input.mutation.expectedFiles.length > input.limits.maxBatchFiles) {
