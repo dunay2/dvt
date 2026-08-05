@@ -86,6 +86,7 @@ Risk records related to validation coverage, CI quality, and regression detectio
 - [Graph-authored dbt artifacts can diverge during publication](R-20260729-GRAPH-DBT-ATOMIC-PUBLICATION.yaml)
 - [Heterogeneous plan projection can drift across authoring and runtime plugins](R-20260805-HET1-PUBLIC-VERTICAL.yaml)
 - [Historical compile-boundary language could leak back into active contracts and route seams](R-20260419-PLAN-COMPILE-LANGUAGE-DRIFT.yaml)
+- [HTTP artifact acquisition can cross network or evidence boundaries](R-20260805-HET2-PUBLIC-VERTICAL.yaml)
 - [In-memory engine state-store invariant drift on snapshot and outbox paths](R-20260404-INMEMORY-STATE-STORE-INVARIANTS.yaml)
 - [Incremental snapshot checkpoint drift can mask replay assumptions](R-20260416-AR-D1-INCREMENTAL-SNAPSHOT-PROJECTION.yaml)
 - [Integration-smoke drift from shared schema test state in S08-4](R-20260403-S08-4-CI-REGRESSION-FIX.yaml)

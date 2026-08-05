@@ -1,0 +1,41 @@
+---
+id: R-20260805-HET2-PUBLIC-VERTICAL
+title: HTTP artifact acquisition can cross network or evidence boundaries
+status: Open
+date: 2026-08-05
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/artifacts
+  - packages/@dvt/temporal-http-json-plugin
+  - apps/temporal-worker
+  - apps/web
+severity: High
+probability: Low
+context: >
+  HET2 adds one bounded HTTPS JSON acquisition before the retained object-file loader and dbt route,
+  with endpoint and credential resolution owned by the Temporal worker.
+risk: >
+  A regression in endpoint allowlisting, DNS/IP validation, redirect handling, response bounds,
+  content-addressed publication, static loader handoff, or evidence mapping could permit SSRF,
+  overwrite an immutable object, execute bytes other than those reviewed in the plan, or expose
+  response and credential material in workflow history or run evidence.
+mitigations:
+  - 'Admit HTTPS GET only through opaque server-owned endpoint and credential references; reject
+    arbitrary URLs, methods, bodies, headers and dynamic output binding.'
+  - 'Validate every initial and redirected host through DNS/IP policy, pin the selected address,
+    require same-origin redirects, and reject loopback/private/link-local/metadata/multicast and
+    unspecified destinations outside the controlled non-production fixture.'
+  - 'Bound connect/request time, redirect count, decoded bytes, identity encoding, status, media
+    type, UTF-8, JSON/JSONL syntax, expected size and SHA-256.'
+  - 'Publish by conditional create to the exact tenant-scoped content address; verify identical
+    retries and refuse conflicts or loader handoff drift.'
+  - 'Keep activity results receipt-only and run a protected live proof that asserts tokens, URLs and
+    payload bytes are absent across success, refusal, failure, cancellation and recovery.'
+  - 'Guard the engine and generic Temporal adapter against HTTP-specific ownership and keep the
+    network implementation in the worker adapter.'
+residual_risk: >
+  The MVP covers one fixed JSON Lines representation, one authenticated HTTPS endpoint, one
+  S3-compatible store and PostgreSQL/dbt. Pagination, OAuth refresh, schema inference, remote
+  cloud-network variance and broader formats require separate contracts and evidence.
+review_after: 2026-09-05
+---
