@@ -50,6 +50,15 @@ export {
 } from './contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
 export type { LoadObjectFileToPostgresStepTypeConfig } from './contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
 export {
+  ACQUIRE_HTTP_JSON_ARTIFACT_MAX_BYTES,
+  ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY,
+  HttpJsonArtifactStepTypeConfigSchema,
+  validateHttpJsonArtifactPlanOwnership,
+  validateHttpJsonObjectFileHandoff,
+  validateHttpJsonArtifactHandoffs,
+} from './contracts/planner/HttpJsonArtifactStepTypeConfig.v1.js';
+export type { HttpJsonArtifactStepTypeConfig } from './contracts/planner/HttpJsonArtifactStepTypeConfig.v1.js';
+export {
   OBJECT_FILE_POSTGRES_DBT_BRIDGE_CUSTOM_KEY,
   OBJECT_FILE_POSTGRES_DBT_STAGING_SCHEMA_ENV,
   ObjectFilePostgresDbtBridgeSchema,

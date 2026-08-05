@@ -1,6 +1,7 @@
 import {
   createDefaultStepTypeRegistry,
   parseExecutionPlan,
+  validateHttpJsonArtifactHandoffs,
   type ExecutionPlan,
   type IStepTypeRegistry,
 } from '@dvt/contracts';
@@ -45,6 +46,11 @@ export function verifyStepTypeConfigsOrThrow(params: StepTypeConfigVerificationP
         `Invalid stepTypeConfig. stepId=${step.stepId} kind=${step.kind} reason=${validationResult.error}`
       );
     }
+  }
+
+  const handoffError = validateHttpJsonArtifactHandoffs(params.plan.steps);
+  if (handoffError !== undefined) {
+    throw new PlanVerifierError('INVALID_STEP_TYPE_CONFIG', handoffError);
   }
 }
 

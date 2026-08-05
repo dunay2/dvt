@@ -104,6 +104,26 @@ export interface MaterializationEvidence {
   durationMs: number;
 }
 
+export interface ArtifactAcquisitionEvidence {
+  evidenceType: 'artifact-acquisition';
+  environmentId: NonBlankString;
+  endpointRef: NonBlankString;
+  artifact: {
+    storageUri: NonBlankString;
+    sha256: Sha256HexString;
+    sizeBytes: number;
+    mediaType: NonBlankString;
+  };
+  publicationOutcome: 'created' | 'verified-existing';
+  statusCode: 200;
+  redirectCount: number;
+  startedAt: IsoUtcString;
+  completedAt: IsoUtcString;
+  durationMs: number;
+}
+
+export type StepResultEvidence = MaterializationEvidence | ArtifactAcquisitionEvidence;
+
 export interface TransformationFlowRuntimeBinding {
   previewProfile: NonBlankString;
   executor: TransformationExecutor;

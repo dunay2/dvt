@@ -4,7 +4,7 @@ import { CompiledCodeRefSchema, StepArtifactRefSchema } from '../step-registry/S
 
 import {
   IsoUtcStringSchema,
-  MaterializationEvidenceSchema,
+  StepResultEvidenceSchema,
   NonBlankStringSchema,
   StepIdSchema,
   StepStatusSchema,
@@ -59,7 +59,7 @@ const StepStartedPayloadSchema = z
 const StepCompletedPayloadSchema = z
   .object({
     gatewayDecision: z.boolean().optional(),
-    resultEvidence: MaterializationEvidenceSchema.optional(),
+    resultEvidence: StepResultEvidenceSchema.optional(),
   })
   .refine(
     (payload) => payload.gatewayDecision !== undefined || payload.resultEvidence !== undefined,
@@ -82,7 +82,7 @@ const StepFailedPayloadSchema = z
 const RunCompletedPayloadSchema = z
   .object({
     executor: TransformationExecutorSchema.optional(),
-    resultEvidence: MaterializationEvidenceSchema.optional(),
+    resultEvidence: StepResultEvidenceSchema.optional(),
   })
   .refine((payload) => payload.executor !== undefined || payload.resultEvidence !== undefined, {
     message: 'RunCompleted payload must contain executor or resultEvidence',

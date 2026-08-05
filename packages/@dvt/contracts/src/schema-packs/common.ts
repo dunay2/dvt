@@ -155,6 +155,33 @@ export const MaterializationEvidenceSchema = z
   })
   .strict();
 
+export const ArtifactAcquisitionEvidenceSchema = z
+  .object({
+    evidenceType: z.literal('artifact-acquisition'),
+    environmentId: NonBlankStringSchema,
+    endpointRef: NonBlankStringSchema,
+    artifact: z
+      .object({
+        storageUri: NonBlankStringSchema,
+        sha256: Sha256HexStringSchema,
+        sizeBytes: z.number().int().positive(),
+        mediaType: NonBlankStringSchema,
+      })
+      .strict(),
+    publicationOutcome: z.enum(['created', 'verified-existing']),
+    statusCode: z.literal(200),
+    redirectCount: z.number().int().min(0).max(5),
+    startedAt: IsoUtcStringSchema,
+    completedAt: IsoUtcStringSchema,
+    durationMs: z.number().int().nonnegative(),
+  })
+  .strict();
+
+export const StepResultEvidenceSchema = z.union([
+  MaterializationEvidenceSchema,
+  ArtifactAcquisitionEvidenceSchema,
+]);
+
 export const RunExecutionEvidenceSchema = z
   .object({
     activeStepId: StepIdSchema.optional(),
