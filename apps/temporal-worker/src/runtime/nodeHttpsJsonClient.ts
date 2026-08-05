@@ -84,7 +84,7 @@ export class NodeHttpsJsonClient implements HttpJsonAcquisitionClient {
     input: HttpJsonAcquireInput,
     redirectCount: number
   ): Promise<HttpJsonAcquireResult> {
-    const addresses = await this.lookupAddresses(url.hostname);
+    const addresses = await this.lookupAddresses(normalizeHttpsHostname(url.hostname));
     if (addresses.length === 0) reject('HTTP_JSON_NETWORK_TARGET_DENIED');
     const allowLoopback =
       this.options.allowLoopbackFixture === true && this.options.nodeEnv !== 'production';
@@ -330,8 +330,8 @@ function destroyBody(body: AsyncIterable<unknown>): void {
 
 function executeHttpsRequest(input: NodeHttpsTransportInput): Promise<NodeHttpsTransportResult> {
   return new Promise((resolve, rejectPromise) => {
-    const authority =
-      input.url.port.length > 0 ? `${input.url.hostname}:${input.url.port}` : input.url.hostname;
+    const authority = input.url.host;
+    const endpointHostname = normalizeHttpsHostname(input.url.hostname);
     const request = httpsRequest({
       protocol: 'https:',
       hostname: input.resolvedAddress,
@@ -339,7 +339,7 @@ function executeHttpsRequest(input: NodeHttpsTransportInput): Promise<NodeHttpsT
       port: input.url.port.length === 0 ? 443 : Number(input.url.port),
       path: `${input.url.pathname}${input.url.search}`,
       method: 'GET',
-      servername: isIP(input.url.hostname) === 0 ? input.url.hostname : undefined,
+      servername: isIP(endpointHostname) === 0 ? endpointHostname : undefined,
       rejectUnauthorized: true,
       ...(input.ca === undefined ? {} : { ca: input.ca }),
       headers: { ...input.headers, host: authority },
@@ -350,6 +350,7 @@ function executeHttpsRequest(input: NodeHttpsTransportInput): Promise<NodeHttpsT
       input.requestTimeoutMs
     );
     request.once('socket', (socket) => {
+      if (!shouldStartHttpsConnectTimer(socket)) return;
       const connectTimer = globalThis.setTimeout(
         () => request.destroy(new Error('HTTP_JSON_CONNECT_TIMEOUT')),
         input.connectTimeoutMs
@@ -374,6 +375,14 @@ function executeHttpsRequest(input: NodeHttpsTransportInput): Promise<NodeHttpsT
     });
     request.end();
   });
+}
+
+export function normalizeHttpsHostname(hostname: string): string {
+  return hostname.startsWith('[') && hostname.endsWith(']') ? hostname.slice(1, -1) : hostname;
+}
+
+export function shouldStartHttpsConnectTimer(socket: Readonly<{ connecting: boolean }>): boolean {
+  return socket.connecting;
 }
 
 function reject(code: string): never {

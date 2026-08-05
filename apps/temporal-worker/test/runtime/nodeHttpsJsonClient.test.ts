@@ -2,6 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   NodeHttpsJsonClient,
+  normalizeHttpsHostname,
+  shouldStartHttpsConnectTimer,
   type NodeHttpsTransport,
 } from '../../src/runtime/nodeHttpsJsonClient.js';
 
@@ -73,6 +75,32 @@ describe('NodeHttpsJsonClient', () => {
     });
     expect(lookupAddresses).toHaveBeenCalledTimes(2);
     expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it('normalizes bracketed IPv6 literals before lookup and TLS classification', async () => {
+    const lookupAddresses = vi.fn(async () => [
+      { address: '2606:4700:4700::1111', family: 6 as const },
+    ]);
+    const transport = vi.fn<NodeHttpsTransport>(async () => ({
+      statusCode: 200,
+      headers: { 'content-type': 'application/x-ndjson' },
+      body: chunks('{"order_id":1}\n'),
+    }));
+    const client = new NodeHttpsJsonClient({
+      endpoints: new Map([['http-endpoint:orders', 'https://[2606:4700:4700::1111]/data']]),
+      authTokens: new Map(),
+      lookupAddresses,
+      transport,
+    });
+
+    await expect(client.acquire(request())).resolves.toMatchObject({ statusCode: 200 });
+    expect(lookupAddresses).toHaveBeenCalledWith('2606:4700:4700::1111');
+    expect(normalizeHttpsHostname('[2606:4700:4700::1111]')).toBe('2606:4700:4700::1111');
+  });
+
+  it('only arms the connect timeout while the assigned socket is connecting', () => {
+    expect(shouldStartHttpsConnectTimer({ connecting: true })).toBe(true);
+    expect(shouldStartHttpsConnectTimer({ connecting: false })).toBe(false);
   });
 
   it('bounds same-origin redirect chains', async () => {
