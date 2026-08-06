@@ -175,6 +175,15 @@ export type CanvasViewCopy = {
   readonly workspaceOpenProjectCodeLabel: string;
   readonly workspaceActiveCanvasLabelTemplate: string;
   readonly workspaceTransformationKindLabel: string;
+  readonly projectExplorerTitle: string;
+  readonly projectExplorerDescription: string;
+  readonly projectExplorerCloseLabel: string;
+  readonly projectExplorerSearchLabel: string;
+  readonly projectExplorerSearchPlaceholder: string;
+  readonly projectExplorerEmptyMessage: string;
+  readonly projectExplorerListLabel: string;
+  readonly projectExplorerCurrentCanvasLabel: string;
+  readonly projectExplorerOpenCanvasTemplate: string;
   readonly toolbarExportSnapshotLabel: string;
   readonly toolbarImportSnapshotLabel: string;
   readonly projectSnapshotExportUnavailableMessage: string;

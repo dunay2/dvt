@@ -3,6 +3,8 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogClose,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '../../components/ui/dialog';
@@ -176,6 +178,17 @@ export function CanvasSettingsDialog({
             onToggle={() => onSetCanvasEmptyStateGuideVisible(!canvasEmptyStateGuideVisible)}
           />
         </div>
+        <DialogFooter className="border-t border-(--border-muted) bg-(--surface-panel-subtle) px-5 py-3">
+          <DialogClose asChild>
+            <button
+              type="button"
+              data-slot="canvas-settings-close-command"
+              className="rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) outline-none hover:bg-(--surface-elevated) focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)]"
+            >
+              {copy.canvasSettingsCloseLabel}
+            </button>
+          </DialogClose>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
