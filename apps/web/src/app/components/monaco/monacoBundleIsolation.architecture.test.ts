@@ -73,6 +73,7 @@ describe('Monaco bundle isolation architecture', () => {
     };
     const codeViewer = readAppSource('src/app/components/monaco/MonacoCodeViewer.tsx');
     const codeEditor = readAppSource('src/app/components/monaco/MonacoCodeEditor.tsx');
+    const codeSurfaceLoader = readAppSource('src/app/components/monaco/useMonacoCodeSurface.ts');
     const diffViewer = readAppSource('src/app/components/monaco/MonacoDiffViewer.tsx');
     const codeSurface = readAppSource('src/app/components/monaco/MonacoCodeSurface.tsx');
     const diffSurface = readAppSource('src/app/components/monaco/MonacoDiffSurface.tsx');
@@ -83,8 +84,9 @@ describe('Monaco bundle isolation architecture', () => {
     expect(viteConfig).toContain('resolveWebManualChunk');
     expect(viteConfig).toContain('manualChunks: resolveWebManualChunk');
 
-    expect(codeViewer).toContain("lazy(() => import('./MonacoCodeSurface'))");
-    expect(codeEditor).toContain("lazy(() => import('./MonacoCodeSurface'))");
+    expect(codeViewer).toContain('useMonacoCodeSurface');
+    expect(codeEditor).toContain('useMonacoCodeSurface');
+    expect(codeSurfaceLoader).toContain("import('./MonacoCodeSurface')");
     expect(diffViewer).toContain("lazy(() => import('./MonacoDiffSurface'))");
 
     for (const [modulePath, source] of [

@@ -30,7 +30,8 @@ describe('dbt project file Canvas architecture', () => {
     expect(view).toContain('CanvasShell');
     expect(view).toContain('buildDbtProjectFileCodeWorkbench');
     expect(codeWorkbench).toContain('SqlContextWorkbench');
-    expect(sqlWorkbench).toContain("lazy(() => import('../CodeView'))");
+    expect(sqlWorkbench).toContain('import CodeView, { type CodeViewFileScope');
+    expect(sqlWorkbench).not.toContain("lazy(() => import('../CodeView'))");
     expect(sqlWorkbench).toContain('publishRouteBootstrap={false}');
     expect(controller).not.toContain('useCanvasController');
     expect(composition).not.toContain('WorkspaceGraphAuthoringDraft');

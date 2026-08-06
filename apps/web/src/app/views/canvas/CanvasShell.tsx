@@ -180,7 +180,6 @@ export default function CanvasShell({
       panel: (
         <SqlContextWorkbench
           ref={codeWorkbenchRef}
-          loadingMessage={copy.sqlContextWorkbenchLoadingMessage}
           initialPath={isNodeCode ? graphDraftCodeTarget.path : undefined}
         />
       ),
@@ -189,7 +188,6 @@ export default function CanvasShell({
     scopedContextualWorkbenchId,
     graphDraftCodeTarget,
     copy.nodeWorkbenchCloseLabel,
-    copy.sqlContextWorkbenchLoadingMessage,
     copy.sqlContextWorkbenchMoveLabel,
     copy.sqlContextWorkbenchProjectDescription,
     copy.sqlContextWorkbenchNodeTitle,

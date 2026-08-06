@@ -103,7 +103,7 @@ describe('Code Monaco editable access architecture', () => {
     expect(workingTreeSync).toContain('WorkspaceFileRevisionConflictError');
     expect(workingTreeStatus).not.toContain('Save');
 
-    expect(codeEditor).toContain("lazy(() => import('./MonacoCodeSurface'))");
+    expect(codeEditor).toContain('useMonacoCodeSurface');
     expect(codeEditor).toContain('readOnly={false}');
     expect(codeEditor).toContain('onChange');
     expect(codeEditor).not.toContain('Cargando');
@@ -119,7 +119,7 @@ describe('Code Monaco editable access architecture', () => {
     expect(codeSurface).not.toContain('save');
 
     expect(canvasShell).toContain('<SqlContextWorkbench');
-    expect(sqlContextWorkbench).toContain("lazy(() => import('../CodeView'))");
+    expect(sqlContextWorkbench).toContain('import CodeView, { type CodeViewFileScope');
     expect(sqlContextWorkbench).toContain('publishRouteBootstrap={false}');
     expect(sqlContextWorkbench).not.toContain('useCodeWorkingTreeSync');
 

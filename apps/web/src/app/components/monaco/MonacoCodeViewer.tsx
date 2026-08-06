@@ -1,9 +1,6 @@
-/** Owned concern: lazy-load the Monaco code surface behind a route-safe read-only viewer API. */
-import { Suspense, lazy } from 'react';
-
+/** Owned concern: load the Monaco code surface behind a route-safe read-only viewer API. */
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME, MonacoViewerFallback } from './MonacoViewerFallback';
-
-const MonacoCodeSurface = lazy(() => import('./MonacoCodeSurface'));
+import { useMonacoCodeSurface } from './useMonacoCodeSurface';
 
 type MonacoCodeViewerProps = Readonly<{
   ariaLabel: string;
@@ -22,20 +19,19 @@ export function MonacoCodeViewer({
   path,
   value,
 }: MonacoCodeViewerProps) {
+  const MonacoCodeSurface = useMonacoCodeSurface();
+  if (MonacoCodeSurface == null) {
+    return <MonacoViewerFallback label={loadingLabel} containerClassName={containerClassName} />;
+  }
+
   return (
-    <Suspense
-      fallback={
-        <MonacoViewerFallback label={loadingLabel} containerClassName={containerClassName} />
-      }
-    >
-      <MonacoCodeSurface
-        ariaLabel={ariaLabel}
-        containerClassName={containerClassName}
-        language={language}
-        path={path}
-        readOnly={true}
-        value={value}
-      />
-    </Suspense>
+    <MonacoCodeSurface
+      ariaLabel={ariaLabel}
+      containerClassName={containerClassName}
+      language={language}
+      path={path}
+      readOnly={true}
+      value={value}
+    />
   );
 }
