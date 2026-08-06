@@ -403,6 +403,26 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.projectSnapshotMenuLabel',
     fallback: 'Project',
   },
+  workspaceImportDbtProjectLabel: {
+    key: 'canvas.workspace.importDbtProjectLabel',
+    fallback: 'Import dbt project',
+  },
+  workspaceExploreProjectLabel: {
+    key: 'canvas.workspace.exploreProjectLabel',
+    fallback: 'Explore project',
+  },
+  workspaceOpenProjectCodeLabel: {
+    key: 'canvas.workspace.openProjectCodeLabel',
+    fallback: 'Open project code',
+  },
+  workspaceActiveCanvasLabelTemplate: {
+    key: 'canvas.workspace.activeCanvasLabelTemplate',
+    fallback: 'Active canvas: {title}',
+  },
+  workspaceTransformationKindLabel: {
+    key: 'canvas.workspace.transformationKindLabel',
+    fallback: 'Transformation',
+  },
   toolbarExportSnapshotLabel: {
     key: 'canvas.toolbar.exportSnapshotLabel',
     fallback: 'Export',

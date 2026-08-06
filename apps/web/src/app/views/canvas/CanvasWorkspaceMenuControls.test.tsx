@@ -11,6 +11,7 @@ import {
   CanvasWorkspaceMenuControls,
 } from './CanvasWorkspaceMenuControls';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +30,7 @@ describe('CanvasWorkspaceMenuControls', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
     useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   });
 
   afterEach(() => {
@@ -36,6 +38,7 @@ describe('CanvasWorkspaceMenuControls', () => {
       root.unmount();
     });
     useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     container.remove();
     vi.clearAllMocks();
   });
@@ -147,6 +150,46 @@ describe('CanvasWorkspaceMenuControls', () => {
     expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe('dbt');
     expect(container.textContent).not.toContain('Export');
     expect(container.textContent).not.toContain('Import');
+  });
+
+  it('renders project commands and active canvas context in the configured language', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+
+    await act(async () => {
+      root.render(
+        <DropdownMenu open>
+          <DropdownMenuTrigger>Espacio de trabajo</DropdownMenuTrigger>
+          <DropdownMenuContent forceMount>
+            <CanvasWorkspaceMenuContributionRegistrar
+              activeCanvas={{ id: 'transformaciones', kind: 'transformation', title: 'Ventas' }}
+              canExportProjectSnapshot
+              canImportProjectSnapshot
+              canOpenProjectExplorer
+              canOpenProjectCode
+              canImportDbtProject
+              onExportProjectSnapshot={vi.fn()}
+              onImportProjectSnapshotFile={vi.fn()}
+              onOpenProjectExplorer={vi.fn()}
+              onOpenProjectCode={vi.fn()}
+              onImportDbtProject={vi.fn()}
+            />
+            <CanvasWorkspaceMenuControls />
+            <CanvasWorkspaceTopBarIdentity />
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    });
+
+    expect(document.body.textContent).toContain('Importar proyecto dbt');
+    expect(document.body.textContent).toContain('Explorar proyecto');
+    expect(document.body.textContent).toContain('Abrir código del proyecto');
+    expect(document.body.textContent).not.toContain('Open project code');
+    expect(
+      document.body
+        .querySelector('[data-slot="shell-active-canvas-identity"]')
+        ?.getAttribute('aria-label')
+    ).toBe('Canvas activo: Ventas');
+    expect(document.body.textContent).toContain('Transformación');
   });
 
   it('does not let a stale Workspace menu cleanup clear an active replacement contribution', async () => {
