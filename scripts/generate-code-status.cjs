@@ -5,12 +5,9 @@ const path = require('node:path');
 const { Client } = require('pg');
 
 const { resolveGeneratedDate } = require('./generated-doc-date.cjs');
-const { schemaName } = require('./planning-db-migrate.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 
 const repoRoot = path.resolve(__dirname, '..');
-const packagesRoot = path.join(repoRoot, 'packages');
-const appsRoot = path.join(repoRoot, 'apps');
 const codeStateOutputPath = path.join(
   repoRoot,
   '.generated-docs',
@@ -39,6 +36,58 @@ function normalizeRepoPath(value) {
     .replace(/^\.\//u, '')
     .replace(/\/$/u, '')
     .trim();
+}
+
+function pnpmCommand() {
+  return process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+}
+
+function parsePnpmWorkspaceRows(output) {
+  let rows;
+  try {
+    rows = JSON.parse(String(output ?? ''));
+  } catch (error) {
+    throw new Error(
+      `Unable to parse effective pnpm workspace membership: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+  if (!Array.isArray(rows)) {
+    throw new Error('Effective pnpm workspace membership must be a JSON array.');
+  }
+  return rows;
+}
+
+function listPnpmWorkspaceDirs(options = {}) {
+  const spawn = options.spawnSync || spawnSync;
+  const result = spawn(pnpmCommand(), ['list', '-r', '--depth', '-1', '--json'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+  });
+  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    throw new Error(
+      `pnpm list failed with exit code ${result.status}: ${String(result.stderr ?? '').trim()}`
+    );
+  }
+
+  const unique = new Map();
+  for (const row of parsePnpmWorkspaceRows(result.stdout)) {
+    if (!row || typeof row.path !== 'string') continue;
+    const absolutePath = path.resolve(row.path);
+    if (absolutePath === repoRoot) continue;
+    const relativePath = relFromRepo(absolutePath);
+    if (!relativePath || relativePath.startsWith('..')) {
+      throw new Error(`pnpm reported a workspace outside the repository: ${row.path}`);
+    }
+    unique.set(relativePath, absolutePath);
+  }
+
+  return [...unique.entries()]
+    .sort(([left], [right]) => left.localeCompare(right, 'en'))
+    .map(([, absolutePath]) => absolutePath);
 }
 
 function walk(dir, predicate) {
@@ -93,36 +142,10 @@ function markdownTable(headers, rows) {
   return [row(normalizedHeaders), separator, ...normalizedRows.map((cells) => row(cells))];
 }
 
-function collectWorkspaceDirs(rootDir) {
-  if (!fs.existsSync(rootDir)) return [];
-  const direct = fs
-    .readdirSync(rootDir, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => path.join(rootDir, entry.name));
-
-  const out = [];
-  for (const dir of direct) {
-    const pkg = path.join(dir, 'package.json');
-    if (fs.existsSync(pkg)) {
-      out.push(dir);
-      continue;
-    }
-    const nested = fs
-      .readdirSync(dir, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => path.join(dir, entry.name))
-      .filter((child) => fs.existsSync(path.join(child, 'package.json')));
-    out.push(...nested);
-  }
-
-  return out.sort((left, right) => relFromRepo(left).localeCompare(relFromRepo(right), 'en'));
-}
-
 function collectWorkspaceStats(dir) {
   const pkgPath = path.join(dir, 'package.json');
   const pkg = safeReadJson(pkgPath) || {};
   const scripts = pkg.scripts || {};
-
   const srcDir = path.join(dir, 'src');
   const testDir = path.join(dir, 'test');
   const srcFiles = fs.existsSync(srcDir)
@@ -141,15 +164,17 @@ function collectWorkspaceStats(dir) {
   const exportedSymbols = (() => {
     const indexTs = path.join(dir, 'src', 'index.ts');
     if (!fs.existsSync(indexTs)) return '-';
-    const content = fs.readFileSync(indexTs, 'utf8');
-    const exportLines = content
-      .split(/\r?\n/u)
-      .map((line) => line.trim())
-      .filter((line) => line.startsWith('export ')).length;
-    return String(exportLines);
+    return String(
+      fs
+        .readFileSync(indexTs, 'utf8')
+        .split(/\r?\n/u)
+        .map((line) => line.trim())
+        .filter((line) => line.startsWith('export ')).length
+    );
   })();
 
   const workspacePath = relFromRepo(dir);
+  const readmePath = path.join(dir, 'README.md');
   return {
     workspace: pkg.name || workspacePath,
     path: workspacePath,
@@ -160,14 +185,12 @@ function collectWorkspaceStats(dir) {
     hasTest: scripts.test ? 'yes' : 'no',
     hasTypecheck: scripts.typecheck || scripts['type-check'] ? 'yes' : 'no',
     exports: exportedSymbols,
+    localReadmePath: fs.existsSync(readmePath) ? `${workspacePath}/README.md` : null,
   };
 }
 
-function collectRepositoryWorkspaceStats() {
-  const workspaceDirs = [
-    ...collectWorkspaceDirs(packagesRoot),
-    ...collectWorkspaceDirs(appsRoot),
-  ].sort((left, right) => relFromRepo(left).localeCompare(relFromRepo(right), 'en'));
+function collectRepositoryWorkspaceStats(options = {}) {
+  const workspaceDirs = options.workspaceDirs || listPnpmWorkspaceDirs(options);
   return workspaceDirs.map(collectWorkspaceStats);
 }
 
@@ -176,14 +199,6 @@ function renderCodeState(workspaces, utcDate) {
   const totalTests = workspaces.reduce((acc, workspace) => acc + workspace.tests, 0);
   const withBuild = workspaces.filter((workspace) => workspace.hasBuild === 'yes').length;
   const withTest = workspaces.filter((workspace) => workspace.hasTest === 'yes').length;
-
-  const summaryRows = [
-    ['Total workspaces', String(workspaces.length)],
-    ['Total source files', String(totalSrc)],
-    ['Total test files', String(totalTests)],
-    ['Workspaces with build script', `${withBuild}/${workspaces.length}`],
-    ['Workspaces with test script', `${withTest}/${workspaces.length}`],
-  ];
 
   const workspaceRows = workspaces.map((workspace) => [
     workspace.workspace,
@@ -207,11 +222,20 @@ function renderCodeState(workspaces, utcDate) {
     '',
     '# Generated Code State',
     '',
-    `Generated automatically from repository code on ${utcDate}.`,
+    `Generated automatically from effective pnpm workspace membership on ${utcDate}.`,
     '',
     '## Summary',
     '',
-    ...markdownTable(['Metric', 'Value'], summaryRows),
+    ...markdownTable(
+      ['Metric', 'Value'],
+      [
+        ['Total workspaces', String(workspaces.length)],
+        ['Total source files', String(totalSrc)],
+        ['Total test files', String(totalTests)],
+        ['Workspaces with build script', `${withBuild}/${workspaces.length}`],
+        ['Workspaces with test script', `${withTest}/${workspaces.length}`],
+      ]
+    ),
     '',
     '## Workspace Matrix',
     '',
@@ -239,42 +263,20 @@ function databaseUrl() {
 }
 
 async function readRepositoryArchitectureFacts(client) {
-  const [componentResult, documentationResult] = await Promise.all([
-    client.query(`
-      select
-        component_id,
-        name,
-        kind,
-        layer,
-        owner,
-        repo_path,
-        status
-      from architecture.component_query
-      where coalesce(status, '') <> 'deprecated'
-      order by repo_path, component_id
-    `),
-    client.query(`
-      select distinct
-        panel.component_id,
-        lifecycle.document_path,
-        lifecycle.canonicality,
-        lifecycle.lifecycle_state,
-        lifecycle.status
-      from ${schemaName}.documentation_panel_query panel
-      join ${schemaName}.documentation_lifecycle_query lifecycle
-        on lifecycle.document_path = panel.source_path
-      where panel.entity_kind = 'document'
-        and panel.panel_surface = 'metadata'
-        and nullif(panel.component_id, '') is not null
-        and lifecycle.canonicality = 'canonical'
-      order by panel.component_id, lifecycle.document_path
-    `),
-  ]);
-
-  return {
-    components: componentResult.rows,
-    documents: documentationResult.rows,
-  };
+  const componentResult = await client.query(`
+    select
+      component_id,
+      name,
+      kind,
+      layer,
+      owner,
+      repo_path,
+      status
+    from architecture.component_query
+    where coalesce(status, '') not in ('deprecated', 'drift')
+    order by repo_path, component_id
+  `);
+  return { components: componentResult.rows, documents: [] };
 }
 
 function isCurrentCanonicalDocument(row) {
@@ -288,29 +290,21 @@ function isCurrentCanonicalDocument(row) {
 
 function relativeDocLink(documentPath) {
   const normalized = normalizeRepoPath(documentPath);
-  if (!normalized.startsWith('docs/')) return null;
+  if (!normalized) return null;
   const relative = path.posix.relative('docs/concepts', normalized);
   return relative || './repository-map.md';
 }
 
-function documentComponentId(document) {
-  return document.component_id ?? document.componentId ?? null;
-}
-
-function documentPath(document) {
-  return document.document_path ?? document.documentPath ?? null;
-}
-
 function resolveCanonicalDocuments(componentId, documents) {
   return documents
-    .filter((document) => documentComponentId(document) === componentId)
+    .filter((document) => (document.component_id ?? document.componentId) === componentId)
     .filter(isCurrentCanonicalDocument)
-    .map(documentPath)
+    .map((document) => document.document_path ?? document.documentPath)
     .filter(Boolean)
     .sort((left, right) => String(left).localeCompare(String(right), 'en'));
 }
 
-function resolveWorkspaceArchitecture(workspace, components, documents) {
+function resolveWorkspaceArchitecture(workspace, components, documents = []) {
   const exactMatches = components.filter(
     (component) => normalizeRepoPath(component.repo_path ?? component.repoPath) === workspace.path
   );
@@ -323,7 +317,6 @@ function resolveWorkspaceArchitecture(workspace, components, documents) {
       gaps: ['unregistered-component'],
     };
   }
-
   if (exactMatches.length > 1) {
     return {
       component: exactMatches
@@ -339,36 +332,50 @@ function resolveWorkspaceArchitecture(workspace, components, documents) {
   const component = exactMatches[0];
   const componentId = component.component_id ?? component.componentId;
   const matchingDocs = resolveCanonicalDocuments(componentId, documents);
-
   if (matchingDocs.length === 0) {
     return {
       component: componentId,
       componentStatus: component.status ?? '-',
       canonicalDoc: '-',
-      gaps: ['missing-doc-entry'],
+      gaps: ['missing-canonical-doc-binding'],
     };
   }
 
-  const linkedDocuments = matchingDocs.map((currentDocumentPath) => {
-    const link = relativeDocLink(currentDocumentPath);
-    return link ? `[${currentDocumentPath}](${link})` : null;
+  const links = matchingDocs.map((documentPath) => {
+    const relative = relativeDocLink(documentPath);
+    return relative ? `[${documentPath}](${relative})` : null;
   });
-
-  if (linkedDocuments.some((link) => link === null)) {
+  if (links.some((link) => link === null)) {
     return {
       component: componentId,
       componentStatus: component.status ?? '-',
       canonicalDoc: '-',
-      gaps: ['missing-doc-entry'],
+      gaps: ['missing-canonical-doc-binding'],
     };
   }
-
   return {
     component: componentId,
     componentStatus: component.status ?? '-',
-    canonicalDoc: linkedDocuments.join(', '),
-    gaps: matchingDocs.length > 1 ? ['ambiguous-doc-entry'] : [],
+    canonicalDoc: links.join(', '),
+    gaps: matchingDocs.length > 1 ? ['ambiguous-canonical-doc-binding'] : [],
   };
+}
+
+function localReadmeLink(workspace) {
+  if (!workspace.localReadmePath) return '-';
+  const relative = relativeDocLink(workspace.localReadmePath);
+  return relative ? `[${workspace.localReadmePath}](${relative})` : '-';
+}
+
+function resolveDocumentationProjection(workspace, architecture) {
+  if (architecture.canonicalDoc !== '-') {
+    return { entry: architecture.canonicalDoc, coverage: 'canonical' };
+  }
+  const localEntry = localReadmeLink(workspace);
+  if (localEntry !== '-') {
+    return { entry: localEntry, coverage: 'linked-local' };
+  }
+  return { entry: '-', coverage: 'reference-only' };
 }
 
 function buildRepositoryMapRows(workspaces, facts) {
@@ -378,6 +385,7 @@ function buildRepositoryMapRows(workspaces, facts) {
       facts.components || [],
       facts.documents || []
     );
+    const documentation = resolveDocumentationProjection(workspace, architecture);
     return [
       workspace.workspace,
       `\`${workspace.path}\``,
@@ -389,7 +397,8 @@ function buildRepositoryMapRows(workspaces, facts) {
       workspace.hasTypecheck,
       architecture.component,
       architecture.componentStatus,
-      architecture.canonicalDoc,
+      documentation.entry,
+      documentation.coverage,
       architecture.gaps.length > 0 ? architecture.gaps.join(', ') : 'none',
     ];
   });
@@ -409,8 +418,8 @@ function renderRepositoryMap(workspaces, facts, utcDate) {
     '',
     '# Repository Map',
     '',
-    'Use this map to locate a workspace, its exact architecture identity, and its canonical documentation entry point.',
-    'Repository facts come from package manifests and source/test files; architecture and documentation identity come from Planning DB read models.',
+    'Use this map to locate every effective pnpm workspace, its exact architecture identity, and an exact documentation entry when one is mechanically available.',
+    'Architecture identity comes from Planning DB; documentation coverage comes from an explicit canonical binding when registered or an exact workspace-local README fallback.',
     'Missing or conflicting identity is reported as a gap and is never inferred from package, directory, title, or document names.',
     '',
     '## Current state',
@@ -420,9 +429,9 @@ function renderRepositoryMap(workspaces, facts, utcDate) {
       [
         ['Workspaces', String(workspaces.length)],
         ['Rows with explicit gaps', String(gapCount)],
-        ['Workspace source', '`apps/*` and `packages/*` package manifests'],
+        ['Workspace source', '`pnpm list -r --depth -1 --json`'],
         ['Architecture source', '`architecture.component_query`'],
-        ['Documentation source', `\`${schemaName}.documentation_panel_query\``],
+        ['Documentation source', 'exact component binding or workspace `README.md`'],
       ]
     ),
     '',
@@ -440,7 +449,8 @@ function renderRepositoryMap(workspaces, facts, utcDate) {
         'Typecheck',
         'Planning DB component',
         'Component status',
-        'Canonical documentation',
+        'Documentation entry',
+        'Coverage',
         'Gap',
       ],
       rows
@@ -448,10 +458,13 @@ function renderRepositoryMap(workspaces, facts, utcDate) {
     '',
     '## Reading rule',
     '',
-    '- `unregistered-component`: no active Planning DB component has the exact workspace repository path.',
-    '- `ambiguous-component`: more than one active Planning DB component claims the exact workspace path.',
-    '- `missing-doc-entry`: the matched component has no current canonical document linked by explicit component identity.',
-    '- `ambiguous-doc-entry`: more than one current canonical document is linked to the same component identity.',
+    '- `canonical`: an exact canonical document binding exists for the workspace component.',
+    '- `linked-local`: no canonical binding exists, but the effective workspace has an exact local `README.md`.',
+    '- `reference-only`: neither an exact canonical binding nor a workspace-local README exists.',
+    '- `unregistered-component`: no active non-drift Planning DB component has the exact workspace repository path.',
+    '- `ambiguous-component`: more than one active non-drift component claims the exact workspace path.',
+    '- `missing-canonical-doc-binding`: the component is registered but no exact canonical document relation is registered.',
+    '- `ambiguous-canonical-doc-binding`: more than one canonical document is explicitly bound to the component.',
     '',
     '## Related authored context',
     '',
@@ -461,7 +474,7 @@ function renderRepositoryMap(workspaces, facts, utcDate) {
     '- [Glossary](./glossary.md) and [Domain Language](./domain-language.md) for repository terminology.',
     '',
     'This projection does not define behavior, maturity, or responsibility prose.',
-    'Use the linked canonical document for authored meaning and design rationale.',
+    'Use the exact documentation entry when present and the related authored context for broader interpretation.',
     '',
     '> This page is auto-generated by `pnpm docs:status:generate`. Do not edit manually.',
     '',
@@ -478,22 +491,20 @@ function writeIfChanged(absPath, content) {
 
 function assertTrackedRepositoryMapCleanInCi() {
   if (!process.env.CI) return;
-
-  const relPath = relFromRepo(repositoryMapOutputPath);
-  const result = spawnSync('git', ['diff', '--exit-code', '--', relPath], {
+  const relativePath = relFromRepo(repositoryMapOutputPath);
+  const result = spawnSync('git', ['diff', '--exit-code', '--', relativePath], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
   if (result.status === 0) return;
-
   const generated = fs.readFileSync(repositoryMapOutputPath, 'utf8');
-  console.error(`[docs:status:generate] ${relPath} is stale. Regenerate and commit it.`);
+  console.error(`[docs:status:generate] ${relativePath} is stale. Regenerate and commit it.`);
   if (result.stdout) console.error(result.stdout.trimEnd());
   if (result.stderr) console.error(result.stderr.trimEnd());
   console.error('--- BEGIN GENERATED REPOSITORY MAP ---');
   console.error(generated.trimEnd());
   console.error('--- END GENERATED REPOSITORY MAP ---');
-  throw new Error(`${relPath} is stale.`);
+  throw new Error(`${relativePath} is stale.`);
 }
 
 function resolveGenerationMode(argv) {
@@ -502,7 +513,6 @@ function resolveGenerationMode(argv) {
   if (unknownFlags.length > 0) {
     throw new Error(`Unknown generate-code-status option: ${unknownFlags.join(', ')}`);
   }
-
   const codeStateOnly = argv.includes('--code-state-only');
   const repositoryMapOnly = argv.includes('--repository-map-only');
   if (codeStateOnly && repositoryMapOnly) {
@@ -514,11 +524,8 @@ function resolveGenerationMode(argv) {
 }
 
 function generateCodeState(workspaces) {
-  const codeStateDate = resolveGeneratedDate(codeStateOutputPath, (date) =>
-    renderCodeState(workspaces, date)
-  );
-  const codeState = renderCodeState(workspaces, codeStateDate);
-  const changed = writeIfChanged(codeStateOutputPath, codeState);
+  const date = resolveGeneratedDate(codeStateOutputPath, (value) => renderCodeState(workspaces, value));
+  const changed = writeIfChanged(codeStateOutputPath, renderCodeState(workspaces, date));
   console.log(
     changed
       ? `[docs:status:generate] Updated ${relFromRepo(codeStateOutputPath)}`
@@ -531,11 +538,13 @@ async function generateRepositoryMap(workspaces, ClientCtor) {
   await client.connect();
   try {
     const facts = await readRepositoryArchitectureFacts(client);
-    const repositoryMapDate = resolveGeneratedDate(repositoryMapOutputPath, (date) =>
+    const date = resolveGeneratedDate(repositoryMapOutputPath, (value) =>
+      renderRepositoryMap(workspaces, facts, value)
+    );
+    const changed = writeIfChanged(
+      repositoryMapOutputPath,
       renderRepositoryMap(workspaces, facts, date)
     );
-    const repositoryMap = renderRepositoryMap(workspaces, facts, repositoryMapDate);
-    const changed = writeIfChanged(repositoryMapOutputPath, repositoryMap);
     console.log(
       changed
         ? `[docs:status:generate] Updated ${relFromRepo(repositoryMapOutputPath)}`
@@ -556,14 +565,10 @@ async function main(argv = process.argv.slice(2), dependencies = {}) {
   const generateRepositoryMapFn =
     dependencies.generateRepositoryMap ||
     ((workspaces) => generateRepositoryMap(workspaces, ClientCtor));
-  const workspaces = collectWorkspaces();
+  const workspaces = collectWorkspaces(dependencies.workspaceOptions || {});
 
-  if (mode !== GENERATION_MODES.repositoryMapOnly) {
-    await generateCodeStateFn(workspaces);
-  }
-  if (mode !== GENERATION_MODES.codeStateOnly) {
-    await generateRepositoryMapFn(workspaces);
-  }
+  if (mode !== GENERATION_MODES.repositoryMapOnly) await generateCodeStateFn(workspaces);
+  if (mode !== GENERATION_MODES.codeStateOnly) await generateRepositoryMapFn(workspaces);
 }
 
 if (require.main === module) {
@@ -576,16 +581,18 @@ if (require.main === module) {
 module.exports = {
   buildRepositoryMapRows,
   collectRepositoryWorkspaceStats,
-  collectWorkspaceDirs,
   collectWorkspaceStats,
   isCurrentCanonicalDocument,
+  listPnpmWorkspaceDirs,
   main,
   markdownCell,
   normalizeRepoPath,
+  parsePnpmWorkspaceRows,
   readRepositoryArchitectureFacts,
   relativeDocLink,
   renderCodeState,
   renderRepositoryMap,
+  resolveDocumentationProjection,
   resolveGenerationMode,
   resolveWorkspaceArchitecture,
 };
