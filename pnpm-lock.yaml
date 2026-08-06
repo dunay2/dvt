@@ -616,9 +616,15 @@ importers:
       '@xterm/xterm':
         specifier: ^6.0.0
         version: 6.0.0
+      axe-core:
+        specifier: 4.13.0
+        version: 4.13.0
       cypress:
         specifier: 15.18.1
         version: 15.18.1
+      cypress-axe:
+        specifier: ^1.7.0
+        version: 1.7.0(axe-core@4.13.0)(cypress@15.18.1)
       jsdom:
         specifier: ^29.1.0
         version: 29.1.0
@@ -5060,6 +5066,10 @@ packages:
   aws4@1.13.2:
     resolution: {integrity: sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==}
 
+  axe-core@4.13.0:
+    resolution: {integrity: sha512-UzGt8zg7Ny8djbYMhxl2zuEevVa7r2gJjYY5Lwr1xM7+XU2nd6CkIWFTVcCIbAP63vSz71NaVyyuSk9lHKcy0A==}
+    engines: {node: '>=4'}
+
   axios@1.14.0:
     resolution: {integrity: sha512-3Y8yrqLSwjuzpXuZ0oIYZ/XGgLwUIBU3uLvbcpb0pidD9ctpShJd43KSlEEkVQg6DS0G9NKyzOvBfUtDKEyHvQ==}
 
@@ -5336,6 +5346,13 @@ packages:
 
   csv-parse@7.0.2:
     resolution: {integrity: sha512-uKZghv9UmPkMVLYy//KZ9HFAIJsl7wkhoEdIL0+rhuSY9pZQlhaeGEDPIe+/w7eh81MOql8Q/9+inAGWG6ZHYA==}
+
+  cypress-axe@1.7.0:
+    resolution: {integrity: sha512-zzJpvAAjauEB3GZl0KYXb8i3w6MztWAt2WM3czYTFyNVC30alDmqCm9E7GwZ4bgkldZJlmHakaVEyu73R5St4w==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      axe-core: ^3 || ^4
+      cypress: ^10 || ^11 || ^12 || ^13 || ^14 || ^15
 
   cypress@15.18.1:
     resolution: {integrity: sha512-JtkTVtUE2lvLYgZCaug+Uai0H9IqsJirlBO49c87QwG0bJUGvAUVBz1EJve0b0oaYP244Ew9M0BkrHpcqkYxmw==}
@@ -12972,6 +12989,8 @@ snapshots:
 
   aws4@1.13.2: {}
 
+  axe-core@4.13.0: {}
+
   axios@1.14.0(debug@4.4.3):
     dependencies:
       follow-redirects: 1.15.11(debug@4.4.3)
@@ -13240,6 +13259,11 @@ snapshots:
   csstype@3.2.3: {}
 
   csv-parse@7.0.2: {}
+
+  cypress-axe@1.7.0(axe-core@4.13.0)(cypress@15.18.1):
+    dependencies:
+      axe-core: 4.13.0
+      cypress: 15.18.1
 
   cypress@15.18.1:
     dependencies:
