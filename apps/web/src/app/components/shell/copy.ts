@@ -50,6 +50,14 @@ export type ShellTopBarCopy = {
   readonly offlineTooltipFallback: string;
   readonly degraded: string;
   readonly degradedTooltipFallback: string;
+  readonly restApiLabel: string;
+  readonly liveEventsLabel: string;
+  readonly canvasRunStatusTemplate: string;
+  readonly runningTemplate: string;
+  readonly runReady: string;
+  readonly previewRequired: string;
+  readonly runBlocked: string;
+  readonly runCommand: string;
 };
 
 const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
@@ -137,6 +145,17 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
     key: 'shell.degradedTooltipFallback',
     fallback: 'Platform in degraded state',
   },
+  restApiLabel: { key: 'shell.restApiLabel', fallback: 'REST API' },
+  liveEventsLabel: { key: 'shell.liveEventsLabel', fallback: 'Live events' },
+  canvasRunStatusTemplate: {
+    key: 'shell.canvasRunStatusTemplate',
+    fallback: 'Canvas run status: {status}',
+  },
+  runningTemplate: { key: 'shell.runningTemplate', fallback: 'Running {runId}' },
+  runReady: { key: 'shell.runReady', fallback: 'Ready' },
+  previewRequired: { key: 'shell.previewRequired', fallback: 'Preview required' },
+  runBlocked: { key: 'shell.runBlocked', fallback: 'Run blocked' },
+  runCommand: { key: 'shell.runCommand', fallback: 'Run' },
 };
 
 const COPY_ES: ShellTopBarCopy = {
@@ -188,6 +207,14 @@ const COPY_ES: ShellTopBarCopy = {
   offlineTooltipFallback: 'No se puede alcanzar /healthz',
   degraded: 'Degradado',
   degradedTooltipFallback: 'Plataforma en estado degradado',
+  restApiLabel: 'API REST',
+  liveEventsLabel: 'Eventos en vivo',
+  canvasRunStatusTemplate: 'Estado de ejecución del Canvas: {status}',
+  runningTemplate: 'Ejecutando {runId}',
+  runReady: 'Lista',
+  previewRequired: 'Vista previa obligatoria',
+  runBlocked: 'Ejecución bloqueada',
+  runCommand: 'Ejecutar',
 };
 
 function resolveShellTopBarLanguage(locale?: string): 'en' | 'es' {
@@ -265,5 +292,13 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     offlineTooltipFallback: resolveString(COPY_BY_KEY.offlineTooltipFallback, locale),
     degraded: resolveString(COPY_BY_KEY.degraded, locale),
     degradedTooltipFallback: resolveString(COPY_BY_KEY.degradedTooltipFallback, locale),
+    restApiLabel: resolveString(COPY_BY_KEY.restApiLabel, locale),
+    liveEventsLabel: resolveString(COPY_BY_KEY.liveEventsLabel, locale),
+    canvasRunStatusTemplate: resolveString(COPY_BY_KEY.canvasRunStatusTemplate, locale),
+    runningTemplate: resolveString(COPY_BY_KEY.runningTemplate, locale),
+    runReady: resolveString(COPY_BY_KEY.runReady, locale),
+    previewRequired: resolveString(COPY_BY_KEY.previewRequired, locale),
+    runBlocked: resolveString(COPY_BY_KEY.runBlocked, locale),
+    runCommand: resolveString(COPY_BY_KEY.runCommand, locale),
   };
 }

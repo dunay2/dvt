@@ -44,7 +44,11 @@ export const dvtContributions: PluginContributions = {
       },
       placement: {
         kind: 'shell-nav',
-        label: 'Templates',
+        label: {
+          key: 'navigation.templates',
+          fallback: 'Templates',
+          translations: { es: 'Plantillas' },
+        },
         icon: FileCode2,
         order: 60,
         level: 'extended',
@@ -68,6 +72,18 @@ export const dvtContributions: PluginContributions = {
         title: 'Start transformation canvas',
         editableMessage:
           'Start this transformation canvas by adding a governed source, SQL transform, or sink node.',
+      },
+      localizedCopy: {
+        es: {
+          label: 'Transformación',
+          description: 'Canvas de flujo para el borrador protegido de autoría.',
+          createTitle: 'Canvas de transformación',
+          emptyState: {
+            title: 'Inicia el canvas de transformación',
+            editableMessage:
+              'Inicia este canvas añadiendo un origen gobernado, una transformación SQL o una salida.',
+          },
+        },
       },
       nodeKinds: DVT_AUTHORING_NODE_KINDS,
     },

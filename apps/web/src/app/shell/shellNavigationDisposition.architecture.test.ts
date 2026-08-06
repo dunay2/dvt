@@ -36,7 +36,9 @@ describe('shell navigation disposition architecture', () => {
       'docs/architecture/components/web/shell-navigation-disposition-component.md'
     );
 
-    expect(rootSource).toContain('buildShellRuntimeState(capabilitiesQuery.data).navigationModel');
+    expect(rootSource).toContain(
+      'buildShellRuntimeState(capabilitiesQuery.data, applicationLanguage).navigationModel'
+    );
     expect(rootSource).toContain('navigationModel={navigationModel}');
     expect(topBarSource).toContain('navigationModel');
     expect(menuSource).toContain('shell-menu-navigation-link');

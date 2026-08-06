@@ -45,7 +45,11 @@ export const costContributions: PluginContributions = {
       },
       placement: {
         kind: 'shell-nav',
-        label: 'Cost',
+        label: {
+          key: 'navigation.cost',
+          fallback: 'Cost',
+          translations: { es: 'Coste' },
+        },
         icon: DollarSign,
         order: 25,
         level: 'extended',

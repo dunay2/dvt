@@ -6,13 +6,29 @@ import type { AppRouteHandle } from '../../bootstrap/routeBootstrapContract';
 import type { CanonicalNode, CoreNodeRole, PluginNodeKind } from '../../types/canonical';
 
 // ---------------------------------------------------------------------------
-// Localizable strings — v1 uses fallback, v2 loads locale dictionary
+// Localizable strings — plugin-owned fallback plus explicit locale translations
 // ---------------------------------------------------------------------------
 
-export type LocalizableString = string | { key: string; fallback: string };
+export type LocalizableString =
+  | string
+  | {
+      key: string;
+      fallback: string;
+      translations?: Readonly<Record<string, string>>;
+    };
 
-export function resolveString(s: LocalizableString, _locale?: string): string {
+export function resolveString(s: LocalizableString, locale?: string): string {
   if (typeof s === 'string') return s;
+
+  const normalizedLocale = locale?.trim().toLowerCase();
+  if (normalizedLocale) {
+    const language = normalizedLocale.split('-')[0] ?? normalizedLocale;
+    const translated = s.translations?.[normalizedLocale] ?? s.translations?.[language];
+    if (translated) {
+      return translated;
+    }
+  }
+
   return s.fallback;
 }
 

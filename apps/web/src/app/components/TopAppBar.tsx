@@ -89,7 +89,7 @@ export function ShellTopBar({
           connectionDetail={connectionDetail}
           copy={copy}
         />
-        <ShellRunStatusIndicator contribution={operationalDrawerContribution} />
+        <ShellRunStatusIndicator contribution={operationalDrawerContribution} copy={copy} />
         {exposeWorkspaceNavigationMenu && (
           <ShellMenu
             kind="workspace"

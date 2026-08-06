@@ -52,6 +52,39 @@ describe('buildShellNavigationModel', () => {
     expect(model.footerItems.every((item) => item.source === 'shell')).toBe(true);
   });
 
+  it('resolves plugin and shell navigation labels with the selected application language', () => {
+    const model = buildShellNavigationModel(
+      [
+        {
+          pluginId: 'monitoring',
+          id: 'monitoring.runs',
+          path: '/runs',
+          component: (() => null) as never,
+          handle: {
+            routeBootstrap: createPublishedRouteBootstrapHandle({
+              pendingDetail: 'Preparing runs route',
+            }),
+          },
+          placement: {
+            kind: 'shell-nav',
+            label: {
+              key: 'navigation.runs',
+              fallback: 'Runs',
+              translations: { es: 'Ejecuciones' },
+            },
+            icon: GitCompareArrows,
+            order: 20,
+            level: 'core',
+          },
+        },
+      ],
+      'es-ES'
+    );
+
+    expect(model.primaryItems.map((item) => item.label)).toEqual(['Ejecuciones']);
+    expect(model.footerItems.map((item) => item.label)).toEqual(['Plugins', 'Administración']);
+  });
+
   it('refuses Canvas workbench tab placements at the shell navigation boundary', () => {
     expect(() =>
       buildShellNavigationModel([

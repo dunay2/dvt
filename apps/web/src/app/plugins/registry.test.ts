@@ -5,6 +5,7 @@ import type { InspectorPanelContribution } from './contracts/PluginManifest';
 import {
   getBottomDiagnosticsContributions,
   getCommandPaletteContributions,
+  getAllCanvasKinds,
   getAllOverlays,
   getNodeBadges,
   getInspectorPanels,
@@ -61,6 +62,21 @@ function buildCanonicalNode(): CanonicalNode {
 }
 
 describe('plugin runtime projection', () => {
+  it('projects plugin-owned Canvas copy in the selected language', () => {
+    const transformation = getAllCanvasKinds(undefined, 'es-ES').find(
+      (registration) => registration.kind === 'transformation'
+    );
+
+    expect(transformation).toMatchObject({
+      label: 'Transformación',
+      createTitle: 'Canvas de transformación',
+      emptyState: {
+        title: 'Inicia el canvas de transformación',
+      },
+    });
+    expect(transformation?.emptyState.editableMessage).not.toContain('Start this');
+  });
+
   it('excludes backend-backed plugins until the backend publishes an available capability row', () => {
     const backendPlugin = PLUGIN_REGISTRY.find((plugin) => plugin.backendPluginId);
 

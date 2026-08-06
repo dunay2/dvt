@@ -21,7 +21,7 @@ function buildCanvasKind(overrides?: Partial<CanvasKindRegistration>): CanvasKin
 
 describe('resolveCanvasTemplatePresentation', () => {
   it('keeps registry copy as the English fallback', () => {
-    const presentation = resolveCanvasTemplatePresentation(buildCanvasKind(), 'en-US');
+    const presentation = resolveCanvasTemplatePresentation(buildCanvasKind());
 
     expect(presentation.title).toBe('Transformation canvas');
     expect(presentation.description).toBe(
@@ -29,26 +29,20 @@ describe('resolveCanvasTemplatePresentation', () => {
     );
   });
 
-  it('resolves built-in dbt and transformation templates in Spanish locale', () => {
-    const transformation = resolveCanvasTemplatePresentation(buildCanvasKind(), 'es-ES');
+  it('uses the already localized registry projection without a second copy authority', () => {
     const dbt = resolveCanvasTemplatePresentation(
       buildCanvasKind({
         kind: 'dbt',
         pluginId: 'dbt',
         label: 'dbt',
-        description: 'Model-first canvas for dbt resources and dependencies.',
-        createTitle: 'dbt canvas',
-      }),
-      'es-ES'
+        description: 'Canvas basado en modelos para recursos y dependencias dbt.',
+        createTitle: 'Canvas dbt',
+      })
     );
 
-    expect(transformation).toMatchObject({
-      title: 'Canvas de transformacion',
-      description: 'Canvas de flujo para el borrador protegido de autoria.',
-    });
     expect(dbt).toMatchObject({
       title: 'Canvas dbt',
-      description: 'Canvas basado en modelo para recursos y dependencias dbt.',
+      description: 'Canvas basado en modelos para recursos y dependencias dbt.',
     });
   });
 });
