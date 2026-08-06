@@ -142,4 +142,29 @@ describe('ProjectOnboardingView', () => {
         ?.className.includes('bg-(--surface-app)')
     ).toBe(true);
   });
+
+  it('changes presentation language without refetching the authorized project catalog', async () => {
+    const listProjects = vi.fn(buildProjectOnboardingService().listProjects);
+
+    mounted = await withTestQueryClient(
+      <ProjectOnboardingView
+        onProjectCreated={vi.fn()}
+        service={buildProjectOnboardingService({ listProjects })}
+      />
+    );
+
+    await waitForReactQuery(() => listProjects.mock.calls.length === 1, {
+      description: 'initial project catalog request',
+    });
+
+    act(() => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    });
+
+    await waitForReactQuery(
+      () => mounted?.container.textContent?.includes('Elige o crea un proyecto') === true,
+      { description: 'reactive onboarding language' }
+    );
+    expect(listProjects).toHaveBeenCalledTimes(1);
+  });
 });

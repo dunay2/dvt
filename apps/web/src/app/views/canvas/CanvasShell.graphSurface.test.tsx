@@ -150,7 +150,12 @@ describe('CanvasShell graph base surface', () => {
     );
     expect(baseSurface?.classList).toContain('flex');
     expect(baseSurface?.classList).toContain('min-h-0');
-    expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
+    const workbench = container.querySelector('[data-slot="canvas-contextual-workbench"]');
+    expect(workbench).not.toBeNull();
+    expect(workbench?.classList).toContain('w-full');
+    expect(workbench?.classList).toContain('min-w-0');
+    expect(workbench?.classList).toContain('max-w-full');
+    expect(workbench?.classList).not.toContain('min-w-96');
     expect(container.querySelector('[data-testid="code-workbench-panel"]')).not.toBeNull();
     const overlay = container.querySelector<HTMLElement>(
       '[data-slot="canvas-contextual-workbench-overlay"]'

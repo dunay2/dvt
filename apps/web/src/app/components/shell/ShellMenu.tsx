@@ -103,7 +103,7 @@ export function ShellMenu({
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button
           data-slot={isWorkspaceMenu ? 'shell-workspace-menu-trigger' : 'shell-menu-trigger'}

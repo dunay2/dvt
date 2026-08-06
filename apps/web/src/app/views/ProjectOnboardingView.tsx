@@ -10,7 +10,10 @@ import {
   type ProjectOnboardingCatalog,
   type ProjectOnboardingService,
 } from '../services/projectOnboarding/projectOnboardingService';
-import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
+import {
+  getApplicationLanguage,
+  useApplicationLanguageStore,
+} from '../stores/applicationLanguageStore';
 import { resolveProjectOnboardingCopy } from './projectOnboardingCopy';
 
 type ProjectOnboardingViewProps = {
@@ -88,7 +91,10 @@ export default function ProjectOnboardingView({
         if (!cancelled) {
           setCatalogState({
             kind: 'failed',
-            message: readableErrorMessage(error, copy.failureMessage),
+            message: readableErrorMessage(
+              error,
+              resolveProjectOnboardingCopy(getApplicationLanguage()).failureMessage
+            ),
           });
         }
       });
@@ -96,7 +102,7 @@ export default function ProjectOnboardingView({
     return () => {
       cancelled = true;
     };
-  }, [copy.failureMessage, projectOnboardingService]);
+  }, [projectOnboardingService]);
 
   async function handleCreateProject(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();

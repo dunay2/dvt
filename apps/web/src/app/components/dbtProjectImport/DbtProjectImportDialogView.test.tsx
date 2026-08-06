@@ -251,4 +251,34 @@ describe('DbtProjectImportDialogView', () => {
     fireEvent.click(document.body.querySelector('[data-slot="dbt-project-cancel-command"]')!);
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
+
+  it('keeps cancel available while validation or import work is in progress', async () => {
+    const onOpenChange = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <DbtProjectImportDialogView
+          open
+          model={buildModel({
+            phase: 'importing',
+            status: { label: 'Importing project', tone: 'info', busy: true },
+            canValidate: false,
+            canImport: false,
+          })}
+          onOpenChange={onOpenChange}
+          onProjectRootChange={vi.fn()}
+          onCanvasIdChange={vi.fn()}
+          onValidate={vi.fn()}
+          onImport={vi.fn()}
+        />
+      );
+    });
+
+    const cancel = document.body.querySelector<HTMLButtonElement>(
+      '[data-slot="dbt-project-cancel-command"]'
+    );
+    expect(cancel?.disabled).toBe(false);
+    fireEvent.click(cancel!);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
 });
