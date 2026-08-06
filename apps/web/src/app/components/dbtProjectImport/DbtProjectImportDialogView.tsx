@@ -7,6 +7,7 @@ import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -18,6 +19,8 @@ import { Label } from '../ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { cn } from '../ui/utils';
 import type { DbtProjectImportPresentationModel } from './dbtProjectImportPresentationModel';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveDbtProjectImportCopy, type DbtProjectImportCopy } from './dbtProjectImportCopy';
 
 type DbtProjectImportDialogViewProps = Readonly<{
   open: boolean;
@@ -37,16 +40,19 @@ const STATUS_TONE_CLASS = {
   danger: 'border-(--status-danger) text-(--status-danger)',
 } as const;
 
-function ProjectSummary({ model }: Readonly<{ model: DbtProjectImportPresentationModel }>) {
+function ProjectSummary({
+  model,
+  copy,
+}: Readonly<{ model: DbtProjectImportPresentationModel; copy: DbtProjectImportCopy }>) {
   if (model.project == null || model.inventory == null) {
     return null;
   }
 
   const metrics = [
-    ['Files', `${model.inventory.fileCount} files`],
-    ['Included', String(model.inventory.includedFileCount)],
-    ['Excluded', String(model.inventory.excludedFileCount)],
-    ['Project size', model.inventory.totalBytesLabel],
+    [copy.filesLabel, copy.fileCountTemplate.replace('{count}', String(model.inventory.fileCount))],
+    [copy.includedLabel, String(model.inventory.includedFileCount)],
+    [copy.excludedLabel, String(model.inventory.excludedFileCount)],
+    [copy.projectSizeLabel, model.inventory.totalBytesLabel],
   ] as const;
 
   return (
@@ -60,7 +66,7 @@ function ProjectSummary({ model }: Readonly<{ model: DbtProjectImportPresentatio
             {model.project.name}
           </h3>
           <p className="mt-1 text-xs text-(--text-muted)">
-            Adapter:{' '}
+            {copy.adapterLabel}:{' '}
             <span className="font-mono text-(--text-default)">{model.project.adapter}</span>
           </p>
         </div>
@@ -70,7 +76,7 @@ function ProjectSummary({ model }: Readonly<{ model: DbtProjectImportPresentatio
           aria-live="polite"
         >
           {model.status.busy ? <LoaderCircle className="animate-spin" /> : null}
-          {model.status.label}
+          {copy.statusByPhase[model.phase]}
         </Badge>
       </div>
       <dl className="mt-4 grid grid-cols-2 border-y border-(--border-muted) md:grid-cols-4">
@@ -88,7 +94,10 @@ function ProjectSummary({ model }: Readonly<{ model: DbtProjectImportPresentatio
   );
 }
 
-function ProjectInventory({ model }: Readonly<{ model: DbtProjectImportPresentationModel }>) {
+function ProjectInventory({
+  model,
+  copy,
+}: Readonly<{ model: DbtProjectImportPresentationModel; copy: DbtProjectImportCopy }>) {
   if (model.inventory == null) {
     return null;
   }
@@ -99,16 +108,16 @@ function ProjectInventory({ model }: Readonly<{ model: DbtProjectImportPresentat
         id="dbt-import-inventory-title"
         className="mb-2 text-sm font-semibold text-(--text-default)"
       >
-        Project inventory
+        {copy.inventoryTitle}
       </h3>
       <div className="max-h-52 overflow-auto border-y border-(--border-muted)">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Path</TableHead>
-              <TableHead>Classification</TableHead>
-              <TableHead>Decision</TableHead>
-              <TableHead className="text-right">Size</TableHead>
+              <TableHead>{copy.pathLabel}</TableHead>
+              <TableHead>{copy.classificationLabel}</TableHead>
+              <TableHead>{copy.decisionLabel}</TableHead>
+              <TableHead className="text-right">{copy.sizeLabel}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -122,7 +131,13 @@ function ProjectInventory({ model }: Readonly<{ model: DbtProjectImportPresentat
                 </TableCell>
                 <TableCell>{file.classification}</TableCell>
                 <TableCell>
-                  <Badge variant="outline">{file.decisionLabel}</Badge>
+                  <Badge variant="outline">
+                    {file.decisionLabel === 'Included'
+                      ? copy.includedLabel
+                      : file.decisionLabel === 'Excluded'
+                        ? copy.excludedLabel
+                        : file.decisionLabel}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-right font-mono text-xs">{file.byteSizeLabel}</TableCell>
               </TableRow>
@@ -134,7 +149,10 @@ function ProjectInventory({ model }: Readonly<{ model: DbtProjectImportPresentat
   );
 }
 
-function ProjectDiagnostics({ model }: Readonly<{ model: DbtProjectImportPresentationModel }>) {
+function ProjectDiagnostics({
+  model,
+  copy,
+}: Readonly<{ model: DbtProjectImportPresentationModel; copy: DbtProjectImportCopy }>) {
   if (model.diagnostics.length === 0 && model.failureMessage == null) {
     return null;
   }
@@ -145,13 +163,13 @@ function ProjectDiagnostics({ model }: Readonly<{ model: DbtProjectImportPresent
         id="dbt-import-diagnostics-title"
         className="mb-2 text-sm font-semibold text-(--text-default)"
       >
-        Diagnostics
+        {copy.diagnosticsTitle}
       </h3>
       <div className="grid gap-2">
         {model.failureMessage == null ? null : (
           <Alert variant="destructive">
             <AlertCircle />
-            <AlertTitle>Import request failed</AlertTitle>
+            <AlertTitle>{copy.requestFailedTitle}</AlertTitle>
             <AlertDescription>{model.failureMessage}</AlertDescription>
           </Alert>
         )}
@@ -179,7 +197,10 @@ function ProjectDiagnostics({ model }: Readonly<{ model: DbtProjectImportPresent
   );
 }
 
-function ImportReceipt({ model }: Readonly<{ model: DbtProjectImportPresentationModel }>) {
+function ImportReceipt({
+  model,
+  copy,
+}: Readonly<{ model: DbtProjectImportPresentationModel; copy: DbtProjectImportCopy }>) {
   if (model.receipt == null) {
     return null;
   }
@@ -187,14 +208,21 @@ function ImportReceipt({ model }: Readonly<{ model: DbtProjectImportPresentation
   return (
     <Alert className="border-(--status-success)" data-slot="dbt-project-import-receipt">
       <CheckCircle2 className="text-(--status-success)" />
-      <AlertTitle>Project authority established</AlertTitle>
+      <AlertTitle>{copy.authorityEstablishedTitle}</AlertTitle>
       <AlertDescription>
-        <span>{model.receipt.projectedResourceCount} projected resources</span>
         <span>
-          Canvas <strong>{model.receipt.canvasId}</strong> at{' '}
+          {copy.projectedResourcesTemplate.replace(
+            '{count}',
+            String(model.receipt.projectedResourceCount)
+          )}
+        </span>
+        <span>
+          {copy.canvasLabel} <strong>{model.receipt.canvasId}</strong> at{' '}
           <span className="font-mono">{model.receipt.projectRoot}</span>
         </span>
-        <span className="font-mono text-xs">Revision {model.receipt.revision}</span>
+        <span className="font-mono text-xs">
+          {copy.revisionLabel} {model.receipt.revision}
+        </span>
       </AlertDescription>
     </Alert>
   );
@@ -209,6 +237,8 @@ export function DbtProjectImportDialogView({
   onValidate,
   onImport,
 }: DbtProjectImportDialogViewProps): JSX.Element {
+  const language = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveDbtProjectImportCopy(language);
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     if (model.canValidate) {
@@ -220,22 +250,21 @@ export function DbtProjectImportDialogView({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         data-slot="dbt-project-import-dialog"
+        closeLabel={copy.closeLabel}
         className="max-h-[min(90vh,54rem)] max-w-5xl overflow-hidden border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default)"
       >
         <DialogHeader className="border-b border-(--border-muted) px-6 py-5 pr-14">
           <DialogTitle className="flex items-center gap-2">
             <FolderInput className="size-5 text-(--accent-default)" />
-            Import dbt project
+            {copy.title}
           </DialogTitle>
-          <DialogDescription>
-            Validate an existing workspace project before establishing file-backed Canvas authority.
-          </DialogDescription>
+          <DialogDescription>{copy.description}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="min-h-0 overflow-y-auto px-6 py-5">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2">
-              <Label htmlFor="dbt-project-root">Project root</Label>
+              <Label htmlFor="dbt-project-root">{copy.projectRootLabel}</Label>
               <Input
                 id="dbt-project-root"
                 data-slot="dbt-project-import-root"
@@ -245,12 +274,10 @@ export function DbtProjectImportDialogView({
                 placeholder="analytics/dbt"
                 autoComplete="off"
               />
-              <p className="text-xs text-(--text-muted)">
-                Workspace-relative directory containing dbt_project.yml.
-              </p>
+              <p className="text-xs text-(--text-muted)">{copy.projectRootHelp}</p>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="dbt-project-canvas-id">Canvas ID</Label>
+              <Label htmlFor="dbt-project-canvas-id">{copy.canvasIdLabel}</Label>
               <Input
                 id="dbt-project-canvas-id"
                 data-slot="dbt-project-import-canvas-id"
@@ -260,23 +287,31 @@ export function DbtProjectImportDialogView({
                 placeholder="warehouse-analytics"
                 autoComplete="off"
               />
-              <p className="text-xs text-(--text-muted)">
-                New Canvas identity; an existing graph-owned Canvas is rejected.
-              </p>
+              <p className="text-xs text-(--text-muted)">{copy.canvasIdHelp}</p>
             </div>
           </div>
 
           <div className="mt-5 grid gap-5">
-            <ProjectSummary model={model} />
-            <ProjectInventory model={model} />
-            <ProjectDiagnostics model={model} />
-            <ImportReceipt model={model} />
+            <ProjectSummary model={model} copy={copy} />
+            <ProjectInventory model={model} copy={copy} />
+            <ProjectDiagnostics model={model} copy={copy} />
+            <ImportReceipt model={model} copy={copy} />
           </div>
 
           <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true" />
         </form>
 
         <DialogFooter className="border-t border-(--border-muted) bg-(--surface-panel-subtle) px-6 py-4">
+          <DialogClose asChild>
+            <Button
+              type="button"
+              variant="outline"
+              data-slot="dbt-project-cancel-command"
+              disabled={model.status.busy}
+            >
+              {copy.cancelLabel}
+            </Button>
+          </DialogClose>
           <Button
             type="button"
             variant="outline"
@@ -285,7 +320,7 @@ export function DbtProjectImportDialogView({
             onClick={onValidate}
           >
             {model.phase === 'validating' ? <LoaderCircle className="animate-spin" /> : null}
-            Validate project
+            {copy.validateLabel}
           </Button>
           <Button
             type="button"
@@ -294,7 +329,7 @@ export function DbtProjectImportDialogView({
             onClick={onImport}
           >
             {model.phase === 'importing' ? <LoaderCircle className="animate-spin" /> : null}
-            Import project
+            {copy.importLabel}
           </Button>
         </DialogFooter>
       </DialogContent>
