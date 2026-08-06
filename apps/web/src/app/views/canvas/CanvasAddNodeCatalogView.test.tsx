@@ -38,6 +38,20 @@ describe('CanvasAddNodeCatalogView', () => {
     expect(container.textContent).toContain('Attach a governed warehouse or dbt source');
     expect(container.textContent).toContain('Add transformation');
     expect(container.textContent).toContain('Transformations');
+    expect(
+      container.querySelectorAll('[data-slot="canvas-context-menu-add-catalog-category"]')
+    ).toHaveLength(2);
+    expect(
+      container.querySelector('[data-catalog-category="source"]')?.getAttribute('aria-label')
+    ).toBe('Sources');
+    expect(
+      container.querySelector('[data-slot="canvas-context-menu-add-catalog-item"] span.truncate')
+    ).toBeNull();
+    expect(
+      container
+        .querySelector('[data-slot="canvas-context-menu-add-catalog-layout"]')
+        ?.className.includes('overflow-x-hidden')
+    ).toBe(true);
   });
 
   it('filters catalog items without mutating the source list', async () => {

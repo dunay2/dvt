@@ -14,10 +14,12 @@ const CATALOG_TITLE_CLASS_NAME =
 const CATALOG_SEARCH_CLASS_NAME =
   'mt-2 h-8 w-full rounded border border-(--border-subtle) bg-(--surface-base) px-2 text-sm text-(--text-default) outline-none focus:border-(--accent-default)';
 const CATALOG_EMPTY_CLASS_NAME = 'px-2 py-3 text-sm text-(--text-muted)';
-const CATALOG_ITEM_META_CLASS_NAME = 'mt-0.5 flex items-center gap-2 text-xs text-(--text-muted)';
-const CATALOG_ITEM_CATEGORY_CLASS_NAME =
-  'rounded border border-(--border-subtle) px-1.5 py-0.5 text-[10px] uppercase tracking-wide';
-const CATALOG_ITEM_DESCRIPTION_CLASS_NAME = 'truncate';
+const CATALOG_LAYOUT_CLASS_NAME = 'w-full min-w-0 max-w-[calc(100vw-1.5rem)] overflow-x-hidden';
+const CATALOG_CATEGORY_CLASS_NAME = 'min-w-0 border-t border-(--border-subtle) pt-1';
+const CATALOG_CATEGORY_TITLE_CLASS_NAME =
+  'px-2 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-(--text-muted)';
+const CATALOG_ITEM_DESCRIPTION_CLASS_NAME =
+  'mt-0.5 block whitespace-normal break-words text-xs leading-4 text-(--text-muted)';
 
 export type CanvasAddNodeCatalogViewProps = Readonly<{
   items: readonly CanvasAddNodeCatalogItem[];
@@ -32,9 +34,24 @@ export function CanvasAddNodeCatalogView({
 }: CanvasAddNodeCatalogViewProps): JSX.Element {
   const [query, setQuery] = useState('');
   const visibleItems = useMemo(() => filterCanvasAddNodeCatalogItems(items, query), [items, query]);
+  const visibleGroups = useMemo(
+    () =>
+      Array.from(
+        visibleItems.reduce((groups, item) => {
+          const group = groups.get(item.category);
+          if (group) {
+            group.push(item);
+          } else {
+            groups.set(item.category, [item]);
+          }
+          return groups;
+        }, new Map<CanvasAddNodeCatalogItem['category'], CanvasAddNodeCatalogItem[]>())
+      ),
+    [visibleItems]
+  );
 
   return (
-    <>
+    <div data-slot="canvas-context-menu-add-catalog-layout" className={CATALOG_LAYOUT_CLASS_NAME}>
       <div className={CATALOG_HEADER_CLASS_NAME}>
         <div className={CATALOG_TITLE_CLASS_NAME}>{copy.canvasAddNodeCatalogTitle}</div>
         <label className="sr-only" htmlFor="canvas-add-node-catalog-search">
@@ -55,29 +72,43 @@ export function CanvasAddNodeCatalogView({
         <div className={CATALOG_EMPTY_CLASS_NAME}>{copy.canvasAddNodeCatalogEmptyMessage}</div>
       ) : (
         <CanvasContextMenuSection dataSlot="canvas-context-menu-add-catalog-group">
-          {visibleItems.map((item) => (
-            <CanvasContextMenuItem
-              key={item.id}
-              dataSlot="canvas-context-menu-add-catalog-item"
-              dataMenuItemKind="catalog"
-              dataMenuAction={resolveCanvasAddNodeCatalogActionId(item)}
-              dataRegistrationKind={item.registration.kind}
-              label={
-                <span>
-                  <span>{item.actionLabel}</span>
-                  <span className={CATALOG_ITEM_META_CLASS_NAME}>
-                    <span className={CATALOG_ITEM_CATEGORY_CLASS_NAME}>{item.categoryLabel}</span>
-                    <span className={CATALOG_ITEM_DESCRIPTION_CLASS_NAME}>{item.description}</span>
-                  </span>
-                </span>
-              }
-              title={item.description}
-              onSelect={() => onSelectItem(item)}
-            />
-          ))}
+          {visibleGroups.map(([category, groupItems]) => {
+            const categoryLabel = groupItems[0]?.categoryLabel ?? category;
+            return (
+              <div
+                key={category}
+                role="group"
+                aria-label={categoryLabel}
+                data-slot="canvas-context-menu-add-catalog-category"
+                data-catalog-category={category}
+                className={CATALOG_CATEGORY_CLASS_NAME}
+              >
+                <div className={CATALOG_CATEGORY_TITLE_CLASS_NAME}>{categoryLabel}</div>
+                {groupItems.map((item) => (
+                  <CanvasContextMenuItem
+                    key={item.id}
+                    dataSlot="canvas-context-menu-add-catalog-item"
+                    dataMenuItemKind="catalog"
+                    dataMenuAction={resolveCanvasAddNodeCatalogActionId(item)}
+                    dataRegistrationKind={item.registration.kind}
+                    label={
+                      <span className="block min-w-0">
+                        <span className="block font-medium">{item.actionLabel}</span>
+                        <span className={CATALOG_ITEM_DESCRIPTION_CLASS_NAME}>
+                          {item.description}
+                        </span>
+                      </span>
+                    }
+                    title={item.description}
+                    onSelect={() => onSelectItem(item)}
+                  />
+                ))}
+              </div>
+            );
+          })}
         </CanvasContextMenuSection>
       )}
-    </>
+    </div>
   );
 }
 
