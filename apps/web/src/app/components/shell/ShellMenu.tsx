@@ -3,6 +3,7 @@ import {
   Activity,
   BriefcaseBusiness,
   Grid2X2,
+  Languages,
   Maximize2,
   Minimize2,
   SlidersHorizontal,
@@ -18,6 +19,7 @@ import {
 } from '../../views/canvas/canvasPalette';
 import { CanvasViewMenuControls } from '../../views/canvas/CanvasViewMenuControls';
 import { CanvasWorkspaceMenuControls } from '../../views/canvas/CanvasWorkspaceMenuControls';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { Button } from '../ui/button';
 import type { ShellViewControlsReadModel } from './shellViewControlsModel';
 import {
@@ -26,6 +28,8 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuSub,
   DropdownMenuSubContent,
@@ -79,6 +83,10 @@ export function ShellMenu({
   setCanvasPalette,
   copy,
 }: ShellMenuProps) {
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const configureApplicationLanguage = useApplicationLanguageStore(
+    (state) => state.configureApplicationLanguage
+  );
   const resolvedCanvasPalette = normalizeCanvasPaletteId(canvasPalette);
   const isWorkspaceMenu = kind === 'workspace';
 
@@ -222,6 +230,29 @@ export function ShellMenu({
 
             <DropdownMenuSeparator />
             <DropdownMenuLabel>{copy.viewOptions}</DropdownMenuLabel>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger data-slot="shell-language-menu">
+                <Languages className="mr-2 size-4" />
+                {copy.language}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup
+                  value={applicationLanguage}
+                  onValueChange={(language) => {
+                    if (language === 'en' || language === 'es') {
+                      configureApplicationLanguage(language);
+                    }
+                  }}
+                >
+                  <DropdownMenuRadioItem data-slot="shell-language-option-en" value="en">
+                    {copy.languageEnglish}
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem data-slot="shell-language-option-es" value="es">
+                    {copy.languageSpanish}
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
             <DropdownMenuItem onClick={() => setGridSize(20)}>{copy.resetGrid}</DropdownMenuItem>
             {viewControls.showCanvasViewContributionControls ? <CanvasViewMenuControls /> : null}
           </>

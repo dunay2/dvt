@@ -7,9 +7,10 @@ import { resolveShellNavigationDisposition } from '../shell/shellNavigationDispo
 import { usePlatformConnectionStore } from '../stores/platformConnectionStore';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import { CanvasWorkspaceTopBarIdentity } from '../views/canvas/CanvasWorkspaceMenuControls';
 import { topAppBarClasses } from './shell/chrome';
-import { detectShellTopBarLocale, resolveShellTopBarCopy } from './shell/copy';
+import { resolveShellTopBarCopy } from './shell/copy';
 import { useOperationalDrawerContributionStore } from './shell/operationalDrawerContributionStore';
 import { ShellAppMenu } from './shell/ShellAppMenu';
 import { ShellConnectionStatus } from './shell/ShellConnectionStatus';
@@ -42,13 +43,14 @@ export function ShellTopBar({
   const toggleBottomDrawer = useUiLayoutStore((state) => state.toggleBottomDrawer);
   const gridSize = useUiLayoutStore((state) => state.gridSize);
   const canvasPalette = useUiLayoutStore((state) => state.canvasPalette);
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const setGridSize = useUiLayoutStore((state) => state.setGridSize);
   const setCanvasPalette = useUiLayoutStore((state) => state.setCanvasPalette);
   const operationalDrawerContribution = useOperationalDrawerContributionStore(
     (state) => state.contribution
   );
   const effectiveConnectionStatus = connectionStateOverride ?? connectionStatus;
-  const copy = resolveShellTopBarCopy(detectShellTopBarLocale());
+  const copy = resolveShellTopBarCopy(applicationLanguage);
   const navigationDisposition = resolveShellNavigationDisposition(location.pathname);
   const isWorkbenchShell = navigationDisposition.reason === 'workbench_route';
   const exposeWorkspaceNavigationMenu = focusMode || navigationDisposition.railMode === 'hidden';

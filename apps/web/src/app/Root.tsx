@@ -52,6 +52,7 @@ import { buildShellRuntimeState } from './shell/shellRuntimeModel';
 import { useCanvasInteractionStore } from './stores/canvasInteractionStore';
 import { usePlatformConnectionStore } from './stores/platformConnectionStore';
 import { useUiLayoutStore } from './stores/uiLayoutStore';
+import { useApplicationLanguageStore } from './stores/applicationLanguageStore';
 import '@xyflow/react/dist/style.css';
 
 type RootShellProps = {
@@ -68,6 +69,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     (state) => state.closeContextualWorkbench
   );
   const connectionStatus = usePlatformConnectionStore((state) => state.connectionStatus);
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const setConnectionStatus = usePlatformConnectionStore((state) => state.setConnectionStatus);
   const capabilitiesQuery = useCapabilitiesQuery();
   const frontendOperabilityTransitionRecorder = useFrontendOperabilityTransitionRecorder();
@@ -82,7 +84,7 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     dataUpdatedAt: platformHealth.dataUpdatedAt,
     errorUpdatedAt: platformHealth.errorUpdatedAt,
   });
-  const bootstrapLocale = detectRouteBootstrapLocale();
+  const bootstrapLocale = applicationLanguage || detectRouteBootstrapLocale();
   const shellCopy = useMemo(() => resolveShellTopBarCopy(bootstrapLocale), [bootstrapLocale]);
   const appBootstrapCopy = useMemo(
     () => resolveAppBootstrapCopy(bootstrapLocale),

@@ -8,6 +8,7 @@ import { canvasViewRouteCopyByKey } from './canvasCopyCatalog.route';
 import { canvasViewRouteCopyEs } from './canvasCopyCatalog.route.es';
 import { canvasViewToolbarCopyByKey } from './canvasCopyCatalog.toolbar';
 import { canvasViewToolbarCopyEs } from './canvasCopyCatalog.toolbar.es';
+import { getApplicationLanguage } from '../../stores/applicationLanguageStore';
 
 const COPY_BY_KEY = {
   ...canvasViewRouteCopyByKey,
@@ -64,4 +65,6 @@ export function resolveCanvasViewCopy(locale: string = detectCanvasViewLocale())
   ) as CanvasViewCopy;
 }
 
-export const canvasViewCopy = resolveCanvasViewCopy();
+export const canvasViewCopy = new Proxy({} as CanvasViewCopy, {
+  get: (_target, key: keyof CanvasViewCopy) => resolveCanvasViewCopy(getApplicationLanguage())[key],
+});
