@@ -56,6 +56,7 @@ export function CanvasNodePortHandle({
         data-port={kind}
         data-tone={tone}
         data-port-compatibility={compatibility?.state}
+        role="button"
         aria-label={label}
         aria-describedby={compatibilityHintId}
         tabIndex={0}
