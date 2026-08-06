@@ -439,7 +439,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvas/canvasNodeContextMenuModel.test.ts]
   - name: ImportReceipt
-    path: apps/web/src/app/components/shell/DbtProjectOnboardingView.tsx
+    path: apps/web/src/app/components/dbtProjectImport/DbtProjectImportDialogView.tsx
     dddOwner: WorkspaceScopeSelection
     cqRails: [SelectWorkspaceScope]
     fowlerSignals: [Primitive obsession]
@@ -447,7 +447,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/DbtProjectOnboardingView.test.tsx]
   - name: ProjectDiagnostics
-    path: apps/web/src/app/components/shell/DbtProjectOnboardingView.tsx
+    path: apps/web/src/app/components/dbtProjectImport/DbtProjectImportDialogView.tsx
     dddOwner: WorkspaceScopeSelection
     cqRails: [SelectWorkspaceScope]
     fowlerSignals: [Primitive obsession]
@@ -455,7 +455,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/DbtProjectOnboardingView.test.tsx]
   - name: ProjectInventory
-    path: apps/web/src/app/components/shell/DbtProjectOnboardingView.tsx
+    path: apps/web/src/app/components/dbtProjectImport/DbtProjectImportDialogView.tsx
     dddOwner: WorkspaceScopeSelection
     cqRails: [SelectWorkspaceScope]
     fowlerSignals: [Primitive obsession]
@@ -463,7 +463,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/DbtProjectOnboardingView.test.tsx]
   - name: ProjectSummary
-    path: apps/web/src/app/components/shell/DbtProjectOnboardingView.tsx
+    path: apps/web/src/app/components/dbtProjectImport/DbtProjectImportDialogView.tsx
     dddOwner: WorkspaceScopeSelection
     cqRails: [SelectWorkspaceScope]
     fowlerSignals: [Primitive obsession]
@@ -471,7 +471,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/DbtProjectOnboardingView.test.tsx]
   - name: COPY_BY_LANGUAGE
-    path: apps/web/src/app/components/shell/dbtProjectOnboardingCopy.ts
+    path: apps/web/src/app/components/dbtProjectImport/dbtProjectImportCopy.ts
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Duplicate semantics]
@@ -479,7 +479,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/dbtProjectOnboardingCopy.test.ts]
   - name: DbtProjectImportCopy
-    path: apps/web/src/app/components/shell/dbtProjectOnboardingCopy.ts
+    path: apps/web/src/app/components/dbtProjectImport/dbtProjectImportCopy.ts
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Duplicate semantics]
@@ -487,7 +487,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/dbtProjectOnboardingCopy.test.ts]
   - name: resolveDbtProjectImportCopy
-    path: apps/web/src/app/components/shell/dbtProjectOnboardingCopy.ts
+    path: apps/web/src/app/components/dbtProjectImport/dbtProjectImportCopy.ts
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Intention-Revealing Interface]
@@ -495,7 +495,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/dbtProjectOnboardingCopy.test.ts]
   - name: MonacoCodeSurfaceProps
-    path: apps/web/src/app/components/shell/MonacoCodeSurface.tsx
+    path: apps/web/src/app/components/monaco/MonacoCodeSurface.tsx
     dddOwner: ContextualCodeWorkbench
     cqRails: [GetWorkspaceFileContent, SaveWorkspaceFileContent]
     fowlerSignals: [Primitive obsession]
@@ -503,7 +503,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/MonacoCodeSurface.test.tsx]
   - name: MonacoCodeSurfaceComponent
-    path: apps/web/src/app/components/shell/useMonacoCodeSurface.ts
+    path: apps/web/src/app/components/monaco/useMonacoCodeSurface.ts
     dddOwner: ContextualCodeWorkbench
     cqRails: [GetWorkspaceFileContent]
     fowlerSignals: [Hidden authority]
@@ -511,7 +511,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/MonacoCodeSurface.test.tsx]
   - name: loadMonacoCodeSurface
-    path: apps/web/src/app/components/shell/useMonacoCodeSurface.ts
+    path: apps/web/src/app/components/monaco/useMonacoCodeSurface.ts
     dddOwner: ContextualCodeWorkbench
     cqRails: [GetWorkspaceFileContent]
     fowlerSignals: [Intention-Revealing Interface]
@@ -519,7 +519,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/MonacoCodeSurface.test.tsx]
   - name: monacoCodeSurfacePromise
-    path: apps/web/src/app/components/shell/useMonacoCodeSurface.ts
+    path: apps/web/src/app/components/monaco/useMonacoCodeSurface.ts
     dddOwner: ContextualCodeWorkbench
     cqRails: [GetWorkspaceFileContent]
     fowlerSignals: [Hidden authority]
@@ -527,7 +527,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/MonacoCodeSurface.test.tsx]
   - name: useMonacoCodeSurface
-    path: apps/web/src/app/components/shell/useMonacoCodeSurface.ts
+    path: apps/web/src/app/components/monaco/useMonacoCodeSurface.ts
     dddOwner: ContextualCodeWorkbench
     cqRails: [GetWorkspaceFileContent]
     fowlerSignals: [Intention-Revealing Interface]
@@ -551,7 +551,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/ShellMenu.test.tsx]
   - name: resolveRunStatusLabel
-    path: apps/web/src/app/components/shell/ShellRunStatus.tsx
+    path: apps/web/src/app/components/shell/ShellRunStatusIndicator.tsx
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Duplicate semantics]
@@ -559,7 +559,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/ShellRunStatus.test.tsx]
   - name: LocalizableString
-    path: apps/web/src/app/plugins/PluginManifest.ts
+    path: apps/web/src/app/plugins/contracts/PluginManifest.ts
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Primitive obsession]
@@ -567,7 +567,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/PluginManifest.test.ts]
   - name: resolveString
-    path: apps/web/src/app/plugins/PluginManifest.ts
+    path: apps/web/src/app/plugins/contracts/PluginManifest.ts
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Intention-Revealing Interface]
@@ -575,7 +575,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/PluginManifest.test.ts]
   - name: CostView
-    path: apps/web/src/app/plugins/contributions/cost.tsx
+    path: apps/web/src/app/plugins/cost/costContributions.ts
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Duplicate semantics]
@@ -583,7 +583,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/cost.test.tsx]
   - name: DeferredViewModule
-    path: apps/web/src/app/plugins/contributions/createDeferredView.tsx
+    path: apps/web/src/app/plugins/createDeferredView.tsx
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Divergent change]
@@ -591,7 +591,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/createDeferredView.test.tsx]
   - name: createDeferredView
-    path: apps/web/src/app/plugins/contributions/createDeferredView.tsx
+    path: apps/web/src/app/plugins/createDeferredView.tsx
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Intention-Revealing Interface]
@@ -599,7 +599,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/createDeferredView.test.tsx]
   - name: CanvasView
-    path: apps/web/src/app/plugins/contributions/dbt.tsx
+    path: apps/web/src/app/plugins/dbt/dbtContributions.ts
     dddOwner: CanvasComponentCatalog
     cqRails: [RenderCanvasGraphBase]
     fowlerSignals: [Hidden authority]
@@ -607,7 +607,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/dbt.test.tsx]
   - name: TemplatesView
-    path: apps/web/src/app/plugins/contributions/dvt.tsx
+    path: apps/web/src/app/plugins/dvt/dvtContributions.ts
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Duplicate semantics]
@@ -615,7 +615,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/dvt.test.tsx]
   - name: RunsView
-    path: apps/web/src/app/plugins/contributions/monitoring.tsx
+    path: apps/web/src/app/plugins/monitoring/monitoringContributions.ts
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage, CancelRun]
     fowlerSignals: [Duplicate semantics]
@@ -639,7 +639,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/queries/workspaceQueries.test.ts]
   - name: flushRouterUpdate
-    path: apps/web/src/app/router.ts
+    path: apps/web/src/app/routerFlushSync.ts
     dddOwner: WorkspaceScopeSelection
     cqRails: [GetEffectiveWorkspaceContext]
     fowlerSignals: [Divergent change]
@@ -647,7 +647,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/router.test.ts]
   - name: SHELL_NAV
-    path: apps/web/src/app/shellNavigationRegistry.ts
+    path: apps/web/src/app/shell/shellNavigationModel.ts
     dddOwner: ApplicationLanguagePreference
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Hidden authority]
@@ -655,7 +655,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/shellNavigationRegistry.test.ts]
   - name: buildShellRuntimeState
-    path: apps/web/src/app/shellRuntime.tsx
+    path: apps/web/src/app/shell/shellRuntimeModel.ts
     dddOwner: WorkspaceScopeSelection
     cqRails: [GetEffectiveWorkspaceContext]
     fowlerSignals: [Intention-Revealing Interface]
@@ -831,7 +831,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasNodeMapper.test.ts]
   - name: ScopedDraftSession
-    path: apps/web/src/app/views/canvas/canvasWorkspaceDraftSession.ts
+    path: apps/web/src/app/views/canvas/useCanvasWorkspaceDraftSession.ts
     dddOwner: WorkspaceScopeSelection
     cqRails: [SelectWorkspaceScope, GetEffectiveWorkspaceContext]
     fowlerSignals: [Hidden authority]
@@ -839,7 +839,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkspaceDraftSession.test.ts]
   - name: resolveStateUpdate
-    path: apps/web/src/app/views/canvas/canvasWorkspaceDraftSession.ts
+    path: apps/web/src/app/views/canvas/useCanvasWorkspaceDraftSession.ts
     dddOwner: WorkspaceScopeSelection
     cqRails: [GetEffectiveWorkspaceContext]
     fowlerSignals: [Intention-Revealing Interface]
@@ -847,7 +847,7 @@ symbols:
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkspaceDraftSession.test.ts]
   - name: useCanvasWorkspaceDraftSession
-    path: apps/web/src/app/views/canvas/canvasWorkspaceDraftSession.ts
+    path: apps/web/src/app/views/canvas/useCanvasWorkspaceDraftSession.ts
     dddOwner: WorkspaceScopeSelection
     cqRails: [GetEffectiveWorkspaceContext]
     fowlerSignals: [Intention-Revealing Interface]
