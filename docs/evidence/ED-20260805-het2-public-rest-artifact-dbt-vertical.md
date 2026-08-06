@@ -49,6 +49,16 @@ HET2 proves the public heterogeneous route
 through the existing Preview, StartRun, status, event, cancellation and recovery
 rails. The implementation adds no HTTP proxy or product route.
 
+# Review and size-gate disposition
+
+PR #2226 changes 67,652 lines because the DB-first planning operation
+regenerates and reorders the canonical feature-mechanization snapshot. The
+semantic planning delta is revision 14 to 15 plus the nine HET2 implementation
+surfaces; product, contract, adapter, test and evidence changes remain separated
+into reviewable microcommits. The repository-approved `pr-size-exempt` path was
+explicitly authorized for this generated-governance case; no quality, ARC,
+review or required-status gate was disabled.
+
 # Boundary evidence
 
 ```mermaid
