@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { waitForReactQuery, withTestQueryClient } from '../../testing/reactQueryHarness';
 import type { ProjectOnboardingService } from '../services/projectOnboarding/projectOnboardingService';
 import ProjectOnboardingView from './ProjectOnboardingView';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 
 function buildProjectOnboardingService(
   overrides: Partial<ProjectOnboardingService> = {}
@@ -38,12 +39,14 @@ describe('ProjectOnboardingView', () => {
 
   beforeEach(() => {
     mounted = null;
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   });
 
   afterEach(async () => {
     if (mounted) {
       await mounted.cleanup();
     }
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   });
 
   it('lets a first-use authenticated user create the first project', async () => {
@@ -93,5 +96,50 @@ describe('ProjectOnboardingView', () => {
         environmentId: 'dev',
       },
     });
+  });
+
+  it('presents existing projects before creation with explicit, localized actions', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    const onProjectSelected = vi.fn();
+
+    mounted = await withTestQueryClient(
+      <ProjectOnboardingView
+        onProjectCreated={vi.fn()}
+        onProjectSelected={onProjectSelected}
+        service={buildProjectOnboardingService({
+          listProjects: async () => ({
+            tenants: [{ tenantId: 'tenant-1', canCreateProject: true }],
+            projects: [
+              {
+                tenantId: 'tenant-1',
+                projectId: 'ventas',
+                name: 'Ventas',
+                environmentIds: ['dev'],
+              },
+            ],
+          }),
+        })}
+      />
+    );
+
+    await waitForReactQuery(() => mounted?.container.textContent?.includes('Ventas') === true, {
+      description: 'localized project onboarding catalog',
+    });
+
+    expect(mounted.container.textContent).toContain('Elige o crea un proyecto');
+    expect(mounted.container.textContent).toContain('Proyectos disponibles');
+    expect(mounted.container.textContent).toContain('Crear un proyecto');
+    expect(mounted.container.textContent).toContain('Abrir proyecto');
+    expect(mounted.container.textContent).not.toContain('Create a project');
+    expect(
+      mounted.container
+        .querySelector('[data-slot="project-onboarding-title"]')
+        ?.className.includes('text-xl')
+    ).toBe(true);
+    expect(
+      mounted.container
+        .querySelector('[data-slot="project-onboarding-root"]')
+        ?.className.includes('bg-(--surface-app)')
+    ).toBe(true);
   });
 });
