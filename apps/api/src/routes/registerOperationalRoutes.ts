@@ -25,7 +25,7 @@ export async function registerOperationalRoutes(
     getIntentReconcilerHealth: options.getIntentReconcilerHealth,
     readinessPorts: options.readinessPorts,
   });
-  app.register(capabilitiesRoutes, { prefix: '/' });
+  app.register(capabilitiesRoutes, { prefix: '/', env: options.env });
   app.register(versionRoutes, { prefix: '/', env: options.env });
   app.register(dbReadyRoutes, { prefix: '/', env: options.env });
 
