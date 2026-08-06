@@ -1230,6 +1230,24 @@ units:
       - package boundary
       - semantic encapsulation
 
+  - id: SYS-ADAPTERS-TEMPORAL-HTTP-JSON-PLUGIN
+    name: Temporal HTTP JSON plugin package
+    parent: SYS-ADAPTERS-ROOT
+    level: source
+    status: review
+    owns:
+      - packages/@dvt/temporal-http-json-plugin/**
+    childrenRequired: false
+    dddOwner: ADP
+    cqRails: WorkflowEngine.startRun HTTP JSON acquisition and artifact publication
+    governance:
+      - docs/planning/proposals/mandatory/runtime-and-contracts/het2-public-rest-artifact-dbt-vertical-plan-20260805.md
+      - docs/evidence/ED-20260805-het2-public-rest-artifact-dbt-vertical.md
+    fowlerSignals:
+      - package boundary
+      - single step-kind ownership
+      - static typed plugin composition
+
   - id: SYS-ADAPTERS-TEMPORAL-OBJECT-FILE-POSTGRES-PLUGIN
     name: Temporal object-file PostgreSQL plugin package
     parent: SYS-ADAPTERS-ROOT
