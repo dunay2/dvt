@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { DbtProjectImportDialogView } from './DbtProjectImportDialogView';
 import type { DbtProjectImportPresentationModel } from './dbtProjectImportPresentationModel';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 function buildModel(
   overrides: Partial<DbtProjectImportPresentationModel> = {}
@@ -63,6 +64,7 @@ describe('DbtProjectImportDialogView', () => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -71,6 +73,7 @@ describe('DbtProjectImportDialogView', () => {
   afterEach(() => {
     act(() => root.unmount());
     container.remove();
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     vi.clearAllMocks();
   });
 
@@ -218,5 +221,34 @@ describe('DbtProjectImportDialogView', () => {
       expect(document.body.textContent).toContain('12 projected resources');
       expect(document.body.textContent).toContain('111111111111');
     });
+  });
+
+  it('localizes dialog chrome and exposes an explicit cancel command', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    const onOpenChange = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <DbtProjectImportDialogView
+          open
+          model={buildModel()}
+          onOpenChange={onOpenChange}
+          onProjectRootChange={vi.fn()}
+          onCanvasIdChange={vi.fn()}
+          onValidate={vi.fn()}
+          onImport={vi.fn()}
+        />
+      );
+    });
+
+    const dialog = document.body.querySelector('[data-slot="dbt-project-import-dialog"]');
+    expect(dialog?.textContent).toContain('Importar proyecto dbt');
+    expect(dialog?.textContent).toContain('Raíz del proyecto');
+    expect(dialog?.textContent).toContain('Listo para importar');
+    expect(dialog?.textContent).toContain('Cancelar');
+    expect(dialog?.textContent).not.toContain('Validate project');
+
+    fireEvent.click(document.body.querySelector('[data-slot="dbt-project-cancel-command"]')!);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });
