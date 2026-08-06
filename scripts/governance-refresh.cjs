@@ -19,8 +19,9 @@ function buildRefreshStages() {
         script: 'docs:sync',
       },
       {
-        id: 'code-status',
+        id: 'code-status-local',
         script: 'docs:status:generate',
+        args: ['--', '--code-state-only'],
       },
       {
         id: 'capability-coverage',
@@ -64,6 +65,11 @@ function buildRefreshStages() {
         id: 'governance-db-import-final',
         script: 'governance:db:import',
         args: ['--', '--if-stale'],
+      },
+      {
+        id: 'repository-map-final',
+        script: 'docs:status:generate',
+        args: ['--', '--repository-map-only'],
       },
       {
         id: 'dbt-roundtrip-capability-status',
