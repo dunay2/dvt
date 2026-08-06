@@ -248,7 +248,8 @@ async function readRepositoryArchitectureFacts(client) {
         layer,
         owner,
         repo_path,
-        status
+        status,
+        parent_component_id
       from architecture.component_query
       where coalesce(status, '') <> 'deprecated'
       order by repo_path, component_id
@@ -273,7 +274,10 @@ async function readRepositoryArchitectureFacts(client) {
 
   return {
     components: componentResult.rows,
-    documents: documentationResult.rows,
+    documents: expandDocumentBindingsToAncestors(
+      documentationResult.rows,
+      componentResult.rows
+    ),
   };
 }
 
@@ -286,8 +290,8 @@ function isCurrentCanonicalDocument(row) {
     !['archived', 'historical', 'superseded', 'retired', 'discarded'].includes(status);
 }
 
-function relativeDocLink(documentPath) {
-  const normalized = normalizeRepoPath(documentPath);
+function relativeDocLink(documentPathValue) {
+  const normalized = normalizeRepoPath(documentPathValue);
   if (!normalized.startsWith('docs/')) return null;
   const relative = path.posix.relative('docs/concepts', normalized);
   return relative || './repository-map.md';
@@ -301,13 +305,57 @@ function documentPath(document) {
   return document.document_path ?? document.documentPath ?? null;
 }
 
-function resolveCanonicalDocuments(componentId, documents) {
+function resolveCanonicalDocuments(componentIdValue, documents) {
   return documents
-    .filter((document) => documentComponentId(document) === componentId)
+    .filter((document) => documentComponentId(document) === componentIdValue)
     .filter(isCurrentCanonicalDocument)
     .map(documentPath)
     .filter(Boolean)
     .sort((left, right) => String(left).localeCompare(String(right), 'en'));
+}
+
+function componentId(component) {
+  return component.component_id ?? component.componentId ?? null;
+}
+
+function parentComponentId(component) {
+  return component.parent_component_id ?? component.parentComponentId ?? null;
+}
+
+function expandDocumentBindingsToAncestors(documents, components) {
+  const componentsById = new Map(
+    components
+      .map((component) => [componentId(component), component])
+      .filter(([currentComponentId]) => Boolean(currentComponentId))
+  );
+  const expanded = [];
+  const seen = new Set();
+
+  for (const document of documents) {
+    const currentDocumentPath = documentPath(document);
+    let currentComponentId = documentComponentId(document);
+    const visited = new Set();
+
+    while (currentComponentId && !visited.has(currentComponentId)) {
+      visited.add(currentComponentId);
+      const bindingKey = `${currentComponentId}\u0000${currentDocumentPath ?? ''}`;
+      if (!seen.has(bindingKey)) {
+        seen.add(bindingKey);
+        expanded.push({ ...document, component_id: currentComponentId });
+      }
+      const component = componentsById.get(currentComponentId);
+      currentComponentId = component ? parentComponentId(component) : null;
+    }
+  }
+
+  return expanded.sort((left, right) => {
+    const componentOrder = String(documentComponentId(left) ?? '').localeCompare(
+      String(documentComponentId(right) ?? ''),
+      'en'
+    );
+    if (componentOrder !== 0) return componentOrder;
+    return String(documentPath(left) ?? '').localeCompare(String(documentPath(right) ?? ''), 'en');
+  });
 }
 
 function resolveWorkspaceArchitecture(workspace, components, documents) {
@@ -337,12 +385,12 @@ function resolveWorkspaceArchitecture(workspace, components, documents) {
   }
 
   const component = exactMatches[0];
-  const componentId = component.component_id ?? component.componentId;
-  const matchingDocs = resolveCanonicalDocuments(componentId, documents);
+  const componentIdValue = component.component_id ?? component.componentId;
+  const matchingDocs = resolveCanonicalDocuments(componentIdValue, documents);
 
   if (matchingDocs.length === 0) {
     return {
-      component: componentId,
+      component: componentIdValue,
       componentStatus: component.status ?? '-',
       canonicalDoc: '-',
       gaps: ['missing-doc-entry'],
@@ -356,7 +404,7 @@ function resolveWorkspaceArchitecture(workspace, components, documents) {
 
   if (linkedDocuments.some((link) => link === null)) {
     return {
-      component: componentId,
+      component: componentIdValue,
       componentStatus: component.status ?? '-',
       canonicalDoc: '-',
       gaps: ['missing-doc-entry'],
@@ -364,7 +412,7 @@ function resolveWorkspaceArchitecture(workspace, components, documents) {
   }
 
   return {
-    component: componentId,
+    component: componentIdValue,
     componentStatus: component.status ?? '-',
     canonicalDoc: linkedDocuments.join(', '),
     gaps: matchingDocs.length > 1 ? ['ambiguous-doc-entry'] : [],
@@ -578,6 +626,7 @@ module.exports = {
   collectRepositoryWorkspaceStats,
   collectWorkspaceDirs,
   collectWorkspaceStats,
+  expandDocumentBindingsToAncestors,
   isCurrentCanonicalDocument,
   main,
   markdownCell,
