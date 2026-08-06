@@ -103,6 +103,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     const artifactPreviewPanel = readFileSync(artifactPreviewPanelPath, 'utf8');
     const monacoViewer = readAppSource('components/monaco/MonacoCodeViewer.tsx');
     const monacoEditor = readAppSource('components/monaco/MonacoCodeEditor.tsx');
+    const monacoLoader = readAppSource('components/monaco/useMonacoCodeSurface.ts');
     const monacoSurface = readAppSource('components/monaco/MonacoCodeSurface.tsx');
     const monacoFallback = readAppSource('components/monaco/MonacoViewerFallback.tsx');
     const monacoVisualTokens = readAppSource('components/monaco/monacoVisualTokens.ts');
@@ -116,6 +117,7 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
       ['views/artifacts/ArtifactMonacoPreviewPanel.tsx', artifactPreviewPanel],
       ['components/monaco/MonacoCodeViewer.tsx', monacoViewer],
       ['components/monaco/MonacoCodeEditor.tsx', monacoEditor],
+      ['components/monaco/useMonacoCodeSurface.ts', monacoLoader],
       ['components/monaco/MonacoCodeSurface.tsx', monacoSurface],
       ['components/monaco/MonacoViewerFallback.tsx', monacoFallback],
       ['components/workbench/RouteWorkbenchFrame.tsx', routeFrame],
@@ -146,11 +148,14 @@ describe('Artifacts Monaco read-only viewer architecture', () => {
     expect(artifactPreviewPanel).not.toContain('Button');
     expect(artifactPreviewPanel).not.toContain('viewFullFile');
 
-    expect(monacoViewer).toContain("lazy(() => import('./MonacoCodeSurface'))");
+    expect(monacoViewer).toContain('useMonacoCodeSurface()');
     expect(monacoViewer).toContain('readOnly={true}');
-    expect(monacoEditor).toContain("lazy(() => import('./MonacoCodeSurface'))");
+    expect(monacoEditor).toContain('useMonacoCodeSurface()');
     expect(monacoEditor).toContain('readOnly={false}');
     expect(monacoEditor).toContain('onChange');
+    expect(monacoLoader).toContain("import('./MonacoCodeSurface')");
+    expect(monacoLoader).toContain('if (active)');
+    expect(monacoLoader).toContain('active = false');
     expect(monacoSurface).toContain('<Editor');
     expect(monacoSurface).toContain('readOnly = true');
     expect(monacoSurface).toContain('createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })');
