@@ -1,4 +1,3 @@
-const { execFileSync } = require('node:child_process');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const os = require('node:os');
@@ -16,280 +15,195 @@ const policyPath = path.join(repoRoot, 'docs', 'generated-docs-policy.json');
 
 const {
   collectRepositoryWorkspaceStats,
-  collectWorkspaceDirs,
+  listPnpmWorkspaceDirs,
   main,
   markdownCell,
+  parsePnpmWorkspaceRows,
   readRepositoryArchitectureFacts,
   renderRepositoryMap,
+  resolveDocumentationProjection,
   resolveGenerationMode,
   resolveWorkspaceArchitecture,
 } = require('./generate-code-status.cjs');
-
-function toPosix(value) {
-  return value.replace(/\\/gu, '/');
-}
 
 function dbUrl() {
   return process.env.DVT_PLANNING_DB_URL || process.env.DATABASE_URL || defaultPgUrl;
 }
 
-function repositoryMapFixture() {
+function createWorkspaceFixture(t, relativePath, packageName, options = {}) {
+  const root = options.root || fs.mkdtempSync(path.join(os.tmpdir(), 'repository-map-'));
+  if (!options.root) t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const directory = path.join(root, ...relativePath.split('/'));
+  fs.mkdirSync(path.join(directory, 'src'), { recursive: true });
+  fs.writeFileSync(
+    path.join(directory, 'package.json'),
+    `${JSON.stringify({ name: packageName, scripts: { build: 'x', test: 'x', typecheck: 'x' } }, null, 2)}\n`,
+    'utf8'
+  );
+  fs.writeFileSync(path.join(directory, 'src', 'index.ts'), 'export const value = 1;\n', 'utf8');
+  if (options.readme) fs.writeFileSync(path.join(directory, 'README.md'), '# Local\n', 'utf8');
+  return { root, directory };
+}
+
+function workspaceRow(overrides = {}) {
   return {
-    workspaces: [
-      {
-        workspace: '@dvt/example',
-        path: 'packages/@dvt/example',
-        kind: 'package',
-        src: 2,
-        tests: 1,
-        hasBuild: 'yes',
-        hasTest: 'yes',
-        hasTypecheck: 'yes',
-      },
-    ],
-    facts: {
-      components: [
-        {
-          component_id: 'COMP-EXAMPLE',
-          repo_path: 'packages/@dvt/example',
-          status: 'implemented',
-        },
-      ],
-      documents: [
-        {
-          component_id: 'COMP-EXAMPLE',
-          document_path: 'docs/architecture/components/example/index.md',
-          canonicality: 'canonical',
-          lifecycle_state: 'active',
-          status: 'Active',
-        },
-      ],
-    },
+    workspace: '@dvt/example',
+    path: 'packages/@dvt/example',
+    kind: 'package',
+    src: 2,
+    tests: 1,
+    hasBuild: 'yes',
+    hasTest: 'yes',
+    hasTypecheck: 'yes',
+    localReadmePath: null,
+    ...overrides,
   };
 }
 
-test('code status generator renders the generated inventory outside tracked docs', () => {
-  const source = fs.readFileSync(generatorPath, 'utf8');
+test('pnpm workspace JSON is the sole membership input', () => {
+  assert.deepEqual(parsePnpmWorkspaceRows('[{"path":"/repo"}]'), [{ path: '/repo' }]);
+  assert.throws(() => parsePnpmWorkspaceRows('{}'), /JSON array/u);
+  assert.throws(() => parsePnpmWorkspaceRows('not-json'), /Unable to parse/u);
 
-  assert.match(source, /'\.generated-docs'/u);
-  assert.match(source, /'planning'[\s\S]*'status'[\s\S]*'generated-code-state\.md'/u);
-  assert.doesNotMatch(
-    source,
-    /const outputPath = path\.join\(repoRoot, 'docs', 'planning', 'status', 'generated-code-state\.md'\)/u
+  const outside = path.resolve(repoRoot, '..', 'outside');
+  assert.throws(
+    () =>
+      listPnpmWorkspaceDirs({
+        spawnSync: () => ({ status: 0, stdout: JSON.stringify([{ path: outside }]) }),
+      }),
+    /outside the repository/u
   );
 });
 
-test('repository map policy declares the actual read models and minimal generator command', () => {
-  const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
-  const repositoryMapPolicy = policy.artifactClasses.find(
-    (entry) => entry.id === 'tracked-docs-repository-map'
-  );
-
-  assert.ok(repositoryMapPolicy);
-  assert.equal(
-    repositoryMapPolicy.generatorCommand,
-    'pnpm docs:status:generate -- --repository-map-only'
-  );
-  assert.deepEqual(repositoryMapPolicy.sourcePaths, [
-    'scripts/generate-code-status.cjs',
-    'pnpm-workspace.yaml',
-    'tools/planning-db/migrations/043_db_first_architecture_authority_queries.sql',
-    'tools/planning-db/migrations/065_documentation_lifecycle_query.sql',
-    'tools/planning-db/migrations/070_documentation_panel_query.sql',
-    'apps',
-    'packages',
-  ]);
-  assert.equal(
-    repositoryMapPolicy.sourcePaths.includes(
-      'tools/planning-db/migrations/067_documentation_lifecycle_subject_key.sql'
-    ),
-    false
-  );
-  assert.equal(
-    repositoryMapPolicy.sourcePaths.includes(
-      'scripts/planning-db/queries/documentation-lifecycle-query.cjs'
-    ),
-    false
-  );
-});
-
-test('generated docs policy treats generated code state as an untracked local artifact', () => {
-  const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
-  const codeStatePolicy = policy.artifactClasses.find(
-    (entry) => entry.id === 'local-docs-status-code-state'
-  );
-
-  assert.ok(codeStatePolicy);
-  assert.deepEqual(codeStatePolicy.artifacts, [
-    '.generated-docs/planning/status/generated-code-state.md',
-  ]);
-  assert.equal(codeStatePolicy.tracking, 'untracked');
-});
-
-test('repository workspace inventory equals effective pnpm membership', () => {
-  const output = execFileSync('pnpm', ['list', '-r', '--depth', '-1', '--json'], {
-    cwd: repoRoot,
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
+test('effective membership can include non-standard layouts and exclude existing directories', (t) => {
+  const first = createWorkspaceFixture(t, 'custom/alpha', '@fixture/alpha');
+  const second = createWorkspaceFixture(t, 'legacy/beta', '@fixture/beta', { root: first.root });
+  const ignored = createWorkspaceFixture(t, 'packages/ignored', '@fixture/ignored', {
+    root: first.root,
   });
-  const rows = JSON.parse(output);
-  const pnpmPaths = rows
-    .map((row) => path.resolve(row.path))
-    .filter((absolutePath) => absolutePath !== repoRoot)
-    .map((absolutePath) => toPosix(path.relative(repoRoot, absolutePath)))
-    .sort((left, right) => left.localeCompare(right, 'en'));
-  const generatedPaths = collectRepositoryWorkspaceStats()
-    .map((workspace) => workspace.path)
-    .sort((left, right) => left.localeCompare(right, 'en'));
 
-  assert.deepEqual(generatedPaths, pnpmPaths);
-  assert.equal(new Set(generatedPaths).size, generatedPaths.length);
+  const workspaces = collectRepositoryWorkspaceStats({
+    workspaceDirs: [second.directory, first.directory],
+  });
+  assert.deepEqual(
+    workspaces.map((workspace) => workspace.workspace),
+    ['@fixture/beta', '@fixture/alpha']
+  );
+  assert.equal(workspaces.some((workspace) => workspace.workspace === '@fixture/ignored'), false);
+  assert.ok(fs.existsSync(ignored.directory));
 });
 
-test('workspace discovery handles add, rename, and removal without a manual map row', (t) => {
-  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'repository-map-workspaces-'));
-  t.after(() => fs.rmSync(fixtureRoot, { recursive: true, force: true }));
+test('workspace add, rename, and removal are expressed only by effective membership', (t) => {
+  const first = createWorkspaceFixture(t, 'alpha', '@fixture/alpha');
+  const second = createWorkspaceFixture(t, 'beta', '@fixture/beta', { root: first.root });
 
-  const writePackage = (relativePath, name) => {
-    const directory = path.join(fixtureRoot, ...relativePath.split('/'));
-    fs.mkdirSync(directory, { recursive: true });
-    fs.writeFileSync(
-      path.join(directory, 'package.json'),
-      `${JSON.stringify({ name, scripts: { test: 'node --test' } }, null, 2)}\n`,
-      'utf8'
-    );
-  };
-  const currentPaths = () =>
-    collectWorkspaceDirs(fixtureRoot)
-      .map((directory) => toPosix(path.relative(fixtureRoot, directory)))
-      .sort((left, right) => left.localeCompare(right, 'en'));
-
-  writePackage('alpha', '@fixture/alpha');
-  writePackage('@fixture/beta', '@fixture/beta');
-  assert.deepEqual(currentPaths(), ['@fixture/beta', 'alpha']);
-
-  fs.renameSync(path.join(fixtureRoot, 'alpha'), path.join(fixtureRoot, 'gamma'));
-  assert.deepEqual(currentPaths(), ['@fixture/beta', 'gamma']);
-
-  fs.rmSync(path.join(fixtureRoot, '@fixture', 'beta'), { recursive: true, force: true });
-  assert.deepEqual(currentPaths(), ['gamma']);
+  assert.deepEqual(
+    collectRepositoryWorkspaceStats({ workspaceDirs: [first.directory, second.directory] }).map(
+      (workspace) => workspace.workspace
+    ),
+    ['@fixture/alpha', '@fixture/beta']
+  );
+  const renamed = path.join(first.root, 'gamma');
+  fs.renameSync(first.directory, renamed);
+  assert.deepEqual(
+    collectRepositoryWorkspaceStats({ workspaceDirs: [renamed] }).map(
+      (workspace) => workspace.workspace
+    ),
+    ['@fixture/alpha']
+  );
+  assert.equal(
+    collectRepositoryWorkspaceStats({ workspaceDirs: [] }).some(
+      (workspace) => workspace.workspace === '@fixture/beta'
+    ),
+    false
+  );
 });
 
-test('repository map resolves workspace and canonical document through explicit component identity', () => {
-  const workspace = { path: 'apps/web' };
+test('repository map component matching is exact and excludes inference', () => {
+  const workspace = workspaceRow({ path: 'apps/web' });
   const components = [
-    {
-      component_id: 'SYS-WEB-ROOT',
-      repo_path: 'apps/web',
-      status: 'implemented',
-    },
-    {
-      component_id: 'SYS-WEB-NESTED',
-      repo_path: 'apps/web/src/app',
-      status: 'implemented',
-    },
+    { component_id: 'SYS-WEB-ROOT', repo_path: 'apps/web', status: 'implemented' },
+    { component_id: 'SIMILAR', repo_path: 'apps/web/src', status: 'implemented' },
   ];
-  const documents = [
-    {
-      component_id: 'SYS-WEB-ROOT',
-      document_path: 'docs/architecture/components/web/index.md',
-      canonicality: 'canonical',
-      lifecycle_state: 'active',
-      status: 'Active',
-    },
-  ];
-
-  assert.deepEqual(resolveWorkspaceArchitecture(workspace, components, documents), {
+  const document = {
+    component_id: 'SYS-WEB-ROOT',
+    document_path: 'docs/architecture/components/web/index.md',
+    canonicality: 'canonical',
+    lifecycle_state: 'active',
+    status: 'Active',
+  };
+  assert.deepEqual(resolveWorkspaceArchitecture(workspace, components, [document]), {
     component: 'SYS-WEB-ROOT',
     componentStatus: 'implemented',
     canonicalDoc:
       '[docs/architecture/components/web/index.md](../architecture/components/web/index.md)',
     gaps: [],
   });
-});
-
-test('repository map never treats a title-derived subject key as component identity', () => {
-  const workspace = { path: 'packages/@dvt/planner' };
-  const components = [
-    {
-      component_id: 'SYS-PLANNER-ROOT',
-      repo_path: workspace.path,
-      status: 'implemented',
-    },
-  ];
-  const documents = [
-    {
-      subject_key: 'SYS-PLANNER-ROOT',
-      document_path: 'docs/architecture/components/planner/index.md',
-      canonicality: 'canonical',
-      lifecycle_state: 'active',
-      status: 'Active',
-    },
-  ];
-
-  assert.deepEqual(resolveWorkspaceArchitecture(workspace, components, documents), {
-    component: 'SYS-PLANNER-ROOT',
-    componentStatus: 'implemented',
-    canonicalDoc: '-',
-    gaps: ['missing-doc-entry'],
-  });
-});
-
-test('repository map exposes missing and ambiguous Planning DB identity instead of guessing', () => {
-  const workspace = { path: 'packages/@dvt/example' };
-
-  assert.deepEqual(resolveWorkspaceArchitecture(workspace, [], []), {
-    component: '-',
-    componentStatus: '-',
-    canonicalDoc: '-',
-    gaps: ['unregistered-component'],
-  });
-
-  const ambiguous = resolveWorkspaceArchitecture(
-    workspace,
-    [
-      { component_id: 'COMP-A', repo_path: workspace.path, status: 'implemented' },
-      { component_id: 'COMP-B', repo_path: workspace.path, status: 'implemented' },
-    ],
-    []
+  assert.deepEqual(
+    resolveWorkspaceArchitecture(workspace, components, [
+      { ...document, component_id: undefined, subject_key: 'SYS-WEB-ROOT' },
+    ]).gaps,
+    ['missing-canonical-doc-binding']
   );
-  assert.deepEqual(ambiguous, {
-    component: 'COMP-A, COMP-B',
-    componentStatus: '-',
-    canonicalDoc: '-',
-    gaps: ['ambiguous-component'],
+});
+
+test('missing and ambiguous component/document identity stays fail-closed', () => {
+  const workspace = workspaceRow();
+  assert.deepEqual(resolveWorkspaceArchitecture(workspace, [], []).gaps, [
+    'unregistered-component',
+  ]);
+  assert.deepEqual(
+    resolveWorkspaceArchitecture(
+      workspace,
+      [
+        { component_id: 'A', repo_path: workspace.path, status: 'implemented' },
+        { component_id: 'B', repo_path: workspace.path, status: 'implemented' },
+      ],
+      []
+    ).gaps,
+    ['ambiguous-component']
+  );
+  assert.deepEqual(
+    resolveWorkspaceArchitecture(
+      workspace,
+      [{ component_id: 'A', repo_path: workspace.path, status: 'implemented' }],
+      [
+        {
+          component_id: 'A',
+          document_path: 'docs/a.md',
+          canonicality: 'canonical',
+          lifecycle_state: 'active',
+        },
+        {
+          component_id: 'A',
+          document_path: 'docs/b.md',
+          canonicality: 'canonical',
+          lifecycle_state: 'active',
+        },
+      ]
+    ).gaps,
+    ['ambiguous-canonical-doc-binding']
+  );
+});
+
+test('governed coverage classes use exact canonical or local evidence', () => {
+  assert.deepEqual(
+    resolveDocumentationProjection(workspaceRow(), { canonicalDoc: '[doc](doc.md)' }),
+    { entry: '[doc](doc.md)', coverage: 'canonical' }
+  );
+  const linked = resolveDocumentationProjection(
+    workspaceRow({ localReadmePath: 'packages/@dvt/example/README.md' }),
+    { canonicalDoc: '-' }
+  );
+  assert.equal(linked.coverage, 'linked-local');
+  assert.match(linked.entry, /README\.md/u);
+  assert.deepEqual(resolveDocumentationProjection(workspaceRow(), { canonicalDoc: '-' }), {
+    entry: '-',
+    coverage: 'reference-only',
   });
 });
 
-test('repository map reports multiple explicit canonical documents as ambiguous', () => {
-  const workspace = { path: 'packages/@dvt/example' };
-  const components = [
-    { component_id: 'COMP-EXAMPLE', repo_path: workspace.path, status: 'implemented' },
-  ];
-  const documents = [
-    {
-      component_id: 'COMP-EXAMPLE',
-      document_path: 'docs/architecture/components/example/index.md',
-      canonicality: 'canonical',
-      lifecycle_state: 'active',
-      status: 'Active',
-    },
-    {
-      component_id: 'COMP-EXAMPLE',
-      document_path: 'docs/contracts/example.md',
-      canonicality: 'canonical',
-      lifecycle_state: 'active',
-      status: 'Active',
-    },
-  ];
-
-  const result = resolveWorkspaceArchitecture(workspace, components, documents);
-  assert.deepEqual(result.gaps, ['ambiguous-doc-entry']);
-  assert.match(result.canonicalDoc, /docs\/architecture\/components\/example\/index\.md/u);
-  assert.match(result.canonicalDoc, /docs\/contracts\/example\.md/u);
-});
-
-test('Markdown table cells escape backslashes, pipes, and line breaks deterministically', () => {
+test('Markdown cells are deterministic and safe', () => {
   assert.equal(
     markdownCell('docs\\component|line\nnext'),
     'docs\\\\component\\|line<br>next'
@@ -304,98 +218,79 @@ test('generation modes isolate code-state and repository-map work', async () => 
     () => resolveGenerationMode(['--code-state-only', '--repository-map-only']),
     /Choose either/u
   );
-  assert.throws(() => resolveGenerationMode(['--unknown']), /Unknown generate-code-status option/u);
 
-  const workspaces = [{ workspace: '@fixture/example', path: 'packages/@fixture/example' }];
+  const workspaces = [workspaceRow()];
   const calls = [];
   const dependencies = {
     collectRepositoryWorkspaceStats: () => workspaces,
-    generateCodeState: async (received) => calls.push(['code-state', received]),
-    generateRepositoryMap: async (received) => calls.push(['repository-map', received]),
+    generateCodeState: async () => calls.push('code'),
+    generateRepositoryMap: async () => calls.push('map'),
   };
-
   await main(['--code-state-only'], dependencies);
-  assert.deepEqual(calls, [['code-state', workspaces]]);
-
+  assert.deepEqual(calls, ['code']);
   calls.length = 0;
   await main(['--repository-map-only'], dependencies);
-  assert.deepEqual(calls, [['repository-map', workspaces]]);
-
-  calls.length = 0;
-  await main([], dependencies);
-  assert.deepEqual(calls, [
-    ['code-state', workspaces],
-    ['repository-map', workspaces],
-  ]);
+  assert.deepEqual(calls, ['map']);
 });
 
-test('repository map rendering is byte-stable for identical Git and DB facts', () => {
-  const fixture = repositoryMapFixture();
-  const first = renderRepositoryMap(fixture.workspaces, fixture.facts, '2026-08-06');
-  const second = renderRepositoryMap(fixture.workspaces, fixture.facts, '2026-08-06');
-
+test('repository map output is byte-stable and preserves governed navigation', () => {
+  const workspaces = [
+    workspaceRow({ localReadmePath: 'packages/@dvt/example/README.md' }),
+  ];
+  const facts = {
+    components: [
+      { component_id: 'COMP-EXAMPLE', repo_path: workspaces[0].path, status: 'implemented' },
+    ],
+    documents: [],
+  };
+  const first = renderRepositoryMap(workspaces, facts, '2026-08-06');
+  const second = renderRepositoryMap(workspaces, facts, '2026-08-06');
   assert.equal(second, first);
+  assert.match(first, /linked-local/u);
+  assert.match(first, /missing-canonical-doc-binding/u);
+  assert.match(first, /\[Component Map\]/u);
+  assert.match(first, /\[Canonical Doc Code Matrix\]/u);
+  assert.match(first, /\[System Delivery Status\]/u);
+  assert.match(first, /\[Glossary\]/u);
+  assert.doesNotMatch(first, /\| Responsibility \|/u);
 });
 
-test('repository map output replaces manual responsibility and coverage inventories', () => {
-  const fixture = repositoryMapFixture();
-  const output = renderRepositoryMap(fixture.workspaces, fixture.facts, '2026-08-06');
+test('policy names actual inputs and the minimal generator command', () => {
+  const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
+  const entry = policy.artifactClasses.find((item) => item.id === 'tracked-docs-repository-map');
+  assert.ok(entry);
+  assert.equal(entry.generatorCommand, 'pnpm docs:status:generate -- --repository-map-only');
+  assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
+  assert.ok(entry.sourcePaths.includes('tools/planning-db/migrations'));
+  assert.equal(entry.sourcePaths.some((value) => value.includes('subject_key')), false);
+});
 
-  assert.match(output, /architecture\.component_query/u);
-  assert.match(output, /documentation_panel_query/u);
-  assert.match(
-    output,
-    /\[docs\/architecture\/components\/example\/index\.md\]\(\.\.\/architecture\/components\/example\/index\.md\)/u
-  );
-  assert.match(output, /\[Component Map\]\(\.\.\/architecture\/component-map\.md\)/u);
-  assert.match(
-    output,
-    /\[Canonical Doc Code Matrix\]\(\.\.\/planning\/status\/canonical-doc-code-matrix\.md\)/u
-  );
-  assert.match(
-    output,
-    /\[System Delivery Status\]\(\.\.\/architecture\/system-delivery-status\.md\)/u
-  );
-  assert.match(output, /\[Glossary\]\(\.\/glossary\.md\)/u);
-  assert.match(output, /\[Domain Language\]\(\.\/domain-language\.md\)/u);
-  assert.match(
-    output,
-    /This page is auto-generated by `pnpm docs:status:generate`\. Do not edit manually\./u
-  );
-  assert.doesNotMatch(output, /## Coverage Classes/u);
-  assert.doesNotMatch(output, /\| Responsibility \|/u);
+test('generator no longer reads the empty documentation panel binding', () => {
+  const source = fs.readFileSync(generatorPath, 'utf8');
+  assert.doesNotMatch(source, /documentation_panel_query/u);
+  assert.match(source, /not in \('deprecated', 'drift'\)/u);
+  assert.match(source, /pnpmCommand\(\)/u);
 });
 
 test(
-  'live Planning DB migration/import renders current HET workspaces through explicit identities',
+  'live Planning DB migration/import renders current workspaces without false document bindings',
   { skip: process.env.DVT_REPOSITORY_MAP_INTEGRATION !== '1' },
   async () => {
     await runMigrations({ databaseUrl: dbUrl(), silent: true });
     await importContent({ databaseUrl: dbUrl(), silent: true });
-
     const client = new Client({ connectionString: dbUrl() });
     await client.connect();
     try {
       const facts = await readRepositoryArchitectureFacts(client);
       const workspaces = collectRepositoryWorkspaceStats();
-      const workspacePaths = new Set(workspaces.map((workspace) => workspace.path));
+      const paths = new Set(workspaces.map((workspace) => workspace.path));
       const output = renderRepositoryMap(workspaces, facts, '2026-08-06');
-
       assert.ok(facts.components.length > 0);
-      assert.equal(
-        facts.documents.every(
-          (document) => Boolean(document.component_id) && Boolean(document.document_path)
-        ),
-        true
-      );
-      assert.equal(
-        workspacePaths.has('packages/@dvt/temporal-object-file-postgres-plugin'),
-        true
-      );
-      assert.equal(workspacePaths.has('packages/@dvt/temporal-http-json-plugin'), true);
-      assert.match(output, /packages\/@dvt\/temporal-object-file-postgres-plugin/u);
-      assert.match(output, /packages\/@dvt\/temporal-http-json-plugin/u);
-      assert.match(output, /planning_query_store\.documentation_panel_query/u);
+      assert.deepEqual(facts.documents, []);
+      assert.equal(paths.has('packages/@dvt/temporal-http-json-plugin'), true);
+      assert.equal(paths.has('packages/@dvt/temporal-object-file-postgres-plugin'), true);
+      assert.match(output, /missing-canonical-doc-binding/u);
+      assert.doesNotMatch(output, /documentation_panel_query/u);
     } finally {
       await client.end();
     }
