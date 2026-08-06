@@ -113,6 +113,7 @@ export function DbtModelAuthoringSection({
               value={draft.selectedSourceId}
               disabled={disabled}
               className={selectClassName}
+              aria-invalid={errors?.selectedSourceId ? 'true' : undefined}
               onChange={(event) =>
                 onChange((currentDraft) => ({
                   ...currentDraft,
@@ -138,6 +139,11 @@ export function DbtModelAuthoringSection({
               {canvasViewCopy.inspectorDbtNoConnectedOriginsMessage}
             </p>
           )}
+          {errors?.selectedSourceId ? (
+            <p className={inspectorVisualClasses.inspectorErrorText}>
+              {formatCanvasInspectorNodeDraftError(errors.selectedSourceId, canvasViewCopy)}
+            </p>
+          ) : null}
         </div>
       </div>
     </div>

@@ -8,7 +8,7 @@ import {
   hasCanvasInspectorNodeDraftChanges,
   validateCanvasInspectorNodeDraft,
 } from './canvasInspectorAuthoringModel';
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 
 function buildNode(): CanonicalNode {
   return {
@@ -142,6 +142,59 @@ describe('canvasInspectorAuthoringModel', () => {
           modelSql: null,
         },
       })
+    ).toEqual({});
+  });
+
+  it('rejects a DBT model origin that is blank or not connected', () => {
+    const source: CanonicalNode = {
+      id: 'source-orders',
+      name: 'Orders source',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    };
+    const model: CanonicalNode = {
+      id: 'model-orders',
+      name: 'Orders model',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    };
+    const edges: readonly CanonicalEdge[] = [
+      {
+        id: 'source-orders-model-orders',
+        sourceId: source.id,
+        targetId: model.id,
+        relation: 'lineage',
+      },
+    ];
+    const draft = {
+      ...createCanvasInspectorNodeDraft(model),
+      dbt: {
+        ...createCanvasInspectorNodeDraft(model).dbt!,
+        selectedSourceId: '',
+      },
+    };
+    const context = { node: model, nodes: [source, model], edges };
+
+    expect(validateCanvasInspectorNodeDraft(draft, context)).toEqual({
+      dbt: { selectedSourceId: 'dbt_source_required' },
+    });
+    expect(
+      validateCanvasInspectorNodeDraft(
+        { ...draft, dbt: { ...draft.dbt, selectedSourceId: 'detached-source' } },
+        context
+      )
+    ).toEqual({ dbt: { selectedSourceId: 'dbt_source_required' } });
+    expect(
+      validateCanvasInspectorNodeDraft(
+        { ...draft, dbt: { ...draft.dbt, selectedSourceId: source.id } },
+        context
+      )
     ).toEqual({});
   });
 

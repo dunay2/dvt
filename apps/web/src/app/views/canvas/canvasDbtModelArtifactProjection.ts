@@ -89,7 +89,9 @@ function isCompatibleOrigin(node: CanonicalNode): boolean {
   );
 }
 
-function resolveIncomingOrigins(args: ProjectDbtModelArtifactArgs): readonly CanonicalNode[] {
+export function resolveCompatibleDbtModelOrigins(
+  args: Pick<ProjectDbtModelArtifactArgs, 'modelNode' | 'nodes' | 'edges'>
+): readonly CanonicalNode[] {
   const nodeById = new Map(args.nodes.map((node) => [node.id, node]));
   return args.edges
     .filter((edge) => edge.targetId === args.modelNode.id)
@@ -159,23 +161,16 @@ function resolveOriginProjection(
   args: ProjectDbtModelArtifactArgs,
   metadata: DbtNodeAuthoringMetadata
 ): DbtModelOriginProjection | DbtModelArtifactProjectionResult {
-  const incomingOrigins = resolveIncomingOrigins(args);
-  const selectedOrigin =
-    metadata.selectedSourceId.length > 0
-      ? incomingOrigins.find((origin) => origin.id === metadata.selectedSourceId)
-      : undefined;
-  const origin =
-    selectedOrigin ??
-    incomingOrigins.find(isDbtSource) ??
-    incomingOrigins.find(isObjectFilePostgresNode) ??
-    incomingOrigins.find(isWarehouseSource) ??
-    incomingOrigins.find(isDbtModel);
+  const selectedSourceId = metadata.selectedSourceId.trim();
+  const origin = resolveCompatibleDbtModelOrigins(args).find(
+    (candidate) => candidate.id === selectedSourceId
+  );
 
   if (origin == null) {
     return {
       ok: false,
       reason: 'origin_required',
-      message: `DBT model "${args.modelNode.name}" must be connected to a source or model origin.`,
+      message: `DBT model "${args.modelNode.name}" must select a connected source or model origin.`,
     };
   }
 

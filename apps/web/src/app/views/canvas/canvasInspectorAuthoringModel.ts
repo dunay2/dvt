@@ -1,5 +1,5 @@
 /** Owned concern: derive, validate, and apply the route-owned Inspector DTO for governed node details. */
-import type { CanonicalNode } from '../../types/canonical';
+import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   applyDbtNodeAuthoringMetadata,
   createDbtNodeAuthoringMetadata,
@@ -23,6 +23,13 @@ import {
   createObjectFilePostgresAuthoringDraft,
   validateObjectFilePostgresAuthoringDraft,
 } from './objectFilePostgresAuthoringModel';
+import { resolveCompatibleDbtModelOrigins } from './canvasDbtModelArtifactProjection';
+
+export type CanvasInspectorNodeDraftValidationContext = Readonly<{
+  node: CanonicalNode;
+  nodes: readonly CanonicalNode[];
+  edges: readonly CanonicalEdge[];
+}>;
 
 function normalizeNodeName(value: string): string {
   return value.trim();
@@ -63,7 +70,8 @@ export function areCanvasInspectorNodeDraftsEqual(
 }
 
 export function validateCanvasInspectorNodeDraft(
-  draft: CanvasInspectorNodeDraft
+  draft: CanvasInspectorNodeDraft,
+  context?: CanvasInspectorNodeDraftValidationContext
 ): CanvasInspectorNodeDraftErrors {
   if (normalizeNodeName(draft.name).length === 0) {
     return {
@@ -87,6 +95,19 @@ export function validateCanvasInspectorNodeDraft(
     }
     if (!['view', 'table', 'incremental', 'ephemeral'].includes(draft.dbt.materialized)) {
       dbtErrors.materialized = 'dbt_materialization_invalid';
+    }
+    if (context?.node.pluginId === 'dbt' && context.node.kind === 'dbt:model') {
+      const selectedSourceId = draft.dbt.selectedSourceId.trim();
+      const connectedOriginIds = new Set(
+        resolveCompatibleDbtModelOrigins({
+          modelNode: context.node,
+          nodes: context.nodes,
+          edges: context.edges,
+        }).map((origin) => origin.id)
+      );
+      if (selectedSourceId.length === 0 || !connectedOriginIds.has(selectedSourceId)) {
+        dbtErrors.selectedSourceId = 'dbt_source_required';
+      }
     }
     if (Object.keys(dbtErrors).length > 0) {
       return {
