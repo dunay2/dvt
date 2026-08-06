@@ -168,7 +168,7 @@ const SCRIPT_FILE_RULES = [
   ],
   [/^scripts\/run-dev-stack(\.[\w-]+)?(\.test)?\.cjs$/u, 'dev-local'],
   [
-    /^scripts\/run-(canvas-first-authoring|canvas-source-import|selected-closure)-live-proof\.cjs$/u,
+    /^scripts\/run-(canvas-first-authoring|canvas-source-import|het1-public-vertical|selected-closure)-live-proof\.cjs$/u,
     'dev-local',
   ],
   [

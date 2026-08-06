@@ -215,6 +215,10 @@ test('classifies current command file paths without broad script-directory assum
     classifyScriptFilePath('scripts/run-canvas-source-import-live-proof.cjs').domain,
     'dev-local'
   );
+  assert.equal(
+    classifyScriptFilePath('scripts/run-het1-public-vertical-live-proof.cjs').domain,
+    'dev-local'
+  );
 });
 
 test('detects repository command files and excludes non-command metadata', () => {
