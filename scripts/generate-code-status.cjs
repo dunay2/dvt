@@ -490,7 +490,10 @@ function writeIfChanged(absPath, content) {
 }
 
 function assertTrackedRepositoryMapClean(options = {}) {
-  const check = options.check === true || Boolean(process.env.CI);
+  const check =
+    options.check === true ||
+    process.env.npm_lifecycle_event === 'docs:status:check' ||
+    Boolean(process.env.CI);
   if (!check) return;
   const run = options.spawnSync || spawnSync;
   const relativePath = relFromRepo(repositoryMapOutputPath);
