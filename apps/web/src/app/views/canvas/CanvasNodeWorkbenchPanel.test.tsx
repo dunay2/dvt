@@ -65,6 +65,9 @@ const MODEL_NODE: CanonicalNode = {
   status: 'idle',
   tags: [],
   metadata: {
+    dbt: {
+      selectedSourceId: SOURCE_NODE.id,
+    },
     columns: {
       order_id: {
         data_type: 'integer',
