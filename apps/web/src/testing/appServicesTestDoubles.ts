@@ -1,7 +1,10 @@
 /** Owned concern: assemble explicit app-service test doubles outside the product runtime. */
 import type { CostAttributionSummary, ICostAttributionSummaryPort } from '../app/ports/cost';
 import type { FrontendOperabilitySink } from '../app/ports/frontendOperability';
-import type { WorkspaceScopeSelectionPort } from '../app/ports/workspaceScopeSelection';
+import type {
+  WorkspaceScopeSelectionPort,
+  WorkspaceScopeSelectionState,
+} from '../app/ports/workspaceScopeSelection';
 import type { AppServicesOverrides } from '../app/services/composition/appServices';
 import { createMockPlansService } from './plansPortDoubles';
 import { createMockRunsService, createMockSessionContextPort } from './runsPortDoubles';
@@ -46,18 +49,20 @@ export function createMockCostAttributionSummaryPort(
 }
 
 export function createMockWorkspaceScopeSelectionPort(): WorkspaceScopeSelectionPort {
+  const selection: WorkspaceScopeSelectionState = {
+    selectedScope: {
+      tenantId: 'tenant-1',
+      projectId: 'project-1',
+      environmentId: 'env-1',
+    },
+    availableScopes: [],
+    targetAdapter: 'temporal',
+    availableTargetAdapters: ['temporal'],
+    status: 'selected' as const,
+  };
+
   return {
-    getSelection: () => ({
-      selectedScope: {
-        tenantId: 'tenant-1',
-        projectId: 'project-1',
-        environmentId: 'env-1',
-      },
-      availableScopes: [],
-      targetAdapter: 'temporal',
-      availableTargetAdapters: ['temporal'],
-      status: 'selected',
-    }),
+    getSelection: () => selection,
     selectWorkspaceScope: (selectedScope) => ({
       status: 'selected',
       selectedScope,
