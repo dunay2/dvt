@@ -7,6 +7,7 @@ export const HTTP_JSON_PLUGIN_ID = 'dvt.http-json';
 
 export const httpJsonContributions: PluginContributions = {
   id: HTTP_JSON_PLUGIN_ID,
+  backendPluginId: HTTP_JSON_PLUGIN_ID,
   displayName: 'DVT HTTP JSON',
   version: '1.0.0',
   capabilities: ['canvas.render', 'canvas.edit', 'plan.preview'],

@@ -25,7 +25,15 @@ const load: CanonicalNode = {
 };
 
 describe('HTTP JSON plugin contributions', () => {
+  const availableCapabilities = {
+    plugins: {
+      [HTTP_JSON_PLUGIN_ID]: { available: true },
+      'dvt.object-file-postgres': { available: true },
+    },
+  } as const;
+
   it('publishes an input node into the DBT canvas and bridges only artifacts to HET1', () => {
+    expect(httpJsonContributions.backendPluginId).toBe(HTTP_JSON_PLUGIN_ID);
     expect(httpJsonContributions.nodeKinds).toEqual([
       expect.objectContaining({
         kind: 'dvt:http_json_acquisition',
@@ -36,15 +44,28 @@ describe('HTTP JSON plugin contributions', () => {
       }),
     ]);
     expect(
-      getAllCanvasRuntimeRegistrations()
+      getAllCanvasRuntimeRegistrations(availableCapabilities)
         .find((registration) => registration.kind === 'dbt')
         ?.nodeKinds.some((kind) => kind.kind === 'dvt:http_json_acquisition')
     ).toBe(true);
-    expect(evaluateConnectionPolicy(acquisition, load, getPluginPortMap())).toEqual({
-      allowed: true,
-    });
-    expect(evaluateConnectionPolicy(load, acquisition, getPluginPortMap())).toMatchObject({
-      allowed: false,
-    });
+    expect(
+      evaluateConnectionPolicy(acquisition, load, getPluginPortMap(availableCapabilities))
+    ).toEqual({ allowed: true });
+    expect(
+      evaluateConnectionPolicy(load, acquisition, getPluginPortMap(availableCapabilities))
+    ).toMatchObject({ allowed: false });
+  });
+
+  it('removes the acquisition node when its backend capability is unavailable', () => {
+    const dbtCanvas = getAllCanvasRuntimeRegistrations({
+      plugins: {
+        [HTTP_JSON_PLUGIN_ID]: { available: false, reason: 'disabled in test' },
+        'dvt.object-file-postgres': { available: true },
+      },
+    }).find((registration) => registration.kind === 'dbt');
+
+    expect(dbtCanvas?.nodeKinds).not.toContainEqual(
+      expect.objectContaining({ pluginId: HTTP_JSON_PLUGIN_ID })
+    );
   });
 });
