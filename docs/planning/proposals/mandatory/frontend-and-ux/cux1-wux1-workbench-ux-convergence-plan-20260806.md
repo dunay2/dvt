@@ -156,7 +156,9 @@ governingSources:
   - docs/architecture/components/web/screen-manuals-and-user-stories.md
 allowedImplementationSurfaces:
   - apps/web/src/**
+  - apps/web/package.json
   - apps/web/cypress/**
+  - pnpm-lock.yaml
   - docs/architecture/components/web/**
   - docs/planning/closeouts/**
   - docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md
@@ -223,14 +225,14 @@ fowlerSignals:
 architectureGuards:
   - pnpm --filter @dvt/web test:architecture
 cypressFlows:
-  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-ux-convergence.cy.ts
+  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
 completionGate:
   - pnpm docs:feature-mechanization -- --feature WORKBENCH-UX-CONVERGENCE-20260806
   - pnpm --filter @dvt/web test
   - pnpm --filter @dvt/web test:architecture
   - pnpm --filter @dvt/web typecheck
   - pnpm --filter @dvt/web lint
-  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/canvas/canvas-workbench-ux-convergence.cy.ts
+  - pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
   - pnpm docs:feature-mechanization:implementation -- --feature WORKBENCH-UX-CONVERGENCE-20260806
   - pnpm verify:prepush
 redGreenCycles:
@@ -272,7 +274,7 @@ symbols:
     cqRails: [ConfigureApplicationLanguage]
     fowlerSignals: [Hidden authority, Duplicate semantics]
     architectureGuard: pnpm --filter @dvt/web test:architecture
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-workbench-ux-convergence.cy.ts
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts]
   - name: ShellWorkspaceScopeSelector
     path: apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx
@@ -280,7 +282,7 @@ symbols:
     cqRails: [SelectWorkspaceScope, GetEffectiveWorkspaceContext]
     fowlerSignals: [Intention-Revealing Interface]
     architectureGuard: pnpm --filter @dvt/web test:architecture
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-workbench-ux-convergence.cy.ts
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/ShellWorkspaceScopeSelector.test.tsx]
   - name: DbtProjectFileCodeWorkbench
     path: apps/web/src/app/views/canvas/dbtProjectFileCodeWorkbench.tsx
@@ -288,7 +290,7 @@ symbols:
     cqRails: [ListWorkspaceFiles, GetWorkspaceFileContent, SaveWorkspaceFileContent]
     fowlerSignals: [Divergent change]
     architectureGuard: pnpm --filter @dvt/web test:architecture
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-workbench-ux-convergence.cy.ts
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/dbtProjectFileCodeWorkbench.test.tsx]
   - name: CanvasAddNodeCatalogView
     path: apps/web/src/app/views/canvas/CanvasAddNodeCatalogView.tsx
@@ -296,7 +298,7 @@ symbols:
     cqRails: [CreateCanvasAuthoringNode]
     fowlerSignals: [Feature envy]
     architectureGuard: pnpm --filter @dvt/web test:architecture
-    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-workbench-ux-convergence.cy.ts
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasAddNodeCatalogView.test.tsx]
 ```
 
