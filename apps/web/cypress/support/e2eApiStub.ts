@@ -188,7 +188,13 @@ export function getLastE2eApiCall(
 }
 
 export function waitForE2eApiCall(pathname: string | RegExp, method?: string): Cypress.Chainable {
-  return cy.wrap(null).should(() => {
-    expect(getE2eApiCalls(pathname, method).length).to.be.greaterThan(0);
+  return cy.wrap(null, { timeout: 20_000 }).should(() => {
+    const matchingCalls = getE2eApiCalls(pathname, method);
+    const recordedCalls = e2eApiCalls.map((call) => `${call.method} ${call.url.pathname}`);
+    if (matchingCalls.length === 0) {
+      throw new Error(
+        `Expected ${method ?? 'any method'} ${String(pathname)}; recorded ${recordedCalls.join(', ')}`
+      );
+    }
   });
 }

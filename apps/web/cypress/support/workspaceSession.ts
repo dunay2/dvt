@@ -22,6 +22,7 @@ export const LIVE_WORKSPACE_SESSION: E2eWorkspaceSession = {
 
 type ShellBootstrapApiOptions = {
   scopes?: readonly string[];
+  projectIds?: readonly string[];
 };
 
 export function seedE2eWorkspaceSession(
@@ -82,7 +83,7 @@ export function stubShellBootstrapApis(options: ShellBootstrapApiOptions = {}): 
     },
     grants: {
       tenantIds: [E2E_WORKSPACE_SESSION.tenantId],
-      projectIds: [E2E_WORKSPACE_SESSION.projectId],
+      projectIds: options.projectIds ?? [E2E_WORKSPACE_SESSION.projectId],
       scopes: options.scopes ?? ['workspace:graph-draft:view', 'workspace:graph-draft:save'],
     },
   });

@@ -118,16 +118,25 @@ export function useCanvasPlanActionHandler({
       return;
     }
 
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.fileTree() });
-    void queryClient.invalidateQueries({ queryKey: queryKeys.workspace.artifacts() });
+    const { tenantId, projectId, environmentId } = sessionContext.getWorkspaceScopeSnapshot();
+    const workspaceLayoutKey = `${tenantId}::${projectId}::${environmentId}`;
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.workspace.fileTree(workspaceLayoutKey),
+    });
+    void queryClient.invalidateQueries({
+      queryKey: queryKeys.workspace.artifacts(workspaceLayoutKey),
+    });
     if (previewProvenanceConfig.graphArtifactPath) {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.workspace.fileContent(previewProvenanceConfig.graphArtifactPath),
+        queryKey: queryKeys.workspace.fileContent(
+          workspaceLayoutKey,
+          previewProvenanceConfig.graphArtifactPath
+        ),
       });
     }
     for (const artifactPath of result.writtenArtifactPaths) {
       void queryClient.invalidateQueries({
-        queryKey: queryKeys.workspace.fileContent(artifactPath),
+        queryKey: queryKeys.workspace.fileContent(workspaceLayoutKey, artifactPath),
       });
     }
 

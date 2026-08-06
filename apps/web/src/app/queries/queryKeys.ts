@@ -21,7 +21,8 @@ export const queryKeys = {
   workspace: {
     graphDraft: (workspaceLayoutKey: string) =>
       ['workspace', 'graph-draft', workspaceLayoutKey] as const,
-    graphForView: (viewId: string) => ['workspace', 'graph', viewId] as const,
+    graphForView: (workspaceLayoutKey: string, viewId: string) =>
+      ['workspace', 'graph', workspaceLayoutKey, viewId] as const,
     dbtProjectGraph: (
       tenantId: string,
       projectId: string,
@@ -38,14 +39,19 @@ export const queryKeys = {
         canvasId,
         projectRoot,
       ] as const,
-    diffChanges: () => ['workspace', 'diff-changes'] as const,
-    plugins: () => ['workspace', 'plugins'] as const,
-    roles: () => ['workspace', 'roles'] as const,
-    audit: () => ['workspace', 'audit'] as const,
-    fileTree: () => ['workspace', 'file-tree'] as const,
-    fileContent: (path: string) => ['workspace', 'file-content', path] as const,
-    fileHistory: (path: string) => ['workspace', 'file-history', path] as const,
-    artifacts: () => ['workspace', 'artifacts'] as const,
+    diffChanges: (workspaceLayoutKey: string) =>
+      ['workspace', 'diff-changes', workspaceLayoutKey] as const,
+    plugins: (workspaceLayoutKey: string) => ['workspace', 'plugins', workspaceLayoutKey] as const,
+    roles: (workspaceLayoutKey: string) => ['workspace', 'roles', workspaceLayoutKey] as const,
+    audit: (workspaceLayoutKey: string) => ['workspace', 'audit', workspaceLayoutKey] as const,
+    fileTree: (workspaceLayoutKey: string) =>
+      ['workspace', 'file-tree', workspaceLayoutKey] as const,
+    fileContent: (workspaceLayoutKey: string, path: string) =>
+      ['workspace', 'file-content', workspaceLayoutKey, path] as const,
+    fileHistory: (workspaceLayoutKey: string, path: string) =>
+      ['workspace', 'file-history', workspaceLayoutKey, path] as const,
+    artifacts: (workspaceLayoutKey: string) =>
+      ['workspace', 'artifacts', workspaceLayoutKey] as const,
   },
 
   // -------------------------------------------------------------------------

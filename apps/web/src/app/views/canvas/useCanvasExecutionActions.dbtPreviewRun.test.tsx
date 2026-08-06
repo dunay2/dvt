@@ -166,7 +166,7 @@ describe('useCanvasExecutionActions dbt preview and run', () => {
       })
     );
     expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: queryKeys.workspace.fileContent('models/orders_model.sql'),
+      queryKey: queryKeys.workspace.fileContent('tenant::project::env', 'models/orders_model.sql'),
     });
     expect(harness.text('can-start-run')).toBe('true');
 
