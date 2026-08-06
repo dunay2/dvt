@@ -34,7 +34,8 @@ describe('Templates workbench', () => {
     visitWithE2eWorkspaceSession('/plugins');
 
     cy.get('[data-slot="app-route-error-boundary"]').should('not.exist');
-    cy.get('[data-slot="left-navigation-link"][href="/templates"]').click();
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-menu-navigation-link"][href="/templates"]').click();
 
     cy.location('pathname').should('eq', '/templates');
     cy.get('[data-slot="route-workbench-header"]').contains('Templates').should('be.visible');
@@ -69,6 +70,7 @@ describe('Templates workbench', () => {
     cy.get('[data-slot="templates-generated-source-readable-preview"]')
       .should('contain', 'create or replace task load_orders')
       .and('contain', 'warehouse = transforming_wh')
-      .and('contain', 'call analytics.load_orders();');
+      .and('contain', 'call analytics.load_orders()')
+      .and('contain', '\n;');
   });
 });

@@ -37,6 +37,10 @@ function stubFirstUseProjectOnboardingApis(): void {
       body: {
         effectiveWorkspace: E2E_WORKSPACE_SESSION,
         availableWorkspaces: [E2E_WORKSPACE_SESSION],
+        deploymentScope: {
+          targetAdapter: 'temporal',
+          availableTargetAdapters: ['temporal'],
+        },
       },
     };
   });
@@ -103,11 +107,11 @@ describe('Project onboarding first-use flow', () => {
   it('creates a project and opens an empty typed canvas without fixture nodes', () => {
     visitCanvasWithoutPersistedWorkspace();
 
-    cy.contains('Create a project', { timeout: 20_000 }).should('be.visible');
+    cy.contains(/Create a project|Crear un proyecto/, { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="project-onboarding-form"]').within(() => {
       cy.contains('E2E Tenant').should('be.visible');
       cy.get('input[name="projectName"]').type('Orders workspace');
-      cy.contains('button', 'Create project').click();
+      cy.contains('button', /Create project|Crear proyecto/).click();
     });
 
     waitForE2eApiCall('/projects', 'POST');
@@ -116,7 +120,9 @@ describe('Project onboarding first-use flow', () => {
 
     cy.location('pathname').should('eq', '/canvas');
     cy.get('[data-slot="canvas-empty-state"]', { timeout: 20_000 }).within(() => {
-      cy.contains('Start transformation canvas').should('be.visible');
+      cy.contains(/Start transformation canvas|Inicia el canvas de transformación/).should(
+        'be.visible'
+      );
     });
     cy.contains('src_orders').should('not.exist');
     cy.contains('model_orders').should('not.exist');
