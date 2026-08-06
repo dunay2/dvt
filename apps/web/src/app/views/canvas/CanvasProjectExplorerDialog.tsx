@@ -1,7 +1,18 @@
 /** Owned concern: render the contextual Canvas project explorer from route-owned project data. */
 import { useMemo, useState } from 'react';
 
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { ProjectCanvasDocument } from './canvasProjectCanvasLifecycle';
+import { canvasViewCopy } from './copy';
 
 type CanvasProjectExplorerDialogProps = Readonly<{
   open: boolean;
@@ -12,7 +23,7 @@ type CanvasProjectExplorerDialogProps = Readonly<{
 }>;
 
 function formatCanvasKind(kind: string): string {
-  return kind === 'dbt' ? 'dbt' : 'Transformation';
+  return kind === 'dbt' ? 'dbt' : canvasViewCopy.workspaceTransformationKindLabel;
 }
 
 export function CanvasProjectExplorerDialog({
@@ -23,6 +34,7 @@ export function CanvasProjectExplorerDialog({
   onClose,
 }: CanvasProjectExplorerDialogProps): JSX.Element | null {
   const [query, setQuery] = useState('');
+  useApplicationLanguageStore((state) => state.language);
   const filteredDocuments = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     if (normalizedQuery.length === 0) {
@@ -37,52 +49,40 @@ export function CanvasProjectExplorerDialog({
     );
   }, [canvasDocuments, query]);
 
-  if (!open) {
-    return null;
-  }
-
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label="Explore project"
-      data-slot="canvas-project-explorer-dialog"
-      className="absolute inset-0 z-40 flex items-start justify-center bg-black/40 p-8"
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) {
+          onClose();
+        }
+      }}
     >
-      <section className="flex max-h-full w-full max-w-4xl flex-col overflow-hidden rounded-md border border-(--border-default) bg-(--surface-panel) shadow-2xl">
-        <header className="border-b border-(--border-muted) px-5 py-4">
-          <div className="flex items-start justify-between gap-4">
-            <div className="min-w-0">
-              <h2 className="text-base font-semibold text-(--text-default)">Explore project</h2>
-              <p className="mt-1 text-sm text-(--text-muted)">
-                Open another governed canvas without mounting a permanent project rail.
-              </p>
-            </div>
-            <button
-              type="button"
-              className="rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
-              onClick={onClose}
-            >
-              Close
-            </button>
-          </div>
+      <DialogContent
+        data-slot="canvas-project-explorer-dialog"
+        closeLabel={canvasViewCopy.projectExplorerCloseLabel}
+        className="max-h-[min(88vh,48rem)] max-w-4xl gap-0 overflow-hidden border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default)"
+      >
+        <DialogHeader className="border-b border-(--border-muted) px-5 py-4 pr-12">
+          <DialogTitle>{canvasViewCopy.projectExplorerTitle}</DialogTitle>
+          <DialogDescription>{canvasViewCopy.projectExplorerDescription}</DialogDescription>
           <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-(--text-muted)">
-            Search canvases
+            {canvasViewCopy.projectExplorerSearchLabel}
             <input
               value={query}
               onChange={(event) => setQuery(event.currentTarget.value)}
               className="mt-2 w-full rounded border border-(--border-default) bg-(--surface-panel-subtle) px-3 py-2 text-sm font-normal normal-case tracking-normal text-(--text-default) outline-none focus:border-(--accent-default)"
-              placeholder="Search by canvas, kind, environment, or id"
+              placeholder={canvasViewCopy.projectExplorerSearchPlaceholder}
             />
           </label>
-        </header>
+        </DialogHeader>
         <div className="min-h-0 overflow-y-auto p-4">
           {filteredDocuments.length === 0 ? (
             <p className="rounded border border-(--border-muted) px-4 py-6 text-sm text-(--text-muted)">
-              No canvas documents match this search.
+              {canvasViewCopy.projectExplorerEmptyMessage}
             </p>
           ) : (
-            <ul className="grid gap-2" aria-label="Project canvases">
+            <ul className="grid gap-2" aria-label={canvasViewCopy.projectExplorerListLabel}>
               {filteredDocuments.map((canvasDocument) => {
                 const selected = canvasDocument.id === activeCanvasId;
                 return (
@@ -101,7 +101,7 @@ export function CanvasProjectExplorerDialog({
                       </div>
                       {selected ? (
                         <span className="rounded border border-(--status-info) px-2 py-1 text-xs text-(--status-info)">
-                          Current
+                          {canvasViewCopy.projectExplorerCurrentCanvasLabel}
                         </span>
                       ) : (
                         <button
@@ -112,7 +112,10 @@ export function CanvasProjectExplorerDialog({
                             onClose();
                           }}
                         >
-                          Open {canvasDocument.title}
+                          {canvasViewCopy.projectExplorerOpenCanvasTemplate.replace(
+                            '{title}',
+                            canvasDocument.title
+                          )}
                         </button>
                       )}
                     </div>
@@ -122,7 +125,18 @@ export function CanvasProjectExplorerDialog({
             </ul>
           )}
         </div>
-      </section>
-    </div>
+        <DialogFooter className="border-t border-(--border-muted) bg-(--surface-panel-subtle) px-5 py-3">
+          <DialogClose asChild>
+            <button
+              type="button"
+              data-slot="canvas-project-explorer-close-command"
+              className="rounded border border-(--border-default) px-3 py-1.5 text-sm text-(--text-default) hover:bg-(--surface-elevated)"
+            >
+              {canvasViewCopy.projectExplorerCloseLabel}
+            </button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

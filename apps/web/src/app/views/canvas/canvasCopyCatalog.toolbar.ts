@@ -423,6 +423,42 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.workspace.transformationKindLabel',
     fallback: 'Transformation',
   },
+  projectExplorerTitle: {
+    key: 'canvas.projectExplorer.title',
+    fallback: 'Explore project',
+  },
+  projectExplorerDescription: {
+    key: 'canvas.projectExplorer.description',
+    fallback: 'Open another governed canvas in the active project.',
+  },
+  projectExplorerCloseLabel: {
+    key: 'canvas.projectExplorer.closeLabel',
+    fallback: 'Close',
+  },
+  projectExplorerSearchLabel: {
+    key: 'canvas.projectExplorer.searchLabel',
+    fallback: 'Search canvases',
+  },
+  projectExplorerSearchPlaceholder: {
+    key: 'canvas.projectExplorer.searchPlaceholder',
+    fallback: 'Search by canvas, kind, environment, or id',
+  },
+  projectExplorerEmptyMessage: {
+    key: 'canvas.projectExplorer.emptyMessage',
+    fallback: 'No canvas documents match this search.',
+  },
+  projectExplorerListLabel: {
+    key: 'canvas.projectExplorer.listLabel',
+    fallback: 'Project canvases',
+  },
+  projectExplorerCurrentCanvasLabel: {
+    key: 'canvas.projectExplorer.currentCanvasLabel',
+    fallback: 'Current canvas',
+  },
+  projectExplorerOpenCanvasTemplate: {
+    key: 'canvas.projectExplorer.openCanvasTemplate',
+    fallback: 'Open {title}',
+  },
   toolbarExportSnapshotLabel: {
     key: 'canvas.toolbar.exportSnapshotLabel',
     fallback: 'Export',
