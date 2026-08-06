@@ -30,6 +30,7 @@ Developer guides, contribution guides, and quality standards.
 - [GenericGraphSource User Manual](generic-graph-source-user-manual-20260404.md)
 - [How To Add A New StepKind](how-to-add-step-kind-20260406.md)
 - [Manual de usuario de autoria en Canvas](canvas-authoring-user-manual-20260501.md)
+- [Manual de usuario del workspace y Canvas](canvas-workbench-user-manual-20260806.md)
 - [Outbox worker technical manual](outbox-worker-technical-manual-20260404.md)
 - [Outbox worker user manual](outbox-worker-user-manual-20260404.md)
 - [Plan Compile Catalog Extension Technical Manual](plan-compile-catalog-extension-technical-manual-20260417.md)
