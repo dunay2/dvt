@@ -2929,7 +2929,12 @@
         "scripts/run-selected-closure-live-proof.cjs#GENERATED_CANVAS_DBT_PROFILE",
         "scripts/run-selected-closure-live-proof.cjs#LOCAL_TEMPORAL_TEST_SERVER_ROOT",
         "scripts/run-selected-closure-live-proof.cjs#buildLiveProofTemporalTimeSkippingOptions",
-        "scripts/run-selected-closure-live-proof.cjs#resolveLiveProofTemporalTestServerPath"
+        "scripts/run-selected-closure-live-proof.cjs#resolveLiveProofTemporalTestServerPath",
+        "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts#resolveTemporalProviderAdapterCapabilities",
+        "apps/api/src/routes/capabilities.ts#OBJECT_FILE_POSTGRES_PLUGIN_ID",
+        "apps/api/src/routes/capabilities.ts#capabilitiesRoutes",
+        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#resolveCompatibleDbtModelOrigins",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts#CanvasInspectorNodeDraftValidationContext"
       ],
       "implementationRefs": [
         "scripts/run-het1-public-vertical-live-proof.cjs#main",
@@ -3094,7 +3099,12 @@
         "scripts/run-selected-closure-live-proof.cjs#GENERATED_CANVAS_DBT_PROFILE",
         "scripts/run-selected-closure-live-proof.cjs#LOCAL_TEMPORAL_TEST_SERVER_ROOT",
         "scripts/run-selected-closure-live-proof.cjs#buildLiveProofTemporalTimeSkippingOptions",
-        "scripts/run-selected-closure-live-proof.cjs#resolveLiveProofTemporalTestServerPath"
+        "scripts/run-selected-closure-live-proof.cjs#resolveLiveProofTemporalTestServerPath",
+        "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts#resolveTemporalProviderAdapterCapabilities",
+        "apps/api/src/routes/capabilities.ts#OBJECT_FILE_POSTGRES_PLUGIN_ID",
+        "apps/api/src/routes/capabilities.ts#capabilitiesRoutes",
+        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#resolveCompatibleDbtModelOrigins",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts#CanvasInspectorNodeDraftValidationContext"
       ],
       "documentationRefs": [
         "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
@@ -3140,12 +3150,17 @@
         "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts",
         "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts",
         "scripts/run-het1-public-vertical-live-proof.test.cjs",
-        "scripts/run-selected-closure-live-proof.cjs"
+        "scripts/run-selected-closure-live-proof.cjs",
+        "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
+        "apps/api/src/routes/capabilities.ts",
+        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts"
       ],
       "architectureGuards": [
         "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
         "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
-        "no route intercepts, direct plan construction, run-state seeding, or staging-row seeding"
+        "no route intercepts, direct plan construction, run-state seeding, or staging-row seeding",
+        "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
       ],
       "completionGate": [
         "node --test scripts/run-het1-public-vertical-live-proof.test.cjs",
@@ -7564,13 +7579,79 @@
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
             "architectureGuard": "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts"
+          },
+          {
+            "name": "resolveTemporalProviderAdapterCapabilities",
+            "path": "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
+            "cqRails": ["RunHet1PublicVerticalLiveProof"],
+            "dddOwner": "DeliveryRuntimeProofs",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+            ],
+            "fowlerSignals": ["executable_specification"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+          },
+          {
+            "name": "OBJECT_FILE_POSTGRES_PLUGIN_ID",
+            "path": "apps/api/src/routes/capabilities.ts",
+            "cqRails": ["RunHet1PublicVerticalLiveProof"],
+            "dddOwner": "DeliveryRuntimeProofs",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+            ],
+            "fowlerSignals": ["executable_specification"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+          },
+          {
+            "name": "capabilitiesRoutes",
+            "path": "apps/api/src/routes/capabilities.ts",
+            "cqRails": ["RunHet1PublicVerticalLiveProof"],
+            "dddOwner": "DeliveryRuntimeProofs",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+            ],
+            "fowlerSignals": ["executable_specification"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+          },
+          {
+            "name": "resolveCompatibleDbtModelOrigins",
+            "path": "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+            "cqRails": ["RunHet1PublicVerticalLiveProof"],
+            "dddOwner": "DeliveryRuntimeProofs",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+            ],
+            "fowlerSignals": ["executable_specification"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+          },
+          {
+            "name": "CanvasInspectorNodeDraftValidationContext",
+            "path": "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+            "cqRails": ["RunHet1PublicVerticalLiveProof"],
+            "dddOwner": "DeliveryRuntimeProofs",
+            "unitTests": [
+              "apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+            ],
+            "fowlerSignals": ["executable_specification"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts",
+            "architectureGuard": "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
           }
         ],
         "version": 1,
         "featureId": "E-HET1-PUBLIC-OBJECT-FILE-DBT-20260805",
         "userStories": [
           "An operator observes honest success, ingestion rejection, DBT test failure, cancellation and recovery through public controls.",
-          "An operator authors, previews, starts, observes, cancels and recovers one public object-file to DBT vertical."
+          "An operator authors, previews, starts, observes, cancels and recovers one public object-file to DBT vertical.",
+          "An operator only sees executable object-file nodes when the backend capability is available and must explicitly select a connected DBT origin."
         ],
         "cypressFlows": [
           "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts"
@@ -7578,7 +7659,8 @@
         "domainObjects": [
           "ObjectFilePostgresAuthoringDraft",
           "ObjectFilePostgresDbtBridge",
-          "Het1PublicVerticalLiveProofRun"
+          "Het1PublicVerticalLiveProofRun",
+          "Het1RuntimeCapabilityAndOriginPolicy"
         ],
         "fowlerSignals": [
           "published_language",
@@ -7599,17 +7681,21 @@
         "redGreenCycles": [
           {
             "id": "runhet1publicverticalliveproof-record",
-            "redTest": "pnpm docs:feature-mechanization:implementation",
-            "greenTest": "pnpm docs:feature-mechanization:implementation",
+            "redTest": "Review exposed capability leakage and implicit origin fallback.",
+            "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/capabilitiesRoutes.test.ts && pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/plugins/objectFilePostgres/objectFilePostgresContributions.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts",
             "patchSurfaces": [
               "apps/web/cypress/support/het1PublicFailureRecoveryProof.ts",
               "apps/web/cypress/support/het1PublicRunProof.ts",
               "apps/web/cypress/support/het1PublicVertical.ts",
               "scripts/run-het1-public-vertical-live-proof.cjs",
               "apps/api/src/application/services/graphDbtWorkspaceArtifactPublication/PublishGraphDbtWorkspaceArtifactsCommand.ts",
-              "tools/planning-db/state/canonical-state.json"
+              "tools/planning-db/state/canonical-state.json",
+              "apps/api/src/routes/capabilities.ts",
+              "apps/web/src/app/plugins/registry.ts",
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+              "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts"
             ],
-            "expectedFailure": "HET1 production and proof symbols are not declared by the selected feature mechanization rail."
+            "expectedFailure": "Disabled object-file execution remains authorable or DBT projection selects an origin by edge order."
           }
         ],
         "componentGuides": [
@@ -7634,7 +7720,8 @@
         "architectureGuards": [
           "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
           "apps/api/test/entrypoints/http/protectedRuntimeRouteGroup.architecture.test.ts",
-          "no route intercepts, direct plan construction, run-state seeding, or staging-row seeding"
+          "no route intercepts, direct plan construction, run-state seeding, or staging-row seeding",
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
         ],
         "implementationPlan": "Reuse the existing public Canvas, planner, run-control, Temporal, object-file and DBT rails for one exact heterogeneous plan.",
         "mechanizationStatus": "implemented",
@@ -7671,7 +7758,11 @@
           "packages/@dvt/temporal-dbt-plugin/src/DbtCliPluginRunner.ts",
           "packages/@dvt/temporal-dbt-plugin/src/dbtCliTypes.ts",
           "scripts/run-het1-public-vertical-live-proof.test.cjs",
-          "scripts/run-selected-closure-live-proof.cjs"
+          "scripts/run-selected-closure-live-proof.cjs",
+          "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
+          "apps/api/src/routes/capabilities.ts",
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "packages/@dvt/engine step-family conditionals",
@@ -7680,7 +7771,7 @@
           "scripts/tmp-het1-feature-mechanization.cjs"
         ]
       },
-      "revision": 2,
+      "revision": 3,
       "createdBy": "codex",
       "createdAt": "2026-08-05T14:29:27.427Z"
     },
@@ -45441,6 +45532,81 @@
         ]
       },
       "createdAt": "2026-08-05T15:09:22.912Z"
+    },
+    {
+      "operationId": "5793cc18-3d41-4125-bd25-a6052349d4f0",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:E-HET1-PUBLIC-OBJECT-FILE-DBT-20260805:command:runhet1publicverticalliveproof:2:4f0c64aad0b5c207",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#E-HET1-PUBLIC-OBJECT-FILE-DBT-20260805#command#runhet1publicverticalliveproof",
+      "sourcePath": "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+      "sourceContentSha256": "6eae89c40a873424440556810f50fc6c45f123e2b00dfca3cd039bd5a4df7eb3",
+      "expectedRevision": 2,
+      "previousRevision": 2,
+      "resultingRevision": 3,
+      "payload": {
+        "redTest": "Review exposed capability leakage and implicit origin fallback.",
+        "dddOwner": "DeliveryRuntimeProofs",
+        "railName": "RunHet1PublicVerticalLiveProof",
+        "railType": "command",
+        "featureId": "E-HET1-PUBLIC-OBJECT-FILE-DBT-20260805",
+        "greenTest": "pnpm --filter dvt-api exec vitest run --config vitest.config.ts test/entrypoints/http/capabilitiesRoutes.test.ts && pnpm --filter @dvt/web exec vitest run --config vitest.config.ts src/app/plugins/objectFilePostgres/objectFilePostgresContributions.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts src/app/views/canvas/canvasInspectorAuthoringModel.test.ts",
+        "sourceRef": "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md",
+        "unitTests": [
+          "apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts",
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "An operator only sees executable object-file nodes when the backend capability is available and must explicitly select a connected DBT origin."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-het1-object-file-dbt-live.cy.ts"
+        ],
+        "domainObjects": ["Het1RuntimeCapabilityAndOriginPolicy"],
+        "fowlerSignals": ["executable_specification"],
+        "patchSurfaces": [
+          "apps/api/src/routes/capabilities.ts",
+          "apps/web/src/app/plugins/registry.ts",
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts"
+        ],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md"
+        ],
+        "expectedFailure": "Disabled object-file execution remains authorable or DBT projection selects an origin by edge order.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260805-het1-public-object-file-dbt-vertical.md"
+        ],
+        "architectureGuards": [
+          "apps/web/src/app/plugins/pluginRuntimeProjection.architecture.test.ts"
+        ],
+        "implementationPlan": "Reuse the existing public Canvas, planner, run-control, Temporal, object-file and DBT rails for one exact heterogeneous plan.",
+        "implementationRefs": [
+          "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts#resolveTemporalProviderAdapterCapabilities",
+          "apps/api/src/routes/capabilities.ts#OBJECT_FILE_POSTGRES_PLUGIN_ID",
+          "apps/api/src/routes/capabilities.ts#capabilitiesRoutes",
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#resolveCompatibleDbtModelOrigins",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts#CanvasInspectorNodeDraftValidationContext"
+        ],
+        "normalizedRailName": "runhet1publicverticalliveproof",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "6eae89c40a873424440556810f50fc6c45f123e2b00dfca3cd039bd5a4df7eb3",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/modules/providerAdapters/createTemporalProviderAdapterFactory.ts",
+          "apps/api/src/routes/capabilities.ts",
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "packages/@dvt/engine step-family conditionals"
+        ]
+      },
+      "createdAt": "2026-08-06T01:47:02.428Z"
     }
   ]
 }
