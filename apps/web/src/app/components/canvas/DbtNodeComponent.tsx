@@ -28,6 +28,7 @@ import type { CanvasNodePresentationCopy } from './canvasNodePresentationCopy.co
 import type { CanvasNodePresentationTruth } from './canvasNodePresentationTruth.contract';
 import {
   buildCanvasNodeContextMenuModel,
+  type CanvasNodeContextMenuCopy,
   type CanvasNodeContextMenuActionId,
 } from './canvasNodeContextMenuModel';
 
@@ -83,6 +84,8 @@ export interface DbtNodeData extends Record<string, unknown> {
     target: CanvasNodePortCompatibilityView;
     source: CanvasNodePortCompatibilityView;
   }>;
+  contextMenuCopy?: CanvasNodeContextMenuCopy;
+  executionSelectionCopy?: Readonly<{ selectLabel: string; deselectLabel: string }>;
 }
 
 type DbtFlowNode = Node<DbtNodeData, 'dbtNode'>;
@@ -222,6 +225,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     canDuplicateNode: typeof data.onDuplicateNode === 'function',
     canToggleNodeSelection: typeof data.onToggleNodeSelection === 'function',
     canRemoveNode: typeof data.onRemoveNode === 'function',
+    copy: data.contextMenuCopy,
   });
 
   const handleSchemaResourceDragOver = (event: DragEvent<HTMLDivElement>) => {

@@ -14,9 +14,29 @@ describe('buildGraphNodeCardPlayAction', () => {
     });
 
     expect(action?.label).toBe('Select for execution');
+    expect(action?.visualState).toBe('select');
     action?.onPress();
 
     expect(toggleNodeSelection).toHaveBeenCalledWith('model_orders', true);
+  });
+
+  it('uses localized deselection copy and pause visual state for selected nodes', () => {
+    const action = buildGraphNodeCardPlayAction({
+      nodeId: 'model_orders',
+      data: {
+        selectedForExecution: true,
+        executionSelectionCopy: {
+          selectLabel: 'Seleccionar para ejecución',
+          deselectLabel: 'Quitar de la ejecución',
+        },
+        onToggleNodeSelection: vi.fn(),
+      },
+    });
+
+    expect(action).toMatchObject({
+      label: 'Quitar de la ejecución',
+      visualState: 'deselect',
+    });
   });
 
   it('does not invent a play action when the node has no execution-selection command', () => {

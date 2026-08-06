@@ -5,9 +5,10 @@ import { useEffect, useMemo } from 'react';
 import { getPluginPortMap } from '../../plugins/registry';
 import type { CanonicalNode } from '../../types/canonical';
 import { buildCanvasConnectionCompatibilityByNodeId } from './canvasConnectionCompatibilityPresenter';
-import { mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
+import { createCanvasDirectionalEdge, mapCanonicalNodeToCanvasNode } from './canvasNodeMapper';
 import { resolveCanvasAuthoringVisibleEdgeId } from './canvasAuthoringGraphProjection';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 type UseCanvasViewportGraphModelArgs = {
   visibleNodeIds: string[];
@@ -41,6 +42,7 @@ function projectViewportNodes(args: {
   frozenNodeIds: ReadonlySet<string>;
   portCompatibilityByNodeId: ReturnType<typeof buildCanvasConnectionCompatibilityByNodeId>;
   fallbackNodesById?: ViewportNodeById;
+  locale: string;
 }): Node[] {
   const {
     visibleNodeIds,
@@ -51,6 +53,7 @@ function projectViewportNodes(args: {
     frozenNodeIds,
     portCompatibilityByNodeId,
     fallbackNodesById,
+    locale,
   } = args;
 
   const visibleCanonicalNodes = resolveVisibleCanonicalNodes(visibleNodeIds, canonicalNodesById);
@@ -73,6 +76,7 @@ function projectViewportNodes(args: {
       }),
       persistedPosition:
         liveGesturePosition ?? persistedNodePositions[canonicalNode.id] ?? fallbackNode?.position,
+      locale,
     });
   });
 }
@@ -86,14 +90,16 @@ function projectViewportEdges(args: {
 
   return visibleEdges
     .filter((edge) => allowedNodeIds.has(edge.sourceId) && allowedNodeIds.has(edge.targetId))
-    .map((edge) => ({
-      id: resolveCanvasAuthoringVisibleEdgeId({
-        edge,
-        canonicalEdgeIdBySignature,
-      }),
-      source: edge.sourceId,
-      target: edge.targetId,
-    }));
+    .map((edge) =>
+      createCanvasDirectionalEdge({
+        id: resolveCanvasAuthoringVisibleEdgeId({
+          edge,
+          canonicalEdgeIdBySignature,
+        }),
+        source: edge.sourceId,
+        target: edge.targetId,
+      })
+    );
 }
 
 function viewportEdgesEqual(left: Edge[], right: Edge[]): boolean {
@@ -176,6 +182,19 @@ function viewportNodeDataEqual(left: Node['data'], right: Node['data']): boolean
       presentationTruthEqual = false;
     }
   }
+  const localizedPresentationEqual =
+    JSON.stringify({
+      contextMenuCopy: left.contextMenuCopy,
+      executionSelectionCopy: left.executionSelectionCopy,
+      portLabels: left.portLabels,
+      presentationCopy: left.presentationCopy,
+    }) ===
+    JSON.stringify({
+      contextMenuCopy: right.contextMenuCopy,
+      executionSelectionCopy: right.executionSelectionCopy,
+      portLabels: right.portLabels,
+      presentationCopy: right.presentationCopy,
+    });
 
   return (
     left.showColumns === right.showColumns &&
@@ -186,6 +205,7 @@ function viewportNodeDataEqual(left: Node['data'], right: Node['data']): boolean
     tagsEqual &&
     portCompatibilityEqual &&
     presentationTruthEqual &&
+    localizedPresentationEqual &&
     metadataEqual
   );
 }
@@ -199,6 +219,7 @@ export function useCanvasViewportGraphModel({
   persistedNodePositions,
   frozenNodeIds = new Set(),
 }: UseCanvasViewportGraphModelArgs) {
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const portCompatibilityByNodeId = useMemo(
     () =>
       buildCanvasConnectionCompatibilityByNodeId({
@@ -220,6 +241,7 @@ export function useCanvasViewportGraphModel({
         persistedNodePositions,
         frozenNodeIds,
         portCompatibilityByNodeId,
+        locale: applicationLanguage,
       }),
     [
       canonicalNodesById,
@@ -229,6 +251,7 @@ export function useCanvasViewportGraphModel({
       portCompatibilityByNodeId,
       visibleEdges,
       visibleNodeIds,
+      applicationLanguage,
     ]
   );
 
@@ -256,6 +279,7 @@ export function useCanvasViewportGraphModel({
         frozenNodeIds,
         portCompatibilityByNodeId,
         fallbackNodesById: new Map(currentNodes.map((node) => [node.id, node])),
+        locale: applicationLanguage,
       });
 
       return viewportNodesEqual(currentNodes, nextNodes) ? currentNodes : nextNodes;
@@ -269,6 +293,7 @@ export function useCanvasViewportGraphModel({
     setNodes,
     visibleEdges,
     visibleNodeIds,
+    applicationLanguage,
   ]);
 
   useEffect(() => {

@@ -178,10 +178,10 @@ const graphNodeKindToneByKind: Partial<Record<PluginNodeKind, GraphNodeKindTone>
 };
 
 export const graphFlowPalette = {
-  edgeStroke: '#6b7280',
-  edgeStrokeWidth: 2,
-  edgeMarkerWidth: 20,
-  edgeMarkerHeight: 20,
+  edgeStroke: '#cbd5e1',
+  edgeStrokeWidth: 2.5,
+  edgeMarkerWidth: 28,
+  edgeMarkerHeight: 28,
 } as const;
 
 export function resolveGraphNodeKindTone(kind: PluginNodeKind): GraphNodeKindTone {

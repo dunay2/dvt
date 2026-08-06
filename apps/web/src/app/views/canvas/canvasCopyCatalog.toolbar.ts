@@ -187,6 +187,42 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.nodeToolbar.moreDescription',
     fallback: 'Open the governed contextual actions for this node.',
   },
+  canvasNodeContextOpenWorkbenchLabel: {
+    key: 'canvas.nodeContext.openWorkbenchLabel',
+    fallback: 'Open workbench',
+  },
+  canvasNodeContextWorkbenchGroupLabel: {
+    key: 'canvas.nodeContext.workbenchGroupLabel',
+    fallback: 'Workbench',
+  },
+  canvasNodeContextExecuteGroupLabel: {
+    key: 'canvas.nodeContext.executeGroupLabel',
+    fallback: 'Execution',
+  },
+  canvasNodeContextEditGroupLabel: {
+    key: 'canvas.nodeContext.editGroupLabel',
+    fallback: 'Edit',
+  },
+  canvasNodeContextDuplicateLabel: {
+    key: 'canvas.nodeContext.duplicateLabel',
+    fallback: 'Duplicate',
+  },
+  canvasNodeContextSelectForExecutionLabel: {
+    key: 'canvas.nodeContext.selectForExecutionLabel',
+    fallback: 'Select for execution',
+  },
+  canvasNodeContextDeselectForExecutionLabel: {
+    key: 'canvas.nodeContext.deselectForExecutionLabel',
+    fallback: 'Deselect for execution',
+  },
+  canvasNodeContextDangerGroupLabel: {
+    key: 'canvas.nodeContext.dangerGroupLabel',
+    fallback: 'Danger',
+  },
+  canvasNodeContextDeleteLabel: {
+    key: 'canvas.nodeContext.deleteLabel',
+    fallback: 'Delete',
+  },
   canvasContextMenuAddLabel: {
     key: 'canvas.contextMenu.addLabel',
     fallback: 'Add...',
