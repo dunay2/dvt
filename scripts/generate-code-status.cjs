@@ -542,14 +542,20 @@ async function generateRepositoryMap(workspaces, ClientCtor) {
 
 async function main(argv = process.argv.slice(2), dependencies = {}) {
   const mode = resolveGenerationMode(argv);
-  const workspaces = collectRepositoryWorkspaceStats();
+  const collectWorkspaces =
+    dependencies.collectRepositoryWorkspaceStats || collectRepositoryWorkspaceStats;
+  const generateCodeStateFn = dependencies.generateCodeState || generateCodeState;
   const ClientCtor = dependencies.ClientCtor || Client;
+  const generateRepositoryMapFn =
+    dependencies.generateRepositoryMap ||
+    ((workspaces) => generateRepositoryMap(workspaces, ClientCtor));
+  const workspaces = collectWorkspaces();
 
   if (mode !== GENERATION_MODES.repositoryMapOnly) {
-    generateCodeState(workspaces);
+    await generateCodeStateFn(workspaces);
   }
   if (mode !== GENERATION_MODES.codeStateOnly) {
-    await generateRepositoryMap(workspaces, ClientCtor);
+    await generateRepositoryMapFn(workspaces);
   }
 }
 
