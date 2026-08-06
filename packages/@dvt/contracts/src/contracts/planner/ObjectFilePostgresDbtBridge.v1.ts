@@ -1,6 +1,12 @@
 /**
  * Owned concern: mark DBT steps whose project reads the scoped PostgreSQL
  * staging relation produced by an object-file load.
+ *
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Mark the object-file staging dependency explicitly in admitted DBT step configuration.
+ * @consequence Artifact projection binds source() to the scoped staging relation without making DBT own ingestion.
+ * @version 1.0.0
  */
 import { z } from 'zod';
 

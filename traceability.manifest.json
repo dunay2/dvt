@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-08-04",
+  "generated": "2026-08-06",
   "repo": {
     "sha": "local"
   },
@@ -119,6 +119,7 @@
         "AllowAllAuthorizer can reject instantiation in production mode via explicit constructor options",
         "Batch maintenance operations (detectStuckRuns) separated from IWorkflowEngine lifecycle",
         "Build run terminal event payloads from DVT runtime evidence instead of Temporal provider metadata",
+        "Carry one bounded dbt selector in the admitted step configuration.",
         "Compose facade use cases through explicit dependencies instead of a multi-reason facade module.",
         "Decision - The engine's error hierarchy encodes domain failures with stable codes",
         "Decision â€” Expose a stable public surface of the engine for orchestration decoupled from the runtime",
@@ -168,6 +169,7 @@
         "Keep the facade use-case export surface local to the component boundary.",
         "Keep workflow side effects behind Temporal activities and await activity cleanup before terminal cancellation",
         "Map verified execution scope to a deterministic physical schema and replace one relation atomically",
+        "Mark the object-file staging dependency explicitly in admitted DBT step configuration.",
         "Model executable plugin runtimes behind a generic runner port",
         "Model facade operations as explicit command and query use-case ports.",
         "Normalize facade start-run input before delegating to the start application service.",
@@ -262,6 +264,8 @@
         "packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts",
         "packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts",
         "packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts",
+        "packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts",
         "packages/@dvt/contracts/src/step-registry/CommonStepTypeConfig.ts",
         "packages/@dvt/engine/src/adapters/CircuitBreakingProviderAdapter.ts",
@@ -846,10 +850,12 @@
       "number": "ADR-0035",
       "decisions": [
         "Admit one UTF-8 CSV or JSON Lines object and one scoped staging relation.",
+        "Carry one bounded dbt selector in the admitted step configuration.",
         "Define plan-compile step-type configuration schemas as explicit planner contract surface",
         "Keep common timeout, concurrency, and compiled-code fields independent of DBT.",
         "Keep executable-selection intent as a canonical planner contract instead of UI-local state.",
         "Keep execution decisions in the persisted plan artifact so Web renders planner truth without reconstructing selection semantics.",
+        "Mark the object-file staging dependency explicitly in admitted DBT step configuration.",
         "Model workspace graph edits as aggregate commands instead of transport-specific patches.",
         "Persist workspace authoring as a graph-first aggregate, not as UI widget state.",
         "Publish execution-selection schemas as a focused schema pack for external validators.",
@@ -860,8 +866,10 @@
         "Validate canonical plan-admission findings through one focused strict schema pack."
       ],
       "implemented_by": [
+        "packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanCompileStepTypeConfigs.v1.ts",
