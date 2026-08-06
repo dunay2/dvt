@@ -238,9 +238,11 @@ test('generation modes isolate code-state and repository-map work', async () => 
   assert.deepEqual(calls, ['map']);
 });
 
-test('local check mode rejects generated map drift while generate mode remains writable', () => {
+test('local check command and explicit check mode reject generated map drift', () => {
   const previousCi = process.env.CI;
+  const previousLifecycleEvent = process.env.npm_lifecycle_event;
   delete process.env.CI;
+  delete process.env.npm_lifecycle_event;
   try {
     assert.doesNotThrow(() =>
       assertTrackedRepositoryMapClean({
@@ -256,9 +258,20 @@ test('local check mode rejects generated map drift while generate mode remains w
         }),
       /repository-map\.md is stale/u
     );
+    process.env.npm_lifecycle_event = 'docs:status:check';
+    assert.throws(
+      () =>
+        assertTrackedRepositoryMapClean({
+          check: false,
+          spawnSync: () => ({ status: 1, stdout: 'diff', stderr: '' }),
+        }),
+      /repository-map\.md is stale/u
+    );
   } finally {
     if (previousCi === undefined) delete process.env.CI;
     else process.env.CI = previousCi;
+    if (previousLifecycleEvent === undefined) delete process.env.npm_lifecycle_event;
+    else process.env.npm_lifecycle_event = previousLifecycleEvent;
   }
 });
 
@@ -300,7 +313,7 @@ test('generator no longer reads the empty documentation panel binding', () => {
   assert.doesNotMatch(source, /documentation_panel_query/u);
   assert.match(source, /not in \('deprecated', 'drift'\)/u);
   assert.match(source, /pnpmCommand\(\)/u);
-  assert.match(source, /--check/u);
+  assert.match(source, /npm_lifecycle_event === 'docs:status:check'/u);
 });
 
 test(
