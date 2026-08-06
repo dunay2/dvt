@@ -14,6 +14,11 @@ export type ShellTopBarCopy = {
   readonly workspacePanels: string;
   readonly globalNavigation: string;
   readonly workspaceContext: string;
+  readonly showWorkspaceContext: string;
+  readonly currentProject: string;
+  readonly availableProjects: string;
+  readonly noAlternativeProjects: string;
+  readonly projectUnavailable: string;
   readonly gitContext: string;
   readonly viewOptions: string;
   readonly language: string;
@@ -58,6 +63,23 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   workspacePanels: { key: 'shell.workspacePanels', fallback: 'Panels' },
   globalNavigation: { key: 'shell.globalNavigation', fallback: 'Navigation' },
   workspaceContext: { key: 'shell.workspaceContext', fallback: 'Workspace context' },
+  showWorkspaceContext: {
+    key: 'shell.showWorkspaceContext',
+    fallback: 'Show project and workspace context',
+  },
+  currentProject: { key: 'shell.currentProject', fallback: 'Current project' },
+  availableProjects: {
+    key: 'shell.availableProjects',
+    fallback: 'Projects available in this session',
+  },
+  noAlternativeProjects: {
+    key: 'shell.noAlternativeProjects',
+    fallback: 'No other project is available in this session.',
+  },
+  projectUnavailable: {
+    key: 'shell.projectUnavailable',
+    fallback: 'That project is not available in this session.',
+  },
   gitContext: { key: 'shell.gitContext', fallback: 'Git context' },
   viewOptions: { key: 'shell.viewOptions', fallback: 'View options' },
   language: { key: 'shell.language', fallback: 'Language' },
@@ -117,6 +139,11 @@ const COPY_ES: ShellTopBarCopy = {
   workspacePanels: 'Paneles',
   globalNavigation: 'Navegacion',
   workspaceContext: 'Contexto del proyecto',
+  showWorkspaceContext: 'Mostrar el contexto del proyecto y del espacio de trabajo',
+  currentProject: 'Proyecto actual',
+  availableProjects: 'Proyectos disponibles en esta sesión',
+  noAlternativeProjects: 'No hay otro proyecto disponible en esta sesión.',
+  projectUnavailable: 'Ese proyecto no está disponible en esta sesión.',
   gitContext: 'Contexto Git',
   viewOptions: 'Opciones de vista',
   language: 'Idioma',
@@ -184,6 +211,11 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     workspacePanels: resolveString(COPY_BY_KEY.workspacePanels, locale),
     globalNavigation: resolveString(COPY_BY_KEY.globalNavigation, locale),
     workspaceContext: resolveString(COPY_BY_KEY.workspaceContext, locale),
+    showWorkspaceContext: resolveString(COPY_BY_KEY.showWorkspaceContext, locale),
+    currentProject: resolveString(COPY_BY_KEY.currentProject, locale),
+    availableProjects: resolveString(COPY_BY_KEY.availableProjects, locale),
+    noAlternativeProjects: resolveString(COPY_BY_KEY.noAlternativeProjects, locale),
+    projectUnavailable: resolveString(COPY_BY_KEY.projectUnavailable, locale),
     gitContext: resolveString(COPY_BY_KEY.gitContext, locale),
     viewOptions: resolveString(COPY_BY_KEY.viewOptions, locale),
     language: resolveString(COPY_BY_KEY.language, locale),

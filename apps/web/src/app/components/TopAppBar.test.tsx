@@ -128,12 +128,17 @@ describe('ShellTopBar workspace context', () => {
       });
 
       const topBar = container.querySelector('[data-slot="shell-top-bar"]');
+      const workspaceMenuTrigger = topBar?.querySelector(
+        '[data-slot="shell-workspace-menu-trigger"]'
+      );
 
       expect(topBar?.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
       expect(topBar?.querySelector('[data-slot="shell-workspace-context-trigger"]')).toBeNull();
       expect(topBar?.querySelector('[data-slot="shell-git-ref"]')).toBeNull();
       expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
-      expect(topBar?.querySelector('[data-slot="shell-workspace-menu-trigger"]')).not.toBeNull();
+      expect(workspaceMenuTrigger).not.toBeNull();
+      expect(workspaceMenuTrigger?.textContent).toContain('Project');
+      expect(workspaceMenuTrigger?.textContent).toContain('dbt-analytics');
       expect(topBar?.querySelector('[data-slot="shell-menu-trigger"]')).not.toBeNull();
 
       await act(async () => {
@@ -169,6 +174,10 @@ describe('ShellTopBar workspace context', () => {
         expect(document.body.textContent).toContain('dev');
         expect(document.body.textContent).toContain('Deployment adapter');
         expect(document.body.textContent).toContain('temporal');
+        expect(document.body.textContent).toContain('Projects available in this session');
+        expect(document.body.textContent).toContain(
+          'No other project is available in this session.'
+        );
       });
     }
   );

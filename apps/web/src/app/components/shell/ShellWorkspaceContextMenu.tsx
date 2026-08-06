@@ -23,7 +23,7 @@ export function ShellWorkspaceContextMenu({ badge, copy }: ShellWorkspaceContext
           variant="ghost"
           size="sm"
           className={topAppBarClasses.menuButton}
-          aria-label="Show workspace context"
+          aria-label={copy.showWorkspaceContext}
         >
           <ChevronsUpDown className="size-4" />
           {copy.workspaceContext}
@@ -45,7 +45,7 @@ export function ShellWorkspaceContextMenu({ badge, copy }: ShellWorkspaceContext
           </div>
         </div>
         <ShellWorkspaceContextDetails badge={badge} copy={copy} />
-        <ShellWorkspaceScopeSelector />
+        <ShellWorkspaceScopeSelector copy={copy} />
       </PopoverContent>
     </Popover>
   );

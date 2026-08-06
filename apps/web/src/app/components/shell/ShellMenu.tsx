@@ -39,6 +39,7 @@ import {
 import { topAppBarClasses } from './chrome';
 import type { ShellTopBarCopy } from './copy';
 import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
+import { ShellWorkspaceScopeSelector } from './ShellWorkspaceScopeSelector';
 
 const GRID_OPTIONS = [
   { value: 10, label: '10px (Dense)' },
@@ -108,7 +109,9 @@ export function ShellMenu({
           ) : (
             <SlidersHorizontal className="size-4" />
           )}
-          {isWorkspaceMenu ? copy.workspaceMenu : copy.shell}
+          {isWorkspaceMenu
+            ? `${copy.projectScope}: ${projectIdentityBadge.projectLabel}`
+            : copy.shell}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-72">
@@ -130,6 +133,7 @@ export function ShellMenu({
             <DropdownMenuLabel>{copy.workspaceContext}</DropdownMenuLabel>
             <div data-slot="shell-menu-workspace-context" className="px-2 py-1.5">
               <ShellWorkspaceContextDetails badge={projectIdentityBadge} copy={copy} />
+              <ShellWorkspaceScopeSelector copy={copy} />
             </div>
             <DropdownMenuLabel>{copy.gitContext}</DropdownMenuLabel>
             <div
