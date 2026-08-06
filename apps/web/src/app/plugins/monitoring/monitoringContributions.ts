@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Activity, Check, GitMerge, Minus, Play, X } from 'lucide-react';
 
 import type { PluginContributions } from '../registry';
@@ -8,12 +6,14 @@ import {
   RUN_DETAIL_ROUTE_BOOTSTRAP_HANDLE,
   RUNS_ROUTE_BOOTSTRAP_HANDLE,
 } from '../../views/runs/runsRouteBootstrap';
+import { createDeferredView } from '../createDeferredView';
 
 // ---------------------------------------------------------------------------
 // monitoring plugin - static contributions v1
 // ---------------------------------------------------------------------------
 
 const MONITORING_PLUGIN_ID = 'monitoring';
+const RunsView = createDeferredView(() => import('../../views/RunsView'));
 
 // Run status → overlay border color
 const STATUS_BORDER_COLOR: Record<string, string> = {
@@ -44,7 +44,7 @@ export const monitoringContributions: PluginContributions = {
       pluginId: MONITORING_PLUGIN_ID,
       id: 'monitoring.runs',
       path: '/runs',
-      component: React.lazy(() => import('../../views/RunsView')),
+      component: RunsView,
       handle: {
         routeBootstrap: RUNS_ROUTE_BOOTSTRAP_HANDLE,
       },
@@ -65,7 +65,7 @@ export const monitoringContributions: PluginContributions = {
       id: 'monitoring.run-detail',
       path: '/runs/:runId',
       // Same component - RunsView reads :runId from params internally
-      component: React.lazy(() => import('../../views/RunsView')),
+      component: RunsView,
       handle: {
         routeBootstrap: RUN_DETAIL_ROUTE_BOOTSTRAP_HANDLE,
       },

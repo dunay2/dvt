@@ -5,6 +5,7 @@ import { vi } from 'vitest';
 
 import type { PlatformHealthCapabilityApi } from '../capabilities/platform-health';
 import AppRouteErrorBoundary from './AppRouteErrorBoundary';
+import { flushRouterUpdate } from './routerFlushSync';
 import StaticRouteBootstrapBoundary from './bootstrap/StaticRouteBootstrapBoundary';
 import {
   createCompleteRouteBootstrapPresentation,
@@ -180,7 +181,7 @@ export function createRootShellNode(
           capabilitiesPort ?? serviceOverrides.capabilitiesPort ?? createDefaultCapabilitiesPort(),
       }}
     >
-      <RouterProvider router={router} />
+      <RouterProvider router={router} flushSync={flushRouterUpdate} />
     </AppServicesProvider>
   );
 }
@@ -210,7 +211,7 @@ export function createBrokenRootShellNode(
         capabilitiesPort: serviceOverrides.capabilitiesPort ?? createDefaultCapabilitiesPort(),
       }}
     >
-      <RouterProvider router={router} />
+      <RouterProvider router={router} flushSync={flushRouterUpdate} />
     </AppServicesProvider>
   );
 }

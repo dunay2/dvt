@@ -1,4 +1,3 @@
-import React from 'react';
 import { LayoutDashboard } from 'lucide-react';
 
 import { CANVAS_ROUTE_BOOTSTRAP_HANDLE } from '../../views/canvas/canvasDraftPresentationStore';
@@ -10,6 +9,7 @@ import { dbtCanvasGraphStrategy } from './dbtNodeAdapter';
 import { dbtGraphNodeCardStrategy } from './dbtGraphNodeCardStrategy';
 import { OBJECT_FILE_POSTGRES_NODE_KINDS } from '../objectFilePostgres/objectFilePostgresNodeTypeCatalog';
 import { HTTP_JSON_NODE_KINDS } from '../httpJson/httpJsonNodeTypeCatalog';
+import { createDeferredView } from '../createDeferredView';
 
 /**
  * Static v1 contribution manifest for the built-in dbt plugin.
@@ -19,6 +19,7 @@ import { HTTP_JSON_NODE_KINDS } from '../httpJson/httpJsonNodeTypeCatalog';
  * Keep this file declarative and route behavior to the owning modules.
  */
 const DBT_PLUGIN_ID = 'dbt';
+const CanvasView = createDeferredView(() => import('../../views/Canvas'));
 
 // dbt owns the renderer registration for every dbt node kind declared in the
 // canonical node-kind catalog.
@@ -59,7 +60,7 @@ export const dbtContributions: PluginContributions = {
       pluginId: DBT_PLUGIN_ID,
       id: 'dbt.canvas',
       path: '/canvas',
-      component: React.lazy(() => import('../../views/Canvas')),
+      component: CanvasView,
       handle: {
         routeBootstrap: CANVAS_ROUTE_BOOTSTRAP_HANDLE,
       },
