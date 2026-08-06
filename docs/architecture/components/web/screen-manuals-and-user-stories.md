@@ -337,42 +337,232 @@ dialog dismissal.
 
 ## WUX1 Demanding-User Manual
 
-This checklist is the acceptance script for a person who has never used DVT.
-Run it in Spanish and English, first at a desktop viewport and then at a narrow
-viewport, with mouse and keyboard. Record the first point of confusion instead
-of compensating with product knowledge.
+The frozen acceptance script is `WUX1-EXPERT-MANUAL-v1`. The evaluator is an
+experienced data-platform operator who has never used DVT and receives no
+implementation walkthrough. Tasks, thresholds, supported screens, and
+severity cannot be weakened after results are observed. A material change
+requires a new version and explanation.
 
-1. Start the application and explain, in one sentence, what it is waiting for.
-   Reject childish or oversized typography, saturated-blue dominance, clipped
-   status text, or unexplained animation.
-2. Identify the active tenant, project, and environment. Open the project
-   control and state whether another authorized project can be selected. Reject
-   a hidden control or a silent absence of alternatives.
-3. Open View, switch to Spanish, inspect the shell, Canvas menus, tooltips, open
-   workbench, and dialogs; repeat in English. Reject mixed-language content or a
-   change that requires reload.
-4. Open project code, move the workbench, browse the file tree, and verify the
-   complete file. Close it using mouse, Escape, and keyboard focus. Reject fixed
-   panels, permanent instructional prose, clipped code, or ambiguous data loss.
-5. Select a node, open its code, and confirm the target file belongs to that
-   node. Reject generated excerpts presented as file authority.
-6. Select and deselect a node for execution. Explain the icon and label in both
-   states. Reject a play icon that still implies “start” when the command removes
-   the node from the selection.
-7. Trace a dependency from source to target at default, selected, and dimmed
-   states. Reject a line whose direction cannot be identified.
-8. Open Add component, name each group, search for an item, and add it at both
-   viewport widths. Reject horizontal scrolling, clipped descriptions, or a
-   flat repeated list.
-9. Open each active route and its primary overlay: Canvas, Runs list/detail,
-   Templates, Plugins, Admin, and available contextual workbenches. Reject
-   missing focus indicators, inaccessible names, low-contrast text, content
-   outside the viewport, repeated navigation, or a surface that cannot be
-   cancelled or closed safely.
-10. Submit a critical report with severity, exact reproduction, expected and
-    actual result, accessibility/visibility impact, and screenshot or DOM/test
-    evidence. The implementation author may not mark this check passed without
-    an independent review against the committed head.
+### Required environment and evidence
+
+Run against an exact immutable candidate SHA on the protected live stack, not
+component stories or intercepted product routes. Use English and Spanish
+starts; author/operator and read-only roles; at least two granted projects with
+different graph, file, run, and permission data; and representative loading,
+empty, degraded, error, unauthorized, unsupported, conflict, active, and
+terminal states.
+
+The viewport matrix is `1280x720`, `1366x768`, `1440x900`, and `1920x1080`.
+Exercise browser zoom at 100%, 200%, and 400%, Canvas graph zoom at 80%, 100%,
+and 125%, keyboard and mouse, a Windows screen reader, reduced motion, and
+forced colors/high contrast. Graph and Monaco may retain bounded
+two-dimensional navigation, but adjacent controls, state, labels, and exits
+must remain reachable.
+
+Record this row for every task:
+
+| Field        | Required value                                                          |
+| ------------ | ----------------------------------------------------------------------- |
+| candidate    | exact SHA and PR                                                        |
+| screen/state | route or contextual surface plus state                                  |
+| environment  | locale, role, project, viewport, zoom, and input mode                   |
+| task         | instruction given to the evaluator verbatim                             |
+| result       | pass/fail and elapsed time                                              |
+| errors       | wrong turns, backtracks, and coaching requests                          |
+| evidence     | screenshot/video plus DOM or accessibility evidence where applicable    |
+| finding      | severity, Fowler signal, owner, rail, reproduction, expected and actual |
+| retest       | fixing SHA and the exact repeated task                                  |
+
+### Universal inspection rules
+
+On every applicable screen and state, the evaluator must:
+
+1. state the primary job after five seconds;
+2. identify the primary action and safe leave/cancel path without guessing;
+3. verify the order context → route identity/status → primary surface → primary
+   action → secondary actions → evidence/recovery;
+4. record duplicated actions/status, competing headings, or orphaned evidence;
+5. verify English/Spanish visible copy, tooltips, accessible names, errors,
+   empty states, and confirmations;
+6. measure normal text at 4.5:1 or better and large text, focus, and essential UI
+   at 3:1 or better;
+7. verify visible focus, logical tab order, no trap, Escape policy, and focus
+   restoration;
+8. reject hover-only actions and require hover help to work on keyboard focus;
+9. verify 200% and 400% reachability without hidden horizontal scrolling,
+   except inside a bounded graph/editor surface whose controls stay reachable;
+10. reject status communicated by color alone;
+11. verify meaning under reduced motion and forced colors;
+12. verify loading, error, cancellation, conflict, and completion announcements
+    without destructive focus jumps;
+13. record undersized text, unexplained all-caps, decorative saturation,
+    excessive rounding, or density that impairs scanning;
+14. verify destructive actions are visually and semantically distinct; and
+15. verify no interaction reveals data from another project, user, or state.
+
+### Cancellation taxonomy
+
+| User-facing term              | Meaning that must be true                                                  |
+| ----------------------------- | -------------------------------------------------------------------------- |
+| Close / Cerrar                | dismiss presentation only; domain work is unchanged; restore focus         |
+| Cancel / Cancelar edit        | abandon reversible local changes, warning before data loss                 |
+| Cancel operation              | dispatch the authoritative cancellation command and expose its real result |
+| Back / Atrás                  | return to the prior step without claiming submitted work stopped           |
+| Cannot cancel / No cancelable | explain why, retain observable status, and offer the next safe action      |
+
+A close icon that merely hides accepted work must never be labelled Cancel.
+`CancelRun` is the sole run-cancellation command; generic dialog dismissal does
+not own domain cancellation.
+
+### S00 — Pre-React and route startup
+
+- Cold-load with slow network, an optional degraded check, a blocking
+  prerequisite, and a startup error.
+- Decide within five seconds whether the product is preparing, blocked,
+  degraded, failed, or ready; identify the next safe action.
+- Inspect palette, IBM Plex typography, scale, progress density, contrast, and
+  motion. Reject dominant decorative blue, juvenile typography, oversized
+  cards, or decoration competing with operational state.
+- Verify retry/leave/non-cancellable explanations and ordered, non-repeating
+  screen-reader announcements.
+
+### S01 — Authentication and project onboarding
+
+- Complete sign-in, rejected sign-in, empty catalog, project selection,
+  supported project creation, and denied scope.
+- Identify cancel/back before submission; verify labels, errors, focus,
+  secret safety, loading posture, and no duplicate in-workbench project switch.
+
+### S02 — Shell and workspace context
+
+- Identify tenant, project, environment, health, and active route.
+- Find global navigation and change between two authorized projects without
+  coaching; verify no competing context control or stale route data.
+- Navigate every active destination with mouse and keyboard and verify
+  menu/project close, Escape, and focus return.
+
+### S03 — Canvas Process Map
+
+- Identify the primary graph action, state, and active project.
+- Create/select nodes; inspect directional edges at graph zoom 80/100/125;
+  search/filter; open settings; add a component; Preview; and start a permitted
+  run.
+- Verify play/pause execution-selection semantics, non-color-only direction and
+  state, keyboard reachability, reflow around the graph, contextual exits, and
+  no second graph/action owner.
+
+### S04 — Contextual Code and node workbench
+
+- Open project code and two distinct node files; verify each complete
+  authoritative file, not a generated excerpt.
+- Reposition with pointer and keyboard; edit/synchronize; trigger conflict;
+  close/reopen; and switch project.
+- Distinguish Close from abandoning edits or cancelling synchronization; verify
+  Monaco keyboard entry/exit, status announcement, focus restoration, and no
+  stale/wrong file.
+
+### S05 — Source Import and authoring dialogs
+
+- Traverse all steps, go back, cancel before submission, attempt dirty close,
+  submit, observe in-flight state, and handle success and rejection.
+- If accepted work is not cancellable, require explicit copy; closing must not
+  claim cancellation. Verify focus trap/return, errors, progress, permissions,
+  and read-only state.
+
+### S06 — Inspector, palette, lineage, and operational drawer
+
+- Open and close every contextual surface from each supported entry point;
+  reject duplicated actions without distinct purpose.
+- Traverse the grouped component catalog at all viewports/zoom with keyboard;
+  verify complete descriptions and a real create-node result.
+- Verify drawer tabs, active state, status, keyboard movement, and close; keep
+  Lineage read-only with direction/impact not conveyed only by color.
+
+### S07 — Runs list and Run detail
+
+- Find active, failed, cancelled, completed, degraded, and missing runs.
+- Open detail, follow evidence, request `CancelRun`, and observe accepted,
+  pending, already-requested, already-cancelled, terminal, unauthorized, and
+  failed outcomes where fixtures/authority permit.
+- Verify navigation never masquerades as cancellation and dense table,
+  heading, focus, status, pagination/filter, and reflow remain readable.
+
+### S08 — Templates
+
+- Find a template, fill parameters, trigger validation, preview the generated
+  source, and attempt to leave with changes.
+- Verify hierarchy between catalog, parameters, preview, validation, and
+  export/dispatch; verify code visibility, keyboard operation, errors, and
+  honest close/cancel behavior.
+
+### S09 — Plugins
+
+- Inspect catalog, capability, unavailable/degraded, and diagnostic states.
+- Identify the primary information and flag repeated raw capability data that
+  does not help the operator. Verify tables/cards at zoom, headings, focus,
+  contrast, and safe navigation.
+
+### S10 — Admin
+
+- Inspect roles, permissions, summaries, diagnostics, denial, and available
+  destructive confirmations.
+- Verify ordered dense information, secondary raw identifiers, cancellation
+  before mutation, and explicit non-color-only permission denial.
+
+### S11 — Cost
+
+- When the capability is active, inspect loading, empty, partial/degraded,
+  populated, and error states.
+- Verify units/basis, non-color-only visualizations, resettable filters, safe
+  navigation, and no unsupported monetary claim. Record the route as not
+  applicable, never as passed, when the capability is not granted.
+
+### S12 — Global recovery and resilience
+
+- Exercise route error boundary, offline/degraded API, revoked project, stale
+  revision, unsupported contract/plugin, and navigation with unsynchronized
+  code.
+- Require current scope, truthful state, the next safe action, and whether
+  cancellation remains possible. Recovery must not duplicate a command or
+  fabricate success.
+
+### Scoring, severity, and exit
+
+Score every screen from 0–2 for immediate comprehension, hierarchy/order,
+visual maturity, readability/contrast, keyboard/focus, screen-reader semantics,
+zoom/reflow/visibility, language consistency, cancel/close honesty, and absence
+of duplication/stale state. Every category must score at least 1 and every
+screen at least 18/20. Numeric scores never override correctness, security,
+accessibility, cancellation, or authority failures.
+
+- Blocker: scope leakage, wrong authoritative content, inaccessible critical
+  flow, fake cancellation, data loss, duplicate authority, or semantic drift.
+- Major: failed task, mixed language, ambiguous primary action, missing safe
+  exit, keyboard trap, invisible focus, inadequate essential contrast,
+  unreachable content, or conflicting repeated action.
+- Minor: bounded defect that does not alter truth, access, comprehension, or
+  task completion.
+
+Exit requires zero unresolved blocker, major, or actionable minor finding. The
+independent report must identify exact candidate SHA, severity, reproduction,
+expected/actual result, accessibility and visibility impact, Fowler signal,
+owner/rail, evidence, fixing SHA, and repeated retest.
+
+### Fowler review matrix
+
+| Finding                                               | Fowler signal                          | Required owner check                         |
+| ----------------------------------------------------- | -------------------------------------- | -------------------------------------------- |
+| Same action/status appears in multiple places         | Duplicate code / alternative classes   | one shell/route read model or command        |
+| Raw type/spacing values vary per route                | Primitive obsession / shotgun surgery  | canonical typography/component tokens        |
+| Screen cannot explain its primary job                 | Long method / data clumps              | route workbench composition                  |
+| Close and Cancel mean the same thing                  | Mysterious name / incomplete lifecycle | presentation versus domain-command owner     |
+| Keyboard behavior differs per custom overlay          | Divergent change                       | shared accessible primitive + surface policy |
+| Audit passes but the user cannot complete the task    | Test smell / inappropriate intimacy    | full rendered journey evidence               |
+| Route reconstructs domain, locale, or workspace truth | Feature envy / parallel authority      | existing command/query rail                  |
+
+The implementation author cannot self-certify this gate. The reviewer executes
+the manual against the committed candidate and reports the first confusion
+instead of compensating with product knowledge.
 
 ## Retired Diff And Artifacts Peer Routes
 
@@ -439,22 +629,31 @@ The user expects to:
   provenance and target profile.
 - Read-only: allow review and export while mutation or dispatch is gated.
 
-## Surface Acceptance Matrix
+## Screen Owner And Action Matrix
 
-This matrix is the active acceptance baseline. It distinguishes routes from
-contextual surfaces so a capability cannot accidentally create a peer graph or
-duplicate command/query owner.
+This is the active hierarchy, action, state, and safe-exit baseline. It
+distinguishes routes from contextual surfaces so a capability cannot create a
+peer graph, duplicate navigation, or parallel command/query owner.
 
-| Surface                    | Placement            | Primary job                                   | Required acceptance states                         |
-| -------------------------- | -------------------- | --------------------------------------------- | -------------------------------------------------- |
-| Process Map                | `/canvas` route      | graph authoring, Preview, and run handoff     | loading, empty, error, degraded, read-only         |
-| Code                       | contextual workbench | revision-guarded project and node file edits  | loading, empty, modified, syncing, conflict, error |
-| Lineage                    | Canvas lens          | dependency and impact projection              | empty, loading, missing metadata                   |
-| Source Import              | contextual modal     | discover and register governed source objects | loading, empty, rejected, completed                |
-| Log/Problems/Runs/Preview  | operational drawer   | operational evidence and readiness            | collapsed, loading, blocked, active, terminal      |
-| Runs list/detail           | `/runs` routes       | execution evidence                            | loading, empty, error, degraded, missing run       |
-| Templates                  | `/templates` route   | governed source generation                    | loading, empty, validation error, preview ready    |
-| retired Diff/Artifacts URL | redirect intent only | explain unavailable superseded surface        | redirected, unavailable                            |
+| Screen or surface          | Placement               | Primary job                            | Authoritative action/read owner                          | Safe exit or cancellation owner                     | Required states                                      |
+| -------------------------- | ----------------------- | -------------------------------------- | -------------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------- |
+| Pre-React/route startup    | startup gate            | explain admission readiness            | `ObserveAppBootstrapRouteReadiness`                      | retry/leave policy; no fake operation cancel        | preparing, blocked, degraded, error, complete        |
+| Authentication/onboarding  | public/project gate     | establish session and project          | session and project onboarding rails                     | form/back policy; dirty-input decision              | loading, rejected, empty, denied, complete           |
+| Shell/workspace context    | persistent shell        | identify scope and navigate            | `GetEffectiveWorkspaceContext`, `SelectWorkspaceScope`   | owning menu/project selector                        | one/many grants, degraded, revoked                   |
+| Process Map                | `/canvas` route         | author graph, Preview, run handoff     | Canvas draft/preview/run rails                           | route/context-menu presentation owners              | loading, empty, error, degraded, read-only           |
+| Contextual Code            | movable workbench       | inspect/edit exact project/node file   | `List/Get/SaveWorkspaceFileContent`                      | workbench controller; synchronized/dirty policy     | loading, empty, modified, syncing, conflict, error   |
+| Lineage                    | Canvas lens             | dependency/impact projection           | Canvas graph read model                                  | lens presentation owner                             | empty, loading, missing metadata                     |
+| Source Import              | contextual modal/wizard | discover/register governed sources     | source-import commands and read models                   | wizard back/close; operation-specific truth         | loading, empty, dirty, rejected, in-flight, complete |
+| Project dbt Import         | contextual dialog       | validate/import a dbt project          | dbt validation/import ports                              | dialog close only; accepted import is not cancelled | pristine, validating, rejected, importing, receipt   |
+| Inspector/palette          | Canvas contextual UI    | inspect or create graph content        | Canvas inspector/catalog and `CreateCanvasAuthoringNode` | owning popover/menu controller                      | empty, grouped, filtered, selected                   |
+| Log/Problems/Runs/Preview  | operational drawer      | show evidence and readiness            | Canvas/run operational read models                       | drawer presentation owner                           | collapsed, loading, blocked, active, terminal        |
+| Runs list/detail           | `/runs` routes          | investigate execution evidence         | `ListRuns`, run snapshot/events, `CancelRun`             | navigation is close; `CancelRun` alone cancels      | loading, empty, error, degraded, missing, terminal   |
+| Templates                  | `/templates` route      | generate governed source               | template catalog/validation/preview owner                | route/form dirty policy                             | loading, empty, validation error, preview ready      |
+| Plugins                    | `/plugins` route        | inspect capability truth               | capability/catalog read models                           | route navigation                                    | loading, unavailable, degraded, diagnostic           |
+| Admin                      | `/admin` route          | inspect/administer platform authority  | admin health, RBAC, audit, and mutation owners           | route/form/confirmation owner                       | loading, denied, degraded, destructive confirmation  |
+| Cost                       | capability route/lens   | inspect bounded cost evidence          | cost read model when granted                             | filter/reset and route owner                        | unavailable, loading, empty, partial, error          |
+| Global recovery            | route/error boundary    | preserve scope and expose next action  | failing route/query/command owner                        | boundary retry/leave; no fabricated success         | offline, revoked, stale, unsupported, conflict       |
+| retired Diff/Artifacts URL | redirect intent only    | explain superseded unavailable surface | Canvas legacy-route intent                               | one-shot redirect                                   | redirected, unavailable                              |
 
 ```mermaid
 flowchart TB
