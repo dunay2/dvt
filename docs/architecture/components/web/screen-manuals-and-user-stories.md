@@ -2,7 +2,7 @@
 title: Screen Manuals And User Stories
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-06
 ---
 
 # Screen Manuals And User Stories
@@ -24,6 +24,10 @@ The user always understands:
 - which tenant, project, and environment are active;
 - whether the platform is healthy;
 - how to reach the main route-level workbenches.
+- how to identify and, when another grant is available, change the active
+  project without guessing that the workspace context is interactive;
+- how to change the application language from the View menu, with visible and
+  accessible copy updating immediately.
 
 ### Primary user stories
 
@@ -39,6 +43,12 @@ The user always understands:
 - Loading: shell frame visible while route content loads.
 - Degraded: health banner explains degraded or offline state.
 - Error: route-level errors do not destroy the shell frame.
+- One granted project: the current project control remains visible and explains
+  that no alternative project is available in this session.
+- Multiple granted projects: the same control exposes the authorized choices,
+  clearly marks the active one, and moves focus predictably after selection.
+- Language changed: shell, active route, menus, tooltips, and open contextual
+  surfaces use the selected language without a page reload.
 
 ### F-04 Data source behavior
 
@@ -78,6 +88,11 @@ The user expects to:
 - request plan;
 - start a run;
 - understand visual overlays without changing graph truth accidentally.
+- follow dependency direction from a visible arrow, including selected and
+  dimmed graph states;
+- distinguish “selected for execution” from “currently running” through paired
+  labels and play/pause-style state iconography;
+- add a component from grouped categories without horizontal scrolling.
 
 ### Current user journey
 
@@ -131,6 +146,10 @@ flowchart LR
   if meaningful.
 - Read-only: overlays and inspection remain available while mutation is gated by
   an explicit route-local banner.
+- Code open: project and node code use a movable contextual workbench, preserve
+  the Process Map, and show the complete authoritative workspace file.
+- Component catalog open: categories are named, items remain fully visible, and
+  search keeps category context.
 
 ### Hardening direction
 
@@ -256,6 +275,12 @@ The user expects:
 - explicit modified, syncing, synchronized, conflict, failed, and read-only
   states without a second Save lifecycle;
 - contextual file history attached to the selected file.
+- a movable workbench with an explicit drag handle that never depends on a
+  hidden gesture;
+- permanent header copy limited to identity and status; explanatory guidance is
+  available on hover and keyboard focus through localized accessible help;
+- the selected node's code command to resolve the complete authoritative file,
+  not a generated excerpt or reconstructed snippet.
 
 ### Primary user stories
 
@@ -276,6 +301,78 @@ The user expects:
 - Conflict: retain the current file and require reconciliation with the
   authoritative revision.
 - Read-only: make it clear that browsing is allowed but editing is not.
+
+## Startup, Onboarding, And Safe Dismissal
+
+### User expectation
+
+Startup and first-use screens feel like the same mature operator workbench as
+the protected routes. Neutral ink and steel surfaces establish hierarchy; blue
+is reserved for focus, information, and primary action rather than filling the
+screen. IBM Plex Sans governs UI copy and IBM Plex Mono governs code and
+identifiers at the canonical type scale.
+
+Every temporary surface answers three questions without experimentation:
+
+1. What will this action do?
+2. Will closing it discard work or cancel domain execution?
+3. How can it be dismissed with mouse and keyboard?
+
+`Close` dismisses a surface. `Cancel` abandons a pending local operation.
+`Discard` is used only when unsaved user input will be lost. `Cancel run`
+dispatches the governed `CancelRun` command and must never be used as generic
+dialog dismissal.
+
+### Expected states
+
+- Loading and bootstrap: stable typography, explicit status, no layout jump,
+  and no decorative saturated-blue field competing with the status.
+- Onboarding: one primary next action, ordered supporting information, and an
+  explicit way back or out whenever the user is not yet committed.
+- Dialog open: focus enters the surface, a visible localized close/cancel action
+  exists, Escape follows the documented dismissal rule, and focus returns to the
+  invoker.
+- Unsaved work: closing either synchronizes safely or asks for an explicit
+  discard decision; it never silently loses edits.
+
+## WUX1 Demanding-User Manual
+
+This checklist is the acceptance script for a person who has never used DVT.
+Run it in Spanish and English, first at a desktop viewport and then at a narrow
+viewport, with mouse and keyboard. Record the first point of confusion instead
+of compensating with product knowledge.
+
+1. Start the application and explain, in one sentence, what it is waiting for.
+   Reject childish or oversized typography, saturated-blue dominance, clipped
+   status text, or unexplained animation.
+2. Identify the active tenant, project, and environment. Open the project
+   control and state whether another authorized project can be selected. Reject
+   a hidden control or a silent absence of alternatives.
+3. Open View, switch to Spanish, inspect the shell, Canvas menus, tooltips, open
+   workbench, and dialogs; repeat in English. Reject mixed-language content or a
+   change that requires reload.
+4. Open project code, move the workbench, browse the file tree, and verify the
+   complete file. Close it using mouse, Escape, and keyboard focus. Reject fixed
+   panels, permanent instructional prose, clipped code, or ambiguous data loss.
+5. Select a node, open its code, and confirm the target file belongs to that
+   node. Reject generated excerpts presented as file authority.
+6. Select and deselect a node for execution. Explain the icon and label in both
+   states. Reject a play icon that still implies “start” when the command removes
+   the node from the selection.
+7. Trace a dependency from source to target at default, selected, and dimmed
+   states. Reject a line whose direction cannot be identified.
+8. Open Add component, name each group, search for an item, and add it at both
+   viewport widths. Reject horizontal scrolling, clipped descriptions, or a
+   flat repeated list.
+9. Open each active route and its primary overlay: Canvas, Runs list/detail,
+   Templates, Plugins, Admin, and available contextual workbenches. Reject
+   missing focus indicators, inaccessible names, low-contrast text, content
+   outside the viewport, repeated navigation, or a surface that cannot be
+   cancelled or closed safely.
+10. Submit a critical report with severity, exact reproduction, expected and
+    actual result, accessibility/visibility impact, and screenshot or DOM/test
+    evidence. The implementation author may not mark this check passed without
+    an independent review against the committed head.
 
 ## Retired Diff And Artifacts Peer Routes
 
