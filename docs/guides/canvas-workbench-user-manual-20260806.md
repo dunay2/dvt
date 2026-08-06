@@ -13,6 +13,12 @@ Este manual parte de cero. No presupone que la persona conozca Raven, dbt,
 Canvas ni la estructura interna de un proyecto. Cada operación indica qué debe
 verse, cómo salir y qué hacer si la opción no está disponible.
 
+La aceptación experta completa se rige por `WUX1-EXPERT-MANUAL-v1`, publicado
+en el documento canónico
+[Screen Manuals And User Stories](../architecture/components/web/screen-manuals-and-user-stories.md#wux1-demanding-user-manual).
+Este documento es la guía operativa en español; no redefine ni rebaja aquella
+matriz.
+
 ## 1. Arranque y primer proyecto
 
 Durante el arranque se muestra una única pantalla de estado. Los pasos se
@@ -139,11 +145,18 @@ La siguiente matriz sirve como comprobación manual mínima en escritorio
 En cada ancho debe comprobarse además:
 
 - contraste de texto, bordes, foco, flechas y controles deshabilitados;
-- zoom del navegador al 200 % sin pérdida de acciones ni texto;
+- zoom del navegador al 200 % y 400 % sin pérdida de acciones ni texto;
 - navegación solo con `Tab`, `Mayús+Tab`, `Intro`, `Espacio` y `Escape`;
 - ausencia de texto cortado o de desplazamiento horizontal accidental;
 - idioma coherente en texto visible, nombre accesible y tooltip;
 - que ningún estado crítico se comunique exclusivamente mediante color.
+- que movimiento reducido elimine animación decorativa sin ocultar cambios de
+  estado;
+- que colores forzados/alto contraste conserven foco, límites, selección,
+  dirección y acciones destructivas;
+- que Canvas, Runs, Templates, Plugins, Admin y Cost cuando esté concedido,
+  además de sus diálogos y bancos contextuales, tengan trabajo principal,
+  acción, estado y salida identificables.
 
 ## 9. Diagnóstico rápido
 
