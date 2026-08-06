@@ -9,7 +9,27 @@ import {
   LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
 } from '@dvt/contracts';
 
+import type { Env } from '../../plugins/env.js';
+
 import type { ProviderAdapterFactory } from './providerAdapterFactory.js';
+
+export function resolveTemporalProviderAdapterCapabilities(
+  env: Pick<
+    Env,
+    'TEMPORAL_ADDRESS' | 'DVT_TEMPORAL_DBT_ENABLED' | 'DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED'
+  >
+): readonly string[] {
+  if (!env.TEMPORAL_ADDRESS) {
+    return [];
+  }
+
+  return [
+    ...(env.DVT_TEMPORAL_DBT_ENABLED ? [DBT_STEP_REQUIRED_CAPABILITY] : []),
+    ...(env.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED
+      ? [LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY]
+      : []),
+  ];
+}
 
 export function createTemporalProviderAdapterFactory(): ProviderAdapterFactory {
   return {
@@ -39,12 +59,7 @@ export function createTemporalProviderAdapterFactory(): ProviderAdapterFactory {
         TEMPORAL_STEP_ACTIVITY_ROUTES: context.env.TEMPORAL_STEP_ACTIVITY_ROUTES,
       });
       const clientManager = new TemporalClientManager(temporalConfig, context.observability);
-      const additionalCapabilities = [
-        ...(context.env.DVT_TEMPORAL_DBT_ENABLED ? [DBT_STEP_REQUIRED_CAPABILITY] : []),
-        ...(context.env.DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED
-          ? [LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY]
-          : []),
-      ];
+      const additionalCapabilities = resolveTemporalProviderAdapterCapabilities(context.env);
 
       const adapter = new TemporalAdapter({
         clientManager,
