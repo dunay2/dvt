@@ -20,6 +20,7 @@ export const objectFilePostgresContributions: PluginContributions = {
   id: OBJECT_FILE_POSTGRES_PLUGIN_ID,
   displayName: 'DVT Object-file PostgreSQL',
   version: '1.0.0',
+  backendPluginId: OBJECT_FILE_POSTGRES_PLUGIN_ID,
   capabilities: ['canvas.render', 'canvas.edit', 'plan.preview'],
   nodeKinds: OBJECT_FILE_POSTGRES_NODE_KINDS,
   nodeRenderers,

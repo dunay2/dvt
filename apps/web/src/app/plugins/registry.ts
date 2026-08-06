@@ -281,7 +281,20 @@ export function getAllNodeKinds(capabilities?: RuntimeCapabilities): NodeKindReg
 export function getAllCanvasRuntimeRegistrations(
   capabilities?: RuntimeCapabilities
 ): CanvasRuntimeRegistration[] {
-  return getRuntimePlugins(capabilities).flatMap((plugin) => plugin.canvasKinds ?? []);
+  const runtimePlugins = getRuntimePlugins(capabilities);
+  const availablePluginIds = new Set(runtimePlugins.map((plugin) => plugin.id));
+
+  return runtimePlugins.flatMap((plugin) =>
+    (plugin.canvasKinds ?? []).map((registration) => {
+      const availableNodeKinds = registration.nodeKinds.filter((nodeKind) =>
+        availablePluginIds.has(nodeKind.pluginId)
+      );
+
+      return availableNodeKinds.length === registration.nodeKinds.length
+        ? registration
+        : { ...registration, nodeKinds: availableNodeKinds };
+    })
+  );
 }
 
 export function getAllCanvasKinds(capabilities?: RuntimeCapabilities): CanvasKindRegistration[] {
