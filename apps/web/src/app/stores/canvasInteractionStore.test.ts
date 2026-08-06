@@ -119,7 +119,7 @@ describe('useCanvasInteractionStore', () => {
     expect(useCanvasInteractionStore.getState().inspectorPreferredTabId).toBeNull();
   });
 
-  it('owns contextual project Code as transient Canvas interaction state', () => {
+  it('owns contextual project and node Code as transient Canvas interaction state', () => {
     useCanvasInteractionStore
       .getState()
       .openContextualWorkbench('project-code', 'dbt-contextual-canvas:sales-canvas');
@@ -134,6 +134,11 @@ describe('useCanvasInteractionStore', () => {
     expect(localStorage.getItem(CANVAS_INTERACTION_STORAGE_KEY)).not.toContain(
       'contextualWorkbenchOwnerKey'
     );
+
+    useCanvasInteractionStore
+      .getState()
+      .openContextualWorkbench('node-code', 'dbt-contextual-canvas:sales-canvas');
+    expect(useCanvasInteractionStore.getState().contextualWorkbenchId).toBe('node-code');
 
     useCanvasInteractionStore.getState().closeContextualWorkbench();
 

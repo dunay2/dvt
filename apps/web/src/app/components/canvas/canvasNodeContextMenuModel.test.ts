@@ -156,6 +156,26 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionById(model, 'remove-node')).toBeUndefined();
   });
 
+  it('offers exact node code only when a canonical workspace-file action exists', () => {
+    const model = buildCanvasNodeContextMenuModel({
+      target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
+      selectedForExecution: false,
+      canMutateGraph: false,
+      canInspectNode: true,
+      canOpenNodeCode: true,
+      canDuplicateNode: false,
+      canToggleNodeSelection: false,
+      canRemoveNode: false,
+    });
+
+    expect(actionIds(model)).toEqual(['inspect-node', 'open-node-code']);
+    expect(actionById(model, 'open-node-code')).toMatchObject({
+      label: 'Open node code',
+      intent: 'read',
+      disabled: false,
+    });
+  });
+
   it('uses execution-selection posture to choose select or deselect intent', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'transform-orders', nodeName: 'Clean Orders' },

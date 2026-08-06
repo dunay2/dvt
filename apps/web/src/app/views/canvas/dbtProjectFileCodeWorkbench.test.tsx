@@ -93,10 +93,10 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
       target: { kind: 'project' },
     });
 
-    await workbench?.requestClose();
+    await expect(workbench?.requestClose()).resolves.toBe(false);
     expect(onClose).not.toHaveBeenCalled();
 
-    await workbench?.requestClose();
+    await expect(workbench?.requestClose()).resolves.toBe(true);
     expect(onClose).toHaveBeenCalledOnce();
     expect(flush).toHaveBeenCalledTimes(2);
   });

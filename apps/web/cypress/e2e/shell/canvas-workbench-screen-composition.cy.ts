@@ -28,6 +28,13 @@ const MODEL_SQL = `select order_id,
        customer_id,
        total_amount
 from raw.orders`;
+const ORPHAN_PATH = 'models/analytics/orphan_metrics.sql';
+const ORPHAN_SQL = `select metric_date,
+       gross_revenue,
+       refund_amount
+from analytics.daily_metrics
+where metric_date >= current_date
+  - interval '30 days'`;
 
 function assertNoSeriousAccessibilityViolations(context: string): void {
   cy.get(context).should('be.visible');
@@ -90,6 +97,11 @@ describe('Canvas workbench screen composition', () => {
                 name: 'model_orders.sql',
                 kind: 'file',
               },
+              {
+                path: ORPHAN_PATH,
+                name: 'orphan_metrics.sql',
+                kind: 'file',
+              },
             ],
           },
         ],
@@ -109,6 +121,14 @@ describe('Canvas workbench screen composition', () => {
       language: 'sql',
       content: MODEL_SQL,
       contentSha256: 'b'.repeat(64),
+      lastModified: '2026-08-06T00:00:00.000Z',
+    });
+    stubE2eJsonApi('GET', '/workspace/files/models%2Fanalytics%2Forphan_metrics.sql', {
+      path: ORPHAN_PATH,
+      name: 'orphan_metrics.sql',
+      language: 'sql',
+      content: ORPHAN_SQL,
+      contentSha256: 'c'.repeat(64),
       lastModified: '2026-08-06T00:00:00.000Z',
     });
     stubE2eJsonApi('GET', /\/workspace\/file-history\/.+/, []);
@@ -302,7 +322,7 @@ describe('Canvas workbench screen composition', () => {
     }
     cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_PATH}"]`).click();
     waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
-    cy.get('[data-testid="monaco-code-editor"]')
+    cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
       .find('.view-line')
       .should('have.length.at.least', 4)
       .then(($lines) => {
@@ -359,6 +379,18 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-context-menu-add-catalog-category"]')
       .its('length')
       .should('be.greaterThan', 1);
+    cy.get('[data-slot="canvas-context-menu-add-catalog-category"]')
+      .then(($groups) => [...$groups].map((group) => group.getAttribute('data-catalog-category')))
+      .should('deep.equal', ['source', 'transformation', 'output']);
+    cy.get('#canvas-add-node-catalog-search').type('transformación');
+    cy.get('[data-slot="canvas-context-menu-add-catalog-category"]')
+      .should('have.length', 1)
+      .and('have.attr', 'data-catalog-category', 'transformation');
+    cy.get('#canvas-add-node-catalog-search').clear();
+    cy.get('[data-slot="canvas-context-menu-add-catalog-item"]')
+      .first()
+      .focus()
+      .should('be.focused');
     cy.get('[data-slot="canvas-context-menu"]').should(($menu) => {
       const rect = $menu.get(0).getBoundingClientRect();
       expect(rect.left).to.be.at.least(0);
@@ -437,29 +469,17 @@ describe('Canvas workbench screen composition', () => {
   });
 
   it('shows directional graph semantics and opens complete node code in a movable workbench', () => {
-    const graphDraft = buildCanvasAuthoringDraft();
-    const graphNodes = graphDraft.nodes.map((node) =>
-      node.id === 'model_orders'
-        ? {
-            ...node,
-            metadata: {
-              ...node.metadata,
-              sql: MODEL_SQL,
-              config: { ...node.metadata?.config, sql: MODEL_SQL },
-            },
-          }
-        : node
-    );
+    const graphDraft = buildCanvasAuthoringDraft({ includeLooseNode: true });
     persistedDraft = {
       revision: 'rev-e2e-graph-ready',
       draft: {
         ...graphDraft,
-        nodes: graphNodes,
         nodePositions: {
           ...graphDraft.nodePositions,
           src_orders: { x: 40, y: 140 },
           model_orders: { x: 420, y: 140 },
           orders_dashboard: { x: 800, y: 140 },
+          orphan_metrics: { x: 420, y: 420 },
         },
       },
     };
@@ -491,35 +511,65 @@ describe('Canvas workbench screen composition', () => {
     cy.get('@modelNode')
       .find('[data-slot="graph-node-card-play"]')
       .should('have.attr', 'data-state', 'deselect')
-      .find('[data-slot="graph-node-card-play-icon"]')
-      .should('not.exist');
+      .and('have.attr', 'aria-label', 'Quitar de la ejecución')
+      .find('[data-slot="graph-node-card-pause-icon"]')
+      .should('exist');
+    cy.get('@modelNode')
+      .find('[data-slot="graph-node-card-play"]')
+      .should('have.attr', 'title', 'Quitar de la ejecución');
 
-    cy.get('@modelNode').click();
-    cy.get(
-      '[data-slot="canvas-node-floating-toolbar"][data-node-id="model_orders"] [data-toolbar-action="code"]'
-    )
-      .should('have.attr', 'aria-label', 'Abrir código del nodo')
-      .click();
-    cy.get('[data-slot="canvas-node-workbench-overlay"]')
+    cy.get('@modelNode').rightclick();
+    cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Abrir código del nodo').click();
+    cy.get('[data-slot="canvas-contextual-workbench"]')
       .should('be.visible')
-      .and('contain.text', 'Código');
-    cy.get('[data-slot="canvas-node-workbench-code-section"]')
-      .should('be.visible')
-      .find('textarea[name="dvt-transform-sql"]')
-      .should('have.value', MODEL_SQL);
+      .and('contain.text', 'Código del nodo');
+    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Fmodel_orders.sql', 'GET');
+    cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
+      .find('.view-line')
+      .should('have.length.at.least', 4)
+      .then(($lines) => {
+        const renderedLines = [...$lines].map((line) =>
+          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
+        );
+        expect(renderedLines.join('\n')).to.equal(MODEL_SQL);
+      });
 
-    cy.get('[data-slot="canvas-node-workbench-overlay"]')
+    cy.get('[data-slot="canvas-contextual-workbench-overlay"]')
       .invoke('attr', 'style')
       .then((initialStyle) => {
-        cy.get('[data-slot="canvas-node-workbench-drag-handle"]')
+        cy.get('[data-slot="canvas-contextual-workbench-drag-handle"]')
           .focus()
           .type('{rightarrow}{downarrow}');
-        cy.get('[data-slot="canvas-node-workbench-overlay"]')
+        cy.get('[data-slot="canvas-contextual-workbench-overlay"]')
           .invoke('attr', 'style')
           .should('not.equal', initialStyle);
       });
-    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-overlay"]');
-    cy.get('[data-slot="canvas-node-workbench-close"]').click();
-    cy.get('.react-flow__node[data-id="model_orders"]').should('be.visible');
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench-overlay"]');
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+    cy.get('.react-flow__node[data-id="model_orders"]').should('be.focused');
+
+    cy.get('.react-flow__node[data-id="orphan_metrics"]').click();
+    cy.get(
+      '[data-slot="canvas-node-floating-toolbar"][data-node-id="orphan_metrics"] [data-toolbar-action="code"]'
+    )
+      .should('have.attr', 'aria-label', 'Abrir código del nodo')
+      .click();
+    waitForE2eApiCall('/workspace/files/models%2Fanalytics%2Forphan_metrics.sql', 'GET');
+    cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
+      .find('.view-line')
+      .should('have.length.at.least', 5)
+      .then(($lines) => {
+        const renderedLines = [...$lines].map((line) =>
+          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
+        );
+        expect(renderedLines.join('\n')).to.equal(ORPHAN_SQL);
+        expect(renderedLines.join('\n')).not.to.equal(MODEL_SQL);
+      });
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+
+    cy.get('.react-flow__node[data-id="src_orders"]').click();
+    cy.get(
+      '[data-slot="canvas-node-floating-toolbar"][data-node-id="src_orders"] [data-toolbar-action="code"]'
+    ).should('not.exist');
   });
 });

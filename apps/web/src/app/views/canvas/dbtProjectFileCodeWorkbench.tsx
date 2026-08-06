@@ -52,6 +52,7 @@ export function buildDbtProjectFileCodeWorkbench({
       if (flushed) {
         onClose();
       }
+      return flushed;
     },
     panel: (
       <SqlContextWorkbench

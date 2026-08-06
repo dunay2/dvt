@@ -18,6 +18,24 @@ import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContextWorkbench';
 import { useCanvasRouteIntentHandler } from './useCanvasRouteIntentHandler';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
+import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+
+type GraphDraftCodeTarget = Readonly<{
+  nodeId: string;
+  nodeName: string;
+  path: string;
+}>;
+
+type WorkbenchOpener = Readonly<{
+  element: HTMLElement | null;
+  fallbackSelector?: string;
+  fallbackNodeId?: string;
+}>;
+
+function resolveWorkspaceFilePath(data: DbtNodeData): string | null {
+  const codeTruth = data.presentationTruth?.code;
+  return codeTruth?.kind === 'workspace-file' ? codeTruth.path : null;
+}
 
 export default function CanvasShell({
   layout,
@@ -37,6 +55,10 @@ export default function CanvasShell({
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
+  const [graphDraftCodeTarget, setGraphDraftCodeTarget] = useState<GraphDraftCodeTarget | null>(
+    null
+  );
+  const workbenchOpenerRef = useRef<WorkbenchOpener | null>(null);
   const contextualWorkbenchId = useCanvasInteractionStore((state) => state.contextualWorkbenchId);
   const contextualWorkbenchOwnerKey = useCanvasInteractionStore(
     (state) => state.contextualWorkbenchOwnerKey
@@ -56,11 +78,54 @@ export default function CanvasShell({
       ? contextualWorkbenchId
       : null;
   const codeWorkbenchRef = useRef<SqlContextWorkbenchHandle>(null);
+  const captureWorkbenchOpener = useCallback(
+    (fallbackSelector?: string, fallbackNodeId?: string) => {
+      workbenchOpenerRef.current = {
+        element: document.activeElement instanceof HTMLElement ? document.activeElement : null,
+        ...(fallbackSelector == null ? {} : { fallbackSelector }),
+        ...(fallbackNodeId == null ? {} : { fallbackNodeId }),
+      };
+    },
+    []
+  );
+  const restoreWorkbenchFocus = useCallback(() => {
+    const opener = workbenchOpenerRef.current;
+    workbenchOpenerRef.current = null;
+    window.requestAnimationFrame(() => {
+      const fallbackNode =
+        opener?.fallbackNodeId == null
+          ? null
+          : (Array.from(document.querySelectorAll<HTMLElement>('.react-flow__node')).find(
+              (node) => node.dataset.id === opener.fallbackNodeId
+            ) ?? null);
+      const target =
+        opener?.element?.isConnected === true
+          ? opener.element
+          : (fallbackNode ??
+            (opener?.fallbackSelector == null
+              ? null
+              : document.querySelector<HTMLElement>(opener.fallbackSelector)));
+      target?.focus({ preventScroll: true });
+    });
+  }, []);
   const openProjectCodeWorkbench = useCallback(() => {
     if (activeContextualWorkbenchOwnerKey != null) {
+      setGraphDraftCodeTarget(null);
       openContextualWorkbench('project-code', activeContextualWorkbenchOwnerKey);
     }
   }, [activeContextualWorkbenchOwnerKey, openContextualWorkbench]);
+  const openGraphDraftNodeCodeWorkbench = useCallback(
+    (target: GraphDraftCodeTarget) => {
+      if (activeContextualWorkbenchOwnerKey == null) {
+        return;
+      }
+
+      setGraphDraftCodeTarget(target);
+      chromeCommands.onHideInspector();
+      openContextualWorkbench('node-code', activeContextualWorkbenchOwnerKey);
+    },
+    [activeContextualWorkbenchOwnerKey, chromeCommands, openContextualWorkbench]
+  );
   const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
   const restoreProjectExplorerFocus = useCallback(() => {
     document
@@ -84,52 +149,114 @@ export default function CanvasShell({
   useEffect(() => {
     if (contextualWorkbenchId != null && scopedContextualWorkbenchId == null) {
       closeContextualWorkbench();
+      setGraphDraftCodeTarget(null);
     }
   }, [closeContextualWorkbench, contextualWorkbenchId, scopedContextualWorkbenchId]);
   const internalContextualWorkbench = useMemo<CanvasShellContextualWorkbench | undefined>(() => {
-    if (scopedContextualWorkbenchId !== 'project-code') {
+    const isProjectCode = scopedContextualWorkbenchId === 'project-code';
+    const isNodeCode = scopedContextualWorkbenchId === 'node-code' && graphDraftCodeTarget != null;
+    if (!isProjectCode && !isNodeCode) {
       return undefined;
     }
 
     return {
-      id: 'project-code',
-      title: copy.sqlContextWorkbenchProjectTitle,
+      id: isNodeCode ? 'node-code' : 'project-code',
+      title: isNodeCode ? copy.sqlContextWorkbenchNodeTitle : copy.sqlContextWorkbenchProjectTitle,
       closeLabel: copy.nodeWorkbenchCloseLabel,
       moveLabel: copy.sqlContextWorkbenchMoveLabel,
-      description: copy.sqlContextWorkbenchProjectDescription,
+      description: isNodeCode
+        ? graphDraftCodeTarget.path
+        : copy.sqlContextWorkbenchProjectDescription,
       requestClose: async () => {
         const flushed = (await codeWorkbenchRef.current?.flush()) ?? true;
         if (flushed) {
           closeContextualWorkbench();
+          setGraphDraftCodeTarget(null);
         }
+        return flushed;
       },
       panel: (
         <SqlContextWorkbench
           ref={codeWorkbenchRef}
           loadingMessage={copy.sqlContextWorkbenchLoadingMessage}
+          initialPath={isNodeCode ? graphDraftCodeTarget.path : undefined}
         />
       ),
     };
   }, [
     scopedContextualWorkbenchId,
+    graphDraftCodeTarget,
     copy.nodeWorkbenchCloseLabel,
     copy.sqlContextWorkbenchLoadingMessage,
     copy.sqlContextWorkbenchMoveLabel,
     copy.sqlContextWorkbenchProjectDescription,
+    copy.sqlContextWorkbenchNodeTitle,
     copy.sqlContextWorkbenchProjectTitle,
     closeContextualWorkbench,
   ]);
-  const shellLayout = useMemo(
-    () =>
-      layout.contextualWorkbench != null || internalContextualWorkbench == null
-        ? layout
-        : {
-            ...layout,
-            contextualWorkbench: internalContextualWorkbench,
+  const selectedContextualWorkbench = layout.contextualWorkbench ?? internalContextualWorkbench;
+  const shellLayout = useMemo(() => {
+    if (selectedContextualWorkbench == null) {
+      return layout;
+    }
+
+    return {
+      ...layout,
+      contextualWorkbench: {
+        ...selectedContextualWorkbench,
+        requestClose: async () => {
+          const closed = await selectedContextualWorkbench.requestClose();
+          if (closed) {
+            restoreWorkbenchFocus();
+          }
+          return closed;
+        },
+      },
+    };
+  }, [layout, restoreWorkbenchFocus, selectedContextualWorkbench]);
+  const onOpenProjectCode = useCallback(() => {
+    captureWorkbenchOpener('[data-slot="shell-workspace-menu-trigger"]');
+    (workspaceCommands?.onOpenProjectCode ?? openProjectCodeWorkbench)();
+  }, [captureWorkbenchOpener, openProjectCodeWorkbench, workspaceCommands?.onOpenProjectCode]);
+  const graphWithCanonicalCodeCommands = useMemo(
+    () => ({
+      ...graph,
+      nodesWithImpact: graph.nodesWithImpact.map((node) => {
+        const data = node.data as DbtNodeData;
+        const existingOpenNodeCode = data.onOpenNodeCode;
+        const workspaceFilePath = resolveWorkspaceFilePath(data);
+        const canOpenNodeCode =
+          data.canOpenNodeCode === true
+            ? typeof existingOpenNodeCode === 'function'
+            : workspaceFilePath != null;
+
+        return {
+          ...node,
+          data: {
+            ...data,
+            canOpenNodeCode,
+            onOpenNodeCode: canOpenNodeCode
+              ? (nodeId: string) => {
+                  captureWorkbenchOpener(undefined, nodeId);
+                  if (typeof existingOpenNodeCode === 'function') {
+                    existingOpenNodeCode(nodeId);
+                    return;
+                  }
+                  if (workspaceFilePath != null) {
+                    openGraphDraftNodeCodeWorkbench({
+                      nodeId,
+                      nodeName: data.name,
+                      path: workspaceFilePath,
+                    });
+                  }
+                }
+              : undefined,
           },
-    [internalContextualWorkbench, layout]
+        };
+      }),
+    }),
+    [captureWorkbenchOpener, graph, openGraphDraftNodeCodeWorkbench]
   );
-  const onOpenProjectCode = workspaceCommands?.onOpenProjectCode ?? openProjectCodeWorkbench;
   useCanvasRouteIntentHandler({
     request: routeIntentRequest ?? null,
     columnLevelLineageEnabled: chromeState.columnLevelLineageEnabled,
@@ -179,7 +306,7 @@ export default function CanvasShell({
       <CanvasShellMainPanel
         layout={shellLayout}
         panels={panels}
-        graph={graph}
+        graph={graphWithCanonicalCodeCommands}
         chromeState={chromeState}
         graphCommands={graphCommands}
         chromeCommands={chromeCommands}
