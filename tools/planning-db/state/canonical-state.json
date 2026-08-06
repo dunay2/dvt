@@ -8130,11 +8130,21 @@
         "docs/.manifest.json",
         "docs/contracts/planner/index.md",
         "docs/evidence/index.md",
-        "docs/risk-register/quality/index.md"
+        "docs/risk-register/quality/index.md",
+        ".gitattributes",
+        "apps/api/src/routes/capabilities.ts",
+        "apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts",
+        "docs/planning/status/system-governance-unit-index.units.yaml",
+        "tools/ci/policy/workflow-scope.json",
+        "tools/ci/repository-command-catalog.mjs",
+        "tools/ci/repository-command-catalog.test.mjs",
+        "tools/ci/scope-config.mjs",
+        "traceability.manifest.json"
       ],
       "architectureGuards": [
         "packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts",
-        "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts"
+        "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+        "scripts/run-het2-public-vertical-live-proof.test.cjs"
       ],
       "completionGate": [
         "pnpm test:web:e2e:het2-public:live",
@@ -11966,7 +11976,7 @@
               "test_only_confidence"
             ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts",
-            "architectureGuard": "packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts"
+            "architectureGuard": "scripts/run-het2-public-vertical-live-proof.test.cjs"
           },
           {
             "name": "path",
@@ -12165,8 +12175,8 @@
         "redGreenCycles": [
           {
             "id": "runhet2publicverticalliveproof-record",
-            "redTest": "pnpm docs:feature-mechanization:implementation -- --base 2eb393a4a --feature E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805",
-            "greenTest": "pnpm docs:feature-mechanization:implementation -- --base 2eb393a4a --feature E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805",
+            "redTest": "pnpm docs:feature-mechanization:implementation -- --base main --feature E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805",
+            "greenTest": "pnpm docs:feature-mechanization:implementation -- --base main --feature E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805",
             "patchSurfaces": [
               "packages/@dvt/contracts/src/**",
               "packages/@dvt/artifacts/src/**",
@@ -12174,9 +12184,18 @@
               "apps/temporal-worker/src/**",
               "apps/web/src/app/views/canvas/**",
               "scripts/run-het2-public-vertical-live-proof.cjs",
-              "docs/.manifest.json"
+              "docs/.manifest.json",
+              ".gitattributes",
+              "apps/api/src/routes/capabilities.ts",
+              "apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts",
+              "docs/planning/status/system-governance-unit-index.units.yaml",
+              "tools/ci/policy/workflow-scope.json",
+              "tools/ci/repository-command-catalog.mjs",
+              "tools/ci/repository-command-catalog.test.mjs",
+              "tools/ci/scope-config.mjs",
+              "traceability.manifest.json"
             ],
-            "expectedFailure": "Generated documentation surfaces are not declared by the HET2 mechanization rail."
+            "expectedFailure": "Review and generated governance surfaces are outside the HET2 allowed implementation boundary."
           }
         ],
         "componentGuides": [
@@ -12196,7 +12215,8 @@
         ],
         "architectureGuards": [
           "packages/@dvt/temporal-http-json-plugin/test/httpJsonPluginBoundary.architecture.test.ts",
-          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts"
+          "apps/web/src/app/views/canvas/canvasDbtAuthoringRun.architecture.test.ts",
+          "scripts/run-het2-public-vertical-live-proof.test.cjs"
         ],
         "implementationPlan": "Prove the public Canvas HTTPS JSON artifact to PostgreSQL and DBT route through existing product rails.",
         "mechanizationStatus": "implemented",
@@ -12295,7 +12315,16 @@
           "docs/.manifest.json",
           "docs/contracts/planner/index.md",
           "docs/evidence/index.md",
-          "docs/risk-register/quality/index.md"
+          "docs/risk-register/quality/index.md",
+          ".gitattributes",
+          "apps/api/src/routes/capabilities.ts",
+          "apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts",
+          "docs/planning/status/system-governance-unit-index.units.yaml",
+          "tools/ci/policy/workflow-scope.json",
+          "tools/ci/repository-command-catalog.mjs",
+          "tools/ci/repository-command-catalog.test.mjs",
+          "tools/ci/scope-config.mjs",
+          "traceability.manifest.json"
         ],
         "forbiddenImplementationSurfaces": [
           "packages/@dvt/engine/src/**",
@@ -12304,7 +12333,7 @@
           "packages/@dvt/temporal-dbt-plugin/src/**"
         ]
       },
-      "revision": 14,
+      "revision": 15,
       "createdBy": "codex",
       "createdAt": "2026-08-05T19:41:23.157Z"
     },
@@ -51675,6 +51704,70 @@
         "forbiddenImplementationSurfaces": ["packages/@dvt/engine/src/**"]
       },
       "createdAt": "2026-08-05T19:48:52.757Z"
+    },
+    {
+      "operationId": "bb15f523-22d9-4874-b521-97fb2d98ce55",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805:command:runhet2publicverticalliveproof:14:43baeb1bb8868af3",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805#command#runhet2publicverticalliveproof",
+      "sourcePath": "docs/evidence/ED-20260805-het2-public-rest-artifact-dbt-vertical.md",
+      "sourceContentSha256": "1ead747ffd803a26d01dcae4fe471dc27c2beff6c0107202a5b4833b438544cd",
+      "expectedRevision": 14,
+      "previousRevision": 14,
+      "resultingRevision": 15,
+      "payload": {
+        "redTest": "pnpm docs:feature-mechanization:implementation -- --base main --feature E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805",
+        "dddOwner": "DeliveryRuntimeProofs",
+        "railName": "RunHet2PublicVerticalLiveProof",
+        "railType": "command",
+        "featureId": "E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805",
+        "greenTest": "pnpm docs:feature-mechanization:implementation -- --base main --feature E-HET2-PUBLIC-REST-ARTIFACT-DBT-20260805",
+        "sourceRef": "docs/evidence/ED-20260805-het2-public-rest-artifact-dbt-vertical.md",
+        "unitTests": ["scripts/run-het2-public-vertical-live-proof.test.cjs"],
+        "railStatus": "implemented",
+        "userStories": ["https://github.com/dunay2/dvt/issues/2181"],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-het2-rest-artifact-dbt-live.cy.ts"
+        ],
+        "domainObjects": ["ArtifactAcquisitionReceipt"],
+        "fowlerSignals": ["boundary_drift"],
+        "patchSurfaces": [],
+        "completionGate": ["pnpm verify:prepush"],
+        "componentGuides": [
+          "docs/evidence/ED-20260805-het2-public-rest-artifact-dbt-vertical.md"
+        ],
+        "expectedFailure": "Review and generated governance surfaces are outside the HET2 allowed implementation boundary.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260805-het2-public-rest-artifact-dbt-vertical.md"
+        ],
+        "architectureGuards": [
+          "scripts/run-het2-public-vertical-live-proof.test.cjs"
+        ],
+        "implementationPlan": "Prove the public Canvas HTTPS JSON artifact to PostgreSQL and DBT route through existing product rails.",
+        "implementationRefs": [
+          "scripts/run-het2-public-vertical-live-proof.cjs#main"
+        ],
+        "normalizedRailName": "runhet2publicverticalliveproof",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "1ead747ffd803a26d01dcae4fe471dc27c2beff6c0107202a5b4833b438544cd",
+        "allowedImplementationSurfaces": [
+          ".gitattributes",
+          "apps/api/src/routes/capabilities.ts",
+          "apps/api/test/entrypoints/http/capabilitiesRoutes.test.ts",
+          "docs/planning/status/system-governance-unit-index.units.yaml",
+          "tools/ci/policy/workflow-scope.json",
+          "tools/ci/repository-command-catalog.mjs",
+          "tools/ci/repository-command-catalog.test.mjs",
+          "tools/ci/scope-config.mjs",
+          "traceability.manifest.json"
+        ],
+        "forbiddenImplementationSurfaces": ["packages/@dvt/engine/src/**"]
+      },
+      "createdAt": "2026-08-06T10:16:25.675Z"
     }
   ]
 }
