@@ -38,25 +38,7 @@ function resolveCanvasViewLanguage(locale?: string): CanvasViewLanguage {
 }
 
 export function detectCanvasViewLocale(): string {
-  const configuredLanguage = getApplicationLanguage();
-  if (configuredLanguage) {
-    return configuredLanguage;
-  }
-
-  if (typeof navigator !== 'undefined') {
-    const navigatorLocale = navigator.language || navigator.languages?.[0];
-    if (navigatorLocale) {
-      return navigatorLocale;
-    }
-  }
-
-  const documentLocale =
-    typeof document === 'undefined' ? '' : document.documentElement.lang?.trim();
-  if (documentLocale) {
-    return documentLocale;
-  }
-
-  return 'en';
+  return getApplicationLanguage();
 }
 
 export function resolveCanvasViewCopy(locale: string = detectCanvasViewLocale()): CanvasViewCopy {

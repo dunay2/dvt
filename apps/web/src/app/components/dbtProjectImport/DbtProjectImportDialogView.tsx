@@ -217,7 +217,8 @@ function ImportReceipt({
           )}
         </span>
         <span>
-          {copy.canvasLabel} <strong>{model.receipt.canvasId}</strong> at{' '}
+          {copy.canvasLabel} <strong>{model.receipt.canvasId}</strong>{' '}
+          {copy.projectRootConnectorLabel}{' '}
           <span className="font-mono">{model.receipt.projectRoot}</span>
         </span>
         <span className="font-mono text-xs">
@@ -303,12 +304,7 @@ export function DbtProjectImportDialogView({
 
         <DialogFooter className="border-t border-(--border-muted) bg-(--surface-panel-subtle) px-6 py-4">
           <DialogClose asChild>
-            <Button
-              type="button"
-              variant="outline"
-              data-slot="dbt-project-cancel-command"
-              disabled={model.status.busy}
-            >
+            <Button type="button" variant="outline" data-slot="dbt-project-cancel-command">
               {copy.cancelLabel}
             </Button>
           </DialogClose>

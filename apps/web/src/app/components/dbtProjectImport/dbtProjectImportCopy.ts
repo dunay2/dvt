@@ -23,6 +23,7 @@ export type DbtProjectImportCopy = Readonly<{
   authorityEstablishedTitle: string;
   projectedResourcesTemplate: string;
   canvasLabel: string;
+  projectRootConnectorLabel: string;
   revisionLabel: string;
   projectRootLabel: string;
   projectRootHelp: string;
@@ -55,6 +56,7 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, DbtProjectImportCopy> = {
     authorityEstablishedTitle: 'Project authority established',
     projectedResourcesTemplate: '{count} projected resources',
     canvasLabel: 'Canvas',
+    projectRootConnectorLabel: 'at',
     revisionLabel: 'Revision',
     projectRootLabel: 'Project root',
     projectRootHelp: 'Workspace-relative directory containing dbt_project.yml.',
@@ -93,6 +95,7 @@ const COPY_BY_LANGUAGE: Record<ApplicationLanguage, DbtProjectImportCopy> = {
     authorityEstablishedTitle: 'Autoridad del proyecto establecida',
     projectedResourcesTemplate: '{count} recursos proyectados',
     canvasLabel: 'Canvas',
+    projectRootConnectorLabel: 'en',
     revisionLabel: 'Revisión',
     projectRootLabel: 'Raíz del proyecto',
     projectRootHelp: 'Directorio relativo al workspace que contiene dbt_project.yml.',

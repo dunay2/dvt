@@ -125,6 +125,7 @@ vi.mock('./canvasOverlayContext', () => ({
   buildNodeDecorations: mocks.buildNodeDecorations,
 }));
 vi.mock('./canvasNodeMapper', () => ({
+  createCanvasDirectionalEdge: (edge: { id: string; source: string; target: string }) => edge,
   mapCanonicalEdgeToCanvasEdge: mocks.mapCanonicalEdgeToCanvasEdge,
   mapCanonicalNodeToCanvasNode: mocks.mapCanonicalNodeToCanvasNode,
 }));
