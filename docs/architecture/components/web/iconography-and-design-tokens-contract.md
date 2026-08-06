@@ -2,7 +2,7 @@
 title: Iconography And Design Tokens Contract
 status: Active
 owner: Frontend / Architecture
-last_reviewed: 2026-04-04
+last_reviewed: 2026-08-06
 planning_type: architecture
 ---
 
@@ -77,6 +77,17 @@ Visual stance:
 - `Runs` is evidence-first and can be denser;
 - `Diff` and `Templates` are review-first and editor-adjacent;
 - `Artifacts` is inspection-first and read-only by default.
+
+Startup and onboarding stance:
+
+- use neutral `ink` and `steel` surfaces for the dominant field;
+- reserve `cobalt` for the primary action, focus, progress, and concise
+  informational emphasis rather than large decorative fills;
+- use the canonical body and title scale; oversized rounded marketing type and
+  playful display treatments are not part of the operator workbench;
+- keep information in one reading order and remove repeated status or guidance;
+- every temporary surface provides a visible, localized dismissal affordance in
+  addition to the documented keyboard path.
 
 ## Token Architecture
 

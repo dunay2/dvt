@@ -2,7 +2,7 @@
 title: Frontend Command And Query Rail Inventory
 status: Active
 owner: Web / Architecture
-last_reviewed: 2026-08-02
+last_reviewed: 2026-08-06
 ---
 
 # Frontend Command And Query Rail Inventory
@@ -43,6 +43,22 @@ commands or queries are still needed for a mature end-to-end workflow.
   a frontend command/query.
 
 ## Runtime And Session Rails
+
+### `ConfigureApplicationLanguage`
+
+- Type: command.
+- Status: `implemented-local` once the CUX1/WUX1 convergence slice lands.
+- Owner: `ApplicationLanguagePreference` value object.
+- Frontend surfaces: the application-language preference store, shell copy
+  presenters, and the Canvas View menu contribution.
+- Scope and authorization: browser-local presentation preference only. It does
+  not alter tenant, project, environment, graph, run, or authenticated-session
+  authority.
+- Persistence: a validated `en | es` value may be stored locally; unsupported or
+  unreadable values fall back to the supported browser/document language and
+  then English.
+- Negative tests: unsupported persisted locale, unavailable storage, reactive
+  copy update without reload, and no protected API call on language change.
 
 ### `GetRuntimeSession`
 
