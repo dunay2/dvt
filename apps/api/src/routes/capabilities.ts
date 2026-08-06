@@ -1,4 +1,7 @@
-import { LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY } from '@dvt/contracts';
+import {
+  ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY,
+  LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
+} from '@dvt/contracts';
 import type { FastifyInstance } from 'fastify';
 
 import { resolveTemporalProviderAdapterCapabilities } from '../modules/providerAdapters/createTemporalProviderAdapterFactory.js';
@@ -33,6 +36,9 @@ export async function capabilitiesRoutes(app: FastifyInstance, opts: { env: Env 
   const objectFilePostgresAvailable = temporalCapabilities.has(
     LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY
   );
+  const httpJsonAvailable = temporalCapabilities.has(
+    ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY
+  );
 
   app.get(
     '/capabilities',
@@ -47,6 +53,16 @@ export async function capabilitiesRoutes(app: FastifyInstance, opts: { env: Env 
       apiVersion: '0.1.0',
       minFrontendVersion: '0.1.0',
       plugins: {
+        'dvt.http-json': {
+          available: httpJsonAvailable,
+          ...(httpJsonAvailable
+            ? {}
+            : {
+                reason: opts.env.TEMPORAL_ADDRESS
+                  ? 'Temporal HTTP JSON acquisition is disabled'
+                  : 'Temporal runtime is not configured',
+              }),
+        },
         [OBJECT_FILE_POSTGRES_PLUGIN_ID]: {
           available: objectFilePostgresAvailable,
           ...(objectFilePostgresAvailable
