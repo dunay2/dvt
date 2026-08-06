@@ -1,0 +1,19 @@
+:root {
+  --font-sans: 'IBM Plex Sans', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Cascadia Code', Consolas, monospace;
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-sans);
+}
+
+code,
+kbd,
+pre,
+samp {
+  font-family: var(--font-mono);
+}

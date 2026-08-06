@@ -17,16 +17,23 @@
         align-items: center;
         justify-content: center;
         padding: 24px;
-        background-color: #050814;
+        background-color: #0b0d10;
         background-image:
-          linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
-          linear-gradient(180deg, rgba(4, 7, 18, 0.98) 0%, rgba(5, 8, 22, 1) 100%);
+          linear-gradient(rgba(203, 213, 225, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(203, 213, 225, 0.03) 1px, transparent 1px),
+          linear-gradient(180deg, rgba(11, 13, 16, 0.99) 0%, rgba(15, 18, 22, 1) 100%);
         background-size:
           32px 32px,
           32px 32px,
           100% 100%;
         transition: opacity 120ms ease;
+        color: #e5e7eb;
+        font-family:
+          'IBM Plex Sans',
+          'Segoe UI',
+          system-ui,
+          -apple-system,
+          sans-serif;
       }
       #app-loading-screen[data-state='complete'] {
         opacity: 0;
@@ -47,12 +54,12 @@
         width: min(92vw, 720px);
       }
       #app-loading-status {
-        border: 1px solid rgba(120, 146, 182, 0.28);
+        border: 1px solid rgba(148, 163, 184, 0.24);
         border-radius: 8px;
-        background: rgba(7, 11, 24, 0.96);
+        background: rgba(17, 20, 25, 0.97);
         box-shadow: 0 18px 48px rgba(0, 0, 0, 0.3);
         padding: 20px;
-        color: #eff5ff;
+        color: #f3f4f6;
       }
       #app-loading-header {
         display: flex;
@@ -65,7 +72,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        color: #eff5ff;
+        color: #f3f4f6;
         font-size: 0.88rem;
         font-weight: 700;
       }
@@ -77,8 +84,8 @@
         background: #f8fafc;
       }
       #app-loading-kicker {
-        color: #93c5fd;
-        font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+        color: #cbd5e1;
+        font-family: 'IBM Plex Mono', 'Cascadia Code', Consolas, monospace;
         font-size: 0.72rem;
         font-weight: 700;
         text-transform: uppercase;
@@ -89,14 +96,14 @@
       }
       #app-loading-title {
         margin: 0;
-        font-size: 1.45rem;
-        font-weight: 700;
-        line-height: 1.2;
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1.35;
       }
       #app-loading-message {
         margin: 8px 0 0;
-        color: rgba(223, 232, 249, 0.82);
-        font-size: 0.95rem;
+        color: rgba(226, 232, 240, 0.8);
+        font-size: 0.875rem;
         line-height: 1.5;
       }
       #app-loading-steps {
@@ -113,7 +120,7 @@
         row-gap: 2px;
         align-items: start;
         padding: 10px 0;
-        border-top: 1px solid rgba(120, 146, 182, 0.18);
+        border-top: 1px solid rgba(148, 163, 184, 0.15);
       }
       #app-loading-steps li::before {
         content: '';
@@ -122,12 +129,12 @@
         height: 10px;
         margin-top: 5px;
         border-radius: 999px;
-        background: rgba(122, 144, 177, 0.52);
-        box-shadow: 0 0 0 4px rgba(122, 144, 177, 0.12);
+        background: rgba(148, 163, 184, 0.58);
+        box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.1);
       }
       #app-loading-steps li[data-status='pending']::before {
-        background: #60a5fa;
-        box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.16);
+        background: #94a3b8;
+        box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.14);
       }
       #app-loading-steps li[data-status='complete']::before {
         background: #22c55e;
@@ -150,14 +157,14 @@
         box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18);
       }
       .app-loading-step-label {
-        font-size: 0.95rem;
+        font-size: 0.875rem;
         font-weight: 600;
-        color: #eff5ff;
+        color: #f3f4f6;
       }
       .app-loading-step-detail {
         grid-column: 2;
-        color: rgba(223, 232, 249, 0.72);
-        font-size: 0.85rem;
+        color: rgba(203, 213, 225, 0.75);
+        font-size: 0.8125rem;
         line-height: 1.45;
       }
       #app-loading-progress {
@@ -177,7 +184,7 @@
       }
       .app-loading-progress-count {
         color: rgba(239, 245, 255, 0.92);
-        font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+        font-family: 'IBM Plex Mono', 'Cascadia Code', Consolas, monospace;
         font-size: 0.78rem;
       }
       .app-loading-progress-segments {
@@ -229,7 +236,7 @@
       }
       .app-loading-meta-item {
         color: rgba(162, 176, 201, 0.86);
-        font-family: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+        font-family: 'IBM Plex Mono', 'Cascadia Code', Consolas, monospace;
         font-size: 0.72rem;
       }
       #app-loading-screen[data-state='blocked'] #app-loading-title {
