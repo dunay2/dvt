@@ -114,6 +114,11 @@ export const canvasViewToolbarCopyEs = {
   canvasAddNodeCatalogNodeDescription: 'Agrega un componente registrado de Canvas.',
   toolbarEmptyCanvasGuideLabel: 'Guia de canvas vacio',
   toolbarProjectSnapshotMenuLabel: 'Proyecto',
+  workspaceImportDbtProjectLabel: 'Importar proyecto dbt',
+  workspaceExploreProjectLabel: 'Explorar proyecto',
+  workspaceOpenProjectCodeLabel: 'Abrir código del proyecto',
+  workspaceActiveCanvasLabelTemplate: 'Canvas activo: {title}',
+  workspaceTransformationKindLabel: 'Transformación',
   toolbarExportSnapshotLabel: 'Exportar',
   toolbarImportSnapshotLabel: 'Importar',
   projectSnapshotExportUnavailableMessage:

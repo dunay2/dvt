@@ -10,11 +10,12 @@ import {
 import type { CanvasWorkspaceMenuContribution } from './canvasWorkspaceMenuContributionStore';
 import { useCanvasWorkspaceMenuContributionStore } from './canvasWorkspaceMenuContributionStore';
 import { canvasViewCopy } from './copy';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 type CanvasWorkspaceMenuContributionRegistrarProps = CanvasWorkspaceMenuContribution;
 
 function resolveCanvasKindLabel(kind: string): string {
-  return kind === 'dbt' ? 'dbt' : 'Transformation';
+  return kind === 'dbt' ? 'dbt' : canvasViewCopy.workspaceTransformationKindLabel;
 }
 
 export function CanvasWorkspaceMenuContributionRegistrar(
@@ -91,6 +92,7 @@ export function CanvasWorkspaceMenuContributionRegistrar(
 
 export function CanvasWorkspaceMenuControls(): JSX.Element | null {
   const contribution = useCanvasWorkspaceMenuContributionStore((state) => state.contribution);
+  useApplicationLanguageStore((state) => state.language);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   if (contribution == null) {
@@ -107,7 +109,7 @@ export function CanvasWorkspaceMenuControls(): JSX.Element | null {
         onClick={contribution.onImportDbtProject}
       >
         <FolderInput className="mr-2 size-4" />
-        Import dbt project
+        {canvasViewCopy.workspaceImportDbtProjectLabel}
       </DropdownMenuItem>
       <DropdownMenuItem
         data-slot="canvas-workspace-explore-project-command"
@@ -117,7 +119,7 @@ export function CanvasWorkspaceMenuControls(): JSX.Element | null {
         onClick={contribution.onOpenProjectExplorer}
       >
         <FolderOpen className="mr-2 size-4" />
-        Explore project
+        {canvasViewCopy.workspaceExploreProjectLabel}
       </DropdownMenuItem>
       <DropdownMenuItem
         data-slot="canvas-workspace-open-project-code-command"
@@ -125,7 +127,7 @@ export function CanvasWorkspaceMenuControls(): JSX.Element | null {
         onClick={contribution.onOpenProjectCode}
       >
         <Code2 className="mr-2 size-4" />
-        Open project code
+        {canvasViewCopy.workspaceOpenProjectCodeLabel}
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuLabel>{canvasViewCopy.toolbarProjectSnapshotMenuLabel}</DropdownMenuLabel>
@@ -168,6 +170,7 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
   const activeCanvas = useCanvasWorkspaceMenuContributionStore(
     (state) => state.contribution?.activeCanvas ?? null
   );
+  useApplicationLanguageStore((state) => state.language);
 
   if (activeCanvas == null) {
     return null;
@@ -179,7 +182,10 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
       data-canvas-id={activeCanvas.id}
       data-kind={activeCanvas.kind}
       className="flex min-w-0 max-w-[24rem] items-center gap-2 rounded-sm border border-(--border-muted) bg-(--surface-panel-subtle) px-2.5 py-1 text-xs"
-      aria-label={`Active canvas: ${activeCanvas.title}`}
+      aria-label={canvasViewCopy.workspaceActiveCanvasLabelTemplate.replace(
+        '{title}',
+        activeCanvas.title
+      )}
     >
       <span className="truncate font-semibold text-(--text-primary)">{activeCanvas.title}</span>
       <span className="shrink-0 text-(--text-muted)">
