@@ -1,17 +1,13 @@
 /** Owned concern: bind an optional selected project file to the canonical Code workbench. */
-import { forwardRef, lazy, Suspense } from 'react';
+import { forwardRef } from 'react';
 
-import type { CodeViewFileScope, CodeViewHandle } from '../CodeView';
+import CodeView, { type CodeViewFileScope, type CodeViewHandle } from '../CodeView';
 import type { WorkspaceFileSaveReceipt } from '../../ports/workspace';
 import type { CodeWorkingTreeReconciliationOutcome } from '../code/codeWorkingTreeSyncModel';
-import { sqlContextWorkbenchVisualTokens as tokens } from './sqlContextWorkbenchVisualTokens';
-
-const CodeView = lazy(() => import('../CodeView'));
 
 export type SqlContextWorkbenchProps = Readonly<{
   fileScope?: CodeViewFileScope;
   initialPath?: string;
-  loadingMessage: string;
   reconcilePersistedFile?: (
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
@@ -21,19 +17,17 @@ export type SqlContextWorkbenchHandle = CodeViewHandle;
 
 export const SqlContextWorkbench = forwardRef<SqlContextWorkbenchHandle, SqlContextWorkbenchProps>(
   function SqlContextWorkbench(
-    { fileScope, initialPath, loadingMessage, reconcilePersistedFile }: SqlContextWorkbenchProps,
+    { fileScope, initialPath, reconcilePersistedFile }: SqlContextWorkbenchProps,
     ref
   ): JSX.Element {
     return (
-      <Suspense fallback={<div className={tokens.loading}>{loadingMessage}</div>}>
-        <CodeView
-          ref={ref}
-          publishRouteBootstrap={false}
-          fileScope={fileScope}
-          initialPath={initialPath}
-          reconcilePersistedFile={reconcilePersistedFile}
-        />
-      </Suspense>
+      <CodeView
+        ref={ref}
+        publishRouteBootstrap={false}
+        fileScope={fileScope}
+        initialPath={initialPath}
+        reconcilePersistedFile={reconcilePersistedFile}
+      />
     );
   }
 );

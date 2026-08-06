@@ -930,6 +930,7 @@ describe('CodeView', () => {
           {' '}
           <AppServicesProvider
             overrides={{
+              ...createAppServicesTestOverrides(),
               workspaceFilesQuery: buildWorkspaceFilesQueryPort({
                 listFiles: async () => {
                   throw new Error('request failed');

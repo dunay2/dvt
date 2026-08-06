@@ -11,7 +11,6 @@ import type { WorkspaceFileSaveReceipt } from '../../ports/workspace';
 type DbtProjectFileCodeWorkbenchCopy = Pick<
   CanvasViewCopy,
   | 'nodeWorkbenchCloseLabel'
-  | 'sqlContextWorkbenchLoadingMessage'
   | 'sqlContextWorkbenchMoveLabel'
   | 'sqlContextWorkbenchNodeTitle'
   | 'sqlContextWorkbenchProjectTitle'
@@ -57,7 +56,6 @@ export function buildDbtProjectFileCodeWorkbench({
     panel: (
       <SqlContextWorkbench
         ref={workbenchRef}
-        loadingMessage={copy.sqlContextWorkbenchLoadingMessage}
         fileScope={{
           kind: 'dbt-project-files',
           projectRoot,

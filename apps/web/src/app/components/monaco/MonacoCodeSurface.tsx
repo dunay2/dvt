@@ -5,7 +5,7 @@ import { DEFAULT_MONACO_CONTAINER_CLASS_NAME } from './MonacoViewerFallback';
 import { configureMonacoLocalWorkers } from './monacoLocalWorkers';
 import { createMonacoCodeOptions, monacoTheme } from './monacoVisualTokens';
 
-type MonacoCodeSurfaceProps = Readonly<{
+export type MonacoCodeSurfaceProps = Readonly<{
   ariaLabel: string;
   containerClassName?: string;
   language: string;

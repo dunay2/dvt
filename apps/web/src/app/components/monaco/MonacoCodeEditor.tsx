@@ -1,9 +1,6 @@
-/** Owned concern: lazy-load the Monaco code surface behind an editable working-tree API. */
-import { Suspense, lazy } from 'react';
-
+/** Owned concern: load the Monaco code surface behind an editable working-tree API. */
 import { DEFAULT_MONACO_CONTAINER_CLASS_NAME, MonacoViewerFallback } from './MonacoViewerFallback';
-
-const MonacoCodeSurface = lazy(() => import('./MonacoCodeSurface'));
+import { useMonacoCodeSurface } from './useMonacoCodeSurface';
 
 type MonacoCodeEditorProps = Readonly<{
   ariaLabel: string;
@@ -24,21 +21,20 @@ export function MonacoCodeEditor({
   path,
   value,
 }: MonacoCodeEditorProps) {
+  const MonacoCodeSurface = useMonacoCodeSurface();
+  if (MonacoCodeSurface == null) {
+    return <MonacoViewerFallback label={loadingLabel} containerClassName={containerClassName} />;
+  }
+
   return (
-    <Suspense
-      fallback={
-        <MonacoViewerFallback label={loadingLabel} containerClassName={containerClassName} />
-      }
-    >
-      <MonacoCodeSurface
-        ariaLabel={ariaLabel}
-        containerClassName={containerClassName}
-        language={language}
-        onChange={onChange}
-        path={path}
-        readOnly={false}
-        value={value}
-      />
-    </Suspense>
+    <MonacoCodeSurface
+      ariaLabel={ariaLabel}
+      containerClassName={containerClassName}
+      language={language}
+      onChange={onChange}
+      path={path}
+      readOnly={false}
+      value={value}
+    />
   );
 }

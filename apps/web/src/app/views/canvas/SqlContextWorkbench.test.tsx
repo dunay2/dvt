@@ -56,7 +56,6 @@ describe('SqlContextWorkbench', () => {
             projectRoot: 'analytics',
             initialPath: 'analytics/models/marts/orders.sql',
           }}
-          loadingMessage="Loading code"
           reconcilePersistedFile={reconcilePersistedFile}
         />
       );
