@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 
 import { ResizablePanel } from '../../components/ui/resizable';
 import { CanvasContextualWorkbenchPanel } from './CanvasContextualWorkbenchPanel';
+import { useCanvasNodeWorkbenchPosition } from './useCanvasNodeWorkbenchPosition';
 
 const canvasShellMainPanelFrameClassNames = {
   root: 'relative h-full flex flex-col bg-(--surface-panel)',
@@ -10,8 +11,10 @@ const canvasShellMainPanelFrameClassNames = {
   overlayBase: 'relative flex min-h-0 flex-1',
   overlayLayer: 'pointer-events-none absolute inset-0',
   overlayContent: 'pointer-events-none h-full',
-  workbenchSplit: 'flex min-h-0 flex-1',
+  workbenchSplit: 'relative flex min-h-0 flex-1',
   workbenchBaseSurface: 'flex min-h-0 min-w-0 flex-1',
+  workbenchOverlay:
+    'absolute z-20 flex h-[min(42rem,calc(100%-2rem))] w-[min(48rem,calc(100%-2rem))] overflow-hidden rounded-md border border-(--border-default) bg-(--surface-panel) shadow-xl',
 } as const;
 
 export function CanvasShellMainPanelFrame({
@@ -56,6 +59,7 @@ export function CanvasShellContextualWorkbenchSplit({
   children,
   closeLabel,
   description,
+  moveLabel,
   onClose,
   title,
 }: Readonly<{
@@ -63,9 +67,12 @@ export function CanvasShellContextualWorkbenchSplit({
   children: ReactNode;
   closeLabel: string;
   description?: string;
+  moveLabel?: string;
   onClose: () => void;
   title: string;
 }>): JSX.Element {
+  const positionController = useCanvasNodeWorkbenchPosition(true);
+
   return (
     <div className={canvasShellMainPanelFrameClassNames.workbenchSplit}>
       <div
@@ -74,14 +81,27 @@ export function CanvasShellContextualWorkbenchSplit({
       >
         {baseSurface}
       </div>
-      <CanvasContextualWorkbenchPanel
-        title={title}
-        closeLabel={closeLabel}
-        description={description}
-        onClose={onClose}
+      <div
+        ref={positionController.surfaceRef}
+        data-slot="canvas-contextual-workbench-overlay"
+        className={canvasShellMainPanelFrameClassNames.workbenchOverlay}
+        style={{
+          left: `${positionController.position.left}px`,
+          top: `${positionController.position.top}px`,
+        }}
+        {...positionController.surfacePointerProps}
       >
-        {children}
-      </CanvasContextualWorkbenchPanel>
+        <CanvasContextualWorkbenchPanel
+          title={title}
+          closeLabel={closeLabel}
+          description={description}
+          moveLabel={moveLabel ?? title}
+          dragHandleProps={positionController.dragHandleProps}
+          onClose={onClose}
+        >
+          {children}
+        </CanvasContextualWorkbenchPanel>
+      </div>
     </div>
   );
 }

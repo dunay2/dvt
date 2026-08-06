@@ -2,6 +2,8 @@
 
 /** Owned concern: prove CanvasShell keeps the graph as the base work surface. */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent } from '@testing-library/dom';
+import { act } from 'react';
 
 import {
   createCanvasShellHarness,
@@ -127,13 +129,15 @@ describe('CanvasShell graph base surface', () => {
     expect(container.querySelector('[data-testid="code-workbench-panel"]')).not.toBeNull();
   });
 
-  it('renders contextual workbench panels beside the graph instead of replacing it', async () => {
+  it('renders a movable contextual workbench over the graph instead of replacing it', async () => {
     await renderShell({
       layout: {
         contextualWorkbench: {
           id: 'project-code',
           title: 'Project code',
           closeLabel: 'Cerrar',
+          moveLabel: 'Mover código',
+          description: 'Workspace files in the active project scope.',
           panel: <div data-testid="code-workbench-panel" />,
           requestClose: vi.fn(async () => undefined),
         },
@@ -148,8 +152,31 @@ describe('CanvasShell graph base surface', () => {
     expect(baseSurface?.classList).toContain('min-h-0');
     expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).not.toBeNull();
     expect(container.querySelector('[data-testid="code-workbench-panel"]')).not.toBeNull();
+    const overlay = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-contextual-workbench-overlay"]'
+    );
+    const dragHandle = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-contextual-workbench-drag-handle"]'
+    );
+    expect(overlay).not.toBeNull();
+    expect(dragHandle?.getAttribute('role')).toBe('button');
+    expect(dragHandle?.getAttribute('aria-label')).toBe('Mover código');
+    expect(
+      container.querySelector('[data-slot="canvas-contextual-workbench-description"]')
+    ).toBeNull();
+    expect(
+      container
+        .querySelector('[data-slot="canvas-contextual-workbench-help"]')
+        ?.getAttribute('aria-label')
+    ).toBe('Workspace files in the active project scope.');
+
+    const topBeforeMove = overlay?.style.top;
+    await act(async () => {
+      fireEvent.keyDown(dragHandle!, { key: 'ArrowDown' });
+    });
+    expect(overlay?.style.top).not.toBe(topBeforeMove);
     const closeButton = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-contextual-workbench-header"] button'
+      '[data-slot="canvas-contextual-workbench-close"]'
     );
     expect(closeButton?.textContent).toBe('Cerrar');
     expect(closeButton?.getAttribute('aria-label')).toBe('Cerrar: Project code');
@@ -176,7 +203,7 @@ describe('CanvasShell graph base surface', () => {
     expect(container.querySelector('[data-testid="dbt-project-file-code-panel"]')).not.toBeNull();
     expect(
       container
-        .querySelector('[data-slot="canvas-contextual-workbench-header"] button')
+        .querySelector('[data-slot="canvas-contextual-workbench-close"]')
         ?.getAttribute('aria-label')
     ).toBe('Cerrar: Orders project code');
   });

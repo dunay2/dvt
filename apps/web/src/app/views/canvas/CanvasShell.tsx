@@ -90,6 +90,7 @@ export default function CanvasShell({
       id: 'project-code',
       title: copy.sqlContextWorkbenchProjectTitle,
       closeLabel: copy.nodeWorkbenchCloseLabel,
+      moveLabel: copy.sqlContextWorkbenchMoveLabel,
       description: copy.sqlContextWorkbenchProjectDescription,
       requestClose: async () => {
         const flushed = (await codeWorkbenchRef.current?.flush()) ?? true;
@@ -108,6 +109,7 @@ export default function CanvasShell({
     scopedContextualWorkbenchId,
     copy.nodeWorkbenchCloseLabel,
     copy.sqlContextWorkbenchLoadingMessage,
+    copy.sqlContextWorkbenchMoveLabel,
     copy.sqlContextWorkbenchProjectDescription,
     copy.sqlContextWorkbenchProjectTitle,
     closeContextualWorkbench,
