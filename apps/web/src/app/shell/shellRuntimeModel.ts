@@ -16,12 +16,15 @@ function normalizeCapabilities(
   return capabilities;
 }
 
-export function buildShellRuntimeState(capabilities: RuntimeCapabilitiesDto | undefined) {
+export function buildShellRuntimeState(
+  capabilities: RuntimeCapabilitiesDto | undefined,
+  locale = 'en'
+) {
   const runtimeCapabilities = normalizeCapabilities(capabilities);
   const navigationViews = getShellNavigationViews(runtimeCapabilities);
   const defaultCoreViewPath = getDefaultCoreViewPath(runtimeCapabilities);
   const registeredPluginIds = getRegisteredPluginIds(runtimeCapabilities);
-  const navigationModel = buildShellNavigationModel(navigationViews);
+  const navigationModel = buildShellNavigationModel(navigationViews, locale);
 
   return {
     capabilities: runtimeCapabilities,

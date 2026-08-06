@@ -65,7 +65,11 @@ export const dbtContributions: PluginContributions = {
       },
       placement: {
         kind: 'shell-nav',
-        label: 'Canvas',
+        label: {
+          key: 'navigation.canvas',
+          fallback: 'Canvas',
+          translations: { es: 'Canvas' },
+        },
         icon: LayoutDashboard,
         order: 10,
         level: 'core',
@@ -90,6 +94,18 @@ export const dbtContributions: PluginContributions = {
         title: 'Start dbt canvas',
         editableMessage:
           'Start this dbt canvas by adding a governed source, model, snapshot, exposure, or metric.',
+      },
+      localizedCopy: {
+        es: {
+          label: 'dbt',
+          description: 'Canvas basado en modelos para recursos y dependencias dbt.',
+          createTitle: 'Canvas dbt',
+          emptyState: {
+            title: 'Inicia el canvas dbt',
+            editableMessage:
+              'Inicia este canvas añadiendo un origen, modelo, snapshot, exposición o métrica gobernados.',
+          },
+        },
       },
       nodeKinds: [...DBT_NODE_KINDS, ...HTTP_JSON_NODE_KINDS, ...OBJECT_FILE_POSTGRES_NODE_KINDS],
     },

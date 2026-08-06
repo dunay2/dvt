@@ -29,6 +29,20 @@ export type CanvasKindRegistration = {
     title: string;
     editableMessage: string;
   };
+  localizedCopy?: Readonly<
+    Record<
+      string,
+      Readonly<{
+        label: string;
+        description: string;
+        createTitle: string;
+        emptyState: Readonly<{
+          title: string;
+          editableMessage: string;
+        }>;
+      }>
+    >
+  >;
   nodeKinds: readonly NodeKindRegistration[];
 };
 

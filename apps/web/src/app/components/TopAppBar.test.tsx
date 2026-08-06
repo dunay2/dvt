@@ -235,6 +235,26 @@ describe('ShellTopBar workspace context', () => {
     expect(topBar?.textContent).not.toContain('Plan');
   });
 
+  it('localizes Canvas run status, command, and accessible name from the application preference', async () => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    useOperationalDrawerContributionStore.setState({
+      contribution: buildCanvasRunContribution(),
+    });
+
+    await act(async () => {
+      root.render(renderShellTopBar('/canvas'));
+    });
+
+    const runStatus = container.querySelector('[data-slot="shell-run-status-indicator"]');
+    const runCommand = container.querySelector<HTMLButtonElement>(
+      '[data-slot="shell-run-command"]'
+    );
+    expect(runStatus?.textContent).toContain('Vista previa obligatoria');
+    expect(runStatus?.getAttribute('aria-label')).toContain('Estado de ejecución del Canvas');
+    expect(runCommand?.textContent).toContain('Ejecutar');
+    expect(runCommand?.getAttribute('aria-label')).toBe('Ejecutar');
+  });
+
   it('routes the compact top-bar Run command through the Canvas operational contribution', async () => {
     const onStartRun = vi.fn();
     useOperationalDrawerContributionStore.setState({

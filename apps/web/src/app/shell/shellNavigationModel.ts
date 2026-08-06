@@ -1,7 +1,7 @@
 /** Owned concern: normalize shell navigation views into render-ready shell rail items. */
 import { Shield, Puzzle } from 'lucide-react';
 
-import { resolveString } from '../plugins/contracts/PluginManifest';
+import { resolveString, type LocalizableString } from '../plugins/contracts/PluginManifest';
 import type { ShellNavigationViewContribution } from '../plugins/registry';
 
 export type ShellNavigationItem = {
@@ -17,25 +17,32 @@ export type ShellNavigationModel = {
   readonly footerItems: readonly ShellNavigationItem[];
 };
 
-const SHELL_NAV: readonly ShellNavigationItem[] = [
+const SHELL_NAV: readonly Readonly<
+  Omit<ShellNavigationItem, 'label'> & { label: LocalizableString }
+>[] = [
   {
     to: '/plugins',
     icon: Puzzle,
-    label: 'Plugins',
+    label: { key: 'navigation.plugins', fallback: 'Plugins', translations: { es: 'Plugins' } },
     level: 'extended',
     source: 'shell',
   },
   {
     to: '/admin',
     icon: Shield,
-    label: 'Admin',
+    label: {
+      key: 'navigation.admin',
+      fallback: 'Admin',
+      translations: { es: 'Administración' },
+    },
     level: 'admin',
     source: 'shell',
   },
 ] as const;
 
 export function buildShellNavigationModel(
-  navigationViews: readonly ShellNavigationViewContribution[]
+  navigationViews: readonly ShellNavigationViewContribution[],
+  locale = 'en'
 ): ShellNavigationModel {
   for (const view of navigationViews) {
     if (view.placement.kind !== 'shell-nav') {
@@ -47,10 +54,10 @@ export function buildShellNavigationModel(
     primaryItems: navigationViews.map((view) => ({
       to: view.path,
       icon: view.placement.icon,
-      label: resolveString(view.placement.label),
+      label: resolveString(view.placement.label, locale),
       level: view.placement.level,
       source: 'runtime',
     })),
-    footerItems: SHELL_NAV,
+    footerItems: SHELL_NAV.map((item) => ({ ...item, label: resolveString(item.label, locale) })),
   };
 }

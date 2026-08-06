@@ -2,6 +2,7 @@
 import { Play } from 'lucide-react';
 
 import { Button } from '../ui/button';
+import type { ShellTopBarCopy } from './copy';
 import type { OperationalDrawerContribution } from './operationalDrawerContributionStore';
 
 const shellRunStatusClasses = {
@@ -17,22 +18,26 @@ const shellRunStatusClasses = {
 
 type ShellRunStatusIndicatorProps = Readonly<{
   contribution: OperationalDrawerContribution | null;
+  copy: ShellTopBarCopy;
 }>;
 
-function resolveRunStatusLabel(contribution: OperationalDrawerContribution): string {
+function resolveRunStatusLabel(
+  contribution: OperationalDrawerContribution,
+  copy: ShellTopBarCopy
+): string {
   if (contribution.runs.activeRunId != null) {
-    return `Running ${contribution.runs.activeRunId}`;
+    return copy.runningTemplate.replace('{runId}', contribution.runs.activeRunId);
   }
 
   if (contribution.runs.status === 'ready') {
-    return 'Ready';
+    return copy.runReady;
   }
 
   if (contribution.preview.status === 'blocked') {
-    return 'Preview required';
+    return copy.previewRequired;
   }
 
-  return 'Run blocked';
+  return copy.runBlocked;
 }
 
 function resolveStatusClassName(contribution: OperationalDrawerContribution): string {
@@ -49,19 +54,20 @@ function resolveStatusClassName(contribution: OperationalDrawerContribution): st
 
 export function ShellRunStatusIndicator({
   contribution,
+  copy,
 }: ShellRunStatusIndicatorProps): JSX.Element | null {
   if (contribution?.source !== 'canvas') {
     return null;
   }
 
-  const statusLabel = resolveRunStatusLabel(contribution);
+  const statusLabel = resolveRunStatusLabel(contribution, copy);
   const runDisabled = contribution.runs.activeRunId != null || !contribution.runs.canStartRun;
 
   return (
     <div
       data-slot="shell-run-status-indicator"
       className={shellRunStatusClasses.root}
-      aria-label={`Canvas run status: ${statusLabel}`}
+      aria-label={copy.canvasRunStatusTemplate.replace('{status}', statusLabel)}
     >
       <span className={resolveStatusClassName(contribution)}>{statusLabel}</span>
       <Button
@@ -72,9 +78,10 @@ export function ShellRunStatusIndicator({
         className={shellRunStatusClasses.runButton}
         disabled={runDisabled}
         onClick={contribution.runs.onStartRun}
+        aria-label={copy.runCommand}
       >
         <Play className={shellRunStatusClasses.icon} />
-        Run
+        <span className="hidden sm:inline">{copy.runCommand}</span>
       </Button>
     </div>
   );

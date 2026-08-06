@@ -102,7 +102,7 @@ export function CanvasWorkspaceMenuControls(): JSX.Element | null {
   return (
     <>
       <DropdownMenuSeparator />
-      <DropdownMenuLabel>Project</DropdownMenuLabel>
+      <DropdownMenuLabel>{canvasViewCopy.toolbarProjectSnapshotMenuLabel}</DropdownMenuLabel>
       <DropdownMenuItem
         data-slot="canvas-workspace-import-dbt-project-command"
         disabled={!contribution.canImportDbtProject || contribution.onImportDbtProject == null}
@@ -181,14 +181,14 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
       data-slot="shell-active-canvas-identity"
       data-canvas-id={activeCanvas.id}
       data-kind={activeCanvas.kind}
-      className="flex min-w-0 max-w-[24rem] items-center gap-2 rounded-sm border border-(--border-muted) bg-(--surface-panel-subtle) px-2.5 py-1 text-xs"
+      className="flex min-w-0 max-w-28 items-center gap-2 rounded-sm border border-(--border-muted) bg-(--surface-panel-subtle) px-2.5 py-1 text-xs sm:max-w-64 lg:max-w-[24rem]"
       aria-label={canvasViewCopy.workspaceActiveCanvasLabelTemplate.replace(
         '{title}',
         activeCanvas.title
       )}
     >
       <span className="truncate font-semibold text-(--text-primary)">{activeCanvas.title}</span>
-      <span className="shrink-0 text-(--text-muted)">
+      <span className="hidden shrink-0 text-(--text-muted) sm:inline">
         {resolveCanvasKindLabel(activeCanvas.kind)}
       </span>
     </div>

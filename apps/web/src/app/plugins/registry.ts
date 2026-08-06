@@ -33,6 +33,7 @@ import type {
   ShellNavigationPlacement,
   ViewContribution,
 } from './contracts/PluginManifest';
+import { getApplicationLanguage } from '../stores/applicationLanguageStore';
 import type { AppRouteHandle } from '../bootstrap/routeBootstrapContract';
 import type {
   CanvasKindRegistration,
@@ -299,16 +300,25 @@ export function getAllCanvasRuntimeRegistrations(
   );
 }
 
-export function getAllCanvasKinds(capabilities?: RuntimeCapabilities): CanvasKindRegistration[] {
-  return getAllCanvasRuntimeRegistrations(capabilities).map((registration) => ({
-    kind: registration.kind,
-    pluginId: registration.pluginId,
-    label: registration.label,
-    description: registration.description,
-    createTitle: registration.createTitle,
-    emptyState: registration.emptyState,
-    nodeKinds: registration.nodeKinds,
-  }));
+export function getAllCanvasKinds(
+  capabilities?: RuntimeCapabilities,
+  locale: string = getApplicationLanguage()
+): CanvasKindRegistration[] {
+  const language = locale.trim().toLowerCase().split('-')[0] ?? 'en';
+
+  return getAllCanvasRuntimeRegistrations(capabilities).map((registration) => {
+    const localizedCopy = registration.localizedCopy?.[language];
+    return {
+      kind: registration.kind,
+      pluginId: registration.pluginId,
+      label: localizedCopy?.label ?? registration.label,
+      description: localizedCopy?.description ?? registration.description,
+      createTitle: localizedCopy?.createTitle ?? registration.createTitle,
+      emptyState: localizedCopy?.emptyState ?? registration.emptyState,
+      localizedCopy: registration.localizedCopy,
+      nodeKinds: registration.nodeKinds,
+    };
+  });
 }
 
 export function getAllOverlays(capabilities?: RuntimeCapabilities): CanvasOverlayContribution[] {

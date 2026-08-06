@@ -128,8 +128,8 @@ export function RootShell({ platformHealthCapability }: RootShellProps = {}) {
     [location.pathname]
   );
   const navigationModel = useMemo(
-    () => buildShellRuntimeState(capabilitiesQuery.data).navigationModel,
-    [capabilitiesQuery.data]
+    () => buildShellRuntimeState(capabilitiesQuery.data, applicationLanguage).navigationModel,
+    [applicationLanguage, capabilitiesQuery.data]
   );
   const bootstrapOperabilityTransition = useMemo(
     () =>

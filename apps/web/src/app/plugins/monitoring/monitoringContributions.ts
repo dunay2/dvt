@@ -50,7 +50,11 @@ export const monitoringContributions: PluginContributions = {
       },
       placement: {
         kind: 'shell-nav',
-        label: 'Runs',
+        label: {
+          key: 'navigation.runs',
+          fallback: 'Runs',
+          translations: { es: 'Ejecuciones' },
+        },
         icon: Activity,
         order: 20,
         level: 'core',

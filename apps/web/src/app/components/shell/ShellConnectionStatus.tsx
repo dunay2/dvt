@@ -49,8 +49,12 @@ export function ShellConnectionStatus({
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          <p>REST API: {effectiveConnectionStatus.rest}</p>
-          <p>Live Events: {effectiveConnectionStatus.liveEvents}</p>
+          <p>
+            {copy.restApiLabel}: {effectiveConnectionStatus.rest}
+          </p>
+          <p>
+            {copy.liveEventsLabel}: {effectiveConnectionStatus.liveEvents}
+          </p>
         </TooltipContent>
       </Tooltip>
     );
