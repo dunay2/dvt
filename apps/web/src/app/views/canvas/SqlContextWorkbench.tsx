@@ -10,6 +10,7 @@ const CodeView = lazy(() => import('../CodeView'));
 
 export type SqlContextWorkbenchProps = Readonly<{
   fileScope?: CodeViewFileScope;
+  initialPath?: string;
   loadingMessage: string;
   reconcilePersistedFile?: (
     receipt: WorkspaceFileSaveReceipt
@@ -20,7 +21,7 @@ export type SqlContextWorkbenchHandle = CodeViewHandle;
 
 export const SqlContextWorkbench = forwardRef<SqlContextWorkbenchHandle, SqlContextWorkbenchProps>(
   function SqlContextWorkbench(
-    { fileScope, loadingMessage, reconcilePersistedFile }: SqlContextWorkbenchProps,
+    { fileScope, initialPath, loadingMessage, reconcilePersistedFile }: SqlContextWorkbenchProps,
     ref
   ): JSX.Element {
     return (
@@ -29,6 +30,7 @@ export const SqlContextWorkbench = forwardRef<SqlContextWorkbenchHandle, SqlCont
           ref={ref}
           publishRouteBootstrap={false}
           fileScope={fileScope}
+          initialPath={initialPath}
           reconcilePersistedFile={reconcilePersistedFile}
         />
       </Suspense>

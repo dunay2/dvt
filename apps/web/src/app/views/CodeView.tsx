@@ -70,6 +70,7 @@ export type CodeViewProps = Readonly<{
   publishRouteBootstrap?: boolean;
   routeBootstrapId?: string;
   fileScope?: CodeViewFileScope;
+  initialPath?: string;
   reconcilePersistedFile?: (
     receipt: WorkspaceFileSaveReceipt
   ) => Promise<CodeWorkingTreeReconciliationOutcome>;
@@ -80,6 +81,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     publishRouteBootstrap = true,
     routeBootstrapId = CANVAS_ROUTE_ID,
     fileScope,
+    initialPath,
     reconcilePersistedFile,
   }: CodeViewProps = {},
   ref
@@ -93,7 +95,7 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     { enabled: fileScope === undefined }
   );
   const [selectedPath, setSelectedPath] = useState<string | undefined>(
-    () => fileScope?.initialPath
+    () => fileScope?.initialPath ?? initialPath
   );
   const fileSelectionRequestIdRef = useRef(0);
   const pendingFileSelectionRef = useRef<Readonly<{
@@ -213,8 +215,8 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
     latestRequestFileSelectionRef.current = requestFileSelection;
   }, [requestFileSelection]);
   useEffect(() => {
-    void latestRequestFileSelectionRef.current(fileScope?.initialPath);
-  }, [fileScope?.initialPath]);
+    void latestRequestFileSelectionRef.current(fileScope?.initialPath ?? initialPath);
+  }, [fileScope?.initialPath, initialPath]);
   useImperativeHandle(ref, () => ({ flush: workingTreeSync.flush }), [workingTreeSync.flush]);
   const workingTreeStatusCopy = {
     synchronized: {

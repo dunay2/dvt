@@ -129,20 +129,19 @@ function buildCodeTruth(
   const inlineCode =
     readString(metadata.compiledSql) ?? readString(config.sql) ?? readString(metadata.sql);
 
-  if (inlineCode != null) {
-    return {
-      kind: 'inline',
-      content: inlineCode,
-      language: 'sql',
-      ...(path == null ? {} : { path }),
-    };
-  }
-
   if (path != null) {
     return {
       kind: 'workspace-file',
       path,
       language: resolveCodeLanguage(path),
+    };
+  }
+
+  if (inlineCode != null) {
+    return {
+      kind: 'inline',
+      content: inlineCode,
+      language: 'sql',
     };
   }
 

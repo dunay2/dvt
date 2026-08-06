@@ -68,7 +68,7 @@ export type CanvasShellContextualWorkbench = Readonly<{
   moveLabel?: string;
   description?: string;
   panel: React.ReactNode;
-  requestClose: () => Promise<void>;
+  requestClose: () => Promise<boolean>;
 }>;
 
 export type CanvasShellPanels = {

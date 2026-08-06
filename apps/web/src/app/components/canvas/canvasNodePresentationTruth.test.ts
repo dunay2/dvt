@@ -101,7 +101,7 @@ describe('buildCanvasNodePresentationTruth', () => {
     });
   });
 
-  it('prefers canonical config SQL over stale top-level SQL while retaining the path', () => {
+  it('prefers canonical workspace-file identity over duplicated graph SQL metadata', () => {
     const model = buildNode({
       path: 'models/orders.sql',
       metadata: {
@@ -113,10 +113,9 @@ describe('buildCanvasNodePresentationTruth', () => {
     expect(
       buildCanvasNodePresentationTruth({ node: model, nodes: [model], edges: [] }).code
     ).toEqual({
-      kind: 'inline',
-      content: 'select * from raw_orders',
-      language: 'sql',
+      kind: 'workspace-file',
       path: 'models/orders.sql',
+      language: 'sql',
     });
   });
 

@@ -117,7 +117,7 @@ describe('CanvasShell graph base surface', () => {
           title: 'Project code',
           closeLabel: 'Cerrar',
           panel: <div data-testid="code-workbench-panel" />,
-          requestClose: vi.fn(async () => undefined),
+          requestClose: vi.fn(async () => true),
         },
       },
       chromeState: {
@@ -139,7 +139,7 @@ describe('CanvasShell graph base surface', () => {
           moveLabel: 'Mover código',
           description: 'Workspace files in the active project scope.',
           panel: <div data-testid="code-workbench-panel" />,
-          requestClose: vi.fn(async () => undefined),
+          requestClose: vi.fn(async () => true),
         },
       },
     });
@@ -200,7 +200,7 @@ describe('CanvasShell graph base surface', () => {
           title: 'Orders project code',
           closeLabel: 'Cerrar',
           panel: <div data-testid="dbt-project-file-code-panel" />,
-          requestClose: vi.fn(async () => undefined),
+          requestClose: vi.fn(async () => true),
         },
       },
     });
