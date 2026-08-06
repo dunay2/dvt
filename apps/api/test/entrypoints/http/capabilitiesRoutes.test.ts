@@ -20,6 +20,10 @@ describe('capabilitiesRoutes', () => {
         apiVersion: '0.1.0',
         minFrontendVersion: '0.1.0',
         plugins: {
+          'dvt.http-json': {
+            available: false,
+            reason: 'Temporal runtime is not configured',
+          },
           'dvt.object-file-postgres': {
             available: false,
             reason: 'Temporal runtime is not configured',
@@ -52,6 +56,32 @@ describe('capabilitiesRoutes', () => {
       expect(response.json()).toMatchObject({
         plugins: {
           'dvt.object-file-postgres': {
+            available: true,
+          },
+        },
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('publishes HTTP JSON availability from the Temporal adapter capability set', async () => {
+    const app = Fastify({ logger: false });
+    await app.register(capabilitiesRoutes, {
+      prefix: '/',
+      env: loadEnv({
+        TEMPORAL_ADDRESS: 'temporal.test:7233',
+        DVT_TEMPORAL_HTTP_JSON_ENABLED: 'true',
+      }),
+    });
+
+    try {
+      const response = await app.inject({ method: 'GET', url: '/capabilities' });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toMatchObject({
+        plugins: {
+          'dvt.http-json': {
             available: true,
           },
         },
