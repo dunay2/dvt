@@ -30,6 +30,7 @@ const BOOTSTRAP_SCREEN_SOURCE_PATH = resolve(
   dirname(fileURLToPath(import.meta.url)),
   'appBootstrapScreen.ts'
 );
+const FONT_SOURCE_PATH = resolve(WEB_ROOT, 'src/styles/fonts.css');
 const REGEXP_SYNTAX_CHARACTERS = new Set([
   '.',
   '*',
@@ -208,6 +209,21 @@ describe('appBootstrapScreen', () => {
 
     startBootstrapScreen();
     expectInitialProgressSurface();
+  });
+
+  it('uses the governed mature typography and neutral startup palette before React executes', () => {
+    const indexHtml = readFileSync(INDEX_HTML_PATH, 'utf8');
+    const fontSource = readFileSync(FONT_SOURCE_PATH, 'utf8');
+    const screenRule = extractCssRule(indexHtml, '#app-loading-screen');
+    const titleRule = extractCssRule(indexHtml, '#app-loading-title');
+
+    expect(fontSource).toContain("--font-sans: 'IBM Plex Sans'");
+    expect(fontSource).toContain("--font-mono: 'IBM Plex Mono'");
+    expect(screenRule).toContain('background-color: #0b0d10');
+    expect(screenRule).toContain("font-family: 'IBM Plex Sans'");
+    expect(titleRule).toContain('font-size: 1.25rem');
+    expect(indexHtml).not.toContain('#60a5fa');
+    expect(indexHtml).not.toContain("'JetBrains Mono'");
   });
 
   it('keeps raw bootstrap DOM identifiers out of the screen adapter', () => {
