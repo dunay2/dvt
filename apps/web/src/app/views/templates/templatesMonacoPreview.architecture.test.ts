@@ -92,6 +92,7 @@ describe('Templates Monaco preview architecture', () => {
     expect(existsSync(previewPanelPath)).toBe(true);
     const previewPanel = readFileSync(previewPanelPath, 'utf8');
     const monacoViewer = readAppSource('components/monaco/MonacoCodeViewer.tsx');
+    const monacoLoader = readAppSource('components/monaco/useMonacoCodeSurface.ts');
     const monacoSurface = readAppSource('components/monaco/MonacoCodeSurface.tsx');
     const monacoVisualTokens = readAppSource('components/monaco/monacoVisualTokens.ts');
 
@@ -100,6 +101,7 @@ describe('Templates Monaco preview architecture', () => {
       ['views/templates/TemplatesRouteWorkbench.tsx', workbench],
       ['views/templates/TemplateMonacoPreviewPanel.tsx', previewPanel],
       ['components/monaco/MonacoCodeViewer.tsx', monacoViewer],
+      ['components/monaco/useMonacoCodeSurface.ts', monacoLoader],
       ['components/monaco/MonacoCodeSurface.tsx', monacoSurface],
     ] as const) {
       expect(source.trimStart().startsWith('/** Owned concern:'), modulePath).toBe(true);
@@ -121,8 +123,10 @@ describe('Templates Monaco preview architecture', () => {
     expect(previewPanel).not.toContain('onChange');
     expect(previewPanel).not.toMatch(/\b(save|apply|dispatch|persist)\b/i);
 
-    expect(monacoViewer).toContain("lazy(() => import('./MonacoCodeSurface'))");
+    expect(monacoViewer).toContain('useMonacoCodeSurface()');
     expect(monacoViewer).toContain('readOnly={true}');
+    expect(monacoLoader).toContain("import('./MonacoCodeSurface')");
+    expect(monacoLoader).toContain('active = false');
     expect(monacoSurface).toContain('<Editor');
     expect(monacoSurface).toContain('createMonacoCodeOptions({ ariaLabel, readOnly: isReadOnly })');
     expect(monacoVisualTokens).toContain('readOnly,');

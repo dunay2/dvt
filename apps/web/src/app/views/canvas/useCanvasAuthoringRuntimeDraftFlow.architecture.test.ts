@@ -6,16 +6,20 @@ const AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE = readArchitectureSiblingSource(
   import.meta.dirname,
   'useCanvasAuthoringRuntimeDraftFlow.ts'
 );
+const WORKSPACE_DRAFT_SESSION_SOURCE = readArchitectureSiblingSource(
+  import.meta.dirname,
+  'useCanvasWorkspaceDraftSession.ts'
+);
 
 describe('useCanvasAuthoringRuntimeDraftFlow architecture', () => {
   it('owns draft baseline, projection, lifecycle, and draft-session state', () => {
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain(
       'Owned concern: compose the draft baseline, semantic projection, lifecycle'
     );
-    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain(
-      "from './canvasAuthoringRuntime.types'"
-    );
-    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useState(');
+    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain("from './canvasAuthoringRuntime.types'");
+    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useCanvasWorkspaceDraftSession');
+    expect(WORKSPACE_DRAFT_SESSION_SOURCE).toContain('useState<ScopedDraftSession>');
+    expect(WORKSPACE_DRAFT_SESSION_SOURCE).toContain('workspaceLayoutKey');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useCanvasDraftBaseline');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useCanvasAuthoringProjection');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('useCanvasDraftLifecycle');
@@ -23,9 +27,7 @@ describe('useCanvasAuthoringRuntimeDraftFlow architecture', () => {
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('session: {');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('projection: {');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).toContain('policy: {');
-    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).not.toContain(
-      "from './useCanvasAuthoringRuntime'"
-    );
+    expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).not.toContain("from './useCanvasAuthoringRuntime'");
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).not.toContain('useQuery(');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).not.toContain('useQueryClient(');
     expect(AUTHORING_RUNTIME_DRAFT_FLOW_SOURCE).not.toContain('deriveCanvasBackendPosture');
