@@ -101,6 +101,7 @@ function buildSourceModel(node = buildSourceNode()): NodePropertiesReadModel {
     node,
     nodes: [node, downstreamNode],
     edges: graphEdges,
+    presentationCopy,
   });
 }
 
@@ -180,7 +181,10 @@ describe('nodePropertiesReadModel', () => {
       node: 'Clean Orders',
       relation: 'lineage',
     });
-    expect(sectionById(model, 'code').code).toBe('select * from analytics.raw.orders');
+    expect(sectionById(model, 'code')).toMatchObject({
+      description: 'Code lives at models/sources/src_orders.yml.',
+    });
+    expect(sectionById(model, 'code').code).toBeUndefined();
   });
 
   it('shows calculated source object size distinctly from measured byte size', () => {
@@ -729,7 +733,7 @@ describe('nodePropertiesReadModel', () => {
     ['metadata SQL fallback', { sql: 'select metadata' }, 'select metadata'],
   ])('uses deterministic SQL precedence for %s', (_name, metadata, expectedCode) => {
     const model = buildNodePropertiesReadModel({
-      node: buildSourceNode({ metadata }),
+      node: buildSourceNode({ path: undefined, metadata }),
       nodes: [buildSourceNode()],
       edges: [],
     });
