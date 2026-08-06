@@ -362,6 +362,7 @@ export default function CanvasShell({
       <DbtProjectImportDialog
         open={dbtProjectImportOpen}
         onClose={() => setDbtProjectImportOpen(false)}
+        onRestoreFocus={restoreProjectExplorerFocus}
         onImported={(result) => {
           setDbtProjectImportOpen(false);
           onDbtProjectImported?.(result);
