@@ -356,16 +356,10 @@ describe('ShellTopBar workspace context', () => {
       fireEvent.pointerDown(container.querySelector('[data-slot="shell-menu-trigger"]')!);
     });
 
-    const languageMenu = await waitFor(() => {
+    await waitFor(() => {
       expect(document.body.textContent).toContain('Language');
       const menu = document.body.querySelector<HTMLElement>('[data-slot="shell-language-menu"]');
       expect(menu).not.toBeNull();
-      return menu;
-    });
-
-    await act(async () => {
-      languageMenu!.focus();
-      fireEvent.keyDown(languageMenu!, { key: 'ArrowRight' });
     });
 
     const spanishLanguageCommand = await waitFor(() => {

@@ -20,6 +20,7 @@ type CanvasProjectExplorerDialogProps = Readonly<{
   canvasDocuments: readonly ProjectCanvasDocument[];
   onSelectCanvas: (canvasId: string) => void;
   onClose: () => void;
+  onRestoreFocus?: () => void;
 }>;
 
 function formatCanvasKind(kind: string): string {
@@ -32,6 +33,7 @@ export function CanvasProjectExplorerDialog({
   canvasDocuments,
   onSelectCanvas,
   onClose,
+  onRestoreFocus,
 }: CanvasProjectExplorerDialogProps): JSX.Element | null {
   const [query, setQuery] = useState('');
   useApplicationLanguageStore((state) => state.language);
@@ -61,6 +63,12 @@ export function CanvasProjectExplorerDialog({
       <DialogContent
         data-slot="canvas-project-explorer-dialog"
         closeLabel={canvasViewCopy.projectExplorerCloseLabel}
+        onCloseAutoFocus={(event) => {
+          if (onRestoreFocus) {
+            event.preventDefault();
+            onRestoreFocus();
+          }
+        }}
         className="max-h-[min(88vh,48rem)] max-w-4xl gap-0 overflow-hidden border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default)"
       >
         <DialogHeader className="border-b border-(--border-muted) px-5 py-4 pr-12">

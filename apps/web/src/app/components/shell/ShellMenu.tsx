@@ -241,29 +241,25 @@ export function ShellMenu({
 
             <DropdownMenuSeparator />
             <DropdownMenuLabel>{copy.viewOptions}</DropdownMenuLabel>
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger data-slot="shell-language-menu">
-                <Languages className="mr-2 size-4" />
-                {copy.language}
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent>
-                <DropdownMenuRadioGroup
-                  value={applicationLanguage}
-                  onValueChange={(language) => {
-                    if (language === 'en' || language === 'es') {
-                      configureApplicationLanguage(language);
-                    }
-                  }}
-                >
-                  <DropdownMenuRadioItem data-slot="shell-language-option-en" value="en">
-                    {copy.languageEnglish}
-                  </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem data-slot="shell-language-option-es" value="es">
-                    {copy.languageSpanish}
-                  </DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
+            <DropdownMenuLabel data-slot="shell-language-menu" className="flex items-center">
+              <Languages className="mr-2 size-4" />
+              {copy.language}
+            </DropdownMenuLabel>
+            <DropdownMenuRadioGroup
+              value={applicationLanguage}
+              onValueChange={(language) => {
+                if (language === 'en' || language === 'es') {
+                  configureApplicationLanguage(language);
+                }
+              }}
+            >
+              <DropdownMenuRadioItem data-slot="shell-language-option-en" value="en">
+                {copy.languageEnglish}
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem data-slot="shell-language-option-es" value="es">
+                {copy.languageSpanish}
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
             <DropdownMenuItem onClick={() => setGridSize(20)}>{copy.resetGrid}</DropdownMenuItem>
             {viewControls.showCanvasViewContributionControls ? <CanvasViewMenuControls /> : null}
           </>
