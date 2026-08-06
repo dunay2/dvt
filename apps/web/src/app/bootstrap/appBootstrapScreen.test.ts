@@ -220,7 +220,7 @@ describe('appBootstrapScreen', () => {
     expect(fontSource).toContain("--font-sans: 'IBM Plex Sans'");
     expect(fontSource).toContain("--font-mono: 'IBM Plex Mono'");
     expect(screenRule).toContain('background-color: #0b0d10');
-    expect(screenRule).toContain("font-family: 'IBM Plex Sans'");
+    expect(screenRule).toMatch(/font-family:\s*'IBM Plex Sans'/);
     expect(titleRule).toContain('font-size: 1.25rem');
     expect(indexHtml).not.toContain('#60a5fa');
     expect(indexHtml).not.toContain("'JetBrains Mono'");

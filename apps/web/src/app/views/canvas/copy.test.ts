@@ -41,7 +41,7 @@ describe('canvas copy catalog', () => {
     expect(canvasViewCopy.routeNeedsCanvasTemplateLabel).toBe('Choose a canvas template');
     expect(spanishCopy.routeNeedsCanvasTitle).toBe('Crear canvas en este workspace');
     expect(spanishCopy.routeNeedsCanvasTemplateLabel).toBe('Elige una plantilla de canvas');
-    expect(spanishCopy.toolbarLayoutLabel).toBe('Disposicion');
+    expect(spanishCopy.toolbarLayoutLabel).toBe('Disposición');
     expect(spanishCopy.toolbarProjectSnapshotMenuLabel).toBe('Proyecto');
     expect(canvasViewCopy.canvasNodePortTargetLabel).toBe('Connect incoming port');
     expect(canvasViewCopy.canvasNodePortSourceLabel).toBe('Connect outgoing port');
