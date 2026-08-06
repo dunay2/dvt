@@ -1,4 +1,12 @@
-/** Owned concern: bind a DBT execution step to its project resource selector. */
+/**
+ * Owned concern: bind a DBT execution step to its project resource selector.
+ *
+ * @baseline ADR-0003: Execution Model Sovereignty
+ * @baseline ADR-0035: Planner Public Contract Evolution Protocol
+ * @decision Carry one bounded dbt selector in the admitted step configuration.
+ * @consequence Runtime dispatch resolves the selected dbt resource without inferring it from step identity.
+ * @version 1.0.0
+ */
 import { z } from 'zod';
 
 export const DBT_STEP_SELECTOR_CUSTOM_KEY = 'dbtStepSelector' as const;
