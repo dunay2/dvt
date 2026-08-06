@@ -14,6 +14,7 @@ const generatorPath = path.join(repoRoot, 'scripts', 'generate-code-status.cjs')
 const policyPath = path.join(repoRoot, 'docs', 'generated-docs-policy.json');
 
 const {
+  assertTrackedRepositoryMapClean,
   collectRepositoryWorkspaceStats,
   listPnpmWorkspaceDirs,
   main,
@@ -214,6 +215,10 @@ test('generation modes isolate code-state and repository-map work', async () => 
   assert.equal(resolveGenerationMode([]), 'all');
   assert.equal(resolveGenerationMode(['--code-state-only']), 'code-state-only');
   assert.equal(resolveGenerationMode(['--repository-map-only']), 'repository-map-only');
+  assert.equal(
+    resolveGenerationMode(['--repository-map-only', '--check']),
+    'repository-map-only'
+  );
   assert.throws(
     () => resolveGenerationMode(['--code-state-only', '--repository-map-only']),
     /Choose either/u
@@ -231,6 +236,30 @@ test('generation modes isolate code-state and repository-map work', async () => 
   calls.length = 0;
   await main(['--repository-map-only'], dependencies);
   assert.deepEqual(calls, ['map']);
+});
+
+test('local check mode rejects generated map drift while generate mode remains writable', () => {
+  const previousCi = process.env.CI;
+  delete process.env.CI;
+  try {
+    assert.doesNotThrow(() =>
+      assertTrackedRepositoryMapClean({
+        check: false,
+        spawnSync: () => ({ status: 1, stdout: 'diff', stderr: '' }),
+      })
+    );
+    assert.throws(
+      () =>
+        assertTrackedRepositoryMapClean({
+          check: true,
+          spawnSync: () => ({ status: 1, stdout: 'diff', stderr: '' }),
+        }),
+      /repository-map\.md is stale/u
+    );
+  } finally {
+    if (previousCi === undefined) delete process.env.CI;
+    else process.env.CI = previousCi;
+  }
 });
 
 test('repository map output is byte-stable and preserves governed navigation', () => {
@@ -260,6 +289,7 @@ test('policy names actual inputs and the minimal generator command', () => {
   const entry = policy.artifactClasses.find((item) => item.id === 'tracked-docs-repository-map');
   assert.ok(entry);
   assert.equal(entry.generatorCommand, 'pnpm docs:status:generate -- --repository-map-only');
+  assert.ok(entry.sourcePaths.includes('package.json'));
   assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
   assert.ok(entry.sourcePaths.includes('tools/planning-db/migrations'));
   assert.equal(entry.sourcePaths.some((value) => value.includes('subject_key')), false);
@@ -270,6 +300,7 @@ test('generator no longer reads the empty documentation panel binding', () => {
   assert.doesNotMatch(source, /documentation_panel_query/u);
   assert.match(source, /not in \('deprecated', 'drift'\)/u);
   assert.match(source, /pnpmCommand\(\)/u);
+  assert.match(source, /--check/u);
 });
 
 test(
