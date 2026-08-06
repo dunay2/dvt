@@ -194,6 +194,10 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.sqlContextWorkbench.projectDescription',
     fallback: 'Workspace files in the active project scope.',
   },
+  sqlContextWorkbenchMoveLabel: {
+    key: 'canvas.sqlContextWorkbench.moveLabel',
+    fallback: 'Move code workbench',
+  },
   sqlContextWorkbenchLoadingMessage: {
     key: 'canvas.sqlContextWorkbench.loadingMessage',
     fallback: 'Loading code...',

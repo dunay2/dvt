@@ -7,6 +7,7 @@ import type { SqlContextWorkbenchHandle, SqlContextWorkbenchProps } from './SqlC
 const copy = {
   nodeWorkbenchCloseLabel: 'Close',
   sqlContextWorkbenchLoadingMessage: 'Loading code',
+  sqlContextWorkbenchMoveLabel: 'Move code workbench',
   sqlContextWorkbenchNodeTitle: 'Node code',
   sqlContextWorkbenchProjectTitle: 'Project code',
 };
@@ -34,6 +35,7 @@ describe('buildDbtProjectFileCodeWorkbench', () => {
     expect(workbench?.id).toBe('node-code');
     expect(workbench?.title).toBe('Node code');
     expect(workbench?.closeLabel).toBe('Close');
+    expect(workbench?.moveLabel).toBe('Move code workbench');
     expect(workbench?.description).toBe('analytics/models/marts/orders.sql');
     expect(isValidElement(workbench?.panel)).toBe(true);
     const panel = workbench?.panel as ReactElement<SqlContextWorkbenchProps>;

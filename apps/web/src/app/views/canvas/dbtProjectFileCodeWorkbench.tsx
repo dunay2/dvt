@@ -12,6 +12,7 @@ type DbtProjectFileCodeWorkbenchCopy = Pick<
   CanvasViewCopy,
   | 'nodeWorkbenchCloseLabel'
   | 'sqlContextWorkbenchLoadingMessage'
+  | 'sqlContextWorkbenchMoveLabel'
   | 'sqlContextWorkbenchNodeTitle'
   | 'sqlContextWorkbenchProjectTitle'
 >;
@@ -40,6 +41,7 @@ export function buildDbtProjectFileCodeWorkbench({
   return {
     id: target.kind === 'node' ? 'node-code' : 'project-code',
     closeLabel: copy.nodeWorkbenchCloseLabel,
+    moveLabel: copy.sqlContextWorkbenchMoveLabel,
     title:
       target.kind === 'node'
         ? copy.sqlContextWorkbenchNodeTitle

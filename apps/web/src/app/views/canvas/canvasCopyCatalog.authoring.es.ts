@@ -66,6 +66,7 @@ export const canvasViewAuthoringCopyEs = {
   sqlContextWorkbenchProjectTitle: 'Código del proyecto',
   sqlContextWorkbenchProjectDescription:
     'Archivos del workspace en el alcance del proyecto activo.',
+  sqlContextWorkbenchMoveLabel: 'Mover banco de trabajo de código',
   sqlContextWorkbenchLoadingMessage: 'Cargando código...',
   inspectorNodeNameLabel: 'Nombre',
   inspectorNodeTagsLabel: 'Tags',

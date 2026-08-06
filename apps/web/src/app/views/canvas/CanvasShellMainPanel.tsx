@@ -225,6 +225,7 @@ function CanvasShellMainSurface({
       baseSurface={baseSurface}
       title={layout.contextualWorkbench.title}
       closeLabel={layout.contextualWorkbench.closeLabel}
+      moveLabel={layout.contextualWorkbench.moveLabel}
       description={layout.contextualWorkbench.description}
       onClose={() => void layout.contextualWorkbench?.requestClose()}
     >

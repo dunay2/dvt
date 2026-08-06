@@ -299,6 +299,7 @@ export type CanvasViewCopy = {
   readonly sqlContextWorkbenchNodeTitle: string;
   readonly sqlContextWorkbenchProjectTitle: string;
   readonly sqlContextWorkbenchProjectDescription: string;
+  readonly sqlContextWorkbenchMoveLabel: string;
   readonly sqlContextWorkbenchLoadingMessage: string;
   readonly inspectorNodeNameLabel: string;
   readonly inspectorNodeTagsLabel: string;
