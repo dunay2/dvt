@@ -1,12 +1,13 @@
 /** Owned concern: declare Cost plugin contributions for shell composition. */
-import React from 'react';
 import { DollarSign } from 'lucide-react';
 
 import type { PluginContributions } from '../registry';
 import type { NodeCostData } from '../contracts/NodeCostData';
 import { COST_ROUTE_BOOTSTRAP_HANDLE } from './costRouteHandle';
+import { createDeferredView } from '../createDeferredView';
 
 const COST_PLUGIN_ID = 'cost';
+const CostView = createDeferredView(() => import('../../views/CostView'));
 const COST_HIGH_DECORATION_THRESHOLD = 0.4;
 const COST_MEDIUM_DECORATION_THRESHOLD = 0.2;
 
@@ -39,7 +40,7 @@ export const costContributions: PluginContributions = {
       pluginId: COST_PLUGIN_ID,
       id: 'cost.dashboard',
       path: '/cost',
-      component: React.lazy(() => import('../../views/CostView')),
+      component: CostView,
       handle: {
         routeBootstrap: COST_ROUTE_BOOTSTRAP_HANDLE,
       },

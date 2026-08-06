@@ -69,6 +69,7 @@ describe('ShellWorkspaceScopeSelector', () => {
       subscribers.forEach((subscriber) => subscriber());
       return { status: 'selected' as const, selectedScope: scope };
     });
+    const onScopeSelected = vi.fn();
     const port: WorkspaceScopeSelectionPort = {
       getSelection: () => snapshot,
       subscribeSelection: (subscriber) => {
@@ -83,7 +84,10 @@ describe('ShellWorkspaceScopeSelector', () => {
         <AppServicesProvider
           overrides={{ ...createAppServicesTestOverrides(), workspaceScopeSelection: port }}
         >
-          <ShellWorkspaceScopeSelector copy={resolveShellTopBarCopy('en')} />
+          <ShellWorkspaceScopeSelector
+            copy={resolveShellTopBarCopy('en')}
+            onScopeSelected={onScopeSelected}
+          />
         </AppServicesProvider>
       );
     });
@@ -98,6 +102,7 @@ describe('ShellWorkspaceScopeSelector', () => {
     });
 
     expect(selectWorkspaceScope).toHaveBeenCalledWith(projectB);
+    expect(onScopeSelected).toHaveBeenCalledOnce();
     expect(projectBButton?.getAttribute('aria-pressed')).toBe('true');
   });
 });

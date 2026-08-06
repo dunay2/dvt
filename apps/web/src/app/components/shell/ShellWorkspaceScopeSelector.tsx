@@ -16,11 +16,13 @@ function formatWorkspaceScope(scope: WorkspaceScopeIdentity): string {
 
 export function ShellWorkspaceScopeSelector({
   copy,
+  onScopeSelected,
 }: Readonly<{
   copy: Pick<
     ShellTopBarCopy,
     'availableProjects' | 'currentProject' | 'noAlternativeProjects' | 'projectUnavailable'
   >;
+  onScopeSelected?: () => void;
 }>) {
   const workspaceScopeSelection = useWorkspaceScopeSelection();
   const selection = useSyncExternalStore(
@@ -59,7 +61,12 @@ export function ShellWorkspaceScopeSelector({
               className="h-auto justify-start whitespace-normal px-2 py-1.5 text-left text-xs"
               aria-pressed={isSelected}
               aria-label={`${isSelected ? copy.currentProject : copy.availableProjects}: ${formatWorkspaceScope(scope)}`}
-              onClick={() => workspaceScopeSelection.selectWorkspaceScope(scope)}
+              onClick={() => {
+                const result = workspaceScopeSelection.selectWorkspaceScope(scope);
+                if (result.status === WORKSPACE_SCOPE_SELECTION_STATUS.selected) {
+                  onScopeSelected?.();
+                }
+              }}
             >
               {formatWorkspaceScope(scope)}
             </Button>

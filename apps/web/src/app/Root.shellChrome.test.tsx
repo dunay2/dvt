@@ -79,6 +79,39 @@ describe('RootShell chrome', () => {
     }
   });
 
+  it('navigates from the Canvas workspace menu to Runs', async () => {
+    const mounted = await withTestQueryClient(
+      createRootShellNode(createHealthyPlatformCapability(), ['/canvas'])
+    );
+
+    try {
+      await waitForHealthyShellChrome(mounted);
+      await act(async () => {
+        fireEvent.pointerDown(
+          mounted.container.querySelector('[data-slot="shell-workspace-menu-trigger"]')!
+        );
+      });
+
+      const runsLink = await waitFor(() => {
+        const link = document.body.querySelector<HTMLAnchorElement>(
+          '[data-slot="shell-menu-navigation-link"][href="/runs"]'
+        );
+        expect(link).not.toBeNull();
+        return link!;
+      });
+      await act(async () => {
+        fireEvent.click(runsLink);
+      });
+
+      await waitFor(() => {
+        expect(mounted.container.textContent).toContain('Runs route');
+        expect(document.body.querySelector('[role="menu"]')).toBeNull();
+      });
+    } finally {
+      await mounted.cleanup();
+    }
+  });
+
   it('renders run detail chrome without changing away from workbench navigation', async () => {
     const mounted = await withTestQueryClient(
       createRootShellNode(createHealthyPlatformCapability(), ['/runs/run_123'])

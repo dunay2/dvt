@@ -1,4 +1,3 @@
-import React from 'react';
 import { FileCode2 } from 'lucide-react';
 
 import { createPublishedRouteBootstrapHandle } from '../../bootstrap/routeBootstrapContract';
@@ -8,8 +7,10 @@ import { dvtCanvasSurfaceStrategy } from './dvtCanvasSurfaceStrategy';
 import { DVT_AUTHORING_NODE_KINDS } from './dvtNodeTypeCatalog';
 import { dvtGraphNodeCardStrategy } from './dvtGraphNodeCardStrategy';
 import { transformationCanvasGraphStrategy } from './transformationGraphStrategy';
+import { createDeferredView } from '../createDeferredView';
 
 const DVT_PLUGIN_ID = 'dvt';
+const TemplatesView = createDeferredView(() => import('../../views/TemplatesView'));
 export const DVT_WAREHOUSE_SOURCE_PLUGIN_ID = 'dvt.warehouse-source';
 const TEMPLATES_ROUTE_BOOTSTRAP_HANDLE = createPublishedRouteBootstrapHandle({
   pendingDetail: 'Preparing Templates route',
@@ -38,7 +39,7 @@ export const dvtContributions: PluginContributions = {
       pluginId: DVT_PLUGIN_ID,
       id: 'dvt.templates',
       path: '/templates',
-      component: React.lazy(() => import('../../views/TemplatesView')),
+      component: TemplatesView,
       handle: {
         routeBootstrap: TEMPLATES_ROUTE_BOOTSTRAP_HANDLE,
       },
