@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { fireEvent, waitFor } from '@testing-library/dom';
-import React, { act } from 'react';
+import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -280,5 +280,39 @@ describe('DbtProjectImportDialogView', () => {
     expect(cancel?.disabled).toBe(false);
     fireEvent.click(cancel!);
     expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('restores focus through the owning shell after cancellation', async () => {
+    const onRestoreFocus = vi.fn();
+
+    function Harness(): JSX.Element {
+      const [open, setOpen] = useState(true);
+      return (
+        <DbtProjectImportDialogView
+          open={open}
+          model={buildModel()}
+          onOpenChange={setOpen}
+          onProjectRootChange={vi.fn()}
+          onCanvasIdChange={vi.fn()}
+          onRestoreFocus={onRestoreFocus}
+          onValidate={vi.fn()}
+          onImport={vi.fn()}
+        />
+      );
+    }
+
+    await act(async () => {
+      root.render(<Harness />);
+    });
+
+    const cancel = document.body.querySelector<HTMLButtonElement>(
+      '[data-slot="dbt-project-cancel-command"]'
+    );
+    expect(cancel).not.toBeNull();
+    await act(async () => {
+      fireEvent.click(cancel!);
+    });
+
+    await waitFor(() => expect(onRestoreFocus).toHaveBeenCalledOnce());
   });
 });

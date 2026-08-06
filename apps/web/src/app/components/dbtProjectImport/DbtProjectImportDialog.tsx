@@ -9,12 +9,14 @@ type DbtProjectImportDialogProps = Readonly<{
   open: boolean;
   onClose: () => void;
   onImported: (result: DbtProjectImportResult) => void;
+  onRestoreFocus?: () => void;
 }>;
 
 export function DbtProjectImportDialog({
   open,
   onClose,
   onImported,
+  onRestoreFocus,
 }: DbtProjectImportDialogProps): JSX.Element {
   const port = useDbtProjectImportPort();
   const controller = useDbtProjectImportController({ open, port, onImported });
@@ -30,6 +32,7 @@ export function DbtProjectImportDialog({
       }}
       onProjectRootChange={controller.setProjectRoot}
       onCanvasIdChange={controller.setCanvasId}
+      onRestoreFocus={onRestoreFocus}
       onValidate={() => void controller.validateProject()}
       onImport={() => void controller.importProject()}
     />

@@ -28,6 +28,7 @@ type DbtProjectImportDialogViewProps = Readonly<{
   onOpenChange: (open: boolean) => void;
   onProjectRootChange: (value: string) => void;
   onCanvasIdChange: (value: string) => void;
+  onRestoreFocus?: () => void;
   onValidate: () => void;
   onImport: () => void;
 }>;
@@ -235,6 +236,7 @@ export function DbtProjectImportDialogView({
   onOpenChange,
   onProjectRootChange,
   onCanvasIdChange,
+  onRestoreFocus,
   onValidate,
   onImport,
 }: DbtProjectImportDialogViewProps): JSX.Element {
@@ -252,6 +254,13 @@ export function DbtProjectImportDialogView({
       <DialogContent
         data-slot="dbt-project-import-dialog"
         closeLabel={copy.closeLabel}
+        onCloseAutoFocus={(event) => {
+          if (onRestoreFocus == null) {
+            return;
+          }
+          event.preventDefault();
+          onRestoreFocus();
+        }}
         className="max-h-[min(90vh,54rem)] max-w-5xl overflow-hidden border-(--border-default) bg-(--surface-panel) p-0 text-(--text-default)"
       >
         <DialogHeader className="border-b border-(--border-muted) px-6 py-5 pr-14">
