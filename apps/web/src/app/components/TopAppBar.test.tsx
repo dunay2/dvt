@@ -315,7 +315,7 @@ describe('ShellTopBar workspace context', () => {
     expect(resolveShellTopBarCopy('es-ES')).toMatchObject({
       shell: 'Vista',
       workspaceMenu: 'Espacio de trabajo',
-      globalNavigation: 'Navegacion',
+      globalNavigation: 'Navegación',
       workspaceContext: 'Contexto del proyecto',
       projectScope: 'Proyecto',
       environmentScope: 'Entorno',

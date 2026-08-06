@@ -69,11 +69,11 @@ describe('CanvasSettingsDialog', () => {
 
     const dialog = document.body.querySelector<HTMLElement>('[data-slot="canvas-settings-dialog"]');
     expect(dialog).not.toBeNull();
-    expect(dialog?.textContent).toContain('Configuracion de canvas');
-    expect(dialog?.textContent).toContain('Preferencias de visualizacion del grafo');
+    expect(dialog?.textContent).toContain('Configuración de canvas');
+    expect(dialog?.textContent).toContain('Preferencias de visualización del grafo');
     expect(
       dialog?.querySelector('[data-slot="canvas-settings-close-command"]')?.textContent
-    ).toContain('Cerrar configuracion de canvas');
+    ).toContain('Cerrar configuración de canvas');
     await waitFor(() => expect(dialog?.contains(document.activeElement)).toBe(true));
 
     await act(async () => {

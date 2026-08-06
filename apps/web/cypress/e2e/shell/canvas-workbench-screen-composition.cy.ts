@@ -16,6 +16,12 @@ import {
   visitWithE2eWorkspaceSession,
 } from '../../support/workspaceSession';
 
+const ALTERNATE_WORKSPACE_SESSION = {
+  tenantId: E2E_WORKSPACE_SESSION.tenantId,
+  projectId: 'e2e-project-alt',
+  environmentId: 'staging',
+} as const;
+
 describe('Canvas workbench screen composition', () => {
   beforeEach(() => {
     cy.viewport(1544, 868);
@@ -30,7 +36,7 @@ describe('Canvas workbench screen composition', () => {
     });
     stubE2eJsonApi('GET', '/workspace/context', {
       effectiveWorkspace: E2E_WORKSPACE_SESSION,
-      availableWorkspaces: [E2E_WORKSPACE_SESSION],
+      availableWorkspaces: [E2E_WORKSPACE_SESSION, ALTERNATE_WORKSPACE_SESSION],
     });
     let persistedDraft: {
       revision: string;
@@ -67,6 +73,7 @@ describe('Canvas workbench screen composition', () => {
         expectedRevision: string;
         draft: {
           canvas: {
+            id?: string;
             kind: string;
             title: string;
           };
@@ -81,7 +88,7 @@ describe('Canvas workbench screen composition', () => {
         schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
         expectedRevision: WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
       });
-      expect(saveRequest.draft.canvas).to.deep.equal({
+      expect(saveRequest.draft.canvas).to.deep.include({
         kind: 'transformation',
         title: 'Canvas de transformacion',
       });
@@ -122,7 +129,7 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="shell-top-bar"]').as('topBar');
     cy.get('@topBar').should('contain.text', 'Raven');
     cy.get('@topBar').should('contain.text', 'Vista');
-    cy.get('@topBar').should('contain.text', 'Workspace');
+    cy.get('@topBar').should('contain.text', 'Proyecto: e2e-project');
     cy.get('@topBar').find('[data-slot="shell-project-identity-badge"]').should('not.exist');
     cy.get('@topBar').find('[data-slot="shell-workspace-context-trigger"]').should('not.exist');
     cy.get('@topBar').find('[data-slot="shell-git-ref"]').should('not.exist');
@@ -143,7 +150,7 @@ describe('Canvas workbench screen composition', () => {
 
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="shell-menu-navigation-link"]').should('not.exist');
-    cy.contains('Contexto del workspace').should('not.exist');
+    cy.contains('Contexto del proyecto').should('not.exist');
     cy.contains('Contexto Git').should('not.exist');
     cy.contains('Panel inspector').should('not.exist');
     cy.contains('Opciones de vista').should('be.visible');
@@ -161,7 +168,7 @@ describe('Canvas workbench screen composition', () => {
     });
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Plugins').should('be.visible');
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Admin').should('be.visible');
-    cy.contains('Contexto del workspace').should('be.visible');
+    cy.contains('Contexto del proyecto').should('be.visible');
     cy.contains('Contexto Git').should('be.visible');
     cy.get('body').type('{esc}');
 
@@ -179,9 +186,9 @@ describe('Canvas workbench screen composition', () => {
     openCanvasContextMenuAt(520, 300);
     cy.get('[data-slot="canvas-context-menu"]')
       .should('be.visible')
-      .and('contain.text', 'Canvas settings')
-      .and('not.contain.text', 'Explore project')
-      .and('not.contain.text', 'Open project code');
+      .and('contain.text', 'Configuración de canvas')
+      .and('not.contain.text', 'Explorar proyecto')
+      .and('not.contain.text', 'Abrir código del proyecto');
     cy.get('body').type('{esc}', { force: true });
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
@@ -194,8 +201,8 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-project-explorer-dialog"]')
       .should('be.visible')
       .and('contain.text', 'Canvas de transformacion')
-      .and('contain.text', 'Current');
-    cy.contains('[data-slot="canvas-project-explorer-dialog"] button', 'Close').click();
+      .and('contain.text', 'Canvas actual');
+    cy.get('[data-slot="canvas-project-explorer-close-command"]').click();
 
     cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
     cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
@@ -206,6 +213,74 @@ describe('Canvas workbench screen composition', () => {
       .click();
     cy.get('[data-slot="canvas-contextual-workbench"]')
       .should('be.visible')
-      .and('contain.text', 'Project code');
+      .and('contain.text', 'Código del proyecto');
+
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.contains(
+      '[data-slot="shell-workspace-scope-selector"] button',
+      'e2e-tenant / e2e-project-alt / staging'
+    ).click();
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').should(
+      'contain.text',
+      'Proyecto: e2e-project-alt'
+    );
+  });
+
+  it('keeps grouped actions, dialogs, language controls and exits visible in a narrow viewport', () => {
+    cy.viewport(390, 844);
+    visitWithE2eWorkspaceSession('/canvas', {
+      onBeforeLoad(window) {
+        Object.defineProperty(window.navigator, 'language', {
+          configurable: true,
+          value: 'es-ES',
+        });
+        window.document.documentElement.lang = 'es-ES';
+      },
+    });
+
+    waitForE2eApiCall('/workspace/graph/draft', 'GET');
+    cy.contains('button', 'Canvas de transformacion').click();
+    waitForE2eApiCall('/workspace/graph/draft', 'PUT');
+
+    openCanvasContextMenuAt(260, 260);
+    cy.get('[data-menu-action="open-add-node-catalog"]').click();
+    cy.get('[data-slot="canvas-context-menu-add-catalog-layout"]')
+      .should('be.visible')
+      .and(($catalog) => {
+        const element = $catalog.get(0);
+        expect(element.scrollWidth).to.be.at.most(element.clientWidth);
+      });
+    cy.get('[data-slot="canvas-context-menu-add-catalog-category"]')
+      .its('length')
+      .should('be.greaterThan', 1);
+    cy.get('[data-slot="canvas-context-menu"]').should(($menu) => {
+      const rect = $menu.get(0).getBoundingClientRect();
+      expect(rect.left).to.be.at.least(0);
+      expect(rect.right).to.be.at.most(390);
+      expect(rect.bottom).to.be.at.most(844);
+    });
+    cy.get('body').type('{esc}', { force: true });
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-explore-project-command"]').click();
+    cy.get('[data-slot="canvas-project-explorer-dialog"]')
+      .should('be.visible')
+      .and('contain.text', 'Cerrar')
+      .and(($dialog) => {
+        const rect = $dialog.get(0).getBoundingClientRect();
+        expect(rect.left).to.be.at.least(0);
+        expect(rect.right).to.be.at.most(390);
+        expect(rect.top).to.be.at.least(0);
+        expect(rect.bottom).to.be.at.most(844);
+      });
+    cy.get('[data-slot="canvas-project-explorer-close-command"]').click();
+    cy.get('[data-slot="canvas-project-explorer-dialog"]').should('not.exist');
+
+    cy.get('[data-slot="shell-menu-trigger"]').click();
+    cy.get('[data-slot="shell-language-menu"]').click();
+    cy.get('[data-slot="shell-language-option-en"]').click();
+    cy.get('[data-slot="shell-menu-trigger"]').should('contain.text', 'View');
+    cy.get('html').should('have.attr', 'lang', 'en');
   });
 });
