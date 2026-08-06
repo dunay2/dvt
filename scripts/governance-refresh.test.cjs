@@ -12,7 +12,7 @@ const {
   runGovernanceRefreshCommand,
 } = require('./governance-refresh.cjs');
 
-test('governance refresh defers governance reports to DB-backed final generation', () => {
+test('governance refresh defers DB-backed Repository Map and reports to final generation', () => {
   const stages = buildRefreshStages();
 
   assert.deepEqual(
@@ -27,6 +27,10 @@ test('governance refresh defers governance reports to DB-backed final generation
       'docs:governance:file-fingerprint-baseline',
       'docs:governance:file-fingerprint-impact',
     ]
+  );
+  assert.deepEqual(
+    stages.generationStages.find((stage) => stage.id === 'code-status-local').args,
+    ['--', '--code-state-only']
   );
   assert.equal(
     stages.generationStages.some((stage) => stage.script === 'governance:db:import'),
@@ -48,6 +52,7 @@ test('governance refresh defers governance reports to DB-backed final generation
       'docs:db-surface-inventory:generate',
       'planning:db:export:check',
       'governance:db:import',
+      'docs:status:generate',
       'docs:dbt-roundtrip-capabilities:generate',
       'docs:knowledge-intake:generate',
       'governance:db:check',
@@ -59,6 +64,16 @@ test('governance refresh defers governance reports to DB-backed final generation
   assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,
     ['--', '--if-stale']
+  );
+  assert.deepEqual(
+    stages.databaseStages.find((stage) => stage.id === 'repository-map-final').args,
+    ['--', '--repository-map-only']
+  );
+  assert.equal(
+    stages.databaseStages.findIndex((stage) => stage.id === 'repository-map-final') >
+      stages.databaseStages.findIndex((stage) => stage.id === 'governance-db-import-final'),
+    true,
+    'Repository Map must render only after the final Planning DB import'
   );
   assert.equal(
     stages.databaseStages.findIndex((stage) => stage.id === 'dbt-roundtrip-capability-status') >
