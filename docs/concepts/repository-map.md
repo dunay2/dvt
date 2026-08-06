@@ -1,98 +1,64 @@
-﻿---
+---
 title: Repository Map
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-09
+last_reviewed: 2026-08-02
 ---
 
 # Repository Map
 
-This page is the canonical workspace map for the repository.
+Current workspace facts come from package manifests and repository source/test files.
+Architecture identity and canonical-document ownership come from exact Planning DB read models.
+Missing or conflicting identity is reported as a gap and is never inferred from names.
 
-Use it to answer:
+## Current state
 
-- which workspace owns what responsibility;
-- which document is the visible entry point for that workspace;
-- whether the workspace has a full canonical doc surface or is still
-  reference-only.
+| Metric                  | Value                                                |
+| ----------------------- | ---------------------------------------------------- |
+| Workspaces              | 25                                                   |
+| Rows with explicit gaps | 25                                                   |
+| Workspace source        | `apps/*` and `packages/*` package manifests          |
+| Architecture source     | `architecture.component_query`                       |
+| Documentation source    | `planning_query_store.documentation_lifecycle_query` |
 
-This page is not a behavioral specification. For topic-level traceability, use
-[Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md).
-For current implementation truth, use
-[System Delivery Status](../architecture/system-delivery-status.md).
+## Workspace map
 
-Concept anchors for this page:
+| Workspace                 | Path                                 | Kind    | Src | Tests | Build | Test | Typecheck | Planning DB component      | Component status | Canonical documentation | Gap                    |
+| ------------------------- | ------------------------------------ | ------- | --- | ----- | ----- | ---- | --------- | -------------------------- | ---------------- | ----------------------- | ---------------------- |
+| dvt-api                   | `apps/api`                           | app     | 349 | 245   | yes   | yes  | yes       | SYS-API-ROOT               | review           | -                       | missing-doc-entry      |
+| dvt-lineage-worker        | `apps/lineage-worker`                | app     | 9   | 5     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| dvt-outbox-worker         | `apps/outbox-worker`                 | app     | 25  | 29    | yes   | yes  | yes       | SYS-WORKERS-ROOT           | review           | -                       | missing-doc-entry      |
+| dvt-projector-worker      | `apps/projector-worker`              | app     | 2   | 1     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| dvt-temporal-worker       | `apps/temporal-worker`               | app     | 14  | 5     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/web                  | `apps/web`                           | app     | 790 | 512   | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/adapter-postgres     | `packages/@dvt/adapter-postgres`     | package | 57  | 47    | yes   | yes  | yes       | SYS-ADAPTERS-ROOT          | review           | -                       | missing-doc-entry      |
+| @dvt/adapter-temporal     | `packages/@dvt/adapter-temporal`     | package | 44  | 46    | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/artifacts            | `packages/@dvt/artifacts`            | package | 20  | 3     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/crypto               | `packages/@dvt/canonical`            | package | 3   | 1     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/cli                  | `packages/@dvt/cli`                  | package | 1   | 1     | yes   | yes  | yes       | SYS-RUNTIME-CLI-VALIDATION | review           | -                       | missing-doc-entry      |
+| @dvt/contracts            | `packages/@dvt/contracts`            | package | 93  | 50    | yes   | yes  | yes       | SYS-CONTRACTS-ROOT         | review           | -                       | missing-doc-entry      |
+| @dvt/delivery             | `packages/@dvt/delivery`             | package | 15  | 11    | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/dsl                  | `packages/@dvt/dsl`                  | package | 4   | 1     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/engine               | `packages/@dvt/engine`               | package | 124 | 70    | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/observability        | `packages/@dvt/observability`        | package | 5   | 1     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/observability-otel   | `packages/@dvt/observability-otel`   | package | 2   | 1     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/plan-interpreter     | `packages/@dvt/plan-interpreter`     | package | 4   | 1     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/plan-verifier        | `packages/@dvt/plan-verifier`        | package | 6   | 3     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/planner              | `packages/@dvt/planner`              | package | 28  | 21    | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/planner-contracts    | `packages/@dvt/planner-contracts`    | package | 0   | 0     | yes   | no   | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/run-domain           | `packages/@dvt/run-domain`           | package | 5   | 1     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/state-store          | `packages/@dvt/state-store`          | package | 15  | 13    | yes   | yes  | yes       | SYS-RUNTIME-STATE-STORE    | review           | -                       | missing-doc-entry      |
+| @dvt/temporal-dbt-plugin  | `packages/@dvt/temporal-dbt-plugin`  | package | 10  | 2     | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
+| @dvt/traceability-service | `packages/@dvt/traceability-service` | package | 39  | 15    | yes   | yes  | yes       | -                          | -                | -                       | unregistered-component |
 
-- [Glossary](./glossary.md) for `workspace`, `reference-only`,
-  `canonical spec`, and `status doc`
-- [Domain Language](./domain-language.md) for repository-wide naming
-  discipline
+## Reading rule
 
-## Coverage Classes
+- `unregistered-component`: no active Planning DB component has the exact workspace repository path.
+- `ambiguous-component`: more than one active Planning DB component claims the exact workspace path.
+- `missing-doc-entry`: the matched component has no current canonical document with the same subject key.
+- `ambiguous-doc-entry`: more than one current canonical document claims the component subject key.
 
-- `canonical`: the workspace has an active documentation landing page or
-  governing doc that should be treated as the first stop.
-- `linked-local`: the canonical route lives in `docs/`, but the detailed local
-  reference still lives under `apps/` or `packages/`.
-- `reference-only`: the workspace exists in code and may have local notes, but
-  it still lacks an accepted canonical package surface.
+This map is a repository and architecture projection, not a behavioral specification.
+Use the linked canonical document for authored meaning and design rationale.
 
-## Entry Surfaces
-
-| Workspace           | Responsibility                                                                  | Primary documentation entry point                                                                                                                                                                                       | Coverage       |
-| ------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| `dvt-api`           | HTTP entrypoint, auth boundary, background runtime wiring                       | [API current-to-target architecture](../architecture/components/api/api-current-to-target-architecture.md), [System Delivery Status](../architecture/system-delivery-status.md)                                         | `canonical`    |
-| `dvt-outbox-worker` | Delivery composition root, active/passive ownership host, operational endpoints | [ADR-0034](../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md), [System Delivery Status](../architecture/system-delivery-status.md)                                                                  | `canonical`    |
-| `@dvt/web`          | UI shell, graph canvas, run monitoring, client routing                          | [web component](../architecture/components/web/index.md), [Read subsystem](../architecture/system/subsystems/read/index.md), [apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md](../../apps/web/FRONTEND_PLAN_BACK_ALIGNMENT.md) | `linked-local` |
-
-## Core Planning and Execution
-
-| Workspace                   | Responsibility                                                | Primary documentation entry point                                                                                                                                                                                       | Coverage       |
-| --------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| `@dvt/contracts`            | Shared contracts, schemas, execution interfaces               | [Contracts Index](../contracts/index.md), [Engine Contracts](../contracts/engine/index.md)                                                                                                                              | `canonical`    |
-| `@dvt/planner`              | Plan construction, compiledCode attachment, planner contracts | [Planner component surface](../architecture/components/planner/index.md), [Planner Current State Assessment](../planning/status/planner-current-state-assessment.md)                                                    | `canonical`    |
-| `@dvt/plan-interpreter`     | Shared DAG analysis and plan interpretation helpers           | [Plan Interpreter Package](../architecture/shared/plan-interpreter.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                    | `canonical`    |
-| `@dvt/plan-verifier`        | Plan integrity, schema compatibility, hash verification       | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md), [ADR-0017](../adr/ADR-0017_ExecutionPlan_Schema_Versioning.md)                                                                            | `canonical`    |
-| `@dvt/dsl`                  | Gateway expression AST, parser, evaluator                     | [Gateway DSL Package](../architecture/shared/dsl.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                                                      | `canonical`    |
-| `@dvt/engine`               | Core workflow execution and orchestration                     | [@dvt/engine](../architecture/components/engine/index.md), [Execution subsystem architecture](../architecture/components/engine/index.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md) | `canonical`    |
-| `@dvt/adapter-temporal`     | Temporal provider runtime and worker host                     | [Temporal Adapter Specification](../architecture/components/engine/adapters/temporal/temporal-adapter-spec.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                            | `canonical`    |
-| `@dvt/adapter-postgres`     | Postgres state store, intent store, outbox persistence        | [Postgres State Store Adapter](../architecture/components/engine/adapters/state-store/postgres/StateStoreAdapter.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                      | `canonical`    |
-| `@dvt/delivery`             | Delivery worker orchestration, retry and shard-aware draining | [ADR-0034](../adr/ADR-0034-bounded-context-boundaries-and-communication-rules.md), [ADR-0033](../adr/ADR-0033-outbox-worker-sharding-and-fencing-model.md)                                                              | `canonical`    |
-| `@dvt/state-store`          | State-store contract and storage boundary                     | [Postgres State Store Adapter](../architecture/components/engine/adapters/state-store/postgres/StateStoreAdapter.md), [System Delivery Status](../architecture/system-delivery-status.md)                               | `canonical`    |
-| `@dvt/traceability-service` | Lineage mapping and governance tooling surface                | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md), [packages/@dvt/traceability-service/README.md](../../packages/@dvt/traceability-service/README.md)                                        | `linked-local` |
-
-## Platform and Support Workspaces
-
-| Workspace                 | Responsibility                                                    | Primary documentation entry point                                                                                                                                            | Coverage       |
-| ------------------------- | ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| `@dvt/observability`      | Runtime observability contracts and label policy                  | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md), [Observability Guide](../architecture/components/engine/ops/observability.md)                  | `canonical`    |
-| `@dvt/observability-otel` | OpenTelemetry implementation path                                 | [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md), [packages/@dvt/observability-otel/README.md](../../packages/@dvt/observability-otel/README.md) | `linked-local` |
-| `@dvt/cli`                | CLI smoke surface and validation entrypoint                       | [CLI Package](../architecture/shared/cli.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                                   | `canonical`    |
-| `@dvt/crypto`             | Canonicalization and hashing helpers in `packages/@dvt/canonical` | [Crypto Package](../architecture/shared/crypto.md), [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md)                                             | `canonical`    |
-| `@dvt/planner-contracts`  | Package boundary for planner contract artifacts                   | [Contracts Index](../contracts/index.md), [Planner Contracts](../contracts/planner/index.md)                                                                                 | `canonical`    |
-
-## Relationships
-
-- `apps/web` consumes `apps/api` and should not act as a parallel documentation
-  root. The route from `docs/` to local frontend docs now starts at
-  [web component](../architecture/components/web/index.md) and
-  [Read subsystem](../architecture/system/subsystems/read/index.md).
-- `@dvt/engine` depends on contracts and ports, while adapters own runtime IO.
-  The route for execution topics starts at
-  [Canonical Doc Code Matrix](../planning/status/canonical-doc-code-matrix.md).
-- `@dvt/plan-verifier`, `@dvt/dsl`, `@dvt/plan-interpreter`, and `@dvt/crypto`
-  are small but critical packages. They cannot remain invisible just because
-  they are smaller than engine or adapters.
-
-## Current Package Limitations
-
-- `@dvt/dsl` now has a canonical doc surface, but the package is still only a
-  minimal equality-expression DSL and has no accepted repository-wide spec.
-- `@dvt/cli` now has a canonical doc surface, but it still exposes script
-  entrypoints more than a real exported CLI.
-- `@dvt/plan-interpreter` and `@dvt/crypto` are now visible, but both remain
-  easy to underestimate because they are small packages with cross-cutting
-  impact.
-
-The documentation gap is reduced. The behavior and maturity gaps still need to
-be read honestly package by package.
+> This page is auto-generated by `pnpm docs:status:generate`. Do not edit manually.
