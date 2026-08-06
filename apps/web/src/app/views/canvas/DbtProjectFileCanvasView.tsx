@@ -8,6 +8,7 @@ import { DBT_NODE_KINDS } from '../../plugins/nodeTypeCatalog.dbt';
 import type { CanvasShellProps, CanvasShellRouteIntentRequest } from './canvasShell.types';
 import CanvasShell from './CanvasShell';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { CanvasErrorStateView, CanvasLoadingStateView } from './CanvasStateViews';
 import { buildDbtProjectFileCodeWorkbench } from './dbtProjectFileCodeWorkbench';
 import type { SqlContextWorkbenchHandle } from './SqlContextWorkbench';
@@ -129,7 +130,8 @@ export function DbtProjectFileCanvasView({
     controller.workspaceLayoutKey,
     controller.activeRunId
   );
-  const copy = resolveCanvasViewCopy();
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasViewCopy(applicationLanguage);
   const projectRoot = controller.authorityBinding.authority.projectRoot;
   const projectTitle = resolveProjectTitle(projectRoot);
   const activeCanvas = {

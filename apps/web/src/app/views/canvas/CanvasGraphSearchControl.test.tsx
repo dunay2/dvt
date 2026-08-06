@@ -66,7 +66,7 @@ describe('CanvasGraphSearchControl', () => {
       fireEvent.change(input, { target: { value: 'customers' } });
       button('Resultado anterior').click();
       button('Resultado siguiente').click();
-      button('Cerrar busqueda del grafo').click();
+      button('Cerrar búsqueda del grafo').click();
     });
 
     expect(onQueryChange).toHaveBeenCalledWith('customers');

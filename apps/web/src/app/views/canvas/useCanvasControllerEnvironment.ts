@@ -17,8 +17,10 @@ import {
 } from '../../services/AppServicesContext';
 import { useCanvasNavigationActions } from './useCanvasNavigationActions';
 import { useCanvasStoreFacade } from './useCanvasStoreFacade';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 export function useCanvasControllerEnvironment() {
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const { data: capabilities } = useCapabilitiesQuery();
   const platformHealthQuery = usePlatformHealthSnapshotQuery();
   const sourceImportContributions = useMemo(
@@ -40,6 +42,7 @@ export function useCanvasControllerEnvironment() {
   const store = useCanvasStoreFacade();
 
   return {
+    applicationLanguage,
     capabilities,
     platformHealthQuery,
     hasAuthorizedSourceImportContribution,

@@ -68,7 +68,7 @@ describe('CanvasGraphFilterControl', () => {
     act(() => {
       fireEvent.change(selects[0]!, { target: { value: 'status' } });
       fireEvent.change(selects[1]!, { target: { value: 'success' } });
-      fireEvent.click(document.querySelector('button[aria-label="Anadir filtro"]')!);
+      fireEvent.click(document.querySelector('button[aria-label="Añadir filtro"]')!);
     });
     expect(onSelectDimension).toHaveBeenCalledWith('status');
     expect(onSelectValue).toHaveBeenCalledWith('success');

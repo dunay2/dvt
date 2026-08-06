@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NODE_PROPERTY_ROW_ID } from '../../components/inspector/nodePropertiesReadModel';
 import type { CanonicalNode } from '../../types/canonical';
 import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 const NODE: CanonicalNode = {
   id: 'model.analytics.orders',
@@ -42,6 +43,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
     act(() => root.unmount());
     container.remove();
     document.documentElement.lang = '';
+    useApplicationLanguageStore.setState({ language: 'en' });
     vi.restoreAllMocks();
   });
 
@@ -85,7 +87,7 @@ describe('CanvasNodeWorkbenchPanel contextual contributions', () => {
   });
 
   it('resolves workbench commands through the Canvas locale catalog', () => {
-    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
 
     act(() => {
       root.render(

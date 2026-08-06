@@ -12,6 +12,7 @@ import AppProviders from './AppProviders';
 import Root from './Root';
 import { createBrokenRootShellNode } from './Root.bootstrapRoute.test.support';
 import { RootServicesProbe } from './Root.test.support';
+import { useApplicationLanguageStore } from './stores/applicationLanguageStore';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -61,8 +62,7 @@ describe('Root integration guard', () => {
 
 describe('Root bootstrap contract guard', () => {
   it('fails fast with a typed localized error when the active route lacks bootstrap registration', async () => {
-    document.documentElement.lang = 'en';
-    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const capability: PlatformHealthCapabilityApi = {
@@ -86,6 +86,7 @@ describe('Root bootstrap contract guard', () => {
         'Falta el registro activo de route bootstrap para la ruta actual.'
       );
     } finally {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
       consoleErrorSpy.mockRestore();
       await mounted.cleanup();
     }

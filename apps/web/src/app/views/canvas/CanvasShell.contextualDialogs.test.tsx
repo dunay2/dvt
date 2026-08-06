@@ -3,6 +3,7 @@
 /** Owned concern: prove CanvasShell contextual dialogs without source-import contract noise. */
 import { DbtProjectImportResultSchema } from '@dvt/contracts';
 import { act } from 'react';
+import { waitFor } from '@testing-library/dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
@@ -68,11 +69,18 @@ describe('CanvasShell contextual dialogs', () => {
       useCanvasWorkspaceMenuContributionStore.getState().contribution?.onOpenProjectExplorer?.();
     });
 
-    expect(container.querySelector('[data-slot="canvas-project-explorer-dialog"]')).not.toBeNull();
-    expect(container.textContent).toContain('Sales canvas');
-    expect(container.textContent).toContain('DVT flow');
+    await waitFor(() =>
+      expect(
+        document.body.querySelector('[data-slot="canvas-project-explorer-dialog"]')
+      ).not.toBeNull()
+    );
+    const projectExplorer = document.body.querySelector(
+      '[data-slot="canvas-project-explorer-dialog"]'
+    );
+    expect(projectExplorer?.textContent).toContain('Sales canvas');
+    expect(projectExplorer?.textContent).toContain('DVT flow');
 
-    const dvtFlowButton = Array.from(container.querySelectorAll('button')).find(
+    const dvtFlowButton = Array.from(projectExplorer?.querySelectorAll('button') ?? []).find(
       (button) => button.textContent === 'Open DVT flow'
     );
     expect(dvtFlowButton).toBeDefined();
@@ -180,7 +188,7 @@ describe('CanvasShell contextual dialogs', () => {
     expect(onUnavailableLegacySurface).not.toHaveBeenCalled();
 
     const closeButton = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-contextual-workbench-header"] button'
+      '[data-slot="canvas-contextual-workbench-close"]'
     );
     expect(closeButton).not.toBeNull();
 
@@ -188,7 +196,9 @@ describe('CanvasShell contextual dialogs', () => {
       closeButton?.click();
     });
 
-    expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).toBeNull();
+    await waitFor(() =>
+      expect(container.querySelector('[data-slot="canvas-contextual-workbench"]')).toBeNull()
+    );
   });
 
   it('routes a legacy Lineage intent through the existing Canvas lens command', async () => {

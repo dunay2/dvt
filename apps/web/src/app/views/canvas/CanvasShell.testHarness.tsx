@@ -52,6 +52,20 @@ vi.mock('./CanvasViewport', () => ({
   },
 }));
 
+vi.mock('./SqlContextWorkbench', async () => {
+  const { forwardRef, useImperativeHandle } = await import('react');
+
+  return {
+    SqlContextWorkbench: forwardRef(function MockSqlContextWorkbench(
+      _props: Record<string, unknown>,
+      ref
+    ) {
+      useImperativeHandle(ref, () => ({ flush: async () => true }));
+      return <div data-testid="sql-context-workbench" />;
+    }),
+  };
+});
+
 export type CanvasShellPropsOverrides = {
   layout?: Partial<CanvasShellLayout>;
   panels?: Partial<CanvasShellPanels>;

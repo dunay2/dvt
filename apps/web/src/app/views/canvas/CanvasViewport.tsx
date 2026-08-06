@@ -31,6 +31,7 @@ import { useCanvasGraphSearchActivation } from './useCanvasGraphSearchActivation
 import { useCanvasGraphFilterController } from './useCanvasGraphFilterController';
 import { useCanvasGraphSearchController } from './useCanvasGraphSearchController';
 import { useCanvasViewportLifecycle } from './useCanvasViewportLifecycle';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 type CanvasViewportProps = {
   readonly canEditEdges: boolean;
@@ -82,7 +83,8 @@ function CanvasViewportWithPresenter({
   ...props
 }: CanvasViewportWithPresenterProps): JSX.Element {
   const reactFlow = useReactFlow<Node, Edge>();
-  const copy = resolveCanvasViewCopy();
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasViewCopy(applicationLanguage);
   const canSelectNodes = props.canSelectNodes ?? props.canEditEdges;
   const graphSearchActivationPort = useMemo(
     () => ({ fitView: reactFlow.fitView, onNodesChange: props.onNodesChange }),

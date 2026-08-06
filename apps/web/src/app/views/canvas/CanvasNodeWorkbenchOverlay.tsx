@@ -7,6 +7,7 @@ import type {
   CanvasShellPanels,
 } from './canvasShell.types';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { CanvasNodeWorkbenchPosition } from './canvasNodeWorkbenchPositionModel';
 import { isCanvasNodeWorkbenchVisible } from './canvasNodeWorkbenchVisibility';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
@@ -75,7 +76,8 @@ export function CanvasNodeWorkbenchOverlay({
     surfaceStrategy,
     hasInspectorNode: panels.inspectorNode != null,
   });
-  const copy = resolveCanvasViewCopy();
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasViewCopy(applicationLanguage);
   const positionController = useCanvasNodeWorkbenchPosition(visible);
 
   if (!visible || surfaceStrategy == null || panels.inspectorNode == null) {
