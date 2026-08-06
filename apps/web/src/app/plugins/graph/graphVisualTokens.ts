@@ -17,8 +17,8 @@ export const graphNodeCardLayoutClasses = {
   icon: 'shrink-0 opacity-80',
   title: 'truncate text-sm font-semibold leading-tight text-slate-50',
   headerActions: 'flex shrink-0 items-center gap-2',
-  kind: 'mt-2 text-xs font-medium text-blue-300',
-  path: 'mt-1 truncate text-[11px] text-slate-500',
+  kind: 'mt-2 text-xs font-medium text-blue-200',
+  path: 'mt-1 truncate text-[11px] text-slate-400',
   playButton:
     'nodrag inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-green-400/30 bg-green-500/15 text-green-300 transition hover:border-green-300/70 hover:bg-green-500/25 hover:text-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 disabled:cursor-not-allowed disabled:opacity-40',
   playIcon: 'size-3.5 fill-current',
@@ -54,7 +54,7 @@ export const graphNodeTagListClasses = {
   root: 'mt-3 flex flex-wrap gap-1.5',
   tag: 'rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] text-slate-300',
   tone: {
-    source: 'border-purple-400/35 bg-purple-500/10 text-purple-200',
+    source: 'border-purple-300/55 bg-purple-500/10 text-purple-100',
     model: 'border-blue-400/35 bg-blue-500/10 text-blue-200',
     test: 'border-red-400/35 bg-red-500/10 text-red-200',
     output: 'border-pink-400/35 bg-pink-500/10 text-pink-200',
@@ -124,7 +124,7 @@ export const graphNodeStatusChipClasses = {
   base: 'rounded-full border px-2 py-0.5 text-[10px] font-medium',
   neutral: 'border-slate-500/50 bg-slate-800/70 text-slate-200',
   info: 'border-blue-400/40 bg-blue-500/15 text-blue-200',
-  success: 'border-green-400/40 bg-green-500/15 text-green-300',
+  success: 'border-green-300/60 bg-green-500/15 text-green-100',
   warning: 'border-amber-400/40 bg-amber-500/15 text-amber-200',
   danger: 'border-red-400/50 bg-red-500/15 text-red-200',
   running: 'border-sky-400/45 bg-sky-500/15 text-sky-200',

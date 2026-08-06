@@ -127,3 +127,58 @@ body {
   width: 14px;
   height: 14px;
 }
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell-background,
+  .react-flow__viewport,
+  .react-flow__node,
+  .react-flow__edge-path,
+  [data-slot='canvas-contextual-workbench-overlay'],
+  [data-slot='canvas-context-menu'],
+  [data-slot='dbt-project-import-dialog'] {
+    scroll-behavior: auto;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .animate-spin {
+    animation: none !important;
+  }
+}
+
+@media (forced-colors: active) {
+  body,
+  .app-shell-background,
+  .react-flow {
+    color: CanvasText;
+    background: Canvas;
+  }
+
+  :where(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid Highlight !important;
+    outline-offset: 2px !important;
+  }
+
+  .react-flow__node {
+    border-radius: var(--radius);
+    outline: 1px solid CanvasText;
+  }
+
+  .react-flow__edge-path {
+    stroke: CanvasText !important;
+  }
+
+  .react-flow marker path,
+  .react-flow marker polyline,
+  .react-flow marker polygon {
+    fill: CanvasText !important;
+    stroke: CanvasText !important;
+  }
+
+  [data-slot='canvas-contextual-workbench'],
+  [data-slot='canvas-context-menu'],
+  [data-slot='dbt-project-import-dialog'] {
+    border: 1px solid CanvasText;
+  }
+}

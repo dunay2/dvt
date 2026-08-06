@@ -47,13 +47,120 @@ from staging.alternate_orders`;
 function assertNoSeriousAccessibilityViolations(context: string): void {
   cy.get(context).should('be.visible');
   cy.injectAxe();
-  cy.checkA11y(context, {
-    runOnly: {
-      type: 'tag',
-      values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
+  cy.checkA11y(
+    context,
+    {
+      runOnly: {
+        type: 'tag',
+        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
+      },
+      includedImpacts: ['serious', 'critical'],
     },
-    includedImpacts: ['serious', 'critical'],
+    (violations) => {
+      if (violations.length === 0) {
+        return;
+      }
+      throw new Error(
+        violations
+          .map(
+            (violation) =>
+              `${violation.id}: ${violation.help} -> ${violation.nodes
+                .map((node) => node.target.join(' '))
+                .join(', ')}`
+          )
+          .join('\n')
+      );
+    }
+  );
+}
+
+function clearBrowserEmulation(): void {
+  cy.then(() =>
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Emulation.clearDeviceMetricsOverride',
+    })
+  );
+  cy.then(() =>
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Emulation.setEmulatedMedia',
+      params: { media: '', features: [] },
+    })
+  );
+}
+
+function emulateBrowserZoom(
+  zoom: 2 | 4,
+  physicalViewport: Readonly<{ width: number; height: number }>
+): void {
+  const cssViewport = {
+    width: Math.floor(physicalViewport.width / zoom),
+    height: Math.floor(physicalViewport.height / zoom),
+  };
+  cy.viewport(cssViewport.width, cssViewport.height);
+  cy.then(() =>
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Emulation.setDeviceMetricsOverride',
+      params: {
+        width: cssViewport.width,
+        height: cssViewport.height,
+        deviceScaleFactor: zoom,
+        mobile: false,
+        screenWidth: physicalViewport.width,
+        screenHeight: physicalViewport.height,
+      },
+    })
+  );
+  cy.window().should((window) => {
+    expect(window.innerWidth).to.equal(cssViewport.width);
+    expect(window.innerHeight).to.equal(cssViewport.height);
+    expect(window.devicePixelRatio).to.equal(zoom);
   });
+}
+
+function emulateAccessibilityMedia(): void {
+  cy.then(() =>
+    Cypress.automation('remote:debugger:protocol', {
+      command: 'Emulation.setEmulatedMedia',
+      params: {
+        media: '',
+        features: [
+          { name: 'prefers-reduced-motion', value: 'reduce' },
+          { name: 'forced-colors', value: 'active' },
+        ],
+      },
+    })
+  );
+  cy.window().should((window) => {
+    expect(window.matchMedia('(prefers-reduced-motion: reduce)').matches).to.equal(true);
+    expect(window.matchMedia('(forced-colors: active)').matches).to.equal(true);
+  });
+}
+
+function assertViewportHasNoGlobalHorizontalOverflow(expectedWidth: number): void {
+  cy.document().should((document) => {
+    expect(document.documentElement.scrollWidth).to.be.at.most(expectedWidth);
+  });
+}
+
+function assertDirectionalMarkers(): void {
+  cy.get('.react-flow__edge-path')
+    .should('have.length.at.least', 2)
+    .each(($edge) => {
+      const markerEnd = $edge.attr('marker-end');
+      expect(markerEnd).to.match(/^url\(/);
+      const normalizedMarkerEnd = decodeURIComponent(markerEnd!);
+      const marker = Array.from($edge.get(0).ownerDocument.querySelectorAll('marker')).find(
+        (candidate) => normalizedMarkerEnd.includes(`#${candidate.id}`)
+      );
+      expect(marker).not.to.equal(null);
+      expect(marker).not.to.equal(undefined);
+      expect(marker?.getAttribute('markerWidth')).to.equal('28');
+      expect(marker?.getAttribute('markerHeight')).to.equal('28');
+      expect(marker?.getAttribute('orient')).to.contain('auto');
+      const arrowShape = marker?.querySelector('path, polyline, polygon');
+      expect(arrowShape).not.to.equal(null);
+      expect(getComputedStyle(arrowShape!).fill).not.to.equal('none');
+    });
 }
 
 describe('Canvas workbench screen composition', () => {
@@ -64,6 +171,7 @@ describe('Canvas workbench screen composition', () => {
   let alternateDraft: ReturnType<typeof buildCanvasAuthoringDraft>;
 
   beforeEach(() => {
+    clearBrowserEmulation();
     cy.viewport(1544, 868);
     stubShellBootstrapApis({
       projectIds: [E2E_WORKSPACE_SESSION.projectId, ALTERNATE_WORKSPACE_SESSION.projectId],
@@ -351,7 +459,7 @@ describe('Canvas workbench screen composition', () => {
     cy.contains('Opciones de vista').should('be.visible');
     cy.get('body').type('{esc}');
 
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').focus().type('{enter}');
     cy.get('[data-slot="shell-menu-navigation-link"]').then(($links) => {
       expect([...$links].map((link) => link.getAttribute('href'))).to.deep.equal([
         '/canvas',
@@ -573,20 +681,20 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="canvas-context-menu-add-catalog-category"]')
       .should('have.length', 1)
       .and('have.attr', 'data-catalog-category', 'transformation');
-    cy.get('#canvas-add-node-catalog-search').clear();
-    cy.get('[data-slot="canvas-context-menu-add-catalog-item"]')
-      .first()
-      .focus()
-      .should('be.focused');
     cy.get('[data-slot="canvas-context-menu"]').should(($menu) => {
       const rect = $menu.get(0).getBoundingClientRect();
       expect(rect.left).to.be.at.least(0);
       expect(rect.right).to.be.at.most(390);
       expect(rect.bottom).to.be.at.most(844);
     });
-    cy.get('body').type('{esc}');
-
-    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-context-menu-add-catalog-item"]')
+      .first()
+      .focus()
+      .should('be.focused')
+      .type('{enter}');
+    cy.get('[data-slot="canvas-context-menu"]').should('not.exist');
+    cy.get('.react-flow__node').should('have.length.at.least', 1);
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').focus().type('{enter}');
     cy.get('[data-slot="canvas-workspace-explore-project-command"]').click();
     cy.get('[data-slot="canvas-project-explorer-dialog"]')
       .should('be.visible')
@@ -614,21 +722,17 @@ describe('Canvas workbench screen composition', () => {
         expect(rect.top).to.be.at.least(0);
         expect(rect.bottom).to.be.at.most(844);
       });
-    cy.document().its('documentElement.scrollWidth').should('be.at.most', 390);
-    cy.document().then((document) => {
-      document.documentElement.style.fontSize = '200%';
-    });
+    assertViewportHasNoGlobalHorizontalOverflow(390);
+    emulateBrowserZoom(2, { width: 780, height: 1688 });
     cy.get('[data-slot="canvas-contextual-workbench-overlay"]').should(($workbench) => {
       const rect = $workbench.get(0).getBoundingClientRect();
       expect(rect.left).to.be.at.least(0);
       expect(rect.right).to.be.at.most(390);
     });
-    cy.document().its('documentElement.scrollWidth').should('be.at.most', 390);
+    assertViewportHasNoGlobalHorizontalOverflow(390);
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
     cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
-    cy.document().then((document) => {
-      document.documentElement.style.fontSize = '';
-    });
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
 
     openCanvasContextMenuAt(260, 260);
     cy.get('[data-menu-action="open-canvas-settings"]').click();
@@ -647,12 +751,17 @@ describe('Canvas workbench screen composition', () => {
     cy.get('[data-slot="dbt-project-cancel-command"]').click();
     cy.get('[data-slot="dbt-project-import-dialog"]').should('not.exist');
     cy.get('body').should('not.have.css', 'pointer-events', 'none');
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
 
     cy.get('[data-slot="shell-menu-trigger"]').click();
     cy.get('[data-slot="shell-language-menu"]').should('contain.text', 'Idioma');
     cy.get('[data-slot="shell-language-option-en"]').click();
     cy.get('[data-slot="shell-menu-trigger"]').should('contain.text', 'View');
     cy.get('html').should('have.attr', 'lang', 'en');
+
+    emulateBrowserZoom(4, { width: 1280, height: 1800 });
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.visible');
+    assertViewportHasNoGlobalHorizontalOverflow(320);
   });
 
   it('shows directional graph semantics and opens complete node code in a movable workbench', () => {
@@ -682,11 +791,7 @@ describe('Canvas workbench screen composition', () => {
     });
 
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
-    cy.get('.react-flow__edge-path')
-      .should('have.length.at.least', 2)
-      .each(($edge) => {
-        expect($edge.attr('marker-end')).to.match(/^url\(/);
-      });
+    assertDirectionalMarkers();
 
     cy.get('.react-flow__node[data-id="model_orders"]').as('modelNode').should('be.visible');
     cy.get('@modelNode')
@@ -704,6 +809,13 @@ describe('Canvas workbench screen composition', () => {
     cy.get('@modelNode')
       .find('[data-slot="graph-node-card-play"]')
       .should('have.attr', 'title', 'Quitar de la ejecución');
+    assertDirectionalMarkers();
+
+    cy.get('[data-slot="canvas-viewport-context-surface"]').type('{ctrl}f');
+    cy.get('[data-slot="canvas-graph-search-control"] input').type('orders');
+    cy.get('.react-flow__edge.canvas-graph-search-relevant-edge').should('have.length.at.least', 1);
+    assertDirectionalMarkers();
+    cy.get('[data-slot="canvas-graph-search-control"] input').type('{esc}');
 
     cy.get('@modelNode').rightclick();
     cy.contains('[data-slot="canvas-node-context-menu-item"]', 'Abrir código del nodo').click();
@@ -758,5 +870,13 @@ describe('Canvas workbench screen composition', () => {
     cy.get(
       '[data-slot="canvas-node-floating-toolbar"][data-node-id="src_orders"] [data-toolbar-action="code"]'
     ).should('not.exist');
+
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-viewport-context-surface"]');
+    emulateAccessibilityMedia();
+    assertDirectionalMarkers();
+    cy.get('.react-flow__node[data-id="model_orders"]').focus().should('be.focused');
+    cy.get('.react-flow__node[data-id="model_orders"]').should(($node) => {
+      expect(getComputedStyle($node.get(0)).outlineStyle).not.to.equal('none');
+    });
   });
 });

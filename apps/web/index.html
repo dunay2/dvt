@@ -259,6 +259,7 @@
       @media (max-width: 700px) {
         #app-loading-screen {
           align-items: flex-start;
+          overflow: auto;
           padding: 16px;
         }
         #app-loading-status {
@@ -268,6 +269,36 @@
           align-items: flex-start;
           flex-direction: column;
           gap: 8px;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #app-loading-screen {
+          scroll-behavior: auto;
+          transition: none;
+        }
+      }
+      @media (forced-colors: active) {
+        #app-loading-screen,
+        #app-loading-status {
+          color: CanvasText;
+          background: Canvas;
+        }
+        #app-loading-status,
+        #app-loading-steps li,
+        #app-loading-meta,
+        .app-loading-progress-segment {
+          border-color: CanvasText;
+        }
+        #app-loading-steps li::before,
+        .app-loading-progress-segment {
+          border: 2px solid CanvasText;
+          background: Canvas;
+          box-shadow: none;
+        }
+        #app-loading-steps li[data-status='complete']::before,
+        .app-loading-progress-segment[data-status='complete'] {
+          border-color: Highlight;
+          background: Highlight;
         }
       }
     </style>
