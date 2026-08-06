@@ -489,16 +489,18 @@ function writeIfChanged(absPath, content) {
   return true;
 }
 
-function assertTrackedRepositoryMapCleanInCi() {
-  if (!process.env.CI) return;
+function assertTrackedRepositoryMapClean(options = {}) {
+  const check = options.check === true || Boolean(process.env.CI);
+  if (!check) return;
+  const run = options.spawnSync || spawnSync;
   const relativePath = relFromRepo(repositoryMapOutputPath);
-  const result = spawnSync('git', ['diff', '--exit-code', '--', relativePath], {
+  const result = run('git', ['diff', '--exit-code', '--', relativePath], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
   if (result.status === 0) return;
   const generated = fs.readFileSync(repositoryMapOutputPath, 'utf8');
-  console.error(`[docs:status:generate] ${relativePath} is stale. Regenerate and commit it.`);
+  console.error(`[docs:status:check] ${relativePath} is stale. Regenerate and commit it.`);
   if (result.stdout) console.error(result.stdout.trimEnd());
   if (result.stderr) console.error(result.stderr.trimEnd());
   console.error('--- BEGIN GENERATED REPOSITORY MAP ---');
@@ -508,7 +510,7 @@ function assertTrackedRepositoryMapCleanInCi() {
 }
 
 function resolveGenerationMode(argv) {
-  const knownFlags = new Set(['--code-state-only', '--repository-map-only']);
+  const knownFlags = new Set(['--code-state-only', '--repository-map-only', '--check']);
   const unknownFlags = argv.filter((argument) => argument.startsWith('--') && !knownFlags.has(argument));
   if (unknownFlags.length > 0) {
     throw new Error(`Unknown generate-code-status option: ${unknownFlags.join(', ')}`);
@@ -533,7 +535,7 @@ function generateCodeState(workspaces) {
   );
 }
 
-async function generateRepositoryMap(workspaces, ClientCtor) {
+async function generateRepositoryMap(workspaces, ClientCtor, options = {}) {
   const client = new ClientCtor({ connectionString: databaseUrl() });
   await client.connect();
   try {
@@ -550,7 +552,7 @@ async function generateRepositoryMap(workspaces, ClientCtor) {
         ? `[docs:status:generate] Updated ${relFromRepo(repositoryMapOutputPath)}`
         : `[docs:status:generate] ${relFromRepo(repositoryMapOutputPath)} already up to date.`
     );
-    assertTrackedRepositoryMapCleanInCi();
+    assertTrackedRepositoryMapClean({ check: options.check });
   } finally {
     await client.end();
   }
@@ -558,13 +560,14 @@ async function generateRepositoryMap(workspaces, ClientCtor) {
 
 async function main(argv = process.argv.slice(2), dependencies = {}) {
   const mode = resolveGenerationMode(argv);
+  const check = argv.includes('--check');
   const collectWorkspaces =
     dependencies.collectRepositoryWorkspaceStats || collectRepositoryWorkspaceStats;
   const generateCodeStateFn = dependencies.generateCodeState || generateCodeState;
   const ClientCtor = dependencies.ClientCtor || Client;
   const generateRepositoryMapFn =
     dependencies.generateRepositoryMap ||
-    ((workspaces) => generateRepositoryMap(workspaces, ClientCtor));
+    ((workspaces) => generateRepositoryMap(workspaces, ClientCtor, { check }));
   const workspaces = collectWorkspaces(dependencies.workspaceOptions || {});
 
   if (mode !== GENERATION_MODES.repositoryMapOnly) await generateCodeStateFn(workspaces);
@@ -579,6 +582,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  assertTrackedRepositoryMapClean,
   buildRepositoryMapRows,
   collectRepositoryWorkspaceStats,
   collectWorkspaceStats,
