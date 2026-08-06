@@ -30,7 +30,14 @@ const dbtModelNode: CanonicalNode = {
 };
 
 describe('object-file PostgreSQL plugin contributions', () => {
+  const availableCapabilities = {
+    plugins: {
+      [OBJECT_FILE_POSTGRES_PLUGIN_ID]: { available: true },
+    },
+  } as const;
+
   it('publishes one executable input node kind owned by the plugin', () => {
+    expect(objectFilePostgresContributions.backendPluginId).toBe(OBJECT_FILE_POSTGRES_PLUGIN_ID);
     expect(objectFilePostgresContributions.nodeKinds).toEqual([
       expect.objectContaining({
         kind: 'dvt:object_file_load',
@@ -44,7 +51,7 @@ describe('object-file PostgreSQL plugin contributions', () => {
   });
 
   it('composes the node into the DBT canvas without transferring plugin ownership', () => {
-    const dbtCanvas = getAllCanvasRuntimeRegistrations().find(
+    const dbtCanvas = getAllCanvasRuntimeRegistrations(availableCapabilities).find(
       (registration) => registration.kind === 'dbt'
     );
 
@@ -59,8 +66,23 @@ describe('object-file PostgreSQL plugin contributions', () => {
     );
   });
 
+  it('removes the executable node kind when the backend capability is unavailable', () => {
+    const dbtCanvas = getAllCanvasRuntimeRegistrations({
+      plugins: {
+        [OBJECT_FILE_POSTGRES_PLUGIN_ID]: {
+          available: false,
+          reason: 'disabled in test',
+        },
+      },
+    }).find((registration) => registration.kind === 'dbt');
+
+    expect(dbtCanvas?.nodeKinds).not.toContainEqual(
+      expect.objectContaining({ pluginId: OBJECT_FILE_POSTGRES_PLUGIN_ID })
+    );
+  });
+
   it('bridges its tabular output to DBT transforms and rejects the reverse direction', () => {
-    const ports = getPluginPortMap();
+    const ports = getPluginPortMap(availableCapabilities);
 
     expect(evaluateConnectionPolicy(objectFileNode, dbtModelNode, ports)).toEqual({
       allowed: true,
