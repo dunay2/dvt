@@ -41,13 +41,20 @@ import type { ShellTopBarCopy } from './copy';
 import { ShellWorkspaceContextDetails } from './ShellWorkspaceContextDetails';
 import { ShellWorkspaceScopeSelector } from './ShellWorkspaceScopeSelector';
 
-const GRID_OPTIONS = [
-  { value: 10, label: '10px (Dense)' },
-  { value: 15, label: '15px' },
-  { value: 20, label: '20px (Default)' },
-  { value: 30, label: '30px' },
-  { value: 40, label: '40px (Sparse)' },
-];
+const GRID_OPTIONS = [10, 15, 20, 30, 40] as const;
+
+function formatGridOption(value: (typeof GRID_OPTIONS)[number], copy: ShellTopBarCopy): string {
+  if (value === 10) {
+    return `${value}px (${copy.gridDensityDense})`;
+  }
+  if (value === 20) {
+    return `${value}px (${copy.gridDensityDefault})`;
+  }
+  if (value === 40) {
+    return `${value}px (${copy.gridDensitySparse})`;
+  }
+  return `${value}px`;
+}
 
 type ShellMenuProps = {
   readonly kind: 'workspace' | 'view';
@@ -205,12 +212,12 @@ export function ShellMenu({
                   </div>
                   <div className="space-y-1">
                     <div className="text-xs font-medium tracking-wide text-muted-foreground">
-                      Hex value
+                      {copy.canvasColorHexValue}
                     </div>
                     <HexColorInput
                       color={resolvedCanvasPalette}
                       prefixed
-                      aria-label="Set canvas background hex color"
+                      aria-label={copy.canvasColorInputLabel}
                       className="h-9 w-full rounded-md border border-white/10 bg-input-background px-3 text-sm text-foreground outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
                       onChange={handleCanvasPaletteChange}
                     />
@@ -225,8 +232,8 @@ export function ShellMenu({
               </DropdownMenuSubTrigger>
               <DropdownMenuSubContent>
                 {GRID_OPTIONS.map((option) => (
-                  <DropdownMenuItem key={option.value} onClick={() => setGridSize(option.value)}>
-                    {option.label}
+                  <DropdownMenuItem key={option} onClick={() => setGridSize(option)}>
+                    {formatGridOption(option, copy)}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuSubContent>

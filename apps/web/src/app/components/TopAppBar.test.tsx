@@ -320,6 +320,10 @@ describe('ShellTopBar workspace context', () => {
       projectScope: 'Proyecto',
       environmentScope: 'Entorno',
       deploymentScope: 'Adapter de despliegue',
+      canvasColorHexValue: 'Valor hexadecimal',
+      canvasColorInputLabel: 'Establecer el color hexadecimal del fondo del Canvas',
+      gridSize: 'Tamaño de rejilla',
+      gridDensityDefault: 'Predeterminada',
     });
   });
 
