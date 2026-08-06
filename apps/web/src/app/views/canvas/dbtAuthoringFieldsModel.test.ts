@@ -103,7 +103,7 @@ function buildDbtModelNode(id = 'model-orders', name = 'Orders Model'): Canonica
 }
 
 describe('dbtAuthoringFieldsModel', () => {
-  it('projects connected dbt origins in graph order and selects the first origin by default', () => {
+  it('projects connected dbt origins in graph order and requires an explicit selection', () => {
     const sourceA = buildDbtSourceNode('source-a', 'Raw Orders', 'raw');
     const sourceB = buildDbtSourceNode('source-b', 'Staging Orders', 'staging');
     const model = buildDbtModelNode();
@@ -127,11 +127,11 @@ describe('dbtAuthoringFieldsModel', () => {
       { value: 'source-a', label: 'Raw Orders (Source)' },
       { value: 'source-b', label: 'Staging Orders (Source)' },
     ]);
-    expect(projection.selectedOriginId).toBe('source-a');
-    expect(projection.modelArtifact).toMatchObject({
-      provenance: 'generated',
-      body: "select *\nfrom {{ source('raw', 'orders') }}",
-    });
+    expect(projection.selectedOriginId).toBe('');
+    expect(projection.modelArtifact).toBeNull();
+    expect(projection.projectionError).toBe(
+      'DBT model "Orders Model" must select a connected source or model origin.'
+    );
   });
 
   it('projects connected warehouse-source origins as dbt source candidates', () => {
@@ -149,7 +149,10 @@ describe('dbtAuthoringFieldsModel', () => {
           relation: 'lineage',
         },
       ],
-      authoringMetadata: createDbtNodeAuthoringMetadata(model),
+      authoringMetadata: {
+        ...createDbtNodeAuthoringMetadata(model),
+        selectedSourceId: source.id,
+      },
       kindLabels: {
         'dbt:source': 'Source',
         'dbt:model': 'Model',
@@ -179,7 +182,10 @@ describe('dbtAuthoringFieldsModel', () => {
           relation: 'lineage',
         },
       ],
-      authoringMetadata: createDbtNodeAuthoringMetadata(model),
+      authoringMetadata: {
+        ...createDbtNodeAuthoringMetadata(model),
+        selectedSourceId: source.id,
+      },
       kindLabels: {
         'dbt:source': 'Source',
         'dbt:model': 'Model',
@@ -230,6 +236,7 @@ describe('dbtAuthoringFieldsModel', () => {
       edges: [{ id: 'edge-a-model', sourceId: source.id, targetId: model.id, relation: 'lineage' }],
       authoringMetadata: {
         ...createDbtNodeAuthoringMetadata(model),
+        selectedSourceId: source.id,
         modelSql: "select order_id from {{ source('raw', 'orders') }}",
       },
       kindLabels: {

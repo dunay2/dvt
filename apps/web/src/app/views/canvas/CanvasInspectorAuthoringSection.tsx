@@ -41,7 +41,10 @@ export function CanvasInspectorAuthoringSection({
   const setDraft = draftController.onDraftChange;
   const setTagsText = draftController.onTagsTextChange;
 
-  const errors = useMemo(() => validateCanvasInspectorNodeDraft(draft), [draft]);
+  const errors = useMemo(
+    () => validateCanvasInspectorNodeDraft(draft, { node, nodes, edges }),
+    [draft, edges, node, nodes]
+  );
   const isDirty = useMemo(() => hasCanvasInspectorNodeDraftChanges(node, draft), [draft, node]);
   const canApply = authoring.canEditNode && isDirty && Object.keys(errors).length === 0;
   const showGeneral = section === 'all' || section === 'general';

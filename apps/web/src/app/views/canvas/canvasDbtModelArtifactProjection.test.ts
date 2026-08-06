@@ -228,7 +228,30 @@ describe('canvas DBT model artifact projection', () => {
     ).toEqual({
       ok: false,
       reason: 'origin_required',
-      message: 'DBT model "Orders Model" must be connected to a source or model origin.',
+      message: 'DBT model "Orders Model" must select a connected source or model origin.',
+    });
+  });
+
+  it('does not fall back to edge order when an origin was not explicitly selected', () => {
+    expect(
+      projectDbtModelArtifact({
+        modelNode: {
+          ...model,
+          metadata: {
+            dbt: {
+              packageName: 'analytics',
+              materialized: 'table',
+              selectedSourceId: '',
+            },
+          },
+        },
+        nodes: [warehouseSource, objectFileLoad, model],
+        edges: [edge(warehouseSource.id), edge(objectFileLoad.id)],
+      })
+    ).toEqual({
+      ok: false,
+      reason: 'origin_required',
+      message: 'DBT model "Orders Model" must select a connected source or model origin.',
     });
   });
 });
