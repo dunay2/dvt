@@ -30,6 +30,7 @@ import {
 } from './canvasNodeWorkbenchContribution';
 import { resolveNodeWorkbenchPrimarySectionIds } from './canvasNodeWorkbenchSectionStrategy';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { canvasNodeWorkbenchVisualTokens } from './canvasNodeWorkbenchVisualTokens';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
@@ -217,7 +218,8 @@ export function CanvasNodeWorkbenchPanel({
   dragHandleProps,
   onClose,
 }: CanvasNodeWorkbenchPanelProps): JSX.Element {
-  const copy = resolveCanvasViewCopy();
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasViewCopy(applicationLanguage);
   const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
   const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
   const draftController = useCanvasNodeWorkbenchDraftController(node);

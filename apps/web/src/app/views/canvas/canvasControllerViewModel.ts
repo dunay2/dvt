@@ -77,7 +77,7 @@ function resolveRouteDraftRecord({
 
 function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
   const {
-    environment: { capabilities, store },
+    environment: { applicationLanguage, capabilities, store },
     graphPolicy: { canvasAuthoringMode, runtimePolicy, surfaceStrategy },
     authoringRuntime: {
       backendPosture,
@@ -114,7 +114,7 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     activeRunId: overlayModel.activeRunId,
     registeredPlugins: getRegisteredPluginIds(capabilities),
     runtimeCapabilities: capabilities,
-    availableCanvasKinds: getAllCanvasKinds(capabilities),
+    availableCanvasKinds: getAllCanvasKinds(capabilities, applicationLanguage),
     canvasDocument: routeDraft?.canvas ?? null,
     canvasDocuments: listProjectCanvasDocuments(routeDraft),
     activeCanvasId: resolveActiveProjectCanvasId(routeDraft),

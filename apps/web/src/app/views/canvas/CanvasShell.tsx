@@ -19,6 +19,7 @@ import { SqlContextWorkbench, type SqlContextWorkbenchHandle } from './SqlContex
 import { useCanvasRouteIntentHandler } from './useCanvasRouteIntentHandler';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 type GraphDraftCodeTarget = Readonly<{
   nodeId: string;
@@ -51,7 +52,8 @@ export default function CanvasShell({
   canvasContextScreenToFlowPosition,
   onDbtProjectImported,
 }: CanvasShellProps): JSX.Element {
-  const copy = resolveCanvasViewCopy();
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCanvasViewCopy(applicationLanguage);
   const [projectExplorerOpen, setProjectExplorerOpen] = useState(false);
   const [canvasSettingsOpen, setCanvasSettingsOpen] = useState(false);
   const [dbtProjectImportOpen, setDbtProjectImportOpen] = useState(false);
