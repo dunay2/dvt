@@ -28,7 +28,12 @@ export type ShellTopBarCopy = {
   readonly closeOperationalDrawer: string;
   readonly focusMode: string;
   readonly canvasPalette: string;
+  readonly canvasColorHexValue: string;
+  readonly canvasColorInputLabel: string;
   readonly gridSize: string;
+  readonly gridDensityDense: string;
+  readonly gridDensityDefault: string;
+  readonly gridDensitySparse: string;
   readonly resetGrid: string;
   readonly tenantScope: string;
   readonly projectScope: string;
@@ -92,7 +97,15 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   },
   focusMode: { key: 'shell.focusMode', fallback: 'Focus Mode' },
   canvasPalette: { key: 'shell.canvasPalette', fallback: 'Canvas background' },
+  canvasColorHexValue: { key: 'shell.canvasColorHexValue', fallback: 'Hex value' },
+  canvasColorInputLabel: {
+    key: 'shell.canvasColorInputLabel',
+    fallback: 'Set Canvas background hex color',
+  },
   gridSize: { key: 'shell.gridSize', fallback: 'Grid size' },
+  gridDensityDense: { key: 'shell.gridDensityDense', fallback: 'Dense' },
+  gridDensityDefault: { key: 'shell.gridDensityDefault', fallback: 'Default' },
+  gridDensitySparse: { key: 'shell.gridDensitySparse', fallback: 'Sparse' },
   resetGrid: { key: 'shell.resetGrid', fallback: 'Reset grid to 20px' },
   tenantScope: { key: 'shell.tenantScope', fallback: 'Tenant' },
   projectScope: { key: 'shell.projectScope', fallback: 'Project' },
@@ -153,7 +166,12 @@ const COPY_ES: ShellTopBarCopy = {
   closeOperationalDrawer: 'Cerrar panel de operaciones',
   focusMode: 'Modo foco',
   canvasPalette: 'Fondo del canvas',
-  gridSize: 'Tamano de rejilla',
+  canvasColorHexValue: 'Valor hexadecimal',
+  canvasColorInputLabel: 'Establecer el color hexadecimal del fondo del Canvas',
+  gridSize: 'Tamaño de rejilla',
+  gridDensityDense: 'Densa',
+  gridDensityDefault: 'Predeterminada',
+  gridDensitySparse: 'Dispersa',
   resetGrid: 'Restablecer rejilla a 20px',
   tenantScope: 'Tenant',
   projectScope: 'Proyecto',
@@ -225,7 +243,12 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     closeOperationalDrawer: resolveString(COPY_BY_KEY.closeOperationalDrawer, locale),
     focusMode: resolveString(COPY_BY_KEY.focusMode, locale),
     canvasPalette: resolveString(COPY_BY_KEY.canvasPalette, locale),
+    canvasColorHexValue: resolveString(COPY_BY_KEY.canvasColorHexValue, locale),
+    canvasColorInputLabel: resolveString(COPY_BY_KEY.canvasColorInputLabel, locale),
     gridSize: resolveString(COPY_BY_KEY.gridSize, locale),
+    gridDensityDense: resolveString(COPY_BY_KEY.gridDensityDense, locale),
+    gridDensityDefault: resolveString(COPY_BY_KEY.gridDensityDefault, locale),
+    gridDensitySparse: resolveString(COPY_BY_KEY.gridDensitySparse, locale),
     resetGrid: resolveString(COPY_BY_KEY.resetGrid, locale),
     tenantScope: resolveString(COPY_BY_KEY.tenantScope, locale),
     projectScope: resolveString(COPY_BY_KEY.projectScope, locale),
