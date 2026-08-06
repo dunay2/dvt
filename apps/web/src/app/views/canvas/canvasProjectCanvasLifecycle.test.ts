@@ -5,6 +5,7 @@ import {
   buildDraftWithDeletedActiveProjectCanvas,
   buildDraftWithSelectedProjectCanvas,
   buildDraftWithUpdatedActiveProjectCanvas,
+  createProjectCanvasId,
 } from './canvasProjectCanvasLifecycle';
 
 function buildDraft(): WorkspaceGraphAuthoringDraft {
@@ -71,6 +72,15 @@ function buildDraft(): WorkspaceGraphAuthoringDraft {
 }
 
 describe('canvasProjectCanvasLifecycle', () => {
+  it('creates stable ASCII canvas ids from localized titles', () => {
+    expect(
+      createProjectCanvasId({
+        canvas: { kind: 'transformation', title: 'Canvas de transformación' },
+        existingIds: new Set(),
+      })
+    ).toBe('canvas-de-transformacion');
+  });
+
   it('selects another canvas without losing the current active workspace graph', () => {
     const result = buildDraftWithSelectedProjectCanvas({
       currentDraft: buildDraft(),

@@ -62,6 +62,11 @@ export default function CanvasShell({
     }
   }, [activeContextualWorkbenchOwnerKey, openContextualWorkbench]);
   const openProjectExplorer = useCallback(() => setProjectExplorerOpen(true), []);
+  const restoreProjectExplorerFocus = useCallback(() => {
+    document
+      .querySelector<HTMLButtonElement>('[data-slot="shell-workspace-menu-trigger"]')
+      ?.focus({ preventScroll: true });
+  }, []);
   const openDbtProjectImport = useCallback(() => setDbtProjectImportOpen(true), []);
   const openCanvasSettings = useCallback(() => setCanvasSettingsOpen(true), []);
   const canEditGraph = panels.userPermissions.canEditEdges;
@@ -205,6 +210,7 @@ export default function CanvasShell({
         canvasDocuments={panels.canvasDocuments}
         onSelectCanvas={canvasCommands.onSelectCanvas}
         onClose={() => setProjectExplorerOpen(false)}
+        onRestoreFocus={restoreProjectExplorerFocus}
       />
       <CanvasSettingsDialog
         open={canvasSettingsOpen}

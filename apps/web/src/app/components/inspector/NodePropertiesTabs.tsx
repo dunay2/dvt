@@ -142,18 +142,23 @@ export function NodePropertiesTabs({
       onValueChange={onActiveTabChange}
       className="gap-4"
     >
-      <TabsList data-slot={slots.list} className={inspectorVisualClasses.contextPanelFlatTabsList}>
-        {primarySections.map((section) => (
-          <TabsTrigger
-            key={section.id}
-            value={section.id}
-            data-slot={`${slots.tabPrefix}-${section.id}`}
-            className={inspectorVisualClasses.contextPanelFlatTabTrigger}
-          >
-            {section.label}
-            {renderTabBadge(section)}
-          </TabsTrigger>
-        ))}
+      <div data-slot={slots.list} className={inspectorVisualClasses.contextPanelFlatTabsList}>
+        <TabsList
+          data-slot={`${slots.list}-tablist`}
+          className="flex h-auto w-auto flex-wrap justify-start gap-x-3 rounded-none bg-transparent p-0"
+        >
+          {primarySections.map((section) => (
+            <TabsTrigger
+              key={section.id}
+              value={section.id}
+              data-slot={`${slots.tabPrefix}-${section.id}`}
+              className={inspectorVisualClasses.contextPanelFlatTabTrigger}
+            >
+              {section.label}
+              {renderTabBadge(section)}
+            </TabsTrigger>
+          ))}
+        </TabsList>
         {overflowItems.length > 0 ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -194,7 +199,7 @@ export function NodePropertiesTabs({
             </DropdownMenuContent>
           </DropdownMenu>
         ) : null}
-      </TabsList>
+      </div>
 
       {model.sections.map((section) => (
         <TabsContent key={section.id} value={section.id} className="m-0">

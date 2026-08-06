@@ -69,6 +69,9 @@ describe('NodePropertiesTabs primary sections', () => {
     });
 
     const tabsList = container.querySelector('[data-slot="node-inspector-core-tabs-list"]');
+    const semanticTabList = container.querySelector(
+      '[data-slot="node-inspector-core-tabs-list-tablist"]'
+    );
 
     expect(container.querySelector('[data-slot="node-inspector-tab-general"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="node-inspector-tab-columns"]')).not.toBeNull();
@@ -79,6 +82,12 @@ describe('NodePropertiesTabs primary sections', () => {
     expect(container.querySelector('[data-slot="node-inspector-tab-code"]')).not.toBeNull();
     expect(container.querySelector('[data-slot="node-inspector-tab-summary"]')).toBeNull();
     expect(container.querySelector('[data-slot="node-inspector-more-trigger"]')).not.toBeNull();
+    expect(
+      Array.from(semanticTabList?.children ?? []).every(
+        (child) => child.getAttribute('role') === 'tab'
+      )
+    ).toBe(true);
+    expect(semanticTabList?.querySelector('[data-slot="node-inspector-more-trigger"]')).toBeNull();
     expect(tabsList?.getAttribute('class')).toContain('flex-wrap');
     expect(tabsList?.getAttribute('class')).toContain('overflow-visible');
     expect(tabsList?.getAttribute('class')).not.toContain('overflow-x-auto');

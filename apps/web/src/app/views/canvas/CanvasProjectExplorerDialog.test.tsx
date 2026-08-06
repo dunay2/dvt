@@ -30,6 +30,7 @@ describe('CanvasProjectExplorerDialog', () => {
 
   it('localizes the project explorer and exposes explicit and Escape close paths', async () => {
     const onClose = vi.fn();
+    const onRestoreFocus = vi.fn();
 
     function Harness(): JSX.Element {
       const [open, setOpen] = useState(true);
@@ -50,6 +51,7 @@ describe('CanvasProjectExplorerDialog', () => {
             onClose();
             setOpen(false);
           }}
+          onRestoreFocus={onRestoreFocus}
         />
       );
     }
@@ -74,5 +76,6 @@ describe('CanvasProjectExplorerDialog', () => {
       ).toBeNull();
     });
     expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onRestoreFocus).toHaveBeenCalledTimes(1);
   });
 });
