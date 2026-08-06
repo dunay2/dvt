@@ -10,7 +10,12 @@ import {
 } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
 import { openCanvasContextMenuAt } from '../../support/canvasExecutionSelection';
-import { stubE2eApi, stubE2eJsonApi, waitForE2eApiCall } from '../../support/e2eApiStub';
+import {
+  getE2eApiCalls,
+  stubE2eApi,
+  stubE2eJsonApi,
+  waitForE2eApiCall,
+} from '../../support/e2eApiStub';
 import {
   E2E_WORKSPACE_SESSION,
   stubShellBootstrapApis,
@@ -35,6 +40,9 @@ const ORPHAN_SQL = `select metric_date,
 from analytics.daily_metrics
 where metric_date >= current_date
   - interval '30 days'`;
+const ALTERNATE_MODEL_PATH = 'models/staging/alternate_orders.sql';
+const ALTERNATE_MODEL_SQL = `select order_id, status
+from staging.alternate_orders`;
 
 function assertNoSeriousAccessibilityViolations(context: string): void {
   cy.get(context).should('be.visible');
@@ -53,10 +61,12 @@ describe('Canvas workbench screen composition', () => {
     revision: string;
     draft: ReturnType<typeof buildProtectedDraftRecord>['draft'];
   } | null;
+  let alternateDraft: ReturnType<typeof buildCanvasAuthoringDraft>;
 
   beforeEach(() => {
     cy.viewport(1544, 868);
     stubShellBootstrapApis({
+      projectIds: [E2E_WORKSPACE_SESSION.projectId, ALTERNATE_WORKSPACE_SESSION.projectId],
       scopes: [
         'workspace:graph-draft:view',
         'workspace:graph-draft:save',
@@ -76,37 +86,62 @@ describe('Canvas workbench screen composition', () => {
       effectiveWorkspace: E2E_WORKSPACE_SESSION,
       availableWorkspaces: [E2E_WORKSPACE_SESSION, ALTERNATE_WORKSPACE_SESSION],
     });
-    stubE2eJsonApi('GET', '/workspace/files', [
-      {
-        path: 'dbt_project.yml',
-        name: 'dbt_project.yml',
-        kind: 'file',
-      },
-      {
-        path: 'models',
-        name: 'models',
-        kind: 'directory',
-        children: [
-          {
-            path: 'models/analytics',
-            name: 'analytics',
-            kind: 'directory',
-            children: [
+    stubE2eApi('GET', '/workspace/files', ({ headers }) => ({
+      body:
+        headers['x-project-id'] === ALTERNATE_WORKSPACE_SESSION.projectId
+          ? [
               {
-                path: MODEL_PATH,
-                name: 'model_orders.sql',
+                path: 'models',
+                name: 'models',
+                kind: 'directory',
+                children: [
+                  {
+                    path: 'models/staging',
+                    name: 'staging',
+                    kind: 'directory',
+                    children: [
+                      {
+                        path: ALTERNATE_MODEL_PATH,
+                        name: 'alternate_orders.sql',
+                        kind: 'file',
+                      },
+                    ],
+                  },
+                ],
+              },
+            ]
+          : [
+              {
+                path: 'dbt_project.yml',
+                name: 'dbt_project.yml',
                 kind: 'file',
               },
               {
-                path: ORPHAN_PATH,
-                name: 'orphan_metrics.sql',
-                kind: 'file',
+                path: 'models',
+                name: 'models',
+                kind: 'directory',
+                children: [
+                  {
+                    path: 'models/analytics',
+                    name: 'analytics',
+                    kind: 'directory',
+                    children: [
+                      {
+                        path: MODEL_PATH,
+                        name: 'model_orders.sql',
+                        kind: 'file',
+                      },
+                      {
+                        path: ORPHAN_PATH,
+                        name: 'orphan_metrics.sql',
+                        kind: 'file',
+                      },
+                    ],
+                  },
+                ],
               },
             ],
-          },
-        ],
-      },
-    ]);
+    }));
     stubE2eJsonApi('GET', '/workspace/files/dbt_project.yml', {
       path: 'dbt_project.yml',
       name: 'dbt_project.yml',
@@ -131,10 +166,50 @@ describe('Canvas workbench screen composition', () => {
       contentSha256: 'c'.repeat(64),
       lastModified: '2026-08-06T00:00:00.000Z',
     });
+    stubE2eApi('GET', '/workspace/files/models%2Fstaging%2Falternate_orders.sql', ({ headers }) => {
+      expect(headers['x-project-id']).to.equal(ALTERNATE_WORKSPACE_SESSION.projectId);
+      return {
+        body: {
+          path: ALTERNATE_MODEL_PATH,
+          name: 'alternate_orders.sql',
+          language: 'sql',
+          content: ALTERNATE_MODEL_SQL,
+          contentSha256: 'd'.repeat(64),
+          lastModified: '2026-08-06T00:00:00.000Z',
+        },
+      };
+    });
     stubE2eJsonApi('GET', /\/workspace\/file-history\/.+/, []);
     persistedDraft = null;
+    const alternateDraftFixture = buildCanvasAuthoringDraft({
+      authoringGenerated: true,
+      title: 'Alternate staging canvas',
+    });
+    alternateDraft = {
+      ...alternateDraftFixture,
+      nodePositions: {
+        ...alternateDraftFixture.nodePositions,
+        'source-1': { x: 40, y: 140 },
+        'dvt-sql-transform-1': { x: 420, y: 140 },
+        'sink-1': { x: 800, y: 140 },
+      },
+    };
 
-    stubE2eApi('GET', '/workspace/graph/draft', () => {
+    stubE2eApi('GET', '/workspace/graph/draft', ({ url }) => {
+      const requestedProjectId = url.searchParams.get('projectId');
+      if (requestedProjectId === ALTERNATE_WORKSPACE_SESSION.projectId) {
+        return {
+          body: buildDraftReadOkResponse(ALTERNATE_WORKSPACE_SESSION, {
+            record: buildProtectedDraftRecord(ALTERNATE_WORKSPACE_SESSION, {
+              revision: 'rev-alternate-project',
+              draft: alternateDraft,
+              updatedAt: '2026-08-06T00:00:00.000Z',
+            }),
+          }),
+        };
+      }
+
+      expect(requestedProjectId).to.equal(E2E_WORKSPACE_SESSION.projectId);
       if (persistedDraft == null) {
         return {
           statusCode: 404,
@@ -198,6 +273,28 @@ describe('Canvas workbench screen composition', () => {
         body: buildDraftSaveSavedResponse(E2E_WORKSPACE_SESSION, {
           revision: 'rev-e2e-first-canvas',
         }),
+      };
+    });
+    stubE2eApi('GET', '/runs', ({ url, headers }) => {
+      const projectId = url.searchParams.get('projectId');
+      expect(headers['x-project-id']).to.equal(projectId);
+      const alternate = projectId === ALTERNATE_WORKSPACE_SESSION.projectId;
+      return {
+        body: {
+          items: [
+            {
+              runId: alternate ? 'run_alternate_project' : 'run_primary_project',
+              planId: alternate ? 'plan_alternate_project' : 'plan_primary_project',
+              status: 'COMPLETED',
+              environmentId: alternate
+                ? ALTERNATE_WORKSPACE_SESSION.environmentId
+                : E2E_WORKSPACE_SESSION.environmentId,
+              startedAt: '2026-08-06T00:00:00.000Z',
+              completedAt: '2026-08-06T00:00:10.000Z',
+            },
+          ],
+          nextCursor: null,
+        },
       };
     });
   });
@@ -268,7 +365,14 @@ describe('Canvas workbench screen composition', () => {
     cy.contains('[data-slot="shell-menu-navigation-link"]', 'Administración').should('be.visible');
     cy.contains('Contexto del proyecto').should('be.visible');
     cy.contains('Contexto Git').should('be.visible');
-    cy.get('body').type('{esc}');
+    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Ejecuciones').click();
+    cy.location('pathname').should('eq', '/runs');
+    waitForE2eApiCall('/runs', 'GET');
+    cy.get('[data-slot="run-operational-table"]').should('contain.text', 'run_primary_project');
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Canvas').click();
+    cy.location('pathname').should('eq', '/canvas');
+    cy.get('[data-slot="canvas-playground-empty-state"]').should('be.visible');
 
     cy.contains('button', 'Canvas de transformación').click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
@@ -343,6 +447,89 @@ describe('Canvas workbench screen composition', () => {
       'contain.text',
       'Proyecto: e2e-project-alt'
     );
+    cy.get('[data-slot="shell-active-canvas-identity"]')
+      .should('contain.text', 'Alternate staging canvas')
+      .and('have.attr', 'data-canvas-id', 'main-canvas');
+    cy.get('.react-flow__node[data-id="source-1"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+    cy.get('[data-slot="shell-run-status-indicator"]')
+      .invoke('attr', 'aria-label')
+      .should('contain', 'Vista previa obligatoria');
+    cy.get('.react-flow__node[data-id="source-1"] [data-slot="graph-node-card-play"]')
+      .click()
+      .should('have.attr', 'data-state', 'deselect');
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.get('[data-slot="canvas-workspace-open-project-code-command"]').click();
+    cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${ALTERNATE_MODEL_PATH}"]`)
+      .should('be.visible')
+      .click();
+    waitForE2eApiCall('/workspace/files/models%2Fstaging%2Falternate_orders.sql', 'GET');
+    cy.get(`[data-slot="code-workspace-file-entry"][data-workspace-path="${MODEL_PATH}"]`).should(
+      'not.exist'
+    );
+    cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]')
+      .find('.view-line')
+      .should(($lines) => {
+        const renderedLines = [...$lines].map((line) =>
+          (line.textContent ?? '').replaceAll('\u00a0', ' ').trimEnd()
+        );
+        expect(renderedLines.join('\n')).to.equal(ALTERNATE_MODEL_SQL);
+      });
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Ejecuciones').click();
+    cy.location('pathname').should('eq', '/runs');
+    waitForE2eApiCall('/runs', 'GET');
+    cy.get('[data-slot="run-operational-table"]', { timeout: 20_000 })
+      .should('contain.text', 'run_alternate_project')
+      .and('not.contain.text', 'run_primary_project');
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.contains(
+      '[data-slot="shell-workspace-scope-selector"] button',
+      'e2e-tenant / e2e-project / e2e-env'
+    ).click();
+    cy.get('[data-slot="run-operational-table"]', { timeout: 20_000 })
+      .should('contain.text', 'run_primary_project')
+      .and('not.contain.text', 'run_alternate_project');
+
+    cy.get('[data-slot="shell-workspace-menu-trigger"]').click();
+    cy.contains('[data-slot="shell-menu-navigation-link"]', 'Canvas').click();
+    cy.location('pathname').should('eq', '/canvas');
+    cy.get('[data-slot="shell-active-canvas-identity"]')
+      .should('contain.text', 'Canvas de transformación')
+      .and('have.attr', 'data-canvas-id', 'canvas-de-transformacion');
+    cy.get('.react-flow__node[data-id="source-1"]').should('not.exist');
+    cy.get('[data-slot="shell-run-command"]').should('be.disabled');
+    cy.get('[data-slot="shell-run-status-indicator"]')
+      .invoke('attr', 'aria-label')
+      .should('contain', 'Vista previa obligatoria');
+
+    cy.then(() => {
+      const draftProjects = getE2eApiCalls('/workspace/graph/draft', 'GET').map((call) =>
+        call.url.searchParams.get('projectId')
+      );
+      expect(draftProjects).to.include.members([
+        E2E_WORKSPACE_SESSION.projectId,
+        ALTERNATE_WORKSPACE_SESSION.projectId,
+      ]);
+      const fileProjects = getE2eApiCalls('/workspace/files', 'GET').map(
+        (call) => call.headers['x-project-id']
+      );
+      expect(fileProjects).to.include.members([
+        E2E_WORKSPACE_SESSION.projectId,
+        ALTERNATE_WORKSPACE_SESSION.projectId,
+      ]);
+      const runProjects = getE2eApiCalls('/runs', 'GET').map((call) =>
+        call.url.searchParams.get('projectId')
+      );
+      expect(runProjects).to.include.members([
+        E2E_WORKSPACE_SESSION.projectId,
+        ALTERNATE_WORKSPACE_SESSION.projectId,
+      ]);
+    });
   });
 
   it('keeps grouped actions, dialogs, language controls and exits visible in a narrow viewport', () => {

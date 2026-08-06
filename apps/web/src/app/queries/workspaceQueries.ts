@@ -1,5 +1,6 @@
 /** Owned concern: bind workspace query hooks to their minimal service ports. */
 import { useQuery } from '@tanstack/react-query';
+import { useSyncExternalStore } from 'react';
 import {
   useWorkspaceAdminReadPort,
   useWorkspaceDiffQueryPort,
@@ -7,6 +8,7 @@ import {
   useWorkspaceFilesQueryPort,
   useWorkspaceGraphSnapshotQueryPort,
   useWorkspacePluginCatalogQueryPort,
+  useSessionContext,
 } from '../services/AppServicesContext';
 import type { FileContent, WorkspaceFileEntry } from '../ports/workspace';
 import { classifyWorkspaceArtifact, type WorkspaceArtifactKind } from './workspaceArtifactPolicy';
@@ -22,6 +24,16 @@ export type WorkspaceArtifactRecord = {
 };
 
 export type WorkspaceArtifactMap = Record<string, WorkspaceArtifactRecord>;
+
+function useWorkspaceLayoutKey(): string {
+  const sessionContext = useSessionContext();
+  const { tenantId, projectId, environmentId } = useSyncExternalStore(
+    sessionContext.subscribeWorkspaceScope,
+    sessionContext.getWorkspaceScopeSnapshot,
+    sessionContext.getWorkspaceScopeSnapshot
+  );
+  return `${tenantId}::${projectId}::${environmentId}`;
+}
 
 function flattenWorkspaceEntries(entries: WorkspaceFileEntry[]): WorkspaceFileEntry[] {
   return entries.flatMap((entry) => [
@@ -71,16 +83,18 @@ async function loadWorkspaceArtifacts(
 
 export function useWorkspaceDiffChangesQuery() {
   const workspaceDiffQuery = useWorkspaceDiffQueryPort();
+  const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.diffChanges(),
+    queryKey: queryKeys.workspace.diffChanges(workspaceLayoutKey),
     queryFn: () => workspaceDiffQuery.getDiffChanges(),
   });
 }
 
 export function useWorkspacePluginCatalogQuery() {
   const workspacePluginCatalogQuery = useWorkspacePluginCatalogQueryPort();
+  const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.plugins(),
+    queryKey: queryKeys.workspace.plugins(workspaceLayoutKey),
     queryFn: () => workspacePluginCatalogQuery.getPlugins(),
   });
 }
@@ -91,8 +105,9 @@ export function useWorkspaceGraphForViewQuery(
   options: Readonly<{ enabled?: boolean }> = {}
 ) {
   const workspaceGraphSnapshotQuery = useWorkspaceGraphSnapshotQueryPort();
+  const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.graphForView(viewId),
+    queryKey: queryKeys.workspace.graphForView(workspaceLayoutKey, viewId),
     queryFn: () => workspaceGraphSnapshotQuery.getGraphSnapshot(),
     enabled: options.enabled ?? true,
     ...(typeof staleTime === 'number' ? { staleTime } : {}),
@@ -101,50 +116,56 @@ export function useWorkspaceGraphForViewQuery(
 
 export function useWorkspaceFileTreeQuery() {
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
+  const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.fileTree(),
+    queryKey: queryKeys.workspace.fileTree(workspaceLayoutKey),
     queryFn: () => workspaceFilesQuery.listFiles(),
   });
 }
 
 export function useWorkspaceFileContentQuery(path: string | undefined) {
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
+  const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
     enabled: path != null,
-    queryKey: queryKeys.workspace.fileContent(path ?? ''),
+    queryKey: queryKeys.workspace.fileContent(workspaceLayoutKey, path ?? ''),
     queryFn: () => workspaceFilesQuery.getFileContent(path ?? ''),
   });
 }
 
 export function useWorkspaceFileHistoryQuery(path: string | undefined) {
   const workspaceFileHistoryQuery = useWorkspaceFileHistoryQueryPort();
+  const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
     enabled: path != null,
-    queryKey: queryKeys.workspace.fileHistory(path ?? ''),
+    queryKey: queryKeys.workspace.fileHistory(workspaceLayoutKey, path ?? ''),
     queryFn: () => workspaceFileHistoryQuery.getFileHistory(path ?? ''),
   });
 }
 
 export function useWorkspaceRolesQuery() {
   const workspaceAdminRead = useWorkspaceAdminReadPort();
+  const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.roles(),
+    queryKey: queryKeys.workspace.roles(workspaceLayoutKey),
     queryFn: () => workspaceAdminRead.getRoles(),
   });
 }
 
 export function useWorkspaceAuditQuery() {
   const workspaceAdminRead = useWorkspaceAdminReadPort();
+  const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery({
-    queryKey: queryKeys.workspace.audit(),
+    queryKey: queryKeys.workspace.audit(workspaceLayoutKey),
     queryFn: () => workspaceAdminRead.getAuditLog(),
   });
 }
 
 export function useWorkspaceArtifactsQuery() {
   const workspaceFilesQuery = useWorkspaceFilesQueryPort();
+  const workspaceLayoutKey = useWorkspaceLayoutKey();
   return useQuery<WorkspaceArtifactMap>({
-    queryKey: queryKeys.workspace.artifacts(),
+    queryKey: queryKeys.workspace.artifacts(workspaceLayoutKey),
     queryFn: () =>
       loadWorkspaceArtifacts(workspaceFilesQuery.listFiles, workspaceFilesQuery.getFileContent),
   });

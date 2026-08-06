@@ -1,5 +1,5 @@
 /** Owned concern: compose Canvas environment, authoring runtime, adapter seams, and execution seams into one route facade. */
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import {
   resolveActiveCanvasAuthoringMode,
@@ -52,6 +52,27 @@ export function useCanvasController() {
     navigationActions,
     store,
   } = environment;
+  const previousWorkspaceLayoutKeyRef = useRef(store.workspaceLayoutKey);
+
+  useEffect(() => {
+    if (previousWorkspaceLayoutKeyRef.current === store.workspaceLayoutKey) {
+      return;
+    }
+
+    previousWorkspaceLayoutKeyRef.current = store.workspaceLayoutKey;
+    store.setExecutionSelectionIntent(createCanvasExecutionSelectionIntent([]));
+    store.setInspectorNode(null);
+    store.closeContextualWorkbench();
+    store.setCurrentPlan(null);
+    store.setCurrentRun(null);
+  }, [
+    store.closeContextualWorkbench,
+    store.setCurrentPlan,
+    store.setCurrentRun,
+    store.setExecutionSelectionIntent,
+    store.setInspectorNode,
+    store.workspaceLayoutKey,
+  ]);
 
   const authoringRuntime = useCanvasAuthoringRuntime({
     platformHealthQuery: {

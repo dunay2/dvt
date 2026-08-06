@@ -70,13 +70,16 @@ describe('useCanvasExecutionActions plan preview persistence', () => {
 
     expect(plansService.previewPlan).toHaveBeenCalledTimes(1);
     expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: queryKeys.workspace.fileTree(),
+      queryKey: queryKeys.workspace.fileTree('tenant::project::env'),
     });
     expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: queryKeys.workspace.fileContent('pipelines/sales_pipeline.yaml'),
+      queryKey: queryKeys.workspace.fileContent(
+        'tenant::project::env',
+        'pipelines/sales_pipeline.yaml'
+      ),
     });
     expect(invalidateQueries).toHaveBeenCalledWith({
-      queryKey: queryKeys.workspace.artifacts(),
+      queryKey: queryKeys.workspace.artifacts('tenant::project::env'),
     });
   });
 });

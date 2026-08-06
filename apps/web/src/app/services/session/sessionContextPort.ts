@@ -39,7 +39,11 @@ export function createSessionContextPort(): SessionContextPort {
     },
     subscribeWorkspaceScope: (onStoreChange) => {
       let previousWorkspaceScope = readWorkspaceScope(useSessionStore.getState());
-      cachedWorkspaceScope = previousWorkspaceScope;
+      if (!areWorkspaceScopesEqual(cachedWorkspaceScope, previousWorkspaceScope)) {
+        cachedWorkspaceScope = previousWorkspaceScope;
+      } else {
+        previousWorkspaceScope = cachedWorkspaceScope;
+      }
 
       return useSessionStore.subscribe((state) => {
         const nextWorkspaceScope = readWorkspaceScope(state);
@@ -48,7 +52,9 @@ export function createSessionContextPort(): SessionContextPort {
         }
 
         previousWorkspaceScope = nextWorkspaceScope;
-        cachedWorkspaceScope = nextWorkspaceScope;
+        if (!areWorkspaceScopesEqual(cachedWorkspaceScope, nextWorkspaceScope)) {
+          cachedWorkspaceScope = nextWorkspaceScope;
+        }
         onStoreChange();
       });
     },

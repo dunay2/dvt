@@ -32,8 +32,12 @@ type CanvasStoreFacade = {
   columnLevelLineageEnabled: boolean;
   toggleColumnLevelLineage: () => void;
   setCurrentPlan: (plan: ReturnType<typeof useExecutionStore.getState>['currentPlan']) => void;
+  setCurrentRun: (run: ReturnType<typeof useExecutionStore.getState>['currentRun']) => void;
   currentPlan: ReturnType<typeof useExecutionStore.getState>['currentPlan'];
   currentRun: ReturnType<typeof useExecutionStore.getState>['currentRun'];
+  closeContextualWorkbench: ReturnType<
+    typeof useCanvasInteractionStore.getState
+  >['closeContextualWorkbench'];
   userPermissions: UserPermissions;
   setBottomDrawerHeight: (height: number) => void;
   bottomDrawerVisible: boolean;
@@ -101,8 +105,12 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     (state) => state.toggleColumnLevelLineage
   );
   const setCurrentPlan = useExecutionStore((state) => state.setCurrentPlan);
+  const setCurrentRun = useExecutionStore((state) => state.setCurrentRun);
   const currentPlan = useExecutionStore((state) => state.currentPlan);
   const currentRun = useExecutionStore((state) => state.currentRun);
+  const closeContextualWorkbench = useCanvasInteractionStore(
+    (state) => state.closeContextualWorkbench
+  );
   const userPermissions = useAuthorizationStore((state) => state.userPermissions);
   const setBottomDrawerHeight = useUiLayoutStore((state) => state.setBottomDrawerHeight);
   const bottomDrawerVisible = useUiLayoutStore((state) => state.bottomDrawerVisible);
@@ -166,8 +174,10 @@ export function useCanvasStoreFacade(): CanvasStoreView {
     columnLevelLineageEnabled,
     toggleColumnLevelLineage,
     setCurrentPlan,
+    setCurrentRun,
     currentPlan,
     currentRun,
+    closeContextualWorkbench,
     userPermissions,
     setBottomDrawerHeight,
     bottomDrawerVisible,
