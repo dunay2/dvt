@@ -21,6 +21,11 @@ const fixtureManifest = JSON.parse(
   readFileSync(path.join(fixtureRoot, 'het2-http-json-orders.manifest.json'), 'utf8')
 );
 
+test('pins HET2 JSONL fixture bytes to LF across checkouts', () => {
+  const attributes = readFileSync(path.resolve(__dirname, '../.gitattributes'), 'utf8');
+  assert.match(attributes, /^apps\/web\/cypress\/fixtures\/\*\.jsonl text eol=lf$/mu);
+});
+
 test('validates the tenant-scoped HET2 fixture before infrastructure startup', () => {
   assert.deepEqual(validateHttpJsonFixture(fixtureContent, fixtureManifest), fixtureManifest);
   assert.throws(

@@ -4,3 +4,4 @@
 *.yaml text eol=lf
 *.cjs text eol=lf
 .husky/* text eol=lf
+apps/web/cypress/fixtures/*.jsonl text eol=lf
