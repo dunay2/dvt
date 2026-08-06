@@ -53,14 +53,14 @@
       "artifacts": ["docs/concepts/repository-map.md"],
       "sourcePaths": [
         "scripts/generate-code-status.cjs",
-        "scripts/planning-db/queries/documentation-lifecycle-query.cjs",
+        "pnpm-workspace.yaml",
         "tools/planning-db/migrations/043_db_first_architecture_authority_queries.sql",
         "tools/planning-db/migrations/065_documentation_lifecycle_query.sql",
-        "tools/planning-db/migrations/067_documentation_lifecycle_subject_key.sql",
+        "tools/planning-db/migrations/070_documentation_panel_query.sql",
         "apps",
         "packages"
       ],
-      "generatorCommand": "pnpm docs:status:generate",
+      "generatorCommand": "pnpm docs:status:generate -- --repository-map-only",
       "tracking": "tracked",
       "manualEditPolicy": "generator-owned",
       "requiredMarkers": [
