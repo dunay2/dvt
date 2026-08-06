@@ -176,6 +176,7 @@
         "Normalize workflow-side unknown errors before they become canonical failure event payloads",
         "Parse workflow control input into DVT-owned cursor and materialization state before Temporal execution",
         "Parse workflow cursor and control values with deterministic validation before execution",
+        "Plans carry only opaque endpoint/credential references and a predeclared content address.",
         "Provide contract-backed Temporal fixtures for tests that exercise DVT-owned run and plan boundaries",
         "Re-export canonical event types from @dvt/contracts without engine-local compatibility aliases.",
         "Re-export canonical types from @dvt/contracts — single source of truth",
@@ -265,6 +266,7 @@
         "packages/@dvt/adapter-temporal/test/workflow-execution-segment.test.ts",
         "packages/@dvt/adapter-temporal/test/workflowMapper.typecheck.ts",
         "packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts",
         "packages/@dvt/contracts/src/step-registry/CommonStepTypeConfig.ts",
@@ -858,6 +860,7 @@
         "Mark the object-file staging dependency explicitly in admitted DBT step configuration.",
         "Model workspace graph edits as aggregate commands instead of transport-specific patches.",
         "Persist workspace authoring as a graph-first aggregate, not as UI widget state.",
+        "Plans carry only opaque endpoint/credential references and a predeclared content address.",
         "Publish execution-selection schemas as a focused schema pack for external validators.",
         "Publish one versioned finding vocabulary for the existing preview-selection and stored-plan executability decisions.",
         "Publish plan-compile request and response schemas as a bounded planner contract pack",
@@ -869,6 +872,7 @@
         "packages/@dvt/contracts/src/contracts/planner/DbtStepSelector.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutableSubgraph.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ExecutionSelection.v1.ts",
+        "packages/@dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ObjectFilePostgresDbtBridge.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/PlanAdmissionFinding.v1.ts",
@@ -954,11 +958,13 @@
       "decisions": [
         "Fetch engine dispatch artifacts through the artifacts-owned reader before segment projection.",
         "Keep scoped plan artifact integrity validation as an engine-owned dispatch port.",
+        "Plans carry only opaque endpoint/credential references and a predeclared content address.",
         "Publish stored-plan artifact validation as artifact state, not as a plan lifecycle facade."
       ],
       "implemented_by": [
         "packages/@dvt/adapter-temporal/src/activities/temporalPlanArtifactReader.ts",
         "packages/@dvt/adapter-temporal/test/temporalPlanArtifactReader.test.ts",
+        "packages/@dvt/contracts/src/contracts/planner/HttpJsonArtifactStepTypeConfig.v1.ts",
         "packages/@dvt/contracts/src/contracts/planner/StoredPlanArtifactValidation.v1.ts",
         "packages/@dvt/engine/src/ports/IPlanIntegrityValidator.ts"
       ],
