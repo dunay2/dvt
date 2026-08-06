@@ -216,7 +216,7 @@ describe('canvas dbt workspace artifacts', () => {
       })
     ).toEqual({
       ok: false,
-      message: 'DBT model "Orders Model" must be connected to a source or model origin.',
+      message: 'DBT model "Orders Model" must select a connected source or model origin.',
     });
   });
 
