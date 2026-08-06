@@ -11,6 +11,7 @@ import { buildShellNavigationModel } from '../shell/shellNavigationModel';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { useSessionStore } from '../stores/sessionStore';
 import { useUiLayoutStore } from '../stores/uiLayoutStore';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 import type { OperationalDrawerContribution } from './shell/operationalDrawerContributionStore';
 import { useOperationalDrawerContributionStore } from './shell/operationalDrawerContributionStore';
 import { useCanvasWorkspaceMenuContributionStore } from '../views/canvas/canvasWorkspaceMenuContributionStore';
@@ -49,6 +50,7 @@ describe('ShellTopBar workspace context', () => {
       availableTargetAdapters: ['temporal'],
     });
     useUiLayoutStore.setState({ focusMode: false });
+    useApplicationLanguageStore.setState({ language: 'en' });
     useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
     useCanvasWorkspaceMenuContributionStore.setState({ contribution: null });
   });
@@ -303,13 +305,52 @@ describe('ShellTopBar workspace context', () => {
   it('resolves Spanish shell copy for the menu and workspace context labels', () => {
     expect(resolveShellTopBarCopy('es-ES')).toMatchObject({
       shell: 'Vista',
-      workspaceMenu: 'Workspace',
+      workspaceMenu: 'Espacio de trabajo',
       globalNavigation: 'Navegacion',
-      workspaceContext: 'Contexto del workspace',
+      workspaceContext: 'Contexto del proyecto',
       projectScope: 'Proyecto',
       environmentScope: 'Entorno',
       deploymentScope: 'Adapter de despliegue',
     });
+  });
+
+  it('changes the application language from the View menu without reloading', async () => {
+    await act(async () => {
+      root.render(renderShellTopBar('/canvas'));
+    });
+
+    await act(async () => {
+      fireEvent.pointerDown(container.querySelector('[data-slot="shell-menu-trigger"]')!);
+    });
+
+    const languageMenu = await waitFor(() => {
+      expect(document.body.textContent).toContain('Language');
+      const menu = document.body.querySelector<HTMLElement>('[data-slot="shell-language-menu"]');
+      expect(menu).not.toBeNull();
+      return menu;
+    });
+
+    await act(async () => {
+      languageMenu!.focus();
+      fireEvent.keyDown(languageMenu!, { key: 'ArrowRight' });
+    });
+
+    const spanishLanguageCommand = await waitFor(() => {
+      const command = document.body.querySelector<HTMLElement>(
+        '[data-slot="shell-language-option-es"]'
+      );
+      expect(command).not.toBeNull();
+      return command;
+    });
+
+    await act(async () => {
+      fireEvent.click(spanishLanguageCommand!);
+    });
+
+    expect(useApplicationLanguageStore.getState().language).toBe('es');
+    expect(container.querySelector('[data-slot="shell-menu-trigger"]')?.textContent).toContain(
+      'Vista'
+    );
   });
 
   it('opens an About dialog from the Raven application menu with compiled version metadata', async () => {

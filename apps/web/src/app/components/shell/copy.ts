@@ -16,6 +16,9 @@ export type ShellTopBarCopy = {
   readonly workspaceContext: string;
   readonly gitContext: string;
   readonly viewOptions: string;
+  readonly language: string;
+  readonly languageEnglish: string;
+  readonly languageSpanish: string;
   readonly operationalDrawer: string;
   readonly closeOperationalDrawer: string;
   readonly focusMode: string;
@@ -57,6 +60,9 @@ const COPY_BY_KEY: Record<keyof ShellTopBarCopy, LocalizableString> = {
   workspaceContext: { key: 'shell.workspaceContext', fallback: 'Workspace context' },
   gitContext: { key: 'shell.gitContext', fallback: 'Git context' },
   viewOptions: { key: 'shell.viewOptions', fallback: 'View options' },
+  language: { key: 'shell.language', fallback: 'Language' },
+  languageEnglish: { key: 'shell.languageEnglish', fallback: 'English' },
+  languageSpanish: { key: 'shell.languageSpanish', fallback: 'Spanish' },
   operationalDrawer: { key: 'shell.operationalDrawer', fallback: 'Operations' },
   closeOperationalDrawer: {
     key: 'shell.closeOperationalDrawer',
@@ -107,12 +113,15 @@ const COPY_ES: ShellTopBarCopy = {
   aboutVersionLabel: 'Version compilada',
   aboutBuildDateLabel: 'Fecha de build',
   aboutBuildDateUnavailable: 'No publicada',
-  workspaceMenu: 'Workspace',
+  workspaceMenu: 'Espacio de trabajo',
   workspacePanels: 'Paneles',
   globalNavigation: 'Navegacion',
-  workspaceContext: 'Contexto del workspace',
+  workspaceContext: 'Contexto del proyecto',
   gitContext: 'Contexto Git',
   viewOptions: 'Opciones de vista',
+  language: 'Idioma',
+  languageEnglish: 'Inglés',
+  languageSpanish: 'Español',
   operationalDrawer: 'Operaciones',
   closeOperationalDrawer: 'Cerrar panel de operaciones',
   focusMode: 'Modo foco',
@@ -177,6 +186,9 @@ export function resolveShellTopBarCopy(locale?: string): ShellTopBarCopy {
     workspaceContext: resolveString(COPY_BY_KEY.workspaceContext, locale),
     gitContext: resolveString(COPY_BY_KEY.gitContext, locale),
     viewOptions: resolveString(COPY_BY_KEY.viewOptions, locale),
+    language: resolveString(COPY_BY_KEY.language, locale),
+    languageEnglish: resolveString(COPY_BY_KEY.languageEnglish, locale),
+    languageSpanish: resolveString(COPY_BY_KEY.languageSpanish, locale),
     operationalDrawer: resolveString(COPY_BY_KEY.operationalDrawer, locale),
     closeOperationalDrawer: resolveString(COPY_BY_KEY.closeOperationalDrawer, locale),
     focusMode: resolveString(COPY_BY_KEY.focusMode, locale),

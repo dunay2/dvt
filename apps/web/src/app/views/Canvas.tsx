@@ -27,6 +27,7 @@ import {
 import { resolveCanvasViewCopy } from './canvas/canvasCopyCatalog';
 import type { CanvasShellRouteIntentRequest } from './canvas/canvasShell.types';
 import { useCanvasRunControlSurface } from './canvas/useCanvasRunControlSurface';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 
 function GraphDraftCanvasContent({
   onDbtProjectImported,
@@ -71,10 +72,11 @@ function GraphDraftCanvasContent({
 }
 
 function CanvasContent(): JSX.Element {
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const feedback = useShellFeedback();
-  const copy = resolveCanvasViewCopy();
+  const copy = resolveCanvasViewCopy(applicationLanguage);
   const authorityResolution = useMemo(
     () => resolveCanvasRouteAuthority(searchParams),
     [searchParams]
