@@ -17,7 +17,6 @@ const policyPath = path.join(repoRoot, 'docs', 'generated-docs-policy.json');
 const {
   collectRepositoryWorkspaceStats,
   collectWorkspaceDirs,
-  expandDocumentBindingsToAncestors,
   main,
   markdownCell,
   readRepositoryArchitectureFacts,
@@ -207,61 +206,6 @@ test('repository map resolves workspace and canonical document through explicit 
       '[docs/architecture/components/web/index.md](../architecture/components/web/index.md)',
     gaps: [],
   });
-});
-
-test('repository map propagates document identity only through explicit component parents', () => {
-  const components = [
-    {
-      component_id: 'SYS-ROOT',
-      repo_path: 'packages/@dvt/example',
-      status: 'implemented',
-      parent_component_id: null,
-    },
-    {
-      component_id: 'SYS-LEAF',
-      repo_path: 'packages/@dvt/example/src',
-      status: 'implemented',
-      parent_component_id: 'SYS-ROOT',
-    },
-  ];
-  const documents = expandDocumentBindingsToAncestors(
-    [
-      {
-        component_id: 'SYS-LEAF',
-        document_path: 'docs/architecture/components/example/index.md',
-        canonicality: 'canonical',
-        lifecycle_state: 'active',
-        status: 'Active',
-      },
-    ],
-    components
-  );
-
-  assert.deepEqual(resolveWorkspaceArchitecture({ path: 'packages/@dvt/example' }, components, documents), {
-    component: 'SYS-ROOT',
-    componentStatus: 'implemented',
-    canonicalDoc:
-      '[docs/architecture/components/example/index.md](../architecture/components/example/index.md)',
-    gaps: [],
-  });
-});
-
-test('document ancestor expansion is deterministic, de-duplicated, and cycle-safe', () => {
-  const components = [
-    { component_id: 'COMP-A', parent_component_id: 'COMP-B' },
-    { component_id: 'COMP-B', parent_component_id: 'COMP-A' },
-  ];
-  const document = {
-    component_id: 'COMP-A',
-    document_path: 'docs/example.md',
-    canonicality: 'canonical',
-    lifecycle_state: 'active',
-  };
-
-  assert.deepEqual(expandDocumentBindingsToAncestors([document, document], components), [
-    { ...document, component_id: 'COMP-A' },
-    { ...document, component_id: 'COMP-B' },
-  ]);
 });
 
 test('repository map never treats a title-derived subject key as component identity', () => {
