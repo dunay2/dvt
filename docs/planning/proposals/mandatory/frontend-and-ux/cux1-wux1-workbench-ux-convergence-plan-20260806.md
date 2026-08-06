@@ -155,6 +155,7 @@ governingSources:
   - docs/architecture/components/web/iconography-and-design-tokens-contract.md
   - docs/architecture/components/web/screen-manuals-and-user-stories.md
 allowedImplementationSurfaces:
+  - apps/web/index.html
   - apps/web/src/**
   - apps/web/package.json
   - apps/web/cypress/**
@@ -164,6 +165,7 @@ allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md
   - docs/planning/status/**
   - docs/evidence/**
+  - docs/guides/**
 forbiddenImplementationSurfaces:
   - apps/api/**
   - packages/@dvt/contracts/**
@@ -300,6 +302,582 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:architecture
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasAddNodeCatalogView.test.tsx]
+  - name: ALTERNATE_MODEL_PATH
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: ALTERNATE_MODEL_SQL
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: ALTERNATE_WORKSPACE_SESSION
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [SelectWorkspaceScope, GetEffectiveWorkspaceContext]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: MODEL_PATH
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: MODEL_SQL
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: ORPHAN_PATH
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: ORPHAN_SQL
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: assertDirectionalMarkers
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: CanvasComponentCatalog
+    cqRails: [RenderCanvasGraphBase]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: assertNoSeriousAccessibilityViolations
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: CanvasComponentCatalog
+    cqRails: [RenderCanvasGraphBase]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: assertViewportHasNoGlobalHorizontalOverflow
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: CanvasComponentCatalog
+    cqRails: [RenderCanvasGraphBase]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: clearBrowserEmulation
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: CanvasComponentCatalog
+    cqRails: [RenderCanvasGraphBase]
+    fowlerSignals: [Divergent change]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: emulateAccessibilityMedia
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: CanvasComponentCatalog
+    cqRails: [RenderCanvasGraphBase]
+    fowlerSignals: [Divergent change]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: emulateBrowserZoom
+    path: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    dddOwner: CanvasComponentCatalog
+    cqRails: [RenderCanvasGraphBase]
+    fowlerSignals: [Divergent change]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:e2e:native -- --spec cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts]
+  - name: CanvasNodeContextMenuCopy
+    path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+    dddOwner: CanvasComponentCatalog
+    cqRails: [CollectCanvasExecutionSelection]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvas/canvasNodeContextMenuModel.test.ts]
+  - name: DEFAULT_COPY
+    path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+    dddOwner: CanvasComponentCatalog
+    cqRails: [CollectCanvasExecutionSelection]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvas/canvasNodeContextMenuModel.test.ts]
+  - name: buildOpenNodeCodeAction
+    path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvas/canvasNodeContextMenuModel.test.ts]
+  - name: buildOpenWorkbenchAction
+    path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/canvas/canvasNodeContextMenuModel.test.ts]
+  - name: ImportReceipt
+    path: apps/web/src/app/components/shell/DbtProjectOnboardingView.tsx
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [SelectWorkspaceScope]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/DbtProjectOnboardingView.test.tsx]
+  - name: ProjectDiagnostics
+    path: apps/web/src/app/components/shell/DbtProjectOnboardingView.tsx
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [SelectWorkspaceScope]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/DbtProjectOnboardingView.test.tsx]
+  - name: ProjectInventory
+    path: apps/web/src/app/components/shell/DbtProjectOnboardingView.tsx
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [SelectWorkspaceScope]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/DbtProjectOnboardingView.test.tsx]
+  - name: ProjectSummary
+    path: apps/web/src/app/components/shell/DbtProjectOnboardingView.tsx
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [SelectWorkspaceScope]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/DbtProjectOnboardingView.test.tsx]
+  - name: COPY_BY_LANGUAGE
+    path: apps/web/src/app/components/shell/dbtProjectOnboardingCopy.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/dbtProjectOnboardingCopy.test.ts]
+  - name: DbtProjectImportCopy
+    path: apps/web/src/app/components/shell/dbtProjectOnboardingCopy.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/dbtProjectOnboardingCopy.test.ts]
+  - name: resolveDbtProjectImportCopy
+    path: apps/web/src/app/components/shell/dbtProjectOnboardingCopy.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/dbtProjectOnboardingCopy.test.ts]
+  - name: MonacoCodeSurfaceProps
+    path: apps/web/src/app/components/shell/MonacoCodeSurface.tsx
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent, SaveWorkspaceFileContent]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/MonacoCodeSurface.test.tsx]
+  - name: MonacoCodeSurfaceComponent
+    path: apps/web/src/app/components/shell/useMonacoCodeSurface.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/MonacoCodeSurface.test.tsx]
+  - name: loadMonacoCodeSurface
+    path: apps/web/src/app/components/shell/useMonacoCodeSurface.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/MonacoCodeSurface.test.tsx]
+  - name: monacoCodeSurfacePromise
+    path: apps/web/src/app/components/shell/useMonacoCodeSurface.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/MonacoCodeSurface.test.tsx]
+  - name: useMonacoCodeSurface
+    path: apps/web/src/app/components/shell/useMonacoCodeSurface.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/MonacoCodeSurface.test.tsx]
+  - name: GRID_OPTIONS
+    path: apps/web/src/app/components/shell/ShellMenu.tsx
+    dddOwner: CanvasComponentCatalog
+    cqRails: [RenderCanvasGraphBase]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/ShellMenu.test.tsx]
+  - name: formatGridOption
+    path: apps/web/src/app/components/shell/ShellMenu.tsx
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/ShellMenu.test.tsx]
+  - name: resolveRunStatusLabel
+    path: apps/web/src/app/components/shell/ShellRunStatus.tsx
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/shell/ShellRunStatus.test.tsx]
+  - name: LocalizableString
+    path: apps/web/src/app/plugins/PluginManifest.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/PluginManifest.test.ts]
+  - name: resolveString
+    path: apps/web/src/app/plugins/PluginManifest.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/PluginManifest.test.ts]
+  - name: CostView
+    path: apps/web/src/app/plugins/contributions/cost.tsx
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/cost.test.tsx]
+  - name: DeferredViewModule
+    path: apps/web/src/app/plugins/contributions/createDeferredView.tsx
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Divergent change]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/createDeferredView.test.tsx]
+  - name: createDeferredView
+    path: apps/web/src/app/plugins/contributions/createDeferredView.tsx
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/createDeferredView.test.tsx]
+  - name: CanvasView
+    path: apps/web/src/app/plugins/contributions/dbt.tsx
+    dddOwner: CanvasComponentCatalog
+    cqRails: [RenderCanvasGraphBase]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/dbt.test.tsx]
+  - name: TemplatesView
+    path: apps/web/src/app/plugins/contributions/dvt.tsx
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/dvt.test.tsx]
+  - name: RunsView
+    path: apps/web/src/app/plugins/contributions/monitoring.tsx
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage, CancelRun]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/contributions/monitoring.test.tsx]
+  - name: getAllCanvasKinds
+    path: apps/web/src/app/plugins/registry.ts
+    dddOwner: CanvasComponentCatalog
+    cqRails: [CreateCanvasAuthoringNode]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/registry.test.ts]
+  - name: useWorkspaceLayoutKey
+    path: apps/web/src/app/queries/workspaceQueries.ts
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [GetEffectiveWorkspaceContext]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/queries/workspaceQueries.test.ts]
+  - name: flushRouterUpdate
+    path: apps/web/src/app/router.ts
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [GetEffectiveWorkspaceContext]
+    fowlerSignals: [Divergent change]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/router.test.ts]
+  - name: SHELL_NAV
+    path: apps/web/src/app/shellNavigationRegistry.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/shellNavigationRegistry.test.ts]
+  - name: buildShellRuntimeState
+    path: apps/web/src/app/shellRuntime.tsx
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [GetEffectiveWorkspaceContext]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/shellRuntime.test.tsx]
+  - name: APPLICATION_LANGUAGE_STORAGE_KEY
+    path: apps/web/src/app/stores/applicationLanguageStore.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts]
+  - name: ApplicationLanguage
+    path: apps/web/src/app/stores/applicationLanguageStore.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts]
+  - name: ApplicationLanguageState
+    path: apps/web/src/app/stores/applicationLanguageStore.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts]
+  - name: detectInitialApplicationLanguage
+    path: apps/web/src/app/stores/applicationLanguageStore.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts]
+  - name: getApplicationLanguage
+    path: apps/web/src/app/stores/applicationLanguageStore.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts]
+  - name: initialLanguage
+    path: apps/web/src/app/stores/applicationLanguageStore.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts]
+  - name: normalizeApplicationLanguage
+    path: apps/web/src/app/stores/applicationLanguageStore.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts]
+  - name: publishDocumentLanguage
+    path: apps/web/src/app/stores/applicationLanguageStore.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts]
+  - name: useApplicationLanguageStore
+    path: apps/web/src/app/stores/applicationLanguageStore.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts]
+  - name: CanvasContextualWorkbenchId
+    path: apps/web/src/app/stores/canvasInteractionStore.ts
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/stores/canvasInteractionStore.test.ts]
+  - name: readableErrorMessage
+    path: apps/web/src/app/views/ProjectOnboardingView.tsx
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [SelectWorkspaceScope]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/ProjectOnboardingView.test.tsx]
+  - name: CATALOG_CATEGORY_CLASS_NAME
+    path: apps/web/src/app/views/canvas/CanvasAddNodeCatalogView.tsx
+    dddOwner: CanvasComponentCatalog
+    cqRails: [CreateCanvasAuthoringNode]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasAddNodeCatalogView.test.tsx]
+  - name: CATALOG_CATEGORY_TITLE_CLASS_NAME
+    path: apps/web/src/app/views/canvas/CanvasAddNodeCatalogView.tsx
+    dddOwner: CanvasComponentCatalog
+    cqRails: [CreateCanvasAuthoringNode]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasAddNodeCatalogView.test.tsx]
+  - name: CATALOG_ITEM_DESCRIPTION_CLASS_NAME
+    path: apps/web/src/app/views/canvas/CanvasAddNodeCatalogView.tsx
+    dddOwner: CanvasComponentCatalog
+    cqRails: [CreateCanvasAuthoringNode]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasAddNodeCatalogView.test.tsx]
+  - name: CATALOG_LAYOUT_CLASS_NAME
+    path: apps/web/src/app/views/canvas/CanvasAddNodeCatalogView.tsx
+    dddOwner: CanvasComponentCatalog
+    cqRails: [CreateCanvasAuthoringNode]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasAddNodeCatalogView.test.tsx]
+  - name: dragHandleClassName
+    path: apps/web/src/app/views/canvas/CanvasContextualWorkbenchPanel.tsx
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasContextualWorkbenchPanel.test.tsx]
+  - name: GraphDraftCodeTarget
+    path: apps/web/src/app/views/canvas/CanvasShell.tsx
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Primitive obsession]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasShell.test.tsx]
+  - name: WorkbenchOpener
+    path: apps/web/src/app/views/canvas/CanvasShell.tsx
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasShell.test.tsx]
+  - name: resolveWorkspaceFilePath
+    path: apps/web/src/app/views/canvas/CanvasShell.tsx
+    dddOwner: ContextualCodeWorkbench
+    cqRails: [GetWorkspaceFileContent]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasShell.test.tsx]
+  - name: canvasViewCopy
+    path: apps/web/src/app/views/canvas/canvasCopyCatalog.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasCopyCatalog.test.ts]
+  - name: createCanvasDirectionalEdge
+    path: apps/web/src/app/views/canvas/canvasNodeMapper.ts
+    dddOwner: CanvasComponentCatalog
+    cqRails: [RenderCanvasGraphBase]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasNodeMapper.test.ts]
+  - name: ScopedDraftSession
+    path: apps/web/src/app/views/canvas/canvasWorkspaceDraftSession.ts
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [SelectWorkspaceScope, GetEffectiveWorkspaceContext]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkspaceDraftSession.test.ts]
+  - name: resolveStateUpdate
+    path: apps/web/src/app/views/canvas/canvasWorkspaceDraftSession.ts
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [GetEffectiveWorkspaceContext]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkspaceDraftSession.test.ts]
+  - name: useCanvasWorkspaceDraftSession
+    path: apps/web/src/app/views/canvas/canvasWorkspaceDraftSession.ts
+    dddOwner: WorkspaceScopeSelection
+    cqRails: [GetEffectiveWorkspaceContext]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/canvasWorkspaceDraftSession.test.ts]
+  - name: COPY_BY_LANGUAGE
+    path: apps/web/src/app/views/projectOnboardingCopy.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/projectOnboardingCopy.test.ts]
+  - name: ProjectOnboardingCopy
+    path: apps/web/src/app/views/projectOnboardingCopy.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/projectOnboardingCopy.test.ts]
+  - name: resolveProjectOnboardingCopy
+    path: apps/web/src/app/views/projectOnboardingCopy.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/projectOnboardingCopy.test.ts]
 ```
 
 ## Demanding-User Acceptance
