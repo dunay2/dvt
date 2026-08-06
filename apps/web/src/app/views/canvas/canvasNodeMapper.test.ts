@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import type { CanonicalNode } from '../../types/canonical';
 import {
+  mapCanonicalEdgeToCanvasEdge,
   mapCanonicalNodeToCanvasNode,
   mapDroppedCanonicalNodeToCanvasNode,
 } from './canvasNodeMapper';
+import { MarkerType } from '@xyflow/react';
 
 function buildCanonicalNode(): CanonicalNode {
   return {
@@ -32,6 +34,26 @@ describe('canvasNodeMapper', () => {
       target: 'Conectar puerto de entrada',
       source: 'Conectar puerto de salida',
     });
+    expect(mappedNode.data.executionSelectionCopy).toEqual({
+      selectLabel: 'Seleccionar para ejecución',
+      deselectLabel: 'Quitar de la ejecución',
+    });
+  });
+
+  it('projects a high-visibility closed arrow for dependency direction', () => {
+    const edge = mapCanonicalEdgeToCanvasEdge({
+      id: 'source-to-model',
+      sourceId: 'source-node',
+      targetId: 'model-node',
+      relation: 'lineage',
+    });
+
+    expect(edge.markerEnd).toMatchObject({
+      type: MarkerType.ArrowClosed,
+      width: 28,
+      height: 28,
+    });
+    expect(edge.style).toMatchObject({ strokeWidth: 2.5 });
   });
 
   it('preserves specialized source plugin identity in React Flow node data', () => {

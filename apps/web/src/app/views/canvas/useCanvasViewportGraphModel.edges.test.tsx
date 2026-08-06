@@ -47,16 +47,18 @@ describe('useCanvasViewportGraphModel edges', () => {
         'transform-node',
         'sink-node',
       ]);
-      expect(mounted.readState()?.edges).toEqual([
+      expect(mounted.readState()?.edges).toMatchObject([
         {
           id: 'draft_edge_source-node_transform-node',
           source: 'source-node',
           target: 'transform-node',
+          markerEnd: { type: 'arrowclosed', width: 28, height: 28 },
         },
         {
           id: 'draft_edge_transform-node_sink-node',
           source: 'transform-node',
           target: 'sink-node',
+          markerEnd: { type: 'arrowclosed', width: 28, height: 28 },
         },
       ]);
     } finally {
@@ -91,16 +93,18 @@ describe('useCanvasViewportGraphModel edges', () => {
     );
 
     try {
-      expect(mounted.readState()?.edges).toEqual([
+      expect(mounted.readState()?.edges).toMatchObject([
         {
           id: 'draft_edge_source-node_transform-node',
           source: 'source-node',
           target: 'transform-node',
+          markerEnd: { type: 'arrowclosed', width: 28, height: 28 },
         },
         {
           id: 'draft_edge_transform-node_sink-node',
           source: 'transform-node',
           target: 'sink-node',
+          markerEnd: { type: 'arrowclosed', width: 28, height: 28 },
         },
       ]);
     } finally {

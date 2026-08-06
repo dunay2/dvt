@@ -117,15 +117,42 @@ export function mapCanonicalNodeToCanvasNode({
         source: copy.canvasNodePortSourceLabel,
       },
       portCompatibility: toPortCompatibilityViewModel(portCompatibility, copy),
+      contextMenuCopy: {
+        openWorkbenchLabel: copy.canvasNodeContextOpenWorkbenchLabel,
+        workbenchGroupLabel: copy.canvasNodeContextWorkbenchGroupLabel,
+        executeGroupLabel: copy.canvasNodeContextExecuteGroupLabel,
+        editGroupLabel: copy.canvasNodeContextEditGroupLabel,
+        duplicateLabel: copy.canvasNodeContextDuplicateLabel,
+        selectForExecutionLabel: copy.canvasNodeContextSelectForExecutionLabel,
+        deselectForExecutionLabel: copy.canvasNodeContextDeselectForExecutionLabel,
+        dangerGroupLabel: copy.canvasNodeContextDangerGroupLabel,
+        deleteLabel: copy.canvasNodeContextDeleteLabel,
+      },
+      executionSelectionCopy: {
+        selectLabel: copy.canvasNodeContextSelectForExecutionLabel,
+        deselectLabel: copy.canvasNodeContextDeselectForExecutionLabel,
+      },
     },
   };
 }
 
 export function mapCanonicalEdgeToCanvasEdge(canonicalEdge: CanonicalEdge): Edge {
-  return {
+  return createCanvasDirectionalEdge({
     id: canonicalEdge.id,
     source: canonicalEdge.sourceId,
     target: canonicalEdge.targetId,
+  });
+}
+
+export function createCanvasDirectionalEdge({
+  id,
+  source,
+  target,
+}: Readonly<{ id: string; source: string; target: string }>): Edge {
+  return {
+    id,
+    source,
+    target,
     type: 'smoothstep',
     animated: false,
     style: createGraphFlowEdgeStyle(),
@@ -142,19 +169,11 @@ export function createCanvasEdgeFromConnection(connection: {
   source: string;
   target: string;
 }): Edge {
-  return {
+  return createCanvasDirectionalEdge({
     id: `${connection.source}->${connection.target}:${Date.now()}`,
     source: connection.source,
     target: connection.target,
-    type: 'smoothstep',
-    style: createGraphFlowEdgeStyle(),
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: graphFlowPalette.edgeStroke,
-      width: graphFlowPalette.edgeMarkerWidth,
-      height: graphFlowPalette.edgeMarkerHeight,
-    },
-  };
+  });
 }
 
 export function mapDroppedCanonicalNodeToCanvasNode(
@@ -201,6 +220,21 @@ export function mapDroppedCanonicalNodeToCanvasNode(
       portLabels: {
         target: copy.canvasNodePortTargetLabel,
         source: copy.canvasNodePortSourceLabel,
+      },
+      contextMenuCopy: {
+        openWorkbenchLabel: copy.canvasNodeContextOpenWorkbenchLabel,
+        workbenchGroupLabel: copy.canvasNodeContextWorkbenchGroupLabel,
+        executeGroupLabel: copy.canvasNodeContextExecuteGroupLabel,
+        editGroupLabel: copy.canvasNodeContextEditGroupLabel,
+        duplicateLabel: copy.canvasNodeContextDuplicateLabel,
+        selectForExecutionLabel: copy.canvasNodeContextSelectForExecutionLabel,
+        deselectForExecutionLabel: copy.canvasNodeContextDeselectForExecutionLabel,
+        dangerGroupLabel: copy.canvasNodeContextDangerGroupLabel,
+        deleteLabel: copy.canvasNodeContextDeleteLabel,
+      },
+      executionSelectionCopy: {
+        selectLabel: copy.canvasNodeContextSelectForExecutionLabel,
+        deselectLabel: copy.canvasNodeContextDeselectForExecutionLabel,
       },
     },
   };

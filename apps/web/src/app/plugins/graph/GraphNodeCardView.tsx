@@ -1,6 +1,6 @@
 /** Owned concern: render graph-node card markup from an already-projected card model. */
 import { type CSSProperties, type MouseEvent as ReactMouseEvent, type ReactElement } from 'react';
-import { MoreHorizontal, Play } from 'lucide-react';
+import { MoreHorizontal, Pause, Play } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
 import { canvasNodeEmbeddedControlProps } from '../../components/canvas/canvasNodeInteractionBoundary';
@@ -119,6 +119,7 @@ export function GraphNodeCardView({
               <button
                 type="button"
                 data-slot="graph-node-card-play"
+                data-state={playAction.visualState}
                 {...canvasNodeEmbeddedControlProps}
                 aria-label={playAction.label}
                 title={playAction.label}
@@ -129,7 +130,17 @@ export function GraphNodeCardView({
                 }}
                 className={graphNodeCardLayoutClasses.playButton}
               >
-                <Play className={graphNodeCardLayoutClasses.playIcon} />
+                {playAction.visualState === 'deselect' ? (
+                  <Pause
+                    data-slot="graph-node-card-pause-icon"
+                    className={graphNodeCardLayoutClasses.playIcon}
+                  />
+                ) : (
+                  <Play
+                    data-slot="graph-node-card-play-icon"
+                    className={graphNodeCardLayoutClasses.playIcon}
+                  />
+                )}
               </button>
             ) : null}
             <button

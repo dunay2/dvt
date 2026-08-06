@@ -63,7 +63,12 @@ describe('GraphNodeCardView', () => {
       root.render(
         <GraphNodeCardView
           {...BASE_PROPS}
-          playAction={{ label: 'Select for execution', onPress: onPlay, disabled: false }}
+          playAction={{
+            label: 'Select for execution',
+            visualState: 'select',
+            onPress: onPlay,
+            disabled: false,
+          }}
         />
       );
     });
@@ -82,7 +87,12 @@ describe('GraphNodeCardView', () => {
       root.render(
         <GraphNodeCardView
           {...BASE_PROPS}
-          playAction={{ label: 'Select for execution', onPress: vi.fn(), disabled: false }}
+          playAction={{
+            label: 'Select for execution',
+            visualState: 'select',
+            onPress: vi.fn(),
+            disabled: false,
+          }}
         />
       );
     });
@@ -94,6 +104,27 @@ describe('GraphNodeCardView', () => {
     expect(button?.className).toContain('text-green');
     expect(button?.className).toContain('cursor-pointer');
     expect(button?.className).not.toContain('opacity-0');
+  });
+
+  it('changes the selected-for-execution action from play to pause', () => {
+    act(() => {
+      root.render(
+        <GraphNodeCardView
+          {...BASE_PROPS}
+          playAction={{
+            label: 'Deselect for execution',
+            visualState: 'deselect',
+            onPress: vi.fn(),
+          }}
+        />
+      );
+    });
+
+    expect(
+      container.querySelector('[data-slot="graph-node-card-play"]')?.getAttribute('data-state')
+    ).toBe('deselect');
+    expect(container.querySelector('[data-slot="graph-node-card-pause-icon"]')).not.toBeNull();
+    expect(container.querySelector('[data-slot="graph-node-card-play-icon"]')).toBeNull();
   });
 
   it('opens governed node actions from the card action button without selecting the card', () => {
