@@ -107,6 +107,84 @@ test('closeout lease rejects a concurrent owner and transfers only after release
   releaseCloseoutLease({}, second);
 });
 
+test('executePrCloseoutPlan releases its lease after an interrupted closeout', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-cleanup-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+
+  assert.throws(
+    () =>
+      executePrCloseoutPlan(
+        [
+          {
+            id: 'closeout-lease-acquire',
+            internal: 'acquireCloseoutLease',
+            label: 'acquire exclusive PR closeout lease',
+          },
+          { id: 'failing-step', command: 'pnpm', args: ['failing-step'] },
+        ],
+        {
+          closeoutLeaseDir: leaseDir,
+          createLeaseToken: () => 'cleanup-token',
+          spawnCommand: () => ({ status: 1 }),
+        }
+      ),
+    /failing-step failed with exit code 1/u
+  );
+  assert.equal(fs.existsSync(leaseDir), false);
+});
+
+test('closeout lease recovers a stale owner without deleting a live successor', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-stale-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const runtime = {};
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+  fs.mkdirSync(leaseDir);
+  fs.writeFileSync(
+    path.join(leaseDir, 'owner.json'),
+    `${JSON.stringify({ pid: 101, token: 'stale-token' })}\n`,
+    'utf8'
+  );
+
+  acquireCloseoutLease(
+    {
+      closeoutLeaseDir: leaseDir,
+      processId: 202,
+      createLeaseToken: () => 'successor-token',
+      isProcessActive: () => false,
+    },
+    runtime
+  );
+  const owner = JSON.parse(fs.readFileSync(path.join(leaseDir, 'owner.json'), 'utf8'));
+  assert.equal(owner.pid, 202);
+  assert.equal(owner.token, 'successor-token');
+  releaseCloseoutLease({}, runtime);
+});
+
+test('closeout lease refuses to delete a successor token', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-token-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const runtime = {};
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+
+  acquireCloseoutLease(
+    {
+      closeoutLeaseDir: leaseDir,
+      processId: 101,
+      createLeaseToken: () => 'original-token',
+    },
+    runtime
+  );
+  fs.writeFileSync(
+    path.join(leaseDir, 'owner.json'),
+    `${JSON.stringify({ pid: 202, token: 'successor-token' })}\n`,
+    'utf8'
+  );
+
+  assert.throws(() => releaseCloseoutLease({}, runtime), /PR_CLOSEOUT_LEASE_OWNERSHIP_LOST/u);
+  assert.equal(fs.existsSync(leaseDir), true);
+});
+
 test('buildPrCloseoutPlan refuses implicit commits with no staged files', () => {
   assert.throws(
     () =>
