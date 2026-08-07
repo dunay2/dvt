@@ -344,6 +344,44 @@ test('queued listener errors survive synchronous task settlement and listener cl
   );
 });
 
+test('listener errors emitted during close remain in the final aggregate', async () => {
+  const releaseError = Object.assign(new Error('listener close failed'), { code: 'EIO' });
+  const server = new EventEmitter();
+  server.listen = (_endpoint, callback) => queueMicrotask(callback);
+  server.close = (callback) => {
+    setImmediate(() => {
+      server.emit('error', new Error('first during-close runtime failed'));
+      server.emit('error', new Error('second during-close runtime failed'));
+      callback(releaseError);
+    });
+  };
+
+  await assert.rejects(
+    runWithCloseoutLock(
+      () => {
+        throw new Error('synchronous guarded task failed');
+      },
+      {
+        endpoint: { path: `test-double-${process.pid}` },
+        createServer: () => server,
+      }
+    ),
+    (error) => {
+      assert.ok(error instanceof AggregateError);
+      assert.deepEqual(
+        error.errors.map((entry) => entry.message),
+        [
+          'synchronous guarded task failed',
+          'PR_CLOSEOUT_LEASE_RUNTIME_FAILED: first during-close runtime failed',
+          'PR_CLOSEOUT_LEASE_RUNTIME_FAILED: second during-close runtime failed',
+          'PR_CLOSEOUT_LEASE_RELEASE_FAILED: listener close failed',
+        ]
+      );
+      return true;
+    }
+  );
+});
+
 test('OS-owned closeout lock serializes processes and releases after abrupt exit', async (t) => {
   const modulePath = path.join(__dirname, 'pr-closeout.cjs');
   const scope = `resource:test-process-${process.pid}-${Date.now()}`;
