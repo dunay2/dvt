@@ -528,6 +528,8 @@ test('Repository Map publication provisions the pinned Zensical runtime first', 
   assert.equal(setupPython.if, publication.if);
   assert.equal(installZensical.if, publication.if);
   assert.equal(setupPython.uses, canonicalSetup.uses);
+  assert.match(setupPython.uses, /^actions\/setup-python@[0-9a-f]{40}$/u);
+  assert.match(canonicalSetup.uses, /^actions\/setup-python@[0-9a-f]{40}$/u);
   assert.equal(setupPython.with['python-version'], canonicalSetup.with['python-version']);
   assert.equal(installZensical.run.trim(), canonicalInstall.run.trim());
   assert.equal(
