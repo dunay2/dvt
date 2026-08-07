@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
+const yaml = require('js-yaml');
 const { Client } = require('pg');
 
 const { runMigrations } = require('./planning-db-migrate.cjs');
@@ -14,6 +15,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const generatorPath = path.join(repoRoot, 'scripts', 'generate-code-status.cjs');
 const policyPath = path.join(repoRoot, 'docs', 'generated-docs-policy.json');
 const prQualityWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'pr-quality-gate.yml');
+const docsDeployWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'docs-deploy.yml');
 const workflowScopePath = path.join(repoRoot, 'tools', 'ci', 'policy', 'workflow-scope.json');
 const packageJson = require('../package.json');
 
@@ -500,19 +502,40 @@ test('live Planning DB workflow provides explicit Git refs to the importer', () 
 });
 
 test('Repository Map publication provisions the pinned Zensical runtime first', () => {
-  const workflow = fs.readFileSync(prQualityWorkflowPath, 'utf8');
-  const setupPythonIndex = workflow.indexOf('name: Setup Python for Repository Map publication');
-  const installZensicalIndex = workflow.indexOf(
-    'name: Install Zensical for Repository Map publication'
+  const workflow = yaml.load(fs.readFileSync(prQualityWorkflowPath, 'utf8'));
+  const deployWorkflow = yaml.load(fs.readFileSync(docsDeployWorkflowPath, 'utf8'));
+  const steps = workflow.jobs['pr-checks'].steps;
+  const deploySteps = deployWorkflow.jobs['build-deploy'].steps;
+  const setupPythonIndex = steps.findIndex(
+    (step) => step.name === 'Setup Python for Repository Map publication'
   );
-  const publicationIndex = workflow.indexOf('name: Validate Repository Map publication and links');
+  const installZensicalIndex = steps.findIndex(
+    (step) => step.name === 'Install Zensical for Repository Map publication'
+  );
+  const publicationIndex = steps.findIndex(
+    (step) => step.name === 'Validate Repository Map publication and links'
+  );
+  const canonicalSetup = deploySteps.find((step) => step.name === 'Setup Python');
+  const canonicalInstall = deploySteps.find((step) => step.name === 'Install Zensical');
 
   assert.ok(setupPythonIndex >= 0, 'expected a Repository Map Python setup step');
   assert.ok(installZensicalIndex > setupPythonIndex, 'expected Zensical installation after Python');
   assert.ok(publicationIndex > installZensicalIndex, 'expected publication after Zensical setup');
-  assert.match(
-    workflow.slice(installZensicalIndex, publicationIndex),
-    /python -m pip install zensical==0\.0\.39/u
+
+  const setupPython = steps[setupPythonIndex];
+  const installZensical = steps[installZensicalIndex];
+  const publication = steps[publicationIndex];
+  assert.equal(setupPython.if, publication.if);
+  assert.equal(installZensical.if, publication.if);
+  assert.equal(setupPython.uses, canonicalSetup.uses);
+  assert.equal(setupPython.with['python-version'], canonicalSetup.with['python-version']);
+  assert.equal(installZensical.run.trim(), canonicalInstall.run.trim());
+  assert.equal(
+    installZensical.run
+      .split(/\r?\n/u)
+      .map((line) => line.trim())
+      .includes('python -m pip install zensical==0.0.39'),
+    true
   );
 });
 
