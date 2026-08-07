@@ -9,6 +9,7 @@ import { createCanvasDirectionalEdge, mapCanonicalNodeToCanvasNode } from './can
 import { resolveCanvasAuthoringVisibleEdgeId } from './canvasAuthoringGraphProjection';
 import { projectCanvasNodePresentationTruth } from './canvasNodePresentationProjection';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 type UseCanvasViewportGraphModelArgs = {
   visibleNodeIds: string[];
@@ -85,8 +86,12 @@ function projectViewportEdges(args: {
   visibleEdges: readonly VisibleViewportEdge[];
   allowedNodeIds: ReadonlySet<string>;
   canonicalEdgeIdBySignature: ReadonlyMap<string, string>;
+  canonicalNodesById: ReadonlyMap<string, CanonicalNode>;
+  locale: string;
 }): Edge[] {
-  const { visibleEdges, allowedNodeIds, canonicalEdgeIdBySignature } = args;
+  const { visibleEdges, allowedNodeIds, canonicalEdgeIdBySignature, canonicalNodesById, locale } =
+    args;
+  const copy = resolveCanvasViewCopy(locale);
 
   return visibleEdges
     .filter((edge) => allowedNodeIds.has(edge.sourceId) && allowedNodeIds.has(edge.targetId))
@@ -98,6 +103,9 @@ function projectViewportEdges(args: {
         }),
         source: edge.sourceId,
         target: edge.targetId,
+        ariaLabel: copy.canvasEdgeAccessibleLabelTemplate
+          .replace('{source}', canonicalNodesById.get(edge.sourceId)?.name ?? edge.sourceId)
+          .replace('{target}', canonicalNodesById.get(edge.targetId)?.name ?? edge.targetId),
       })
     );
 }
@@ -131,13 +139,19 @@ function getOrderedArrayItem<T>(items: readonly T[], index: number): T {
 }
 
 function viewportEdgeEqual(left: Edge, right: Edge): boolean {
-  return left.id === right.id && left.source === right.source && left.target === right.target;
+  return (
+    left.id === right.id &&
+    left.source === right.source &&
+    left.target === right.target &&
+    left.ariaLabel === right.ariaLabel
+  );
 }
 
 function viewportNodeEqual(left: Node, right: Node): boolean {
   return (
     left.id === right.id &&
     left.draggable === right.draggable &&
+    left.ariaLabel === right.ariaLabel &&
     viewportNodePositionEqual(left, right) &&
     viewportNodeDataEqual(left.data, right.data)
   );
@@ -261,8 +275,16 @@ export function useCanvasViewportGraphModel({
         visibleEdges,
         allowedNodeIds: new Set(visibleNodeIds),
         canonicalEdgeIdBySignature,
+        canonicalNodesById,
+        locale: applicationLanguage,
       }),
-    [canonicalEdgeIdBySignature, visibleEdges, visibleNodeIds]
+    [
+      applicationLanguage,
+      canonicalEdgeIdBySignature,
+      canonicalNodesById,
+      visibleEdges,
+      visibleNodeIds,
+    ]
   );
 
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
@@ -302,11 +324,20 @@ export function useCanvasViewportGraphModel({
         visibleEdges,
         allowedNodeIds: new Set(nodes.map((node) => node.id)),
         canonicalEdgeIdBySignature,
+        canonicalNodesById,
+        locale: applicationLanguage,
       });
 
       return viewportEdgesEqual(currentEdges, nextEdges) ? currentEdges : nextEdges;
     });
-  }, [canonicalEdgeIdBySignature, nodes, setEdges, visibleEdges]);
+  }, [
+    applicationLanguage,
+    canonicalEdgeIdBySignature,
+    canonicalNodesById,
+    nodes,
+    setEdges,
+    visibleEdges,
+  ]);
 
   return {
     nodes,

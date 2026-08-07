@@ -198,6 +198,58 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.nodePresentation.testKindLabel',
     fallback: 'Test',
   },
+  canvasNodeAccessibleLabelTemplate: {
+    key: 'canvas.a11y.nodeLabelTemplate',
+    fallback: '{name}, {kind}',
+  },
+  canvasEdgeAccessibleLabelTemplate: {
+    key: 'canvas.a11y.edgeLabelTemplate',
+    fallback: 'Edge from {source} to {target}',
+  },
+  reactFlowNodeDescription: {
+    key: 'canvas.a11y.nodeDescription',
+    fallback: 'Press Enter or Space to select a node. Use arrow keys to move it.',
+  },
+  reactFlowNodeKeyboardDisabledDescription: {
+    key: 'canvas.a11y.nodeKeyboardDisabledDescription',
+    fallback: 'This node cannot be moved with the keyboard.',
+  },
+  reactFlowNodeMovedTemplate: {
+    key: 'canvas.a11y.nodeMovedTemplate',
+    fallback: 'Moved {direction}. Position: {x}, {y}.',
+  },
+  reactFlowEdgeDescription: {
+    key: 'canvas.a11y.edgeDescription',
+    fallback: 'Press Delete to remove this connection.',
+  },
+  reactFlowControlsLabel: {
+    key: 'canvas.a11y.controlsLabel',
+    fallback: 'Canvas controls',
+  },
+  reactFlowZoomInLabel: {
+    key: 'canvas.a11y.zoomInLabel',
+    fallback: 'Zoom in',
+  },
+  reactFlowZoomOutLabel: {
+    key: 'canvas.a11y.zoomOutLabel',
+    fallback: 'Zoom out',
+  },
+  reactFlowFitViewLabel: {
+    key: 'canvas.a11y.fitViewLabel',
+    fallback: 'Fit graph to view',
+  },
+  reactFlowInteractiveLabel: {
+    key: 'canvas.a11y.interactiveLabel',
+    fallback: 'Toggle graph interaction',
+  },
+  reactFlowMinimapLabel: {
+    key: 'canvas.a11y.minimapLabel',
+    fallback: 'Canvas minimap',
+  },
+  reactFlowHandleLabel: {
+    key: 'canvas.a11y.handleLabel',
+    fallback: 'Connection port',
+  },
   nodeWorkbenchCloseLabel: {
     key: 'canvas.nodeWorkbench.closeLabel',
     fallback: 'Close',

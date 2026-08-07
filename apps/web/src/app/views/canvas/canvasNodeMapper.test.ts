@@ -39,6 +39,7 @@ describe('canvasNodeMapper', () => {
       deselectLabel: 'Quitar de la ejecución',
     });
     expect(mappedNode.data.typeLabel).toBe('Origen');
+    expect(mappedNode.ariaLabel).toBe('Raw orders, Origen');
     expect(mappedNode.data.presentationCopy).toMatchObject({
       nodeActionsLabel: 'Más acciones del nodo',
       readyStatusLabel: 'Listo',

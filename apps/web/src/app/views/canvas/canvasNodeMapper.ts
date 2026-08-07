@@ -92,6 +92,12 @@ export function mapCanonicalNodeToCanvasNode({
   return {
     id: canonicalNode.id,
     type: 'dbtNode',
+    ariaLabel: copy.canvasNodeAccessibleLabelTemplate
+      .replace('{name}', canonicalNode.name)
+      .replace(
+        '{kind}',
+        presentationCopy.kindLabels?.[canonicalNode.kind] ?? kindRegistration.label
+      ),
     position: persistedPosition ?? { x: (index % 3) * 250, y: Math.floor(index / 3) * 150 },
     draggable: !frozen,
     data: {
@@ -142,10 +148,14 @@ export function mapCanonicalNodeToCanvasNode({
 }
 
 export function mapCanonicalEdgeToCanvasEdge(canonicalEdge: CanonicalEdge): Edge {
+  const copy = resolveCanvasViewCopy();
   return createCanvasDirectionalEdge({
     id: canonicalEdge.id,
     source: canonicalEdge.sourceId,
     target: canonicalEdge.targetId,
+    ariaLabel: copy.canvasEdgeAccessibleLabelTemplate
+      .replace('{source}', canonicalEdge.sourceId)
+      .replace('{target}', canonicalEdge.targetId),
   });
 }
 
@@ -153,11 +163,13 @@ export function createCanvasDirectionalEdge({
   id,
   source,
   target,
-}: Readonly<{ id: string; source: string; target: string }>): Edge {
+  ariaLabel,
+}: Readonly<{ id: string; source: string; target: string; ariaLabel?: string }>): Edge {
   return {
     id,
     source,
     target,
+    ariaLabel,
     type: 'smoothstep',
     animated: false,
     style: createGraphFlowEdgeStyle(),
@@ -204,6 +216,12 @@ export function mapDroppedCanonicalNodeToCanvasNode(
   return {
     id: canonicalNode.id,
     type: 'dbtNode',
+    ariaLabel: copy.canvasNodeAccessibleLabelTemplate
+      .replace('{name}', canonicalNode.name)
+      .replace(
+        '{kind}',
+        presentationCopy.kindLabels?.[canonicalNode.kind] ?? kindRegistration.label
+      ),
     position,
     data: {
       name: canonicalNode.name,

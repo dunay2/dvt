@@ -7,6 +7,7 @@ import {
   type Node,
   type NodeTypes,
   type ReactFlowProps,
+  type AriaLabelConfig,
 } from '@xyflow/react';
 import type { DragEventHandler, RefObject } from 'react';
 
@@ -64,6 +65,28 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   copy: CanvasViewCopy;
 }>;
 
+export function buildCanvasReactFlowAriaLabelConfig(
+  copy: CanvasViewCopy
+): Partial<AriaLabelConfig> {
+  return {
+    'node.a11yDescription.default': copy.reactFlowNodeDescription,
+    'node.a11yDescription.keyboardDisabled': copy.reactFlowNodeKeyboardDisabledDescription,
+    'node.a11yDescription.ariaLiveMessage': ({ direction, x, y }) =>
+      copy.reactFlowNodeMovedTemplate
+        .replace('{direction}', direction)
+        .replace('{x}', String(x))
+        .replace('{y}', String(y)),
+    'edge.a11yDescription.default': copy.reactFlowEdgeDescription,
+    'controls.ariaLabel': copy.reactFlowControlsLabel,
+    'controls.zoomIn.ariaLabel': copy.reactFlowZoomInLabel,
+    'controls.zoomOut.ariaLabel': copy.reactFlowZoomOutLabel,
+    'controls.fitView.ariaLabel': copy.reactFlowFitViewLabel,
+    'controls.interactive.ariaLabel': copy.reactFlowInteractiveLabel,
+    'minimap.ariaLabel': copy.reactFlowMinimapLabel,
+    'handle.ariaLabel': copy.reactFlowHandleLabel,
+  };
+}
+
 function resolveMiniMapNodeColor(node: { data?: unknown }): string {
   const pluginKind = (node.data as { pluginKind?: string }).pluginKind ?? 'dvt:unknown';
   return resolveNodeKindRegistration(pluginKind).minimapColor;
@@ -95,6 +118,7 @@ function CanvasViewportReactFlowSurface({
   onCloseNodeFloatingToolbar,
   onCloseNodeHealthPopover,
   graphSearchController,
+  copy,
 }: Omit<
   CanvasViewportSurfaceViewProps,
   | 'viewportRef'
@@ -104,7 +128,6 @@ function CanvasViewportReactFlowSurface({
   | 'nodeFloatingToolbarModel'
   | 'nodeHealthPopoverModel'
   | 'graphFilterController'
-  | 'copy'
 >): JSX.Element {
   const handlePaneClick: NonNullable<ReactFlowProps<Node, Edge>['onPaneClick']> = (event) => {
     onCloseNodeFloatingToolbar();
@@ -210,6 +233,7 @@ function CanvasViewportReactFlowSurface({
         onPaneContextMenu={handlePaneContextMenu}
         onEdgeContextMenu={handleEdgeContextMenu}
         className="bg-(--canvas-surface)"
+        ariaLabelConfig={buildCanvasReactFlowAriaLabelConfig(copy)}
       >
         <Controls />
         <MiniMap
@@ -257,6 +281,7 @@ export function CanvasViewportSurfaceView({
         onCloseNodeFloatingToolbar={onCloseNodeFloatingToolbar}
         onCloseNodeHealthPopover={onCloseNodeHealthPopover}
         graphSearchController={graphSearchController}
+        copy={copy}
       />
       <CanvasGraphSearchControl
         model={graphSearchController.model}
