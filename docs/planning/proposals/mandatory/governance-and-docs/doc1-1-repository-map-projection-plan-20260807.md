@@ -129,10 +129,12 @@ flowchart LR
 - Every closeout input class prepares Planning DB before the unconditional full
   pre-push consumer, including code/config files outside Repository Map scope.
 - The entire synchronous closeout executes while the same Node process owns a
-  deterministic loopback TCP listener. The operating system performs the
-  atomic bind, rejects every concurrent contender, and releases the endpoint
-  when the process exits; no stale owner record, token comparison, quarantine,
-  or pathname deletion participates in mutual exclusion.
+  deterministic operating-system listener: a named pipe on Windows, an
+  abstract Unix-domain socket on Linux, or a loopback TCP fallback elsewhere.
+  The operating system performs the atomic bind, rejects every concurrent
+  contender, and releases the endpoint when the process exits; no stale owner
+  record, token comparison, quarantine, or pathname deletion participates in
+  mutual exclusion.
 - PR publication and docs deployment use the same exact Python patch and the
   same hash-locked pip/Zensical dependency graph, with no moving upgrade step.
 - Feature mechanization, docs governance, CI tools, ARC evaluation, and the full
@@ -430,7 +432,7 @@ redGreenCycles:
     greenTest: node --test scripts/pr-closeout.test.cjs
   - id: os-owned-closeout-socket-review
     redTest: node --test scripts/pr-closeout.test.cjs
-    expectedFailure: Check-then-delete recovery can remove a late initializer, a successor marker, or an entire successor lease; repeated ownerless retries can also rejuvenate the stale threshold indefinitely.
+    expectedFailure: Check-then-delete recovery can remove a late initializer, a successor marker, or an entire successor lease; repeated ownerless retries can rejuvenate the stale threshold indefinitely, while a fixed Windows loopback port can be reserved by the operating system.
     patchSurfaces:
       - scripts/pr-closeout.cjs
       - scripts/pr-closeout.test.cjs
