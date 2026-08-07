@@ -12,6 +12,7 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const repoRoot = path.resolve(__dirname, '..');
 const generatorPath = path.join(repoRoot, 'scripts', 'generate-code-status.cjs');
 const policyPath = path.join(repoRoot, 'docs', 'generated-docs-policy.json');
+const packageJson = require('../package.json');
 
 const {
   assertTrackedRepositoryMapClean,
@@ -90,7 +91,10 @@ test('effective membership can include non-standard layouts and exclude existing
     workspaces.map((workspace) => workspace.workspace),
     ['@fixture/beta', '@fixture/alpha']
   );
-  assert.equal(workspaces.some((workspace) => workspace.workspace === '@fixture/ignored'), false);
+  assert.equal(
+    workspaces.some((workspace) => workspace.workspace === '@fixture/ignored'),
+    false
+  );
   assert.ok(fs.existsSync(ignored.directory));
 });
 
@@ -205,20 +209,14 @@ test('governed coverage classes use exact canonical or local evidence', () => {
 });
 
 test('Markdown cells are deterministic and safe', () => {
-  assert.equal(
-    markdownCell('docs\\component|line\nnext'),
-    'docs\\\\component\\|line<br>next'
-  );
+  assert.equal(markdownCell('docs\\component|line\nnext'), 'docs\\\\component\\|line<br>next');
 });
 
 test('generation modes isolate code-state and repository-map work', async () => {
   assert.equal(resolveGenerationMode([]), 'all');
   assert.equal(resolveGenerationMode(['--code-state-only']), 'code-state-only');
   assert.equal(resolveGenerationMode(['--repository-map-only']), 'repository-map-only');
-  assert.equal(
-    resolveGenerationMode(['--repository-map-only', '--check']),
-    'repository-map-only'
-  );
+  assert.equal(resolveGenerationMode(['--repository-map-only', '--check']), 'repository-map-only');
   assert.throws(
     () => resolveGenerationMode(['--code-state-only', '--repository-map-only']),
     /Choose either/u
@@ -238,11 +236,9 @@ test('generation modes isolate code-state and repository-map work', async () => 
   assert.deepEqual(calls, ['map']);
 });
 
-test('local check command and explicit check mode reject generated map drift', () => {
+test('explicit check mode and CI reject generated map drift', () => {
   const previousCi = process.env.CI;
-  const previousLifecycleEvent = process.env.npm_lifecycle_event;
   delete process.env.CI;
-  delete process.env.npm_lifecycle_event;
   try {
     assert.doesNotThrow(() =>
       assertTrackedRepositoryMapClean({
@@ -258,7 +254,7 @@ test('local check command and explicit check mode reject generated map drift', (
         }),
       /repository-map\.md is stale/u
     );
-    process.env.npm_lifecycle_event = 'docs:status:check';
+    process.env.CI = '1';
     assert.throws(
       () =>
         assertTrackedRepositoryMapClean({
@@ -270,15 +266,15 @@ test('local check command and explicit check mode reject generated map drift', (
   } finally {
     if (previousCi === undefined) delete process.env.CI;
     else process.env.CI = previousCi;
-    if (previousLifecycleEvent === undefined) delete process.env.npm_lifecycle_event;
-    else process.env.npm_lifecycle_event = previousLifecycleEvent;
   }
 });
 
+test('docs status check passes fail-closed intent through the nested pnpm script', () => {
+  assert.equal(packageJson.scripts['docs:status:check'], 'pnpm docs:status:generate -- --check');
+});
+
 test('repository map output is byte-stable and preserves governed navigation', () => {
-  const workspaces = [
-    workspaceRow({ localReadmePath: 'packages/@dvt/example/README.md' }),
-  ];
+  const workspaces = [workspaceRow({ localReadmePath: 'packages/@dvt/example/README.md' })];
   const facts = {
     components: [
       { component_id: 'COMP-EXAMPLE', repo_path: workspaces[0].path, status: 'implemented' },
@@ -305,7 +301,10 @@ test('policy names actual inputs and the minimal generator command', () => {
   assert.ok(entry.sourcePaths.includes('package.json'));
   assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
   assert.ok(entry.sourcePaths.includes('tools/planning-db/migrations'));
-  assert.equal(entry.sourcePaths.some((value) => value.includes('subject_key')), false);
+  assert.equal(
+    entry.sourcePaths.some((value) => value.includes('subject_key')),
+    false
+  );
 });
 
 test('generator no longer reads the empty documentation panel binding', () => {
@@ -313,7 +312,7 @@ test('generator no longer reads the empty documentation panel binding', () => {
   assert.doesNotMatch(source, /documentation_panel_query/u);
   assert.match(source, /not in \('deprecated', 'drift'\)/u);
   assert.match(source, /pnpmCommand\(\)/u);
-  assert.match(source, /npm_lifecycle_event === 'docs:status:check'/u);
+  assert.doesNotMatch(source, /npm_lifecycle_event === 'docs:status:check'/u);
 });
 
 test(

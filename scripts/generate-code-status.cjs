@@ -50,7 +50,8 @@ function parsePnpmWorkspaceRows(output) {
     throw new Error(
       `Unable to parse effective pnpm workspace membership: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
+      { cause: error }
     );
   }
   if (!Array.isArray(rows)) {
@@ -155,9 +156,7 @@ function collectWorkspaceStats(dir) {
     ? walk(srcDir, (_, name) => isColocatedTestFile(name))
     : [];
   const testFiles = [
-    ...(fs.existsSync(testDir)
-      ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/u.test(name))
-      : []),
+    ...(fs.existsSync(testDir) ? walk(testDir, (_, name) => /\.(ts|tsx|js|jsx)$/u.test(name)) : []),
     ...colocatedTestFiles,
   ];
 
@@ -284,8 +283,10 @@ function isCurrentCanonicalDocument(row) {
   const lifecycle = String(row.lifecycle_state ?? row.lifecycleState ?? '').toLowerCase();
   const status = String(row.status ?? '').toLowerCase();
   if (canonicality && canonicality !== 'canonical') return false;
-  return !['archived', 'historical', 'superseded', 'retired', 'discarded'].includes(lifecycle) &&
-    !['archived', 'historical', 'superseded', 'retired', 'discarded'].includes(status);
+  return (
+    !['archived', 'historical', 'superseded', 'retired', 'discarded'].includes(lifecycle) &&
+    !['archived', 'historical', 'superseded', 'retired', 'discarded'].includes(status)
+  );
 }
 
 function relativeDocLink(documentPath) {
@@ -490,10 +491,7 @@ function writeIfChanged(absPath, content) {
 }
 
 function assertTrackedRepositoryMapClean(options = {}) {
-  const check =
-    options.check === true ||
-    process.env.npm_lifecycle_event === 'docs:status:check' ||
-    Boolean(process.env.CI);
+  const check = options.check === true || Boolean(process.env.CI);
   if (!check) return;
   const run = options.spawnSync || spawnSync;
   const relativePath = relFromRepo(repositoryMapOutputPath);
@@ -514,7 +512,9 @@ function assertTrackedRepositoryMapClean(options = {}) {
 
 function resolveGenerationMode(argv) {
   const knownFlags = new Set(['--code-state-only', '--repository-map-only', '--check']);
-  const unknownFlags = argv.filter((argument) => argument.startsWith('--') && !knownFlags.has(argument));
+  const unknownFlags = argv.filter(
+    (argument) => argument.startsWith('--') && !knownFlags.has(argument)
+  );
   if (unknownFlags.length > 0) {
     throw new Error(`Unknown generate-code-status option: ${unknownFlags.join(', ')}`);
   }
@@ -529,7 +529,9 @@ function resolveGenerationMode(argv) {
 }
 
 function generateCodeState(workspaces) {
-  const date = resolveGeneratedDate(codeStateOutputPath, (value) => renderCodeState(workspaces, value));
+  const date = resolveGeneratedDate(codeStateOutputPath, (value) =>
+    renderCodeState(workspaces, value)
+  );
   const changed = writeIfChanged(codeStateOutputPath, renderCodeState(workspaces, date));
   console.log(
     changed
