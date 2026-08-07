@@ -8,6 +8,11 @@ export type CanvasNodePresentationCopy = Readonly<{
   workspaceCodeDetailTemplate: string;
   generatedCodeDetailTemplate: string;
   codeUnavailableMessage: string;
+  nodeActionsLabel?: string;
+  readyStatusLabel?: string;
+  draftStatusLabel?: string;
+  authoringTagLabel?: string;
+  kindLabels?: Readonly<Record<string, string>>;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -24,6 +29,11 @@ export function isCanvasNodePresentationCopy(value: unknown): value is CanvasNod
     typeof value.codeLabel === 'string' &&
     typeof value.workspaceCodeDetailTemplate === 'string' &&
     typeof value.generatedCodeDetailTemplate === 'string' &&
-    typeof value.codeUnavailableMessage === 'string'
+    typeof value.codeUnavailableMessage === 'string' &&
+    (value.nodeActionsLabel == null || typeof value.nodeActionsLabel === 'string') &&
+    (value.readyStatusLabel == null || typeof value.readyStatusLabel === 'string') &&
+    (value.draftStatusLabel == null || typeof value.draftStatusLabel === 'string') &&
+    (value.authoringTagLabel == null || typeof value.authoringTagLabel === 'string') &&
+    (value.kindLabels == null || isRecord(value.kindLabels))
   );
 }

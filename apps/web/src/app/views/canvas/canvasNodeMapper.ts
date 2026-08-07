@@ -87,6 +87,7 @@ export function mapCanonicalNodeToCanvasNode({
     name,
     type,
   }));
+  const presentationCopy = buildCanvasNodePresentationCopy(copy);
 
   return {
     id: canonicalNode.id,
@@ -99,7 +100,7 @@ export function mapCanonicalNodeToCanvasNode({
       pluginId: canonicalNode.pluginId,
       pluginKind: canonicalNode.kind,
       role: canonicalNode.role,
-      typeLabel: kindRegistration.label,
+      typeLabel: presentationCopy.kindLabels?.[canonicalNode.kind] ?? kindRegistration.label,
       status: canonicalNode.status,
       path: canonicalNode.path,
       description: canonicalNode.description,
@@ -107,9 +108,12 @@ export function mapCanonicalNodeToCanvasNode({
       lastCost: canonicalNode.lastCost,
       overlayDecoration: overlayDecoration ?? null,
       tags: canonicalNode.tags,
+      displayTags: canonicalNode.tags.map((tag) =>
+        tag === 'authoring' ? (presentationCopy.authoringTagLabel ?? tag) : tag
+      ),
       metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
       presentationTruth: resolvedPresentationTruth,
-      presentationCopy: buildCanvasNodePresentationCopy(copy),
+      presentationCopy,
       columns,
       showColumns: showColumns || (columns?.length ?? 0) > 0,
       portLabels: {
@@ -191,6 +195,7 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     edges: [],
   });
   const columns = presentationTruth.columns.visible.map(({ name, type }) => ({ name, type }));
+  const presentationCopy = buildCanvasNodePresentationCopy(copy);
   const typeLabelFromMetadata =
     typeof canonicalNode.metadata?.typeLabel === 'string'
       ? canonicalNode.metadata.typeLabel
@@ -206,16 +211,19 @@ export function mapDroppedCanonicalNodeToCanvasNode(
       pluginId: canonicalNode.pluginId,
       pluginKind: canonicalNode.kind,
       role: canonicalNode.role,
-      typeLabel: kindRegistration.label,
+      typeLabel: presentationCopy.kindLabels?.[canonicalNode.kind] ?? kindRegistration.label,
       status: canonicalNode.status,
       path: canonicalNode.path,
       description: canonicalNode.description,
       lastDuration: canonicalNode.lastDuration,
       lastCost: canonicalNode.lastCost,
       tags: canonicalNode.tags,
+      displayTags: canonicalNode.tags.map((tag) =>
+        tag === 'authoring' ? (presentationCopy.authoringTagLabel ?? tag) : tag
+      ),
       metadata: canonicalNode.metadata == null ? undefined : { ...canonicalNode.metadata },
       presentationTruth,
-      presentationCopy: buildCanvasNodePresentationCopy(copy),
+      presentationCopy,
       columns,
       showColumns: showColumns || (columns?.length ?? 0) > 0,
       portLabels: {

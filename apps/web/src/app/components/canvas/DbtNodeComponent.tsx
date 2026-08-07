@@ -55,6 +55,7 @@ export interface DbtNodeData extends Record<string, unknown> {
   showColumns?: boolean;
   columns?: Array<{ name: string; type: string }>;
   tags?: string[];
+  displayTags?: string[];
   path?: string;
   description?: string;
   metadata?: Record<string, unknown>;

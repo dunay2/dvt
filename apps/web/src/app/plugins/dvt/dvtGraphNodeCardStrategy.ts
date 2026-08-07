@@ -21,6 +21,7 @@ import {
   resolveGraphNodeRelationPath,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
+import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
 
 function buildDvtSubtitle(
   metadata: Record<string, unknown>,
@@ -76,6 +77,9 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metadata,
     data,
   });
+  const presentationCopy = isCanvasNodePresentationCopy(data.presentationCopy)
+    ? data.presentationCopy
+    : null;
   const columnPresentation = resolveColumnMetricPresentation(metadata, data);
   const columnCount = columnPresentation.count;
   const titlePresentation = buildGraphNodeTitlePresentation({
@@ -118,13 +122,14 @@ function buildDvtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
       metadata,
       data,
       node.role === 'input'
-        ? { label: 'Ready', tone: 'success' }
-        : { label: 'Draft', tone: 'warning' }
+        ? { label: presentationCopy?.readyStatusLabel ?? 'Ready', tone: 'success' }
+        : { label: presentationCopy?.draftStatusLabel ?? 'Draft', tone: 'warning' }
     ),
     metrics,
     operationalMetrics: operationalSummary.metrics,
     operationalDetail: operationalSummary.detail,
-    nodeActionsLabel: graphNodeCardCopyTokens.nodeActionsLabel,
+    nodeActionsLabel:
+      presentationCopy?.nodeActionsLabel ?? graphNodeCardCopyTokens.nodeActionsLabel,
   };
 }
 

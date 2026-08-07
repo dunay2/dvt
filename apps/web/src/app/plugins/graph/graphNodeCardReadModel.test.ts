@@ -67,7 +67,7 @@ describe('buildGraphNodeCardReadModel', () => {
     expect(model.accentTone).toBe('source');
     expect(model.technicalName).toBe('public.orders');
     expect(model.status).toEqual({ label: 'Ready', tone: 'success' });
-    expect(model.nodeActionsLabel).toBe('Más acciones del nodo');
+    expect(model.nodeActionsLabel).toBe('More node actions');
     expect(model.subtitle).toBe('warehouse.public.orders');
     expect(model.path).toBe('warehouse.public.orders');
     expect(model.metrics).toEqual([{ id: 'columns', label: 'Columns', value: '2' }]);
