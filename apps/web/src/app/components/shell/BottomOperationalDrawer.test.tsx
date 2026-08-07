@@ -8,6 +8,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AppServicesProvider } from '../../services/AppServicesContext';
 import type { RunEventFeedHealthModel } from '../../services/runs/runEventFeedHealthModel';
+import {
+  APPLICATION_LANGUAGE_STORAGE_KEY,
+  useApplicationLanguageStore,
+} from '../../stores/applicationLanguageStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import BottomOperationalDrawer from './BottomOperationalDrawer';
 import { useOperationalDrawerContributionStore } from './operationalDrawerContributionStore';
@@ -43,6 +47,8 @@ describe('BottomOperationalDrawer', () => {
     liveLogStreamState.runId = undefined;
     liveLogStreamState.health = { state: 'idle', events: [], canRetry: false };
     liveLogStreamState.retry.mockReset();
+    localStorage.removeItem(APPLICATION_LANGUAGE_STORAGE_KEY);
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
     useUiLayoutStore.setState({
       leftNavCollapsed: false,
@@ -66,6 +72,8 @@ describe('BottomOperationalDrawer', () => {
       root.unmount();
     });
     useOperationalDrawerContributionStore.setState({ activeTab: 'log', contribution: null });
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+    localStorage.removeItem(APPLICATION_LANGUAGE_STORAGE_KEY);
     vi.restoreAllMocks();
     container.remove();
   });
@@ -113,8 +121,8 @@ describe('BottomOperationalDrawer', () => {
     ).toBeNull();
   });
 
-  it('uses one host locale for drawer chrome and feed health', async () => {
-    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('es-ES');
+  it('updates drawer chrome and feed health when the application language changes', async () => {
+    vi.spyOn(window.navigator, 'language', 'get').mockReturnValue('en-US');
     liveLogStreamState.runId = 'run-42';
     liveLogStreamState.health = { state: 'degraded', events: [], canRetry: true };
 
@@ -124,6 +132,14 @@ describe('BottomOperationalDrawer', () => {
           <BottomOperationalDrawer />
         </AppServicesProvider>
       );
+    });
+
+    expect(
+      document.body.querySelector('[data-slot="bottom-operational-drawer-title"]')?.textContent
+    ).toContain('Operations');
+
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('es');
     });
 
     expect(

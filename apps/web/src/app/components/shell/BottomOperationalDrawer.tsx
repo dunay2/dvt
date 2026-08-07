@@ -2,11 +2,12 @@ import { Suspense, lazy, useEffect } from 'react';
 import { Activity, X } from 'lucide-react';
 
 import { resolveRunEventFeedHealthCopy } from '../../services/runs/runEventFeedHealthCopy';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { useUiLayoutStore } from '../../stores/uiLayoutStore';
 import { useConsoleLogStream } from '../console/useConsoleLogStream';
 import { buildBottomOperationalDrawerLogModel } from './bottomOperationalDrawerLogModel';
 import { bottomOperationalDrawerClasses } from './chrome';
-import { detectShellTopBarLocale, resolveShellTopBarCopy } from './copy';
+import { resolveShellTopBarCopy } from './copy';
 import { useOperationalDrawerContributionStore } from './operationalDrawerContributionStore';
 import {
   BottomOperationalDrawerBody,
@@ -87,7 +88,7 @@ function BottomOperationalLogBody({
 }
 
 export function BottomOperationalDrawer() {
-  const locale = detectShellTopBarLocale();
+  const locale = useApplicationLanguageStore((state) => state.language);
   const copy = resolveShellTopBarCopy(locale);
   const hideBottomDrawer = useUiLayoutStore((state) => state.hideBottomDrawer);
   const contribution = useOperationalDrawerContributionStore((state) => state.contribution);

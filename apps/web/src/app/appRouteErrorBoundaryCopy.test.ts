@@ -6,9 +6,9 @@ import { resolveAppRouteErrorBoundaryCopy } from './appRouteErrorBoundaryCopy';
 describe('appRouteErrorBoundaryCopy', () => {
   it('resolves supported route error boundary locales without component-owned strings', () => {
     expect(resolveAppRouteErrorBoundaryCopy('es-ES')).toMatchObject({
-      title: 'La aplicacion encontro un error inesperado.',
-      reloadLabel: 'Recargar aplicacion',
-      homeLabel: 'Volver al workspace',
+      title: 'La aplicación encontró un error inesperado.',
+      reloadLabel: 'Recargar aplicación',
+      homeLabel: 'Volver al espacio de trabajo',
       unexpectedRouteError: 'Se produjo un error inesperado en la ruta.',
     });
   });
