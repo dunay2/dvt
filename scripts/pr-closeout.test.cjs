@@ -1,7 +1,8 @@
 /** Owned concern: prove the governed PR closeout command plan. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { once } = require('node:events');
+const { spawn } = require('node:child_process');
+const { EventEmitter, once } = require('node:events');
 const fs = require('node:fs');
 const net = require('node:net');
 const path = require('node:path');
@@ -65,7 +66,7 @@ test('buildPrCloseoutPlan commits before the only full prepush validation and pu
 });
 
 test('OS-owned closeout lock serializes contenders and releases after completion', async () => {
-  const endpoint = resolveCloseoutLockEndpoint(`test-${process.pid}-${Date.now()}`);
+  const endpoint = resolveCloseoutLockEndpoint(`resource:test-${process.pid}-${Date.now()}`);
   let releaseFirst;
   let firstStarted;
   const started = new Promise((resolve) => {
@@ -112,7 +113,7 @@ test('closeout endpoint uses OS-released local namespaces where available', () =
 });
 
 test('OS-owned closeout lock releases automatically when the guarded task fails', async () => {
-  const endpoint = resolveCloseoutLockEndpoint(`failure-${process.pid}-${Date.now()}`);
+  const endpoint = resolveCloseoutLockEndpoint(`resource:failure-${process.pid}-${Date.now()}`);
 
   await assert.rejects(
     runWithCloseoutLock(
@@ -128,7 +129,7 @@ test('OS-owned closeout lock releases automatically when the guarded task fails'
 });
 
 test('OS-owned closeout lock rejects clients that could extend its lifetime', async () => {
-  const endpoint = resolveCloseoutLockEndpoint(`client-${process.pid}-${Date.now()}`);
+  const endpoint = resolveCloseoutLockEndpoint(`resource:client-${process.pid}-${Date.now()}`);
   let releaseTask;
   let taskStarted;
   const started = new Promise((resolve) => {
@@ -153,6 +154,106 @@ test('OS-owned closeout lock rejects clients that could extend its lifetime', as
   await guarded;
 
   assert.equal(await runWithCloseoutLock(() => 'available', { endpoint }), 'available');
+});
+
+test('machine-global Planning DB lock serializes separate checkout roots', async (t) => {
+  const checkoutRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-checkouts-'));
+  const firstCheckout = path.join(checkoutRoot, 'first');
+  const secondCheckout = path.join(checkoutRoot, 'second');
+  fs.mkdirSync(firstCheckout);
+  fs.mkdirSync(secondCheckout);
+  t.after(() => fs.rmSync(checkoutRoot, { recursive: true, force: true }));
+  let releaseFirst;
+  let firstStarted;
+  const started = new Promise((resolve) => {
+    firstStarted = resolve;
+  });
+  const hold = new Promise((resolve) => {
+    releaseFirst = resolve;
+  });
+  const first = runWithCloseoutLock(
+    async () => {
+      firstStarted();
+      await hold;
+    },
+    { repoRootPath: firstCheckout }
+  );
+  await started;
+
+  try {
+    await assert.rejects(
+      runWithCloseoutLock(() => 'second-acquired', { repoRootPath: secondCheckout }),
+      /PR_CLOSEOUT_LEASE_BUSY/u
+    );
+  } finally {
+    releaseFirst();
+    await first;
+  }
+});
+
+test('explicit path lock scope fails closed when it cannot be canonicalized', () => {
+  const missingScope = path.join(process.cwd(), `.missing-closeout-scope-${process.pid}`);
+  assert.throws(() => resolveCloseoutLockEndpoint(missingScope), /PR_CLOSEOUT_LOCK_SCOPE_FAILED/u);
+});
+
+test('closeout lock preserves task and listener-release failures', async () => {
+  const releaseError = Object.assign(new Error('listener release failed'), { code: 'EIO' });
+  const server = new EventEmitter();
+  server.listen = (_endpoint, callback) => queueMicrotask(callback);
+  server.close = (callback) => callback(releaseError);
+
+  await assert.rejects(
+    runWithCloseoutLock(
+      () => {
+        throw new Error('guarded task failed');
+      },
+      {
+        endpoint: { path: `test-double-${process.pid}` },
+        createServer: () => server,
+      }
+    ),
+    (error) => {
+      assert.ok(error instanceof AggregateError);
+      assert.match(error.message, /guarded task failed/u);
+      assert.match(error.message, /listener release failed/u);
+      assert.deepEqual(
+        error.errors.map((entry) => entry.message),
+        ['guarded task failed', 'PR_CLOSEOUT_LEASE_RELEASE_FAILED: listener release failed']
+      );
+      return true;
+    }
+  );
+});
+
+test('OS-owned closeout lock serializes processes and releases after abrupt exit', async (t) => {
+  const modulePath = path.join(__dirname, 'pr-closeout.cjs');
+  const childScript = [
+    'const { runWithCloseoutLock } = require(process.argv[1]);',
+    "runWithCloseoutLock(() => { process.stdout.write('locked\\n'); return new Promise(() => {}); });",
+  ].join(' ');
+  const child = spawn(process.execPath, ['-e', childScript, modulePath], {
+    cwd: process.cwd(),
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  t.after(() => {
+    if (child.exitCode === null) child.kill('SIGKILL');
+  });
+  let timeoutId;
+  const timeout = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error('child lock acquisition timed out')), 5_000);
+  });
+  const [startedOutput] = await Promise.race([once(child.stdout, 'data'), timeout]);
+  clearTimeout(timeoutId);
+  assert.match(String(startedOutput), /locked/u);
+
+  await assert.rejects(
+    runWithCloseoutLock(() => 'parent-acquired'),
+    /PR_CLOSEOUT_LEASE_BUSY/u
+  );
+  const exited = once(child, 'exit');
+  child.kill('SIGKILL');
+  await exited;
+  assert.equal(await runWithCloseoutLock(() => 'recovered'), 'recovered');
 });
 
 test('closeout mutual exclusion has no mutable owner or recovery records', () => {
