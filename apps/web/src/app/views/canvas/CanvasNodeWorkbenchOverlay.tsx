@@ -81,6 +81,17 @@ export function CanvasNodeWorkbenchOverlay({
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
   const positionController = useCanvasNodeWorkbenchPosition(visible);
+  const inspectorNodeId = panels.inspectorNode?.id ?? null;
+
+  const hideAndRestoreNodeFocus = (): void => {
+    onHide();
+    window.requestAnimationFrame(() => {
+      const nodeElement = Array.from(
+        document.querySelectorAll<HTMLElement>('.react-flow__node')
+      ).find((candidate) => candidate.dataset.id === inspectorNodeId);
+      nodeElement?.focus({ preventScroll: true });
+    });
+  };
 
   if (!visible || surfaceStrategy == null || panels.inspectorNode == null) {
     return null;
@@ -101,7 +112,7 @@ export function CanvasNodeWorkbenchOverlay({
         preferredTabId={panels.inspectorPreferredTabId}
         preferredTabRequestId={panels.inspectorPreferredTabRequestId}
         primarySectionIds={surfaceStrategy.nodeWorkbench.sections}
-        onClose={onHide}
+        onClose={hideAndRestoreNodeFocus}
         authoring={panels.inspectorAuthoring}
         contributions={panels.inspectorWorkbenchContributions}
         onOpenNodeCode={onOpenNodeCode}

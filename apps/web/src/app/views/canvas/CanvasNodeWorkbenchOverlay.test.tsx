@@ -199,6 +199,27 @@ describe('CanvasNodeWorkbenchOverlay', () => {
     expect(Number.parseFloat(overlay.style.left)).toBe(initialLeft - 8);
   });
 
+  it('restores focus to the inspected graph node after closing the workbench', async () => {
+    const onHide = vi.fn();
+    const graphNode = document.createElement('div');
+    graphNode.className = 'react-flow__node';
+    graphNode.dataset.id = NODE.id;
+    graphNode.tabIndex = 0;
+    document.body.appendChild(graphNode);
+    renderOverlay(root, { onHide });
+
+    act(() => {
+      (workbenchState.props?.onClose as (() => void) | undefined)?.();
+    });
+    await act(async () => {
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+    });
+
+    expect(onHide).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(graphNode);
+    graphNode.remove();
+  });
+
   it('does not mount node workbench chrome when the surface strategy is unavailable', () => {
     renderOverlay(root, {
       layout: {
