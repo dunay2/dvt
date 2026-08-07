@@ -477,6 +477,23 @@ test('live Planning DB workflow provides explicit Git refs to the importer', () 
   assert.ok(workflowScope.generated_status_relevant.includes('buzon/*.md'));
 });
 
+test('Repository Map publication provisions the pinned Zensical runtime first', () => {
+  const workflow = fs.readFileSync(prQualityWorkflowPath, 'utf8');
+  const setupPythonIndex = workflow.indexOf('name: Setup Python for Repository Map publication');
+  const installZensicalIndex = workflow.indexOf(
+    'name: Install Zensical for Repository Map publication'
+  );
+  const publicationIndex = workflow.indexOf('name: Validate Repository Map publication and links');
+
+  assert.ok(setupPythonIndex >= 0, 'expected a Repository Map Python setup step');
+  assert.ok(installZensicalIndex > setupPythonIndex, 'expected Zensical installation after Python');
+  assert.ok(publicationIndex > installZensicalIndex, 'expected publication after Zensical setup');
+  assert.match(
+    workflow.slice(installZensicalIndex, publicationIndex),
+    /python -m pip install zensical==0\.0\.39/u
+  );
+});
+
 test(
   'live Planning DB migration/import renders current workspaces without false document bindings',
   { skip: process.env.DVT_REPOSITORY_MAP_INTEGRATION !== '1' },
