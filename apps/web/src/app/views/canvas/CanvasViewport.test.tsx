@@ -10,7 +10,8 @@ vi.mock(
 );
 
 import { deriveCanvasPaletteTokens, normalizeCanvasPaletteId } from './canvasPalette';
-import { canvasViewCopy } from './canvasCopyCatalog';
+import { canvasViewCopy, resolveCanvasViewCopy } from './canvasCopyCatalog';
+import { buildCanvasReactFlowAriaLabelConfig } from './CanvasViewportSurfaceView';
 import {
   buildCanvasViewportProps,
   createCanvasViewportHarness,
@@ -45,6 +46,19 @@ describe('CanvasViewport', () => {
     const buttons = Array.from(container.querySelectorAll('button'));
     expect(buttons.some((button) => button.ariaLabel === 'Show explorer panel')).toBe(false);
     expect(buttons.some((button) => button.ariaLabel === 'Show inspector panel')).toBe(false);
+  });
+
+  it('localizes the React Flow accessibility surface for the active language', () => {
+    expect(buildCanvasReactFlowAriaLabelConfig(resolveCanvasViewCopy('es'))).toMatchObject({
+      'node.a11yDescription.default':
+        'Pulsa Intro o Espacio para seleccionar un nodo. Usa las flechas para moverlo.',
+      'edge.a11yDescription.default': 'Pulsa Suprimir para eliminar esta conexión.',
+      'controls.ariaLabel': 'Controles del lienzo',
+      'controls.zoomIn.ariaLabel': 'Acercar',
+      'controls.zoomOut.ariaLabel': 'Alejar',
+      'controls.fitView.ariaLabel': 'Ajustar vista',
+      'minimap.ariaLabel': 'Minimapa del lienzo',
+    });
   });
 
   it('resolves minimap color from node registry while keeping the graph canvas chrome minimal', async () => {
@@ -82,6 +96,10 @@ describe('CanvasViewport', () => {
       nodesConnectable: true,
       snapToGrid: false,
       snapGrid: [32, 32],
+      ariaLabelConfig: {
+        'controls.ariaLabel': 'Canvas controls',
+        'minimap.ariaLabel': 'Canvas minimap',
+      },
     });
     expect(container.querySelector('[data-testid="background"]')).toBeNull();
     expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
