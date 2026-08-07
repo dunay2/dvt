@@ -65,7 +65,7 @@ export function ShellTopBar({
 
   return (
     <TooltipProvider>
-      <div data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
+      <header data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
         <div
           data-slot="shell-top-bar-context-cluster"
           className="flex w-full min-w-0 items-center gap-1 sm:w-auto sm:flex-1 sm:gap-2"
@@ -135,7 +135,7 @@ export function ShellTopBar({
             copy={copy}
           />
         </div>
-      </div>
+      </header>
     </TooltipProvider>
   );
 }
