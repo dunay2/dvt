@@ -212,6 +212,13 @@ describe('ShellTopBar workspace context', () => {
     expect(activeCanvasIdentity?.getAttribute('data-canvas-id')).toBe('transformation-canvas');
     expect(topBar?.querySelector('[data-slot="shell-top-bar-canvas-controls"]')).toBeNull();
     expect(topBar?.querySelector('[data-slot="shell-project-identity-badge"]')).toBeNull();
+    expect(topBar?.className).toContain('flex-wrap');
+    expect(
+      topBar?.querySelector('[data-slot="shell-top-bar-context-cluster"]')?.className
+    ).toContain('w-full');
+    expect(
+      topBar?.querySelector('[data-slot="shell-top-bar-command-cluster"]')?.className
+    ).toContain('w-full');
   });
 
   it('renders Canvas run readiness as compact top-bar status without restoring Plan chrome', async () => {

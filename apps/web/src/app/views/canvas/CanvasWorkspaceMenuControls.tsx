@@ -181,7 +181,7 @@ export function CanvasWorkspaceTopBarIdentity(): JSX.Element | null {
       data-slot="shell-active-canvas-identity"
       data-canvas-id={activeCanvas.id}
       data-kind={activeCanvas.kind}
-      className="flex min-w-0 max-w-28 items-center gap-2 rounded-sm border border-(--border-muted) bg-(--surface-panel-subtle) px-2.5 py-1 text-xs sm:max-w-64 lg:max-w-[24rem]"
+      className="flex min-w-0 max-w-[calc(100%-2.5rem)] shrink-0 items-center gap-2 rounded-sm border border-(--border-muted) bg-(--surface-panel-subtle) px-2.5 py-1 text-xs sm:max-w-64 lg:max-w-[24rem]"
       aria-label={canvasViewCopy.workspaceActiveCanvasLabelTemplate.replace(
         '{title}',
         activeCanvas.title
