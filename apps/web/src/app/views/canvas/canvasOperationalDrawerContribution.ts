@@ -12,7 +12,7 @@ import type {
 } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerSelectionRecoveryMessages } from '../../components/shell/operationalDrawerSelectionRecoveryMessages';
 import type { PlanRunReadinessBlocker, PlanRunReadinessReadModel } from './canvasPlanReadiness';
-import { canvasViewCopy } from './copy';
+import { canvasViewCopy, formatCanvasCopyTemplate, type CanvasViewCopy } from './copy';
 
 type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   policy: CanvasOperationalDrawerSurfacePolicy;
@@ -26,22 +26,41 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   selectionRecovery?: CanvasExecutionSelectionRecoveryReadModel | null;
   selectionRecoveryCommands?: CanvasExecutionSelectionRecoveryCommands | null;
   selectionRecoveryMessages?: OperationalDrawerSelectionRecoveryMessages;
+  copy?: CanvasViewCopy;
   onPreviewExecutionPlan: () => void;
   onStartRun: () => void;
 }>;
 
-const tabLabels = {
-  log: 'Log',
-  problems: 'Problems',
-  runs: 'Runs',
-  preview: 'Preview',
-} satisfies Record<OperationalDrawerTabId, string>;
+function buildTabLabels(copy: CanvasViewCopy): Record<OperationalDrawerTabId, string> {
+  return {
+    log: copy.operationalDrawerLogTab,
+    problems: copy.operationalDrawerProblemsTab,
+    runs: copy.operationalDrawerRunsTab,
+    preview: copy.operationalDrawerPreviewTab,
+  };
+}
+
+function labelReadinessBlocker(blocker: PlanRunReadinessBlocker, copy: CanvasViewCopy): string {
+  switch (blocker) {
+    case 'plan_integrity':
+      return copy.operationalDrawerPlanIntegrityBlocker;
+    case 'backpressure':
+      return copy.operationalDrawerBackpressureBlocker;
+    case 'capability_mismatch':
+      return copy.operationalDrawerCapabilityMismatchBlocker;
+    case 'adapter_degraded':
+      return copy.operationalDrawerAdapterDegradedBlocker;
+    case 'authorization_denied':
+      return copy.operationalDrawerAuthorizationDeniedBlocker;
+  }
+}
 
 function buildReadinessProblems({
   blockers,
   canPreviewExecutionPlan,
   planRunReadiness,
   planStatusSummary,
+  previewActionLabel,
   labelBlocker,
   onPreviewExecutionPlan,
 }: Readonly<{
@@ -49,6 +68,7 @@ function buildReadinessProblems({
   canPreviewExecutionPlan: boolean;
   planRunReadiness: PlanRunReadinessReadModel;
   planStatusSummary: string;
+  previewActionLabel: string;
   labelBlocker: (blocker: PlanRunReadinessBlocker) => string;
   onPreviewExecutionPlan: () => void;
 }>): readonly OperationalDrawerProblem[] {
@@ -64,7 +84,7 @@ function buildReadinessProblems({
     action:
       canPreviewExecutionPlan && blocker === 'plan_integrity'
         ? {
-            label: 'Preview execution plan',
+            label: previewActionLabel,
             onAction: onPreviewExecutionPlan,
           }
         : null,
@@ -81,6 +101,7 @@ export function buildCanvasOperationalDrawerContribution({
   planRunReadiness,
   planStatusSummary,
   policy,
+  copy = canvasViewCopy,
   runControls = null,
   selectionRecovery = null,
   selectionRecoveryCommands = null,
@@ -89,12 +110,8 @@ export function buildCanvasOperationalDrawerContribution({
   const selectionRecoveryBlocked = selectionRecovery?.status === 'blocked';
   const canPreviewExecutionPlan = canPlan && canPlanGraph && !selectionRecoveryBlocked;
   const labelBlocker = (blocker: PlanRunReadinessBlocker): string =>
-    blocker === 'plan_integrity'
-      ? 'Execution Preview integrity'
-      : blocker
-          .split('_')
-          .map((part, index) => (index === 0 ? part[0]?.toUpperCase() + part.slice(1) : part))
-          .join(' ');
+    labelReadinessBlocker(blocker, copy);
+  const tabLabels = buildTabLabels(copy);
   const readinessBlockers: readonly PlanRunReadinessBlocker[] =
     planRunReadiness.status === 'ready'
       ? []
@@ -106,6 +123,7 @@ export function buildCanvasOperationalDrawerContribution({
     canPreviewExecutionPlan,
     planRunReadiness,
     planStatusSummary,
+    previewActionLabel: copy.operationalDrawerPreviewAction,
     labelBlocker,
     onPreviewExecutionPlan,
   });
@@ -130,7 +148,25 @@ export function buildCanvasOperationalDrawerContribution({
 
   return {
     source: 'canvas',
-    title: 'Canvas operations',
+    title: copy.operationalDrawerTitle,
+    copy: {
+      problemsAriaLabel: copy.operationalDrawerProblemsAriaLabel,
+      noProblemsMessage: copy.operationalDrawerNoProblemsMessage,
+      runsAriaLabel: copy.operationalDrawerRunsAriaLabel,
+      runReadyStatus: copy.operationalDrawerRunReadyStatus,
+      runBlockedStatus: copy.operationalDrawerRunBlockedStatus,
+      runActiveStatus: copy.operationalDrawerRunActiveStatus,
+      previewAriaLabel: copy.operationalDrawerPreviewAriaLabel,
+      previewAction: copy.operationalDrawerPreviewAction,
+      previewReadyStatus: copy.operationalDrawerPreviewReadyStatus,
+      previewBlockedStatus: copy.operationalDrawerPreviewBlockedStatus,
+      tabsAriaLabel: copy.operationalDrawerTabsAriaLabel,
+      severity: {
+        info: copy.operationalDrawerInfoSeverity,
+        warning: copy.operationalDrawerWarningSeverity,
+        error: copy.operationalDrawerErrorSeverity,
+      },
+    },
     tabs: policy.tabs.map((id) => ({
       id,
       label: tabLabels[id],
@@ -154,9 +190,11 @@ export function buildCanvasOperationalDrawerContribution({
       status: runsStatus,
       summary:
         runsStatus === 'active'
-          ? `Run ${activeRunId} is active.`
+          ? formatCanvasCopyTemplate(copy.operationalDrawerActiveRunSummaryTemplate, {
+              runId: activeRunId ?? '',
+            })
           : runsStatus === 'ready'
-            ? 'Run is ready after the current execution preview.'
+            ? copy.operationalDrawerReadyRunSummary
             : planRunReadiness.summary || planStatusSummary,
     },
     preview: {

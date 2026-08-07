@@ -17,6 +17,20 @@ function buildCanvasOperationalDrawerContribution(
   return {
     source: 'canvas',
     title: 'Canvas operations',
+    copy: {
+      problemsAriaLabel: 'Canvas problems',
+      noProblemsMessage: 'No current Canvas problems.',
+      runsAriaLabel: 'Canvas runs',
+      runReadyStatus: 'Run ready',
+      runBlockedStatus: 'Run blocked',
+      runActiveStatus: 'Active run',
+      previewAriaLabel: 'Canvas execution preview',
+      previewAction: 'Preview execution plan',
+      previewReadyStatus: 'Preview ready',
+      previewBlockedStatus: 'Preview blocked',
+      tabsAriaLabel: 'Canvas operational drawer',
+      severity: { info: 'Info', warning: 'Warning', error: 'Error' },
+    },
     tabs: [
       { id: 'log', label: 'Log', count: null },
       { id: 'problems', label: 'Problems', count: 1 },
@@ -134,7 +148,7 @@ describe('OperationalDrawerPanels', () => {
     expect(container.textContent).not.toContain('plan_integrity');
     expect(
       container.querySelector('[data-slot="bottom-operational-problem-severity"]')?.textContent
-    ).toBe('warning');
+    ).toBe('Warning');
 
     await act(async () => {
       root.render(
@@ -189,5 +203,111 @@ describe('OperationalDrawerPanels', () => {
     });
 
     expect(container.textContent).toBe('log stream');
+  });
+
+  it('renders all contributed Spanish labels, status text, actions, and accessible names', async () => {
+    const contribution = buildCanvasOperationalDrawerContribution({
+      title: 'Operaciones del Canvas',
+      copy: {
+        problemsAriaLabel: 'Problemas del Canvas',
+        noProblemsMessage: 'No hay problemas actuales en el Canvas.',
+        runsAriaLabel: 'Ejecuciones del Canvas',
+        runReadyStatus: 'Ejecución lista',
+        runBlockedStatus: 'Ejecución bloqueada',
+        runActiveStatus: 'Ejecución activa',
+        previewAriaLabel: 'Vista previa de ejecución del Canvas',
+        previewAction: 'Previsualizar el plan de ejecución',
+        previewReadyStatus: 'Vista previa lista',
+        previewBlockedStatus: 'Vista previa bloqueada',
+        tabsAriaLabel: 'Cajón operativo del Canvas',
+        severity: { info: 'Información', warning: 'Advertencia', error: 'Error' },
+      },
+      tabs: [
+        { id: 'log', label: 'Registro', count: null },
+        { id: 'problems', label: 'Problemas', count: 1 },
+        { id: 'runs', label: 'Ejecuciones', count: 1 },
+        { id: 'preview', label: 'Vista previa', count: 1 },
+      ],
+      problems: {
+        items: [
+          {
+            id: 'plan_integrity',
+            severity: 'warning',
+            message: 'Se requiere una vista previa antes de ejecutar.',
+            detail: 'Integridad del Execution Preview',
+          },
+        ],
+      },
+      runs: {
+        activeRunId: null,
+        canStartRun: false,
+        controls: null,
+        onStartRun: vi.fn(),
+        status: 'blocked',
+        summary: 'Se requiere una vista previa antes de ejecutar.',
+      },
+      preview: {
+        status: 'blocked',
+        summary: 'Se requiere una vista previa antes de ejecutar.',
+        blockers: ['Integridad del Execution Preview'],
+        canPreview: true,
+        onPreviewExecutionPlan: vi.fn(),
+        selectionRecovery: null,
+      },
+    });
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerTabs
+          activeTab="log"
+          contribution={contribution}
+          onSelectTab={vi.fn()}
+        />
+      );
+    });
+    expect(container.querySelector('[role="tablist"]')?.getAttribute('aria-label')).toBe(
+      'Cajón operativo del Canvas'
+    );
+    expect(container.textContent).toContain('Registro');
+    expect(container.textContent).toContain('Vista previa');
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="problems"
+          contribution={contribution}
+          logBody={null}
+        />
+      );
+    });
+    expect(container.querySelector('section')?.getAttribute('aria-label')).toBe(
+      'Problemas del Canvas'
+    );
+    expect(container.textContent).toContain('Advertencia');
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody activeTab="runs" contribution={contribution} logBody={null} />
+      );
+    });
+    expect(container.querySelector('section')?.getAttribute('aria-label')).toBe(
+      'Ejecuciones del Canvas'
+    );
+    expect(container.textContent).toContain('Ejecución bloqueada');
+
+    await act(async () => {
+      root.render(
+        <BottomOperationalDrawerBody
+          activeTab="preview"
+          contribution={contribution}
+          logBody={null}
+        />
+      );
+    });
+    expect(container.querySelector('section')?.getAttribute('aria-label')).toBe(
+      'Vista previa de ejecución del Canvas'
+    );
+    expect(container.textContent).toContain('Vista previa bloqueada');
+    expect(container.textContent).toContain('Previsualizar el plan de ejecución');
   });
 });

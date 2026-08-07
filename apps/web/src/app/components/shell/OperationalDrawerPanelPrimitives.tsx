@@ -90,17 +90,17 @@ export function OperationalDrawerProblemItem({
   action,
   detail,
   message,
-  severity,
+  severityLabel,
 }: Readonly<{
   action?: Readonly<{ label: string; onAction: () => void }> | null;
   detail: string;
   message: string;
-  severity: string;
+  severityLabel: string;
 }>): JSX.Element {
   return (
     <li className={operationalDrawerPanelClassNames.problemItem}>
       <OperationalDrawerWarningBadge dataSlot="bottom-operational-problem-severity">
-        {severity}
+        {severityLabel}
       </OperationalDrawerWarningBadge>
       <span className={operationalDrawerPanelClassNames.problemMessageFrame}>
         <span className={operationalDrawerPanelClassNames.problemMessage}>{message}</span>
@@ -150,9 +150,9 @@ export function OperationalDrawerSectionKicker({
 
 export function OperationalDrawerRunActiveSummary({
   activeRunId,
-  statusLabel = 'Active run',
+  statusLabel,
   summary,
-}: Readonly<{ activeRunId: string; statusLabel?: string; summary?: string }>): JSX.Element {
+}: Readonly<{ activeRunId: string; statusLabel: string; summary?: string }>): JSX.Element {
   return (
     <div className={operationalDrawerPanelClassNames.runSummary}>
       <span className={operationalDrawerPanelClassNames.runSummaryLabel}>{statusLabel}</span>

@@ -29,10 +29,12 @@ export function BottomOperationalProblemsPanel({
   return (
     <OperationalDrawerPanelSurface
       dataSlot="bottom-operational-drawer-problems"
-      ariaLabel="Canvas problems"
+      ariaLabel={contribution.copy.problemsAriaLabel}
     >
       {problems.length === 0 ? (
-        <OperationalDrawerEmptyState>No current Canvas problems.</OperationalDrawerEmptyState>
+        <OperationalDrawerEmptyState>
+          {contribution.copy.noProblemsMessage}
+        </OperationalDrawerEmptyState>
       ) : (
         <OperationalDrawerProblemList>
           {problems.map((problem) => (
@@ -40,7 +42,7 @@ export function BottomOperationalProblemsPanel({
               key={problem.id}
               detail={problem.detail}
               message={problem.message}
-              severity={problem.severity}
+              severityLabel={contribution.copy.severity[problem.severity]}
               action={problem.action}
             />
           ))}
@@ -56,17 +58,17 @@ export function BottomOperationalRunsPanel({
   return (
     <OperationalDrawerPanelSurface
       dataSlot="bottom-operational-drawer-runs"
-      ariaLabel="Canvas runs"
+      ariaLabel={contribution.copy.runsAriaLabel}
       textSm
     >
       {contribution.runs.activeRunId == null ? (
         <OperationalDrawerRunStatusSummary
           statusLabel={
             contribution.runs.status === 'ready'
-              ? 'Run ready'
+              ? contribution.copy.runReadyStatus
               : contribution.runs.status === 'blocked'
-                ? 'Run blocked'
-                : 'Run active'
+                ? contribution.copy.runBlockedStatus
+                : contribution.copy.runActiveStatus
           }
           summary={contribution.runs.summary}
         />
@@ -89,6 +91,7 @@ export function BottomOperationalRunsPanel({
         >
           <OperationalDrawerRunActiveSummary
             activeRunId={contribution.runs.activeRunId}
+            statusLabel={contribution.copy.runActiveStatus}
             summary={contribution.runs.summary}
           />
         </OperationalDrawerRunLayout>
@@ -103,7 +106,7 @@ export function BottomOperationalPreviewPanel({
   return (
     <OperationalDrawerPanelSurface
       dataSlot="bottom-operational-drawer-preview"
-      ariaLabel="Canvas execution preview"
+      ariaLabel={contribution.copy.previewAriaLabel}
       textSm
     >
       <>
@@ -113,14 +116,16 @@ export function BottomOperationalPreviewPanel({
               disabled={!contribution.preview.canPreview}
               onClick={contribution.preview.onPreviewExecutionPlan}
             >
-              Preview execution plan
+              {contribution.copy.previewAction}
             </OperationalDrawerPrimaryAction>
           }
         >
           <OperationalDrawerPreviewSummary
             blockers={contribution.preview.blockers}
             statusLabel={
-              contribution.preview.status === 'ready' ? 'Preview ready' : 'Preview blocked'
+              contribution.preview.status === 'ready'
+                ? contribution.copy.previewReadyStatus
+                : contribution.copy.previewBlockedStatus
             }
             summary={contribution.preview.summary}
           />
@@ -149,7 +154,7 @@ export function BottomOperationalDrawerTabs({
   return (
     <OperationalDrawerTabs
       activeTab={activeTab}
-      ariaLabel="Canvas operational drawer"
+      ariaLabel={contribution.copy.tabsAriaLabel}
       onSelectTab={onSelectTab}
       tabs={contribution.tabs}
     />
