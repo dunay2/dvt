@@ -130,7 +130,7 @@ describe('Canvas DBT execution-selection recovery live protected runtime', () =>
     waitForPersistedNodeAbsence('dbt-model-1');
 
     revealOperationalDrawer();
-    cy.contains('[data-slot="bottom-operational-drawer-tab"]', 'Preview').click();
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]').click();
     cy.get('[data-slot="bottom-operational-selection-status"]')
       .invoke('text')
       .should('match', /blocked|bloqueada/i);
@@ -154,10 +154,7 @@ describe('Canvas DBT execution-selection recovery live protected runtime', () =>
     cy.contains(/^(Admitted scope|Alcance admitido)$/)
       .parent()
       .should('contain.text', 'dbt-model-2');
-    cy.contains(
-      '[data-slot="bottom-operational-drawer-preview"] button',
-      /Preview execution plan|Previsualizar plan/
-    ).should('be.enabled');
+    cy.get('[data-slot="bottom-operational-preview-action"]').should('be.enabled');
     cy.screenshot('canvas-dbt-selection-recovery-live-ready');
   });
 });
