@@ -207,6 +207,7 @@ describe('OperationalDrawerPanels', () => {
   });
 
   it('renders all contributed Spanish labels, status text, actions, and accessible names', async () => {
+    container.style.width = '320px';
     const contribution = buildCanvasOperationalDrawerContribution({
       title: 'Operaciones del Canvas',
       copy: {
@@ -266,9 +267,12 @@ describe('OperationalDrawerPanels', () => {
         />
       );
     });
-    expect(container.querySelector('[role="tablist"]')?.getAttribute('aria-label')).toBe(
-      'Cajón operativo del Canvas'
-    );
+    const tabList = container.querySelector<HTMLElement>('[role="tablist"]');
+    const tabs = Array.from(tabList?.querySelectorAll<HTMLElement>('[role="tab"]') ?? []);
+    expect(tabList?.getAttribute('aria-label')).toBe('Cajón operativo del Canvas');
+    expect(tabList?.className).toContain('overflow-x-auto');
+    expect(tabs).toHaveLength(4);
+    expect(tabs.every((tab) => tab.className.includes('shrink-0'))).toBe(true);
     expect(container.textContent).toContain('Registro');
     expect(container.textContent).toContain('Vista previa');
 
