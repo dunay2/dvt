@@ -406,6 +406,34 @@ test('closeout lease recovers a stale recovery reservation', (t) => {
   releaseCloseoutLease({}, runtime);
 });
 
+test('closeout lease bounds partial recovery reservations by the initialization grace', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-partial-recovery-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const recoveryPath = path.join(leaseDir, 'recovery.json');
+  const runtime = {};
+  const commonOptions = {
+    closeoutLeaseDir: leaseDir,
+    processId: 202,
+    createLeaseToken: () => 'successor-token',
+    getProcessIdentity: getTestProcessIdentity,
+    closeoutLeaseInitializationGraceMs: 30_000,
+  };
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+  fs.mkdirSync(leaseDir);
+  fs.writeFileSync(recoveryPath, '{"pid":101', 'utf8');
+
+  assert.throws(() => acquireCloseoutLease(commonOptions, runtime), /PR_CLOSEOUT_LEASE_BUSY/u);
+
+  const staleTime = new Date(Date.now() - 60_000);
+  fs.utimesSync(recoveryPath, staleTime, staleTime);
+  acquireCloseoutLease(commonOptions, runtime);
+
+  const owner = JSON.parse(fs.readFileSync(path.join(leaseDir, 'owner.json'), 'utf8'));
+  assert.equal(owner.token, 'successor-token');
+  assert.equal(runtime.closeoutLeaseOwned, true);
+  releaseCloseoutLease({}, runtime);
+});
+
 test('closeout lease bounds recovery of partially written owner files by the initialization grace', (t) => {
   const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-partial-owner-'));
   const ownerContents = ['', '{"pid":101', `${JSON.stringify({ pid: 101 })}\n`];

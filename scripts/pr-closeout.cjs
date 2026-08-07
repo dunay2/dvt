@@ -620,6 +620,19 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
         reservation = readCloseoutLeaseRecord(recoveryPath, options);
       }
 
+      if (!reservation) {
+        try {
+          rmSync(recoveryPath, { force: false });
+          recoveredStaleReservation = true;
+        } catch (recoveryError) {
+          if (recoveryError?.code === 'ENOENT') continue;
+          throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${recoveryError.message}`, {
+            cause: recoveryError,
+          });
+        }
+        continue;
+      }
+
       if (reservation && ownerIsActive(reservation)) {
         throw new Error(
           `PR_CLOSEOUT_LEASE_BUSY: recovery reserved by process ${reservation.pid}. Retry after it finishes.`,
