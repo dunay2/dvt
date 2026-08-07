@@ -136,9 +136,12 @@ flowchart LR
   The operating system performs the atomic bind, rejects every concurrent
   contender, and releases the endpoint when the process exits; an explicit
   path scope fails closed when it cannot be canonicalized, cleanup preserves
-  both task and listener-release failures, and no stale owner record, token
+  both task and listener-release failures, a runtime listener error remains
+  pending until the guarded task settles, and no stale owner record, token
   comparison, quarantine, or pathname deletion participates in mutual
-  exclusion.
+  exclusion. Regression tests use explicit isolated resource scopes so the
+  full pre-push child suite can run while the parent owns the production lock;
+  the TCP fallback also proves real bind, contention, and release behavior.
 - PR publication and docs deployment use the same exact Python patch and the
   same hash-locked pip/Zensical dependency graph, with no moving upgrade step.
 - Feature mechanization, docs governance, CI tools, ARC evaluation, and the full
@@ -444,6 +447,13 @@ redGreenCycles:
   - id: shared-planning-db-closeout-lock-review
     redTest: node --test scripts/pr-closeout.test.cjs
     expectedFailure: Checkout-scoped endpoints allow separate clones to mutate the same machine-global Planning DB concurrently, realpath failure degrades to a second identity, and listener-release failure is hidden when the guarded task also fails.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node --test scripts/pr-closeout.test.cjs
+  - id: nested-closeout-validation-review
+    redTest: node --test scripts/pr-closeout.test.cjs
+    expectedFailure: Focal tests that acquire the production resource deadlock under the parent closeout lock, while a runtime listener error can release an async task's endpoint before that task settles and the TCP fallback lacks an executable bind-contention-release regression.
     patchSurfaces:
       - scripts/pr-closeout.cjs
       - scripts/pr-closeout.test.cjs
