@@ -112,6 +112,12 @@ flowchart LR
   the root package repository URL; they never render as unpublished relative
   site paths.
 - Governance refresh converges after the final DB-backed map.
+- Local closeout routes every canonical-binding and workspace-fallback input
+  through the same Repository Map gate used by CI, including the root and
+  non-standard workspace paths.
+- A Planning DB runtime started by local closeout remains available through the
+  full pre-push consumer and is released only afterward or during fail-closed
+  cleanup.
 - Feature mechanization, docs governance, CI tools, ARC evaluation, and the full
   pre-push gate pass without disabled rules or bypassed hooks.
 - Review threads are answered with commit/test evidence, the temporary
@@ -317,6 +323,17 @@ redGreenCycles:
       - tools/ci/policy/workflow-scope.json
       - tools/ci/workflow-scope-classification.test.mjs
     greenTest: node --test scripts/generate-code-status.test.cjs scripts/planning-db-run.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
+  - id: final-source-and-lifecycle-review
+    redTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
+    expectedFailure: Local closeout releases its owned Planning DB before full pre-push, canonical-binding inputs do not schedule Repository Map regeneration, and root or non-standard workspace README/source inputs can bypass local and remote gates.
+    patchSurfaces:
+      - docs/generated-docs-policy.json
+      - scripts/generate-code-status.test.cjs
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+      - tools/ci/policy/workflow-scope.json
+      - tools/ci/workflow-scope-classification.test.mjs
+    greenTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
 symbols:
   - &repositoryMapSymbol
     name: GENERATION_MODES
