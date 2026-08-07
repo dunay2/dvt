@@ -34785,7 +34785,7 @@
     {
       "railId": "local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties",
       "featureId": "WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619",
-      "mechanizationStatus": "implemented",
+      "mechanizationStatus": "closed",
       "railName": "InspectCanvasNodeProperties",
       "normalizedRailName": "inspectcanvasnodeproperties",
       "railType": "query",
@@ -34891,7 +34891,7 @@
           "apps/web/src/app/views/canvas/CanvasShellMainPanel.architecture.test.ts"
         ],
         "implementationPlan": "CanvasNodeWorkbenchPanel consumes the canonical InspectCanvasNodeProperties query owned by NodePropertiesReadModel and does not redeclare that rail.",
-        "mechanizationStatus": "implemented",
+        "mechanizationStatus": "closed",
         "noHumanDecisionsRemaining": true,
         "allowedImplementationSurfaces": [
           "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx",
@@ -34901,7 +34901,7 @@
           "apps/web/src/app/components/InspectorPanel.tsx"
         ]
       },
-      "revision": 8,
+      "revision": 10,
       "createdBy": "codex",
       "createdAt": "2026-08-02T09:29:37.877Z"
     },
@@ -52009,6 +52009,83 @@
         "forbiddenImplementationSurfaces": ["apps/api"]
       },
       "createdAt": "2026-08-07T00:18:43.713Z"
+    },
+    {
+      "operationId": "11f221f7-0d8c-4c17-a7d4-a924092febe0",
+      "idempotencyKey": "codex-retire-workbench-inspect-canvas-node-properties-20260806",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties",
+      "sourcePath": "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx",
+      "sourceContentSha256": "8372ec8e1359f0a580232a64478733648d1f2251b9580ba70da016baf07394cd",
+      "expectedRevision": 9,
+      "previousRevision": 9,
+      "resultingRevision": 10,
+      "payload": {
+        "redTest": "pnpm planning:db:integrity:check",
+        "dddOwner": "CanvasNodeWorkbenchPanel",
+        "railName": "InspectCanvasNodeProperties",
+        "railType": "query",
+        "featureId": "WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619",
+        "greenTest": "pnpm planning:db:integrity:check",
+        "sourceRef": "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx"
+        ],
+        "railStatus": "retired",
+        "userStories": [
+          "As a Canvas author, I inspect one canonical node-properties read model through the workbench without duplicate query ownership."
+        ],
+        "cypressFlows": ["not_applicable:component_boundary"],
+        "domainObjects": [
+          "CanvasNodeWorkbenchPanel",
+          "NodePropertiesReadModel"
+        ],
+        "fowlerSignals": [
+          "separated-interface",
+          "presentation-model",
+          "single-responsibility"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx"
+        ],
+        "completionGate": [
+          "pnpm planning:db:integrity:check",
+          "pnpm docs:feature-mechanization:implementation",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md"
+        ],
+        "expectedFailure": "InspectCanvasNodeProperties is declared as implemented by two owning features.",
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md"
+        ],
+        "architectureGuards": [
+          "apps/web/src/app/views/canvas/CanvasShellMainPanel.architecture.test.ts"
+        ],
+        "implementationPlan": "CanvasNodeWorkbenchPanel consumes the canonical InspectCanvasNodeProperties query owned by NodePropertiesReadModel and does not redeclare that rail.",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx#CanvasNodeWorkbenchPanel"
+        ],
+        "normalizedRailName": "inspectcanvasnodeproperties",
+        "mechanizationStatus": "closed",
+        "sourceContentSha256": "8372ec8e1359f0a580232a64478733648d1f2251b9580ba70da016baf07394cd",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx",
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "apps/web/src/app/components/InspectorPanel.tsx"
+        ]
+      },
+      "createdAt": "2026-08-07T00:45:54.813Z"
     }
   ]
 }
