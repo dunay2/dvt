@@ -81,7 +81,7 @@ export const canvasViewExecutionCopyEs = {
   operationalDrawerReadyRunSummary:
     'La ejecución está lista tras la vista previa de ejecución actual.',
   operationalDrawerPreviewAriaLabel: 'Vista previa de ejecución del Canvas',
-  operationalDrawerPreviewAction: 'Previsualizar el plan de ejecución',
+  operationalDrawerPreviewAction: 'Crear Execution Preview',
   operationalDrawerPreviewReadyStatus: 'Vista previa lista',
   operationalDrawerPreviewBlockedStatus: 'Vista previa bloqueada',
   operationalDrawerTabsAriaLabel: 'Cajón operativo del Canvas',

@@ -27,7 +27,7 @@ function buildContribution(
       runBlockedStatus: 'Run blocked',
       runActiveStatus: 'Active run',
       previewAriaLabel: 'Canvas execution preview',
-      previewAction: 'Preview execution plan',
+      previewAction: 'Create Execution Preview',
       previewReadyStatus: 'Preview ready',
       previewBlockedStatus: 'Preview blocked',
       tabsAriaLabel: 'Canvas operational drawer',
@@ -47,7 +47,7 @@ function buildContribution(
           message: 'Preview required before running.',
           detail: 'Execution Preview integrity',
           action: {
-            label: 'Preview execution plan',
+            label: 'Create Execution Preview',
             onAction: vi.fn(),
           },
         },
@@ -101,7 +101,7 @@ describe('OperationalDrawerPanels action surfaces', () => {
             severity: 'warning',
             message: 'Preview required before running.',
             detail: 'Execution Preview integrity',
-            action: { label: 'Preview execution plan', onAction },
+            action: { label: 'Create Execution Preview', onAction },
           },
         ],
       },
@@ -112,7 +112,7 @@ describe('OperationalDrawerPanels action surfaces', () => {
     });
 
     const action = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Preview execution plan')
+      button.textContent?.includes('Create Execution Preview')
     );
 
     expect(action).not.toBeNull();

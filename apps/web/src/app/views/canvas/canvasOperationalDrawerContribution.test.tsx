@@ -43,7 +43,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         id: 'plan_integrity',
         severity: 'warning',
         detail: 'Execution Preview integrity',
-        action: expect.objectContaining({ label: 'Preview execution plan' }),
+        action: expect.objectContaining({ label: 'Create Execution Preview' }),
       }),
       expect.objectContaining({
         id: 'backpressure',
@@ -231,7 +231,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
         runsAriaLabel: 'Ejecuciones del Canvas',
         runBlockedStatus: 'Ejecución bloqueada',
         previewAriaLabel: 'Vista previa de ejecución del Canvas',
-        previewAction: 'Previsualizar el plan de ejecución',
+        previewAction: 'Crear Execution Preview',
         previewBlockedStatus: 'Vista previa bloqueada',
         tabsAriaLabel: 'Cajón operativo del Canvas',
         severity: { info: 'Información', warning: 'Advertencia', error: 'Error' },
@@ -247,9 +247,7 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       'Integridad del Execution Preview',
       'Autorización denegada',
     ]);
-    expect(contribution.problems.items[0]?.action?.label).toBe(
-      'Previsualizar el plan de ejecución'
-    );
+    expect(contribution.problems.items[0]?.action?.label).toBe('Crear Execution Preview');
     expect(contribution.preview.blockers).toEqual([
       'Integridad del Execution Preview',
       'Autorización denegada',
