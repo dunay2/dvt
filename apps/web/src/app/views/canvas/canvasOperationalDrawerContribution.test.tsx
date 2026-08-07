@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { buildCanvasShellProps, buildPlanRunReadiness } from './CanvasShell.testHarness';
 import { buildCanvasOperationalDrawerContribution } from './canvasOperationalDrawerContribution';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 describe('buildCanvasOperationalDrawerContribution', () => {
   it('projects readiness blockers into actionable Problems and Preview counters', () => {
@@ -192,5 +193,66 @@ describe('buildCanvasOperationalDrawerContribution', () => {
       canPreview: false,
       selectionRecovery: { model: selectionRecovery, commands: recoveryCommands },
     });
+  });
+
+  it('projects the complete Spanish drawer contribution without English presentation copy', () => {
+    const props = buildCanvasShellProps({
+      chromeState: {
+        canPlanGraph: true,
+        canStartRun: false,
+        planRunReadiness: buildPlanRunReadiness({
+          blockers: ['plan_integrity', 'authorization_denied'],
+          summary: 'Se requiere una vista previa antes de ejecutar.',
+        }),
+        planStatusSummary: 'Se requiere una vista previa antes de ejecutar.',
+      },
+    });
+    const copy = resolveCanvasViewCopy('es');
+
+    const contribution = buildCanvasOperationalDrawerContribution({
+      policy: props.layout.surfaceStrategy!.operationalDrawer!,
+      canPlan: props.panels.userPermissions.canPlan,
+      activeRunId: null,
+      canPlanGraph: props.chromeState.canPlanGraph,
+      canStartRun: props.chromeState.canStartRun,
+      planRunReadiness: props.chromeState.planRunReadiness,
+      planStatusSummary: props.chromeState.planStatusSummary,
+      copy,
+      selectionRecoveryMessages: copy,
+      onPreviewExecutionPlan: vi.fn(),
+      onStartRun: vi.fn(),
+    });
+
+    expect(contribution).toMatchObject({
+      title: 'Operaciones del Canvas',
+      copy: {
+        problemsAriaLabel: 'Problemas del Canvas',
+        noProblemsMessage: 'No hay problemas actuales en el Canvas.',
+        runsAriaLabel: 'Ejecuciones del Canvas',
+        runBlockedStatus: 'Ejecución bloqueada',
+        previewAriaLabel: 'Vista previa de ejecución del Canvas',
+        previewAction: 'Previsualizar el plan de ejecución',
+        previewBlockedStatus: 'Vista previa bloqueada',
+        tabsAriaLabel: 'Cajón operativo del Canvas',
+        severity: { info: 'Información', warning: 'Advertencia', error: 'Error' },
+      },
+      tabs: [
+        { id: 'log', label: 'Registro', count: null },
+        { id: 'problems', label: 'Problemas', count: 2 },
+        { id: 'runs', label: 'Ejecuciones', count: 1 },
+        { id: 'preview', label: 'Vista previa', count: 2 },
+      ],
+    });
+    expect(contribution.problems.items.map((problem) => problem.detail)).toEqual([
+      'Integridad del Execution Preview',
+      'Autorización denegada',
+    ]);
+    expect(contribution.problems.items[0]?.action?.label).toBe(
+      'Previsualizar el plan de ejecución'
+    );
+    expect(contribution.preview.blockers).toEqual([
+      'Integridad del Execution Preview',
+      'Autorización denegada',
+    ]);
   });
 });

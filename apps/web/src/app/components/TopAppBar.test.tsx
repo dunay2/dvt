@@ -73,6 +73,20 @@ describe('ShellTopBar workspace context', () => {
     return {
       source: 'canvas',
       title: 'Canvas operations',
+      copy: {
+        problemsAriaLabel: 'Canvas problems',
+        noProblemsMessage: 'No current Canvas problems.',
+        runsAriaLabel: 'Canvas runs',
+        runReadyStatus: 'Run ready',
+        runBlockedStatus: 'Run blocked',
+        runActiveStatus: 'Active run',
+        previewAriaLabel: 'Canvas execution preview',
+        previewAction: 'Preview execution plan',
+        previewReadyStatus: 'Preview ready',
+        previewBlockedStatus: 'Preview blocked',
+        tabsAriaLabel: 'Canvas operational drawer',
+        severity: { info: 'Info', warning: 'Warning', error: 'Error' },
+      },
       tabs: [
         { id: 'log', label: 'Log', count: null },
         { id: 'problems', label: 'Problems', count: 1 },
