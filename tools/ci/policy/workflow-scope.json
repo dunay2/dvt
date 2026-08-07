@@ -58,6 +58,8 @@
     "tools/planning-db/migrations/**",
     "tools/planning-db/state/canonical-state.json",
     "tools/ci/policy/workflow-scope.json",
+    ".github/requirements/zensical.lock",
+    ".github/workflows/docs-deploy.yml",
     ".github/workflows/pr-quality-gate.yml",
     "package.json",
     "pnpm-lock.yaml",
