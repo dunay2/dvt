@@ -239,7 +239,7 @@ test('explicit path lock scope fails closed when it cannot be canonicalized', ()
   assert.throws(() => resolveCloseoutLockEndpoint(missingScope), /PR_CLOSEOUT_LOCK_SCOPE_FAILED/u);
 });
 
-test('closeout lock preserves task and listener-release failures', async () => {
+test('closeout lock preserves task, runtime, and listener-release failures', async () => {
   const releaseError = Object.assign(new Error('listener release failed'), { code: 'EIO' });
   const server = new EventEmitter();
   server.listen = (_endpoint, callback) => queueMicrotask(callback);
@@ -248,6 +248,8 @@ test('closeout lock preserves task and listener-release failures', async () => {
   await assert.rejects(
     runWithCloseoutLock(
       () => {
+        server.emit('error', new Error('first listener runtime failed'));
+        server.emit('error', new Error('second listener runtime failed'));
         throw new Error('guarded task failed');
       },
       {
@@ -258,10 +260,17 @@ test('closeout lock preserves task and listener-release failures', async () => {
     (error) => {
       assert.ok(error instanceof AggregateError);
       assert.match(error.message, /guarded task failed/u);
+      assert.match(error.message, /first listener runtime failed/u);
+      assert.match(error.message, /second listener runtime failed/u);
       assert.match(error.message, /listener release failed/u);
       assert.deepEqual(
         error.errors.map((entry) => entry.message),
-        ['guarded task failed', 'PR_CLOSEOUT_LEASE_RELEASE_FAILED: listener release failed']
+        [
+          'guarded task failed',
+          'PR_CLOSEOUT_LEASE_RUNTIME_FAILED: first listener runtime failed',
+          'PR_CLOSEOUT_LEASE_RUNTIME_FAILED: second listener runtime failed',
+          'PR_CLOSEOUT_LEASE_RELEASE_FAILED: listener release failed',
+        ]
       );
       return true;
     }
