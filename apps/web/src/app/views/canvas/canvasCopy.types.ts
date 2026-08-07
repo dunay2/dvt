@@ -169,6 +169,7 @@ export type CanvasViewCopy = {
   readonly canvasAddNodeCatalogMacroDescription: string;
   readonly canvasAddNodeCatalogNodeDescription: string;
   readonly toolbarEmptyCanvasGuideLabel: string;
+  readonly workspaceProjectActionsMenuLabel: string;
   readonly toolbarProjectSnapshotMenuLabel: string;
   readonly workspaceImportDbtProjectLabel: string;
   readonly workspaceExploreProjectLabel: string;

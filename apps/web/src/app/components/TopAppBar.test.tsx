@@ -178,6 +178,7 @@ describe('ShellTopBar workspace context', () => {
         expect(document.body.textContent).toContain(
           'No other project is available in this session.'
         );
+        expect(document.body.querySelector('[data-slot="shell-menu-git-context"]')).toBeNull();
       });
     }
   );
@@ -346,7 +347,7 @@ describe('ShellTopBar workspace context', () => {
       workspaceContext: 'Contexto del proyecto',
       projectScope: 'Proyecto',
       environmentScope: 'Entorno',
-      deploymentScope: 'Adapter de despliegue',
+      deploymentScope: 'Adaptador de despliegue',
       canvasColorHexValue: 'Valor hexadecimal',
       canvasColorInputLabel: 'Establecer el color hexadecimal del fondo del Canvas',
       gridSize: 'Tamaño de rejilla',

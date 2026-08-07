@@ -102,7 +102,7 @@ export function CanvasWorkspaceMenuControls(): JSX.Element | null {
   return (
     <>
       <DropdownMenuSeparator />
-      <DropdownMenuLabel>{canvasViewCopy.toolbarProjectSnapshotMenuLabel}</DropdownMenuLabel>
+      <DropdownMenuLabel>{canvasViewCopy.workspaceProjectActionsMenuLabel}</DropdownMenuLabel>
       <DropdownMenuItem
         data-slot="canvas-workspace-import-dbt-project-command"
         disabled={!contribution.canImportDbtProject || contribution.onImportDbtProject == null}
