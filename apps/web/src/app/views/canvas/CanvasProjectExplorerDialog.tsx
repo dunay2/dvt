@@ -62,7 +62,7 @@ export function CanvasProjectExplorerDialog({
     >
       <DialogContent
         data-slot="canvas-project-explorer-dialog"
-        closeLabel={canvasViewCopy.projectExplorerCloseLabel}
+        closeLabel={canvasViewCopy.projectExplorerDismissLabel}
         onCloseAutoFocus={(event) => {
           if (onRestoreFocus) {
             event.preventDefault();

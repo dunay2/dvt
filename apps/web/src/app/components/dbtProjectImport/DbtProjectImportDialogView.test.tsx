@@ -247,6 +247,10 @@ describe('DbtProjectImportDialogView', () => {
     expect(dialog?.textContent).toContain('Listo para importar');
     expect(dialog?.textContent).toContain('Cancelar');
     expect(dialog?.textContent).not.toContain('Validate project');
+    expect(dialog?.querySelector('[data-slot="dialog-footer"]')?.className).toContain('flex-col');
+    expect(dialog?.querySelector('[data-slot="dialog-footer"]')?.className).not.toContain(
+      'flex-col-reverse'
+    );
 
     fireEvent.click(document.body.querySelector('[data-slot="dbt-project-cancel-command"]')!);
     expect(onOpenChange).toHaveBeenCalledWith(false);

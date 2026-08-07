@@ -439,6 +439,10 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.projectExplorer.closeLabel',
     fallback: 'Close',
   },
+  projectExplorerDismissLabel: {
+    key: 'canvas.projectExplorer.dismissLabel',
+    fallback: 'Close project explorer window',
+  },
   projectExplorerSearchLabel: {
     key: 'canvas.projectExplorer.searchLabel',
     fallback: 'Search canvases',

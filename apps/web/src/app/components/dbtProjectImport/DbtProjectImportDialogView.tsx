@@ -311,7 +311,7 @@ export function DbtProjectImportDialogView({
           <button type="submit" className="sr-only" tabIndex={-1} aria-hidden="true" />
         </form>
 
-        <DialogFooter className="border-t border-(--border-muted) bg-(--surface-panel-subtle) px-6 py-4">
+        <DialogFooter className="flex-col border-t border-(--border-muted) bg-(--surface-panel-subtle) px-6 py-4 sm:flex-row">
           <DialogClose asChild>
             <Button type="button" variant="outline" data-slot="dbt-project-cancel-command">
               {copy.cancelLabel}

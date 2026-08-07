@@ -65,6 +65,12 @@ describe('CanvasProjectExplorerDialog', () => {
     expect(dialog?.textContent).toContain('Canvas actual');
     expect(dialog?.textContent).toContain('Cerrar');
     expect(dialog?.textContent).not.toContain('Explore project');
+    expect(
+      Array.from(
+        dialog?.querySelectorAll('button') ?? [],
+        (button) => button.getAttribute('aria-label') ?? button.textContent?.trim()
+      )
+    ).toEqual(expect.arrayContaining(['Cerrar ventana del explorador de proyecto', 'Cerrar']));
 
     await act(async () => {
       fireEvent.keyDown(document.activeElement ?? document, { key: 'Escape' });
