@@ -100,6 +100,22 @@ el atributo `lang` correspondiente para tecnologías de asistencia.
 La selección no inicia una ejecución por sí sola. La previsualización del plan
 y la ejecución siguen siendo operaciones gobernadas separadas.
 
+El estado de preparación aparece completo en la barra superior. En una ventana
+estrecha los controles se redistribuyen en varias líneas; Raven no sustituye
+**Vista previa obligatoria** por puntos suspensivos.
+
+### Inspector del nodo
+
+1. Selecciona un nodo para abrir su Inspector.
+2. Recorre **General**, **Columnas**, **Pruebas**, **Entradas y salidas** y
+   **Código**. Abre **Más** para ver claves, índices, restricciones, resumen,
+   configuración e historial cuando correspondan.
+3. Comprueba que encabezados, valores, estados vacíos y nombres accesibles usan
+   el idioma activo.
+4. En **Entradas y salidas**, usa **Dirección**, **Nodo**, **ID del nodo** y
+   **Relación** para confirmar el sentido de la conexión.
+5. Cierra el Inspector y comprueba que el foco vuelve al nodo.
+
 ## 6. Añadir componentes
 
 1. Abre el menú contextual del Canvas y selecciona **Añadir…**.
