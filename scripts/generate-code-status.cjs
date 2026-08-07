@@ -62,8 +62,9 @@ function parsePnpmWorkspaceRows(output) {
 
 function listPnpmWorkspaceDirs(options = {}) {
   const spawn = options.spawnSync || spawnSync;
+  const root = path.resolve(options.root || repoRoot);
   const result = spawn(pnpmCommand(), ['list', '-r', '--depth', '-1', '--json'], {
-    cwd: repoRoot,
+    cwd: root,
     encoding: 'utf8',
     shell: process.platform === 'win32',
   });
@@ -78,8 +79,8 @@ function listPnpmWorkspaceDirs(options = {}) {
   for (const row of parsePnpmWorkspaceRows(result.stdout)) {
     if (!row || typeof row.path !== 'string') continue;
     const absolutePath = path.resolve(row.path);
-    if (absolutePath === repoRoot) continue;
-    const relativePath = relFromRepo(absolutePath);
+    if (absolutePath === root) continue;
+    const relativePath = toPosix(path.relative(root, absolutePath));
     if (!relativePath || relativePath.startsWith('..')) {
       throw new Error(`pnpm reported a workspace outside the repository: ${row.path}`);
     }
@@ -295,7 +296,7 @@ function isCurrentCanonicalDocument(row) {
   const canonicality = String(row.canonicality ?? '').toLowerCase();
   const lifecycle = String(row.lifecycle_state ?? row.lifecycleState ?? '').toLowerCase();
   const status = String(row.status ?? '').toLowerCase();
-  if (canonicality && canonicality !== 'canonical') return false;
+  if (canonicality !== 'canonical') return false;
   return (
     !['archived', 'historical', 'superseded', 'retired', 'discarded'].includes(lifecycle) &&
     !['archived', 'historical', 'superseded', 'retired', 'discarded'].includes(status)

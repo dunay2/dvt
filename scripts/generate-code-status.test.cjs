@@ -127,6 +127,37 @@ test('workspace add, rename, and removal are expressed only by effective members
   );
 });
 
+test('pnpm workspace rules drive real add, rename, exclusion, and removal fixtures', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'repository-map-pnpm-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  fs.writeFileSync(
+    path.join(root, 'package.json'),
+    `${JSON.stringify({ name: 'fixture-root', private: true }, null, 2)}\n`,
+    'utf8'
+  );
+  fs.writeFileSync(
+    path.join(root, 'pnpm-workspace.yaml'),
+    "packages:\n  - 'apps/*'\n  - 'packages/*'\n  - '!packages/excluded'\n",
+    'utf8'
+  );
+  const alpha = createWorkspaceFixture(t, 'apps/alpha', '@fixture/alpha', { root });
+  const beta = createWorkspaceFixture(t, 'packages/beta', '@fixture/beta', { root });
+  createWorkspaceFixture(t, 'packages/excluded', '@fixture/excluded', { root });
+
+  const selectedPaths = () =>
+    listPnpmWorkspaceDirs({ root }).map((directory) =>
+      path.relative(root, directory).split(path.sep).join('/')
+    );
+  assert.deepEqual(selectedPaths(), ['apps/alpha', 'packages/beta']);
+
+  const renamed = path.join(root, 'apps', 'renamed');
+  fs.renameSync(alpha.directory, renamed);
+  assert.deepEqual(selectedPaths(), ['apps/renamed', 'packages/beta']);
+
+  fs.rmSync(beta.directory, { recursive: true, force: true });
+  assert.deepEqual(selectedPaths(), ['apps/renamed']);
+});
+
 test('repository map component matching is exact and excludes inference', () => {
   const workspace = workspaceRow({ path: 'apps/web' });
   const components = [
@@ -192,6 +223,21 @@ test('missing and ambiguous component/document identity stays fail-closed', () =
   assert.deepEqual(resolveWorkspaceArchitecture(workspace, [], []).gaps, [
     'unregistered-component',
   ]);
+  assert.deepEqual(
+    resolveWorkspaceArchitecture(
+      workspace,
+      [{ component_id: 'A', repo_path: workspace.path, status: 'implemented' }],
+      [
+        {
+          component_id: 'A',
+          document_path: 'docs/undeclared-canonicality.md',
+          lifecycle_state: 'active',
+          status: 'Active',
+        },
+      ]
+    ).gaps,
+    ['missing-canonical-doc-binding']
+  );
   assert.deepEqual(
     resolveWorkspaceArchitecture(
       workspace,
@@ -409,7 +455,19 @@ test(
     try {
       const facts = await readRepositoryArchitectureFacts(client);
       const workspaces = collectRepositoryWorkspaceStats();
-      const effectiveWorkspacePaths = listPnpmWorkspaceDirs()
+      const independentPnpmResult = spawnSync(
+        process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
+        ['list', '-r', '--depth', '-1', '--json'],
+        { cwd: repoRoot, encoding: 'utf8', shell: process.platform === 'win32' }
+      );
+      assert.equal(
+        independentPnpmResult.status,
+        0,
+        `${independentPnpmResult.stdout}\n${independentPnpmResult.stderr}`
+      );
+      const effectiveWorkspacePaths = parsePnpmWorkspaceRows(independentPnpmResult.stdout)
+        .map((row) => path.resolve(row.path))
+        .filter((directory) => directory !== repoRoot)
         .map((directory) => path.relative(repoRoot, directory).split(path.sep).join('/'))
         .sort();
       const renderedWorkspacePaths = workspaces.map((workspace) => workspace.path).sort();
@@ -429,8 +487,18 @@ test(
       const outputPath = path.join(repoRoot, 'docs', 'concepts', 'repository-map.md');
       await main(['--repository-map-only']);
       const firstGeneration = fs.readFileSync(outputPath);
-      await main(['--repository-map-only']);
+      const firstModifiedAt = fs.statSync(outputPath, { bigint: true }).mtimeNs;
+      const messages = [];
+      const originalLog = console.log;
+      console.log = (...values) => messages.push(values.join(' '));
+      try {
+        await main(['--repository-map-only']);
+      } finally {
+        console.log = originalLog;
+      }
       assert.deepEqual(fs.readFileSync(outputPath), firstGeneration);
+      assert.equal(fs.statSync(outputPath, { bigint: true }).mtimeNs, firstModifiedAt);
+      assert.ok(messages.some((message) => message.includes('already up to date')));
     } finally {
       await client.end();
     }

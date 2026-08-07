@@ -248,6 +248,13 @@ redGreenCycles:
       - scripts/generate-code-status.test.cjs
       - tools/ci/policy/workflow-scope.json
     greenTest: node --test scripts/generate-code-status.test.cjs
+  - id: demanding-fowler-qa
+    redTest: node --test scripts/generate-code-status.test.cjs
+    expectedFailure: Undeclared document canonicality is accepted, workspace lifecycle fixtures bypass real pnpm rules, and a second generation is not proven to avoid a write.
+    patchSurfaces:
+      - scripts/generate-code-status.cjs
+      - scripts/generate-code-status.test.cjs
+    greenTest: node --test scripts/generate-code-status.test.cjs
   - id: refresh-reconvergence
     redTest: node --test scripts/governance-refresh.test.cjs
     expectedFailure: A final Repository Map write can leave governance fingerprints stale after the final Planning DB import.
