@@ -15,6 +15,7 @@ import { mockGraphDraftAuthoringAuthority } from '../../testing/workspacePortDou
 import { WorkspaceFileLoadError } from '../services/workspace/workspaceErrors';
 import CodeView, { type CodeViewFileScope, type CodeViewHandle } from './CodeView';
 import { resolveCodeViewCopy } from './code/codeViewCopy';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 
 vi.mock('../components/monaco/MonacoCodeEditor', () => ({
   MonacoCodeEditor: ({
@@ -110,6 +111,7 @@ describe('CodeView', () => {
     root = null;
     container = null;
     vi.useRealTimers();
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   });
 
   async function waitFor(predicate: () => boolean): Promise<void> {
@@ -196,6 +198,24 @@ describe('CodeView', () => {
         container?.querySelector('[data-testid="monaco-code-viewer"]') != null
     );
   }
+
+  it('reacts to the configured application language inside a contextual workbench', async () => {
+    setupContainer();
+    useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    await renderCodeView(undefined, false, undefined, { fileScope: defaultEditableFileScope });
+    await waitFor(() => getContainer().textContent?.includes('Explorador') === true);
+
+    expect(getContainer().textContent).toContain('Explorador');
+    expect(getContainer().textContent).not.toContain('Canvas-generated');
+
+    act(() => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+    });
+    await waitFor(() => getContainer().textContent?.includes('Explorer') === true);
+
+    expect(getContainer().textContent).toContain('Explorer');
+    expect(getContainer().textContent).not.toContain('Generado por el Canvas');
+  });
 
   function verifyInitialState(): HTMLTextAreaElement | null {
     const currentContainer = getContainer();
