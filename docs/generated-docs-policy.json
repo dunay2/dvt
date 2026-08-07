@@ -58,6 +58,8 @@
         "package.json",
         "pnpm-workspace.yaml",
         "tools/planning-db/migrations",
+        "tools/planning-db/state/canonical-state.json",
+        "scripts/planning-db-import.cjs",
         "docs/planning/status/system-governance-unit-index.units.yaml",
         "docs/*.md",
         "docs/**/*.md",

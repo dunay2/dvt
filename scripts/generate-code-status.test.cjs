@@ -430,6 +430,8 @@ test('policy names actual inputs and the minimal generator command', () => {
   assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
   assert.ok(entry.sourcePaths.includes('scripts/generated-doc-date.cjs'));
   assert.ok(entry.sourcePaths.includes('tools/planning-db/migrations'));
+  assert.ok(entry.sourcePaths.includes('tools/planning-db/state/canonical-state.json'));
+  assert.ok(entry.sourcePaths.includes('scripts/planning-db-import.cjs'));
   assert.ok(
     entry.sourcePaths.includes('docs/planning/status/system-governance-unit-index.units.yaml')
   );
@@ -461,6 +463,10 @@ test('live Planning DB workflow provides explicit Git refs to the importer', () 
   assert.match(liveStep, /GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/u);
   assert.match(liveStep, /GIT_HEAD: \$\{\{ github\.sha \}\}/u);
   assert.ok(workflowScope.generated_status_relevant.includes('scripts/generated-doc-date.cjs'));
+  assert.ok(
+    workflowScope.generated_status_relevant.includes('tools/planning-db/state/canonical-state.json')
+  );
+  assert.ok(workflowScope.generated_status_relevant.includes('scripts/planning-db-import.cjs'));
   assert.ok(
     workflowScope.generated_status_relevant.includes(
       'docs/planning/status/system-governance-unit-index.units.yaml'

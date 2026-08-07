@@ -48,6 +48,8 @@ test('classifies Repository Map binding and lifecycle inputs as generated-status
     'docs/planning/status/system-governance-unit-index.units.yaml',
     'docs/contracts/index.md',
     'buzon/20260807-example.md',
+    'tools/planning-db/state/canonical-state.json',
+    'scripts/planning-db-import.cjs',
   ]) {
     const scope = computeBooleanScope([file], WORKFLOW_SCOPE_PATTERNS);
     assert.equal(scope.generated_status_relevant, true, file);
