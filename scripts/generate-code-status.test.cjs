@@ -1,4 +1,5 @@
 const assert = require('node:assert/strict');
+const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
@@ -13,6 +14,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const generatorPath = path.join(repoRoot, 'scripts', 'generate-code-status.cjs');
 const policyPath = path.join(repoRoot, 'docs', 'generated-docs-policy.json');
 const prQualityWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'pr-quality-gate.yml');
+const workflowScopePath = path.join(repoRoot, 'tools', 'ci', 'policy', 'workflow-scope.json');
 const packageJson = require('../package.json');
 
 const {
@@ -178,6 +180,7 @@ test('architecture facts join exact governed documents by document path', async 
     components: [component],
     documents: [document],
   });
+  assert.match(queries[0], /not in \('deprecated', 'drift'\)/u);
   assert.match(queries[1], /component_engineering_document_query/u);
   assert.match(queries[1], /documentation_lifecycle_query/u);
   assert.match(queries[1], /document_kind = 'governing'/u);
@@ -308,6 +311,37 @@ test('docs status check passes fail-closed intent through the nested pnpm script
   assert.equal(packageJson.scripts['docs:status:check'], 'pnpm docs:status:generate --check');
 });
 
+test('DB-free docs workflows and contributor guidance select code-state explicitly', () => {
+  assert.match(packageJson.scripts['docs:ci'], /docs:status:generate --code-state-only/u);
+
+  const guidancePaths = [
+    'AGENTS.md',
+    'docs/DOCS_README.md',
+    'docs/planning/status/generated-code-state.md',
+    'docs/guides/documentation-maintenance-guide-20260407.md',
+    'docs/runbooks/planning-generated-artifacts-operations-20260403.md',
+    'docs/guides/pr-preflight-and-ci-triage.md',
+  ];
+  for (const guidancePath of guidancePaths) {
+    const content = fs.readFileSync(path.join(repoRoot, guidancePath), 'utf8');
+    assert.match(content, /docs:status:generate -- --code-state-only/u, guidancePath);
+    assert.match(content, /docs:status:generate -- --repository-map-only/u, guidancePath);
+  }
+});
+
+test('code-state-only generation does not require a reachable Planning DB', () => {
+  const result = spawnSync(process.execPath, [generatorPath, '--code-state-only'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      DATABASE_URL: 'postgresql://invalid:invalid@127.0.0.1:1/invalid',
+      DVT_PLANNING_DB_URL: 'postgresql://invalid:invalid@127.0.0.1:1/invalid',
+    },
+  });
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+});
+
 test('repository map output is byte-stable and preserves governed navigation', () => {
   const workspaces = [workspaceRow({ localReadmePath: 'packages/@dvt/example/README.md' })];
   const facts = {
@@ -335,6 +369,7 @@ test('policy names actual inputs and the minimal generator command', () => {
   assert.equal(entry.generatorCommand, 'pnpm docs:status:generate -- --repository-map-only');
   assert.ok(entry.sourcePaths.includes('package.json'));
   assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
+  assert.ok(entry.sourcePaths.includes('scripts/generated-doc-date.cjs'));
   assert.ok(entry.sourcePaths.includes('tools/planning-db/migrations'));
   assert.equal(
     entry.sourcePaths.some((value) => value.includes('subject_key')),
@@ -352,6 +387,7 @@ test('generator no longer reads the empty documentation panel binding', () => {
 
 test('live Planning DB workflow provides explicit Git refs to the importer', () => {
   const workflow = fs.readFileSync(prQualityWorkflowPath, 'utf8');
+  const workflowScope = JSON.parse(fs.readFileSync(workflowScopePath, 'utf8'));
   const liveStep = workflow.match(
     /- name: Prove Repository Map against migrated and imported Planning DB[\s\S]*?(?=\n\s+- name:)/u
   )?.[0];
@@ -359,6 +395,7 @@ test('live Planning DB workflow provides explicit Git refs to the importer', () 
   assert.ok(liveStep, 'expected the live Repository Map workflow step');
   assert.match(liveStep, /GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/u);
   assert.match(liveStep, /GIT_HEAD: \$\{\{ github\.sha \}\}/u);
+  assert.ok(workflowScope.generated_status_relevant.includes('scripts/generated-doc-date.cjs'));
 });
 
 test(
@@ -372,8 +409,14 @@ test(
     try {
       const facts = await readRepositoryArchitectureFacts(client);
       const workspaces = collectRepositoryWorkspaceStats();
+      const effectiveWorkspacePaths = listPnpmWorkspaceDirs()
+        .map((directory) => path.relative(repoRoot, directory).split(path.sep).join('/'))
+        .sort();
+      const renderedWorkspacePaths = workspaces.map((workspace) => workspace.path).sort();
       const paths = new Set(workspaces.map((workspace) => workspace.path));
       const output = renderRepositoryMap(workspaces, facts, '2026-08-06');
+      assert.deepEqual(renderedWorkspacePaths, effectiveWorkspacePaths);
+      assert.equal(new Set(renderedWorkspacePaths).size, renderedWorkspacePaths.length);
       assert.ok(facts.components.length > 0);
       assert.ok(facts.documents.length > 0);
       assert.equal(paths.has('packages/@dvt/temporal-http-json-plugin'), true);
@@ -382,6 +425,12 @@ test(
       assert.match(output, /ambiguous-canonical-doc-binding/u);
       assert.match(output, /missing-canonical-doc-binding/u);
       assert.doesNotMatch(output, /documentation_panel_query/u);
+
+      const outputPath = path.join(repoRoot, 'docs', 'concepts', 'repository-map.md');
+      await main(['--repository-map-only']);
+      const firstGeneration = fs.readFileSync(outputPath);
+      await main(['--repository-map-only']);
+      assert.deepEqual(fs.readFileSync(outputPath), firstGeneration);
     } finally {
       await client.end();
     }

@@ -317,13 +317,23 @@ Use `gh pr create` with an explicit `--body`. Never open a PR with an empty or o
 
 ## Generated Docs Rule
 
-Whenever source files are added or removed from any workspace, `docs/planning/status/generated-code-state.md` goes stale and CI fails. Always run:
+Whenever source files are added or removed from any workspace, refresh the
+DB-free local code-state inventory with:
 
 ```bash
-pnpm docs:status:generate
+pnpm docs:status:generate -- --code-state-only
 ```
 
-and commit the result before pushing. Required after any structural change to `apps/` or `packages/`.
+The tracked Repository Map also includes workspace source/test counts. After a
+structural change to `apps/` or `packages/`, prepare and import the Planning DB,
+then refresh and commit the map with:
+
+```bash
+pnpm docs:status:generate -- --repository-map-only
+```
+
+The first command is deliberately DB-free. The second is deliberately
+DB-backed and fails closed when Planning DB is unavailable.
 
 Whenever any file under `docs/` is added, removed, or renamed, the documentation index files go stale and CI fails. Always run:
 

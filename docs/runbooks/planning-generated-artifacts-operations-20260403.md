@@ -2,7 +2,7 @@
 title: Planning Generated Artifacts Operations
 status: Active
 owner: Docs / Delivery / Architecture
-last_reviewed: 2026-07-31
+last_reviewed: 2026-08-07
 ---
 
 # Planning Generated Artifacts Operations
@@ -21,6 +21,7 @@ Retained generated surfaces:
 - documentation indexes produced by `pnpm docs:sync`;
 - `docs/.manifest.json`;
 - `docs/planning/status/generated-code-state.md`;
+- `docs/concepts/repository-map.md`;
 - governance indexes and DB exports produced by `pnpm governance:refresh`.
 
 Retired surfaces:
@@ -44,11 +45,14 @@ and discoverability for retained generated surfaces.
 ## Standard Workflow
 
 1. Run `pnpm docs:sync` after adding, removing, or renaming files under `docs/`.
-2. Run `pnpm docs:status:generate` after structural source changes under
-   `apps/` or `packages/`.
-3. Run `pnpm governance:refresh` after changing governance sources,
+2. Run DB-free `pnpm docs:status:generate -- --code-state-only` after structural
+   source changes under `apps/` or `packages/`.
+3. Prepare and import Planning DB, then run
+   `pnpm docs:status:generate -- --repository-map-only` to refresh the tracked
+   Repository Map after those changes.
+4. Run `pnpm governance:refresh` after changing governance sources,
    generators, scripts, or package commands.
-4. Run `pnpm verify:prepush` before publishing the branch.
+5. Run `pnpm verify:prepush` before publishing the branch.
 
 ## Failure Triage
 
@@ -63,6 +67,8 @@ and discoverability for retained generated surfaces.
 ## CI Expectations
 
 - `docs:sync:check` validates tracked documentation indexes.
-- generated code-state checks validate source inventory.
+- DB-free generated code-state checks validate local source inventory.
+- DB-backed Repository Map checks validate exact architecture and documentation
+  bindings against migrated and imported Planning DB state.
 - governance refresh checks validate DB-first architecture projections.
 - no CI path may require retired lane or workboard state.

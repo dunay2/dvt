@@ -149,11 +149,17 @@ governingSources:
   - docs/generated-docs-policy.json
 allowedImplementationSurfaces:
   - .github/workflows/pr-quality-gate.yml
+  - AGENTS.md
   - docs/.manifest.json
   - docs/**/index.md
+  - docs/DOCS_README.md
   - docs/concepts/repository-map.md
   - docs/generated-docs-policy.json
+  - docs/guides/documentation-maintenance-guide-20260407.md
+  - docs/guides/pr-preflight-and-ci-triage.md
   - docs/planning/proposals/mandatory/governance-and-docs/doc1-1-repository-map-projection-plan-20260807.md
+  - docs/planning/status/generated-code-state.md
+  - docs/runbooks/planning-generated-artifacts-operations-20260403.md
   - package.json
   - scripts/generate-code-status.cjs
   - scripts/generate-code-status.test.cjs
@@ -226,6 +232,21 @@ redGreenCycles:
       - package.json
       - scripts/generate-code-status.cjs
       - scripts/generate-code-status.test.cjs
+    greenTest: node --test scripts/generate-code-status.test.cjs
+  - id: operational-mode-guidance
+    redTest: node --test scripts/generate-code-status.test.cjs
+    expectedFailure: DB-free workflows, generated-doc ownership, CI scope, and contributor guidance do not explicitly select the correct generation mode.
+    patchSurfaces:
+      - AGENTS.md
+      - docs/DOCS_README.md
+      - docs/generated-docs-policy.json
+      - docs/guides/documentation-maintenance-guide-20260407.md
+      - docs/guides/pr-preflight-and-ci-triage.md
+      - docs/planning/status/generated-code-state.md
+      - docs/runbooks/planning-generated-artifacts-operations-20260403.md
+      - package.json
+      - scripts/generate-code-status.test.cjs
+      - tools/ci/policy/workflow-scope.json
     greenTest: node --test scripts/generate-code-status.test.cjs
   - id: refresh-reconvergence
     redTest: node --test scripts/governance-refresh.test.cjs

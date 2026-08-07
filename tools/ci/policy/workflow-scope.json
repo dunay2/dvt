@@ -41,6 +41,7 @@
     "docs/concepts/domain-language.md",
     "scripts/generate-code-status.cjs",
     "scripts/generate-code-status.test.cjs",
+    "scripts/generated-doc-date.cjs",
     "scripts/governance-refresh.cjs",
     "tools/planning-db/migrations/**",
     "tools/ci/policy/workflow-scope.json",

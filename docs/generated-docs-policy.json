@@ -54,6 +54,7 @@
       "sourcePaths": [
         "scripts/generate-code-status.cjs",
         "scripts/generate-code-status.test.cjs",
+        "scripts/generated-doc-date.cjs",
         "package.json",
         "pnpm-workspace.yaml",
         "tools/planning-db/migrations",
@@ -88,6 +89,7 @@
       "artifacts": [".generated-docs/planning/status/generated-code-state.md"],
       "sourcePaths": [
         "scripts/generate-code-status.cjs",
+        "scripts/generated-doc-date.cjs",
         "package.json",
         "pnpm-workspace.yaml",
         "apps",

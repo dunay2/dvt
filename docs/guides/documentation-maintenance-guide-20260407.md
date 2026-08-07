@@ -2,7 +2,7 @@
 title: Documentation maintenance guide
 status: Active
 owner: Architecture / Docs
-last_reviewed: 2026-04-07
+last_reviewed: 2026-08-07
 ---
 
 # Documentation maintenance guide
@@ -14,15 +14,15 @@ without turning every change into an unbounded docs sweep.
 
 ## Minimum update rules by change type
 
-| Change type                                                     | Required documentation action                                                                                                           |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| Runtime behavior or contract change                             | update the canonical spec or status doc that owns the behavior, then repair supporting maps that route readers there                    |
-| Code path rename or file move                                   | update every active doc link that points to the old path; do not leave active docs pointing at renamed code                             |
-| New or renamed doc under `docs/`                                | run `pnpm docs:sync` so governed indexes stay current                                                                                   |
-| MVP task lifecycle change                                       | update the governing GitHub issue; do not create a local task mirror                                                                    |
-| `docs:doctor` reports missing planning `last_reviewed` metadata | run `pnpm docs:planning:last-reviewed:backfill`, then explicitly re-review any doc whose content changed materially                     |
-| Archive or supersede a doc pack                                 | move it to archive, add or update an archive index, and leave only a deliberate active pointer if readers still need historical context |
-| Add or remove workspaces under `apps/` or `packages/`           | run `pnpm docs:status:generate` before closing the slice                                                                                |
+| Change type                                                     | Required documentation action                                                                                                                                                    |
+| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Runtime behavior or contract change                             | update the canonical spec or status doc that owns the behavior, then repair supporting maps that route readers there                                                             |
+| Code path rename or file move                                   | update every active doc link that points to the old path; do not leave active docs pointing at renamed code                                                                      |
+| New or renamed doc under `docs/`                                | run `pnpm docs:sync` so governed indexes stay current                                                                                                                            |
+| MVP task lifecycle change                                       | update the governing GitHub issue; do not create a local task mirror                                                                                                             |
+| `docs:doctor` reports missing planning `last_reviewed` metadata | run `pnpm docs:planning:last-reviewed:backfill`, then explicitly re-review any doc whose content changed materially                                                              |
+| Archive or supersede a doc pack                                 | move it to archive, add or update an archive index, and leave only a deliberate active pointer if readers still need historical context                                          |
+| Add or remove workspaces under `apps/` or `packages/`           | run DB-free `pnpm docs:status:generate -- --code-state-only`; after preparing/importing Planning DB, run `pnpm docs:status:generate -- --repository-map-only` and commit the map |
 
 ## Archive rules
 
