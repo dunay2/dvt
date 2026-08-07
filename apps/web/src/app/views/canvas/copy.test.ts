@@ -56,6 +56,12 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.canvasNodePortNoCompatibleNodesMessage).toBe(
       'No hay nodos compatibles disponibles'
     );
+    expect(spanishCopy.canvasNodePortBlockedMessage).toBe(
+      'Los nodos compatibles están bloqueados por la política actual del grafo'
+    );
+    expect(spanishCopy.canvasAddNodeCatalogSeedDescription).toBe(
+      'Agrega un dataset seed estático gestionado por el proyecto.'
+    );
     expect(spanishCopy.draftSyncedLabel).toBe('Borrador sincronizado');
     expect(spanishCopy.draftSavedLabel).toBe('Borrador guardado');
     expect(spanishCopy.draftSaveFailedLabel).toBe('Guardado del borrador fallido');
