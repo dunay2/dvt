@@ -554,7 +554,7 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
 
   const readInitializationAge = (recordPath, fallbackPath) => {
     try {
-      return now() - statSync(recordPath).mtimeMs;
+      return Math.max(0, now() - statSync(recordPath).mtimeMs);
     } catch (statError) {
       if (statError?.code !== 'ENOENT') {
         throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${statError.message}`, {
@@ -562,7 +562,7 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
         });
       }
       try {
-        return now() - statSync(fallbackPath).mtimeMs;
+        return Math.max(0, now() - statSync(fallbackPath).mtimeMs);
       } catch (fallbackStatError) {
         if (fallbackStatError?.code === 'ENOENT') return null;
         throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${fallbackStatError.message}`, {
@@ -574,6 +574,7 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
 
   for (let attempt = 0; attempt < 4; attempt += 1) {
     let createdLeaseDirectory = false;
+    let observedLeaseAgeMs;
     try {
       mkdirSync(leaseDir);
       createdLeaseDirectory = true;
@@ -582,6 +583,14 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
       if (error?.code !== 'EEXIST') {
         throw new Error(`PR_CLOSEOUT_LEASE_ACQUIRE_FAILED: ${error.message}`, { cause: error });
       }
+    }
+
+    if (!createdLeaseDirectory) {
+      const ownerBeforeReservation = readCloseoutLeaseOwner(leaseDir, options);
+      observedLeaseAgeMs = ownerBeforeReservation
+        ? Number.POSITIVE_INFINITY
+        : readInitializationAge(ownerPath, leaseDir);
+      if (observedLeaseAgeMs === null) continue;
     }
 
     try {
@@ -652,12 +661,7 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
       }
 
       if (!owner && !createdLeaseDirectory) {
-        const leaseAgeMs = readInitializationAge(ownerPath, leaseDir);
-        if (leaseAgeMs === null) {
-          releaseRecoveryReservation();
-          continue;
-        }
-        if (leaseAgeMs < initializationGraceMs) {
+        if (observedLeaseAgeMs < initializationGraceMs) {
           releaseRecoveryReservation();
           throw new Error(
             'PR_CLOSEOUT_LEASE_BUSY: owned by an initializing process. Retry after it finishes.'
@@ -725,7 +729,16 @@ function releaseCloseoutLease(options = {}, runtime = {}) {
 
   runtime.closeoutLeaseReleaseAttempted = true;
   const owner = readCloseoutLeaseOwner(runtime.closeoutLease.leaseDir, options);
-  if (!owner || owner.token !== runtime.closeoutLease.token) {
+  const reservation = readCloseoutLeaseRecord(
+    path.join(runtime.closeoutLease.leaseDir, closeoutLeaseRecoveryFile),
+    options
+  );
+  if (
+    !owner ||
+    owner.token !== runtime.closeoutLease.token ||
+    !reservation ||
+    reservation.token !== runtime.closeoutLease.token
+  ) {
     throw new Error(
       'PR_CLOSEOUT_LEASE_OWNERSHIP_LOST: refusing to release another closeout lease.'
     );

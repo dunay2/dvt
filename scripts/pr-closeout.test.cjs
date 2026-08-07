@@ -346,6 +346,30 @@ test('closeout lease recovers an ownerless directory after the initialization gr
   releaseCloseoutLease({}, runtime);
 });
 
+test('closeout lease measures ownerless age before creating its recovery reservation', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-real-age-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const runtime = {};
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+  fs.mkdirSync(leaseDir);
+  const staleTime = new Date(Date.now() - 60_000);
+  fs.utimesSync(leaseDir, staleTime, staleTime);
+
+  acquireCloseoutLease(
+    {
+      closeoutLeaseDir: leaseDir,
+      processId: 202,
+      createLeaseToken: () => 'successor-token',
+      getProcessIdentity: getTestProcessIdentity,
+      closeoutLeaseInitializationGraceMs: 30_000,
+    },
+    runtime
+  );
+
+  assert.equal(runtime.closeoutLeaseOwned, true);
+  releaseCloseoutLease({}, runtime);
+});
+
 test('closeout lease recovers a stale recovery reservation', (t) => {
   const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-reservation-'));
   const leaseDir = path.join(leaseRoot, 'lease');
@@ -653,6 +677,32 @@ test('closeout lease refuses to delete a successor token', (t) => {
   );
 
   assert.throws(() => releaseCloseoutLease({}, runtime), /PR_CLOSEOUT_LEASE_OWNERSHIP_LOST/u);
+  assert.equal(fs.existsSync(leaseDir), true);
+});
+
+test('closeout lease refuses to delete a successor recovery reservation', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-recovery-token-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const runtime = {};
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+
+  acquireCloseoutLease(
+    {
+      closeoutLeaseDir: leaseDir,
+      processId: 101,
+      createLeaseToken: () => 'original-token',
+      getProcessIdentity: getTestProcessIdentity,
+    },
+    runtime
+  );
+  fs.writeFileSync(
+    path.join(leaseDir, 'recovery.json'),
+    `${JSON.stringify({ pid: 202, token: 'successor-token' })}\n`,
+    'utf8'
+  );
+
+  assert.throws(() => releaseCloseoutLease({}, runtime), /PR_CLOSEOUT_LEASE_OWNERSHIP_LOST/u);
+  assert.equal(runtime.closeoutLeaseOwned, true);
   assert.equal(fs.existsSync(leaseDir), true);
 });
 
