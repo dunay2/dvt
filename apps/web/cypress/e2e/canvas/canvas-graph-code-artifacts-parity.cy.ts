@@ -1,4 +1,4 @@
-import { stubCanvasDraftRead, stubCanvasDraftSave } from '../../support/canvasDraftAuthoring';
+import { stubStatefulCanvasDraftAuthoring } from '../../support/canvasDraftAuthoring';
 import {
   clickPreviewExecutionPlanFromOperationalDrawer,
   getVisibleCanvasNode,
@@ -43,8 +43,7 @@ describe('Canvas graph to execution-preview source parity', () => {
       effectiveWorkspace: E2E_WORKSPACE_SESSION,
       availableWorkspaces: [E2E_WORKSPACE_SESSION],
     });
-    stubCanvasDraftRead();
-    stubCanvasDraftSave();
+    stubStatefulCanvasDraftAuthoring();
 
     stubE2eApi('GET', '/workspace/files', ({ url }) => {
       expect(Object.fromEntries(url.searchParams.entries())).to.deep.include({
