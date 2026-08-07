@@ -69,6 +69,9 @@ function commitArgs(commit) {
 function buildPrCloseoutPlan(options = {}) {
   const changedFiles = normalizeChangedFiles(options.changedFiles || []);
   const stagedFiles = normalizeChangedFiles(options.stagedFiles || []);
+  const workspaceSourceChanged = hasWorkspaceSourceChange(changedFiles);
+  const governanceRefreshChanged = hasGovernanceRefreshChange(changedFiles);
+  const needsPlanningDbLifecycle = workspaceSourceChanged || governanceRefreshChanged;
   const steps = [];
 
   if (changedFiles.length === 0) {
@@ -89,12 +92,15 @@ function buildPrCloseoutPlan(options = {}) {
     });
   }
 
-  if (hasWorkspaceSourceChange(changedFiles)) {
+  if (workspaceSourceChanged) {
     pushStepOnce(steps, {
       id: 'docs-status-code-state',
       command: 'pnpm',
       args: ['docs:status:generate', '--code-state-only'],
     });
+  }
+
+  if (needsPlanningDbLifecycle) {
     pushStepOnce(steps, {
       id: 'planning-db-ownership',
       internal: 'capturePlanningDbOwnership',
@@ -115,6 +121,9 @@ function buildPrCloseoutPlan(options = {}) {
       command: 'pnpm',
       args: ['planning:db:migrate'],
     });
+  }
+
+  if (workspaceSourceChanged && !governanceRefreshChanged) {
     pushStepOnce(steps, {
       id: 'planning-db-import',
       command: 'pnpm',
@@ -125,14 +134,9 @@ function buildPrCloseoutPlan(options = {}) {
       command: 'pnpm',
       args: ['docs:status:generate', '--repository-map-only'],
     });
-    pushStepOnce(steps, {
-      id: 'planning-db-release',
-      internal: 'releasePlanningDbIfOwned',
-      label: 'release owned Planning DB',
-    });
   }
 
-  if (hasGovernanceRefreshChange(changedFiles)) {
+  if (governanceRefreshChanged) {
     pushStepOnce(steps, {
       id: 'governance-refresh',
       command: 'pnpm',
@@ -144,6 +148,14 @@ function buildPrCloseoutPlan(options = {}) {
     pushStepOnce(steps, {
       id: `custom-check-${index + 1}`,
       commandLine: check,
+    });
+  }
+
+  if (needsPlanningDbLifecycle) {
+    pushStepOnce(steps, {
+      id: 'planning-db-release',
+      internal: 'releasePlanningDbIfOwned',
+      label: 'release owned Planning DB',
     });
   }
 
@@ -268,7 +280,14 @@ function probePlanningDbActive(options = {}) {
     stdio: 'ignore',
   });
 
-  return !result.error && result.status === 0;
+  if (result.error) {
+    throw new Error(`PLANNING_DB_OWNERSHIP_PROBE_FAILED: ${result.error.message}`);
+  }
+  if (result.status === 0) return true;
+  if (result.status === 3) return false;
+  throw new Error(
+    `PLANNING_DB_OWNERSHIP_PROBE_FAILED: planning:db:health --active exited with ${result.status || 1}`
+  );
 }
 
 function releasePlanningDbIfOwned(options, runtime) {

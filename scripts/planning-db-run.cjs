@@ -221,10 +221,26 @@ function isPlanningDbActive(options = {}) {
   const spawn = options.spawnSync || childProcess.spawnSync;
   const result = spawn('docker', ['inspect', '--format', '{{.State.Running}}', containerName], {
     encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'ignore'],
+    stdio: ['ignore', 'pipe', 'pipe'],
   });
 
-  return !result.error && result.status === 0 && String(result.stdout || '').trim() === 'true';
+  if (result.error) {
+    throw new Error(`Planning DB active probe failed: ${result.error.message}`);
+  }
+
+  const stdout = String(result.stdout || '').trim();
+  const stderr = String(result.stderr || '').trim();
+  if (result.status !== 0) {
+    if (/No such (?:object|container)/iu.test(stderr)) {
+      return false;
+    }
+    throw new Error(
+      `Planning DB active probe failed with exit code ${result.status || 1}: ${stderr || 'unknown Docker error'}`
+    );
+  }
+  if (stdout === 'true') return true;
+  if (stdout === 'false') return false;
+  throw new Error(`Planning DB active probe returned unexpected state "${stdout || '<empty>'}".`);
 }
 
 function runPlanningDbHealth(args = [], options = {}) {
@@ -239,7 +255,9 @@ function runPlanningDbHealth(args = [], options = {}) {
   if (args.includes('--active')) {
     const activeProbe = options.isPlanningDbActive || isPlanningDbActive;
     if (!activeProbe(options)) {
-      throw new Error('Planning DB is not active.');
+      const error = new Error('Planning DB is not active.');
+      error.exitCode = 3;
+      throw error;
     }
     return;
   }
@@ -434,7 +452,7 @@ async function main() {
 if (require.main === module) {
   main().catch((error) => {
     console.error(error.message);
-    process.exit(1);
+    process.exit(error.exitCode || 1);
   });
 }
 

@@ -9,6 +9,7 @@ const {
   commandLabel,
   executePrCloseoutPlan,
   parseArgs,
+  probePlanningDbActive,
   resolveCommandInvocation,
 } = require('./pr-closeout.cjs');
 
@@ -37,7 +38,11 @@ test('buildPrCloseoutPlan commits before the only full prepush validation and pu
   });
   const ids = stepIds(plan);
 
-  assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
+  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-migrate'));
+  assert.ok(indexOf(ids, 'planning-db-migrate') < indexOf(ids, 'governance-refresh'));
+  assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'planning-db-release'));
+  assert.ok(indexOf(ids, 'planning-db-release') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'assert-no-unstaged'));
   assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'commit') < indexOf(ids, 'verify-prepush'));
@@ -78,21 +83,14 @@ test('buildPrCloseoutPlan can stage all local changes explicitly before commit',
   assert.equal(ids.includes('assert-no-unstaged'), false);
 });
 
-test('buildPrCloseoutPlan prepares docs and generated code status before commit when needed', () => {
+test('buildPrCloseoutPlan prepares generated code status before commit when needed', () => {
   const plan = buildPrCloseoutPlan({
-    changedFiles: [
-      'docs/runbooks/governed-changed-slice-closeout-20260506.md',
-      'packages/@dvt/engine/src/WorkflowEngine.ts',
-    ],
-    stagedFiles: [
-      'docs/runbooks/governed-changed-slice-closeout-20260506.md',
-      'packages/@dvt/engine/src/WorkflowEngine.ts',
-    ],
+    changedFiles: ['packages/@dvt/engine/src/WorkflowEngine.ts'],
+    stagedFiles: ['packages/@dvt/engine/src/WorkflowEngine.ts'],
     commit,
   });
   const ids = stepIds(plan);
 
-  assert.ok(indexOf(ids, 'docs-sync') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'docs-status-code-state') < indexOf(ids, 'planning-db-ownership'));
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
   assert.ok(indexOf(ids, 'planning-db-up') < indexOf(ids, 'planning-db-health'));
@@ -116,6 +114,21 @@ test('buildPrCloseoutPlan prepares docs and generated code status before commit 
     commandLabel(plan.find((step) => step.id === 'docs-status-repository-map')),
     'pnpm docs:status:generate --repository-map-only'
   );
+});
+
+test('buildPrCloseoutPlan keeps Planning DB through mixed workspace and governance consumers', () => {
+  const plan = buildPrCloseoutPlan({
+    changedFiles: ['apps/web/src/main.tsx', 'scripts/governance-refresh.cjs'],
+    stagedFiles: ['apps/web/src/main.tsx', 'scripts/governance-refresh.cjs'],
+    commit,
+  });
+  const ids = stepIds(plan);
+
+  assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
+  assert.ok(indexOf(ids, 'planning-db-migrate') < indexOf(ids, 'governance-refresh'));
+  assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'planning-db-release'));
+  assert.equal(ids.includes('planning-db-import'), false);
+  assert.equal(ids.includes('docs-status-repository-map'), false);
 });
 
 test('buildPrCloseoutPlan prepares Repository Map for workspace manifest-only changes', () => {
@@ -144,7 +157,9 @@ test('buildPrCloseoutPlan refreshes governance for mandatory planning proposals'
   });
   const ids = stepIds(plan);
 
-  assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'governance-refresh'));
+  assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'planning-db-release'));
+  assert.ok(indexOf(ids, 'planning-db-release') < indexOf(ids, 'commit'));
 });
 
 test('executePrCloseoutPlan fails staged-file mode if prep leaves unstaged files', () => {
@@ -243,6 +258,54 @@ test('executePrCloseoutPlan releases an owned Planning DB even when closeout fai
   );
 
   assert.equal(calls.filter((call) => call.includes('planning:db:down')).length, 1);
+});
+
+test('executePrCloseoutPlan fails closed when Planning DB ownership cannot be probed', () => {
+  const calls = [];
+
+  assert.throws(
+    () =>
+      executePrCloseoutPlan(
+        [
+          {
+            id: 'planning-db-ownership',
+            internal: 'capturePlanningDbOwnership',
+            label: 'detect Planning DB ownership',
+          },
+          { id: 'planning-db-up', command: 'pnpm', args: ['planning:db:up'] },
+        ],
+        {
+          probePlanningDbActive: () => {
+            throw new Error('PLANNING_DB_OWNERSHIP_PROBE_FAILED: Docker unavailable');
+          },
+          spawnCommand: (command, args) => {
+            calls.push([command, ...args].join(' '));
+            return { status: 0 };
+          },
+        }
+      ),
+    /PLANNING_DB_OWNERSHIP_PROBE_FAILED/
+  );
+
+  assert.deepEqual(calls, []);
+});
+
+test('probePlanningDbActive distinguishes inactive from probe failure', () => {
+  assert.equal(
+    probePlanningDbActive({
+      spawnCommand: () => ({ status: 3 }),
+      platform: 'linux',
+    }),
+    false
+  );
+  assert.throws(
+    () =>
+      probePlanningDbActive({
+        spawnCommand: () => ({ status: 2 }),
+        platform: 'linux',
+      }),
+    /PLANNING_DB_OWNERSHIP_PROBE_FAILED/
+  );
 });
 
 test('parseArgs exposes commit, stage, push, dry-run, and custom check intent', () => {

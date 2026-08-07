@@ -10,6 +10,7 @@ const {
   buildPgEnv,
   buildComposeArgs,
   ensureDataDir,
+  isPlanningDbActive,
   planResetDataDir,
   resetPlanningDb,
   resolveComposeCommand,
@@ -297,7 +298,31 @@ test('runPlanningDbHealth active mode distinguishes pre-existing runtime ownersh
   assert.doesNotThrow(() => runPlanningDbHealth(['--active'], { isPlanningDbActive: () => true }));
   assert.throws(
     () => runPlanningDbHealth(['--active'], { isPlanningDbActive: () => false }),
-    /Planning DB is not active/
+    (error) => {
+      assert.match(error.message, /Planning DB is not active/);
+      assert.equal(error.exitCode, 3);
+      return true;
+    }
+  );
+});
+
+test('isPlanningDbActive treats only an absent container as inactive and fails closed otherwise', () => {
+  assert.equal(
+    isPlanningDbActive({
+      spawnSync: () => ({
+        status: 1,
+        stdout: '',
+        stderr: 'Error: No such object: dvt-planning-db-postgres',
+      }),
+    }),
+    false
+  );
+  assert.throws(
+    () =>
+      isPlanningDbActive({
+        spawnSync: () => ({ status: 1, stdout: '', stderr: 'Docker daemon unavailable' }),
+      }),
+    /Planning DB active probe failed/
   );
 });
 
