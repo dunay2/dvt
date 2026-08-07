@@ -184,7 +184,10 @@ allowedImplementationSurfaces:
   - scripts/generate-code-status.test.cjs
   - scripts/governance-refresh.cjs
   - scripts/governance-refresh.test.cjs
+  - scripts/planning-db-run.cjs
+  - scripts/planning-db-run.test.cjs
   - tools/ci/policy/workflow-scope.json
+  - tools/ci/workflow-scope-classification.test.mjs
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
@@ -201,6 +204,9 @@ commandQueryRails:
   - name: ReadComponentEngineeringRecord
     type: query
     dddOwner: ComponentEngineeringRecordReadModel
+  - name: InspectPlanningQueryStoreRuntime
+    type: query
+    dddOwner: PlanningQueryStoreRuntime
 domainObjects:
   - Effective pnpm workspace membership
   - Repository Map projection
@@ -213,6 +219,7 @@ fowlerSignals:
   - Temporal Coupling
 architectureGuards:
   - node --test scripts/generate-code-status.test.cjs scripts/governance-refresh.test.cjs
+  - node --test scripts/planning-db-run.test.cjs scripts/pr-closeout.test.cjs
   - DVT_REPOSITORY_MAP_INTEGRATION=1 node --test scripts/generate-code-status.test.cjs
   - pnpm test:ci-tools
   - pnpm docs:build
@@ -221,6 +228,7 @@ cypressFlows:
   - N/A - repository documentation projection with no browser interaction
 completionGate:
   - node --test scripts/generate-code-status.test.cjs scripts/governance-refresh.test.cjs
+  - node --test scripts/planning-db-run.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
   - DVT_REPOSITORY_MAP_INTEGRATION=1 node --test scripts/generate-code-status.test.cjs
   - pnpm docs:status:check
   - pnpm test:ci-tools
@@ -290,6 +298,25 @@ redGreenCycles:
       - scripts/governance-refresh.cjs
       - scripts/governance-refresh.test.cjs
     greenTest: node --test scripts/governance-refresh.test.cjs
+  - id: current-head-review-closeout-hardening
+    redTest: node --test scripts/generate-code-status.test.cjs scripts/planning-db-run.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
+    expectedFailure: Status-mode commands use ambiguous pnpm separators; canonical-binding, canonical-state, and materializer inputs can skip the live map gate; and closeout neither waits for Planning DB readiness, reacts to workspace-manifest-only changes, nor releases only the runtime it owns.
+    patchSurfaces:
+      - AGENTS.md
+      - docs/DOCS_README.md
+      - docs/generated-docs-policy.json
+      - docs/guides/documentation-maintenance-guide-20260407.md
+      - docs/guides/pr-preflight-and-ci-triage.md
+      - docs/planning/status/generated-code-state.md
+      - docs/runbooks/planning-generated-artifacts-operations-20260403.md
+      - scripts/generate-code-status.test.cjs
+      - scripts/planning-db-run.cjs
+      - scripts/planning-db-run.test.cjs
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+      - tools/ci/policy/workflow-scope.json
+      - tools/ci/workflow-scope-classification.test.mjs
+    greenTest: node --test scripts/generate-code-status.test.cjs scripts/planning-db-run.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
 symbols:
   - &repositoryMapSymbol
     name: GENERATION_MODES
