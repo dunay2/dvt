@@ -233,7 +233,7 @@ export function CanvasNodeWorkbenchPanel({
     node,
     nodes,
     edges,
-    presentationCopy: buildCanvasNodePresentationCopy(copy),
+    presentationCopy: buildCanvasNodePresentationCopy(copy, applicationLanguage),
     presentationTruth,
   });
   const contributionModel = resolveCanvasNodeWorkbenchContributions(node.id, contributions);

@@ -579,7 +579,11 @@ export const dbtInspectorPanels: InspectorPanelContribution[] = [
   {
     id: 'dbt.overview',
     pluginId: DBT_PLUGIN_ID,
-    label: 'Overview',
+    label: {
+      key: 'dbt.inspector.overview',
+      fallback: 'Overview',
+      translations: { es: 'Vista general' },
+    },
     icon: Info,
     order: 10,
     shouldShow: (node) => node.pluginId === DBT_PLUGIN_ID,
@@ -597,7 +601,11 @@ export const dbtInspectorPanels: InspectorPanelContribution[] = [
   {
     id: 'dbt.config',
     pluginId: DBT_PLUGIN_ID,
-    label: 'Config',
+    label: {
+      key: 'dbt.inspector.config',
+      fallback: 'Configuration',
+      translations: { es: 'Configuración' },
+    },
     icon: Settings,
     order: 30,
     shouldShow: (node) => node.pluginId === DBT_PLUGIN_ID,
@@ -606,7 +614,11 @@ export const dbtInspectorPanels: InspectorPanelContribution[] = [
   {
     id: 'dbt.columns',
     pluginId: DBT_PLUGIN_ID,
-    label: 'Columns',
+    label: {
+      key: 'dbt.inspector.columns',
+      fallback: 'Columns',
+      translations: { es: 'Columnas' },
+    },
     icon: Table,
     order: 40,
     shouldShow: (node) =>
@@ -618,7 +630,11 @@ export const dbtInspectorPanels: InspectorPanelContribution[] = [
   {
     id: 'dbt.history',
     pluginId: DBT_PLUGIN_ID,
-    label: 'History',
+    label: {
+      key: 'dbt.inspector.history',
+      fallback: 'History',
+      translations: { es: 'Historial' },
+    },
     icon: Clock,
     order: 50,
     shouldShow: (node) => node.pluginId === DBT_PLUGIN_ID,

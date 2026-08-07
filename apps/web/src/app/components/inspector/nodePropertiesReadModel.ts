@@ -80,6 +80,7 @@ export type NodePropertySection = Readonly<{
   emptyState?: string;
   description?: string;
   code?: string;
+  columnLabels?: Readonly<Record<string, string>>;
 }>;
 
 export type NodePropertiesReadModel = Readonly<{
@@ -201,12 +202,13 @@ function readColumns(value: unknown): readonly InspectorColumn[] {
 
 function buildGeneralRows(
   node: CanonicalNode,
-  metadata: Record<string, unknown>
+  metadata: Record<string, unknown>,
+  locale = 'en-US'
 ): NodePropertyRow[] {
   const config = asRecord(metadata.config);
   const dbt = asRecord(metadata.dbt);
   const rows: NodePropertyRow[] = [];
-  const numberFormatter = new Intl.NumberFormat('en-US');
+  const numberFormatter = new Intl.NumberFormat(locale);
 
   addRow(rows, NODE_PROPERTY_ROW_ID.name, 'Name', node.name);
   addRow(rows, NODE_PROPERTY_ROW_ID.nodeId, 'Node ID', node.id);
@@ -409,6 +411,39 @@ function interpolatePresentationTemplate(template: string, values: Record<string
     (resolved, [key, value]) => resolved.replaceAll(`{${key}}`, value),
     template
   );
+}
+
+function localizePresentationValue(
+  value: string,
+  presentationCopy: CanvasNodePresentationCopy | undefined
+): string {
+  return presentationCopy?.valueLabels?.[value.trim().toLowerCase()] ?? value;
+}
+
+function localizePropertyRows(
+  rows: readonly NodePropertyRow[],
+  presentationCopy: CanvasNodePresentationCopy | undefined
+): readonly NodePropertyRow[] {
+  return rows.map((row) => ({
+    ...row,
+    label: presentationCopy?.rowLabels?.[row.id] ?? row.label,
+    value: localizePresentationValue(row.value, presentationCopy),
+  }));
+}
+
+function localizePropertyTableRows(
+  rows: readonly NodePropertyTableRow[],
+  presentationCopy: CanvasNodePresentationCopy | undefined
+): readonly NodePropertyTableRow[] {
+  return rows.map((row) => ({
+    ...row,
+    cells: Object.fromEntries(
+      Object.entries(row.cells).map(([key, value]) => [
+        key,
+        localizePresentationValue(value, presentationCopy),
+      ])
+    ),
+  }));
 }
 
 function buildKeyRows(
@@ -630,6 +665,7 @@ function createSection({
   emptyState,
   description,
   code,
+  columnLabels,
 }: Readonly<{
   id: NodePropertySectionId;
   label: string;
@@ -638,6 +674,7 @@ function createSection({
   emptyState?: string;
   description?: string;
   code?: string;
+  columnLabels?: Readonly<Record<string, string>>;
 }>): NodePropertySection {
   return {
     id,
@@ -647,6 +684,7 @@ function createSection({
     ...(emptyState != null ? { emptyState } : {}),
     ...(description != null ? { description } : {}),
     ...(code != null ? { code } : {}),
+    ...(columnLabels != null ? { columnLabels } : {}),
   };
 }
 
@@ -661,17 +699,25 @@ export function buildNodePropertiesReadModel({
   const columns = readColumns(metadata.columns);
   const presentationTruth =
     suppliedPresentationTruth ?? buildCanvasNodePresentationTruth({ node, nodes, edges });
-  const columnRows =
+  const columnRows = localizePropertyTableRows(
     presentationTruth.columns.visibleProvenance === 'declared'
       ? buildColumnRows(columns)
-      : buildInheritedColumnRows(presentationTruth.columns.inherited);
-  const keyRows = buildKeyRows(metadata, columns);
-  const indexRows = buildIndexRows(metadata);
-  const foreignKeyRows = buildForeignKeyRows(metadata);
-  const constraintRows = buildConstraintRows(metadata);
-  const inputsOutputsRows = buildInputsOutputsRows(node, nodes, edges);
-  const testRows = buildDbtTestRows({ node, metadata, nodes, edges });
-  const sinkRows = buildSinkRows(node, metadata);
+      : buildInheritedColumnRows(presentationTruth.columns.inherited),
+    presentationCopy
+  );
+  const keyRows = localizePropertyTableRows(buildKeyRows(metadata, columns), presentationCopy);
+  const indexRows = localizePropertyTableRows(buildIndexRows(metadata), presentationCopy);
+  const foreignKeyRows = localizePropertyTableRows(buildForeignKeyRows(metadata), presentationCopy);
+  const constraintRows = localizePropertyTableRows(buildConstraintRows(metadata), presentationCopy);
+  const inputsOutputsRows = localizePropertyTableRows(
+    buildInputsOutputsRows(node, nodes, edges),
+    presentationCopy
+  );
+  const testRows = localizePropertyTableRows(
+    buildDbtTestRows({ node, metadata, nodes, edges }),
+    presentationCopy
+  );
+  const sinkRows = localizePropertyRows(buildSinkRows(node, metadata), presentationCopy);
   const code =
     presentationTruth.code.kind === 'inline' || presentationTruth.code.kind === 'generated'
       ? presentationTruth.code.content
@@ -700,6 +746,9 @@ export function buildNodePropertiesReadModel({
               path: presentationTruth.code.path,
             })
           : undefined;
+  const sectionLabels = presentationCopy?.sectionLabels;
+  const sectionEmptyStates = presentationCopy?.sectionEmptyStates;
+  const columnLabels = presentationCopy?.columnLabels;
 
   return {
     nodeId: node.id,
@@ -707,87 +756,113 @@ export function buildNodePropertiesReadModel({
     sections: [
       createSection({
         id: 'general',
-        label: 'General',
-        rows: buildGeneralRows(node, metadata),
+        label: sectionLabels?.general ?? 'General',
+        rows: localizePropertyRows(
+          buildGeneralRows(node, metadata, presentationCopy?.locale),
+          presentationCopy
+        ),
       }),
       createSection({
         id: 'columns',
-        label: presentationCopy?.columnsLabel ?? 'Columns',
+        label: sectionLabels?.columns ?? presentationCopy?.columnsLabel ?? 'Columns',
         tableRows: columnRows,
+        columnLabels,
         description: columnsDescription,
-        emptyState: columnRows.length === 0 ? 'No columns are recorded for this node.' : undefined,
+        emptyState:
+          columnRows.length === 0
+            ? (sectionEmptyStates?.columns ?? 'No columns are recorded for this node.')
+            : undefined,
       }),
       createSection({
         id: 'inputs-outputs',
-        label: 'Inputs / Outputs',
+        label: sectionLabels?.['inputs-outputs'] ?? 'Inputs / Outputs',
         tableRows: inputsOutputsRows,
+        columnLabels,
         emptyState:
           inputsOutputsRows.length === 0
-            ? 'No graph inputs or outputs are recorded for this node.'
+            ? (sectionEmptyStates?.['inputs-outputs'] ??
+              'No graph inputs or outputs are recorded for this node.')
             : undefined,
       }),
       createSection({
         id: 'tests',
-        label: 'Tests',
+        label: sectionLabels?.tests ?? 'Tests',
         tableRows: testRows,
+        columnLabels,
         emptyState:
           testRows.length === 0
-            ? 'No dbt or data-quality tests are recorded for this node.'
+            ? (sectionEmptyStates?.tests ??
+              'No dbt or data-quality tests are recorded for this node.')
             : undefined,
       }),
       createSection({
         id: 'keys',
-        label: 'Keys',
+        label: sectionLabels?.keys ?? 'Keys',
         tableRows: keyRows,
-        emptyState: keyRows.length === 0 ? 'No keys are recorded for this node.' : undefined,
+        columnLabels,
+        emptyState:
+          keyRows.length === 0
+            ? (sectionEmptyStates?.keys ?? 'No keys are recorded for this node.')
+            : undefined,
       }),
       createSection({
         id: 'indexes',
-        label: 'Indexes',
+        label: sectionLabels?.indexes ?? 'Indexes',
         tableRows: indexRows,
-        emptyState: indexRows.length === 0 ? 'No indexes are recorded for this node.' : undefined,
+        columnLabels,
+        emptyState:
+          indexRows.length === 0
+            ? (sectionEmptyStates?.indexes ?? 'No indexes are recorded for this node.')
+            : undefined,
       }),
       createSection({
         id: 'foreign-keys',
-        label: 'Foreign Keys',
+        label: sectionLabels?.['foreign-keys'] ?? 'Foreign Keys',
         tableRows: foreignKeyRows,
+        columnLabels,
         emptyState:
-          foreignKeyRows.length === 0 ? 'No foreign keys are recorded for this node.' : undefined,
+          foreignKeyRows.length === 0
+            ? (sectionEmptyStates?.['foreign-keys'] ??
+              'No foreign keys are recorded for this node.')
+            : undefined,
       }),
       createSection({
         id: 'constraints',
-        label: 'Constraints',
+        label: sectionLabels?.constraints ?? 'Constraints',
         tableRows: constraintRows,
+        columnLabels,
         emptyState:
           constraintRows.length === 0
-            ? 'No table constraints are recorded for this node.'
+            ? (sectionEmptyStates?.constraints ??
+              'No table constraints are recorded for this node.')
             : undefined,
       }),
       createSection({
         id: 'comments',
-        label: 'Comments',
-        rows: buildCommentRows(node, metadata),
+        label: sectionLabels?.comments ?? 'Comments',
+        rows: localizePropertyRows(buildCommentRows(node, metadata), presentationCopy),
         emptyState:
           node.description == null && readFirstString(metadata.comment, metadata.comments) == null
-            ? 'No comments are recorded for this node.'
+            ? (sectionEmptyStates?.comments ?? 'No comments are recorded for this node.')
             : undefined,
       }),
       ...(node.kind === 'dvt:sink'
         ? [
             createSection({
               id: 'sink',
-              label: 'Sink',
+              label: sectionLabels?.sink ?? 'Sink',
               rows: sinkRows,
               emptyState:
                 sinkRows.length === 0
-                  ? 'No sink target or write policy is recorded for this node.'
+                  ? (sectionEmptyStates?.sink ??
+                    'No sink target or write policy is recorded for this node.')
                   : undefined,
             }),
           ]
         : []),
       createSection({
         id: 'code',
-        label: presentationCopy?.codeLabel ?? 'Code',
+        label: sectionLabels?.code ?? presentationCopy?.codeLabel ?? 'Code',
         code,
         description: codeDescription,
         emptyState:
@@ -798,8 +873,8 @@ export function buildNodePropertiesReadModel({
       }),
       createSection({
         id: 'summary',
-        label: 'Summary',
-        rows: buildSummaryRows(node, nodes, edges),
+        label: sectionLabels?.summary ?? 'Summary',
+        rows: localizePropertyRows(buildSummaryRows(node, nodes, edges), presentationCopy),
       }),
     ],
   };

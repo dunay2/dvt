@@ -76,7 +76,8 @@ function renderSectionBody(
                     'px-2 py-2 font-medium'
                   )}
                 >
-                  {surface === 'workbench' ? key.replace(/([a-z])([A-Z])/g, '$1 $2') : key}
+                  {section.columnLabels?.[key] ??
+                    (surface === 'workbench' ? key.replace(/([a-z])([A-Z])/g, '$1 $2') : key)}
                 </th>
               ))}
             </tr>

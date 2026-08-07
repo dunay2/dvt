@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
+import { resolveCanvasViewCopy } from '../../views/canvas/canvasCopyCatalog';
+import { buildCanvasNodePresentationCopy } from '../../views/canvas/canvasNodePresentationCopy';
 import {
   buildNodePropertiesReadModel,
   type NodePropertiesReadModel,
@@ -126,6 +128,46 @@ function expectTableCells(
 }
 
 describe('nodePropertiesReadModel', () => {
+  it('projects every core Inspector section, row, column, value, and empty state in Spanish', () => {
+    const node = buildSourceNode({ metadata: {} });
+    const model = buildNodePropertiesReadModel({
+      node,
+      nodes: [node],
+      edges: [],
+      presentationCopy: buildCanvasNodePresentationCopy(resolveCanvasViewCopy('es'), 'es'),
+    });
+
+    expect(model.sections.map((section) => section.label)).toEqual([
+      'General',
+      'Columnas',
+      'Entradas y salidas',
+      'Pruebas',
+      'Claves',
+      'Índices',
+      'Claves externas',
+      'Restricciones',
+      'Comentarios',
+      'Código',
+      'Resumen',
+    ]);
+    expect(sectionById(model, 'general').rows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'node-id', label: 'ID del nodo' }),
+        expect.objectContaining({ id: 'kind', label: 'Tipo' }),
+        expect.objectContaining({ id: 'status', label: 'Estado', value: 'Inactivo' }),
+      ])
+    );
+    expect(sectionById(model, 'summary').rows).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 'tags', label: 'Etiquetas' })])
+    );
+    expect(sectionById(model, 'keys').emptyState).toBe('No hay claves registradas para este nodo.');
+    expect(sectionById(model, 'columns').columnLabels).toMatchObject({
+      name: 'Nombre',
+      nullable: 'Admite nulos',
+      reference: 'Referencia',
+    });
+  });
+
   it('projects source metadata into table-modeler sections', () => {
     const model = buildSourceModel();
 

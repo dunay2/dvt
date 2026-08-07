@@ -11,6 +11,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { IRunsPort, RunSnapshot, RunSummaryItem } from '../../ports/runs';
 import { AppServicesProvider } from '../../services/AppServicesContext';
 import type { CanonicalNode } from '../../types/canonical';
+import { resolveString } from '../contracts/PluginManifest';
 import { dbtGraphNodeCardStrategy } from './dbtGraphNodeCardStrategy';
 import { DbtNodeRenderer, dbtInspectorPanels } from './DbtNodeRenderer';
 
@@ -29,6 +30,16 @@ describe('DbtNodeRenderer history panel', () => {
     tags: [],
     metadata: {},
     ...overrides,
+  });
+
+  it('localizes every contributed Inspector panel label', () => {
+    expect(dbtInspectorPanels.map((panel) => resolveString(panel.label, 'es'))).toEqual([
+      'Vista general',
+      'SQL',
+      'Configuración',
+      'Columnas',
+      'Historial',
+    ]);
   });
 
   const buildSnapshot = (runId: string): RunSnapshot => ({
