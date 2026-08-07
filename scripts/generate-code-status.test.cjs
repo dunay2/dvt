@@ -270,7 +270,7 @@ test('explicit check mode and CI reject generated map drift', () => {
 });
 
 test('docs status check passes fail-closed intent through the nested pnpm script', () => {
-  assert.equal(packageJson.scripts['docs:status:check'], 'pnpm docs:status:generate -- --check');
+  assert.equal(packageJson.scripts['docs:status:check'], 'pnpm docs:status:generate --check');
 });
 
 test('repository map output is byte-stable and preserves governed navigation', () => {
