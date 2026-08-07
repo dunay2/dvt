@@ -137,8 +137,10 @@ flowchart LR
 - Linux process identity uses the kernel boot ID plus monotonic process-start
   ticks and never derives ownership from wall-clock boot time.
 - Stale closeout recovery keeps the public lease directory continuously
-  reserved: one verified recovery marker serializes owner replacement, and a
-  third contender fails closed until that reservation is released.
+  reserved: ownerless age is sampled before mutation, one verified recovery
+  marker serializes owner replacement and remains for the lease lifetime, and
+  release verifies both owner and reservation tokens. A third contender fails
+  closed until that reservation is released.
 - PR publication and docs deployment use the same exact Python patch and the
   same hash-locked pip/Zensical dependency graph, with no moving upgrade step.
 - Feature mechanization, docs governance, CI tools, ARC evaluation, and the full
