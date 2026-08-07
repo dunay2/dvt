@@ -128,6 +128,9 @@ flowchart LR
   cleanup.
 - Every closeout input class prepares Planning DB before the unconditional full
   pre-push consumer, including code/config files outside Repository Map scope.
+- A partially written or schema-invalid closeout owner remains fail-closed
+  during the initialization grace and becomes recoverable only when its owner
+  file has reached that same bounded stale threshold.
 - PR publication and docs deployment use the same exact Python patch and the
   same hash-locked pip/Zensical dependency graph, with no moving upgrade step.
 - Feature mechanization, docs governance, CI tools, ARC evaluation, and the full
@@ -391,6 +394,13 @@ redGreenCycles:
   - id: closeout-lease-interleaving-review
     redTest: node --test scripts/pr-closeout.test.cjs
     expectedFailure: An owner can appear between stale checks and quarantine, or be replaced before the initializer records runtime ownership, allowing a live lease to be deleted or misclaimed.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node --test scripts/pr-closeout.test.cjs
+  - id: partial-closeout-owner-recovery-review
+    redTest: node --test scripts/pr-closeout.test.cjs
+    expectedFailure: An empty, truncated, or schema-invalid owner file is treated as a permanent read error instead of an initializing lease with bounded stale recovery.
     patchSurfaces:
       - scripts/pr-closeout.cjs
       - scripts/pr-closeout.test.cjs
