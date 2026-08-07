@@ -128,19 +128,11 @@ flowchart LR
   cleanup.
 - Every closeout input class prepares Planning DB before the unconditional full
   pre-push consumer, including code/config files outside Repository Map scope.
-- A partially written or schema-invalid closeout owner or recovery reservation
-  remains fail-closed during the initialization grace and becomes recoverable
-  only when that record has reached the same bounded stale threshold.
-- A live PID is accepted as the lease owner only when its OS process-start
-  identity matches the recorded owner identity; PID reuse is recoverable and
-  an unreadable identity remains fail-closed.
-- Linux process identity uses the kernel boot ID plus monotonic process-start
-  ticks and never derives ownership from wall-clock boot time.
-- Stale closeout recovery keeps the public lease directory continuously
-  reserved: ownerless age is sampled before mutation, one verified recovery
-  marker serializes owner replacement and remains for the lease lifetime, and
-  release verifies both owner and reservation tokens. A third contender fails
-  closed until that reservation is released.
+- The entire synchronous closeout executes while the same Node process owns a
+  deterministic loopback TCP listener. The operating system performs the
+  atomic bind, rejects every concurrent contender, and releases the endpoint
+  when the process exits; no stale owner record, token comparison, quarantine,
+  or pathname deletion participates in mutual exclusion.
 - PR publication and docs deployment use the same exact Python patch and the
   same hash-locked pip/Zensical dependency graph, with no moving upgrade step.
 - Feature mechanization, docs governance, CI tools, ARC evaluation, and the full
@@ -436,6 +428,13 @@ redGreenCycles:
       - scripts/pr-closeout.cjs
       - scripts/pr-closeout.test.cjs
     greenTest: node --test scripts/pr-closeout.test.cjs
+  - id: os-owned-closeout-socket-review
+    redTest: node --test scripts/pr-closeout.test.cjs
+    expectedFailure: Check-then-delete recovery can remove a late initializer, a successor marker, or an entire successor lease; repeated ownerless retries can also rejuvenate the stale threshold indefinitely.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node --test scripts/pr-closeout.test.cjs
 symbols:
   - &repositoryMapSymbol
     name: GENERATION_MODES
@@ -538,23 +537,9 @@ symbols:
   - <<: *prCloseoutLifecycleSymbol
     name: releasePlanningDbIfOwned
   - <<: *prCloseoutLifecycleSymbol
-    name: acquireCloseoutLease
+    name: resolveCloseoutLockEndpoint
   - <<: *prCloseoutLifecycleSymbol
-    name: closeoutLeaseOwnerFile
-  - <<: *prCloseoutLifecycleSymbol
-    name: closeoutLeaseInitializationGraceMs
-  - <<: *prCloseoutLifecycleSymbol
-    name: defaultCloseoutLeaseDir
-  - <<: *prCloseoutLifecycleSymbol
-    name: isProcessActive
-  - <<: *prCloseoutLifecycleSymbol
-    name: os
-  - <<: *prCloseoutLifecycleSymbol
-    name: readCloseoutLeaseOwner
-  - <<: *prCloseoutLifecycleSymbol
-    name: readProcessIdentity
-  - <<: *prCloseoutLifecycleSymbol
-    name: releaseCloseoutLease
+    name: runWithCloseoutLock
   - &prCloseoutRoutingSymbol
     name: workflowScopePolicy
     path: scripts/pr-closeout.cjs
