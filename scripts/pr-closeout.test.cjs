@@ -315,6 +315,26 @@ test('runtime listener errors retain exclusion until the async task settles', as
   assert.match(outcome.error?.message || '', /PR_CLOSEOUT_LEASE_RUNTIME_FAILED/u);
 });
 
+test('queued listener errors survive synchronous task settlement and listener close', async () => {
+  const server = new EventEmitter();
+  server.listen = (_endpoint, callback) => queueMicrotask(callback);
+  server.close = (callback) => setImmediate(callback);
+
+  await assert.rejects(
+    runWithCloseoutLock(
+      () => {
+        setImmediate(() => server.emit('error', new Error('queued listener runtime failed')));
+        return 'synchronous task complete';
+      },
+      {
+        endpoint: { path: `test-double-${process.pid}` },
+        createServer: () => server,
+      }
+    ),
+    /PR_CLOSEOUT_LEASE_RUNTIME_FAILED: queued listener runtime failed/u
+  );
+});
+
 test('OS-owned closeout lock serializes processes and releases after abrupt exit', async (t) => {
   const modulePath = path.join(__dirname, 'pr-closeout.cjs');
   const scope = `resource:test-process-${process.pid}-${Date.now()}`;
