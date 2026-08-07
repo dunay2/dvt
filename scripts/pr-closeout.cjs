@@ -425,13 +425,47 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
       const staleLeaseDir = `${leaseDir}.stale-${token}`;
       try {
         renameSync(leaseDir, staleLeaseDir);
-        rmSync(staleLeaseDir, { recursive: true, force: true });
       } catch (recoveryError) {
-        if (recoveryError?.code !== 'ENOENT') {
-          throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${recoveryError.message}`, {
-            cause: recoveryError,
+        if (recoveryError?.code === 'ENOENT') continue;
+        throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${recoveryError.message}`, {
+          cause: recoveryError,
+        });
+      }
+
+      let quarantinedOwner;
+      try {
+        quarantinedOwner = readCloseoutLeaseOwner(staleLeaseDir, options);
+      } catch (ownerReadError) {
+        try {
+          renameSync(staleLeaseDir, leaseDir);
+        } catch (restoreError) {
+          throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${restoreError.message}`, {
+            cause: restoreError,
           });
         }
+        throw ownerReadError;
+      }
+
+      if (quarantinedOwner && processIsActive(quarantinedOwner.pid)) {
+        try {
+          renameSync(staleLeaseDir, leaseDir);
+        } catch (restoreError) {
+          throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${restoreError.message}`, {
+            cause: restoreError,
+          });
+        }
+        throw new Error(
+          `PR_CLOSEOUT_LEASE_BUSY: owned by process ${quarantinedOwner.pid}. Retry after it finishes.`,
+          { cause: error }
+        );
+      }
+
+      try {
+        rmSync(staleLeaseDir, { recursive: true, force: true });
+      } catch (recoveryError) {
+        throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${recoveryError.message}`, {
+          cause: recoveryError,
+        });
       }
       continue;
     }
@@ -443,8 +477,14 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
         { encoding: 'utf8', flag: 'wx' }
       );
     } catch (error) {
-      rmSync(leaseDir, { recursive: true, force: true });
       throw new Error(`PR_CLOSEOUT_LEASE_ACQUIRE_FAILED: ${error.message}`, { cause: error });
+    }
+
+    const visibleOwner = readCloseoutLeaseOwner(leaseDir, options);
+    if (!visibleOwner || visibleOwner.pid !== processId || visibleOwner.token !== token) {
+      throw new Error(
+        'PR_CLOSEOUT_LEASE_OWNERSHIP_LOST: refusing to claim a replaced closeout lease.'
+      );
     }
 
     runtime.closeoutLeaseOwned = true;
