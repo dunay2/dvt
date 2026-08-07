@@ -187,6 +187,42 @@ test('closeout lease recovers an ownerless directory after the initialization gr
   releaseCloseoutLease({}, runtime);
 });
 
+test('closeout lease bounds recovery of partially written owner files by the initialization grace', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-partial-owner-'));
+  const ownerContents = ['', '{"pid":101', `${JSON.stringify({ pid: 101 })}\n`];
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+
+  for (const [index, ownerContent] of ownerContents.entries()) {
+    const leaseDir = path.join(leaseRoot, `lease-${index}`);
+    const ownerPath = path.join(leaseDir, 'owner.json');
+    const runtime = {};
+    const commonOptions = {
+      closeoutLeaseDir: leaseDir,
+      processId: 202,
+      createLeaseToken: () => `successor-token-${index}`,
+      closeoutLeaseInitializationGraceMs: 30_000,
+      isProcessActive: () => false,
+      statSync: (target) => {
+        assert.equal(target, ownerPath);
+        return { mtimeMs: 1_000 };
+      },
+    };
+    fs.mkdirSync(leaseDir);
+    fs.writeFileSync(ownerPath, ownerContent, 'utf8');
+
+    assert.throws(
+      () => acquireCloseoutLease({ ...commonOptions, now: () => 30_999 }, runtime),
+      /PR_CLOSEOUT_LEASE_BUSY/u
+    );
+
+    acquireCloseoutLease({ ...commonOptions, now: () => 31_000 }, runtime);
+    const owner = JSON.parse(fs.readFileSync(ownerPath, 'utf8'));
+    assert.equal(owner.pid, 202);
+    assert.equal(owner.token, `successor-token-${index}`);
+    releaseCloseoutLease({}, runtime);
+  }
+});
+
 test('closeout lease restores an owner that appears while the directory enters quarantine', (t) => {
   const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-interleave-'));
   const leaseDir = path.join(leaseRoot, 'lease');
