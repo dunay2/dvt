@@ -11,6 +11,7 @@ const {
   executePrCloseoutPlan,
   parseArgs,
   probePlanningDbActive,
+  readProcessIdentity,
   readProcessStartedAt,
   releaseCloseoutLease,
   resolveCommandInvocation,
@@ -223,6 +224,46 @@ test('process start identity derives a stable Linux epoch and fails closed on un
       }),
     /PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: access denied/u
   );
+});
+
+test('Linux process identity uses boot ID and start ticks without wall-clock time', () => {
+  const processFields = [
+    'S',
+    '1',
+    '1',
+    '1',
+    '0',
+    '-1',
+    '4194304',
+    '0',
+    '0',
+    '0',
+    '0',
+    '0',
+    '0',
+    '0',
+    '0',
+    '20',
+    '0',
+    '1',
+    '0',
+    '250',
+  ];
+  const readIdentity = (bootTime) =>
+    readProcessIdentity(101, {
+      platform: 'linux',
+      processIdentityReadFileSync: (filePath) => {
+        if (filePath === '/proc/101/stat') {
+          return `101 (worker with spaces) ${processFields.join(' ')}`;
+        }
+        if (filePath === '/proc/sys/kernel/random/boot_id') return 'boot-identity\n';
+        if (filePath === '/proc/stat') return `btime ${bootTime}\n`;
+        throw new Error(`unexpected path ${filePath}`);
+      },
+    });
+
+  assert.equal(readIdentity(1_000), 'linux:boot-identity:250');
+  assert.equal(readIdentity(1_100), 'linux:boot-identity:250');
 });
 
 test('closeout lease recovers a stale owner after its PID is reused', (t) => {
