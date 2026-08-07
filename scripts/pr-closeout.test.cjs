@@ -94,6 +94,23 @@ test('OS-owned closeout lock serializes contenders and releases after completion
   assert.equal(await runWithCloseoutLock(() => 'third-complete', { endpoint }), 'third-complete');
 });
 
+test('closeout endpoint uses OS-released local namespaces where available', () => {
+  const scope = path.join(process.cwd(), `endpoint-${process.pid}`);
+  const windowsEndpoint = resolveCloseoutLockEndpoint(scope, 'win32');
+  const linuxEndpoint = resolveCloseoutLockEndpoint(scope, 'linux');
+  const fallbackEndpoint = resolveCloseoutLockEndpoint(scope, 'darwin');
+
+  assert.match(windowsEndpoint.path, /^\\\\\.\\pipe\\dvt-pr-closeout-[a-f0-9]{24}$/u);
+  assert.equal(linuxEndpoint.path.charCodeAt(0), 0);
+  assert.match(linuxEndpoint.path.slice(1), /^dvt-pr-closeout-[a-f0-9]{24}$/u);
+  assert.equal(fallbackEndpoint.host, '127.0.0.1');
+  assert.ok(fallbackEndpoint.port >= 49_152 && fallbackEndpoint.port <= 65_535);
+  assert.deepEqual(
+    resolveCloseoutLockEndpoint(scope, process.platform),
+    resolveCloseoutLockEndpoint(scope, process.platform)
+  );
+});
+
 test('OS-owned closeout lock releases automatically when the guarded task fails', async () => {
   const endpoint = resolveCloseoutLockEndpoint(`failure-${process.pid}-${Date.now()}`);
 

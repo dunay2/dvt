@@ -1,19 +1,15 @@
 #!/usr/bin/env node
 /** Owned concern: run the governed PR closeout rail without pre-commit/prepush duplication. */
 const { execFileSync, spawnSync } = require('node:child_process');
-const { randomUUID } = require('node:crypto');
+const { createHash } = require('node:crypto');
 const fs = require('node:fs');
-const os = require('node:os');
+const net = require('node:net');
 const path = require('node:path');
 
 const { listLocalChangedFiles, parseGitLines, toPosix } = require('./git-local-changes.cjs');
 const workflowScopePolicy = require('../tools/ci/policy/workflow-scope.json');
 
 const repoRoot = path.resolve(__dirname, '..');
-const defaultCloseoutLeaseDir = path.join(os.tmpdir(), 'dvt-planning-db-pr-closeout.lock');
-const closeoutLeaseOwnerFile = 'owner.json';
-const closeoutLeaseRecoveryFile = 'recovery.json';
-const closeoutLeaseInitializationGraceMs = 30_000;
 const repositoryMapSourcePatterns = Object.freeze([
   ...workflowScopePolicy.generated_status_relevant,
 ]);
@@ -30,6 +26,100 @@ const workspaceSourcePatterns = Object.freeze([
   '**/src/**',
   '**/test/**',
 ]);
+
+function resolveCloseoutLockEndpoint(scope = repoRoot, platform = process.platform) {
+  const absoluteScope = path.resolve(scope);
+  let canonicalScope;
+  try {
+    canonicalScope = fs.realpathSync.native(absoluteScope);
+  } catch {
+    canonicalScope = absoluteScope;
+  }
+  if (platform === 'win32') canonicalScope = canonicalScope.toLowerCase();
+
+  const digest = createHash('sha256').update(canonicalScope).digest();
+  const lockName = `dvt-pr-closeout-${digest.toString('hex').slice(0, 24)}`;
+  if (platform === 'win32') {
+    return { path: `\\\\.\\pipe\\${lockName}` };
+  }
+  if (platform === 'linux') {
+    return { path: `\0${lockName}` };
+  }
+  return {
+    host: '127.0.0.1',
+    port: 49_152 + (digest.readUInt16BE(0) % 16_384),
+  };
+}
+
+function runWithCloseoutLock(task, options = {}) {
+  const endpoint =
+    options.endpoint || resolveCloseoutLockEndpoint(options.repoRootPath || repoRoot);
+  const createServer = options.createServer || net.createServer;
+
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    let settled = false;
+    const endpointLabel = endpoint.path
+      ? endpoint.path.replace(/^\0/u, '@')
+      : `${endpoint.host}:${endpoint.port}`;
+
+    const closeAndSettle = (error, value) => {
+      if (settled) return;
+      settled = true;
+      server.close((closeError) => {
+        if (error) {
+          reject(error);
+        } else if (closeError) {
+          reject(
+            new Error(`PR_CLOSEOUT_LEASE_RELEASE_FAILED: ${closeError.message}`, {
+              cause: closeError,
+            })
+          );
+        } else {
+          resolve(value);
+        }
+      });
+    };
+
+    const rejectAcquisition = (error) => {
+      if (settled) return;
+      settled = true;
+      if (error?.code === 'EADDRINUSE') {
+        reject(
+          new Error(
+            `PR_CLOSEOUT_LEASE_BUSY: closeout endpoint ${endpointLabel} is already owned. Retry after it finishes.`,
+            { cause: error }
+          )
+        );
+        return;
+      }
+      reject(new Error(`PR_CLOSEOUT_LEASE_ACQUIRE_FAILED: ${error.message}`, { cause: error }));
+    };
+
+    server.once('error', rejectAcquisition);
+    server.on('connection', (socket) => socket.destroy());
+
+    server.listen({ ...endpoint, exclusive: true }, () => {
+      server.off('error', rejectAcquisition);
+      server.on('error', (error) => {
+        closeAndSettle(
+          new Error(`PR_CLOSEOUT_LEASE_RUNTIME_FAILED: ${error.message}`, { cause: error })
+        );
+      });
+      let result;
+      try {
+        result = task();
+      } catch (error) {
+        closeAndSettle(error);
+        return;
+      }
+      Promise.resolve(result).then(
+        (value) => closeAndSettle(null, value),
+        (error) => closeAndSettle(error)
+      );
+    });
+  });
+}
 
 function normalizeChangedFiles(changedFiles) {
   return Array.from(new Set(changedFiles.map(toPosix).filter(Boolean))).sort();
@@ -132,12 +222,6 @@ function buildPrCloseoutPlan(options = {}) {
   if (!options.commit?.type || !options.commit?.scope || !options.commit?.subject) {
     throw new Error('INVALID_COMMIT: usage is pnpm pr:closeout <type> <scope> "<Subject>".');
   }
-
-  pushStepOnce(steps, {
-    id: 'closeout-lease-acquire',
-    internal: 'acquireCloseoutLease',
-    label: 'acquire exclusive PR closeout lease',
-  });
 
   if (hasDocsChange(changedFiles)) {
     pushStepOnce(steps, {
@@ -243,12 +327,6 @@ function buildPrCloseoutPlan(options = {}) {
     });
   }
 
-  pushStepOnce(steps, {
-    id: 'closeout-lease-release',
-    internal: 'releaseCloseoutLease',
-    label: 'release exclusive PR closeout lease',
-  });
-
   return steps;
 }
 
@@ -347,425 +425,6 @@ function probePlanningDbActive(options = {}) {
   );
 }
 
-function isProcessActive(processId) {
-  if (!Number.isSafeInteger(processId) || processId <= 0) return false;
-  try {
-    process.kill(processId, 0);
-    return true;
-  } catch (error) {
-    return error?.code === 'EPERM';
-  }
-}
-
-function readProcessIdentity(processId, options = {}) {
-  if (!Number.isSafeInteger(processId) || processId <= 0) return null;
-
-  const platform = options.platform || process.platform;
-  const readFileSync = options.processIdentityReadFileSync || fs.readFileSync;
-  const spawnCommand = options.processIdentitySpawnCommand || spawnSync;
-
-  if (platform === 'linux') {
-    let processStat;
-    try {
-      processStat = readFileSync(`/proc/${processId}/stat`, 'utf8');
-    } catch (error) {
-      if (error?.code === 'ENOENT') return null;
-      throw new Error(`PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: ${error.message}`, { cause: error });
-    }
-
-    try {
-      const commandEnd = processStat.lastIndexOf(')');
-      const processFields = processStat
-        .slice(commandEnd + 1)
-        .trim()
-        .split(/\s+/u);
-      const startTicks = processFields[19];
-      const bootId = readFileSync('/proc/sys/kernel/random/boot_id', 'utf8').trim();
-      if (commandEnd < 0 || !/^\d+$/u.test(startTicks) || !bootId) {
-        throw new Error('invalid Linux process timing data');
-      }
-      return `linux:${bootId}:${startTicks}`;
-    } catch (error) {
-      throw new Error(`PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: ${error.message}`, { cause: error });
-    }
-  }
-
-  if (platform === 'win32') {
-    const script = [
-      `$process = Get-Process -Id ${processId} -ErrorAction SilentlyContinue`,
-      'if ($null -eq $process) { exit 3 }',
-      '[Console]::Out.Write(([DateTimeOffset]$process.StartTime.ToUniversalTime()).ToUnixTimeMilliseconds())',
-    ].join('; ');
-    const result = spawnCommand(
-      'powershell.exe',
-      ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
-      { encoding: 'utf8', windowsHide: true }
-    );
-    if (result.error) {
-      throw new Error(`PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: ${result.error.message}`, {
-        cause: result.error,
-      });
-    }
-    if (result.status === 3) return null;
-    if (result.status !== 0) {
-      throw new Error(
-        `PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: PowerShell exited with ${result.status ?? 1}`
-      );
-    }
-    const startedAt = String(result.stdout).trim();
-    if (!/^\d+$/u.test(startedAt)) {
-      throw new Error('PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: invalid Windows process timing data');
-    }
-    return `win32:${startedAt}`;
-  }
-
-  const result = spawnCommand('ps', ['-o', 'lstart=', '-p', String(processId)], {
-    encoding: 'utf8',
-    windowsHide: true,
-  });
-  if (result.error) {
-    throw new Error(`PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: ${result.error.message}`, {
-      cause: result.error,
-    });
-  }
-  if (result.status === 1) return null;
-  if (result.status !== 0) {
-    throw new Error(`PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: ps exited with ${result.status ?? 1}`);
-  }
-  const startedAt = String(result.stdout).trim();
-  if (!startedAt || !Number.isFinite(Date.parse(startedAt))) {
-    throw new Error('PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: invalid process timing data');
-  }
-  return `${platform}:${startedAt}`;
-}
-
-function readCloseoutLeaseRecord(recordPath, options = {}) {
-  const readFileSync = options.readFileSync || fs.readFileSync;
-  let ownerContents;
-  try {
-    ownerContents = readFileSync(recordPath, 'utf8');
-  } catch (error) {
-    if (error?.code === 'ENOENT') return null;
-    throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${error.message}`, { cause: error });
-  }
-
-  let owner;
-  try {
-    owner = JSON.parse(ownerContents);
-  } catch (error) {
-    if (error instanceof SyntaxError) return null;
-    throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${error.message}`, { cause: error });
-  }
-
-  if (
-    !owner ||
-    typeof owner !== 'object' ||
-    !Number.isSafeInteger(owner.pid) ||
-    owner.pid <= 0 ||
-    typeof owner.token !== 'string' ||
-    owner.token.length === 0 ||
-    (owner.processIdentity !== undefined &&
-      (typeof owner.processIdentity !== 'string' || owner.processIdentity.length === 0)) ||
-    (owner.processStartedAt !== undefined &&
-      (typeof owner.processStartedAt !== 'string' ||
-        !Number.isFinite(Date.parse(owner.processStartedAt))))
-  ) {
-    return null;
-  }
-
-  return owner;
-}
-
-function readCloseoutLeaseOwner(leaseDir, options = {}) {
-  return readCloseoutLeaseRecord(path.join(leaseDir, closeoutLeaseOwnerFile), options);
-}
-
-function acquireCloseoutLease(options = {}, runtime = {}) {
-  const leaseDir = options.closeoutLeaseDir || defaultCloseoutLeaseDir;
-  const processId = options.processId || process.pid;
-  const createLeaseToken = options.createLeaseToken || randomUUID;
-  const processIsActive = options.isProcessActive || isProcessActive;
-  const getProcessIdentity =
-    options.getProcessIdentity || ((pid) => readProcessIdentity(pid, options));
-  const mkdirSync = options.mkdirSync || fs.mkdirSync;
-  const writeFileSync = options.writeFileSync || fs.writeFileSync;
-  const rmSync = options.rmSync || fs.rmSync;
-  const statSync = options.statSync || fs.statSync;
-  const now = options.now || Date.now;
-  const initializationGraceMs =
-    options.closeoutLeaseInitializationGraceMs ?? closeoutLeaseInitializationGraceMs;
-  const token = createLeaseToken();
-  const processIdentity = getProcessIdentity(processId);
-  const ownerPath = path.join(leaseDir, closeoutLeaseOwnerFile);
-  const recoveryPath = path.join(leaseDir, closeoutLeaseRecoveryFile);
-  const leaseRecord = {
-    pid: processId,
-    token,
-    startedAt: new Date().toISOString(),
-    processIdentity,
-  };
-
-  if (typeof processIdentity !== 'string' || processIdentity.length === 0) {
-    throw new Error(
-      'PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: current process identity is unavailable.'
-    );
-  }
-
-  const ownerIsActive = (owner) => {
-    if (!processIsActive(owner.pid)) return false;
-    if (!owner.processIdentity) return true;
-    const observedProcessIdentity = getProcessIdentity(owner.pid);
-    if (observedProcessIdentity === null) return false;
-    if (typeof observedProcessIdentity !== 'string' || observedProcessIdentity.length === 0) {
-      throw new Error(
-        `PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: process ${owner.pid} identity is unavailable.`
-      );
-    }
-    return observedProcessIdentity === owner.processIdentity;
-  };
-
-  if (!Number.isFinite(initializationGraceMs) || initializationGraceMs < 0) {
-    throw new Error('PR_CLOSEOUT_LEASE_INVALID_GRACE: expected a non-negative millisecond value.');
-  }
-
-  const recordIsOurs = (record) =>
-    Boolean(record && record.pid === processId && record.token === token);
-
-  const assertRecoveryReservation = () => {
-    const reservation = readCloseoutLeaseRecord(recoveryPath, options);
-    if (!recordIsOurs(reservation)) {
-      throw new Error(
-        'PR_CLOSEOUT_LEASE_OWNERSHIP_LOST: refusing to recover without the visible reservation.'
-      );
-    }
-  };
-
-  const releaseRecoveryReservation = () => {
-    const reservation = readCloseoutLeaseRecord(recoveryPath, options);
-    if (!recordIsOurs(reservation)) return;
-    rmSync(recoveryPath, { force: false });
-  };
-
-  const cleanupFailedClaim = () => {
-    const visibleOwner = readCloseoutLeaseOwner(leaseDir, options);
-    if (recordIsOurs(visibleOwner)) rmSync(ownerPath, { force: false });
-    releaseRecoveryReservation();
-  };
-
-  const readInitializationAge = (recordPath, fallbackPath) => {
-    try {
-      return Math.max(0, now() - statSync(recordPath).mtimeMs);
-    } catch (statError) {
-      if (statError?.code !== 'ENOENT') {
-        throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${statError.message}`, {
-          cause: statError,
-        });
-      }
-      try {
-        return Math.max(0, now() - statSync(fallbackPath).mtimeMs);
-      } catch (fallbackStatError) {
-        if (fallbackStatError?.code === 'ENOENT') return null;
-        throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${fallbackStatError.message}`, {
-          cause: fallbackStatError,
-        });
-      }
-    }
-  };
-
-  let recoveredStaleReservation = false;
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    let createdLeaseDirectory = false;
-    let observedLeaseAgeMs;
-    try {
-      mkdirSync(leaseDir);
-      createdLeaseDirectory = true;
-    } catch (error) {
-      if (error?.code === 'ENOENT') continue;
-      if (error?.code !== 'EEXIST') {
-        throw new Error(`PR_CLOSEOUT_LEASE_ACQUIRE_FAILED: ${error.message}`, { cause: error });
-      }
-    }
-
-    if (!createdLeaseDirectory) {
-      const ownerBeforeReservation = readCloseoutLeaseOwner(leaseDir, options);
-      observedLeaseAgeMs = ownerBeforeReservation
-        ? Number.POSITIVE_INFINITY
-        : recoveredStaleReservation
-          ? Number.POSITIVE_INFINITY
-          : readInitializationAge(ownerPath, leaseDir);
-      if (observedLeaseAgeMs === null) continue;
-    }
-
-    try {
-      writeFileSync(recoveryPath, `${JSON.stringify(leaseRecord)}\n`, {
-        encoding: 'utf8',
-        flag: 'wx',
-      });
-    } catch (error) {
-      if (error?.code === 'ENOENT') continue;
-      if (error?.code !== 'EEXIST') {
-        throw new Error(`PR_CLOSEOUT_LEASE_ACQUIRE_FAILED: ${error.message}`, { cause: error });
-      }
-
-      let reservation = readCloseoutLeaseRecord(recoveryPath, options);
-      if (!reservation) {
-        const reservationAgeMs = readInitializationAge(recoveryPath, leaseDir);
-        if (reservationAgeMs === null) continue;
-        if (reservationAgeMs < initializationGraceMs) {
-          throw new Error(
-            'PR_CLOSEOUT_LEASE_BUSY: owned by an initializing process. Retry after it finishes.',
-            { cause: error }
-          );
-        }
-        reservation = readCloseoutLeaseRecord(recoveryPath, options);
-      }
-
-      if (!reservation) {
-        try {
-          rmSync(recoveryPath, { force: false });
-          recoveredStaleReservation = true;
-        } catch (recoveryError) {
-          if (recoveryError?.code === 'ENOENT') continue;
-          throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${recoveryError.message}`, {
-            cause: recoveryError,
-          });
-        }
-        continue;
-      }
-
-      if (reservation && ownerIsActive(reservation)) {
-        throw new Error(
-          `PR_CLOSEOUT_LEASE_BUSY: recovery reserved by process ${reservation.pid}. Retry after it finishes.`,
-          {
-            cause: error,
-          }
-        );
-      }
-
-      const visibleReservation = readCloseoutLeaseRecord(recoveryPath, options);
-      if (!visibleReservation) continue;
-      if (reservation && visibleReservation.token !== reservation.token) continue;
-      if (ownerIsActive(visibleReservation)) {
-        throw new Error(
-          `PR_CLOSEOUT_LEASE_BUSY: recovery reserved by process ${visibleReservation.pid}. Retry after it finishes.`,
-          {
-            cause: error,
-          }
-        );
-      }
-
-      try {
-        rmSync(recoveryPath, { force: false });
-        recoveredStaleReservation = true;
-      } catch (recoveryError) {
-        if (recoveryError?.code === 'ENOENT') continue;
-        throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${recoveryError.message}`, {
-          cause: recoveryError,
-        });
-      }
-      continue;
-    }
-
-    try {
-      assertRecoveryReservation();
-      let owner = readCloseoutLeaseOwner(leaseDir, options);
-
-      if (owner && ownerIsActive(owner)) {
-        releaseRecoveryReservation();
-        throw new Error(
-          `PR_CLOSEOUT_LEASE_BUSY: owned by process ${owner.pid}. Retry after it finishes.`
-        );
-      }
-
-      if (!owner && !createdLeaseDirectory) {
-        if (observedLeaseAgeMs < initializationGraceMs) {
-          releaseRecoveryReservation();
-          throw new Error(
-            'PR_CLOSEOUT_LEASE_BUSY: owned by an initializing process. Retry after it finishes.'
-          );
-        }
-        owner = readCloseoutLeaseOwner(leaseDir, options);
-        if (owner && ownerIsActive(owner)) {
-          releaseRecoveryReservation();
-          throw new Error(
-            `PR_CLOSEOUT_LEASE_BUSY: owned by process ${owner.pid}. Retry after it finishes.`
-          );
-        }
-      }
-
-      assertRecoveryReservation();
-      owner = readCloseoutLeaseOwner(leaseDir, options);
-      if (owner && ownerIsActive(owner)) {
-        releaseRecoveryReservation();
-        throw new Error(
-          `PR_CLOSEOUT_LEASE_BUSY: owned by process ${owner.pid}. Retry after it finishes.`
-        );
-      }
-
-      try {
-        rmSync(ownerPath, { force: false });
-      } catch (ownerRemovalError) {
-        if (ownerRemovalError?.code !== 'ENOENT') throw ownerRemovalError;
-      }
-
-      writeFileSync(ownerPath, `${JSON.stringify(leaseRecord)}\n`, {
-        encoding: 'utf8',
-        flag: 'wx',
-      });
-      assertRecoveryReservation();
-      const visibleOwner = readCloseoutLeaseOwner(leaseDir, options);
-      if (!recordIsOurs(visibleOwner)) {
-        throw new Error(
-          'PR_CLOSEOUT_LEASE_OWNERSHIP_LOST: refusing to claim a replaced closeout lease.'
-        );
-      }
-
-      runtime.closeoutLeaseOwned = true;
-      runtime.closeoutLeaseReleaseAttempted = false;
-      runtime.closeoutLease = { leaseDir, processId, token };
-      return;
-    } catch (error) {
-      if (!runtime.closeoutLeaseOwned) {
-        try {
-          cleanupFailedClaim();
-        } catch (cleanupError) {
-          throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${cleanupError.message}`, {
-            cause: cleanupError,
-          });
-        }
-      }
-      throw error;
-    }
-  }
-
-  throw new Error('PR_CLOSEOUT_LEASE_BUSY: another closeout acquired the lease during recovery.');
-}
-
-function releaseCloseoutLease(options = {}, runtime = {}) {
-  if (!runtime.closeoutLeaseOwned || runtime.closeoutLeaseReleaseAttempted) return;
-
-  runtime.closeoutLeaseReleaseAttempted = true;
-  const owner = readCloseoutLeaseOwner(runtime.closeoutLease.leaseDir, options);
-  const reservation = readCloseoutLeaseRecord(
-    path.join(runtime.closeoutLease.leaseDir, closeoutLeaseRecoveryFile),
-    options
-  );
-  if (
-    !owner ||
-    owner.token !== runtime.closeoutLease.token ||
-    !reservation ||
-    reservation.token !== runtime.closeoutLease.token
-  ) {
-    throw new Error(
-      'PR_CLOSEOUT_LEASE_OWNERSHIP_LOST: refusing to release another closeout lease.'
-    );
-  }
-
-  const rmSync = options.rmSync || fs.rmSync;
-  rmSync(runtime.closeoutLease.leaseDir, { recursive: true, force: true });
-  runtime.closeoutLeaseOwned = false;
-}
-
 function releasePlanningDbIfOwned(options, runtime) {
   if (!runtime.planningDbOwned || runtime.planningDbReleaseAttempted) {
     return;
@@ -784,16 +443,6 @@ function releasePlanningDbIfOwned(options, runtime) {
 }
 
 function runCommand(step, options = {}, runtime = {}) {
-  if (step.internal === 'acquireCloseoutLease') {
-    const acquireLease = options.acquireCloseoutLease || acquireCloseoutLease;
-    acquireLease(options, runtime);
-    return;
-  }
-  if (step.internal === 'releaseCloseoutLease') {
-    const releaseLease = options.releaseCloseoutLease || releaseCloseoutLease;
-    releaseLease(options, runtime);
-    return;
-  }
   if (step.internal === 'assertNoUnstagedChanges') {
     assertNoUnstagedChanges(options);
     return;
@@ -853,15 +502,6 @@ function executePrCloseoutPlan(plan, options = {}) {
       cleanupErrors.push(error);
     }
   }
-  if (runtime.closeoutLeaseOwned && !runtime.closeoutLeaseReleaseAttempted) {
-    console.log('[pr:closeout] release closeout lease after interrupted closeout');
-    try {
-      releaseCloseoutLease(options, runtime);
-    } catch (error) {
-      cleanupErrors.push(error);
-    }
-  }
-
   if (executionError && cleanupErrors.length > 0) {
     throw new AggregateError(
       [executionError, ...cleanupErrors],
@@ -1003,19 +643,16 @@ function main(argv = process.argv.slice(2)) {
 }
 
 if (require.main === module) {
-  try {
-    main();
-  } catch (error) {
+  runWithCloseoutLock(() => main(), { repoRootPath: repoRoot }).catch((error) => {
     console.error(`[pr:closeout] ${error.message}`);
     if (error.message.startsWith('INVALID_')) {
       printUsage();
     }
-    process.exit(1);
-  }
+    process.exitCode = 1;
+  });
 }
 
 module.exports = {
-  acquireCloseoutLease,
   buildPrCloseoutPlan,
   commandLabel,
   executePrCloseoutPlan,
@@ -1024,8 +661,8 @@ module.exports = {
   listPrCloseoutStagedFiles,
   parseArgs,
   probePlanningDbActive,
-  readProcessIdentity,
-  releaseCloseoutLease,
+  resolveCloseoutLockEndpoint,
   resolveCommandInvocation,
   runCommand,
+  runWithCloseoutLock,
 };
