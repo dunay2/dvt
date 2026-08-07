@@ -70,6 +70,13 @@
         "docs/planning/status/governance-document-rule-inventory.md",
         "docs/concepts/glossary.md",
         "docs/concepts/domain-language.md",
+        "README.md",
+        "src/**",
+        "test/**",
+        "**/README.md",
+        "**/package.json",
+        "**/src/**",
+        "**/test/**",
         "apps",
         "packages"
       ],
