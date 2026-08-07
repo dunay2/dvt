@@ -9,7 +9,10 @@ import {
   buildDraftSaveSavedResponse,
 } from '../../../src/app/services/workspace/workspaceGraphDraftProtocol.test.fixtures';
 import { buildCanvasAuthoringDraft } from '../../support/canvasDraftAuthoring';
-import { openCanvasContextMenuAt } from '../../support/canvasExecutionSelection';
+import {
+  openCanvasContextMenuAt,
+  revealOperationalDrawer,
+} from '../../support/canvasExecutionSelection';
 import {
   getE2eApiCalls,
   stubE2eApi,
@@ -740,6 +743,27 @@ describe('Canvas workbench screen composition', () => {
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
     cy.get('[data-slot="canvas-contextual-workbench-close"]').click();
     cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
+
+    revealOperationalDrawer();
+    cy.get('[data-slot="bottom-operational-drawer-tabs"]')
+      .should('have.attr', 'aria-label', 'Cajón operativo del Canvas')
+      .and(($tabList) => {
+        const element = $tabList.get(0);
+        expect(element.scrollWidth).to.be.at.most(element.clientWidth);
+      });
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]')
+      .focus()
+      .type('{leftarrow}');
+    cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="runs"]')
+      .should('be.focused')
+      .and('have.attr', 'aria-selected', 'true')
+      .and('have.attr', 'aria-controls', 'bottom-operational-drawer-panel-runs');
+    cy.get('#bottom-operational-drawer-panel-runs')
+      .should('be.visible')
+      .and('have.attr', 'role', 'tabpanel')
+      .and('have.attr', 'aria-labelledby', 'bottom-operational-drawer-tab-runs');
+    assertViewportHasNoGlobalHorizontalOverflow(390);
+    assertNoSeriousAccessibilityViolations('[data-slot="bottom-operational-drawer"]');
 
     openCanvasContextMenuAt(260, 260);
     cy.get('[data-menu-action="open-canvas-settings"]').click();

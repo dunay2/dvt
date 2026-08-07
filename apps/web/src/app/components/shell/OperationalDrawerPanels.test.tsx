@@ -112,6 +112,23 @@ describe('OperationalDrawerPanels', () => {
       'Preview 1',
     ]);
     expect(tabs[0]?.getAttribute('aria-selected')).toBe('true');
+    expect(tabs.map((tab) => tab.tabIndex)).toEqual([0, -1, -1, -1]);
+    expect(tabs[0]?.getAttribute('aria-controls')).toBe('bottom-operational-drawer-panel-log');
+
+    tabs[0]?.focus();
+    await act(async () => {
+      fireEvent.keyDown(tabs[0]!, { key: 'ArrowRight' });
+    });
+
+    expect(onSelectTab).toHaveBeenLastCalledWith('problems');
+    expect(tabs[1]).toBe(document.activeElement);
+
+    await act(async () => {
+      fireEvent.keyDown(tabs[1]!, { key: 'End' });
+    });
+
+    expect(onSelectTab).toHaveBeenLastCalledWith('preview');
+    expect(tabs[3]).toBe(document.activeElement);
 
     await act(async () => {
       fireEvent.click(tabs[3]!);
@@ -178,6 +195,15 @@ describe('OperationalDrawerPanels', () => {
       container.querySelector('[data-slot="bottom-operational-preview-blocker"]')?.textContent
     ).toBe('Execution Preview integrity');
     expect(container.textContent).not.toContain('plan_integrity');
+
+    const previewPanel = container.querySelector<HTMLElement>(
+      '#bottom-operational-drawer-panel-preview'
+    );
+    expect(previewPanel?.getAttribute('role')).toBe('tabpanel');
+    expect(previewPanel?.getAttribute('aria-labelledby')).toBe(
+      'bottom-operational-drawer-tab-preview'
+    );
+    expect(previewPanel?.hidden).toBe(false);
 
     const previewButton = container.querySelector<HTMLButtonElement>(
       '[data-slot="bottom-operational-preview-action"]'
@@ -270,9 +296,10 @@ describe('OperationalDrawerPanels', () => {
     const tabList = container.querySelector<HTMLElement>('[role="tablist"]');
     const tabs = Array.from(tabList?.querySelectorAll<HTMLElement>('[role="tab"]') ?? []);
     expect(tabList?.getAttribute('aria-label')).toBe('Cajón operativo del Canvas');
-    expect(tabList?.className).toContain('overflow-x-auto');
+    expect(tabList?.getAttribute('aria-orientation')).toBe('horizontal');
+    expect(tabList?.className).toContain('flex-wrap');
+    expect(tabList?.className).not.toContain('overflow-x-auto');
     expect(tabs).toHaveLength(4);
-    expect(tabs.every((tab) => tab.className.includes('shrink-0'))).toBe(true);
     expect(container.textContent).toContain('Registro');
     expect(container.textContent).toContain('Vista previa');
 

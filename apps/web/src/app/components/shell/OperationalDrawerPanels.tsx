@@ -171,17 +171,36 @@ export function BottomOperationalDrawerBody({
   contribution: OperationalDrawerContribution | null;
   logBody: ReactNode;
 }>): JSX.Element {
-  if (contribution == null || activeTab === 'log') {
+  if (contribution == null) {
     return <>{logBody}</>;
   }
 
+  let activeBody = logBody;
+
   if (activeTab === 'problems') {
-    return <BottomOperationalProblemsPanel contribution={contribution} />;
+    activeBody = <BottomOperationalProblemsPanel contribution={contribution} />;
+  } else if (activeTab === 'runs') {
+    activeBody = <BottomOperationalRunsPanel contribution={contribution} />;
+  } else if (activeTab === 'preview') {
+    activeBody = <BottomOperationalPreviewPanel contribution={contribution} />;
   }
 
-  if (activeTab === 'runs') {
-    return <BottomOperationalRunsPanel contribution={contribution} />;
-  }
-
-  return <BottomOperationalPreviewPanel contribution={contribution} />;
+  return (
+    <>
+      {contribution.tabs.map((tab) => (
+        <div
+          key={tab.id}
+          id={`bottom-operational-drawer-panel-${tab.id}`}
+          role="tabpanel"
+          aria-labelledby={`bottom-operational-drawer-tab-${tab.id}`}
+          tabIndex={activeTab === tab.id ? 0 : -1}
+          hidden={activeTab !== tab.id}
+          data-slot="bottom-operational-drawer-panel"
+          data-tab={tab.id}
+        >
+          {activeTab === tab.id ? activeBody : null}
+        </div>
+      ))}
+    </>
+  );
 }
