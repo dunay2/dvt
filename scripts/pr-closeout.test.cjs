@@ -161,6 +161,32 @@ test('closeout lease recovers a stale owner without deleting a live successor', 
   releaseCloseoutLease({}, runtime);
 });
 
+test('closeout lease recovers an ownerless directory after the initialization grace', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-ownerless-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const runtime = {};
+  const commonOptions = {
+    closeoutLeaseDir: leaseDir,
+    processId: 202,
+    createLeaseToken: () => 'successor-token',
+    closeoutLeaseInitializationGraceMs: 30_000,
+    statSync: () => ({ mtimeMs: 1_000 }),
+  };
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+  fs.mkdirSync(leaseDir);
+
+  assert.throws(
+    () => acquireCloseoutLease({ ...commonOptions, now: () => 30_999 }, runtime),
+    /PR_CLOSEOUT_LEASE_BUSY/u
+  );
+
+  acquireCloseoutLease({ ...commonOptions, now: () => 31_000 }, runtime);
+  const owner = JSON.parse(fs.readFileSync(path.join(leaseDir, 'owner.json'), 'utf8'));
+  assert.equal(owner.pid, 202);
+  assert.equal(owner.token, 'successor-token');
+  releaseCloseoutLease({}, runtime);
+});
+
 test('closeout lease refuses to delete a successor token', (t) => {
   const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-token-'));
   const leaseDir = path.join(leaseRoot, 'lease');

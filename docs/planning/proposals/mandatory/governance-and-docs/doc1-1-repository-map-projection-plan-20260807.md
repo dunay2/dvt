@@ -381,6 +381,13 @@ redGreenCycles:
       - tools/ci/policy/workflow-scope.json
       - tools/ci/workflow-scope-classification.test.mjs
     greenTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
+  - id: ownerless-closeout-lease-recovery-review
+    redTest: node --test scripts/pr-closeout.test.cjs
+    expectedFailure: A process terminated between lease-directory creation and owner-file creation leaves a permanent machine-local busy lease.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node --test scripts/pr-closeout.test.cjs
 symbols:
   - &repositoryMapSymbol
     name: GENERATION_MODES
