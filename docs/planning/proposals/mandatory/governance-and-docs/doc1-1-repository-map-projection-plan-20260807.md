@@ -494,6 +494,8 @@ symbols:
   - <<: *prCloseoutLifecycleSymbol
     name: closeoutLeaseOwnerFile
   - <<: *prCloseoutLifecycleSymbol
+    name: closeoutLeaseInitializationGraceMs
+  - <<: *prCloseoutLifecycleSymbol
     name: defaultCloseoutLeaseDir
   - <<: *prCloseoutLifecycleSymbol
     name: isProcessActive

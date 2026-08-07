@@ -12,6 +12,7 @@ const workflowScopePolicy = require('../tools/ci/policy/workflow-scope.json');
 const repoRoot = path.resolve(__dirname, '..');
 const defaultCloseoutLeaseDir = path.join(os.tmpdir(), 'dvt-planning-db-pr-closeout.lock');
 const closeoutLeaseOwnerFile = 'owner.json';
+const closeoutLeaseInitializationGraceMs = 30_000;
 const repositoryMapSourcePatterns = Object.freeze([
   ...workflowScopePolicy.generated_status_relevant,
 ]);
@@ -374,7 +375,15 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
   const writeFileSync = options.writeFileSync || fs.writeFileSync;
   const renameSync = options.renameSync || fs.renameSync;
   const rmSync = options.rmSync || fs.rmSync;
+  const statSync = options.statSync || fs.statSync;
+  const now = options.now || Date.now;
+  const initializationGraceMs =
+    options.closeoutLeaseInitializationGraceMs ?? closeoutLeaseInitializationGraceMs;
   const token = createLeaseToken();
+
+  if (!Number.isFinite(initializationGraceMs) || initializationGraceMs < 0) {
+    throw new Error('PR_CLOSEOUT_LEASE_INVALID_GRACE: expected a non-negative millisecond value.');
+  }
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
@@ -384,8 +393,29 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
         throw new Error(`PR_CLOSEOUT_LEASE_ACQUIRE_FAILED: ${error.message}`, { cause: error });
       }
 
-      const owner = readCloseoutLeaseOwner(leaseDir, options);
-      if (!owner || processIsActive(owner.pid)) {
+      let owner = readCloseoutLeaseOwner(leaseDir, options);
+      if (!owner) {
+        let leaseAgeMs;
+        try {
+          leaseAgeMs = now() - statSync(leaseDir).mtimeMs;
+        } catch (statError) {
+          if (statError?.code === 'ENOENT') continue;
+          throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${statError.message}`, {
+            cause: statError,
+          });
+        }
+
+        if (leaseAgeMs < initializationGraceMs) {
+          throw new Error(
+            'PR_CLOSEOUT_LEASE_BUSY: owned by an initializing process. Retry after it finishes.',
+            { cause: error }
+          );
+        }
+
+        owner = readCloseoutLeaseOwner(leaseDir, options);
+      }
+
+      if (owner && processIsActive(owner.pid)) {
         const ownerLabel = owner?.pid ? ` process ${owner.pid}` : ' an initializing process';
         throw new Error(`PR_CLOSEOUT_LEASE_BUSY: owned by${ownerLabel}. Retry after it finishes.`, {
           cause: error,
