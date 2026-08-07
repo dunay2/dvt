@@ -29,9 +29,10 @@ const operationalDrawerPanelClassNames = {
   previewSummary: 'mt-1 text-[var(--text-default)]',
   previewBlockers: 'mt-2 flex flex-wrap gap-1.5',
   sectionKicker: 'text-[11px] font-semibold uppercase text-[var(--text-muted)]',
-  tabList: 'flex shrink-0 items-center gap-1 border-b border-[color:var(--border-default)] px-3',
+  tabList:
+    'flex shrink-0 items-center gap-1 overflow-x-auto border-b border-[color:var(--border-default)] px-3',
   tabButton:
-    'h-9 border-b-2 border-transparent px-2 text-xs font-semibold text-[var(--text-muted)] data-[active=true]:border-[color:var(--focus-ring)] data-[active=true]:text-[var(--text-strong)]',
+    'h-9 shrink-0 border-b-2 border-transparent px-2 text-xs font-semibold text-[var(--text-muted)] data-[active=true]:border-[color:var(--focus-ring)] data-[active=true]:text-[var(--text-strong)]',
 } as const;
 
 export function OperationalDrawerPanelSurface({
