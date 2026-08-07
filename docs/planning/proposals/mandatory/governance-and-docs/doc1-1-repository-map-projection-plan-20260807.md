@@ -59,6 +59,9 @@ flowchart LR
 5. Refresh truth: generate local sources first, prepare/import the current DB,
    render the final map, and reconverge if that tracked projection changes a
    governed fingerprint.
+6. Closeout and publication truth: keep Planning DB available for every full
+   pre-push invocation, and build the published map with an exact Python patch
+   plus a hash-locked pip/Zensical dependency graph.
 
 ## Definition Of Ready
 
@@ -76,14 +79,16 @@ flowchart LR
 
 ## Fowler Opportunity Matrix
 
-| Opportunity           | Signal                             | Selected response                                    | Rejected alternative                          | Evidence                                             |
-| --------------------- | ---------------------------------- | ---------------------------------------------------- | --------------------------------------------- | ---------------------------------------------------- |
-| Competing generators  | Divergent Change / Shotgun Surgery | Extend `generate-code-status.cjs`                    | Add a second map scanner                      | One generator and one generated-doc policy entry     |
-| Workspace discovery   | Speculative Generality             | Use effective pnpm output only                       | Infer membership from `apps/` or `packages/`  | Add/remove/rename and non-standard-layout tests      |
-| Architecture identity | Primitive Obsession / Feature Envy | Exact normalized path and canonical-binding joins    | Guess from names, scopes, or prose            | Missing and ambiguous identities stay explicit       |
-| Mode coupling         | Inappropriate Intimacy             | Separate DB-free and DB-backed modes                 | Make every status generation require Postgres | Invalid-DB code-state test and mode-separation tests |
-| Refresh ordering      | Temporal Coupling                  | Import current state before final map and reconverge | Render from stale imported state              | Refresh order and fingerprint-change tests           |
-| CI confidence         | Test Double overreach              | Run a migrated/imported Planning DB integration      | Treat mocked rows as end-to-end proof         | Opt-in live integration plus docs/link gates         |
+| Opportunity           | Signal                             | Selected response                                     | Rejected alternative                           | Evidence                                             |
+| --------------------- | ---------------------------------- | ----------------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------- |
+| Competing generators  | Divergent Change / Shotgun Surgery | Extend `generate-code-status.cjs`                     | Add a second map scanner                       | One generator and one generated-doc policy entry     |
+| Workspace discovery   | Speculative Generality             | Use effective pnpm output only                        | Infer membership from `apps/` or `packages/`   | Add/remove/rename and non-standard-layout tests      |
+| Architecture identity | Primitive Obsession / Feature Envy | Exact normalized path and canonical-binding joins     | Guess from names, scopes, or prose             | Missing and ambiguous identities stay explicit       |
+| Mode coupling         | Inappropriate Intimacy             | Separate DB-free and DB-backed modes                  | Make every status generation require Postgres  | Invalid-DB code-state test and mode-separation tests |
+| Refresh ordering      | Temporal Coupling                  | Import current state before final map and reconverge  | Render from stale imported state               | Refresh order and fingerprint-change tests           |
+| CI confidence         | Test Double overreach              | Run a migrated/imported Planning DB integration       | Treat mocked rows as end-to-end proof          | Opt-in live integration plus docs/link gates         |
+| Closeout lifecycle    | Temporal Coupling                  | Enclose every full pre-push in the owned DB lifecycle | Infer DB need from a partial changed-file list | Generic-input closeout ordering test                 |
+| Publication toolchain | Uncontrolled dependency            | Pin Python and install a hash-locked dependency graph | Resolve newest pip or transitive packages      | Workflow parity and lock-integrity tests             |
 
 ## Decision
 
@@ -97,6 +102,9 @@ flowchart LR
   CI using a real migrated and imported Planning DB.
 - Run the final map after the final import and reconverge all governed surfaces
   before validation if its content changes.
+- Treat full pre-push as a Planning DB consumer for every closeout input class.
+- Install the publication toolchain only from exact Python and hash-locked
+  Python dependency versions shared by PR validation and docs deployment.
 
 ## Definition Of Done
 
@@ -118,6 +126,10 @@ flowchart LR
 - A Planning DB runtime started by local closeout remains available through the
   full pre-push consumer and is released only afterward or during fail-closed
   cleanup.
+- Every closeout input class prepares Planning DB before the unconditional full
+  pre-push consumer, including code/config files outside Repository Map scope.
+- PR publication and docs deployment use the same exact Python patch and the
+  same hash-locked pip/Zensical dependency graph, with no moving upgrade step.
 - Feature mechanization, docs governance, CI tools, ARC evaluation, and the full
   pre-push gate pass without disabled rules or bypassed hooks.
 - Review threads are answered with commit/test evidence, the temporary
@@ -171,6 +183,8 @@ governingSources:
   - docs/planning/state/github-mvp-issue-workflow.md
   - docs/generated-docs-policy.json
 allowedImplementationSurfaces:
+  - .github/requirements/zensical.lock
+  - .github/workflows/docs-deploy.yml
   - .github/workflows/pr-quality-gate.yml
   - AGENTS.md
   - docs/.manifest.json
@@ -334,6 +348,17 @@ redGreenCycles:
       - tools/ci/policy/workflow-scope.json
       - tools/ci/workflow-scope-classification.test.mjs
     greenTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
+  - id: final-runtime-determinism-review
+    redTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs
+    expectedFailure: A generic full-prepush closeout can omit Planning DB preparation, while publication resolves a moving Python patch, upgrades pip to newest, and installs an unhashed transitive graph.
+    patchSurfaces:
+      - .github/requirements/zensical.lock
+      - .github/workflows/docs-deploy.yml
+      - .github/workflows/pr-quality-gate.yml
+      - scripts/generate-code-status.test.cjs
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs
 symbols:
   - &repositoryMapSymbol
     name: GENERATION_MODES
