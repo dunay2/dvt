@@ -153,6 +153,37 @@ test('repository map component matching is exact and excludes inference', () => 
   );
 });
 
+test('architecture facts join exact governed documents by document path', async () => {
+  const queries = [];
+  const component = {
+    component_id: 'SYS-CONTRACTS-ROOT',
+    repo_path: 'packages/@dvt/contracts',
+    status: 'review',
+  };
+  const document = {
+    component_id: 'SYS-CONTRACTS-ROOT',
+    document_path: 'docs/contracts/index.md',
+    canonicality: 'canonical',
+    lifecycle_state: 'active',
+    status: 'Active',
+  };
+  const client = {
+    async query(sql) {
+      queries.push(sql);
+      return { rows: queries.length === 1 ? [component] : [document] };
+    },
+  };
+
+  assert.deepEqual(await readRepositoryArchitectureFacts(client), {
+    components: [component],
+    documents: [document],
+  });
+  assert.match(queries[1], /component_engineering_document_query/u);
+  assert.match(queries[1], /documentation_lifecycle_query/u);
+  assert.match(queries[1], /document_kind = 'governing'/u);
+  assert.doesNotMatch(queries[1], /subject_key/u);
+});
+
 test('missing and ambiguous component/document identity stays fail-closed', () => {
   const workspace = workspaceRow();
   assert.deepEqual(resolveWorkspaceArchitecture(workspace, [], []).gaps, [
@@ -201,8 +232,11 @@ test('governed coverage classes use exact canonical or local evidence', () => {
     workspaceRow({ localReadmePath: 'packages/@dvt/example/README.md' }),
     { canonicalDoc: '-' }
   );
-  assert.equal(linked.coverage, 'linked-local');
-  assert.match(linked.entry, /README\.md/u);
+  assert.deepEqual(linked, {
+    entry:
+      '[packages/@dvt/example/README.md](https://github.com/dunay2/dvt/blob/main/packages/@dvt/example/README.md)',
+    coverage: 'linked-local',
+  });
   assert.deepEqual(resolveDocumentationProjection(workspaceRow(), { canonicalDoc: '-' }), {
     entry: '-',
     coverage: 'reference-only',
@@ -341,9 +375,11 @@ test(
       const paths = new Set(workspaces.map((workspace) => workspace.path));
       const output = renderRepositoryMap(workspaces, facts, '2026-08-06');
       assert.ok(facts.components.length > 0);
-      assert.deepEqual(facts.documents, []);
+      assert.ok(facts.documents.length > 0);
       assert.equal(paths.has('packages/@dvt/temporal-http-json-plugin'), true);
       assert.equal(paths.has('packages/@dvt/temporal-object-file-postgres-plugin'), true);
+      assert.match(output, /docs\/contracts\/index\.md/u);
+      assert.match(output, /ambiguous-canonical-doc-binding/u);
       assert.match(output, /missing-canonical-doc-binding/u);
       assert.doesNotMatch(output, /documentation_panel_query/u);
     } finally {

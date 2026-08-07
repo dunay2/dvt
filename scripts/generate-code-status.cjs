@@ -275,7 +275,20 @@ async function readRepositoryArchitectureFacts(client) {
     where coalesce(status, '') not in ('deprecated', 'drift')
     order by repo_path, component_id
   `);
-  return { components: componentResult.rows, documents: [] };
+  const documentResult = await client.query(`
+    select distinct
+      component_document.component_id,
+      component_document.document_path,
+      lifecycle.canonicality,
+      lifecycle.lifecycle_state,
+      lifecycle.status
+    from planning_query_store.component_engineering_document_query component_document
+    inner join planning_query_store.documentation_lifecycle_query lifecycle
+      on lifecycle.document_path = component_document.document_path
+    where component_document.document_kind = 'governing'
+    order by component_document.component_id, component_document.document_path
+  `);
+  return { components: componentResult.rows, documents: documentResult.rows };
 }
 
 function isCurrentCanonicalDocument(row) {
@@ -362,10 +375,27 @@ function resolveWorkspaceArchitecture(workspace, components, documents = []) {
   };
 }
 
+function repositoryBrowserUrl() {
+  const repository = safeReadJson(path.join(repoRoot, 'package.json'))?.repository;
+  const configuredUrl = typeof repository === 'string' ? repository : repository?.url;
+  const browserUrl = String(configuredUrl || '')
+    .replace(/^git\+/u, '')
+    .replace(/\.git$/u, '')
+    .replace(/\/$/u, '');
+
+  if (!/^https:\/\/github\.com\/[^/]+\/[^/]+$/u.test(browserUrl)) {
+    throw new Error(
+      'Root package.json must declare a GitHub repository URL for local README links.'
+    );
+  }
+  return browserUrl;
+}
+
 function localReadmeLink(workspace) {
   if (!workspace.localReadmePath) return '-';
-  const relative = relativeDocLink(workspace.localReadmePath);
-  return relative ? `[${workspace.localReadmePath}](${relative})` : '-';
+  const documentPath = normalizeRepoPath(workspace.localReadmePath);
+  if (!documentPath) return '-';
+  return `[${documentPath}](${repositoryBrowserUrl()}/blob/main/${documentPath})`;
 }
 
 function resolveDocumentationProjection(workspace, architecture) {

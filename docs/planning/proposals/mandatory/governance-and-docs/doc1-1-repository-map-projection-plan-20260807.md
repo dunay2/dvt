@@ -65,8 +65,9 @@ flowchart LR
 - Issue #2144 owns delivery state and acceptance.
 - The existing generator and generated-doc policy are identified as the owning
   mechanism.
-- `GeneratePlanningDerivedSurfaces` and `ListSystemComponentRoadmap` are the
-  reused command/query rails; no new rail or parallel service is needed.
+- `GeneratePlanningDerivedSurfaces`, `ReadArchitectureDesignAuthority`, and
+  `ReadComponentEngineeringRecord` are the reused command/query rails; no new
+  rail or parallel service is needed.
 - Planning DB migration and import are available for real integration proof.
 - The behavior can be driven by failing unit and live-DB tests before each
   implementation increment.
@@ -107,6 +108,9 @@ flowchart LR
   distinct and fail closed in their declared boundaries.
 - A live migrated/imported Planning DB test proves production-shaped joins.
 - The generated map builds and its links validate.
+- Workspace-local README fallbacks remain clickable in the built site through
+  the root package repository URL; they never render as unpublished relative
+  site paths.
 - Governance refresh converges after the final DB-backed map.
 - Feature mechanization, docs governance, CI tools, ARC evaluation, and the full
   pre-push gate pass without disabled rules or bypassed hooks.
@@ -166,9 +170,12 @@ commandQueryRails:
   - name: GeneratePlanningDerivedSurfaces
     type: command
     dddOwner: PlanningGeneratedArtifact
-  - name: ListSystemComponentRoadmap
+  - name: ReadArchitectureDesignAuthority
     type: query
-    dddOwner: SystemComponentRoadmapReadModel
+    dddOwner: ArchitectureDesignAuthority
+  - name: ReadComponentEngineeringRecord
+    type: query
+    dddOwner: ComponentEngineeringRecordReadModel
 domainObjects:
   - Effective pnpm workspace membership
   - Repository Map projection
@@ -234,7 +241,8 @@ symbols:
     dddOwner: PlanningGeneratedArtifact
     cqRails:
       - GeneratePlanningDerivedSurfaces
-      - ListSystemComponentRoadmap
+      - ReadArchitectureDesignAuthority
+      - ReadComponentEngineeringRecord
     fowlerSignals:
       - Single generator owner
       - Exact identity
@@ -284,6 +292,8 @@ symbols:
     name: renderRepositoryMap
   - <<: *repositoryMapSymbol
     name: repositoryMapOutputPath
+  - <<: *repositoryMapSymbol
+    name: repositoryBrowserUrl
   - <<: *repositoryMapSymbol
     name: resolveCanonicalDocuments
   - <<: *repositoryMapSymbol
