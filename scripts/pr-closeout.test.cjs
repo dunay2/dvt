@@ -427,6 +427,87 @@ test('closeout lease restores an owner that appears while the directory enters q
   assert.equal(runtime.closeoutLeaseOwned, undefined);
 });
 
+test('closeout lease keeps its public path reserved while a live owner appears', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-reserved-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const ownerPath = path.join(leaseDir, 'owner.json');
+  const recoveryPath = path.join(leaseDir, 'recovery.json');
+  const recovererRuntime = {};
+  const thirdRuntime = {};
+  let thirdError;
+  let interleavingInjected = false;
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+  fs.mkdirSync(leaseDir);
+
+  const attemptThirdCloseout = () => {
+    try {
+      acquireCloseoutLease(
+        {
+          closeoutLeaseDir: leaseDir,
+          processId: 303,
+          createLeaseToken: () => 'third-token',
+          getProcessIdentity: () => 'test:third-process',
+          isProcessActive: (pid) => pid === 101,
+        },
+        thirdRuntime
+      );
+    } catch (error) {
+      thirdError = error;
+    }
+  };
+
+  assert.throws(
+    () =>
+      acquireCloseoutLease(
+        {
+          closeoutLeaseDir: leaseDir,
+          processId: 202,
+          createLeaseToken: () => 'recoverer-token',
+          getProcessIdentity: () => 'test:recoverer-process',
+          closeoutLeaseInitializationGraceMs: 30_000,
+          statSync: () => ({ mtimeMs: 1_000 }),
+          now: () => 31_000,
+          isProcessActive: (pid) => pid === 101,
+          writeFileSync: (filePath, value, options) => {
+            fs.writeFileSync(filePath, value, options);
+            if (filePath === recoveryPath && !interleavingInjected) {
+              interleavingInjected = true;
+              attemptThirdCloseout();
+              fs.writeFileSync(
+                ownerPath,
+                `${JSON.stringify({ pid: 101, token: 'live-token' })}\n`,
+                'utf8'
+              );
+            }
+          },
+          renameSync: (source, target) => {
+            if (source === leaseDir && !interleavingInjected) {
+              interleavingInjected = true;
+              fs.writeFileSync(
+                ownerPath,
+                `${JSON.stringify({ pid: 101, token: 'live-token' })}\n`,
+                'utf8'
+              );
+              fs.renameSync(source, target);
+              attemptThirdCloseout();
+              return;
+            }
+            fs.renameSync(source, target);
+          },
+        },
+        recovererRuntime
+      ),
+    /PR_CLOSEOUT_LEASE_BUSY/u
+  );
+
+  assert.match(thirdError?.message || '', /PR_CLOSEOUT_LEASE_BUSY/u);
+  const owner = JSON.parse(fs.readFileSync(ownerPath, 'utf8'));
+  assert.equal(owner.pid, 101);
+  assert.equal(owner.token, 'live-token');
+  assert.equal(recovererRuntime.closeoutLeaseOwned, undefined);
+  assert.equal(thirdRuntime.closeoutLeaseOwned, undefined);
+});
+
 test('closeout lease verifies its visible token before claiming ownership', (t) => {
   const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-visible-'));
   const leaseDir = path.join(leaseRoot, 'lease');
