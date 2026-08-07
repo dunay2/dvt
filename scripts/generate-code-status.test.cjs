@@ -17,6 +17,7 @@ const policyPath = path.join(repoRoot, 'docs', 'generated-docs-policy.json');
 const prQualityWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'pr-quality-gate.yml');
 const docsDeployWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'docs-deploy.yml');
 const zensicalRequirementsPath = path.join(repoRoot, '.github', 'requirements', 'zensical.lock');
+const zensicalRequirementsInputPath = path.join(repoRoot, '.github', 'requirements', 'zensical.in');
 const workflowScopePath = path.join(repoRoot, 'tools', 'ci', 'policy', 'workflow-scope.json');
 const packageJson = require('../package.json');
 
@@ -421,6 +422,8 @@ test('repository map output is byte-stable and preserves governed navigation', (
   assert.match(first, /\[Canonical Doc Code Matrix\]/u);
   assert.match(first, /\[System Delivery Status\]/u);
   assert.match(first, /\[Glossary\]/u);
+  assert.match(first, /Conventional src files/u);
+  assert.match(first, /Root-level `scripts\/` and `tools\/` are outside these counts\./u);
   assert.doesNotMatch(first, /\| Responsibility \|/u);
 });
 
@@ -547,6 +550,9 @@ test('Repository Map publication provisions the pinned Zensical runtime first', 
   assert.doesNotMatch(installZensical.run, /--upgrade/u);
 
   const lockedRequirements = fs.readFileSync(zensicalRequirementsPath, 'utf8');
+  const directRequirements = fs.readFileSync(zensicalRequirementsInputPath, 'utf8');
+  assert.equal(directRequirements, 'pip==26.0.1\nzensical==0.0.39\n');
+  assert.match(lockedRequirements, /\.github\/requirements\/zensical\.in/u);
   assert.match(lockedRequirements, /^pip==26\.0\.1\s+\\$/mu);
   assert.match(lockedRequirements, /^zensical==0\.0\.39\s+\\$/mu);
   assert.match(lockedRequirements, /--hash=sha256:[0-9a-f]{64}/u);

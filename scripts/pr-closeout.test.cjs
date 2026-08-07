@@ -5,11 +5,13 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const {
+  acquireCloseoutLease,
   buildPrCloseoutPlan,
   commandLabel,
   executePrCloseoutPlan,
   parseArgs,
   probePlanningDbActive,
+  releaseCloseoutLease,
   resolveCommandInvocation,
 } = require('./pr-closeout.cjs');
 
@@ -38,6 +40,7 @@ test('buildPrCloseoutPlan commits before the only full prepush validation and pu
   });
   const ids = stepIds(plan);
 
+  assert.ok(indexOf(ids, 'closeout-lease-acquire') < indexOf(ids, 'planning-db-ownership'));
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
   assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-migrate'));
   assert.ok(indexOf(ids, 'planning-db-migrate') < indexOf(ids, 'governance-refresh'));
@@ -46,6 +49,7 @@ test('buildPrCloseoutPlan commits before the only full prepush validation and pu
   assert.ok(indexOf(ids, 'commit') < indexOf(ids, 'verify-prepush'));
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
   assert.ok(indexOf(ids, 'planning-db-release') < indexOf(ids, 'push'));
+  assert.ok(indexOf(ids, 'push') < indexOf(ids, 'closeout-lease-release'));
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'push'));
   assert.equal(ids.filter((id) => id === 'verify-prepush').length, 1);
   assert.equal(
@@ -56,6 +60,51 @@ test('buildPrCloseoutPlan commits before the only full prepush validation and pu
     commandLabel(plan.find((step) => step.id === 'commit')),
     'pnpm commit chore ci "Mechanize PR closeout"'
   );
+});
+
+test('closeout lease rejects a concurrent owner and transfers only after release', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-lease-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+  const first = {};
+  const second = {};
+
+  acquireCloseoutLease(
+    {
+      closeoutLeaseDir: leaseDir,
+      processId: 101,
+      createLeaseToken: () => 'first-token',
+      isProcessActive: (pid) => pid === 101,
+    },
+    first
+  );
+
+  assert.throws(
+    () =>
+      acquireCloseoutLease(
+        {
+          closeoutLeaseDir: leaseDir,
+          processId: 202,
+          createLeaseToken: () => 'second-token',
+          isProcessActive: (pid) => pid === 101,
+        },
+        second
+      ),
+    /PR_CLOSEOUT_LEASE_BUSY.*101/u
+  );
+  assert.equal(second.closeoutLeaseOwned, undefined);
+
+  releaseCloseoutLease({}, first);
+  acquireCloseoutLease(
+    {
+      closeoutLeaseDir: leaseDir,
+      processId: 202,
+      createLeaseToken: () => 'second-token',
+      isProcessActive: () => false,
+    },
+    second
+  );
+  releaseCloseoutLease({}, second);
 });
 
 test('buildPrCloseoutPlan refuses implicit commits with no staged files', () => {
