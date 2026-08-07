@@ -34935,7 +34935,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
-      "sourceContentSha256": "176fce0c1cc08d68db22f483a1c4f33d12dae7c83d789242a65c9bd91a4a2697",
+      "sourceContentSha256": "3e88046dec8089d75475e754858c4f56d1d17f212bfc53203af855387ee82093",
       "rawRail": {
         "name": "ConfigureApplicationLanguage",
         "type": "command",

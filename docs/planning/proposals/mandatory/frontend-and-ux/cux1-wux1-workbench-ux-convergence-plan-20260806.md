@@ -163,6 +163,7 @@ allowedImplementationSurfaces:
   - docs/architecture/components/web/**
   - docs/planning/closeouts/**
   - docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md
+  - docs/planning/reviews/20260806-cux1-wux1-novice-fowler-qa-review.md
   - docs/planning/status/**
   - docs/evidence/**
   - docs/guides/**
@@ -879,6 +880,62 @@ symbols:
     architectureGuard: pnpm --filter @dvt/web test:architecture
     cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
     unitTests: [pnpm --filter @dvt/web test -- src/app/views/projectOnboardingCopy.test.ts]
+  - name: localizePresentationValue
+    path: apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/inspector/nodePropertiesReadModel.test.ts]
+  - name: localizePropertyRows
+    path: apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/inspector/nodePropertiesReadModel.test.ts]
+  - name: localizePropertyTableRows
+    path: apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/inspector/nodePropertiesReadModel.test.ts]
+  - name: DBT_INSPECTOR_COPY
+    path: apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx]
+  - name: useDbtInspectorCopy
+    path: apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/plugins/dbt/DbtNodeRenderer.test.tsx]
+  - name: buildCanvasReactFlowAriaLabelConfig
+    path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage, RenderCanvasGraphBase]
+    fowlerSignals: [Intention-Revealing Interface]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/views/canvas/CanvasViewport.test.tsx]
+  - name: NODE_PROPERTY_PRESENTATION_COPY
+    path: apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
+    dddOwner: ApplicationLanguagePreference
+    cqRails: [ConfigureApplicationLanguage]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:architecture
+    cypressCoverage: apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts
+    unitTests: [pnpm --filter @dvt/web test -- src/app/components/inspector/nodePropertiesReadModel.test.ts]
 ```
 
 ## Demanding-User Acceptance
