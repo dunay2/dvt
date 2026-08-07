@@ -11,6 +11,7 @@ const {
   executePrCloseoutPlan,
   parseArgs,
   probePlanningDbActive,
+  readProcessStartedAt,
   releaseCloseoutLease,
   resolveCommandInvocation,
 } = require('./pr-closeout.cjs');
@@ -158,6 +159,96 @@ test('closeout lease recovers a stale owner without deleting a live successor', 
   const owner = JSON.parse(fs.readFileSync(path.join(leaseDir, 'owner.json'), 'utf8'));
   assert.equal(owner.pid, 202);
   assert.equal(owner.token, 'successor-token');
+  releaseCloseoutLease({}, runtime);
+});
+
+test('process start identity derives a stable Linux epoch and fails closed on unreadable state', () => {
+  const processFields = [
+    'S',
+    '1',
+    '1',
+    '1',
+    '0',
+    '-1',
+    '4194304',
+    '0',
+    '0',
+    '0',
+    '0',
+    '0',
+    '0',
+    '0',
+    '0',
+    '20',
+    '0',
+    '1',
+    '0',
+    '250',
+  ];
+  const startedAt = readProcessStartedAt(101, {
+    platform: 'linux',
+    processIdentityReadFileSync: (filePath) => {
+      if (filePath === '/proc/101/stat') {
+        return `101 (worker with spaces) ${processFields.join(' ')}`;
+      }
+      if (filePath === '/proc/stat') return 'cpu  1 2 3 4\nbtime 1000\n';
+      throw new Error(`unexpected path ${filePath}`);
+    },
+    processIdentitySpawnCommand: () => ({ status: 0, stdout: '100\n' }),
+  });
+  assert.equal(startedAt, 1_002_500);
+
+  assert.throws(
+    () =>
+      readProcessStartedAt(101, {
+        platform: 'linux',
+        processIdentityReadFileSync: () => {
+          const error = new Error('access denied');
+          error.code = 'EACCES';
+          throw error;
+        },
+      }),
+    /PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: access denied/u
+  );
+});
+
+test('closeout lease recovers a stale owner after its PID is reused', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-reused-pid-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const ownerPath = path.join(leaseDir, 'owner.json');
+  const runtime = {};
+  const originalProcessStartedAt = Date.parse('2026-08-07T10:00:00.000Z');
+  const reusedProcessStartedAt = Date.parse('2026-08-07T11:00:00.000Z');
+  const successorProcessStartedAt = Date.parse('2026-08-07T12:00:00.000Z');
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+  fs.mkdirSync(leaseDir);
+  fs.writeFileSync(
+    ownerPath,
+    `${JSON.stringify({
+      pid: 101,
+      token: 'stale-token',
+      startedAt: '2026-08-07T10:05:00.000Z',
+      processStartedAt: new Date(originalProcessStartedAt).toISOString(),
+    })}\n`,
+    'utf8'
+  );
+
+  acquireCloseoutLease(
+    {
+      closeoutLeaseDir: leaseDir,
+      processId: 202,
+      createLeaseToken: () => 'successor-token',
+      isProcessActive: (pid) => pid === 101,
+      getProcessStartedAt: (pid) =>
+        pid === 101 ? reusedProcessStartedAt : successorProcessStartedAt,
+    },
+    runtime
+  );
+
+  const owner = JSON.parse(fs.readFileSync(ownerPath, 'utf8'));
+  assert.equal(owner.pid, 202);
+  assert.equal(owner.token, 'successor-token');
+  assert.equal(owner.processStartedAt, new Date(successorProcessStartedAt).toISOString());
   releaseCloseoutLease({}, runtime);
 });
 
