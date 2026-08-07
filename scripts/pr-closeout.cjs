@@ -18,7 +18,10 @@ function hasDocsChange(changedFiles) {
 
 function hasWorkspaceSourceChange(changedFiles) {
   return changedFiles.some(
-    (filePath) => filePath.startsWith('apps/') || filePath.startsWith('packages/')
+    (filePath) =>
+      filePath === 'pnpm-workspace.yaml' ||
+      filePath.startsWith('apps/') ||
+      filePath.startsWith('packages/')
   );
 }
 

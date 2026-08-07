@@ -115,6 +115,20 @@ test('buildPrCloseoutPlan prepares docs and generated code status before commit 
   );
 });
 
+test('buildPrCloseoutPlan prepares Repository Map for workspace manifest-only changes', () => {
+  const plan = buildPrCloseoutPlan({
+    changedFiles: ['pnpm-workspace.yaml'],
+    stagedFiles: ['pnpm-workspace.yaml'],
+    commit,
+  });
+  const ids = stepIds(plan);
+
+  assert.ok(indexOf(ids, 'docs-status-code-state') < indexOf(ids, 'planning-db-up'));
+  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-migrate'));
+  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'docs-status-repository-map'));
+  assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'commit'));
+});
+
 test('buildPrCloseoutPlan refreshes governance for mandatory planning proposals', () => {
   const plan = buildPrCloseoutPlan({
     changedFiles: [
