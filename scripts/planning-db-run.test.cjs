@@ -293,6 +293,14 @@ test('runPlanningDbHealth wait mode uses the bounded readiness rail', () => {
   assert.deepEqual(calls, [{ attempts: 30, intervalMs: 2000 }]);
 });
 
+test('runPlanningDbHealth active mode distinguishes pre-existing runtime ownership', () => {
+  assert.doesNotThrow(() => runPlanningDbHealth(['--active'], { isPlanningDbActive: () => true }));
+  assert.throws(
+    () => runPlanningDbHealth(['--active'], { isPlanningDbActive: () => false }),
+    /Planning DB is not active/
+  );
+});
+
 test('resolveComposeCommand prefers docker compose v2', (t) => {
   resetComposeCommandCache();
   t.after(() => {

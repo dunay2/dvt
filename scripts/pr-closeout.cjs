@@ -96,6 +96,11 @@ function buildPrCloseoutPlan(options = {}) {
       args: ['docs:status:generate', '--code-state-only'],
     });
     pushStepOnce(steps, {
+      id: 'planning-db-ownership',
+      internal: 'capturePlanningDbOwnership',
+      label: 'detect Planning DB ownership',
+    });
+    pushStepOnce(steps, {
       id: 'planning-db-up',
       command: 'pnpm',
       args: ['planning:db:up'],
@@ -119,6 +124,11 @@ function buildPrCloseoutPlan(options = {}) {
       id: 'docs-status-repository-map',
       command: 'pnpm',
       args: ['docs:status:generate', '--repository-map-only'],
+    });
+    pushStepOnce(steps, {
+      id: 'planning-db-release',
+      internal: 'releasePlanningDbIfOwned',
+      label: 'release owned Planning DB',
     });
   }
 
@@ -249,9 +259,48 @@ function assertNoUnstagedChanges(options = {}) {
   }
 }
 
-function runCommand(step, options = {}) {
+function probePlanningDbActive(options = {}) {
+  const spawnCommand = options.spawnCommand || spawnSync;
+  const invocation = resolveCommandInvocation('pnpm', ['planning:db:health', '--active'], options);
+  const result = spawnCommand(invocation.command, invocation.args, {
+    cwd: options.repoRootPath || repoRoot,
+    shell: invocation.shell,
+    stdio: 'ignore',
+  });
+
+  return !result.error && result.status === 0;
+}
+
+function releasePlanningDbIfOwned(options, runtime) {
+  if (!runtime.planningDbOwned || runtime.planningDbReleaseAttempted) {
+    return;
+  }
+
+  runtime.planningDbReleaseAttempted = true;
+  runCommand(
+    {
+      id: 'planning-db-down',
+      command: 'pnpm',
+      args: ['planning:db:down'],
+    },
+    options,
+    runtime
+  );
+}
+
+function runCommand(step, options = {}, runtime = {}) {
   if (step.internal === 'assertNoUnstagedChanges') {
     assertNoUnstagedChanges(options);
+    return;
+  }
+  if (step.internal === 'capturePlanningDbOwnership') {
+    const activeProbe = options.probePlanningDbActive || probePlanningDbActive;
+    runtime.planningDbOwned = !activeProbe(options);
+    runtime.planningDbOwnershipKnown = true;
+    return;
+  }
+  if (step.internal === 'releasePlanningDbIfOwned') {
+    releasePlanningDbIfOwned(options, runtime);
     return;
   }
 
@@ -278,9 +327,39 @@ function runCommand(step, options = {}) {
 }
 
 function executePrCloseoutPlan(plan, options = {}) {
-  for (const step of plan) {
-    console.log(`[pr:closeout] ${commandLabel(step)}`);
-    runCommand(step, options);
+  const runtime = {};
+  let executionError;
+
+  try {
+    for (const step of plan) {
+      console.log(`[pr:closeout] ${commandLabel(step)}`);
+      runCommand(step, options, runtime);
+    }
+  } catch (error) {
+    executionError = error;
+  }
+
+  let cleanupError;
+  if (runtime.planningDbOwned && !runtime.planningDbReleaseAttempted) {
+    console.log('[pr:closeout] release owned Planning DB after interrupted closeout');
+    try {
+      releasePlanningDbIfOwned(options, runtime);
+    } catch (error) {
+      cleanupError = error;
+    }
+  }
+
+  if (executionError && cleanupError) {
+    throw new AggregateError(
+      [executionError, cleanupError],
+      `${executionError.message}; Planning DB cleanup also failed: ${cleanupError.message}`
+    );
+  }
+  if (executionError) {
+    throw executionError;
+  }
+  if (cleanupError) {
+    throw cleanupError;
   }
 }
 
@@ -427,6 +506,7 @@ module.exports = {
   listPrCloseoutChangedFiles,
   listPrCloseoutStagedFiles,
   parseArgs,
+  probePlanningDbActive,
   resolveCommandInvocation,
   runCommand,
 };

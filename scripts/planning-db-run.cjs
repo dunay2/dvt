@@ -217,10 +217,31 @@ function waitForPlanningDbReady(options = {}) {
   throw new Error('Planning DB did not become ready within the bounded wait.');
 }
 
+function isPlanningDbActive(options = {}) {
+  const spawn = options.spawnSync || childProcess.spawnSync;
+  const result = spawn('docker', ['inspect', '--format', '{{.State.Running}}', containerName], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'ignore'],
+  });
+
+  return !result.error && result.status === 0 && String(result.stdout || '').trim() === 'true';
+}
+
 function runPlanningDbHealth(args = [], options = {}) {
-  const unknownArgs = args.filter((arg) => arg !== '--wait');
+  const unknownArgs = args.filter((arg) => arg !== '--wait' && arg !== '--active');
   if (unknownArgs.length > 0) {
     throw new Error(`Unknown planning DB health option "${unknownArgs[0]}".`);
+  }
+  if (args.includes('--wait') && args.includes('--active')) {
+    throw new Error('Choose either --wait or --active for planning DB health, not both.');
+  }
+
+  if (args.includes('--active')) {
+    const activeProbe = options.isPlanningDbActive || isPlanningDbActive;
+    if (!activeProbe(options)) {
+      throw new Error('Planning DB is not active.');
+    }
+    return;
   }
 
   if (args.includes('--wait')) {
@@ -426,6 +447,7 @@ module.exports = {
   buildPgEnv,
   buildComposeArgs,
   ensureDataDir,
+  isPlanningDbActive,
   planResetDataDir,
   readLocalOperationBackup,
   resolveComposeCommand,

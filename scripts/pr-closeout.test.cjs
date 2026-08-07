@@ -93,11 +93,14 @@ test('buildPrCloseoutPlan prepares docs and generated code status before commit 
   const ids = stepIds(plan);
 
   assert.ok(indexOf(ids, 'docs-sync') < indexOf(ids, 'commit'));
-  assert.ok(indexOf(ids, 'docs-status-code-state') < indexOf(ids, 'planning-db-up'));
+  assert.ok(indexOf(ids, 'docs-status-code-state') < indexOf(ids, 'planning-db-ownership'));
+  assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
   assert.ok(indexOf(ids, 'planning-db-up') < indexOf(ids, 'planning-db-health'));
   assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-migrate'));
   assert.ok(indexOf(ids, 'planning-db-migrate') < indexOf(ids, 'planning-db-import'));
   assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'docs-status-repository-map'));
+  assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'planning-db-release'));
+  assert.ok(indexOf(ids, 'planning-db-release') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'assert-no-unstaged'));
   assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
@@ -173,6 +176,73 @@ test('executePrCloseoutPlan fails staged-file mode if prep leaves unstaged files
     calls.some((call) => call.includes(' commit ')),
     false
   );
+});
+
+test('executePrCloseoutPlan preserves a Planning DB that was already active', () => {
+  const calls = [];
+
+  executePrCloseoutPlan(
+    [
+      {
+        id: 'planning-db-ownership',
+        internal: 'capturePlanningDbOwnership',
+        label: 'detect Planning DB ownership',
+      },
+      { id: 'planning-db-up', command: 'pnpm', args: ['planning:db:up'] },
+      {
+        id: 'planning-db-release',
+        internal: 'releasePlanningDbIfOwned',
+        label: 'release owned Planning DB',
+      },
+    ],
+    {
+      probePlanningDbActive: () => true,
+      spawnCommand: (command, args) => {
+        calls.push([command, ...args].join(' '));
+        return { status: 0 };
+      },
+    }
+  );
+
+  assert.equal(
+    calls.some((call) => call.includes('planning:db:down')),
+    false
+  );
+});
+
+test('executePrCloseoutPlan releases an owned Planning DB even when closeout fails', () => {
+  const calls = [];
+
+  assert.throws(
+    () =>
+      executePrCloseoutPlan(
+        [
+          {
+            id: 'planning-db-ownership',
+            internal: 'capturePlanningDbOwnership',
+            label: 'detect Planning DB ownership',
+          },
+          { id: 'planning-db-up', command: 'pnpm', args: ['planning:db:up'] },
+          { id: 'failing-step', command: 'pnpm', args: ['failing-step'] },
+          {
+            id: 'planning-db-release',
+            internal: 'releasePlanningDbIfOwned',
+            label: 'release owned Planning DB',
+          },
+        ],
+        {
+          probePlanningDbActive: () => false,
+          spawnCommand: (command, args) => {
+            const label = [command, ...args].join(' ');
+            calls.push(label);
+            return { status: args.includes('failing-step') ? 1 : 0 };
+          },
+        }
+      ),
+    /failing-step failed with exit code 1/
+  );
+
+  assert.equal(calls.filter((call) => call.includes('planning:db:down')).length, 1);
 });
 
 test('parseArgs exposes commit, stage, push, dry-run, and custom check intent', () => {
