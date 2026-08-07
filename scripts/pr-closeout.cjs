@@ -358,12 +358,34 @@ function isProcessActive(processId) {
 
 function readCloseoutLeaseOwner(leaseDir, options = {}) {
   const readFileSync = options.readFileSync || fs.readFileSync;
+  let ownerContents;
   try {
-    return JSON.parse(readFileSync(path.join(leaseDir, closeoutLeaseOwnerFile), 'utf8'));
+    ownerContents = readFileSync(path.join(leaseDir, closeoutLeaseOwnerFile), 'utf8');
   } catch (error) {
     if (error?.code === 'ENOENT') return null;
     throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${error.message}`, { cause: error });
   }
+
+  let owner;
+  try {
+    owner = JSON.parse(ownerContents);
+  } catch (error) {
+    if (error instanceof SyntaxError) return null;
+    throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${error.message}`, { cause: error });
+  }
+
+  if (
+    !owner ||
+    typeof owner !== 'object' ||
+    !Number.isSafeInteger(owner.pid) ||
+    owner.pid <= 0 ||
+    typeof owner.token !== 'string' ||
+    owner.token.length === 0
+  ) {
+    return null;
+  }
+
+  return owner;
 }
 
 function acquireCloseoutLease(options = {}, runtime = {}) {
@@ -397,12 +419,22 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
       if (!owner) {
         let leaseAgeMs;
         try {
-          leaseAgeMs = now() - statSync(leaseDir).mtimeMs;
+          leaseAgeMs = now() - statSync(path.join(leaseDir, closeoutLeaseOwnerFile)).mtimeMs;
         } catch (statError) {
-          if (statError?.code === 'ENOENT') continue;
-          throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${statError.message}`, {
-            cause: statError,
-          });
+          if (statError?.code === 'ENOENT') {
+            try {
+              leaseAgeMs = now() - statSync(leaseDir).mtimeMs;
+            } catch (directoryStatError) {
+              if (directoryStatError?.code === 'ENOENT') continue;
+              throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${directoryStatError.message}`, {
+                cause: directoryStatError,
+              });
+            }
+          } else {
+            throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${statError.message}`, {
+              cause: statError,
+            });
+          }
         }
 
         if (leaseAgeMs < initializationGraceMs) {
