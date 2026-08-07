@@ -255,6 +255,40 @@ describe('CanvasNodeWorkbenchPanel', () => {
     }
   });
 
+  it('routes the Code tab to the authoritative node-file workbench when available', () => {
+    const onOpenNodeCode = vi.fn();
+
+    act(() => {
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={MODEL_NODE}
+          nodes={[SOURCE_NODE, MODEL_NODE]}
+          edges={EDGES}
+          activeRunId={null}
+          preferredTabId="general"
+          authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
+          onOpenNodeCode={onOpenNodeCode}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    const codeTab = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-tab-code"]'
+    );
+    expect(codeTab).not.toBeNull();
+    expect(codeTab?.getAttribute('aria-selected')).toBe('false');
+
+    act(() => {
+      fireEvent.pointerDown(codeTab!, { button: 0, ctrlKey: false, pointerType: 'mouse' });
+      fireEvent.mouseDown(codeTab!, { button: 0, ctrlKey: false });
+      fireEvent.click(codeTab!);
+    });
+
+    expect(onOpenNodeCode).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('textarea[aria-label="Model SQL"]')).toBeNull();
+  });
+
   it('keeps the accessible movement handle separate from the close command', () => {
     renderMovablePanel(root);
 

@@ -48,6 +48,7 @@ export type CanvasNodeWorkbenchPanelProps = Readonly<{
   authoring: CanvasInspectorAuthoringContract;
   contributions?: readonly CanvasNodeWorkbenchContribution[];
   dragHandleProps?: CanvasNodeWorkbenchDragHandleProps;
+  onOpenNodeCode?: () => void;
   onClose: () => void;
 }>;
 
@@ -216,6 +217,7 @@ export function CanvasNodeWorkbenchPanel({
   authoring,
   contributions = [],
   dragHandleProps,
+  onOpenNodeCode,
   onClose,
 }: CanvasNodeWorkbenchPanelProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
@@ -274,6 +276,14 @@ export function CanvasNodeWorkbenchPanel({
     contributionModel.afterBodyBySection,
     node.id
   );
+  const handleActiveTabChange = (nextTabId: string): void => {
+    if (nextTabId === 'code' && onOpenNodeCode != null) {
+      onOpenNodeCode();
+      return;
+    }
+
+    setActiveTab(nextTabId);
+  };
 
   if (authoring.canEditNode) {
     sectionBeforeChildren.general = (
@@ -353,7 +363,7 @@ export function CanvasNodeWorkbenchPanel({
             slotPrefix="canvas-node-workbench"
             surface="workbench"
             showSectionCountBadge
-            onActiveTabChange={setActiveTab}
+            onActiveTabChange={handleActiveTabChange}
             onHide={onClose}
           />
         </div>
