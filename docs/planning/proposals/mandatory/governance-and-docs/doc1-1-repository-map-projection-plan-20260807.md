@@ -552,6 +552,8 @@ symbols:
   - <<: *prCloseoutLifecycleSymbol
     name: net
   - <<: *prCloseoutLifecycleSymbol
+    name: planningDbProjectName
+  - <<: *prCloseoutLifecycleSymbol
     name: resolveCloseoutLockEndpoint
   - <<: *prCloseoutLifecycleSymbol
     name: runCommand
