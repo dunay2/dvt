@@ -208,6 +208,7 @@ describe('ShellTopBar workspace context', () => {
     );
 
     expect(activeCanvasIdentity).not.toBeNull();
+    expect(topBar?.tagName).toBe('HEADER');
     expect(activeCanvasIdentity?.textContent).toContain('Transformation canvas');
     expect(activeCanvasIdentity?.getAttribute('data-kind')).toBe('transformation');
     expect(activeCanvasIdentity?.getAttribute('data-canvas-id')).toBe('transformation-canvas');
@@ -233,10 +234,12 @@ describe('ShellTopBar workspace context', () => {
 
     const topBar = container.querySelector('[data-slot="shell-top-bar"]');
     const runStatus = topBar?.querySelector('[data-slot="shell-run-status-indicator"]');
+    const runStatusLabel = topBar?.querySelector('[data-slot="shell-run-status-label"]');
     const runCommand = topBar?.querySelector<HTMLButtonElement>('[data-slot="shell-run-command"]');
 
     expect(runStatus).not.toBeNull();
     expect(runStatus?.textContent).toContain('Preview required');
+    expect(runStatusLabel?.className).not.toContain('hidden');
     expect(runCommand).not.toBeNull();
     expect(runCommand?.textContent).toBe('Run');
     expect(runCommand?.disabled).toBe(true);

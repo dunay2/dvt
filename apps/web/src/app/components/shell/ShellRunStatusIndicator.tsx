@@ -6,8 +6,9 @@ import type { ShellTopBarCopy } from './copy';
 import type { OperationalDrawerContribution } from './operationalDrawerContributionStore';
 
 const shellRunStatusClasses = {
-  root: 'flex min-w-0 items-center gap-2',
-  status: 'hidden max-w-56 truncate text-[11px] font-medium text-[var(--text-subtle)] md:inline',
+  root: 'flex min-w-0 items-center gap-1.5',
+  status:
+    'inline min-w-0 max-w-28 truncate text-[11px] font-medium text-[var(--text-subtle)] sm:max-w-40 md:max-w-56',
   activeStatus: 'text-[var(--status-running)]',
   blockedStatus: 'text-amber-100',
   readyStatus: 'text-[var(--status-success)]',
@@ -69,7 +70,9 @@ export function ShellRunStatusIndicator({
       className={shellRunStatusClasses.root}
       aria-label={copy.canvasRunStatusTemplate.replace('{status}', statusLabel)}
     >
-      <span className={resolveStatusClassName(contribution)}>{statusLabel}</span>
+      <span data-slot="shell-run-status-label" className={resolveStatusClassName(contribution)}>
+        {statusLabel}
+      </span>
       <Button
         type="button"
         variant="ghost"
