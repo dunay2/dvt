@@ -183,6 +183,7 @@ governingSources:
   - docs/planning/state/github-mvp-issue-workflow.md
   - docs/generated-docs-policy.json
 allowedImplementationSurfaces:
+  - .github/requirements/zensical.in
   - .github/requirements/zensical.lock
   - .github/workflows/docs-deploy.yml
   - .github/workflows/pr-quality-gate.yml
@@ -366,6 +367,20 @@ redGreenCycles:
     patchSurfaces:
       - tools/ci/workflow-pattern-parity.test.mjs
     greenTest: pnpm test:ci-tools:executable
+  - id: concurrent-closeout-and-reader-clarity-review
+    redTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
+    expectedFailure: Concurrent closeouts can both claim the shared Planning DB lifecycle, the publication lock has no versioned direct-input source, and conventional src/test counters read as repository-wide totals.
+    patchSurfaces:
+      - .github/requirements/zensical.in
+      - .github/requirements/zensical.lock
+      - docs/concepts/repository-map.md
+      - scripts/generate-code-status.cjs
+      - scripts/generate-code-status.test.cjs
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+      - tools/ci/policy/workflow-scope.json
+      - tools/ci/workflow-scope-classification.test.mjs
+    greenTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
 symbols:
   - &repositoryMapSymbol
     name: GENERATION_MODES
@@ -467,6 +482,10 @@ symbols:
       - node --test scripts/pr-closeout.test.cjs
   - <<: *prCloseoutLifecycleSymbol
     name: releasePlanningDbIfOwned
+  - <<: *prCloseoutLifecycleSymbol
+    name: acquireCloseoutLease
+  - <<: *prCloseoutLifecycleSymbol
+    name: releaseCloseoutLease
   - &prCloseoutRoutingSymbol
     name: workflowScopePolicy
     path: scripts/pr-closeout.cjs
