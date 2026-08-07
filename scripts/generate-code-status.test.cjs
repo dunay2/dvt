@@ -438,6 +438,17 @@ test('policy names actual inputs and the minimal generator command', () => {
   assert.ok(entry.sourcePaths.includes('docs/*.md'));
   assert.ok(entry.sourcePaths.includes('docs/**/*.md'));
   assert.ok(entry.sourcePaths.includes('buzon/*.md'));
+  for (const sourcePath of [
+    'README.md',
+    'src/**',
+    'test/**',
+    '**/README.md',
+    '**/package.json',
+    '**/src/**',
+    '**/test/**',
+  ]) {
+    assert.ok(entry.sourcePaths.includes(sourcePath), sourcePath);
+  }
   assert.equal(
     entry.sourcePaths.some((value) => value.includes('subject_key')),
     false
@@ -475,6 +486,17 @@ test('live Planning DB workflow provides explicit Git refs to the importer', () 
   assert.ok(workflowScope.generated_status_relevant.includes('docs/*.md'));
   assert.ok(workflowScope.generated_status_relevant.includes('docs/**/*.md'));
   assert.ok(workflowScope.generated_status_relevant.includes('buzon/*.md'));
+  for (const sourcePath of [
+    'README.md',
+    'src/**',
+    'test/**',
+    '**/README.md',
+    '**/package.json',
+    '**/src/**',
+    '**/test/**',
+  ]) {
+    assert.ok(workflowScope.generated_status_relevant.includes(sourcePath), sourcePath);
+  }
 });
 
 test('Repository Map publication provisions the pinned Zensical runtime first', () => {

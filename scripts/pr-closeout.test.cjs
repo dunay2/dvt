@@ -41,11 +41,11 @@ test('buildPrCloseoutPlan commits before the only full prepush validation and pu
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
   assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-migrate'));
   assert.ok(indexOf(ids, 'planning-db-migrate') < indexOf(ids, 'governance-refresh'));
-  assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'planning-db-release'));
-  assert.ok(indexOf(ids, 'planning-db-release') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'assert-no-unstaged'));
   assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'commit') < indexOf(ids, 'verify-prepush'));
+  assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
+  assert.ok(indexOf(ids, 'planning-db-release') < indexOf(ids, 'push'));
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'push'));
   assert.equal(ids.filter((id) => id === 'verify-prepush').length, 1);
   assert.equal(
@@ -97,11 +97,10 @@ test('buildPrCloseoutPlan prepares generated code status before commit when need
   assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-migrate'));
   assert.ok(indexOf(ids, 'planning-db-migrate') < indexOf(ids, 'planning-db-import'));
   assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'docs-status-repository-map'));
-  assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'planning-db-release'));
-  assert.ok(indexOf(ids, 'planning-db-release') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'assert-no-unstaged'));
   assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
   assert.equal(
     commandLabel(plan.find((step) => step.id === 'docs-status-code-state')),
     'pnpm docs:status:generate --code-state-only'
@@ -145,6 +144,44 @@ test('buildPrCloseoutPlan prepares Repository Map for workspace manifest-only ch
   assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'commit'));
 });
 
+test('buildPrCloseoutPlan prepares Repository Map for canonical-binding inputs', () => {
+  const plan = buildPrCloseoutPlan({
+    changedFiles: ['docs/contracts/index.md'],
+    stagedFiles: ['docs/contracts/index.md'],
+    commit,
+  });
+  const ids = stepIds(plan);
+
+  assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
+  assert.ok(indexOf(ids, 'planning-db-migrate') < indexOf(ids, 'planning-db-import'));
+  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'docs-status-repository-map'));
+  assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
+});
+
+test('buildPrCloseoutPlan prepares workspace projections for root and non-standard inputs', () => {
+  for (const filePath of [
+    'README.md',
+    'src/index.ts',
+    'test/root.test.ts',
+    'integrations/example/README.md',
+    'integrations/example/package.json',
+    'integrations/example/src/index.ts',
+    'integrations/example/test/example.test.ts',
+  ]) {
+    const plan = buildPrCloseoutPlan({
+      changedFiles: [filePath],
+      stagedFiles: [filePath],
+      commit,
+    });
+    const ids = stepIds(plan);
+
+    assert.ok(ids.includes('docs-status-code-state'), filePath);
+    assert.ok(ids.includes('docs-status-repository-map'), filePath);
+    assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'), filePath);
+  }
+});
+
 test('buildPrCloseoutPlan refreshes governance for mandatory planning proposals', () => {
   const plan = buildPrCloseoutPlan({
     changedFiles: [
@@ -158,8 +195,8 @@ test('buildPrCloseoutPlan refreshes governance for mandatory planning proposals'
   const ids = stepIds(plan);
 
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'governance-refresh'));
-  assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'planning-db-release'));
-  assert.ok(indexOf(ids, 'planning-db-release') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
 });
 
 test('executePrCloseoutPlan fails staged-file mode if prep leaves unstaged files', () => {

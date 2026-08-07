@@ -50,6 +50,13 @@ test('classifies Repository Map binding and lifecycle inputs as generated-status
     'buzon/20260807-example.md',
     'tools/planning-db/state/canonical-state.json',
     'scripts/planning-db-import.cjs',
+    'README.md',
+    'src/index.ts',
+    'test/root.test.ts',
+    'integrations/example/README.md',
+    'integrations/example/package.json',
+    'integrations/example/src/index.ts',
+    'integrations/example/test/example.test.ts',
   ]) {
     const scope = computeBooleanScope([file], WORKFLOW_SCOPE_PATTERNS);
     assert.equal(scope.generated_status_relevant, true, file);
