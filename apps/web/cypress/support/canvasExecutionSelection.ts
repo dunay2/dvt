@@ -102,10 +102,10 @@ export function revealOperationalDrawer(): void {
 
 export function clickPreviewExecutionPlanFromOperationalDrawer(): void {
   revealOperationalDrawer();
-  cy.contains('[data-slot="bottom-operational-drawer-tab"]', 'Preview')
+  cy.get('[data-slot="bottom-operational-drawer-tab"][data-tab="preview"]')
     .should('be.visible')
     .click();
-  cy.contains('[data-slot="bottom-operational-drawer-preview"] button', 'Preview execution plan')
+  cy.get('[data-slot="bottom-operational-preview-action"]')
     .should('be.visible')
     .should('be.enabled')
     .then(($button) => {
@@ -115,6 +115,11 @@ export function clickPreviewExecutionPlanFromOperationalDrawer(): void {
 
 export function expectPreviewExecutionPlanUnavailableFromCanvasContextMenu(): void {
   openCanvasContextMenuAt();
+  cy.get('[data-slot="canvas-context-menu"]').should(
+    'not.contain.text',
+    'Create Execution Preview'
+  );
+  cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Crear Execution Preview');
   cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Preview execution plan');
   cy.get('[data-slot="canvas-context-menu"]').should('not.contain.text', 'Previsualizar plan');
   cy.get('body').type('{esc}', { force: true });

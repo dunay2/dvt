@@ -179,10 +179,11 @@ describe('OperationalDrawerPanels', () => {
     ).toBe('Execution Preview integrity');
     expect(container.textContent).not.toContain('plan_integrity');
 
-    const previewButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Create Execution Preview')
+    const previewButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="bottom-operational-preview-action"]'
     );
     expect(previewButton).not.toBeNull();
+    expect(previewButton?.textContent).toContain('Create Execution Preview');
 
     await act(async () => {
       fireEvent.click(previewButton!);
