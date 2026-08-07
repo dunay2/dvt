@@ -9,6 +9,7 @@ import type {
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { resolveRunControlCopy } from './runControlCopy';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 type RunControlActionsProps = Readonly<{
   runId: string;
@@ -49,11 +50,13 @@ export function RunControlActions({
   outcome,
   runId,
 }: RunControlActionsProps): JSX.Element | null {
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   if (!availability) {
     return null;
   }
 
-  const copy = resolveRunControlCopy(locale);
+  const resolvedLocale = locale ?? applicationLanguage;
+  const copy = resolveRunControlCopy(resolvedLocale);
   const activeForRun = activity?.runId === runId ? activity : null;
   const outcomeForRun = outcome?.runId === runId ? outcome : null;
   const failureForRun = failure?.runId === runId ? failure : null;
@@ -67,7 +70,7 @@ export function RunControlActions({
   const feedback = failureForRun
     ? copy.failure(failureForRun.error.message)
     : outcomeForRun
-      ? describeOutcome(outcomeForRun, locale)
+      ? describeOutcome(outcomeForRun, resolvedLocale)
       : null;
 
   return (

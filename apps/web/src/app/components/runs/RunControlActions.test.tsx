@@ -2,13 +2,18 @@
 
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RunControlActions } from './RunControlActions';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 describe('RunControlActions', () => {
   let container: HTMLDivElement | null = null;
   let root: Root | null = null;
+
+  beforeEach(() => {
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
+  });
 
   afterEach(() => {
     if (root) {
@@ -17,6 +22,7 @@ describe('RunControlActions', () => {
     container?.remove();
     container = null;
     root = null;
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   });
 
   async function renderActions(
@@ -71,11 +77,27 @@ describe('RunControlActions', () => {
       activity: { action: 'cancel', runId: 'run_1' },
     });
 
-    expect(container?.textContent).toContain('Cancelar ejecucion');
-    expect(container?.textContent).toContain('Recuperar ejecucion');
+    expect(container?.textContent).toContain('Cancelar ejecución');
+    expect(container?.textContent).toContain('Recuperar ejecución');
     expect(
       container?.querySelector<HTMLButtonElement>('[data-slot="run-cancel-action"]')?.disabled
     ).toBe(true);
+  });
+
+  it('reacts to the application language when no local locale override is supplied', async () => {
+    await renderActions({ compact: false });
+    expect(container?.textContent).toContain('Cancel run');
+
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    });
+
+    expect(container?.textContent).toContain('Cancelar ejecución');
+    expect(
+      container
+        ?.querySelector<HTMLButtonElement>('[data-slot="run-recover-action"]')
+        ?.getAttribute('aria-description')
+    ).toContain('recuperación');
   });
 
   it('explains when recovery context integrity cannot be verified', async () => {

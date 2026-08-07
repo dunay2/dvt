@@ -8,6 +8,8 @@ import type { CanvasShellPanels, CanvasShellChromeState } from './canvasShell.ty
 import type { CanvasExecutionSelectionRecoveryCommands } from '../../types/canvasExecutionSelectionRecovery';
 import type { OperationalDrawerRunControls } from '../../components/shell/operationalDrawerContributionStore';
 import { buildCanvasOperationalDrawerContribution } from './canvasOperationalDrawerContribution';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 type CanvasOperationalDrawerContributionRegistrarProps = Readonly<{
   policy: CanvasOperationalDrawerSurfacePolicy;
@@ -28,6 +30,8 @@ export function CanvasOperationalDrawerContributionRegistrar({
   chromeState,
   selectionRecoveryCommands,
 }: CanvasOperationalDrawerContributionRegistrarProps): null {
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const copy = useMemo(() => resolveCanvasViewCopy(applicationLanguage), [applicationLanguage]);
   const registerOperationalDrawerContribution = useOperationalDrawerContributionStore(
     (state) => state.registerOperationalDrawerContribution
   );
@@ -60,6 +64,8 @@ export function CanvasOperationalDrawerContributionRegistrar({
         planStatusSummary: chromeState.planStatusSummary,
         selectionRecovery: chromeState.executionSelectionRecovery,
         selectionRecoveryCommands,
+        selectionRecoveryMessages: copy,
+        copy,
         onPreviewExecutionPlan: () => latestCommandsRef.current.onPreviewExecutionPlan(),
         onStartRun: () => latestCommandsRef.current.onStartRun(),
       }),
@@ -72,6 +78,7 @@ export function CanvasOperationalDrawerContributionRegistrar({
       chromeState.planRunReadiness.summary,
       chromeState.planStatusSummary,
       chromeState.executionSelectionRecovery,
+      copy,
       logTab,
       panels.activeRunId,
       panels.userPermissions.canPlan,
