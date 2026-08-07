@@ -88,9 +88,29 @@ function buildPrCloseoutPlan(options = {}) {
 
   if (hasWorkspaceSourceChange(changedFiles)) {
     pushStepOnce(steps, {
-      id: 'docs-status-generate',
+      id: 'docs-status-code-state',
       command: 'pnpm',
-      args: ['docs:status:generate'],
+      args: ['docs:status:generate', '--', '--code-state-only'],
+    });
+    pushStepOnce(steps, {
+      id: 'planning-db-up',
+      command: 'pnpm',
+      args: ['planning:db:up'],
+    });
+    pushStepOnce(steps, {
+      id: 'planning-db-migrate',
+      command: 'pnpm',
+      args: ['planning:db:migrate'],
+    });
+    pushStepOnce(steps, {
+      id: 'planning-db-import',
+      command: 'pnpm',
+      args: ['planning:db:import', '--', '--if-stale'],
+    });
+    pushStepOnce(steps, {
+      id: 'docs-status-repository-map',
+      command: 'pnpm',
+      args: ['docs:status:generate', '--', '--repository-map-only'],
     });
   }
 

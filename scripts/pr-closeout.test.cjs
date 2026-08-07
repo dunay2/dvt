@@ -93,9 +93,21 @@ test('buildPrCloseoutPlan prepares docs and generated code status before commit 
   const ids = stepIds(plan);
 
   assert.ok(indexOf(ids, 'docs-sync') < indexOf(ids, 'commit'));
-  assert.ok(indexOf(ids, 'docs-status-generate') < indexOf(ids, 'commit'));
-  assert.ok(indexOf(ids, 'docs-status-generate') < indexOf(ids, 'assert-no-unstaged'));
+  assert.ok(indexOf(ids, 'docs-status-code-state') < indexOf(ids, 'planning-db-up'));
+  assert.ok(indexOf(ids, 'planning-db-up') < indexOf(ids, 'planning-db-migrate'));
+  assert.ok(indexOf(ids, 'planning-db-migrate') < indexOf(ids, 'planning-db-import'));
+  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'docs-status-repository-map'));
+  assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'docs-status-repository-map') < indexOf(ids, 'assert-no-unstaged'));
   assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
+  assert.equal(
+    commandLabel(plan.find((step) => step.id === 'docs-status-code-state')),
+    'pnpm docs:status:generate -- --code-state-only'
+  );
+  assert.equal(
+    commandLabel(plan.find((step) => step.id === 'docs-status-repository-map')),
+    'pnpm docs:status:generate -- --repository-map-only'
+  );
 });
 
 test('buildPrCloseoutPlan refreshes governance for mandatory planning proposals', () => {
