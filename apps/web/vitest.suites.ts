@@ -20,8 +20,7 @@ export type WebVitestPrimarySuiteName = (typeof WEB_VITEST_PRIMARY_SUITE_NAMES)[
 export type WebVitestFocusSuiteName = (typeof WEB_VITEST_FOCUS_SUITE_NAMES)[number];
 export type WebVitestSuiteName = 'all' | WebVitestPrimarySuiteName | WebVitestFocusSuiteName;
 export type WebVitestChangedSuiteName =
-  | WebVitestPrimarySuiteName
-  | Exclude<WebVitestFocusSuiteName, 'canvas'>;
+  WebVitestPrimarySuiteName | Exclude<WebVitestFocusSuiteName, 'canvas'>;
 
 export type WebVitestChangedCommandPlanEntry =
   | Readonly<{ kind: 'shell'; command: string }>
@@ -193,7 +192,8 @@ function createWebVitestCiWorkerConfig(): NonNullable<UserConfig['test']> {
     maxWorkers: WEB_VITEST_CI_WORKER_COUNT,
     poolOptions: {
       forks: {
-        singleFork: true,
+        singleFork: false,
+        isolate: true,
         minForks: 1,
         maxForks: WEB_VITEST_CI_WORKER_COUNT,
         execArgv: [WEB_VITEST_CI_NODE_OPTIONS],

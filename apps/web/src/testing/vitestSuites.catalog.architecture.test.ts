@@ -173,7 +173,8 @@ describe('web Vitest suite catalog', () => {
       maxWorkers: WEB_VITEST_CI_WORKER_COUNT,
       poolOptions: {
         forks: {
-          singleFork: true,
+          singleFork: false,
+          isolate: true,
           minForks: 1,
           maxForks: WEB_VITEST_CI_WORKER_COUNT,
           execArgv: [WEB_VITEST_CI_NODE_OPTIONS],

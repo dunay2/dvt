@@ -101,6 +101,11 @@ Warm-build note:
 
 ## Package Validation Commands
 
+The Web CI primary suites run with one isolated fork at a time. Each test file
+gets a fresh fork so completed processes release module and DOM memory while
+the governed suite coverage remains unchanged. Do not enable `singleFork`: it
+disables this isolation and can exhaust the 4 GB worker limit.
+
 | Capability                         | Command                                                                    | Scope                                                | Source                                                                                                 |
 | ---------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Web app tests                      | `pnpm test:web` or `pnpm --filter @dvt/web test`                           | `apps/web` primary-suite composition                 | [`apps/web/package.json`](../../apps/web/package.json)                                                 |
@@ -611,9 +616,9 @@ Current workflow consumers:
   Vitest delegates. `pnpm test:web` and `pnpm --filter @dvt/web test` use the
   same primary-suite delegate sequence through the package `pretest` lifecycle,
   so root `turbo run test` and the dedicated web lane mirror the same coverage.
-  CI uses the suite catalog's single-fork worker topology to keep hosted-runner
-  memory and process-exit behavior deterministic. The hosted `Web Frontend
-Tests` lane and the main/manual `Full CI` baseline both set the same web
+  CI uses the suite catalog's one-worker isolated-fork topology to keep
+  hosted-runner memory and process-exit behavior deterministic. The hosted `Web
+Frontend Tests` lane and the main/manual `Full CI` baseline both set the same web
   Vitest old-space value through `NODE_OPTIONS`, so the Vitest parent process
   and forked workers inherit the limit in GitHub Actions. Public web suite
   commands also run `test:deps` before their raw `*:run` delegates so split-suite
