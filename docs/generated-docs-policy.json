@@ -67,7 +67,7 @@
         "apps",
         "packages"
       ],
-      "generatorCommand": "pnpm docs:status:generate -- --repository-map-only",
+      "generatorCommand": "pnpm docs:status:generate --repository-map-only",
       "tracking": "tracked",
       "manualEditPolicy": "generator-owned",
       "requiredMarkers": [
@@ -79,7 +79,7 @@
       "description": "Tracked stable navigation pointer for the locally rendered code-state inventory.",
       "artifacts": ["docs/planning/status/generated-code-state.md"],
       "sourcePaths": ["docs/planning/status/generated-code-state.md"],
-      "generatorCommand": "pnpm docs:status:generate -- --code-state-only",
+      "generatorCommand": "pnpm docs:status:generate --code-state-only",
       "tracking": "tracked",
       "manualEditPolicy": "source-owned"
     },
@@ -95,7 +95,7 @@
         "apps",
         "packages"
       ],
-      "generatorCommand": "pnpm docs:status:generate -- --code-state-only",
+      "generatorCommand": "pnpm docs:status:generate --code-state-only",
       "tracking": "untracked",
       "manualEditPolicy": "generator-owned",
       "requiredMarkers": [

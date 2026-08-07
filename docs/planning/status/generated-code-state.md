@@ -14,12 +14,12 @@ conflicts from source and test inventory churn.
 Run:
 
 ```bash
-pnpm docs:status:generate -- --code-state-only
+pnpm docs:status:generate --code-state-only
 ```
 
 This mode is deliberately DB-free. The tracked Repository Map is a separate,
 DB-backed projection; after preparing and importing Planning DB, refresh it
-with `pnpm docs:status:generate -- --repository-map-only`.
+with `pnpm docs:status:generate --repository-map-only`.
 
 The local render is written to:
 

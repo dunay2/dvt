@@ -45,10 +45,10 @@ and discoverability for retained generated surfaces.
 ## Standard Workflow
 
 1. Run `pnpm docs:sync` after adding, removing, or renaming files under `docs/`.
-2. Run DB-free `pnpm docs:status:generate -- --code-state-only` after structural
+2. Run DB-free `pnpm docs:status:generate --code-state-only` after structural
    source changes under `apps/` or `packages/`.
 3. Prepare and import Planning DB, then run
-   `pnpm docs:status:generate -- --repository-map-only` to refresh the tracked
+   `pnpm docs:status:generate --repository-map-only` to refresh the tracked
    Repository Map after those changes.
 4. Run `pnpm governance:refresh` after changing governance sources,
    generators, scripts, or package commands.

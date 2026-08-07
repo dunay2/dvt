@@ -102,11 +102,11 @@ test('buildPrCloseoutPlan prepares docs and generated code status before commit 
   assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
   assert.equal(
     commandLabel(plan.find((step) => step.id === 'docs-status-code-state')),
-    'pnpm docs:status:generate -- --code-state-only'
+    'pnpm docs:status:generate --code-state-only'
   );
   assert.equal(
     commandLabel(plan.find((step) => step.id === 'docs-status-repository-map')),
-    'pnpm docs:status:generate -- --repository-map-only'
+    'pnpm docs:status:generate --repository-map-only'
   );
 });
 

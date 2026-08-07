@@ -382,8 +382,9 @@ test('DB-free docs workflows and contributor guidance select code-state explicit
   ];
   for (const guidancePath of guidancePaths) {
     const content = fs.readFileSync(path.join(repoRoot, guidancePath), 'utf8');
-    assert.match(content, /docs:status:generate -- --code-state-only/u, guidancePath);
-    assert.match(content, /docs:status:generate -- --repository-map-only/u, guidancePath);
+    assert.match(content, /docs:status:generate --code-state-only/u, guidancePath);
+    assert.match(content, /docs:status:generate --repository-map-only/u, guidancePath);
+    assert.doesNotMatch(content, /docs:status:generate -- --(?:code-state|repository-map)-only/u);
   }
 });
 
@@ -424,7 +425,7 @@ test('policy names actual inputs and the minimal generator command', () => {
   const policy = JSON.parse(fs.readFileSync(policyPath, 'utf8'));
   const entry = policy.artifactClasses.find((item) => item.id === 'tracked-docs-repository-map');
   assert.ok(entry);
-  assert.equal(entry.generatorCommand, 'pnpm docs:status:generate -- --repository-map-only');
+  assert.equal(entry.generatorCommand, 'pnpm docs:status:generate --repository-map-only');
   assert.ok(entry.sourcePaths.includes('package.json'));
   assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
   assert.ok(entry.sourcePaths.includes('scripts/generated-doc-date.cjs'));

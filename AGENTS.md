@@ -321,7 +321,7 @@ Whenever source files are added or removed from any workspace, refresh the
 DB-free local code-state inventory with:
 
 ```bash
-pnpm docs:status:generate -- --code-state-only
+pnpm docs:status:generate --code-state-only
 ```
 
 The tracked Repository Map also includes workspace source/test counts. After a
@@ -329,7 +329,7 @@ structural change to `apps/` or `packages/`, prepare and import the Planning DB,
 then refresh and commit the map with:
 
 ```bash
-pnpm docs:status:generate -- --repository-map-only
+pnpm docs:status:generate --repository-map-only
 ```
 
 The first command is deliberately DB-free. The second is deliberately

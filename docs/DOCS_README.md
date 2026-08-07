@@ -46,14 +46,14 @@ is deliberately DB-free.
 Generate only the ignored local code-state inventory without Planning DB:
 
 ```bash
-pnpm docs:status:generate -- --code-state-only
+pnpm docs:status:generate --code-state-only
 ```
 
 After preparing and importing Planning DB, generate only the tracked Repository
 Map with:
 
 ```bash
-pnpm docs:status:generate -- --repository-map-only
+pnpm docs:status:generate --repository-map-only
 ```
 
 For strict drift enforcement against `HEAD`:

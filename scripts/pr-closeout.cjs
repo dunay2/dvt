@@ -90,7 +90,7 @@ function buildPrCloseoutPlan(options = {}) {
     pushStepOnce(steps, {
       id: 'docs-status-code-state',
       command: 'pnpm',
-      args: ['docs:status:generate', '--', '--code-state-only'],
+      args: ['docs:status:generate', '--code-state-only'],
     });
     pushStepOnce(steps, {
       id: 'planning-db-up',
@@ -110,7 +110,7 @@ function buildPrCloseoutPlan(options = {}) {
     pushStepOnce(steps, {
       id: 'docs-status-repository-map',
       command: 'pnpm',
-      args: ['docs:status:generate', '--', '--repository-map-only'],
+      args: ['docs:status:generate', '--repository-map-only'],
     });
   }
 
