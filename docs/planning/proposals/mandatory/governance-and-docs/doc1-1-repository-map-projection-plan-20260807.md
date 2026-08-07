@@ -539,7 +539,11 @@ symbols:
   - <<: *prCloseoutLifecycleSymbol
     name: releasePlanningDbIfOwned
   - <<: *prCloseoutLifecycleSymbol
+    name: net
+  - <<: *prCloseoutLifecycleSymbol
     name: resolveCloseoutLockEndpoint
+  - <<: *prCloseoutLifecycleSymbol
+    name: runCommand
   - <<: *prCloseoutLifecycleSymbol
     name: runWithCloseoutLock
   - &prCloseoutRoutingSymbol
