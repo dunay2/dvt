@@ -43,6 +43,17 @@ test('classifies docs-only pull request scope', () => {
   assert.equal(scope.security_analysis_relevant, false);
 });
 
+test('classifies Repository Map binding and lifecycle inputs as generated-status relevant', () => {
+  for (const file of [
+    'docs/planning/status/system-governance-unit-index.units.yaml',
+    'docs/contracts/index.md',
+    'buzon/20260807-example.md',
+  ]) {
+    const scope = computeBooleanScope([file], WORKFLOW_SCOPE_PATTERNS);
+    assert.equal(scope.generated_status_relevant, true, file);
+  }
+});
+
 test('keeps mailbox analysis out of security analysis scope', () => {
   const scope = computeWorkflowModeScopeOutputs('workflow', [
     'buzon/20260531-db-first-architecture-generated-docs-fowler-analysis.md',

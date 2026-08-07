@@ -430,6 +430,12 @@ test('policy names actual inputs and the minimal generator command', () => {
   assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
   assert.ok(entry.sourcePaths.includes('scripts/generated-doc-date.cjs'));
   assert.ok(entry.sourcePaths.includes('tools/planning-db/migrations'));
+  assert.ok(
+    entry.sourcePaths.includes('docs/planning/status/system-governance-unit-index.units.yaml')
+  );
+  assert.ok(entry.sourcePaths.includes('docs/*.md'));
+  assert.ok(entry.sourcePaths.includes('docs/**/*.md'));
+  assert.ok(entry.sourcePaths.includes('buzon/*.md'));
   assert.equal(
     entry.sourcePaths.some((value) => value.includes('subject_key')),
     false
@@ -455,6 +461,14 @@ test('live Planning DB workflow provides explicit Git refs to the importer', () 
   assert.match(liveStep, /GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/u);
   assert.match(liveStep, /GIT_HEAD: \$\{\{ github\.sha \}\}/u);
   assert.ok(workflowScope.generated_status_relevant.includes('scripts/generated-doc-date.cjs'));
+  assert.ok(
+    workflowScope.generated_status_relevant.includes(
+      'docs/planning/status/system-governance-unit-index.units.yaml'
+    )
+  );
+  assert.ok(workflowScope.generated_status_relevant.includes('docs/*.md'));
+  assert.ok(workflowScope.generated_status_relevant.includes('docs/**/*.md'));
+  assert.ok(workflowScope.generated_status_relevant.includes('buzon/*.md'));
 });
 
 test(
