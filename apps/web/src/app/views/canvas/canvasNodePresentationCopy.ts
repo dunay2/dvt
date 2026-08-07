@@ -110,6 +110,8 @@ const NODE_PROPERTY_PRESENTATION_COPY = {
       kind: 'Tipo',
       severity: 'Severidad',
       status: 'Estado',
+      nodeId: 'ID del nodo',
+      relation: 'Relación',
       target: 'Objetivo',
       test: 'Prueba',
       package: 'Paquete',
@@ -136,6 +138,9 @@ const NODE_PROPERTY_PRESENTATION_COPY = {
       skipped: 'Omitido',
       draft: 'Borrador',
       ready: 'Listo',
+      lineage: 'Linaje',
+      validation: 'Validación',
+      dependency: 'Dependencia',
     },
   },
 } as const;
