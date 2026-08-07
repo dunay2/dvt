@@ -36,12 +36,12 @@ const COPY_BY_KEY: Record<keyof AppRouteErrorBoundaryCopy, LocalizableString> = 
 
 const SPANISH_COPY: AppRouteErrorBoundaryCopy = {
   brandLabel: 'Raven',
-  title: 'La aplicacion encontro un error inesperado.',
+  title: 'La aplicación encontró un error inesperado.',
   message:
-    'La vista actual no pudo recuperarse limpiamente. Recarga la aplicacion para restaurar la shell o vuelve a la raiz del workspace.',
+    'La vista actual no pudo recuperarse correctamente. Recarga la aplicación para restaurar la interfaz o vuelve a la raíz del espacio de trabajo.',
   errorLabel: 'Error',
-  reloadLabel: 'Recargar aplicacion',
-  homeLabel: 'Volver al workspace',
+  reloadLabel: 'Recargar aplicación',
+  homeLabel: 'Volver al espacio de trabajo',
   unexpectedRouteError: 'Se produjo un error inesperado en la ruta.',
 };
 

@@ -13,6 +13,7 @@ import {
   normalizeFrontendOperabilityRouteId,
 } from './services/operability/frontendOperabilityRecorder';
 import { useFrontendOperabilityTransition } from './services/operability/useFrontendOperabilityTransition';
+import { useApplicationLanguageStore } from './stores/applicationLanguageStore';
 
 function getErrorMessage(error: unknown, copy: AppRouteErrorBoundaryCopy): string {
   if (isRouteErrorResponse(error)) {
@@ -34,7 +35,8 @@ export default function AppRouteErrorBoundary() {
   const error = useRouteError();
   const matches = useMatches();
   const frontendOperabilityTransitionRecorder = useFrontendOperabilityTransitionRecorder();
-  const copy = resolveAppRouteErrorBoundaryCopy();
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveAppRouteErrorBoundaryCopy(applicationLanguage);
   const message = getErrorMessage(error, copy);
   const bootstrapScreenVisible = isBootstrapScreenVisible();
   const routeId = normalizeFrontendOperabilityRouteId(matches[matches.length - 1]?.id);
