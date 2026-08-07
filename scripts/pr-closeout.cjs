@@ -68,32 +68,38 @@ function runWithCloseoutLock(task, options = {}) {
 
   return new Promise((resolve, reject) => {
     const server = createServer();
+    let closing = false;
     let settled = false;
     const runtimeErrors = [];
     const endpointLabel = endpoint.path
       ? endpoint.path.replace(/^\0/u, '@')
       : `${endpoint.host}:${endpoint.port}`;
 
-    const closeAndSettle = (error, value) => {
-      if (settled) return;
-      settled = true;
+    const closeAndSettle = (taskError, value) => {
+      if (closing || settled) return;
+      closing = true;
       const settleAfterClose = (closeError) => {
+        if (settled) return;
+        settled = true;
         const releaseError = closeError
           ? new Error(`PR_CLOSEOUT_LEASE_RELEASE_FAILED: ${closeError.message}`, {
               cause: closeError,
             })
           : null;
-        if (error && releaseError) {
+        const errors = [
+          ...(taskError ? [taskError] : []),
+          ...runtimeErrors,
+          ...(releaseError ? [releaseError] : []),
+        ];
+        if (errors.length > 1) {
           reject(
             new AggregateError(
-              [error, releaseError],
-              `${error.message}; closeout lock release also failed: ${releaseError.message}`
+              errors,
+              `Guarded closeout failed: ${errors.map((error) => error.message).join('; ')}`
             )
           );
-        } else if (error) {
-          reject(error);
-        } else if (releaseError) {
-          reject(releaseError);
+        } else if (errors.length === 1) {
+          reject(errors[0]);
         } else {
           resolve(value);
         }
@@ -132,19 +138,7 @@ function runWithCloseoutLock(task, options = {}) {
         );
       });
       const settleTask = (taskError, value) => {
-        const errors = [...(taskError ? [taskError] : []), ...runtimeErrors];
-        if (errors.length === 0) {
-          closeAndSettle(null, value);
-        } else if (errors.length === 1) {
-          closeAndSettle(errors[0]);
-        } else {
-          closeAndSettle(
-            new AggregateError(
-              errors,
-              `Guarded closeout failed: ${errors.map((error) => error.message).join('; ')}`
-            )
-          );
-        }
+        setImmediate(() => closeAndSettle(taskError, value));
       };
       let result;
       try {
