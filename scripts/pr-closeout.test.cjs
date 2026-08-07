@@ -187,6 +187,138 @@ test('closeout lease recovers an ownerless directory after the initialization gr
   releaseCloseoutLease({}, runtime);
 });
 
+test('closeout lease restores an owner that appears while the directory enters quarantine', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-interleave-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const runtime = {};
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+  fs.mkdirSync(leaseDir);
+
+  assert.throws(
+    () =>
+      acquireCloseoutLease(
+        {
+          closeoutLeaseDir: leaseDir,
+          processId: 202,
+          createLeaseToken: () => 'successor-token',
+          closeoutLeaseInitializationGraceMs: 30_000,
+          statSync: () => ({ mtimeMs: 1_000 }),
+          now: () => 31_000,
+          isProcessActive: (pid) => pid === 101,
+          renameSync: (source, target) => {
+            if (source === leaseDir) {
+              fs.writeFileSync(
+                path.join(leaseDir, 'owner.json'),
+                `${JSON.stringify({ pid: 101, token: 'live-token' })}\n`,
+                'utf8'
+              );
+            }
+            fs.renameSync(source, target);
+          },
+        },
+        runtime
+      ),
+    /PR_CLOSEOUT_LEASE_BUSY/u
+  );
+
+  const owner = JSON.parse(fs.readFileSync(path.join(leaseDir, 'owner.json'), 'utf8'));
+  assert.equal(owner.pid, 101);
+  assert.equal(owner.token, 'live-token');
+  assert.equal(runtime.closeoutLeaseOwned, undefined);
+});
+
+test('closeout lease verifies its visible token before claiming ownership', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-visible-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const runtime = {};
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+
+  assert.throws(
+    () =>
+      acquireCloseoutLease(
+        {
+          closeoutLeaseDir: leaseDir,
+          processId: 101,
+          createLeaseToken: () => 'initializer-token',
+          writeFileSync: (filePath, value, options) => {
+            fs.writeFileSync(filePath, value, options);
+            fs.writeFileSync(
+              filePath,
+              `${JSON.stringify({ pid: 202, token: 'visible-successor-token' })}\n`,
+              'utf8'
+            );
+          },
+        },
+        runtime
+      ),
+    /PR_CLOSEOUT_LEASE_OWNERSHIP_LOST/u
+  );
+
+  const owner = JSON.parse(fs.readFileSync(path.join(leaseDir, 'owner.json'), 'utf8'));
+  assert.equal(owner.token, 'visible-successor-token');
+  assert.equal(runtime.closeoutLeaseOwned, undefined);
+});
+
+test('closeout lease retries a vanished ownerless directory and fails closed on stat errors', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-stat-'));
+  const vanishedLeaseDir = path.join(leaseRoot, 'vanished-lease');
+  const unreadableLeaseDir = path.join(leaseRoot, 'unreadable-lease');
+  const runtime = {};
+  let mkdirAttempts = 0;
+  let readAttempts = 0;
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+
+  acquireCloseoutLease(
+    {
+      closeoutLeaseDir: vanishedLeaseDir,
+      processId: 101,
+      createLeaseToken: () => 'retry-token',
+      mkdirSync: (target) => {
+        mkdirAttempts += 1;
+        if (mkdirAttempts === 1) {
+          const error = new Error('already existed before it vanished');
+          error.code = 'EEXIST';
+          throw error;
+        }
+        fs.mkdirSync(target);
+      },
+      readFileSync: (filePath, encoding) => {
+        readAttempts += 1;
+        if (readAttempts === 1) {
+          const error = new Error('vanished');
+          error.code = 'ENOENT';
+          throw error;
+        }
+        return fs.readFileSync(filePath, encoding);
+      },
+      statSync: () => {
+        const error = new Error('vanished');
+        error.code = 'ENOENT';
+        throw error;
+      },
+    },
+    runtime
+  );
+  assert.equal(runtime.closeoutLeaseOwned, true);
+  releaseCloseoutLease({}, runtime);
+
+  fs.mkdirSync(unreadableLeaseDir);
+  assert.throws(
+    () =>
+      acquireCloseoutLease({
+        closeoutLeaseDir: unreadableLeaseDir,
+        createLeaseToken: () => 'unreadable-token',
+        statSync: () => {
+          const error = new Error('access denied');
+          error.code = 'EACCES';
+          throw error;
+        },
+      }),
+    /PR_CLOSEOUT_LEASE_READ_FAILED: access denied/u
+  );
+  assert.equal(fs.existsSync(unreadableLeaseDir), true);
+});
+
 test('closeout lease refuses to delete a successor token', (t) => {
   const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-token-'));
   const leaseDir = path.join(leaseRoot, 'lease');

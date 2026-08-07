@@ -388,6 +388,13 @@ redGreenCycles:
       - scripts/pr-closeout.cjs
       - scripts/pr-closeout.test.cjs
     greenTest: node --test scripts/pr-closeout.test.cjs
+  - id: closeout-lease-interleaving-review
+    redTest: node --test scripts/pr-closeout.test.cjs
+    expectedFailure: An owner can appear between stale checks and quarantine, or be replaced before the initializer records runtime ownership, allowing a live lease to be deleted or misclaimed.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node --test scripts/pr-closeout.test.cjs
 symbols:
   - &repositoryMapSymbol
     name: GENERATION_MODES
