@@ -57,6 +57,8 @@ test('classifies Repository Map binding and lifecycle inputs as generated-status
     'integrations/example/package.json',
     'integrations/example/src/index.ts',
     'integrations/example/test/example.test.ts',
+    '.github/workflows/docs-deploy.yml',
+    '.github/requirements/zensical.lock',
   ]) {
     const scope = computeBooleanScope([file], WORKFLOW_SCOPE_PATTERNS);
     assert.equal(scope.generated_status_relevant, true, file);
