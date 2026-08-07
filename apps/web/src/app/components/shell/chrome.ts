@@ -1,7 +1,7 @@
 /** Owned concern: publish shell chrome class contracts without route or session authority. */
 export const topAppBarClasses = {
   shellBar:
-    'flex h-10 min-w-0 shrink-0 items-center gap-1 border-b border-[color:var(--border-default)] bg-[var(--surface-shell)] px-1.5 text-[var(--text-default)] sm:gap-2 sm:px-3',
+    'flex min-h-10 min-w-0 shrink-0 flex-wrap items-center gap-1 border-b border-[color:var(--border-default)] bg-[var(--surface-shell)] px-1.5 py-1 text-[var(--text-default)] sm:h-10 sm:flex-nowrap sm:gap-2 sm:px-3 sm:py-0',
   brand: 'text-base leading-none font-semibold text-[var(--text-strong)]',
   readOnlyScopeField:
     'h-8 rounded-md border border-[color:var(--border-default)] bg-[var(--surface-app)] px-3 text-sm text-[var(--text-default)]',

@@ -66,33 +66,59 @@ export function ShellTopBar({
   return (
     <TooltipProvider>
       <div data-slot="shell-top-bar" className={topAppBarClasses.shellBar}>
-        <ShellAppMenu copy={copy} />
+        <div
+          data-slot="shell-top-bar-context-cluster"
+          className="flex w-full min-w-0 items-center gap-1 sm:w-auto sm:flex-1 sm:gap-2"
+        >
+          <ShellAppMenu copy={copy} />
 
-        {isWorkbenchShell ? <CanvasWorkspaceTopBarIdentity /> : null}
+          {isWorkbenchShell ? <CanvasWorkspaceTopBarIdentity /> : null}
 
-        {!isWorkbenchShell && (
-          <>
-            <ShellProjectIdentityBadge badge={projectIdentityBadge} />
-            <ShellWorkspaceContextMenu badge={projectIdentityBadge} copy={copy} />
-            <ShellGitRef
+          {!isWorkbenchShell && (
+            <>
+              <ShellProjectIdentityBadge badge={projectIdentityBadge} />
+              <ShellWorkspaceContextMenu badge={projectIdentityBadge} copy={copy} />
+              <ShellGitRef
+                gitBranch={workspaceBootstrap.gitBranch}
+                gitSha={workspaceBootstrap.gitSha}
+                copy={copy}
+              />
+            </>
+          )}
+        </div>
+
+        <div
+          data-slot="shell-top-bar-command-cluster"
+          className="flex w-full min-w-0 items-center justify-end gap-1 sm:w-auto sm:shrink-0 sm:gap-2"
+        >
+          <ShellConnectionStatus
+            isConnectionChecking={isConnectionChecking}
+            effectiveConnectionStatus={effectiveConnectionStatus}
+            connectionDetail={connectionDetail}
+            copy={copy}
+          />
+          <ShellRunStatusIndicator contribution={operationalDrawerContribution} copy={copy} />
+          {exposeWorkspaceNavigationMenu && (
+            <ShellMenu
+              kind="workspace"
+              viewControls={shellViewControls}
+              bottomDrawerVisible={bottomDrawerVisible}
+              focusMode={focusMode}
+              gridSize={gridSize}
+              canvasPalette={canvasPalette}
+              navigationModel={navigationModel}
+              projectIdentityBadge={projectIdentityBadge}
               gitBranch={workspaceBootstrap.gitBranch}
               gitSha={workspaceBootstrap.gitSha}
+              toggleBottomDrawer={toggleBottomDrawer}
+              toggleFocusMode={toggleFocusMode}
+              setGridSize={setGridSize}
+              setCanvasPalette={setCanvasPalette}
               copy={copy}
             />
-          </>
-        )}
-        <div className="flex-1" />
-
-        <ShellConnectionStatus
-          isConnectionChecking={isConnectionChecking}
-          effectiveConnectionStatus={effectiveConnectionStatus}
-          connectionDetail={connectionDetail}
-          copy={copy}
-        />
-        <ShellRunStatusIndicator contribution={operationalDrawerContribution} copy={copy} />
-        {exposeWorkspaceNavigationMenu && (
+          )}
           <ShellMenu
-            kind="workspace"
+            kind="view"
             viewControls={shellViewControls}
             bottomDrawerVisible={bottomDrawerVisible}
             focusMode={focusMode}
@@ -108,24 +134,7 @@ export function ShellTopBar({
             setCanvasPalette={setCanvasPalette}
             copy={copy}
           />
-        )}
-        <ShellMenu
-          kind="view"
-          viewControls={shellViewControls}
-          bottomDrawerVisible={bottomDrawerVisible}
-          focusMode={focusMode}
-          gridSize={gridSize}
-          canvasPalette={canvasPalette}
-          navigationModel={navigationModel}
-          projectIdentityBadge={projectIdentityBadge}
-          gitBranch={workspaceBootstrap.gitBranch}
-          gitSha={workspaceBootstrap.gitSha}
-          toggleBottomDrawer={toggleBottomDrawer}
-          toggleFocusMode={toggleFocusMode}
-          setGridSize={setGridSize}
-          setCanvasPalette={setCanvasPalette}
-          copy={copy}
-        />
+        </div>
       </div>
     </TooltipProvider>
   );
