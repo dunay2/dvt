@@ -53,6 +53,7 @@ import { type CodeWorkingTreeReconciliationOutcome } from './code/codeWorkingTre
 import { reconcileWorkspaceFileAuthority } from './code/workspaceFileReconciliationAuthority';
 import { resolveCodeWorkspaceFileEditPosture } from './code/codeWorkspaceFileEditPosture';
 import { CodeWorkspaceFileSurface } from './code/CodeWorkspaceFileSurface';
+import { useApplicationLanguageStore } from '../stores/applicationLanguageStore';
 
 const CODE_GRAPH_FILE_SCOPE_VIEW_ID = 'canvas-code-file-scope';
 
@@ -86,7 +87,8 @@ const CodeView = forwardRef<CodeViewHandle, CodeViewProps>(function CodeView(
   }: CodeViewProps = {},
   ref
 ) {
-  const copy = resolveCodeViewCopy();
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
+  const copy = resolveCodeViewCopy(applicationLanguage);
   const workspaceFileContentCommand = useWorkspaceFileContentCommandPort();
   const fileTreeQuery = useWorkspaceFileTreeQuery();
   const graphSnapshotQuery = useWorkspaceGraphForViewQuery(
