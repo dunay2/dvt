@@ -31,30 +31,6 @@ type BuildCanvasOperationalDrawerContributionArgs = Readonly<{
   onStartRun: () => void;
 }>;
 
-function buildTabLabels(copy: CanvasViewCopy): Record<OperationalDrawerTabId, string> {
-  return {
-    log: copy.operationalDrawerLogTab,
-    problems: copy.operationalDrawerProblemsTab,
-    runs: copy.operationalDrawerRunsTab,
-    preview: copy.operationalDrawerPreviewTab,
-  };
-}
-
-function labelReadinessBlocker(blocker: PlanRunReadinessBlocker, copy: CanvasViewCopy): string {
-  switch (blocker) {
-    case 'plan_integrity':
-      return copy.operationalDrawerPlanIntegrityBlocker;
-    case 'backpressure':
-      return copy.operationalDrawerBackpressureBlocker;
-    case 'capability_mismatch':
-      return copy.operationalDrawerCapabilityMismatchBlocker;
-    case 'adapter_degraded':
-      return copy.operationalDrawerAdapterDegradedBlocker;
-    case 'authorization_denied':
-      return copy.operationalDrawerAuthorizationDeniedBlocker;
-  }
-}
-
 function buildReadinessProblems({
   blockers,
   canPreviewExecutionPlan,
@@ -109,9 +85,26 @@ export function buildCanvasOperationalDrawerContribution({
 }: BuildCanvasOperationalDrawerContributionArgs): OperationalDrawerContribution {
   const selectionRecoveryBlocked = selectionRecovery?.status === 'blocked';
   const canPreviewExecutionPlan = canPlan && canPlanGraph && !selectionRecoveryBlocked;
-  const labelBlocker = (blocker: PlanRunReadinessBlocker): string =>
-    labelReadinessBlocker(blocker, copy);
-  const tabLabels = buildTabLabels(copy);
+  const labelBlocker = (blocker: PlanRunReadinessBlocker): string => {
+    switch (blocker) {
+      case 'plan_integrity':
+        return copy.operationalDrawerPlanIntegrityBlocker;
+      case 'backpressure':
+        return copy.operationalDrawerBackpressureBlocker;
+      case 'capability_mismatch':
+        return copy.operationalDrawerCapabilityMismatchBlocker;
+      case 'adapter_degraded':
+        return copy.operationalDrawerAdapterDegradedBlocker;
+      case 'authorization_denied':
+        return copy.operationalDrawerAuthorizationDeniedBlocker;
+    }
+  };
+  const tabLabels = {
+    log: copy.operationalDrawerLogTab,
+    problems: copy.operationalDrawerProblemsTab,
+    runs: copy.operationalDrawerRunsTab,
+    preview: copy.operationalDrawerPreviewTab,
+  } satisfies Record<OperationalDrawerTabId, string>;
   const readinessBlockers: readonly PlanRunReadinessBlocker[] =
     planRunReadiness.status === 'ready'
       ? []
