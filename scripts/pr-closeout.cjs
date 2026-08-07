@@ -151,14 +151,6 @@ function buildPrCloseoutPlan(options = {}) {
     });
   }
 
-  if (needsPlanningDbLifecycle) {
-    pushStepOnce(steps, {
-      id: 'planning-db-release',
-      internal: 'releasePlanningDbIfOwned',
-      label: 'release owned Planning DB',
-    });
-  }
-
   if (options.stageAll) {
     pushStepOnce(steps, {
       id: 'stage-all',
@@ -183,6 +175,14 @@ function buildPrCloseoutPlan(options = {}) {
     command: 'pnpm',
     args: ['verify:prepush', '--', '--full'],
   });
+
+  if (needsPlanningDbLifecycle) {
+    pushStepOnce(steps, {
+      id: 'planning-db-release',
+      internal: 'releasePlanningDbIfOwned',
+      label: 'release owned Planning DB',
+    });
+  }
 
   if (options.push) {
     pushStepOnce(steps, {
