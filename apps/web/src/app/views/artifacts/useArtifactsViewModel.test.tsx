@@ -235,6 +235,7 @@ describe('useArtifactsViewModel', () => {
     mounted = await withTestQueryClient(
       <AppServicesProvider
         overrides={{
+          ...createAppServicesTestOverrides(),
           workspaceFilesQuery: buildWorkspaceFilesQueryPort({
             listFiles: async () => {
               throw new Error('workspace unavailable');
