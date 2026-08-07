@@ -170,6 +170,34 @@ export const canvasViewAuthoringCopyByKey = {
     key: 'canvas.nodePresentation.codeUnavailableMessage',
     fallback: 'No inline code or workspace file is recorded for this node.',
   },
+  nodePresentationActionsLabel: {
+    key: 'canvas.nodePresentation.actionsLabel',
+    fallback: 'More node actions',
+  },
+  nodePresentationReadyStatusLabel: {
+    key: 'canvas.nodePresentation.readyStatusLabel',
+    fallback: 'Ready',
+  },
+  nodePresentationDraftStatusLabel: {
+    key: 'canvas.nodePresentation.draftStatusLabel',
+    fallback: 'Draft',
+  },
+  nodePresentationAuthoringTagLabel: {
+    key: 'canvas.nodePresentation.authoringTagLabel',
+    fallback: 'Authoring',
+  },
+  nodePresentationSourceKindLabel: {
+    key: 'canvas.nodePresentation.sourceKindLabel',
+    fallback: 'Source',
+  },
+  nodePresentationModelKindLabel: {
+    key: 'canvas.nodePresentation.modelKindLabel',
+    fallback: 'Model',
+  },
+  nodePresentationTestKindLabel: {
+    key: 'canvas.nodePresentation.testKindLabel',
+    fallback: 'Test',
+  },
   nodeWorkbenchCloseLabel: {
     key: 'canvas.nodeWorkbench.closeLabel',
     fallback: 'Close',

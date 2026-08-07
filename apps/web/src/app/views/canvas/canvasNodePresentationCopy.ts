@@ -12,5 +12,15 @@ export function buildCanvasNodePresentationCopy(copy: CanvasViewCopy): CanvasNod
     workspaceCodeDetailTemplate: copy.nodePresentationWorkspaceCodeDetailTemplate,
     generatedCodeDetailTemplate: copy.nodePresentationGeneratedCodeDetailTemplate,
     codeUnavailableMessage: copy.nodePresentationCodeUnavailableMessage,
+    nodeActionsLabel: copy.nodePresentationActionsLabel,
+    readyStatusLabel: copy.nodePresentationReadyStatusLabel,
+    draftStatusLabel: copy.nodePresentationDraftStatusLabel,
+    authoringTagLabel: copy.nodePresentationAuthoringTagLabel,
+    kindLabels: {
+      'dbt:source': copy.nodePresentationSourceKindLabel,
+      'dvt:source': copy.nodePresentationSourceKindLabel,
+      'dbt:model': copy.nodePresentationModelKindLabel,
+      'dbt:test': copy.nodePresentationTestKindLabel,
+    },
   };
 }

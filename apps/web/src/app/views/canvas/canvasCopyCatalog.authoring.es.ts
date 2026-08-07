@@ -59,6 +59,13 @@ export const canvasViewAuthoringCopyEs = {
     'Artefacto DBT generado en {path}. Edita Código para convertirlo en código escrito.',
   nodePresentationCodeUnavailableMessage:
     'No hay código inline ni archivo del workspace registrado para este nodo.',
+  nodePresentationActionsLabel: 'Más acciones del nodo',
+  nodePresentationReadyStatusLabel: 'Listo',
+  nodePresentationDraftStatusLabel: 'Borrador',
+  nodePresentationAuthoringTagLabel: 'En edición',
+  nodePresentationSourceKindLabel: 'Origen',
+  nodePresentationModelKindLabel: 'Modelo',
+  nodePresentationTestKindLabel: 'Prueba',
   nodeWorkbenchCloseLabel: 'Cerrar',
   nodeWorkbenchMoveLabel: 'Mover banco de trabajo del nodo',
   nodeWorkbenchMoreLabel: 'Más',

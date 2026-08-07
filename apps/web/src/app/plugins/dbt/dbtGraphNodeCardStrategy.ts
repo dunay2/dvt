@@ -22,6 +22,7 @@ import {
   resolveGraphNodeRelationPath,
   stringValue,
 } from '../graph/graphNodeCardStrategyUtils';
+import { isCanvasNodePresentationCopy } from '../../components/canvas/canvasNodePresentationCopy.contract';
 
 function resolveDbtMaterialization(metadata: Record<string, unknown>): string | null {
   const config = metadata.config;
@@ -67,6 +68,9 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
     metadata,
     data,
   });
+  const presentationCopy = isCanvasNodePresentationCopy(data.presentationCopy)
+    ? data.presentationCopy
+    : null;
 
   pushMetric(metrics, 'materialization', 'Mat.', materialization);
   pushMetric(metrics, 'dependencies', 'Deps', arrayCount(metadata.dependencies));
@@ -104,12 +108,15 @@ function buildDbtCard(node: CanonicalNode, data: Record<string, unknown>): Graph
       node,
       metadata,
       data,
-      isSource ? { label: 'Ready', tone: 'success' } : { label: 'Draft', tone: 'warning' }
+      isSource
+        ? { label: presentationCopy?.readyStatusLabel ?? 'Ready', tone: 'success' }
+        : { label: presentationCopy?.draftStatusLabel ?? 'Draft', tone: 'warning' }
     ),
     metrics,
     operationalMetrics: operationalSummary.metrics,
     operationalDetail: operationalSummary.detail,
-    nodeActionsLabel: graphNodeCardCopyTokens.nodeActionsLabel,
+    nodeActionsLabel:
+      presentationCopy?.nodeActionsLabel ?? graphNodeCardCopyTokens.nodeActionsLabel,
   };
 }
 

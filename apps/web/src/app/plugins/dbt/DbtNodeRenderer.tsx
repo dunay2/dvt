@@ -161,12 +161,15 @@ export function DbtNodeRenderer({
     data.showColumns === true &&
     columns.length > 0 &&
     (kindMeta?.supportsColumns || node.role === 'input' || node.role === 'transform');
+  const displayTags = Array.isArray(data.displayTags)
+    ? data.displayTags.filter((tag): tag is string => typeof tag === 'string')
+    : node.tags;
 
   return (
     <GraphNodeCardView
       cardModel={cardModel}
       typeLabel={typeLabel}
-      tags={node.tags}
+      tags={displayTags}
       columns={columns}
       showColumns={showColumns}
       icon={Icon}

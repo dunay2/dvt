@@ -38,6 +38,31 @@ describe('canvasNodeMapper', () => {
       selectLabel: 'Seleccionar para ejecución',
       deselectLabel: 'Quitar de la ejecución',
     });
+    expect(mappedNode.data.typeLabel).toBe('Origen');
+    expect(mappedNode.data.presentationCopy).toMatchObject({
+      nodeActionsLabel: 'Más acciones del nodo',
+      readyStatusLabel: 'Listo',
+      draftStatusLabel: 'Borrador',
+    });
+  });
+
+  it('localizes node kind, authoring status and visible tags without changing canonical tags', () => {
+    const mappedNode = mapCanonicalNodeToCanvasNode({
+      canonicalNode: {
+        ...buildCanonicalNode(),
+        kind: 'dbt:model',
+        pluginId: 'dbt',
+        role: 'transform',
+        tags: ['authoring', 'finance'],
+      },
+      index: 0,
+      showColumns: false,
+      locale: 'es',
+    });
+
+    expect(mappedNode.data.typeLabel).toBe('Modelo');
+    expect(mappedNode.data.tags).toEqual(['authoring', 'finance']);
+    expect(mappedNode.data.displayTags).toEqual(['En edición', 'finance']);
   });
 
   it('projects a high-visibility closed arrow for dependency direction', () => {

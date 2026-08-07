@@ -316,6 +316,13 @@ export type CanvasViewCopy = {
   readonly nodePresentationWorkspaceCodeDetailTemplate: string;
   readonly nodePresentationGeneratedCodeDetailTemplate: string;
   readonly nodePresentationCodeUnavailableMessage: string;
+  readonly nodePresentationActionsLabel: string;
+  readonly nodePresentationReadyStatusLabel: string;
+  readonly nodePresentationDraftStatusLabel: string;
+  readonly nodePresentationAuthoringTagLabel: string;
+  readonly nodePresentationSourceKindLabel: string;
+  readonly nodePresentationModelKindLabel: string;
+  readonly nodePresentationTestKindLabel: string;
   readonly nodeWorkbenchCloseLabel: string;
   readonly nodeWorkbenchMoveLabel: string;
   readonly nodeWorkbenchMoreLabel: string;
