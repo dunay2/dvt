@@ -207,6 +207,7 @@ allowedImplementationSurfaces:
   - scripts/planning-db-run.cjs
   - scripts/planning-db-run.test.cjs
   - tools/ci/policy/workflow-scope.json
+  - tools/ci/workflow-pattern-parity.test.mjs
   - tools/ci/workflow-scope-classification.test.mjs
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
@@ -359,6 +360,12 @@ redGreenCycles:
       - scripts/pr-closeout.cjs
       - scripts/pr-closeout.test.cjs
     greenTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs
+  - id: publication-contract-parity-review
+    redTest: pnpm test:ci-tools:executable
+    expectedFailure: The executable workflow parity contract still requires the superseded direct Zensical install instead of the shared hash-locked publication command.
+    patchSurfaces:
+      - tools/ci/workflow-pattern-parity.test.mjs
+    greenTest: pnpm test:ci-tools:executable
 symbols:
   - &repositoryMapSymbol
     name: GENERATION_MODES
