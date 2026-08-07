@@ -17,6 +17,10 @@ import {
 } from '../../services/runs/runEventPresentationModel';
 import { resolveRunEventHeadline } from '../../services/runs/runEventPresentationCopy';
 import { useSessionStore } from '../../stores/sessionStore';
+import {
+  useApplicationLanguageStore,
+  type ApplicationLanguage,
+} from '../../stores/applicationLanguageStore';
 import type { Run, RunEvent } from '../../types/dbt';
 import type {
   CanonicalRun,
@@ -36,6 +40,74 @@ import { GraphNodeCardView } from '../graph/GraphNodeCardView';
 import { CANVAS_NODE_KINDS } from '../nodeTypeCatalog';
 
 const DBT_PLUGIN_ID = 'dbt';
+
+const DBT_INSPECTOR_COPY = {
+  en: {
+    package: 'Package',
+    path: 'Path',
+    status: 'Status',
+    lastDuration: 'Last duration',
+    lastCost: 'Last cost',
+    description: 'Description',
+    tags: 'Tags',
+    dependencies: 'Dependencies',
+    compiledSql: 'Compiled SQL',
+    noCompiledSql: 'No compiled SQL available',
+    configuration: 'Config',
+    noColumnMetadata: 'No column metadata available.',
+    nullable: 'nullable',
+    notNull: 'not null',
+    historyLoadFailure: 'Runtime event detail could not be loaded for this node.',
+    retryHistory: 'Retry history',
+    loadingRunData: 'Loading run data...',
+    noRuntimeSnapshot: 'No runtime snapshot exists for this run.',
+    noRunHistory: 'No run history for this node.',
+    lastRecordedDuration: 'Last recorded duration',
+    statuses: {
+      idle: 'Idle',
+      running: 'Running',
+      success: 'Success',
+      failed: 'Failed',
+      skipped: 'Skipped',
+      warn: 'Warning',
+    },
+  },
+  es: {
+    package: 'Paquete',
+    path: 'Ruta',
+    status: 'Estado',
+    lastDuration: 'Última duración',
+    lastCost: 'Último coste',
+    description: 'Descripción',
+    tags: 'Etiquetas',
+    dependencies: 'Dependencias',
+    compiledSql: 'SQL compilado',
+    noCompiledSql: 'No hay SQL compilado disponible',
+    configuration: 'Configuración',
+    noColumnMetadata: 'No hay metadatos de columnas disponibles.',
+    nullable: 'admite nulos',
+    notNull: 'no nulo',
+    historyLoadFailure: 'No se pudo cargar el detalle de ejecución de este nodo.',
+    retryHistory: 'Reintentar historial',
+    loadingRunData: 'Cargando datos de ejecución...',
+    noRuntimeSnapshot: 'No existe una instantánea de ejecución para esta ejecución.',
+    noRunHistory: 'No hay historial de ejecuciones para este nodo.',
+    lastRecordedDuration: 'Última duración registrada',
+    statuses: {
+      idle: 'Inactivo',
+      running: 'En ejecución',
+      success: 'Correcto',
+      failed: 'Fallido',
+      skipped: 'Omitido',
+      warn: 'Con advertencias',
+    },
+  },
+} as const;
+
+function useDbtInspectorCopy() {
+  const language = useApplicationLanguageStore((state) => state.language);
+  return DBT_INSPECTOR_COPY[language];
+}
 
 type ColumnMeta = {
   name: string;
@@ -91,7 +163,8 @@ function meta<T>(node: InspectorPanelProps['node'], key: string): T | undefined 
 export function buildDbtNodeRunHistoryEntries(
   runId: string | undefined,
   events: readonly EngineRunEvent[] | undefined,
-  nodeId: string
+  nodeId: string,
+  language: ApplicationLanguage = 'en'
 ): DbtNodeRunHistoryEntry[] {
   if (!runId || !events) {
     return [];
@@ -121,7 +194,9 @@ export function buildDbtNodeRunHistoryEntries(
         runId: event.runId,
         runSeq: event.runSeq,
         emittedAt: event.emittedAt,
-        emittedAtLabel: new Date(event.emittedAt).toLocaleString(),
+        emittedAtLabel: new Date(event.emittedAt).toLocaleString(
+          language === 'es' ? 'es-ES' : 'en-US'
+        ),
         headline: resolveRunEventHeadline(presentation.headlineKey, presentation.fallbackHeadline),
         detail: presentation.detail,
         level: presentation.level,
@@ -192,6 +267,7 @@ export function DbtNodeRenderer({
 }
 
 function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
+  const copy = useDbtInspectorCopy();
   const pkg = meta<string>(node, 'package');
   const deps = meta<string[]>(node, 'dependencies') ?? [];
   const statusClass = graphStatusBadgeClasses[node.status] ?? graphStatusBadgeClasses.idle;
@@ -202,31 +278,31 @@ function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
         <div className="space-y-2 text-sm">
           {pkg && (
             <div className="flex justify-between">
-              <span className={inspectorVisualClasses.inspectorLabel}>Package</span>
+              <span className={inspectorVisualClasses.inspectorLabel}>{copy.package}</span>
               <span>{pkg}</span>
             </div>
           )}
           {node.path && (
             <div className="flex justify-between gap-4">
-              <span className={inspectorVisualClasses.inspectorLabelFixed}>Path</span>
+              <span className={inspectorVisualClasses.inspectorLabelFixed}>{copy.path}</span>
               <span className="truncate font-mono text-xs">{node.path}</span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className={inspectorVisualClasses.inspectorLabel}>Status</span>
+            <span className={inspectorVisualClasses.inspectorLabel}>{copy.status}</span>
             <Badge variant="outline" className={`capitalize ${statusClass}`}>
-              {node.status}
+              {copy.statuses[node.status]}
             </Badge>
           </div>
           {node.lastDuration != null && (
             <div className="flex justify-between">
-              <span className={inspectorVisualClasses.inspectorLabel}>Last duration</span>
+              <span className={inspectorVisualClasses.inspectorLabel}>{copy.lastDuration}</span>
               <span>{node.lastDuration}s</span>
             </div>
           )}
           {node.lastCost != null && (
             <div className="flex justify-between">
-              <span className={inspectorVisualClasses.inspectorLabel}>Last cost</span>
+              <span className={inspectorVisualClasses.inspectorLabel}>{copy.lastCost}</span>
               <span>${node.lastCost.toFixed(4)}</span>
             </div>
           )}
@@ -235,14 +311,14 @@ function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
 
       {node.description && (
         <Card className={inspectorVisualClasses.inspectorCard}>
-          <h3 className={inspectorVisualClasses.inspectorTitle}>Description</h3>
+          <h3 className={inspectorVisualClasses.inspectorTitle}>{copy.description}</h3>
           <p className={inspectorVisualClasses.inspectorBody}>{node.description}</p>
         </Card>
       )}
 
       {(node.tags.length > 0 || tagsEditor) && (
         <Card className={inspectorVisualClasses.inspectorCard}>
-          <h3 className={inspectorVisualClasses.inspectorTitle}>Tags</h3>
+          <h3 className={inspectorVisualClasses.inspectorTitle}>{copy.tags}</h3>
           {tagsEditor ?? (
             <div className="flex flex-wrap gap-1">
               {node.tags.map((tag) => (
@@ -257,7 +333,7 @@ function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
 
       {deps.length > 0 && (
         <Card className={inspectorVisualClasses.inspectorCard}>
-          <h3 className={inspectorVisualClasses.inspectorTitle}>Dependencies</h3>
+          <h3 className={inspectorVisualClasses.inspectorTitle}>{copy.dependencies}</h3>
           <div className="space-y-0.5">
             {deps.map((dep) => (
               <div key={dep} className={`font-mono ${inspectorVisualClasses.inspectorBody}`}>
@@ -272,24 +348,26 @@ function DbtOverviewPanel({ node, tagsEditor }: InspectorPanelProps) {
 }
 
 function DbtSqlPanel({ node }: InspectorPanelProps) {
+  const copy = useDbtInspectorCopy();
   const compiledSql = meta<string>(node, 'compiledSql');
 
   return (
     <Card className={inspectorVisualClasses.inspectorCard}>
-      <h3 className={inspectorVisualClasses.inspectorTitle}>Compiled SQL</h3>
+      <h3 className={inspectorVisualClasses.inspectorTitle}>{copy.compiledSql}</h3>
       <pre className={inspectorVisualClasses.inspectorCodeBlock}>
-        {compiledSql ?? 'No compiled SQL available'}
+        {compiledSql ?? copy.noCompiledSql}
       </pre>
     </Card>
   );
 }
 
 function DbtConfigPanel({ node }: InspectorPanelProps) {
+  const copy = useDbtInspectorCopy();
   const config = meta<Record<string, unknown>>(node, 'config') ?? { materialized: 'table' };
 
   return (
     <Card className={inspectorVisualClasses.inspectorCard}>
-      <h3 className={inspectorVisualClasses.inspectorTitle}>Config</h3>
+      <h3 className={inspectorVisualClasses.inspectorTitle}>{copy.configuration}</h3>
       <pre className={inspectorVisualClasses.inspectorCodeText}>
         {JSON.stringify(config, null, 2)}
       </pre>
@@ -298,10 +376,11 @@ function DbtConfigPanel({ node }: InspectorPanelProps) {
 }
 
 function DbtColumnsPanel({ node }: InspectorPanelProps) {
+  const copy = useDbtInspectorCopy();
   const columns = meta<ColumnMeta[]>(node, 'columns') ?? [];
 
   if (columns.length === 0) {
-    return <p className={inspectorVisualClasses.inspectorMuted}>No column metadata available.</p>;
+    return <p className={inspectorVisualClasses.inspectorMuted}>{copy.noColumnMetadata}</p>;
   }
 
   return (
@@ -320,7 +399,7 @@ function DbtColumnsPanel({ node }: InspectorPanelProps) {
             </div>
             {column.nullable != null && (
               <Badge variant="outline" className="text-xs">
-                {column.nullable ? 'nullable' : 'not null'}
+                {column.nullable ? copy.nullable : copy.notNull}
               </Badge>
             )}
           </div>
@@ -331,12 +410,13 @@ function DbtColumnsPanel({ node }: InspectorPanelProps) {
 }
 
 function DbtHistoryDegradedNotice({ onRetry }: Readonly<{ onRetry?: () => void }>) {
+  const copy = useDbtInspectorCopy();
   return (
     <div className={inspectorVisualClasses.inspectorMutedBlock}>
-      <p>Runtime event detail could not be loaded for this node.</p>
+      <p>{copy.historyLoadFailure}</p>
       {onRetry ? (
         <Button type="button" size="sm" variant="outline" className="mt-3" onClick={onRetry}>
-          Retry history
+          {copy.retryHistory}
         </Button>
       ) : null}
     </div>
@@ -344,6 +424,8 @@ function DbtHistoryDegradedNotice({ onRetry }: Readonly<{ onRetry?: () => void }
 }
 
 function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
+  const language = useApplicationLanguageStore((state) => state.language);
+  const copy = DBT_INSPECTOR_COPY[language];
   const tenantId = useSessionStore((state) => state.tenantId);
   const projectId = useSessionStore((state) => state.projectId);
   const environmentId = useSessionStore((state) => state.environmentId);
@@ -374,8 +456,8 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
   });
   const runEvents = runEventFeed?.phase === 'idle' ? [] : runEventFeed?.events;
   const nodeHistoryEntries = useMemo(
-    () => buildDbtNodeRunHistoryEntries(historyRunId, runEvents, node.id),
-    [historyRunId, node.id, runEvents]
+    () => buildDbtNodeRunHistoryEntries(historyRunId, runEvents, node.id, language),
+    [historyRunId, language, node.id, runEvents]
   );
   const hasRunEventFeedFailure = runEventFeed?.phase !== 'idle' && Boolean(runEventFeed?.failure);
   const retryHistory =
@@ -389,7 +471,7 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
     return (
       <div className={`flex items-center gap-2 ${inspectorVisualClasses.inspectorMuted}`}>
         <Loader2 className="size-4 animate-spin" />
-        Loading run data...
+        {copy.loadingRunData}
       </div>
     );
   }
@@ -397,7 +479,7 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
   if (activeRunId && hasRunSnapshotLoaded && runSnapshot == null) {
     return (
       <div className={inspectorVisualClasses.inspectorMutedBlock}>
-        <p>No runtime snapshot exists for this run.</p>
+        <p>{copy.noRuntimeSnapshot}</p>
       </div>
     );
   }
@@ -436,10 +518,10 @@ function DbtHistoryPanel({ node, activeRunId }: InspectorPanelProps) {
 
   return (
     <div className={inspectorVisualClasses.inspectorMutedBlock}>
-      <p>No run history for this node.</p>
+      <p>{copy.noRunHistory}</p>
       {node.lastDuration != null && (
         <p className={inspectorVisualClasses.inspectorBody}>
-          Last recorded duration: <span className="font-mono">{node.lastDuration}s</span>
+          {copy.lastRecordedDuration}: <span className="font-mono">{node.lastDuration}s</span>
         </p>
       )}
     </div>

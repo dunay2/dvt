@@ -166,6 +166,12 @@ describe('nodePropertiesReadModel', () => {
       nullable: 'Admite nulos',
       reference: 'Referencia',
     });
+    expect(sectionById(model, 'inputs-outputs').columnLabels).toMatchObject({
+      direction: 'Dirección',
+      node: 'Nodo',
+      nodeId: 'ID del nodo',
+      relation: 'Relación',
+    });
   });
 
   it('projects source metadata into table-modeler sections', () => {

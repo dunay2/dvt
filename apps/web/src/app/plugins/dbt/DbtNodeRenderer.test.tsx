@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { IRunsPort, RunSnapshot, RunSummaryItem } from '../../ports/runs';
 import { AppServicesProvider } from '../../services/AppServicesContext';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import type { CanonicalNode } from '../../types/canonical';
 import { resolveString } from '../contracts/PluginManifest';
 import { dbtGraphNodeCardStrategy } from './dbtGraphNodeCardStrategy';
@@ -119,6 +120,7 @@ describe('DbtNodeRenderer history panel', () => {
     container = null;
     root = null;
     queryClient = null;
+    useApplicationLanguageStore.setState({ language: 'en' });
   });
 
   async function renderHistoryPanel(args: {
@@ -166,6 +168,75 @@ describe('DbtNodeRenderer history panel', () => {
       );
     });
   }
+
+  it('localizes contributed Inspector content and empty history in Spanish', async () => {
+    useApplicationLanguageStore.setState({ language: 'es' });
+    const overviewPanel = dbtInspectorPanels.find((panel) => panel.id === 'dbt.overview');
+    const configPanel = dbtInspectorPanels.find((panel) => panel.id === 'dbt.config');
+    expect(overviewPanel).toBeDefined();
+    expect(configPanel).toBeDefined();
+    if (!overviewPanel || !configPanel) {
+      throw new Error('EXPECTED_DBT_LOCALIZED_PANELS');
+    }
+    const OverviewPanel = overviewPanel.component;
+    const ConfigPanel = configPanel.component;
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+    (
+      globalThis as typeof globalThis & {
+        IS_REACT_ACT_ENVIRONMENT?: boolean;
+      }
+    ).IS_REACT_ACT_ENVIRONMENT = true;
+    await act(async () => {
+      root?.render(
+        <>
+          <OverviewPanel
+            node={buildNode({
+              status: 'idle',
+              path: 'models/orders.sql',
+              tags: ['diario'],
+              description: 'Pedidos diarios',
+              lastDuration: 2,
+              lastCost: 0.25,
+              metadata: { package: 'analytics', dependencies: ['source.orders'] },
+            })}
+            activeRunId={null}
+            onClose={vi.fn()}
+          />
+          <ConfigPanel
+            node={buildNode({ metadata: { config: { materialized: 'view' } } })}
+            activeRunId={null}
+            onClose={vi.fn()}
+          />
+        </>
+      );
+    });
+
+    expect(document.body.textContent).toContain('Paquete');
+    expect(document.body.textContent).toContain('Ruta');
+    expect(document.body.textContent).toContain('Estado');
+    expect(document.body.textContent).toContain('Inactivo');
+    expect(document.body.textContent).toContain('Última duración');
+    expect(document.body.textContent).toContain('Último coste');
+    expect(document.body.textContent).toContain('Descripción');
+    expect(document.body.textContent).toContain('Etiquetas');
+    expect(document.body.textContent).toContain('Dependencias');
+    expect(document.body.textContent).toContain('Configuración');
+    expect(document.body.textContent).not.toMatch(/Package|Path|Status|Idle|Tags/);
+
+    act(() => {
+      root?.unmount();
+    });
+    root = null;
+    container.remove();
+    container = null;
+
+    await renderHistoryPanel({ runsService: buildRunsService(), activeRunId: null });
+    await waitForText('No hay historial de ejecuciones para este nodo.');
+    expect(document.body.textContent).not.toContain('No run history for this node.');
+  });
 
   it('renders dbt card metrics through the shared graph node card read model', async () => {
     container = document.createElement('div');
