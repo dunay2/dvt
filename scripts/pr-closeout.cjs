@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 /** Owned concern: run the governed PR closeout rail without pre-commit/prepush duplication. */
 const { execFileSync, spawnSync } = require('node:child_process');
+const { randomUUID } = require('node:crypto');
 const fs = require('node:fs');
+const os = require('node:os');
 const path = require('node:path');
 
 const { listLocalChangedFiles, parseGitLines, toPosix } = require('./git-local-changes.cjs');
 const workflowScopePolicy = require('../tools/ci/policy/workflow-scope.json');
 
 const repoRoot = path.resolve(__dirname, '..');
+const defaultCloseoutLeaseDir = path.join(os.tmpdir(), 'dvt-planning-db-pr-closeout.lock');
+const closeoutLeaseOwnerFile = 'owner.json';
 const repositoryMapSourcePatterns = Object.freeze([
   ...workflowScopePolicy.generated_status_relevant,
 ]);
@@ -127,6 +131,12 @@ function buildPrCloseoutPlan(options = {}) {
     throw new Error('INVALID_COMMIT: usage is pnpm pr:closeout <type> <scope> "<Subject>".');
   }
 
+  pushStepOnce(steps, {
+    id: 'closeout-lease-acquire',
+    internal: 'acquireCloseoutLease',
+    label: 'acquire exclusive PR closeout lease',
+  });
+
   if (hasDocsChange(changedFiles)) {
     pushStepOnce(steps, {
       id: 'docs-sync',
@@ -231,6 +241,12 @@ function buildPrCloseoutPlan(options = {}) {
     });
   }
 
+  pushStepOnce(steps, {
+    id: 'closeout-lease-release',
+    internal: 'releaseCloseoutLease',
+    label: 'release exclusive PR closeout lease',
+  });
+
   return steps;
 }
 
@@ -329,6 +345,103 @@ function probePlanningDbActive(options = {}) {
   );
 }
 
+function isProcessActive(processId) {
+  if (!Number.isSafeInteger(processId) || processId <= 0) return false;
+  try {
+    process.kill(processId, 0);
+    return true;
+  } catch (error) {
+    return error?.code === 'EPERM';
+  }
+}
+
+function readCloseoutLeaseOwner(leaseDir, options = {}) {
+  const readFileSync = options.readFileSync || fs.readFileSync;
+  try {
+    return JSON.parse(readFileSync(path.join(leaseDir, closeoutLeaseOwnerFile), 'utf8'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    throw new Error(`PR_CLOSEOUT_LEASE_READ_FAILED: ${error.message}`, { cause: error });
+  }
+}
+
+function acquireCloseoutLease(options = {}, runtime = {}) {
+  const leaseDir = options.closeoutLeaseDir || defaultCloseoutLeaseDir;
+  const processId = options.processId || process.pid;
+  const createLeaseToken = options.createLeaseToken || randomUUID;
+  const processIsActive = options.isProcessActive || isProcessActive;
+  const mkdirSync = options.mkdirSync || fs.mkdirSync;
+  const writeFileSync = options.writeFileSync || fs.writeFileSync;
+  const renameSync = options.renameSync || fs.renameSync;
+  const rmSync = options.rmSync || fs.rmSync;
+  const token = createLeaseToken();
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      mkdirSync(leaseDir);
+    } catch (error) {
+      if (error?.code !== 'EEXIST') {
+        throw new Error(`PR_CLOSEOUT_LEASE_ACQUIRE_FAILED: ${error.message}`, { cause: error });
+      }
+
+      const owner = readCloseoutLeaseOwner(leaseDir, options);
+      if (!owner || processIsActive(owner.pid)) {
+        const ownerLabel = owner?.pid ? ` process ${owner.pid}` : ' an initializing process';
+        throw new Error(`PR_CLOSEOUT_LEASE_BUSY: owned by${ownerLabel}. Retry after it finishes.`, {
+          cause: error,
+        });
+      }
+
+      const staleLeaseDir = `${leaseDir}.stale-${token}`;
+      try {
+        renameSync(leaseDir, staleLeaseDir);
+        rmSync(staleLeaseDir, { recursive: true, force: true });
+      } catch (recoveryError) {
+        if (recoveryError?.code !== 'ENOENT') {
+          throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${recoveryError.message}`, {
+            cause: recoveryError,
+          });
+        }
+      }
+      continue;
+    }
+
+    try {
+      writeFileSync(
+        path.join(leaseDir, closeoutLeaseOwnerFile),
+        `${JSON.stringify({ pid: processId, token, startedAt: new Date().toISOString() })}\n`,
+        { encoding: 'utf8', flag: 'wx' }
+      );
+    } catch (error) {
+      rmSync(leaseDir, { recursive: true, force: true });
+      throw new Error(`PR_CLOSEOUT_LEASE_ACQUIRE_FAILED: ${error.message}`, { cause: error });
+    }
+
+    runtime.closeoutLeaseOwned = true;
+    runtime.closeoutLeaseReleaseAttempted = false;
+    runtime.closeoutLease = { leaseDir, processId, token };
+    return;
+  }
+
+  throw new Error('PR_CLOSEOUT_LEASE_BUSY: another closeout acquired the lease during recovery.');
+}
+
+function releaseCloseoutLease(options = {}, runtime = {}) {
+  if (!runtime.closeoutLeaseOwned || runtime.closeoutLeaseReleaseAttempted) return;
+
+  runtime.closeoutLeaseReleaseAttempted = true;
+  const owner = readCloseoutLeaseOwner(runtime.closeoutLease.leaseDir, options);
+  if (!owner || owner.token !== runtime.closeoutLease.token) {
+    throw new Error(
+      'PR_CLOSEOUT_LEASE_OWNERSHIP_LOST: refusing to release another closeout lease.'
+    );
+  }
+
+  const rmSync = options.rmSync || fs.rmSync;
+  rmSync(runtime.closeoutLease.leaseDir, { recursive: true, force: true });
+  runtime.closeoutLeaseOwned = false;
+}
+
 function releasePlanningDbIfOwned(options, runtime) {
   if (!runtime.planningDbOwned || runtime.planningDbReleaseAttempted) {
     return;
@@ -347,6 +460,16 @@ function releasePlanningDbIfOwned(options, runtime) {
 }
 
 function runCommand(step, options = {}, runtime = {}) {
+  if (step.internal === 'acquireCloseoutLease') {
+    const acquireLease = options.acquireCloseoutLease || acquireCloseoutLease;
+    acquireLease(options, runtime);
+    return;
+  }
+  if (step.internal === 'releaseCloseoutLease') {
+    const releaseLease = options.releaseCloseoutLease || releaseCloseoutLease;
+    releaseLease(options, runtime);
+    return;
+  }
   if (step.internal === 'assertNoUnstagedChanges') {
     assertNoUnstagedChanges(options);
     return;
@@ -397,27 +520,38 @@ function executePrCloseoutPlan(plan, options = {}) {
     executionError = error;
   }
 
-  let cleanupError;
+  const cleanupErrors = [];
   if (runtime.planningDbOwned && !runtime.planningDbReleaseAttempted) {
     console.log('[pr:closeout] release owned Planning DB after interrupted closeout');
     try {
       releasePlanningDbIfOwned(options, runtime);
     } catch (error) {
-      cleanupError = error;
+      cleanupErrors.push(error);
+    }
+  }
+  if (runtime.closeoutLeaseOwned && !runtime.closeoutLeaseReleaseAttempted) {
+    console.log('[pr:closeout] release closeout lease after interrupted closeout');
+    try {
+      releaseCloseoutLease(options, runtime);
+    } catch (error) {
+      cleanupErrors.push(error);
     }
   }
 
-  if (executionError && cleanupError) {
+  if (executionError && cleanupErrors.length > 0) {
     throw new AggregateError(
-      [executionError, cleanupError],
-      `${executionError.message}; Planning DB cleanup also failed: ${cleanupError.message}`
+      [executionError, ...cleanupErrors],
+      `${executionError.message}; closeout cleanup also failed: ${cleanupErrors.map((error) => error.message).join('; ')}`
     );
   }
   if (executionError) {
     throw executionError;
   }
-  if (cleanupError) {
-    throw cleanupError;
+  if (cleanupErrors.length === 1) {
+    throw cleanupErrors[0];
+  }
+  if (cleanupErrors.length > 1) {
+    throw new AggregateError(cleanupErrors, 'Multiple closeout cleanup operations failed.');
   }
 }
 
@@ -557,6 +691,7 @@ if (require.main === module) {
 }
 
 module.exports = {
+  acquireCloseoutLease,
   buildPrCloseoutPlan,
   commandLabel,
   executePrCloseoutPlan,
@@ -565,6 +700,7 @@ module.exports = {
   listPrCloseoutStagedFiles,
   parseArgs,
   probePlanningDbActive,
+  releaseCloseoutLease,
   resolveCommandInvocation,
   runCommand,
 };
