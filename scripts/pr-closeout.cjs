@@ -69,6 +69,7 @@ function runWithCloseoutLock(task, options = {}) {
   return new Promise((resolve, reject) => {
     const server = createServer();
     let settled = false;
+    const runtimeErrors = [];
     const endpointLabel = endpoint.path
       ? endpoint.path.replace(/^\0/u, '@')
       : `${endpoint.host}:${endpoint.port}`;
@@ -125,20 +126,36 @@ function runWithCloseoutLock(task, options = {}) {
     server.listen({ ...endpoint, exclusive: true }, () => {
       server.off('error', rejectAcquisition);
       server.on('error', (error) => {
-        closeAndSettle(
+        if (settled) return;
+        runtimeErrors.push(
           new Error(`PR_CLOSEOUT_LEASE_RUNTIME_FAILED: ${error.message}`, { cause: error })
         );
       });
+      const settleTask = (taskError, value) => {
+        const errors = [...(taskError ? [taskError] : []), ...runtimeErrors];
+        if (errors.length === 0) {
+          closeAndSettle(null, value);
+        } else if (errors.length === 1) {
+          closeAndSettle(errors[0]);
+        } else {
+          closeAndSettle(
+            new AggregateError(
+              errors,
+              `Guarded closeout failed: ${errors.map((error) => error.message).join('; ')}`
+            )
+          );
+        }
+      };
       let result;
       try {
         result = task();
       } catch (error) {
-        closeAndSettle(error);
+        settleTask(error);
         return;
       }
       Promise.resolve(result).then(
-        (value) => closeAndSettle(null, value),
-        (error) => closeAndSettle(error)
+        (value) => settleTask(null, value),
+        (error) => settleTask(error)
       );
     });
   });
