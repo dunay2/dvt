@@ -28,10 +28,10 @@ test('governance refresh defers DB-backed Repository Map and reports to final ge
       'docs:governance:file-fingerprint-impact',
     ]
   );
-  assert.deepEqual(
-    stages.generationStages.find((stage) => stage.id === 'code-status-local').args,
-    ['--', '--code-state-only']
-  );
+  assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'code-status-local').args, [
+    '--',
+    '--code-state-only',
+  ]);
   assert.equal(
     stages.generationStages.some((stage) => stage.script === 'governance:db:import'),
     false,
@@ -100,10 +100,14 @@ test('governance refresh defers DB-backed Repository Map and reports to final ge
 test('governance refresh repeats generation until the worktree fingerprint stabilizes', () => {
   const executedScripts = [];
   const fingerprints = ['before', 'after-first-pass', 'after-first-pass'];
+  let lastFingerprint = fingerprints[0];
 
   const result = runGovernanceRefresh({
     logger: { log() {} },
-    readFingerprint: () => fingerprints.shift(),
+    readFingerprint: () => {
+      lastFingerprint = fingerprints.shift() ?? lastFingerprint;
+      return lastFingerprint;
+    },
     runScript: (script) => {
       executedScripts.push(script);
     },
@@ -115,6 +119,53 @@ test('governance refresh repeats generation until the worktree fingerprint stabi
     ...stages.generationStages.map((stage) => stage.script),
     ...stages.generationStages.map((stage) => stage.script),
     ...stages.databaseStages.map((stage) => stage.script),
+  ]);
+});
+
+test('governance refresh reconverges and reimports when the final Repository Map changes', () => {
+  const executedScripts = [];
+  let fingerprint = 'initial';
+  let generationRuns = 0;
+  let repositoryMapRuns = 0;
+  const stages = {
+    generationStages: [{ id: 'derived-index', script: 'derived:index' }],
+    databaseStages: [
+      { id: 'governance-db-import-final', script: 'governance:db:import' },
+      { id: 'repository-map-final', script: 'docs:status:generate' },
+      { id: 'governance-db-check', script: 'governance:db:check' },
+    ],
+  };
+
+  const result = runGovernanceRefresh({
+    stages,
+    logger: { log() {} },
+    readFingerprint: () => fingerprint,
+    runScript: (script) => {
+      executedScripts.push(script);
+      if (script === 'derived:index') {
+        generationRuns += 1;
+        if (repositoryMapRuns === 1 && generationRuns === 2) {
+          fingerprint = 'derived-from-map';
+        }
+      }
+      if (script === 'docs:status:generate') {
+        repositoryMapRuns += 1;
+        if (repositoryMapRuns === 1) fingerprint = 'map-changed';
+      }
+    },
+  });
+
+  assert.equal(result.stabilized, true);
+  assert.equal(result.generationPasses, 3);
+  assert.deepEqual(executedScripts, [
+    'derived:index',
+    'governance:db:import',
+    'docs:status:generate',
+    'derived:index',
+    'derived:index',
+    'governance:db:import',
+    'docs:status:generate',
+    'governance:db:check',
   ]);
 });
 
