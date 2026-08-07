@@ -12,6 +12,7 @@ import {
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { CanvasShellGraphCommands, CanvasShellProps } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
+import { resolveWorkspaceFilePath } from './CanvasShell';
 
 describe('CanvasShell graph base surface', () => {
   let container: HTMLDivElement;
@@ -27,6 +28,16 @@ describe('CanvasShell graph base surface', () => {
 
   afterEach(() => {
     unmountShell();
+  });
+
+  it('resolves the canonical dbt model file when a legacy draft omitted its path', () => {
+    expect(
+      resolveWorkspaceFilePath({
+        name: 'Model 1',
+        pluginKind: 'dbt:model',
+        status: 'idle',
+      })
+    ).toBe('models/model_1.sql');
   });
 
   it('keeps node selection separate from contextual node workbench opening', async () => {

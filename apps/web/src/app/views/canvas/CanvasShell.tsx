@@ -20,6 +20,7 @@ import { useCanvasRouteIntentHandler } from './useCanvasRouteIntentHandler';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { normalizeDbtArtifactIdentifier } from './canvasDbtModelArtifactProjection';
 
 type GraphDraftCodeTarget = Readonly<{
   nodeId: string;
@@ -33,9 +34,21 @@ type WorkbenchOpener = Readonly<{
   fallbackNodeId?: string;
 }>;
 
-function resolveWorkspaceFilePath(data: DbtNodeData): string | null {
+export function resolveWorkspaceFilePath(data: DbtNodeData): string | null {
   const codeTruth = data.presentationTruth?.code;
-  return codeTruth?.kind === 'workspace-file' ? codeTruth.path : null;
+  if (codeTruth?.kind === 'workspace-file') {
+    return codeTruth.path;
+  }
+
+  if (typeof data.path === 'string' && data.path.trim().length > 0) {
+    return data.path;
+  }
+
+  if (data.pluginKind === 'dbt:model') {
+    return `models/${normalizeDbtArtifactIdentifier(data.name, 'dbt_model')}.sql`;
+  }
+
+  return null;
 }
 
 export default function CanvasShell({
