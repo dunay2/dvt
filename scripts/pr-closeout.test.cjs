@@ -270,7 +270,7 @@ test('closeout lease recovers a stale owner after its PID is reused', (t) => {
   releaseCloseoutLease({}, runtime);
 });
 
-test('closeout lease restores quarantine when process identity becomes unreadable', (t) => {
+test('closeout lease releases recovery when process identity becomes unreadable', (t) => {
   const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-identity-read-'));
   const leaseDir = path.join(leaseRoot, 'lease');
   const ownerPath = path.join(leaseDir, 'owner.json');
@@ -316,10 +316,7 @@ test('closeout lease restores quarantine when process identity becomes unreadabl
   assert.equal(owner.pid, 101);
   assert.equal(owner.token, 'original-token');
   assert.equal(runtime.closeoutLeaseOwned, undefined);
-  assert.deepEqual(
-    fs.readdirSync(leaseRoot).filter((entry) => entry.includes('.stale-')),
-    []
-  );
+  assert.equal(fs.existsSync(path.join(leaseDir, 'recovery.json')), false);
 });
 
 test('closeout lease recovers an ownerless directory after the initialization grace', (t) => {
@@ -346,6 +343,43 @@ test('closeout lease recovers an ownerless directory after the initialization gr
   const owner = JSON.parse(fs.readFileSync(path.join(leaseDir, 'owner.json'), 'utf8'));
   assert.equal(owner.pid, 202);
   assert.equal(owner.token, 'successor-token');
+  releaseCloseoutLease({}, runtime);
+});
+
+test('closeout lease recovers a stale recovery reservation', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-reservation-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const recoveryPath = path.join(leaseDir, 'recovery.json');
+  const runtime = {};
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+  fs.mkdirSync(leaseDir);
+  fs.writeFileSync(
+    recoveryPath,
+    `${JSON.stringify({
+      pid: 101,
+      token: 'stale-recovery-token',
+      processIdentity: 'test:stale-process',
+    })}\n`,
+    'utf8'
+  );
+
+  acquireCloseoutLease(
+    {
+      closeoutLeaseDir: leaseDir,
+      processId: 202,
+      createLeaseToken: () => 'successor-token',
+      getProcessIdentity: () => 'test:successor-process',
+      isProcessActive: () => false,
+      closeoutLeaseInitializationGraceMs: 0,
+    },
+    runtime
+  );
+
+  const owner = JSON.parse(fs.readFileSync(path.join(leaseDir, 'owner.json'), 'utf8'));
+  const reservation = JSON.parse(fs.readFileSync(recoveryPath, 'utf8'));
+  assert.equal(owner.token, 'successor-token');
+  assert.equal(reservation.token, 'successor-token');
+  assert.equal(runtime.closeoutLeaseOwned, true);
   releaseCloseoutLease({}, runtime);
 });
 
@@ -386,9 +420,10 @@ test('closeout lease bounds recovery of partially written owner files by the ini
   }
 });
 
-test('closeout lease restores an owner that appears while the directory enters quarantine', (t) => {
+test('closeout lease releases recovery when a live owner appears after reservation', (t) => {
   const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-interleave-'));
   const leaseDir = path.join(leaseRoot, 'lease');
+  const recoveryPath = path.join(leaseDir, 'recovery.json');
   const runtime = {};
   t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
   fs.mkdirSync(leaseDir);
@@ -405,15 +440,15 @@ test('closeout lease restores an owner that appears while the directory enters q
           statSync: () => ({ mtimeMs: 1_000 }),
           now: () => 31_000,
           isProcessActive: (pid) => pid === 101,
-          renameSync: (source, target) => {
-            if (source === leaseDir) {
+          writeFileSync: (filePath, value, options) => {
+            fs.writeFileSync(filePath, value, options);
+            if (filePath === recoveryPath) {
               fs.writeFileSync(
                 path.join(leaseDir, 'owner.json'),
                 `${JSON.stringify({ pid: 101, token: 'live-token' })}\n`,
                 'utf8'
               );
             }
-            fs.renameSync(source, target);
           },
         },
         runtime
@@ -446,8 +481,9 @@ test('closeout lease keeps its public path reserved while a live owner appears',
           closeoutLeaseDir: leaseDir,
           processId: 303,
           createLeaseToken: () => 'third-token',
-          getProcessIdentity: () => 'test:third-process',
-          isProcessActive: (pid) => pid === 101,
+          getProcessIdentity: (pid) =>
+            pid === 202 ? 'test:recoverer-process' : 'test:third-process',
+          isProcessActive: (pid) => pid === 101 || pid === 202,
         },
         thirdRuntime
       );
@@ -511,6 +547,7 @@ test('closeout lease keeps its public path reserved while a live owner appears',
 test('closeout lease verifies its visible token before claiming ownership', (t) => {
   const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-visible-'));
   const leaseDir = path.join(leaseRoot, 'lease');
+  const ownerPath = path.join(leaseDir, 'owner.json');
   const runtime = {};
   t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
 
@@ -524,11 +561,13 @@ test('closeout lease verifies its visible token before claiming ownership', (t) 
           getProcessIdentity: getTestProcessIdentity,
           writeFileSync: (filePath, value, options) => {
             fs.writeFileSync(filePath, value, options);
-            fs.writeFileSync(
-              filePath,
-              `${JSON.stringify({ pid: 202, token: 'visible-successor-token' })}\n`,
-              'utf8'
-            );
+            if (filePath === ownerPath) {
+              fs.writeFileSync(
+                filePath,
+                `${JSON.stringify({ pid: 202, token: 'visible-successor-token' })}\n`,
+                'utf8'
+              );
+            }
           },
         },
         runtime
@@ -547,7 +586,6 @@ test('closeout lease retries a vanished ownerless directory and fails closed on 
   const unreadableLeaseDir = path.join(leaseRoot, 'unreadable-lease');
   const runtime = {};
   let mkdirAttempts = 0;
-  let readAttempts = 0;
   t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
 
   acquireCloseoutLease(
@@ -564,15 +602,6 @@ test('closeout lease retries a vanished ownerless directory and fails closed on 
           throw error;
         }
         fs.mkdirSync(target);
-      },
-      readFileSync: (filePath, encoding) => {
-        readAttempts += 1;
-        if (readAttempts === 1) {
-          const error = new Error('vanished');
-          error.code = 'ENOENT';
-          throw error;
-        }
-        return fs.readFileSync(filePath, encoding);
       },
       statSync: () => {
         const error = new Error('vanished');
