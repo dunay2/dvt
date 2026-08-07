@@ -179,6 +179,22 @@ jobs:
           GIT_BASE: ${{ github.event.pull_request.base.sha }}
           GIT_HEAD: ${{ github.sha }}
 
+      - name: Setup Python for Repository Map publication
+        if:
+          github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
+          'true'
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+
+      - name: Install Zensical for Repository Map publication
+        if:
+          github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
+          'true'
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install zensical==0.0.39
+
       - name: Validate Repository Map publication and links
         if:
           github.event_name == 'pull_request' && steps.scope.outputs.generated_status_relevant ==
