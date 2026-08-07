@@ -4,7 +4,7 @@
  */
 import type { PlanViewModel } from '../../types/plans';
 import type { PlanRef } from '../../types/engine';
-import { canvasViewCopy } from './copy';
+import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 
 export type PlanRunReadinessBlocker =
   | 'plan_integrity'
@@ -61,6 +61,7 @@ export function buildPlanStatusSummary(args: {
   backpressure?: boolean;
   capabilityMismatch?: boolean;
   adapterDegraded?: boolean;
+  locale?: string;
 }): string {
   return observePlanRunReadiness(args).summary;
 }
@@ -74,6 +75,7 @@ export function observePlanRunReadiness(args: {
   backpressure?: boolean;
   capabilityMismatch?: boolean;
   adapterDegraded?: boolean;
+  locale?: string;
 }): PlanRunReadinessReadModel {
   const blockers: PlanRunReadinessBlocker[] = [];
 
@@ -116,35 +118,38 @@ function buildPlanRunReadinessSummary(args: {
   backpressure?: boolean;
   capabilityMismatch?: boolean;
   adapterDegraded?: boolean;
+  locale?: string;
 }): string {
+  const copy = resolveCanvasViewCopy(args.locale);
+
   if (args.backpressure === true) {
-    return canvasViewCopy.planStatusBackpressureMessage;
+    return copy.planStatusBackpressureMessage;
   }
   if (args.adapterDegraded === true) {
-    return canvasViewCopy.planStatusAdapterDegradedMessage;
+    return copy.planStatusAdapterDegradedMessage;
   }
   if (args.capabilityMismatch === true) {
-    return canvasViewCopy.canvasExecutionUnavailableMessage;
+    return copy.canvasExecutionUnavailableMessage;
   }
   if (!args.canRun) {
-    return canvasViewCopy.planStatusRunUnavailableMessage;
+    return copy.planStatusRunUnavailableMessage;
   }
   if (args.currentPlan == null) {
-    return canvasViewCopy.planStatusPreviewRequiredMessage;
+    return copy.planStatusPreviewRequiredMessage;
   }
   if (args.isCurrentPlanStale) {
-    return canvasViewCopy.runPreviewStaleMessage;
+    return copy.runPreviewStaleMessage;
   }
   if (!args.currentPlan.planRef) {
-    return canvasViewCopy.runPlanRefUnavailableMessage;
+    return copy.runPlanRefUnavailableMessage;
   }
   if (args.persistedPreviewIdentityMismatch) {
-    return canvasViewCopy.planStatusPreviewNotAlignedMessage;
+    return copy.planStatusPreviewNotAlignedMessage;
   }
   if (!args.hasPersistedPlanForRun) {
-    return canvasViewCopy.planStatusPreviewNotPersistedMessage;
+    return copy.planStatusPreviewNotPersistedMessage;
   }
-  return canvasViewCopy.planStatusPreviewReadyMessage;
+  return copy.planStatusPreviewReadyMessage;
 }
 
 function hasPersistedPreviewRecord(plan: PlanViewModel | null): boolean {

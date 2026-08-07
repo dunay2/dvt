@@ -1,10 +1,12 @@
 // @vitest-environment jsdom
 
+import { act } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import type { PlanViewModel } from '../../types/plans';
-import { canvasViewCopy } from './copy';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import { canvasViewCopy, resolveCanvasViewCopy } from './copy';
 import {
   buildCanonicalEdges,
   buildCanonicalNodes,
@@ -164,11 +166,13 @@ describe('useCanvasExecutionActions run start guards', () => {
 
   beforeEach(() => {
     resetExecutionActionsTestDoubles();
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   });
 
   afterEach(() => {
     harness?.cleanup();
     harness = null;
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     restoreExecutionActionsTestDoubles();
   });
 
@@ -206,5 +210,22 @@ describe('useCanvasExecutionActions run start guards', () => {
       expectedError: canvasViewCopy.transformationRequiresExecutablePathMessage,
       expectedModalState: 'false',
     });
+  });
+
+  it('recomputes an unchanged readiness summary when the application language changes', async () => {
+    const scenario = await renderRunStartHarness({ currentPlan: null });
+    harness = scenario.harness;
+
+    expect(harness.text('plan-status-summary')).toBe(
+      resolveCanvasViewCopy('en').planStatusPreviewRequiredMessage
+    );
+
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    });
+
+    expect(harness.text('plan-status-summary')).toBe(
+      resolveCanvasViewCopy('es').planStatusPreviewRequiredMessage
+    );
   });
 });
