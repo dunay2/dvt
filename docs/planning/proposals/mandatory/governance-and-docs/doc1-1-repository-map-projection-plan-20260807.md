@@ -128,6 +128,23 @@ from canonical data: every non-canonical relation is displayed as a gap.
 
 ## Feature Mechanization
 
+### Historical ordering deviation and corrective evidence
+
+The first implementation commits inherited by this branch preceded this
+mandatory plan. That ordering did not comply with the repository's
+documentation-before-implementation rule and cannot be made compliant
+retroactively by marking the final manifest closed. The deviation is retained
+here explicitly rather than hidden.
+
+Corrective work began only after this plan recorded the DoR, DoD, diagrams,
+Fowler matrix, rails, allowed surfaces, and red/green cycles. Subsequent review
+increments were each driven by failing tests and include exact governed
+document bindings, published README links, operational mode separation, strict
+canonicality, real pnpm lifecycle fixtures, no-write generation proof, the
+effective root workspace, and the prepared PR-closeout path. `closed` below
+describes the final mechanized tree and remaining-decision state; it does not
+claim that the original commit ordering was compliant.
+
 ```feature-mechanization
 version: 1
 featureId: DOC1-1-REPOSITORY-MAP-20260807
@@ -161,6 +178,8 @@ allowedImplementationSurfaces:
   - docs/planning/status/generated-code-state.md
   - docs/runbooks/planning-generated-artifacts-operations-20260403.md
   - package.json
+  - scripts/pr-closeout.cjs
+  - scripts/pr-closeout.test.cjs
   - scripts/generate-code-status.cjs
   - scripts/generate-code-status.test.cjs
   - scripts/governance-refresh.cjs
@@ -255,6 +274,15 @@ redGreenCycles:
       - scripts/generate-code-status.cjs
       - scripts/generate-code-status.test.cjs
     greenTest: node --test scripts/generate-code-status.test.cjs
+  - id: review-root-and-closeout-rail
+    redTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs
+    expectedFailure: The pnpm root row is dropped and the governed PR-closeout rail invokes an implicit DB-backed generator without preparing Planning DB.
+    patchSurfaces:
+      - scripts/generate-code-status.cjs
+      - scripts/generate-code-status.test.cjs
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node --test scripts/generate-code-status.test.cjs scripts/pr-closeout.test.cjs
   - id: refresh-reconvergence
     redTest: node --test scripts/governance-refresh.test.cjs
     expectedFailure: A final Repository Map write can leave governance fingerprints stale after the final Planning DB import.
