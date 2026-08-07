@@ -5,8 +5,25 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const { listLocalChangedFiles, parseGitLines, toPosix } = require('./git-local-changes.cjs');
+const workflowScopePolicy = require('../tools/ci/policy/workflow-scope.json');
 
 const repoRoot = path.resolve(__dirname, '..');
+const repositoryMapSourcePatterns = Object.freeze([
+  ...workflowScopePolicy.generated_status_relevant,
+]);
+const workspaceSourcePatterns = Object.freeze([
+  'package.json',
+  'pnpm-workspace.yaml',
+  'README.md',
+  'src/**',
+  'test/**',
+  'apps/**',
+  'packages/**',
+  '**/package.json',
+  '**/README.md',
+  '**/src/**',
+  '**/test/**',
+]);
 
 function normalizeChangedFiles(changedFiles) {
   return Array.from(new Set(changedFiles.map(toPosix).filter(Boolean))).sort();
@@ -16,13 +33,39 @@ function hasDocsChange(changedFiles) {
   return changedFiles.some((filePath) => filePath.startsWith('docs/'));
 }
 
+function escapeRegexCharacter(character) {
+  return /[|\\{}()[\]^$+?.]/u.test(character) ? `\\${character}` : character;
+}
+
+function globToRegExp(pattern) {
+  let source = '^';
+
+  for (let index = 0; index < pattern.length; index += 1) {
+    const current = pattern[index];
+    const next = pattern[index + 1];
+    if (current === '*' && next === '*') {
+      source += '.*';
+      index += 1;
+    } else if (current === '*') {
+      source += '[^/]*';
+    } else {
+      source += escapeRegexCharacter(current);
+    }
+  }
+
+  return new RegExp(`${source}$`, 'u');
+}
+
+function matchesAnyPattern(filePath, patterns) {
+  return patterns.some((pattern) => globToRegExp(pattern).test(toPosix(filePath)));
+}
+
 function hasWorkspaceSourceChange(changedFiles) {
-  return changedFiles.some(
-    (filePath) =>
-      filePath === 'pnpm-workspace.yaml' ||
-      filePath.startsWith('apps/') ||
-      filePath.startsWith('packages/')
-  );
+  return changedFiles.some((filePath) => matchesAnyPattern(filePath, workspaceSourcePatterns));
+}
+
+function hasRepositoryMapSourceChange(changedFiles) {
+  return changedFiles.some((filePath) => matchesAnyPattern(filePath, repositoryMapSourcePatterns));
 }
 
 function hasGovernanceRefreshChange(changedFiles) {
@@ -70,8 +113,9 @@ function buildPrCloseoutPlan(options = {}) {
   const changedFiles = normalizeChangedFiles(options.changedFiles || []);
   const stagedFiles = normalizeChangedFiles(options.stagedFiles || []);
   const workspaceSourceChanged = hasWorkspaceSourceChange(changedFiles);
+  const repositoryMapSourceChanged = hasRepositoryMapSourceChange(changedFiles);
   const governanceRefreshChanged = hasGovernanceRefreshChange(changedFiles);
-  const needsPlanningDbLifecycle = workspaceSourceChanged || governanceRefreshChanged;
+  const needsPlanningDbLifecycle = repositoryMapSourceChanged || governanceRefreshChanged;
   const steps = [];
 
   if (changedFiles.length === 0) {
@@ -123,7 +167,7 @@ function buildPrCloseoutPlan(options = {}) {
     });
   }
 
-  if (workspaceSourceChanged && !governanceRefreshChanged) {
+  if (repositoryMapSourceChanged && !governanceRefreshChanged) {
     pushStepOnce(steps, {
       id: 'planning-db-import',
       command: 'pnpm',
