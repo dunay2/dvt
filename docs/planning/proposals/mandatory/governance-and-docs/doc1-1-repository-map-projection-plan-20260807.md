@@ -485,6 +485,16 @@ symbols:
   - <<: *prCloseoutLifecycleSymbol
     name: acquireCloseoutLease
   - <<: *prCloseoutLifecycleSymbol
+    name: closeoutLeaseOwnerFile
+  - <<: *prCloseoutLifecycleSymbol
+    name: defaultCloseoutLeaseDir
+  - <<: *prCloseoutLifecycleSymbol
+    name: isProcessActive
+  - <<: *prCloseoutLifecycleSymbol
+    name: os
+  - <<: *prCloseoutLifecycleSymbol
+    name: readCloseoutLeaseOwner
+  - <<: *prCloseoutLifecycleSymbol
     name: releaseCloseoutLease
   - &prCloseoutRoutingSymbol
     name: workflowScopePolicy
