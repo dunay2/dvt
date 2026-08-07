@@ -441,9 +441,8 @@ test('policy names actual inputs and the minimal generator command', () => {
   assert.ok(entry.sourcePaths.includes('docs/**/*.md'));
   assert.ok(entry.sourcePaths.includes('buzon/*.md'));
   for (const sourcePath of [
+    '.',
     'README.md',
-    'src/**',
-    'test/**',
     '**/README.md',
     '**/package.json',
     '**/src/**',
