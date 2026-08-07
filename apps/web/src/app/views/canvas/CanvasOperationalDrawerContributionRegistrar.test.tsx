@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useOperationalDrawerContributionStore } from '../../components/shell/operationalDrawerContributionStore';
 import { CanvasOperationalDrawerContributionRegistrar } from './CanvasOperationalDrawerContributionRegistrar';
 import { buildCanvasShellProps } from './CanvasShell.testHarness';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 describe('CanvasOperationalDrawerContributionRegistrar', () => {
   let container: HTMLDivElement;
@@ -20,11 +21,13 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
     useOperationalDrawerContributionStore.setState({ contribution: null });
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
   });
 
   afterEach(() => {
     act(() => root.unmount());
     useOperationalDrawerContributionStore.setState({ contribution: null });
+    useApplicationLanguageStore.getState().configureApplicationLanguage('en');
     container.remove();
     vi.clearAllMocks();
   });
@@ -62,5 +65,47 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
     latestContribution?.preview.onPreviewExecutionPlan();
     expect(firstCommand).not.toHaveBeenCalled();
     expect(latestCommand).toHaveBeenCalledTimes(1);
+  });
+
+  it('replaces the registered contribution when the application language changes', async () => {
+    const shell = buildCanvasShellProps();
+    const policy = shell.layout.surfaceStrategy!.operationalDrawer!;
+
+    await act(async () => {
+      root.render(
+        <CanvasOperationalDrawerContributionRegistrar
+          policy={policy}
+          panels={shell.panels}
+          chromeState={shell.chromeState}
+          runControls={shell.runControls}
+          onPreviewExecutionPlan={vi.fn()}
+          onStartRun={vi.fn()}
+          selectionRecoveryCommands={shell.chromeCommands.executionSelectionRecovery}
+        />
+      );
+    });
+
+    const englishContribution = useOperationalDrawerContributionStore.getState().contribution;
+    expect(englishContribution?.title).toBe('Canvas operations');
+
+    await act(async () => {
+      useApplicationLanguageStore.getState().configureApplicationLanguage('es');
+    });
+
+    const spanishContribution = useOperationalDrawerContributionStore.getState().contribution;
+    expect(spanishContribution).not.toBe(englishContribution);
+    expect(spanishContribution).toMatchObject({
+      title: 'Operaciones del Canvas',
+      tabs: [
+        { id: 'log', label: 'Registro' },
+        { id: 'problems', label: 'Problemas' },
+        { id: 'runs', label: 'Ejecuciones' },
+        { id: 'preview', label: 'Vista previa' },
+      ],
+      copy: {
+        previewAction: 'Previsualizar el plan de ejecución',
+        tabsAriaLabel: 'Cajón operativo del Canvas',
+      },
+    });
   });
 });

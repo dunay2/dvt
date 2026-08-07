@@ -36,26 +36,26 @@ const EN_COPY: RunControlCopy = {
 };
 
 const ES_COPY: RunControlCopy = {
-  cancel: 'Cancelar ejecucion',
-  recover: 'Recuperar ejecucion',
-  cancellationRequested: 'Cancelacion solicitada.',
-  cancellationAlreadyRequested: 'La cancelacion ya estaba solicitada.',
-  cancellationAlreadyCompleted: 'La ejecucion ya esta cancelada.',
-  recoveryStarted: (runId) => `Recuperacion iniciada como ${runId}.`,
-  failure: (message) => `El comando de ejecucion ha fallado: ${message}`,
+  cancel: 'Cancelar ejecución',
+  recover: 'Recuperar ejecución',
+  cancellationRequested: 'Cancelación solicitada.',
+  cancellationAlreadyRequested: 'La cancelación ya estaba solicitada.',
+  cancellationAlreadyCompleted: 'La ejecución ya está cancelada.',
+  recoveryStarted: (runId) => `Recuperación iniciada como ${runId}.`,
+  failure: (message) => `El comando de ejecución ha fallado: ${message}`,
   unavailableReason: {
-    cancellation_pending: 'La cancelacion ya esta pendiente.',
-    dispatch_pending: 'La cancelacion estara disponible al finalizar el envio al runtime.',
-    run_active: 'La recuperacion solo esta disponible tras un fallo o cancelacion.',
-    run_cancelled: 'La ejecucion ya esta cancelada.',
+    cancellation_pending: 'La cancelación ya está pendiente.',
+    dispatch_pending: 'La cancelación estará disponible al finalizar el envío al runtime.',
+    run_active: 'La recuperación solo está disponible tras un fallo o cancelación.',
+    run_cancelled: 'La ejecución ya está cancelada.',
     run_completed: 'Las ejecuciones completadas no se pueden cancelar ni recuperar.',
-    run_terminal: 'Esta ejecucion terminal no se puede cancelar.',
+    run_terminal: 'Esta ejecución terminal no se puede cancelar.',
     source_adapter_unavailable:
-      'La recuperacion no esta disponible porque el adaptador de ejecucion original no esta configurado.',
+      'La recuperación no está disponible porque el adaptador de ejecución original no está configurado.',
     source_plan_unavailable:
-      'La recuperacion no esta disponible porque el plan de ejecucion original ya no esta disponible.',
+      'La recuperación no está disponible porque el plan de ejecución original ya no está disponible.',
     source_context_untrusted:
-      'La recuperacion no esta disponible porque no se puede verificar el contexto de ejecucion original.',
+      'La recuperación no está disponible porque no se puede verificar el contexto de ejecución original.',
   },
 };
 
