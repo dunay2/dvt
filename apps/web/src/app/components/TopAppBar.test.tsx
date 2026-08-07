@@ -81,7 +81,7 @@ describe('ShellTopBar workspace context', () => {
         runBlockedStatus: 'Run blocked',
         runActiveStatus: 'Active run',
         previewAriaLabel: 'Canvas execution preview',
-        previewAction: 'Preview execution plan',
+        previewAction: 'Create Execution Preview',
         previewReadyStatus: 'Preview ready',
         previewBlockedStatus: 'Preview blocked',
         tabsAriaLabel: 'Canvas operational drawer',

@@ -103,7 +103,7 @@ describe('CanvasOperationalDrawerContributionRegistrar', () => {
         { id: 'preview', label: 'Vista previa' },
       ],
       copy: {
-        previewAction: 'Previsualizar el plan de ejecución',
+        previewAction: 'Crear Execution Preview',
         tabsAriaLabel: 'Cajón operativo del Canvas',
       },
     });

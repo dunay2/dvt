@@ -259,7 +259,7 @@ export const canvasViewExecutionCopyByKey = {
   },
   operationalDrawerPreviewAction: {
     key: 'canvas.operationalDrawer.previewAction',
-    fallback: 'Preview execution plan',
+    fallback: 'Create Execution Preview',
   },
   operationalDrawerPreviewReadyStatus: {
     key: 'canvas.operationalDrawer.previewReadyStatus',

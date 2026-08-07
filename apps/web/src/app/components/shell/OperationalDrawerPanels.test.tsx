@@ -25,7 +25,7 @@ function buildCanvasOperationalDrawerContribution(
       runBlockedStatus: 'Run blocked',
       runActiveStatus: 'Active run',
       previewAriaLabel: 'Canvas execution preview',
-      previewAction: 'Preview execution plan',
+      previewAction: 'Create Execution Preview',
       previewReadyStatus: 'Preview ready',
       previewBlockedStatus: 'Preview blocked',
       tabsAriaLabel: 'Canvas operational drawer',
@@ -180,7 +180,7 @@ describe('OperationalDrawerPanels', () => {
     expect(container.textContent).not.toContain('plan_integrity');
 
     const previewButton = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent?.includes('Preview execution plan')
+      button.textContent?.includes('Create Execution Preview')
     );
     expect(previewButton).not.toBeNull();
 
@@ -216,7 +216,7 @@ describe('OperationalDrawerPanels', () => {
         runBlockedStatus: 'Ejecución bloqueada',
         runActiveStatus: 'Ejecución activa',
         previewAriaLabel: 'Vista previa de ejecución del Canvas',
-        previewAction: 'Previsualizar el plan de ejecución',
+        previewAction: 'Crear Execution Preview',
         previewReadyStatus: 'Vista previa lista',
         previewBlockedStatus: 'Vista previa bloqueada',
         tabsAriaLabel: 'Cajón operativo del Canvas',
@@ -308,6 +308,6 @@ describe('OperationalDrawerPanels', () => {
       'Vista previa de ejecución del Canvas'
     );
     expect(container.textContent).toContain('Vista previa bloqueada');
-    expect(container.textContent).toContain('Previsualizar el plan de ejecución');
+    expect(container.textContent).toContain('Crear Execution Preview');
   });
 });
