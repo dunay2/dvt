@@ -29,7 +29,6 @@ test('governance refresh defers DB-backed Repository Map and reports to final ge
     ]
   );
   assert.deepEqual(stages.generationStages.find((stage) => stage.id === 'code-status-local').args, [
-    '--',
     '--code-state-only',
   ]);
   assert.equal(
@@ -63,11 +62,11 @@ test('governance refresh defers DB-backed Repository Map and reports to final ge
   );
   assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'governance-db-import-final').args,
-    ['--', '--if-stale']
+    ['--if-stale']
   );
   assert.deepEqual(
     stages.databaseStages.find((stage) => stage.id === 'repository-map-final').args,
-    ['--', '--repository-map-only']
+    ['--repository-map-only']
   );
   assert.equal(
     stages.databaseStages.findIndex((stage) => stage.id === 'repository-map-final') >
