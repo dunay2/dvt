@@ -387,6 +387,37 @@ symbols:
     name: resolveWorkspaceArchitecture
   - <<: *repositoryMapSymbol
     name: toPosix
+  - &planningDbLifecycleSymbol
+    name: isPlanningDbActive
+    path: scripts/planning-db-run.cjs
+    dddOwner: PlanningQueryStoreRuntime
+    cqRails:
+      - InspectPlanningQueryStoreRuntime
+    fowlerSignals:
+      - Fail-closed ownership probe
+      - Bounded readiness
+    architectureGuard: node --test scripts/planning-db-run.test.cjs
+    cypressCoverage: N/A - local Planning DB lifecycle with no browser interaction
+    unitTests:
+      - node --test scripts/planning-db-run.test.cjs
+  - <<: *planningDbLifecycleSymbol
+    name: runPlanningDbHealth
+  - &prCloseoutLifecycleSymbol
+    name: probePlanningDbActive
+    path: scripts/pr-closeout.cjs
+    dddOwner: PlanningGeneratedArtifact
+    cqRails:
+      - GeneratePlanningDerivedSurfaces
+      - InspectPlanningQueryStoreRuntime
+    fowlerSignals:
+      - Explicit lifecycle ownership
+      - Guaranteed cleanup
+    architectureGuard: node --test scripts/pr-closeout.test.cjs
+    cypressCoverage: N/A - repository closeout command with no browser interaction
+    unitTests:
+      - node --test scripts/pr-closeout.test.cjs
+  - <<: *prCloseoutLifecycleSymbol
+    name: releasePlanningDbIfOwned
 ```
 
 ## No-Debt Boundary
