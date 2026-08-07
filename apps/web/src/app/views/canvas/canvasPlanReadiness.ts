@@ -118,10 +118,10 @@ function buildPlanRunReadinessSummary(args: {
   adapterDegraded?: boolean;
 }): string {
   if (args.backpressure === true) {
-    return 'Runtime admission is temporarily backpressured. Retry after capacity recovers.';
+    return canvasViewCopy.planStatusBackpressureMessage;
   }
   if (args.adapterDegraded === true) {
-    return 'The execution adapter is degraded. Run start remains blocked until runtime recovers.';
+    return canvasViewCopy.planStatusAdapterDegradedMessage;
   }
   if (args.capabilityMismatch === true) {
     return canvasViewCopy.canvasExecutionUnavailableMessage;

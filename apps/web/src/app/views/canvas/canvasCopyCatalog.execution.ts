@@ -201,6 +201,119 @@ export const canvasViewExecutionCopyByKey = {
     key: 'canvas.planStatus.previewReadyMessage',
     fallback: 'Preview is current and ready to run.',
   },
+  operationalDrawerTitle: {
+    key: 'canvas.operationalDrawer.title',
+    fallback: 'Canvas operations',
+  },
+  operationalDrawerLogTab: {
+    key: 'canvas.operationalDrawer.logTab',
+    fallback: 'Log',
+  },
+  operationalDrawerProblemsTab: {
+    key: 'canvas.operationalDrawer.problemsTab',
+    fallback: 'Problems',
+  },
+  operationalDrawerRunsTab: {
+    key: 'canvas.operationalDrawer.runsTab',
+    fallback: 'Runs',
+  },
+  operationalDrawerPreviewTab: {
+    key: 'canvas.operationalDrawer.previewTab',
+    fallback: 'Preview',
+  },
+  operationalDrawerProblemsAriaLabel: {
+    key: 'canvas.operationalDrawer.problemsAriaLabel',
+    fallback: 'Canvas problems',
+  },
+  operationalDrawerNoProblemsMessage: {
+    key: 'canvas.operationalDrawer.noProblemsMessage',
+    fallback: 'No current Canvas problems.',
+  },
+  operationalDrawerRunsAriaLabel: {
+    key: 'canvas.operationalDrawer.runsAriaLabel',
+    fallback: 'Canvas runs',
+  },
+  operationalDrawerRunReadyStatus: {
+    key: 'canvas.operationalDrawer.runReadyStatus',
+    fallback: 'Run ready',
+  },
+  operationalDrawerRunBlockedStatus: {
+    key: 'canvas.operationalDrawer.runBlockedStatus',
+    fallback: 'Run blocked',
+  },
+  operationalDrawerRunActiveStatus: {
+    key: 'canvas.operationalDrawer.runActiveStatus',
+    fallback: 'Active run',
+  },
+  operationalDrawerActiveRunSummaryTemplate: {
+    key: 'canvas.operationalDrawer.activeRunSummaryTemplate',
+    fallback: 'Run {runId} is active.',
+  },
+  operationalDrawerReadyRunSummary: {
+    key: 'canvas.operationalDrawer.readyRunSummary',
+    fallback: 'Run is ready after the current execution preview.',
+  },
+  operationalDrawerPreviewAriaLabel: {
+    key: 'canvas.operationalDrawer.previewAriaLabel',
+    fallback: 'Canvas execution preview',
+  },
+  operationalDrawerPreviewAction: {
+    key: 'canvas.operationalDrawer.previewAction',
+    fallback: 'Preview execution plan',
+  },
+  operationalDrawerPreviewReadyStatus: {
+    key: 'canvas.operationalDrawer.previewReadyStatus',
+    fallback: 'Preview ready',
+  },
+  operationalDrawerPreviewBlockedStatus: {
+    key: 'canvas.operationalDrawer.previewBlockedStatus',
+    fallback: 'Preview blocked',
+  },
+  operationalDrawerTabsAriaLabel: {
+    key: 'canvas.operationalDrawer.tabsAriaLabel',
+    fallback: 'Canvas operational drawer',
+  },
+  operationalDrawerInfoSeverity: {
+    key: 'canvas.operationalDrawer.infoSeverity',
+    fallback: 'Info',
+  },
+  operationalDrawerWarningSeverity: {
+    key: 'canvas.operationalDrawer.warningSeverity',
+    fallback: 'Warning',
+  },
+  operationalDrawerErrorSeverity: {
+    key: 'canvas.operationalDrawer.errorSeverity',
+    fallback: 'Error',
+  },
+  operationalDrawerPlanIntegrityBlocker: {
+    key: 'canvas.operationalDrawer.planIntegrityBlocker',
+    fallback: 'Execution Preview integrity',
+  },
+  operationalDrawerBackpressureBlocker: {
+    key: 'canvas.operationalDrawer.backpressureBlocker',
+    fallback: 'Backpressure',
+  },
+  operationalDrawerCapabilityMismatchBlocker: {
+    key: 'canvas.operationalDrawer.capabilityMismatchBlocker',
+    fallback: 'Capability mismatch',
+  },
+  operationalDrawerAdapterDegradedBlocker: {
+    key: 'canvas.operationalDrawer.adapterDegradedBlocker',
+    fallback: 'Adapter degraded',
+  },
+  operationalDrawerAuthorizationDeniedBlocker: {
+    key: 'canvas.operationalDrawer.authorizationDeniedBlocker',
+    fallback: 'Authorization denied',
+  },
+  planStatusBackpressureMessage: {
+    key: 'canvas.planStatus.backpressureMessage',
+    fallback: 'Runtime admission is temporarily backpressured. Retry after capacity recovers.',
+  },
+  planStatusAdapterDegradedMessage: {
+    key: 'canvas.planStatus.adapterDegradedMessage',
+    fallback:
+      'The execution adapter is degraded. Run start remains blocked until runtime recovers.',
+  },
   selectionRecoveryTitle: {
     key: 'canvas.selectionRecovery.title',
     fallback: 'Execution selection',
