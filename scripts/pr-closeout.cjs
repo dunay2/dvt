@@ -7,6 +7,7 @@ const net = require('node:net');
 const path = require('node:path');
 
 const { listLocalChangedFiles, parseGitLines, toPosix } = require('./git-local-changes.cjs');
+const { projectName: planningDbProjectName } = require('./planning-db-run.cjs');
 const workflowScopePolicy = require('../tools/ci/policy/workflow-scope.json');
 
 const repoRoot = path.resolve(__dirname, '..');
@@ -27,15 +28,25 @@ const workspaceSourcePatterns = Object.freeze([
   '**/test/**',
 ]);
 
-function resolveCloseoutLockEndpoint(scope = repoRoot, platform = process.platform) {
-  const absoluteScope = path.resolve(scope);
-  let canonicalScope;
-  try {
-    canonicalScope = fs.realpathSync.native(absoluteScope);
-  } catch {
-    canonicalScope = absoluteScope;
+function resolveCloseoutLockEndpoint(
+  scope = `resource:${planningDbProjectName}`,
+  platform = process.platform
+) {
+  if (typeof scope !== 'string' || scope.length === 0) {
+    throw new Error('PR_CLOSEOUT_LOCK_SCOPE_FAILED: expected a non-empty scope.');
   }
-  if (platform === 'win32') canonicalScope = canonicalScope.toLowerCase();
+
+  const resourceScoped = scope.startsWith('resource:');
+  let canonicalScope = scope;
+  if (!resourceScoped) {
+    const absoluteScope = path.resolve(scope);
+    try {
+      canonicalScope = fs.realpathSync.native(absoluteScope);
+    } catch (error) {
+      throw new Error(`PR_CLOSEOUT_LOCK_SCOPE_FAILED: ${error.message}`, { cause: error });
+    }
+    if (platform === 'win32') canonicalScope = canonicalScope.toLowerCase();
+  }
 
   const digest = createHash('sha256').update(canonicalScope).digest();
   const lockName = `dvt-pr-closeout-${digest.toString('hex').slice(0, 24)}`;
@@ -52,8 +63,7 @@ function resolveCloseoutLockEndpoint(scope = repoRoot, platform = process.platfo
 }
 
 function runWithCloseoutLock(task, options = {}) {
-  const endpoint =
-    options.endpoint || resolveCloseoutLockEndpoint(options.repoRootPath || repoRoot);
+  const endpoint = options.endpoint || resolveCloseoutLockEndpoint(options.scope);
   const createServer = options.createServer || net.createServer;
 
   return new Promise((resolve, reject) => {
@@ -66,19 +76,32 @@ function runWithCloseoutLock(task, options = {}) {
     const closeAndSettle = (error, value) => {
       if (settled) return;
       settled = true;
-      server.close((closeError) => {
-        if (error) {
-          reject(error);
-        } else if (closeError) {
-          reject(
-            new Error(`PR_CLOSEOUT_LEASE_RELEASE_FAILED: ${closeError.message}`, {
+      const settleAfterClose = (closeError) => {
+        const releaseError = closeError
+          ? new Error(`PR_CLOSEOUT_LEASE_RELEASE_FAILED: ${closeError.message}`, {
               cause: closeError,
             })
+          : null;
+        if (error && releaseError) {
+          reject(
+            new AggregateError(
+              [error, releaseError],
+              `${error.message}; closeout lock release also failed: ${releaseError.message}`
+            )
           );
+        } else if (error) {
+          reject(error);
+        } else if (releaseError) {
+          reject(releaseError);
         } else {
           resolve(value);
         }
-      });
+      };
+      try {
+        server.close(settleAfterClose);
+      } catch (closeError) {
+        settleAfterClose(closeError);
+      }
     };
 
     const rejectAcquisition = (error) => {
@@ -643,7 +666,7 @@ function main(argv = process.argv.slice(2)) {
 }
 
 if (require.main === module) {
-  runWithCloseoutLock(() => main(), { repoRootPath: repoRoot }).catch((error) => {
+  runWithCloseoutLock(() => main()).catch((error) => {
     console.error(`[pr:closeout] ${error.message}`);
     if (error.message.startsWith('INVALID_')) {
       printUsage();

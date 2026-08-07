@@ -17,6 +17,7 @@ const {
   resolveCommandInvocation,
   runWithCloseoutLock,
 } = require('./pr-closeout.cjs');
+const { projectName: planningDbProjectName } = require('./planning-db-run.cjs');
 
 function stepIds(plan) {
   return plan.map((step) => step.id);
@@ -96,7 +97,7 @@ test('OS-owned closeout lock serializes contenders and releases after completion
 });
 
 test('closeout endpoint uses OS-released local namespaces where available', () => {
-  const scope = path.join(process.cwd(), `endpoint-${process.pid}`);
+  const scope = process.cwd();
   const windowsEndpoint = resolveCloseoutLockEndpoint(scope, 'win32');
   const linuxEndpoint = resolveCloseoutLockEndpoint(scope, 'linux');
   const fallbackEndpoint = resolveCloseoutLockEndpoint(scope, 'darwin');
@@ -109,6 +110,10 @@ test('closeout endpoint uses OS-released local namespaces where available', () =
   assert.deepEqual(
     resolveCloseoutLockEndpoint(scope, process.platform),
     resolveCloseoutLockEndpoint(scope, process.platform)
+  );
+  assert.deepEqual(
+    resolveCloseoutLockEndpoint(),
+    resolveCloseoutLockEndpoint(`resource:${planningDbProjectName}`)
   );
 });
 
