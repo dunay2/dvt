@@ -221,6 +221,9 @@ describe('ShellTopBar workspace context', () => {
     expect(
       topBar?.querySelector('[data-slot="shell-top-bar-command-cluster"]')?.className
     ).toContain('w-full');
+    expect(
+      topBar?.querySelector('[data-slot="shell-top-bar-command-cluster"]')?.className
+    ).toContain('flex-wrap');
   });
 
   it('renders Canvas run readiness as compact top-bar status without restoring Plan chrome', async () => {
@@ -239,7 +242,10 @@ describe('ShellTopBar workspace context', () => {
 
     expect(runStatus).not.toBeNull();
     expect(runStatus?.textContent).toContain('Preview required');
+    expect(runStatus?.className).toContain('shrink-0');
     expect(runStatusLabel?.className).not.toContain('hidden');
+    expect(runStatusLabel?.className).toContain('whitespace-nowrap');
+    expect(runStatusLabel?.className).not.toContain('truncate');
     expect(runCommand).not.toBeNull();
     expect(runCommand?.textContent).toBe('Run');
     expect(runCommand?.disabled).toBe(true);

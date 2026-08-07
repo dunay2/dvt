@@ -6,9 +6,8 @@ import type { ShellTopBarCopy } from './copy';
 import type { OperationalDrawerContribution } from './operationalDrawerContributionStore';
 
 const shellRunStatusClasses = {
-  root: 'flex min-w-0 items-center gap-1.5',
-  status:
-    'inline min-w-0 max-w-28 truncate text-[11px] font-medium text-[var(--text-subtle)] sm:max-w-40 md:max-w-56',
+  root: 'flex shrink-0 items-center gap-1.5',
+  status: 'inline whitespace-nowrap text-[11px] font-medium text-[var(--text-subtle)]',
   activeStatus: 'text-[var(--status-running)]',
   blockedStatus: 'text-amber-100',
   readyStatus: 'text-[var(--status-success)]',

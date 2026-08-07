@@ -660,6 +660,13 @@ describe('Canvas workbench screen composition', () => {
       expect(rect.right).to.be.at.most(390);
     });
     cy.document().its('documentElement.scrollWidth').should('be.at.most', 390);
+    cy.get('[data-slot="shell-run-status-label"]')
+      .should('have.text', 'Vista previa obligatoria')
+      .and(($label) => {
+        const label = $label.get(0);
+        expect(label.scrollWidth).to.be.at.most(label.clientWidth);
+        expect(getComputedStyle(label).textOverflow).not.to.equal('ellipsis');
+      });
     cy.contains('button', 'Canvas de transformación').click();
     waitForE2eApiCall('/workspace/graph/draft', 'PUT');
 

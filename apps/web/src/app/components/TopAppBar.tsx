@@ -89,7 +89,7 @@ export function ShellTopBar({
 
         <div
           data-slot="shell-top-bar-command-cluster"
-          className="flex w-full min-w-0 items-center justify-end gap-1 sm:w-auto sm:shrink-0 sm:gap-2"
+          className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1 sm:w-auto sm:shrink-0 sm:flex-nowrap sm:gap-2"
         >
           <ShellConnectionStatus
             isConnectionChecking={isConnectionChecking}
