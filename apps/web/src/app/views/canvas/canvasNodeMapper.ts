@@ -87,7 +87,7 @@ export function mapCanonicalNodeToCanvasNode({
     name,
     type,
   }));
-  const presentationCopy = buildCanvasNodePresentationCopy(copy);
+  const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
 
   return {
     id: canonicalNode.id,
@@ -207,7 +207,7 @@ export function mapDroppedCanonicalNodeToCanvasNode(
     edges: [],
   });
   const columns = presentationTruth.columns.visible.map(({ name, type }) => ({ name, type }));
-  const presentationCopy = buildCanvasNodePresentationCopy(copy);
+  const presentationCopy = buildCanvasNodePresentationCopy(copy, locale);
   const typeLabelFromMetadata =
     typeof canonicalNode.metadata?.typeLabel === 'string'
       ? canonicalNode.metadata.typeLabel

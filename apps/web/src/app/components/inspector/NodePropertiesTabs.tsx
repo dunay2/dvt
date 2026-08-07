@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { cn } from '../ui/utils';
 import { NodePropertySectionView } from './NodePropertySectionView';
 import type { NodePropertiesReadModel, NodePropertySection } from './nodePropertiesReadModel';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 export type NodePropertiesTabsProps = Readonly<{
   node: CanonicalNode;
@@ -93,6 +94,7 @@ export function NodePropertiesTabs({
   onActiveTabChange,
   onHide,
 }: NodePropertiesTabsProps): JSX.Element {
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const slots =
     slotPrefix == null
       ? {
@@ -129,7 +131,7 @@ export function NodePropertiesTabs({
     })),
     ...panels.map((panel) => ({
       id: panel.id,
-      label: resolveString(panel.label),
+      label: resolveString(panel.label, applicationLanguage),
       count: 0,
     })),
   ];

@@ -107,10 +107,10 @@ describe('canvas copy catalog', () => {
       'Execution Preview requires one selected source -> sql_transform -> sink path.'
     );
     expect(formatTransformationGraphValidationSummary('requires_executable_path', 'es-ES')).toBe(
-      'El Execution Preview requiere un path conectado source -> sql_transform -> sink.'
+      'El Execution Preview requiere una ruta conectada source -> sql_transform -> sink.'
     );
     expect(formatTransformationGraphValidationSummary('ambiguous_executable_paths', 'es-ES')).toBe(
-      'El Execution Preview requiere seleccionar un unico path source -> sql_transform -> sink.'
+      'El Execution Preview requiere seleccionar una única ruta source -> sql_transform -> sink.'
     );
   });
 });

@@ -13,6 +13,12 @@ export type CanvasNodePresentationCopy = Readonly<{
   draftStatusLabel?: string;
   authoringTagLabel?: string;
   kindLabels?: Readonly<Record<string, string>>;
+  locale?: string;
+  sectionLabels?: Readonly<Record<string, string>>;
+  sectionEmptyStates?: Readonly<Record<string, string>>;
+  rowLabels?: Readonly<Record<string, string>>;
+  columnLabels?: Readonly<Record<string, string>>;
+  valueLabels?: Readonly<Record<string, string>>;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -34,6 +40,12 @@ export function isCanvasNodePresentationCopy(value: unknown): value is CanvasNod
     (value.readyStatusLabel == null || typeof value.readyStatusLabel === 'string') &&
     (value.draftStatusLabel == null || typeof value.draftStatusLabel === 'string') &&
     (value.authoringTagLabel == null || typeof value.authoringTagLabel === 'string') &&
-    (value.kindLabels == null || isRecord(value.kindLabels))
+    (value.kindLabels == null || isRecord(value.kindLabels)) &&
+    (value.locale == null || typeof value.locale === 'string') &&
+    (value.sectionLabels == null || isRecord(value.sectionLabels)) &&
+    (value.sectionEmptyStates == null || isRecord(value.sectionEmptyStates)) &&
+    (value.rowLabels == null || isRecord(value.rowLabels)) &&
+    (value.columnLabels == null || isRecord(value.columnLabels)) &&
+    (value.valueLabels == null || isRecord(value.valueLabels))
   );
 }
