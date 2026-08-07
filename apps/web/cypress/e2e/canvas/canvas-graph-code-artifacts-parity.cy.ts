@@ -1,5 +1,8 @@
 import { stubCanvasDraftRead } from '../../support/canvasDraftAuthoring';
-import { clickPreviewExecutionPlanFromOperationalDrawer } from '../../support/canvasExecutionSelection';
+import {
+  clickPreviewExecutionPlanFromOperationalDrawer,
+  getVisibleCanvasNode,
+} from '../../support/canvasExecutionSelection';
 import {
   getE2eApiCalls,
   getLastE2eApiCall,
@@ -261,9 +264,9 @@ describe('Canvas graph to execution-preview source parity', () => {
 
     visitWithE2eWorkspaceSession('/canvas');
     waitForE2eApiCall('/workspace/graph/draft', 'GET');
-    cy.contains('.react-flow__node', 'src_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'model_orders').should('be.visible');
-    cy.contains('.react-flow__node', 'orders_dashboard').should('be.visible');
+    getVisibleCanvasNode('src_orders').should('be.visible');
+    getVisibleCanvasNode('model_orders').should('be.visible');
+    getVisibleCanvasNode('orders_dashboard').should('be.visible');
 
     clickPreviewExecutionPlanFromOperationalDrawer();
     waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
