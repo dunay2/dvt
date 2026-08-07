@@ -14,7 +14,9 @@ const {
   resetPlanningDb,
   resolveComposeCommand,
   runPlanningDbUp,
+  runPlanningDbHealth,
   resetComposeCommandCache,
+  waitForPlanningDbReady,
 } = require('./planning-db-run.cjs');
 
 const scriptPath = path.join(__dirname, 'planning-db-run.cjs');
@@ -251,6 +253,44 @@ test('runPlanningDbUp fails after bounded compose startup attempts', () => {
     ['up', '-d', '--pull', 'always'],
     ['up', '-d', '--pull', 'always'],
   ]);
+});
+
+test('waitForPlanningDbReady retries health probes until Postgres accepts connections', () => {
+  const calls = [];
+  const outcomes = [false, false, true];
+
+  waitForPlanningDbReady({
+    attempts: 3,
+    intervalMs: 1,
+    runComposeQuiet: (args) => {
+      calls.push(['health', args]);
+      return outcomes.shift();
+    },
+    sleep: (intervalMs) => calls.push(['sleep', intervalMs]),
+  });
+
+  assert.deepEqual(
+    calls.map(([kind, value]) => [kind, kind === 'health' ? value.slice(0, 3) : value]),
+    [
+      ['health', ['exec', '-T', 'postgres']],
+      ['sleep', 1],
+      ['health', ['exec', '-T', 'postgres']],
+      ['sleep', 1],
+      ['health', ['exec', '-T', 'postgres']],
+    ]
+  );
+});
+
+test('runPlanningDbHealth wait mode uses the bounded readiness rail', () => {
+  const calls = [];
+
+  runPlanningDbHealth(['--wait'], {
+    waitForPlanningDbReady: (options) => calls.push(options),
+    attempts: 30,
+    intervalMs: 2000,
+  });
+
+  assert.deepEqual(calls, [{ attempts: 30, intervalMs: 2000 }]);
 });
 
 test('resolveComposeCommand prefers docker compose v2', (t) => {

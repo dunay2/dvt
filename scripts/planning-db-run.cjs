@@ -192,6 +192,8 @@ function runPlanningDbUp(extraArgs = [], options = {}) {
 function waitForPlanningDbReady(options = {}) {
   const attempts = options.attempts ?? 20;
   const intervalMs = options.intervalMs ?? 500;
+  const runComposeQuietFn = options.runComposeQuiet || runComposeQuiet;
+  const sleepFn = options.sleep || sleep;
   const readyArgs = [
     'exec',
     '-T',
@@ -203,14 +205,50 @@ function waitForPlanningDbReady(options = {}) {
     'dvt_planning',
   ];
 
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    if (runComposeQuiet(readyArgs)) {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    if (runComposeQuietFn(readyArgs)) {
       return;
     }
-    sleep(intervalMs);
+    if (attempt < attempts) {
+      sleepFn(intervalMs);
+    }
   }
 
-  throw new Error('Planning DB did not become ready before shared reset backup.');
+  throw new Error('Planning DB did not become ready within the bounded wait.');
+}
+
+function runPlanningDbHealth(args = [], options = {}) {
+  const unknownArgs = args.filter((arg) => arg !== '--wait');
+  if (unknownArgs.length > 0) {
+    throw new Error(`Unknown planning DB health option "${unknownArgs[0]}".`);
+  }
+
+  if (args.includes('--wait')) {
+    const waitForReady = options.waitForPlanningDbReady || waitForPlanningDbReady;
+    waitForReady({
+      attempts: normalizePositiveInteger(
+        options.attempts ?? process.env.DVT_PLANNING_DB_HEALTH_ATTEMPTS,
+        30
+      ),
+      intervalMs: normalizePositiveInteger(
+        options.intervalMs ?? process.env.DVT_PLANNING_DB_HEALTH_INTERVAL_MS,
+        2000
+      ),
+    });
+    return;
+  }
+
+  const runComposeFn = options.runCompose || runCompose;
+  runComposeFn([
+    'exec',
+    '-T',
+    'postgres',
+    'pg_isready',
+    '-U',
+    'dvt_planning',
+    '-d',
+    'dvt_planning',
+  ]);
 }
 
 async function readLocalOperationBackup(options = {}) {
@@ -356,16 +394,7 @@ async function main() {
   }
 
   if (action === 'health') {
-    runCompose([
-      'exec',
-      '-T',
-      'postgres',
-      'pg_isready',
-      '-U',
-      'dvt_planning',
-      '-d',
-      'dvt_planning',
-    ]);
+    runPlanningDbHealth(rest);
     return;
   }
 
@@ -400,6 +429,7 @@ module.exports = {
   planResetDataDir,
   readLocalOperationBackup,
   resolveComposeCommand,
+  runPlanningDbHealth,
   runPlanningDbUp,
   resetPlanningDb,
   resetComposeCommandCache,

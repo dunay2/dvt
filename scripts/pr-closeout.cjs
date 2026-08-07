@@ -98,6 +98,11 @@ function buildPrCloseoutPlan(options = {}) {
       args: ['planning:db:up'],
     });
     pushStepOnce(steps, {
+      id: 'planning-db-health',
+      command: 'pnpm',
+      args: ['planning:db:health', '--wait'],
+    });
+    pushStepOnce(steps, {
       id: 'planning-db-migrate',
       command: 'pnpm',
       args: ['planning:db:migrate'],
