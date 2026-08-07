@@ -182,6 +182,24 @@ test('buildPrCloseoutPlan prepares workspace projections for root and non-standa
   }
 });
 
+test('buildPrCloseoutPlan prepares Planning DB for every full prepush invocation', () => {
+  const plan = buildPrCloseoutPlan({
+    changedFiles: ['eslint.config.cjs'],
+    stagedFiles: ['eslint.config.cjs'],
+    commit,
+  });
+  const ids = stepIds(plan);
+
+  assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
+  assert.ok(indexOf(ids, 'planning-db-up') < indexOf(ids, 'planning-db-health'));
+  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-migrate'));
+  assert.ok(indexOf(ids, 'planning-db-migrate') < indexOf(ids, 'commit'));
+  assert.ok(indexOf(ids, 'commit') < indexOf(ids, 'verify-prepush'));
+  assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
+  assert.equal(ids.includes('governance-refresh'), false);
+  assert.equal(ids.includes('docs-status-repository-map'), false);
+});
+
 test('buildPrCloseoutPlan refreshes governance for mandatory planning proposals', () => {
   const plan = buildPrCloseoutPlan({
     changedFiles: [

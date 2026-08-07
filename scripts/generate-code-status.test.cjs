@@ -16,6 +16,7 @@ const generatorPath = path.join(repoRoot, 'scripts', 'generate-code-status.cjs')
 const policyPath = path.join(repoRoot, 'docs', 'generated-docs-policy.json');
 const prQualityWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'pr-quality-gate.yml');
 const docsDeployWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'docs-deploy.yml');
+const zensicalRequirementsPath = path.join(repoRoot, '.github', 'requirements', 'zensical.lock');
 const workflowScopePath = path.join(repoRoot, 'tools', 'ci', 'policy', 'workflow-scope.json');
 const packageJson = require('../package.json');
 
@@ -530,14 +531,25 @@ test('Repository Map publication provisions the pinned Zensical runtime first', 
   assert.match(setupPython.uses, /^actions\/setup-python@[0-9a-f]{40}$/u);
   assert.match(canonicalSetup.uses, /^actions\/setup-python@[0-9a-f]{40}$/u);
   assert.equal(setupPython.with['python-version'], canonicalSetup.with['python-version']);
+  assert.equal(setupPython.with['python-version'], '3.12.10');
+  assert.equal(setupPython.with.cache, 'pip');
+  assert.equal(setupPython.with['cache-dependency-path'], '.github/requirements/zensical.lock');
+  assert.equal(canonicalSetup.with.cache, setupPython.with.cache);
+  assert.equal(
+    canonicalSetup.with['cache-dependency-path'],
+    setupPython.with['cache-dependency-path']
+  );
   assert.equal(installZensical.run.trim(), canonicalInstall.run.trim());
   assert.equal(
-    installZensical.run
-      .split(/\r?\n/u)
-      .map((line) => line.trim())
-      .includes('python -m pip install zensical==0.0.39'),
-    true
+    installZensical.run.trim(),
+    'python -m pip install --disable-pip-version-check --require-hashes -r .github/requirements/zensical.lock'
   );
+  assert.doesNotMatch(installZensical.run, /--upgrade/u);
+
+  const lockedRequirements = fs.readFileSync(zensicalRequirementsPath, 'utf8');
+  assert.match(lockedRequirements, /^pip==26\.0\.1(?:\s|\\)$/mu);
+  assert.match(lockedRequirements, /^zensical==0\.0\.39(?:\s|\\)$/mu);
+  assert.match(lockedRequirements, /--hash=sha256:[0-9a-f]{64}/u);
 });
 
 test(
