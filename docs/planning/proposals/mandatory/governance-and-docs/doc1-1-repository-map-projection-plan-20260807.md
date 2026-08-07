@@ -131,10 +131,14 @@ flowchart LR
 - The entire synchronous closeout executes while the same Node process owns a
   deterministic operating-system listener: a named pipe on Windows, an
   abstract Unix-domain socket on Linux, or a loopback TCP fallback elsewhere.
+  Its identity is the machine-global `dvt-planning-db` resource rather than a
+  checkout path, so separate clones and worktrees contend for the same owner.
   The operating system performs the atomic bind, rejects every concurrent
-  contender, and releases the endpoint when the process exits; no stale owner
-  record, token comparison, quarantine, or pathname deletion participates in
-  mutual exclusion.
+  contender, and releases the endpoint when the process exits; an explicit
+  path scope fails closed when it cannot be canonicalized, cleanup preserves
+  both task and listener-release failures, and no stale owner record, token
+  comparison, quarantine, or pathname deletion participates in mutual
+  exclusion.
 - PR publication and docs deployment use the same exact Python patch and the
   same hash-locked pip/Zensical dependency graph, with no moving upgrade step.
 - Feature mechanization, docs governance, CI tools, ARC evaluation, and the full
@@ -433,6 +437,13 @@ redGreenCycles:
   - id: os-owned-closeout-socket-review
     redTest: node --test scripts/pr-closeout.test.cjs
     expectedFailure: Check-then-delete recovery can remove a late initializer, a successor marker, or an entire successor lease; repeated ownerless retries can rejuvenate the stale threshold indefinitely, while a fixed Windows loopback port can be reserved by the operating system.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node --test scripts/pr-closeout.test.cjs
+  - id: shared-planning-db-closeout-lock-review
+    redTest: node --test scripts/pr-closeout.test.cjs
+    expectedFailure: Checkout-scoped endpoints allow separate clones to mutate the same machine-global Planning DB concurrently, realpath failure degrades to a second identity, and listener-release failure is hidden when the guarded task also fails.
     patchSurfaces:
       - scripts/pr-closeout.cjs
       - scripts/pr-closeout.test.cjs
