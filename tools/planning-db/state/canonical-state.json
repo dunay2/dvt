@@ -34913,7 +34913,7 @@
       "normalizedRailName": "configureapplicationlanguage",
       "railType": "command",
       "dddOwner": "ApplicationLanguagePreference",
-      "railStatus": "planned",
+      "railStatus": "implemented",
       "symbolRefs": [
         "apps/web/src/app/stores/applicationLanguageStore.ts#configureApplicationLanguage"
       ],
@@ -34935,11 +34935,11 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
-      "sourceContentSha256": "b6e22e69c94d7e8e26469e4fb8497485924390b0413d2eddb4a88932ee5440cd",
+      "sourceContentSha256": "176fce0c1cc08d68db22f483a1c4f33d12dae7c83d789242a65c9bd91a4a2697",
       "rawRail": {
         "name": "ConfigureApplicationLanguage",
         "type": "command",
-        "status": "planned",
+        "status": "implemented",
         "dddOwner": "ApplicationLanguagePreference"
       },
       "rawManifest": {
@@ -34955,17 +34955,19 @@
             "fowlerSignals": [
               "Centralized locale authority removes duplicated leaf detection"
             ],
-            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-workbench-ux-convergence.cy.ts",
+            "cypressCoverage": "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts",
             "architectureGuard": "pnpm --filter @dvt/web test:architecture"
           }
         ],
         "version": 1,
         "featureId": "WORKBENCH-UX-CONVERGENCE-20260806",
         "userStories": [
-          "docs/architecture/components/web/screen-manuals-and-user-stories.md"
+          "docs/architecture/components/web/screen-manuals-and-user-stories.md",
+          "docs/architecture/components/web/workbench-ux-canon-user-stories.md"
         ],
         "cypressFlows": [
-          "apps/web/cypress/e2e/canvas/canvas-workbench-ux-convergence.cy.ts"
+          "apps/web/cypress/e2e/canvas/canvas-workbench-ux-convergence.cy.ts",
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
         ],
         "domainObjects": ["ApplicationLanguagePreference"],
         "fowlerSignals": [
@@ -34979,16 +34981,17 @@
         "redGreenCycles": [
           {
             "id": "configureapplicationlanguage-record",
-            "redTest": "pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts",
-            "greenTest": "pnpm --filter @dvt/web test -- src/app/stores/applicationLanguageStore.test.ts",
+            "redTest": "pnpm --filter @dvt/web test:unit:run -- src/app/stores/applicationLanguageStore.test.ts",
+            "greenTest": "pnpm --filter @dvt/web test:unit:run -- src/app/stores/applicationLanguageStore.test.ts",
             "patchSurfaces": [
               "apps/web/src/app/stores/applicationLanguageStore.ts"
             ],
-            "expectedFailure": "No observable persisted application language command exists"
+            "expectedFailure": "No observable persisted application-language command exists"
           }
         ],
         "componentGuides": [
-          "docs/architecture/components/web/frontend-command-query-rail-inventory.md"
+          "docs/architecture/components/web/frontend-command-query-rail-inventory.md",
+          "docs/architecture/components/web/screen-manuals-and-user-stories.md"
         ],
         "governingSources": [
           "docs/architecture/command-query-rail-governance.md",
@@ -34998,7 +35001,7 @@
           {
             "name": "ConfigureApplicationLanguage",
             "type": "command",
-            "status": "planned",
+            "status": "implemented",
             "dddOwner": "ApplicationLanguagePreference"
           }
         ],
@@ -35009,7 +35012,7 @@
         "allowedImplementationSurfaces": ["apps/web/src", "apps/web/cypress"],
         "forbiddenImplementationSurfaces": ["apps/api"]
       },
-      "revision": 0,
+      "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-06T17:46:27.582Z"
     }
@@ -51941,6 +51944,71 @@
         "forbiddenImplementationSurfaces": ["apps/api"]
       },
       "createdAt": "2026-08-06T17:46:27.582Z"
+    },
+    {
+      "operationId": "06af616a-7fff-4964-9440-6cb2e7ddb68a",
+      "idempotencyKey": "feature_mechanization_rail_record:codex:WORKBENCH-UX-CONVERGENCE-20260806:command:configureapplicationlanguage:0:bfc37497766d6d12",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#WORKBENCH-UX-CONVERGENCE-20260806#command#configureapplicationlanguage",
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+      "sourceContentSha256": "176fce0c1cc08d68db22f483a1c4f33d12dae7c83d789242a65c9bd91a4a2697",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web test:unit:run -- src/app/stores/applicationLanguageStore.test.ts",
+        "dddOwner": "ApplicationLanguagePreference",
+        "railName": "ConfigureApplicationLanguage",
+        "railType": "command",
+        "featureId": "WORKBENCH-UX-CONVERGENCE-20260806",
+        "greenTest": "pnpm --filter @dvt/web test:unit:run -- src/app/stores/applicationLanguageStore.test.ts",
+        "sourceRef": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+        "unitTests": [
+          "apps/web/src/app/stores/applicationLanguageStore.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "docs/architecture/components/web/workbench-ux-canon-user-stories.md"
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/shell/canvas-workbench-screen-composition.cy.ts"
+        ],
+        "domainObjects": ["ApplicationLanguagePreference"],
+        "fowlerSignals": [
+          "Centralized locale authority removes duplicated leaf detection"
+        ],
+        "patchSurfaces": [
+          "apps/web/src/app/stores/applicationLanguageStore.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web test",
+          "pnpm docs:feature-mechanization:implementation -- --feature WORKBENCH-UX-CONVERGENCE-20260806",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": [
+          "docs/architecture/components/web/screen-manuals-and-user-stories.md"
+        ],
+        "expectedFailure": "No observable persisted application-language command exists",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/architecture/components/web/frontend-command-query-rail-inventory.md"
+        ],
+        "architectureGuards": ["pnpm --filter @dvt/web test:architecture"],
+        "implementationPlan": "docs/planning/proposals/mandatory/frontend-and-ux/cux1-wux1-workbench-ux-convergence-plan-20260806.md",
+        "implementationRefs": [
+          "apps/web/src/app/stores/applicationLanguageStore.ts#configureApplicationLanguage"
+        ],
+        "normalizedRailName": "configureapplicationlanguage",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "176fce0c1cc08d68db22f483a1c4f33d12dae7c83d789242a65c9bd91a4a2697",
+        "allowedImplementationSurfaces": ["apps/web/src", "apps/web/cypress"],
+        "forbiddenImplementationSurfaces": ["apps/api"]
+      },
+      "createdAt": "2026-08-07T00:18:43.713Z"
     }
   ]
 }
