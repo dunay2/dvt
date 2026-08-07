@@ -13,7 +13,9 @@ const {
   probePlanningDbActive,
   readProcessIdentity,
   releaseCloseoutLease,
+  resolveCloseoutLockEndpoint,
   resolveCommandInvocation,
+  runWithCloseoutLock,
 } = require('./pr-closeout.cjs');
 
 function stepIds(plan) {
@@ -63,6 +65,57 @@ test('buildPrCloseoutPlan commits before the only full prepush validation and pu
     commandLabel(plan.find((step) => step.id === 'commit')),
     'pnpm commit chore ci "Mechanize PR closeout"'
   );
+});
+
+test('OS-owned closeout lock serializes contenders and releases after completion', async () => {
+  const endpoint = resolveCloseoutLockEndpoint(`test-${process.pid}-${Date.now()}`);
+  let releaseFirst;
+  let firstStarted;
+  const started = new Promise((resolve) => {
+    firstStarted = resolve;
+  });
+  const hold = new Promise((resolve) => {
+    releaseFirst = resolve;
+  });
+
+  const first = runWithCloseoutLock(
+    async () => {
+      firstStarted();
+      await hold;
+      return 'first-complete';
+    },
+    { endpoint }
+  );
+  await started;
+
+  await assert.rejects(
+    runWithCloseoutLock(() => 'second-complete', { endpoint }),
+    /PR_CLOSEOUT_LEASE_BUSY/u
+  );
+  releaseFirst();
+  assert.equal(await first, 'first-complete');
+  assert.equal(await runWithCloseoutLock(() => 'third-complete', { endpoint }), 'third-complete');
+});
+
+test('OS-owned closeout lock releases automatically when the guarded task fails', async () => {
+  const endpoint = resolveCloseoutLockEndpoint(`failure-${process.pid}-${Date.now()}`);
+
+  await assert.rejects(
+    runWithCloseoutLock(
+      () => {
+        throw new Error('guarded closeout failed');
+      },
+      { endpoint }
+    ),
+    /guarded closeout failed/u
+  );
+
+  assert.equal(await runWithCloseoutLock(() => 'recovered', { endpoint }), 'recovered');
+});
+
+test('closeout mutual exclusion has no mutable owner or recovery records', () => {
+  const source = fs.readFileSync(path.join(__dirname, 'pr-closeout.cjs'), 'utf8');
+  assert.doesNotMatch(source, /owner\.json|recovery\.json|readProcessIdentity/u);
 });
 
 test('closeout lease rejects a concurrent owner and transfers only after release', (t) => {
