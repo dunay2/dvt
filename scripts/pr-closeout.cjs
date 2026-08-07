@@ -572,6 +572,7 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
     }
   };
 
+  let recoveredStaleReservation = false;
   for (let attempt = 0; attempt < 4; attempt += 1) {
     let createdLeaseDirectory = false;
     let observedLeaseAgeMs;
@@ -589,7 +590,9 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
       const ownerBeforeReservation = readCloseoutLeaseOwner(leaseDir, options);
       observedLeaseAgeMs = ownerBeforeReservation
         ? Number.POSITIVE_INFINITY
-        : readInitializationAge(ownerPath, leaseDir);
+        : recoveredStaleReservation
+          ? Number.POSITIVE_INFINITY
+          : readInitializationAge(ownerPath, leaseDir);
       if (observedLeaseAgeMs === null) continue;
     }
 
@@ -640,6 +643,7 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
 
       try {
         rmSync(recoveryPath, { force: false });
+        recoveredStaleReservation = true;
       } catch (recoveryError) {
         if (recoveryError?.code === 'ENOENT') continue;
         throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${recoveryError.message}`, {

@@ -394,7 +394,6 @@ test('closeout lease recovers a stale recovery reservation', (t) => {
       createLeaseToken: () => 'successor-token',
       getProcessIdentity: () => 'test:successor-process',
       isProcessActive: () => false,
-      closeoutLeaseInitializationGraceMs: 0,
     },
     runtime
   );
