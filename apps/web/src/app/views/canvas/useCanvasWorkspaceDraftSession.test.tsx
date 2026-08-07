@@ -14,6 +14,34 @@ describe('useCanvasWorkspaceDraftSession', () => {
     ).IS_REACT_ACT_ENVIRONMENT = true;
   });
 
+  it('does not rerender when a reconciliation preserves the current session', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    let renderCount = 0;
+    let latestSession: CanvasDraftSession | null = null;
+    let latestSetter: Dispatch<SetStateAction<CanvasDraftSession>> | null = null;
+
+    function HookHost(): null {
+      renderCount += 1;
+      [latestSession, latestSetter] = useCanvasWorkspaceDraftSession('tenant::project-a::dev');
+      return null;
+    }
+
+    await act(async () => {
+      root.render(<HookHost />);
+    });
+    const initialSession = latestSession;
+
+    await act(async () => {
+      latestSetter?.((currentSession) => currentSession);
+    });
+
+    expect(latestSession).toBe(initialSession);
+    expect(renderCount).toBe(1);
+
+    act(() => root.unmount());
+  });
+
   it('starts each workspace in isolation and ignores late updates from the previous scope', async () => {
     const container = document.createElement('div');
     const root = createRoot(container);

@@ -43,9 +43,14 @@ export function useCanvasWorkspaceDraftSession(
             ? current.session
             : canvasDraftSession.machine.createBootstrapping();
 
+        const nextSession = resolveStateUpdate(update, currentSession);
+        if (current.workspaceLayoutKey === workspaceLayoutKey && nextSession === currentSession) {
+          return current;
+        }
+
         return {
           workspaceLayoutKey,
-          session: resolveStateUpdate(update, currentSession),
+          session: nextSession,
         };
       });
     },
