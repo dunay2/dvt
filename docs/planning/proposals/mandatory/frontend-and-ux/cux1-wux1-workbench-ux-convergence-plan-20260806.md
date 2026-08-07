@@ -176,6 +176,7 @@ forbiddenImplementationSurfaces:
 commandQueryRails:
   - name: ConfigureApplicationLanguage
     type: command
+    status: implemented
     dddOwner: ApplicationLanguagePreference value object
   - name: SelectWorkspaceScope
     type: command
