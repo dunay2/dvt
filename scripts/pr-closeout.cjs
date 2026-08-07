@@ -115,7 +115,6 @@ function buildPrCloseoutPlan(options = {}) {
   const workspaceSourceChanged = hasWorkspaceSourceChange(changedFiles);
   const repositoryMapSourceChanged = hasRepositoryMapSourceChange(changedFiles);
   const governanceRefreshChanged = hasGovernanceRefreshChange(changedFiles);
-  const needsPlanningDbLifecycle = repositoryMapSourceChanged || governanceRefreshChanged;
   const steps = [];
 
   if (changedFiles.length === 0) {
@@ -144,28 +143,26 @@ function buildPrCloseoutPlan(options = {}) {
     });
   }
 
-  if (needsPlanningDbLifecycle) {
-    pushStepOnce(steps, {
-      id: 'planning-db-ownership',
-      internal: 'capturePlanningDbOwnership',
-      label: 'detect Planning DB ownership',
-    });
-    pushStepOnce(steps, {
-      id: 'planning-db-up',
-      command: 'pnpm',
-      args: ['planning:db:up'],
-    });
-    pushStepOnce(steps, {
-      id: 'planning-db-health',
-      command: 'pnpm',
-      args: ['planning:db:health', '--wait'],
-    });
-    pushStepOnce(steps, {
-      id: 'planning-db-migrate',
-      command: 'pnpm',
-      args: ['planning:db:migrate'],
-    });
-  }
+  pushStepOnce(steps, {
+    id: 'planning-db-ownership',
+    internal: 'capturePlanningDbOwnership',
+    label: 'detect Planning DB ownership',
+  });
+  pushStepOnce(steps, {
+    id: 'planning-db-up',
+    command: 'pnpm',
+    args: ['planning:db:up'],
+  });
+  pushStepOnce(steps, {
+    id: 'planning-db-health',
+    command: 'pnpm',
+    args: ['planning:db:health', '--wait'],
+  });
+  pushStepOnce(steps, {
+    id: 'planning-db-migrate',
+    command: 'pnpm',
+    args: ['planning:db:migrate'],
+  });
 
   if (repositoryMapSourceChanged && !governanceRefreshChanged) {
     pushStepOnce(steps, {
@@ -220,13 +217,11 @@ function buildPrCloseoutPlan(options = {}) {
     args: ['verify:prepush', '--', '--full'],
   });
 
-  if (needsPlanningDbLifecycle) {
-    pushStepOnce(steps, {
-      id: 'planning-db-release',
-      internal: 'releasePlanningDbIfOwned',
-      label: 'release owned Planning DB',
-    });
-  }
+  pushStepOnce(steps, {
+    id: 'planning-db-release',
+    internal: 'releasePlanningDbIfOwned',
+    label: 'release owned Planning DB',
+  });
 
   if (options.push) {
     pushStepOnce(steps, {
