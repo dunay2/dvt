@@ -31,6 +31,7 @@ type DeriveCanvasExecutionStateArgs = {
   workspaceNodeIds: string[];
   latestPreviewOutcome: PlanPreviewOutcome | null;
   executionScope?: ObjectFilePostgresExecutionScope;
+  applicationLanguage?: string;
 };
 
 export type CanvasExecutionState = {
@@ -73,6 +74,7 @@ export function deriveCanvasExecutionState({
   workspaceNodeIds,
   latestPreviewOutcome,
   executionScope,
+  applicationLanguage,
 }: DeriveCanvasExecutionStateArgs): CanvasExecutionState {
   const previewOutcomeProjection =
     latestPreviewOutcome == null ? null : projectCanvasPreviewOutcome(latestPreviewOutcome);
@@ -139,7 +141,10 @@ export function deriveCanvasExecutionState({
     !isExecutableGraphReady
       ? dbtPlannerProjection?.ok === false
         ? dbtPlannerProjection.message
-        : formatTransformationGraphValidationSummary(transformationValidation.summaryCode)
+        : formatTransformationGraphValidationSummary(
+            transformationValidation.summaryCode,
+            applicationLanguage
+          )
       : null;
   const planRunReadinessSource = observePlanRunReadiness({
     canRun,
@@ -148,6 +153,7 @@ export function deriveCanvasExecutionState({
     persistedPreviewIdentityMismatch,
     hasPersistedPlanForRun,
     capabilityMismatch: executionStrategy == null || executionStrategy.kind === 'not_executable',
+    locale: applicationLanguage,
   });
   const authoritativePreviewReason = previewOutcomeProjection?.diagnostic?.reason;
   const planRunReadiness =

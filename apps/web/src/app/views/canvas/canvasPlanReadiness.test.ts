@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { mockExecutionPlan } from '../../../testing/fixtures/mockDbtData';
 import { makePlanRef } from '../../testing/contractTestUtils';
-import { canvasViewCopy } from './copy';
+import { canvasViewCopy, resolveCanvasViewCopy } from './copy';
 import {
   observePlanRunReadiness,
   hasPersistedPreviewProof,
@@ -103,6 +103,23 @@ describe('canvasPlanReadiness', () => {
       status: 'ready',
       summary: canvasViewCopy.planStatusPreviewReadyMessage,
     });
+  });
+
+  it('resolves the readiness summary from the requested application language', () => {
+    const args = {
+      canRun: true,
+      currentPlan: null,
+      isCurrentPlanStale: false,
+      persistedPreviewIdentityMismatch: false,
+      hasPersistedPlanForRun: false,
+    } as const;
+
+    expect(observePlanRunReadiness({ ...args, locale: 'en' }).summary).toBe(
+      resolveCanvasViewCopy('en').planStatusPreviewRequiredMessage
+    );
+    expect(observePlanRunReadiness({ ...args, locale: 'es' }).summary).toBe(
+      resolveCanvasViewCopy('es').planStatusPreviewRequiredMessage
+    );
   });
 
   it.each([

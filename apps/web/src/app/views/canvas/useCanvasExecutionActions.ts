@@ -12,6 +12,7 @@ import { useCanvasPlanActionHandler } from './useCanvasPlanActionHandler';
 import { useCanvasRunStartHandler } from './useCanvasRunStartHandler';
 import type { PlanPreviewOutcome } from '../../ports/plans';
 import { doesPreviewOutcomeOwnPlan } from './canvasPreviewOutcomeProjection';
+import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 
 function normalizeExecutionEnvironmentId(
   environmentId: WorkspaceScope['environmentId'] | undefined
@@ -83,6 +84,7 @@ export function useCanvasExecutionActions({
   toggleBottomDrawer,
   onRunStarted,
 }: UseCanvasExecutionActionsParams): UseCanvasExecutionActionsResult {
+  const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const [planModalOpen, setPlanModalOpen] = useState(false);
   const [lastPlannedDraftSignature, setLastPlannedDraftSignature] = useState<string | null>(null);
   const [latestPreviewOutcome, setLatestPreviewOutcome] = useState<PlanPreviewOutcome | null>(null);
@@ -101,6 +103,7 @@ export function useCanvasExecutionActions({
     workspaceNodeIds,
     latestPreviewOutcome,
     executionScope: executionSessionContext.getWorkspaceScopeSnapshot(),
+    applicationLanguage,
   });
   const {
     transformationValidation,
