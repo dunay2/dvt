@@ -31,6 +31,8 @@ const commit = {
   scope: 'ci',
   subject: 'Mechanize PR closeout',
 };
+const testProcessStartedAt = Date.parse('2026-08-07T09:00:00.000Z');
+const getTestProcessStartedAt = () => testProcessStartedAt;
 
 test('buildPrCloseoutPlan commits before the only full prepush validation and push', () => {
   const plan = buildPrCloseoutPlan({
@@ -75,6 +77,7 @@ test('closeout lease rejects a concurrent owner and transfers only after release
       closeoutLeaseDir: leaseDir,
       processId: 101,
       createLeaseToken: () => 'first-token',
+      getProcessStartedAt: getTestProcessStartedAt,
       isProcessActive: (pid) => pid === 101,
     },
     first
@@ -87,6 +90,7 @@ test('closeout lease rejects a concurrent owner and transfers only after release
           closeoutLeaseDir: leaseDir,
           processId: 202,
           createLeaseToken: () => 'second-token',
+          getProcessStartedAt: getTestProcessStartedAt,
           isProcessActive: (pid) => pid === 101,
         },
         second
@@ -101,6 +105,7 @@ test('closeout lease rejects a concurrent owner and transfers only after release
       closeoutLeaseDir: leaseDir,
       processId: 202,
       createLeaseToken: () => 'second-token',
+      getProcessStartedAt: getTestProcessStartedAt,
       isProcessActive: () => false,
     },
     second
@@ -152,6 +157,7 @@ test('closeout lease recovers a stale owner without deleting a live successor', 
       closeoutLeaseDir: leaseDir,
       processId: 202,
       createLeaseToken: () => 'successor-token',
+      getProcessStartedAt: getTestProcessStartedAt,
       isProcessActive: () => false,
     },
     runtime
@@ -197,6 +203,13 @@ test('process start identity derives a stable Linux epoch and fails closed on un
     processIdentitySpawnCommand: () => ({ status: 0, stdout: '100\n' }),
   });
   assert.equal(startedAt, 1_002_500);
+  assert.equal(
+    readProcessStartedAt(101, {
+      platform: 'win32',
+      processIdentitySpawnCommand: () => ({ status: 0, stdout: '1786100400123' }),
+    }),
+    1_786_100_400_123
+  );
 
   assert.throws(
     () =>
@@ -252,6 +265,58 @@ test('closeout lease recovers a stale owner after its PID is reused', (t) => {
   releaseCloseoutLease({}, runtime);
 });
 
+test('closeout lease restores quarantine when process identity becomes unreadable', (t) => {
+  const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-identity-read-'));
+  const leaseDir = path.join(leaseRoot, 'lease');
+  const ownerPath = path.join(leaseDir, 'owner.json');
+  const runtime = {};
+  const originalProcessStartedAt = Date.parse('2026-08-07T10:00:00.000Z');
+  const reusedProcessStartedAt = Date.parse('2026-08-07T11:00:00.000Z');
+  const successorProcessStartedAt = Date.parse('2026-08-07T12:00:00.000Z');
+  let ownerIdentityReads = 0;
+  t.after(() => fs.rmSync(leaseRoot, { recursive: true, force: true }));
+  fs.mkdirSync(leaseDir);
+  fs.writeFileSync(
+    ownerPath,
+    `${JSON.stringify({
+      pid: 101,
+      token: 'original-token',
+      startedAt: '2026-08-07T10:05:00.000Z',
+      processStartedAt: new Date(originalProcessStartedAt).toISOString(),
+    })}\n`,
+    'utf8'
+  );
+
+  assert.throws(
+    () =>
+      acquireCloseoutLease(
+        {
+          closeoutLeaseDir: leaseDir,
+          processId: 202,
+          createLeaseToken: () => 'successor-token',
+          isProcessActive: (pid) => pid === 101,
+          getProcessStartedAt: (pid) => {
+            if (pid === 202) return successorProcessStartedAt;
+            ownerIdentityReads += 1;
+            if (ownerIdentityReads === 1) return reusedProcessStartedAt;
+            throw new Error('identity access denied');
+          },
+        },
+        runtime
+      ),
+    /identity access denied/u
+  );
+
+  const owner = JSON.parse(fs.readFileSync(ownerPath, 'utf8'));
+  assert.equal(owner.pid, 101);
+  assert.equal(owner.token, 'original-token');
+  assert.equal(runtime.closeoutLeaseOwned, undefined);
+  assert.deepEqual(
+    fs.readdirSync(leaseRoot).filter((entry) => entry.includes('.stale-')),
+    []
+  );
+});
+
 test('closeout lease recovers an ownerless directory after the initialization grace', (t) => {
   const leaseRoot = fs.mkdtempSync(path.join(process.cwd(), '.tmp-pr-closeout-ownerless-'));
   const leaseDir = path.join(leaseRoot, 'lease');
@@ -260,6 +325,7 @@ test('closeout lease recovers an ownerless directory after the initialization gr
     closeoutLeaseDir: leaseDir,
     processId: 202,
     createLeaseToken: () => 'successor-token',
+    getProcessStartedAt: getTestProcessStartedAt,
     closeoutLeaseInitializationGraceMs: 30_000,
     statSync: () => ({ mtimeMs: 1_000 }),
   };
@@ -291,6 +357,7 @@ test('closeout lease bounds recovery of partially written owner files by the ini
       closeoutLeaseDir: leaseDir,
       processId: 202,
       createLeaseToken: () => `successor-token-${index}`,
+      getProcessStartedAt: getTestProcessStartedAt,
       closeoutLeaseInitializationGraceMs: 30_000,
       isProcessActive: () => false,
       statSync: (target) => {
@@ -328,6 +395,7 @@ test('closeout lease restores an owner that appears while the directory enters q
           closeoutLeaseDir: leaseDir,
           processId: 202,
           createLeaseToken: () => 'successor-token',
+          getProcessStartedAt: getTestProcessStartedAt,
           closeoutLeaseInitializationGraceMs: 30_000,
           statSync: () => ({ mtimeMs: 1_000 }),
           now: () => 31_000,
@@ -367,6 +435,7 @@ test('closeout lease verifies its visible token before claiming ownership', (t) 
           closeoutLeaseDir: leaseDir,
           processId: 101,
           createLeaseToken: () => 'initializer-token',
+          getProcessStartedAt: getTestProcessStartedAt,
           writeFileSync: (filePath, value, options) => {
             fs.writeFileSync(filePath, value, options);
             fs.writeFileSync(
@@ -400,6 +469,7 @@ test('closeout lease retries a vanished ownerless directory and fails closed on 
       closeoutLeaseDir: vanishedLeaseDir,
       processId: 101,
       createLeaseToken: () => 'retry-token',
+      getProcessStartedAt: getTestProcessStartedAt,
       mkdirSync: (target) => {
         mkdirAttempts += 1;
         if (mkdirAttempts === 1) {
@@ -457,6 +527,7 @@ test('closeout lease refuses to delete a successor token', (t) => {
       closeoutLeaseDir: leaseDir,
       processId: 101,
       createLeaseToken: () => 'original-token',
+      getProcessStartedAt: getTestProcessStartedAt,
     },
     runtime
   );

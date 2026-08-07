@@ -356,6 +356,104 @@ function isProcessActive(processId) {
   }
 }
 
+function readProcessStartedAt(processId, options = {}) {
+  if (!Number.isSafeInteger(processId) || processId <= 0) return null;
+
+  const platform = options.platform || process.platform;
+  const readFileSync = options.processIdentityReadFileSync || fs.readFileSync;
+  const spawnCommand = options.processIdentitySpawnCommand || spawnSync;
+
+  if (platform === 'linux') {
+    let processStat;
+    try {
+      processStat = readFileSync(`/proc/${processId}/stat`, 'utf8');
+    } catch (error) {
+      if (error?.code === 'ENOENT') return null;
+      throw new Error(`PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: ${error.message}`, { cause: error });
+    }
+
+    try {
+      const commandEnd = processStat.lastIndexOf(')');
+      const processFields = processStat
+        .slice(commandEnd + 1)
+        .trim()
+        .split(/\s+/u);
+      const startTicks = Number(processFields[19]);
+      const bootTimeMatch = readFileSync('/proc/stat', 'utf8').match(/^btime\s+(\d+)$/mu);
+      const ticksResult = spawnCommand('getconf', ['CLK_TCK'], {
+        encoding: 'utf8',
+        windowsHide: true,
+      });
+      if (ticksResult.error) throw ticksResult.error;
+      if (ticksResult.status !== 0) {
+        throw new Error(`getconf CLK_TCK exited with ${ticksResult.status ?? 1}`);
+      }
+      const ticksPerSecond = Number(String(ticksResult.stdout).trim());
+      const bootTimeSeconds = Number(bootTimeMatch?.[1]);
+      if (
+        commandEnd < 0 ||
+        !Number.isFinite(startTicks) ||
+        !Number.isFinite(bootTimeSeconds) ||
+        !Number.isFinite(ticksPerSecond) ||
+        ticksPerSecond <= 0
+      ) {
+        throw new Error('invalid Linux process timing data');
+      }
+      return bootTimeSeconds * 1_000 + (startTicks * 1_000) / ticksPerSecond;
+    } catch (error) {
+      throw new Error(`PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: ${error.message}`, { cause: error });
+    }
+  }
+
+  if (platform === 'win32') {
+    const script = [
+      `$process = Get-Process -Id ${processId} -ErrorAction SilentlyContinue`,
+      'if ($null -eq $process) { exit 3 }',
+      '[Console]::Out.Write(([DateTimeOffset]$process.StartTime.ToUniversalTime()).ToUnixTimeMilliseconds())',
+    ].join('; ');
+    const result = spawnCommand(
+      'powershell.exe',
+      ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
+      { encoding: 'utf8', windowsHide: true }
+    );
+    if (result.error) {
+      throw new Error(`PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: ${result.error.message}`, {
+        cause: result.error,
+      });
+    }
+    if (result.status === 3) return null;
+    if (result.status !== 0) {
+      throw new Error(
+        `PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: PowerShell exited with ${result.status ?? 1}`
+      );
+    }
+    const startedAt = Number(String(result.stdout).trim());
+    if (!Number.isFinite(startedAt)) {
+      throw new Error('PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: invalid Windows process timing data');
+    }
+    return startedAt;
+  }
+
+  const result = spawnCommand('ps', ['-o', 'lstart=', '-p', String(processId)], {
+    encoding: 'utf8',
+    windowsHide: true,
+  });
+  if (result.error) {
+    throw new Error(`PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: ${result.error.message}`, {
+      cause: result.error,
+    });
+  }
+  if (result.status === 1) return null;
+  if (result.status !== 0) {
+    throw new Error(`PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: ps exited with ${result.status ?? 1}`);
+  }
+  const startedAt = Date.parse(String(result.stdout).trim());
+  if (!Number.isFinite(startedAt)) {
+    throw new Error('PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: invalid process timing data');
+  }
+  return startedAt;
+}
+
 function readCloseoutLeaseOwner(leaseDir, options = {}) {
   const readFileSync = options.readFileSync || fs.readFileSync;
   let ownerContents;
@@ -380,7 +478,10 @@ function readCloseoutLeaseOwner(leaseDir, options = {}) {
     !Number.isSafeInteger(owner.pid) ||
     owner.pid <= 0 ||
     typeof owner.token !== 'string' ||
-    owner.token.length === 0
+    owner.token.length === 0 ||
+    (owner.processStartedAt !== undefined &&
+      (typeof owner.processStartedAt !== 'string' ||
+        !Number.isFinite(Date.parse(owner.processStartedAt))))
   ) {
     return null;
   }
@@ -393,6 +494,8 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
   const processId = options.processId || process.pid;
   const createLeaseToken = options.createLeaseToken || randomUUID;
   const processIsActive = options.isProcessActive || isProcessActive;
+  const getProcessStartedAt =
+    options.getProcessStartedAt || ((pid) => readProcessStartedAt(pid, options));
   const mkdirSync = options.mkdirSync || fs.mkdirSync;
   const writeFileSync = options.writeFileSync || fs.writeFileSync;
   const renameSync = options.renameSync || fs.renameSync;
@@ -402,6 +505,26 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
   const initializationGraceMs =
     options.closeoutLeaseInitializationGraceMs ?? closeoutLeaseInitializationGraceMs;
   const token = createLeaseToken();
+  const processStartedAt = getProcessStartedAt(processId);
+
+  if (!Number.isFinite(processStartedAt)) {
+    throw new Error(
+      'PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: current process start time is unavailable.'
+    );
+  }
+
+  const ownerIsActive = (owner) => {
+    if (!processIsActive(owner.pid)) return false;
+    if (!owner.processStartedAt) return true;
+    const observedProcessStartedAt = getProcessStartedAt(owner.pid);
+    if (observedProcessStartedAt === null) return false;
+    if (!Number.isFinite(observedProcessStartedAt)) {
+      throw new Error(
+        `PR_CLOSEOUT_PROCESS_IDENTITY_FAILED: process ${owner.pid} start time is unavailable.`
+      );
+    }
+    return new Date(observedProcessStartedAt).toISOString() === owner.processStartedAt;
+  };
 
   if (!Number.isFinite(initializationGraceMs) || initializationGraceMs < 0) {
     throw new Error('PR_CLOSEOUT_LEASE_INVALID_GRACE: expected a non-negative millisecond value.');
@@ -447,7 +570,7 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
         owner = readCloseoutLeaseOwner(leaseDir, options);
       }
 
-      if (owner && processIsActive(owner.pid)) {
+      if (owner && ownerIsActive(owner)) {
         const ownerLabel = owner?.pid ? ` process ${owner.pid}` : ' an initializing process';
         throw new Error(`PR_CLOSEOUT_LEASE_BUSY: owned by${ownerLabel}. Retry after it finishes.`, {
           cause: error,
@@ -478,7 +601,21 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
         throw ownerReadError;
       }
 
-      if (quarantinedOwner && processIsActive(quarantinedOwner.pid)) {
+      let quarantinedOwnerActive;
+      try {
+        quarantinedOwnerActive = Boolean(quarantinedOwner && ownerIsActive(quarantinedOwner));
+      } catch (identityError) {
+        try {
+          renameSync(staleLeaseDir, leaseDir);
+        } catch (restoreError) {
+          throw new Error(`PR_CLOSEOUT_LEASE_RECOVERY_FAILED: ${restoreError.message}`, {
+            cause: restoreError,
+          });
+        }
+        throw identityError;
+      }
+
+      if (quarantinedOwnerActive) {
         try {
           renameSync(staleLeaseDir, leaseDir);
         } catch (restoreError) {
@@ -505,7 +642,12 @@ function acquireCloseoutLease(options = {}, runtime = {}) {
     try {
       writeFileSync(
         path.join(leaseDir, closeoutLeaseOwnerFile),
-        `${JSON.stringify({ pid: processId, token, startedAt: new Date().toISOString() })}\n`,
+        `${JSON.stringify({
+          pid: processId,
+          token,
+          startedAt: new Date().toISOString(),
+          processStartedAt: new Date(processStartedAt).toISOString(),
+        })}\n`,
         { encoding: 'utf8', flag: 'wx' }
       );
     } catch (error) {
@@ -802,6 +944,7 @@ module.exports = {
   listPrCloseoutStagedFiles,
   parseArgs,
   probePlanningDbActive,
+  readProcessStartedAt,
   releaseCloseoutLease,
   resolveCommandInvocation,
   runCommand,
