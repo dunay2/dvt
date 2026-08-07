@@ -128,9 +128,9 @@ flowchart LR
   cleanup.
 - Every closeout input class prepares Planning DB before the unconditional full
   pre-push consumer, including code/config files outside Repository Map scope.
-- A partially written or schema-invalid closeout owner remains fail-closed
-  during the initialization grace and becomes recoverable only when its owner
-  file has reached that same bounded stale threshold.
+- A partially written or schema-invalid closeout owner or recovery reservation
+  remains fail-closed during the initialization grace and becomes recoverable
+  only when that record has reached the same bounded stale threshold.
 - A live PID is accepted as the lease owner only when its OS process-start
   identity matches the recorded owner identity; PID reuse is recoverable and
   an unreadable identity remains fail-closed.
