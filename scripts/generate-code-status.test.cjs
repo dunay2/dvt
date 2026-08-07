@@ -12,6 +12,7 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const repoRoot = path.resolve(__dirname, '..');
 const generatorPath = path.join(repoRoot, 'scripts', 'generate-code-status.cjs');
 const policyPath = path.join(repoRoot, 'docs', 'generated-docs-policy.json');
+const prQualityWorkflowPath = path.join(repoRoot, '.github', 'workflows', 'pr-quality-gate.yml');
 const packageJson = require('../package.json');
 
 const {
@@ -313,6 +314,17 @@ test('generator no longer reads the empty documentation panel binding', () => {
   assert.match(source, /not in \('deprecated', 'drift'\)/u);
   assert.match(source, /pnpmCommand\(\)/u);
   assert.doesNotMatch(source, /npm_lifecycle_event === 'docs:status:check'/u);
+});
+
+test('live Planning DB workflow provides explicit Git refs to the importer', () => {
+  const workflow = fs.readFileSync(prQualityWorkflowPath, 'utf8');
+  const liveStep = workflow.match(
+    /- name: Prove Repository Map against migrated and imported Planning DB[\s\S]*?(?=\n\s+- name:)/u
+  )?.[0];
+
+  assert.ok(liveStep, 'expected the live Repository Map workflow step');
+  assert.match(liveStep, /GIT_BASE: \$\{\{ github\.event\.pull_request\.base\.sha \}\}/u);
+  assert.match(liveStep, /GIT_HEAD: \$\{\{ github\.sha \}\}/u);
 });
 
 test(
