@@ -104,6 +104,45 @@ export function useCanvasContextMenuPresenter({
     [openCanvasContextMenu]
   );
 
+  const openAddNodeCatalog = useCallback(
+    (screenPosition: CanvasContextMenuPosition, opener?: HTMLElement) => {
+      const flowPosition = screenToFlowPosition(screenPosition);
+      const sourceModel = buildCanvasContextMenuModel({
+        target: {
+          kind: 'pane',
+          screenPosition,
+          flowPosition,
+        },
+        canMutateGraph: canEditEdges,
+        canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
+        canOpenCanvasSettings: Boolean(canOpenCanvasSettings && onOpenCanvasSettings),
+        authoringNodeKinds,
+      });
+
+      markContextMenuOpened({ targetKind: 'pane', screenPosition, opener });
+      flushSync(() => {
+        setModel(
+          buildCanvasAddNodeCatalogMenuModel({
+            sourceModel,
+            authoringNodeKinds,
+            canOpenSourceImport: Boolean(canOpenSourceImport && onOpenSourceImport),
+            canCreateAuthoringNodes: canEditEdges,
+          })
+        );
+      });
+    },
+    [
+      authoringNodeKinds,
+      canEditEdges,
+      canOpenCanvasSettings,
+      canOpenSourceImport,
+      markContextMenuOpened,
+      onOpenCanvasSettings,
+      onOpenSourceImport,
+      screenToFlowPosition,
+    ]
+  );
+
   const handleViewportContextMenu = useCallback(
     (event: ReactMouseEvent<HTMLDivElement>) => {
       handleViewportContextMenuEvent(event);
@@ -235,6 +274,7 @@ export function useCanvasContextMenuPresenter({
     contextSurfaceRef,
     closeContextMenu,
     restoreContextMenuOpenerFocus,
+    openAddNodeCatalog,
     handlePaneClick,
     handleViewportContextMenu,
     handleViewportContextMenuKeyDown,

@@ -53,6 +53,7 @@ export type UseCanvasContextMenuPresenterResult = Readonly<{
   contextSurfaceRef: RefObject<HTMLDivElement>;
   closeContextMenu: (options?: CloseCanvasContextMenuOptions) => void;
   restoreContextMenuOpenerFocus: () => void;
+  openAddNodeCatalog: (screenPosition: CanvasContextMenuPosition, opener?: HTMLElement) => void;
   handlePaneClick: (event: PaneClickEvent) => void;
   handleViewportContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => void;
   handleViewportContextMenuKeyDown: (event: ContextMenuKeyboardEvent) => void;

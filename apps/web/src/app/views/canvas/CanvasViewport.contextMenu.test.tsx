@@ -91,6 +91,27 @@ describe('CanvasViewport context menus', () => {
     expect(props.onCreateAuthoringNode).toHaveBeenCalledWith(sourceKind, { x: 580, y: 280 });
   });
 
+  it('exposes the governed Add component catalog as a visible primary command', async () => {
+    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
+    await renderViewport({
+      authoringNodeKinds: [sourceKind],
+      onCreateAuthoringNode: vi.fn(),
+    });
+
+    const addComponentButton = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-add-component-command"]'
+    );
+    expect(addComponentButton?.textContent).toContain('Add component');
+
+    await act(async () => {
+      addComponentButton?.click();
+    });
+
+    expect(getMenuText()).toContain('Add component');
+    expect(findButton('Add source')).toBeDefined();
+    expect(xyflowState.screenToFlowPosition).toHaveBeenCalledTimes(1);
+  });
+
   it('opens a governed create-node menu from the viewport context surface', async () => {
     const sourceKind = buildTestNodeKind('dvt:source', 'Source');
     await renderViewport({

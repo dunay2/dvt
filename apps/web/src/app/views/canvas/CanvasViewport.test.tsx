@@ -77,6 +77,7 @@ describe('CanvasViewport', () => {
 
     expect(Array.from(container.querySelectorAll('button'), (button) => button.ariaLabel)).toEqual([
       canvasViewCopy.canvasGraphFilterLabel,
+      canvasViewCopy.canvasAddNodeCatalogTitle,
     ]);
     expect(viewportDataset?.canvasPalette).toBe(normalizedCanvasPalette);
     expect(viewportStyle.getPropertyValue('--canvas-surface')).toBe(expectedPaletteTokens.surface);
