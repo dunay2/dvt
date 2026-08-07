@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 
 import { readArchitectureSiblingSource } from '../../views/architecture.test.support';
+import {
+  fallbackGraphNodeClasses,
+  graphNodeCardSurfaceClasses,
+  graphNodeColumnClasses,
+  graphNodeMetricRowClasses,
+  graphNodeOperationalRailClasses,
+  graphNodeStatusChipClasses,
+  graphNodeTagListClasses,
+} from './graphVisualTokens';
 
 const TOKEN_SOURCE = readArchitectureSiblingSource(import.meta.dirname, 'graphVisualTokens.ts');
 const GRAPH_RENDERER_SOURCE = readArchitectureSiblingSource(
@@ -101,6 +110,22 @@ const GRAPH_CARD_PRESENTATION_SOURCES = [
 ];
 
 describe('React Flow visual token convergence architecture', () => {
+  it('keeps primary graph-node copy at a readable source size before viewport scaling', () => {
+    const primaryCopyClasses = [
+      graphNodeCardSurfaceClasses.root,
+      graphNodeMetricRowClasses.root,
+      graphNodeTagListClasses.tag,
+      graphNodeOperationalRailClasses.label,
+      graphNodeOperationalRailClasses.value,
+      fallbackGraphNodeClasses.card,
+      fallbackGraphNodeClasses.kind,
+      graphNodeColumnClasses.row,
+      graphNodeStatusChipClasses.base,
+    ];
+
+    expect(primaryCopyClasses.join(' ')).not.toMatch(/text-\[(?:9|10|11)px\]/);
+  });
+
   it('keeps graph visual values behind the graph token component', () => {
     expect(TOKEN_SOURCE).toContain('Owned concern: own React Flow graph visual tokens');
     expect(TOKEN_SOURCE).toContain('graphNodeCardSurfaceClasses');

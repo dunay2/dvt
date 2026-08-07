@@ -4,7 +4,7 @@ import type { CSSProperties } from 'react';
 import type { PluginNodeKind } from '../../types/canonical';
 
 export const graphNodeCardSurfaceClasses = {
-  root: 'group w-[24rem] min-w-[24rem] max-w-[24rem] overflow-hidden rounded-md border bg-slate-950/95 text-xs text-slate-100 shadow-xl shadow-slate-950/30 transition-opacity',
+  root: 'group w-[24rem] min-w-[24rem] max-w-[24rem] overflow-hidden rounded-md border bg-slate-950/95 text-sm text-slate-100 shadow-xl shadow-slate-950/30 transition-opacity',
   selected: 'ring-2 ring-white/40',
   hovered: 'ring-1 ring-white/20',
   dimmed: 'opacity-30',
@@ -18,7 +18,7 @@ export const graphNodeCardLayoutClasses = {
   title: 'truncate text-sm font-semibold leading-tight text-slate-50',
   headerActions: 'flex shrink-0 items-center gap-2',
   kind: 'mt-2 text-xs font-medium text-blue-200',
-  path: 'mt-1 truncate text-[11px] text-slate-400',
+  path: 'mt-1 truncate text-xs text-slate-400',
   playButton:
     'nodrag inline-flex size-6 cursor-pointer items-center justify-center rounded-full border border-green-400/30 bg-green-500/15 text-green-300 transition hover:border-green-300/70 hover:bg-green-500/25 hover:text-green-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-300 disabled:cursor-not-allowed disabled:opacity-40',
   playIcon: 'size-3.5 fill-current',
@@ -36,7 +36,7 @@ export const graphNodeCardLayoutClasses = {
 } as const;
 
 export const graphNodeMetricRowClasses = {
-  root: 'mt-3 flex flex-wrap items-center gap-2 text-[11px] text-slate-300',
+  root: 'mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-300',
   item: 'inline-flex items-baseline gap-1',
   label: 'text-slate-500',
   value: 'font-medium text-slate-200',
@@ -52,7 +52,7 @@ export const graphNodeMetricRowClasses = {
 
 export const graphNodeTagListClasses = {
   root: 'mt-3 flex flex-wrap gap-1.5',
-  tag: 'rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] text-slate-300',
+  tag: 'rounded border border-slate-700 bg-slate-900 px-2 py-0.5 text-xs text-slate-300',
   tone: {
     source: 'border-purple-300/55 bg-purple-500/10 text-purple-100',
     model: 'border-blue-400/35 bg-blue-500/10 text-blue-200',
@@ -71,8 +71,8 @@ export const graphNodeOperationalRailClasses = {
   icon: 'flex size-5 shrink-0 items-center justify-center rounded-full border border-slate-700/80 bg-slate-950/70 text-slate-400',
   iconSvg: 'size-3',
   metricText: 'min-w-0',
-  label: 'block truncate text-[9px] uppercase tracking-wide text-slate-500',
-  value: 'mt-0.5 block truncate text-[11px] font-medium text-slate-200',
+  label: 'block truncate text-xs uppercase tracking-wide text-slate-500',
+  value: 'mt-0.5 block truncate text-sm font-medium text-slate-200',
   valueTone: {
     neutral: 'text-slate-200',
     info: 'text-blue-200',
@@ -103,9 +103,9 @@ export const graphNodeHealthPopoverClasses = {
 } as const;
 
 export const fallbackGraphNodeClasses = {
-  card: 'min-w-[140px] rounded-md border-2 border-dashed border-slate-500 bg-slate-900/60 px-3 py-2 text-xs text-slate-400',
+  card: 'min-w-[140px] rounded-md border-2 border-dashed border-slate-500 bg-slate-900/60 px-3 py-2 text-sm text-slate-400',
   title: 'truncate font-semibold text-slate-300',
-  kind: 'mt-0.5 font-mono text-[10px] uppercase tracking-wide',
+  kind: 'mt-0.5 font-mono text-xs uppercase tracking-wide',
 } as const;
 
 export const graphNodeColumnClasses = {
@@ -115,13 +115,13 @@ export const graphNodeColumnClasses = {
   toggleLabel: 'flex items-center gap-1',
   toggleIcon: 'size-3',
   list: 'mt-2 max-h-32 space-y-1 overflow-y-auto',
-  row: 'flex items-center justify-between rounded bg-slate-950 px-2 py-1 text-[10px]',
+  row: 'flex items-center justify-between rounded bg-slate-950 px-2 py-1 text-xs',
   name: 'truncate font-mono text-white',
   type: 'ml-2 shrink-0 text-slate-400',
 } as const;
 
 export const graphNodeStatusChipClasses = {
-  base: 'rounded-full border px-2 py-0.5 text-[10px] font-medium',
+  base: 'rounded-full border px-2 py-0.5 text-xs font-medium',
   neutral: 'border-slate-500/50 bg-slate-800/70 text-slate-200',
   info: 'border-blue-400/40 bg-blue-500/15 text-blue-200',
   success: 'border-green-300/60 bg-green-500/15 text-green-100',
