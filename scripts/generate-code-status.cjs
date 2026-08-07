@@ -79,12 +79,11 @@ function listPnpmWorkspaceDirs(options = {}) {
   for (const row of parsePnpmWorkspaceRows(result.stdout)) {
     if (!row || typeof row.path !== 'string') continue;
     const absolutePath = path.resolve(row.path);
-    if (absolutePath === root) continue;
     const relativePath = toPosix(path.relative(root, absolutePath));
-    if (!relativePath || relativePath.startsWith('..')) {
+    if (relativePath.startsWith('..')) {
       throw new Error(`pnpm reported a workspace outside the repository: ${row.path}`);
     }
-    unique.set(relativePath, absolutePath);
+    unique.set(relativePath || '.', absolutePath);
   }
 
   return [...unique.entries()]
@@ -173,19 +172,23 @@ function collectWorkspaceStats(dir) {
     );
   })();
 
-  const workspacePath = relFromRepo(dir);
+  const workspacePath = relFromRepo(dir) || '.';
   const readmePath = path.join(dir, 'README.md');
   return {
     workspace: pkg.name || workspacePath,
     path: workspacePath,
-    kind: workspacePath.startsWith('apps/') ? 'app' : 'package',
+    kind: workspacePath === '.' ? 'root' : workspacePath.startsWith('apps/') ? 'app' : 'package',
     src: srcFiles.length,
     tests: testFiles.length,
     hasBuild: scripts.build ? 'yes' : 'no',
     hasTest: scripts.test ? 'yes' : 'no',
     hasTypecheck: scripts.typecheck || scripts['type-check'] ? 'yes' : 'no',
     exports: exportedSymbols,
-    localReadmePath: fs.existsSync(readmePath) ? `${workspacePath}/README.md` : null,
+    localReadmePath: fs.existsSync(readmePath)
+      ? workspacePath === '.'
+        ? 'README.md'
+        : `${workspacePath}/README.md`
+      : null,
   };
 }
 

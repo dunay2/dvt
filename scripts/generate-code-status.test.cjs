@@ -145,17 +145,29 @@ test('pnpm workspace rules drive real add, rename, exclusion, and removal fixtur
   createWorkspaceFixture(t, 'packages/excluded', '@fixture/excluded', { root });
 
   const selectedPaths = () =>
-    listPnpmWorkspaceDirs({ root }).map((directory) =>
-      path.relative(root, directory).split(path.sep).join('/')
+    listPnpmWorkspaceDirs({ root }).map(
+      (directory) => path.relative(root, directory).split(path.sep).join('/') || '.'
     );
-  assert.deepEqual(selectedPaths(), ['apps/alpha', 'packages/beta']);
+  assert.deepEqual(selectedPaths(), ['.', 'apps/alpha', 'packages/beta']);
 
   const renamed = path.join(root, 'apps', 'renamed');
   fs.renameSync(alpha.directory, renamed);
-  assert.deepEqual(selectedPaths(), ['apps/renamed', 'packages/beta']);
+  assert.deepEqual(selectedPaths(), ['.', 'apps/renamed', 'packages/beta']);
 
   fs.rmSync(beta.directory, { recursive: true, force: true });
-  assert.deepEqual(selectedPaths(), ['apps/renamed']);
+  assert.deepEqual(selectedPaths(), ['.', 'apps/renamed']);
+});
+
+test('the effective pnpm root is rendered as an explicit repository workspace', () => {
+  assert.deepEqual(
+    collectRepositoryWorkspaceStats({ workspaceDirs: [repoRoot] }).map((workspace) => ({
+      workspace: workspace.workspace,
+      path: workspace.path,
+      kind: workspace.kind,
+      localReadmePath: workspace.localReadmePath,
+    })),
+    [{ workspace: 'dvt', path: '.', kind: 'root', localReadmePath: 'README.md' }]
+  );
 });
 
 test('repository map component matching is exact and excludes inference', () => {
@@ -467,8 +479,7 @@ test(
       );
       const effectiveWorkspacePaths = parsePnpmWorkspaceRows(independentPnpmResult.stdout)
         .map((row) => path.resolve(row.path))
-        .filter((directory) => directory !== repoRoot)
-        .map((directory) => path.relative(repoRoot, directory).split(path.sep).join('/'))
+        .map((directory) => path.relative(repoRoot, directory).split(path.sep).join('/') || '.')
         .sort();
       const renderedWorkspacePaths = workspaces.map((workspace) => workspace.path).sort();
       const paths = new Set(workspaces.map((workspace) => workspace.path));
