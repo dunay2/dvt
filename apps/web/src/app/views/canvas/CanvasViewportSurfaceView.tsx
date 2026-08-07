@@ -286,6 +286,16 @@ export function CanvasViewportSurfaceView({
       data-canvas-palette={resolvedCanvasPalette}
       className="relative flex-1 overflow-hidden"
     >
+      <button
+        type="button"
+        data-slot="canvas-add-component-command"
+        aria-label={copy.canvasAddNodeCatalogTitle}
+        className="bg-popover text-popover-foreground border-border hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute top-3 left-3 z-20 inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium shadow-lg outline-none focus-visible:ring-[3px]"
+        onClick={(event) => handleOpenAddNodeCatalog(event.currentTarget)}
+      >
+        <Plus className="size-4" aria-hidden="true" />
+        {copy.canvasAddNodeCatalogTitle}
+      </button>
       <CanvasViewportReactFlowSurface
         {...reactFlowSurfaceProps}
         contextMenuPresenter={contextMenuPresenter}
@@ -317,16 +327,6 @@ export function CanvasViewportSurfaceView({
         onSetPresentation={graphFilterController.setPresentation}
         onClear={graphFilterController.clear}
       />
-      <button
-        type="button"
-        data-slot="canvas-add-component-command"
-        aria-label={copy.canvasAddNodeCatalogTitle}
-        className="bg-popover text-popover-foreground border-border hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute top-3 left-3 z-20 inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium shadow-lg outline-none focus-visible:ring-[3px]"
-        onClick={(event) => handleOpenAddNodeCatalog(event.currentTarget)}
-      >
-        <Plus className="size-4" aria-hidden="true" />
-        {copy.canvasAddNodeCatalogTitle}
-      </button>
       {nodeFloatingToolbarModel == null ? null : (
         <CanvasNodeFloatingToolbarView model={nodeFloatingToolbarModel} />
       )}

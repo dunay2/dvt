@@ -101,7 +101,12 @@ describe('CanvasViewport context menus', () => {
     const addComponentButton = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-add-component-command"]'
     );
+    const contextSurface = container.querySelector('[data-slot="canvas-viewport-context-surface"]');
     expect(addComponentButton?.textContent).toContain('Add component');
+    expect(
+      (addComponentButton?.compareDocumentPosition(contextSurface!) ?? 0) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
 
     await act(async () => {
       addComponentButton?.click();
