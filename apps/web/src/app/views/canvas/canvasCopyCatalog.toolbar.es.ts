@@ -123,6 +123,7 @@ export const canvasViewToolbarCopyEs = {
   projectExplorerTitle: 'Explorar proyecto',
   projectExplorerDescription: 'Abre otro canvas gobernado del proyecto activo.',
   projectExplorerCloseLabel: 'Cerrar',
+  projectExplorerDismissLabel: 'Cerrar ventana del explorador de proyecto',
   projectExplorerSearchLabel: 'Buscar canvas',
   projectExplorerSearchPlaceholder: 'Buscar por canvas, tipo, entorno o id',
   projectExplorerEmptyMessage: 'Ningún canvas coincide con la búsqueda.',

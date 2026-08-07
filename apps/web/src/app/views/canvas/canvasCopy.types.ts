@@ -179,6 +179,7 @@ export type CanvasViewCopy = {
   readonly projectExplorerTitle: string;
   readonly projectExplorerDescription: string;
   readonly projectExplorerCloseLabel: string;
+  readonly projectExplorerDismissLabel: string;
   readonly projectExplorerSearchLabel: string;
   readonly projectExplorerSearchPlaceholder: string;
   readonly projectExplorerEmptyMessage: string;
