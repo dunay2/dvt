@@ -131,6 +131,9 @@ flowchart LR
 - A partially written or schema-invalid closeout owner remains fail-closed
   during the initialization grace and becomes recoverable only when its owner
   file has reached that same bounded stale threshold.
+- A live PID is accepted as the lease owner only when its OS process-start
+  identity matches the recorded owner identity; PID reuse is recoverable and
+  an unreadable identity remains fail-closed.
 - PR publication and docs deployment use the same exact Python patch and the
   same hash-locked pip/Zensical dependency graph, with no moving upgrade step.
 - Feature mechanization, docs governance, CI tools, ARC evaluation, and the full
@@ -405,6 +408,13 @@ redGreenCycles:
       - scripts/pr-closeout.cjs
       - scripts/pr-closeout.test.cjs
     greenTest: node --test scripts/pr-closeout.test.cjs
+  - id: reused-pid-closeout-owner-review
+    redTest: node --test scripts/pr-closeout.test.cjs
+    expectedFailure: PID liveness alone treats an unrelated process that reused a stale owner's PID as the live lease owner forever.
+    patchSurfaces:
+      - scripts/pr-closeout.cjs
+      - scripts/pr-closeout.test.cjs
+    greenTest: node --test scripts/pr-closeout.test.cjs
 symbols:
   - &repositoryMapSymbol
     name: GENERATION_MODES
@@ -520,6 +530,8 @@ symbols:
     name: os
   - <<: *prCloseoutLifecycleSymbol
     name: readCloseoutLeaseOwner
+  - <<: *prCloseoutLifecycleSymbol
+    name: readProcessStartedAt
   - <<: *prCloseoutLifecycleSymbol
     name: releaseCloseoutLease
   - &prCloseoutRoutingSymbol
