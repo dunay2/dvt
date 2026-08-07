@@ -86,7 +86,7 @@ export const canvasViewToolbarCopyEs = {
   canvasNodePortCompatibleWithPrefix: 'Compatible con',
   canvasNodePortNoCompatibleNodesMessage: 'No hay nodos compatibles disponibles',
   canvasNodePortBlockedMessage:
-    'Los nodos compatibles estan bloqueados por la politica actual del grafo',
+    'Los nodos compatibles están bloqueados por la política actual del grafo',
   canvasAddNodeCatalogTitle: 'Añadir componente',
   canvasAddNodeCatalogSearchLabel: 'Buscar componentes',
   canvasAddNodeCatalogSearchPlaceholder: 'Buscar origen, modelo, transformación, test, salida...',
@@ -103,7 +103,7 @@ export const canvasViewToolbarCopyEs = {
   canvasAddNodeCatalogModelDescription:
     'Crea un dataset modelado que recibe entradas y alimenta validaciones posteriores.',
   canvasAddNodeCatalogSeedDescription:
-    'Agrega un dataset seed estatico gestionado por el proyecto.',
+    'Agrega un dataset seed estático gestionado por el proyecto.',
   canvasAddNodeCatalogTransformationDescription:
     'Agrega una transformación SQL entre orígenes aguas arriba y salidas aguas abajo.',
   canvasAddNodeCatalogTestDescription:
