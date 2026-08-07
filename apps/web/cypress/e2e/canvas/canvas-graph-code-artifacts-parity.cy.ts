@@ -110,18 +110,21 @@ describe('Canvas graph to execution-preview source parity', () => {
       });
       expect(body).to.have.property('content');
 
+      const disposition = savedWorkflowSource == null ? 'created' : 'updated';
+      expect((body as { expectedRevision?: unknown }).expectedRevision).to.deep.equal(
+        disposition === 'created'
+          ? { kind: 'absent' }
+          : { kind: 'content_sha256', value: 'f'.repeat(64) }
+      );
       savedWorkflowSource = String((body as { content: unknown }).content);
-      expect(savedWorkflowSource).to.contain('id: "src_orders"');
-      expect(savedWorkflowSource).to.contain('id: "model_orders"');
-      expect(savedWorkflowSource).to.contain('id: "orders_dashboard"');
-      expect(savedWorkflowSource).to.contain('entrypoint: "models/analytics/model_orders.sql"');
 
       return {
+        statusCode: 200,
         body: {
+          kind: 'saved',
+          disposition,
           path: 'pipelines/sales_pipeline.yaml',
-          name: 'sales_pipeline.yaml',
-          language: 'yaml',
-          content: savedWorkflowSource,
+          contentSha256: 'f'.repeat(64),
           lastModified: '2026-05-25T00:00:00.000Z',
         },
       };
@@ -241,6 +244,7 @@ describe('Canvas graph to execution-preview source parity', () => {
         warnings: [],
       },
       provenance: {
+        kind: 'transformation-git-artifacts',
         graphArtifact: {
           repo: 'dunay2/dvt',
           path: 'pipelines/sales_pipeline.yaml',
@@ -271,9 +275,9 @@ describe('Canvas graph to execution-preview source parity', () => {
     clickPreviewExecutionPlanFromOperationalDrawer();
     waitForE2eApiCall('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'POST');
     waitForE2eApiCall('/plans/preview', 'POST');
-    cy.contains('Execution Preview').should('be.visible');
+    cy.get('[data-testid="plan-preview-modal"]').should('be.visible');
     cy.get('body').type('{esc}', { force: true });
-    cy.contains('Execution Preview').should('not.exist');
+    cy.get('[data-testid="plan-preview-modal"]').should('not.exist');
     cy.wrap(null).should(() => {
       const saveCall = getLastE2eApiCall(
         '/workspace/files/pipelines%2Fsales_pipeline.yaml',
@@ -283,21 +287,19 @@ describe('Canvas graph to execution-preview source parity', () => {
       expect(String((saveCall?.body as { content: unknown }).content)).to.contain(
         'id: "model_orders"'
       );
-    });
-
-    cy.location('pathname').should('eq', '/canvas');
-    cy.get('[data-slot="canvas-workbench-tab-strip"]').should('not.exist');
-    cy.wrap(null).should(() => {
       expect(savedWorkflowSource).to.contain('id: "src_orders"');
       expect(savedWorkflowSource).to.contain('id: "model_orders"');
       expect(savedWorkflowSource).to.contain('id: "orders_dashboard"');
       expect(savedWorkflowSource).to.contain('entrypoint: "models/analytics/model_orders.sql"');
     });
+
+    cy.location('pathname').should('eq', '/canvas');
+    cy.get('[data-slot="canvas-workbench-tab-strip"]').should('not.exist');
     cy.wrap(null).should(() => {
       expect(getE2eApiCalls('/workspace/files', 'GET')).to.have.length(0);
       expect(
         getE2eApiCalls('/workspace/files/pipelines%2Fsales_pipeline.yaml', 'GET')
-      ).to.have.length(0);
+      ).to.have.length(1);
     });
   });
 });
