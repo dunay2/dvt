@@ -547,8 +547,8 @@ test('Repository Map publication provisions the pinned Zensical runtime first', 
   assert.doesNotMatch(installZensical.run, /--upgrade/u);
 
   const lockedRequirements = fs.readFileSync(zensicalRequirementsPath, 'utf8');
-  assert.match(lockedRequirements, /^pip==26\.0\.1(?:\s|\\)$/mu);
-  assert.match(lockedRequirements, /^zensical==0\.0\.39(?:\s|\\)$/mu);
+  assert.match(lockedRequirements, /^pip==26\.0\.1\s+\\$/mu);
+  assert.match(lockedRequirements, /^zensical==0\.0\.39\s+\\$/mu);
   assert.match(lockedRequirements, /--hash=sha256:[0-9a-f]{64}/u);
 });
 
