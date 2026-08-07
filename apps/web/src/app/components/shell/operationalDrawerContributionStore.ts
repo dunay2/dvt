@@ -41,25 +41,23 @@ export type OperationalDrawerRunControls = Readonly<{
   onRecover: () => void;
 }>;
 
-export type OperationalDrawerContributionCopy = Readonly<{
-  problemsAriaLabel: string;
-  noProblemsMessage: string;
-  runsAriaLabel: string;
-  runReadyStatus: string;
-  runBlockedStatus: string;
-  runActiveStatus: string;
-  previewAriaLabel: string;
-  previewAction: string;
-  previewReadyStatus: string;
-  previewBlockedStatus: string;
-  tabsAriaLabel: string;
-  severity: Readonly<Record<OperationalDrawerProblem['severity'], string>>;
-}>;
-
 export type OperationalDrawerContribution = Readonly<{
   source: 'canvas';
   title: string;
-  copy: OperationalDrawerContributionCopy;
+  copy: Readonly<{
+    problemsAriaLabel: string;
+    noProblemsMessage: string;
+    runsAriaLabel: string;
+    runReadyStatus: string;
+    runBlockedStatus: string;
+    runActiveStatus: string;
+    previewAriaLabel: string;
+    previewAction: string;
+    previewReadyStatus: string;
+    previewBlockedStatus: string;
+    tabsAriaLabel: string;
+    severity: Readonly<Record<OperationalDrawerProblem['severity'], string>>;
+  }>;
   tabs: readonly OperationalDrawerTab[];
   problems: Readonly<{
     items: readonly OperationalDrawerProblem[];
