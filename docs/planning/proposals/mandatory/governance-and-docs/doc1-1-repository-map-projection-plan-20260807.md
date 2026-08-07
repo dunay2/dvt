@@ -435,6 +435,31 @@ symbols:
       - node --test scripts/pr-closeout.test.cjs
   - <<: *prCloseoutLifecycleSymbol
     name: releasePlanningDbIfOwned
+  - &prCloseoutRoutingSymbol
+    name: workflowScopePolicy
+    path: scripts/pr-closeout.cjs
+    dddOwner: PlanningGeneratedArtifact
+    cqRails:
+      - GeneratePlanningDerivedSurfaces
+    fowlerSignals:
+      - Canonical policy reuse
+      - Single routing vocabulary
+    architectureGuard: node --test scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
+    cypressCoverage: N/A - repository closeout routing with no browser interaction
+    unitTests:
+      - node --test scripts/pr-closeout.test.cjs tools/ci/workflow-scope-classification.test.mjs
+  - <<: *prCloseoutRoutingSymbol
+    name: repositoryMapSourcePatterns
+  - <<: *prCloseoutRoutingSymbol
+    name: workspaceSourcePatterns
+  - <<: *prCloseoutRoutingSymbol
+    name: escapeRegexCharacter
+  - <<: *prCloseoutRoutingSymbol
+    name: globToRegExp
+  - <<: *prCloseoutRoutingSymbol
+    name: matchesAnyPattern
+  - <<: *prCloseoutRoutingSymbol
+    name: hasRepositoryMapSourceChange
 ```
 
 ## No-Debt Boundary
