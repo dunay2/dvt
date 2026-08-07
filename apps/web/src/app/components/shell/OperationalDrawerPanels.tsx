@@ -113,6 +113,7 @@ export function BottomOperationalPreviewPanel({
         <OperationalDrawerPreviewLayout
           action={
             <OperationalDrawerPrimaryAction
+              dataSlot="bottom-operational-preview-action"
               disabled={!contribution.preview.canPreview}
               onClick={contribution.preview.onPreviewExecutionPlan}
             >

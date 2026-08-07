@@ -228,15 +228,24 @@ export function OperationalDrawerPreviewSummary({
 
 export function OperationalDrawerPrimaryAction({
   children,
+  dataSlot,
   disabled,
   onClick,
 }: Readonly<{
   children: ReactNode;
+  dataSlot: string;
   disabled: boolean;
   onClick: () => void;
 }>): JSX.Element {
   return (
-    <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={onClick}>
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      data-slot={dataSlot}
+      disabled={disabled}
+      onClick={onClick}
+    >
       {children}
     </Button>
   );
