@@ -181,6 +181,8 @@ describe('CanvasWorkspaceMenuControls', () => {
     });
 
     expect(document.body.textContent).toContain('Importar proyecto dbt');
+    expect(document.body.textContent).toContain('Acciones del proyecto');
+    expect(document.body.textContent).toContain('Instantáneas del proyecto');
     expect(document.body.textContent).toContain('Explorar proyecto');
     expect(document.body.textContent).toContain('Abrir código del proyecto');
     expect(document.body.textContent).not.toContain('Open project code');

@@ -399,9 +399,13 @@ export const canvasViewToolbarCopyByKey = {
     key: 'canvas.toolbar.emptyCanvasGuideLabel',
     fallback: 'Empty canvas guide',
   },
+  workspaceProjectActionsMenuLabel: {
+    key: 'canvas.workspace.projectActionsMenuLabel',
+    fallback: 'Project actions',
+  },
   toolbarProjectSnapshotMenuLabel: {
     key: 'canvas.toolbar.projectSnapshotMenuLabel',
-    fallback: 'Project',
+    fallback: 'Project snapshots',
   },
   workspaceImportDbtProjectLabel: {
     key: 'canvas.workspace.importDbtProjectLabel',

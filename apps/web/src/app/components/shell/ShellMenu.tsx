@@ -100,6 +100,7 @@ export function ShellMenu({
   );
   const resolvedCanvasPalette = normalizeCanvasPaletteId(canvasPalette);
   const isWorkspaceMenu = kind === 'workspace';
+  const hasKnownGitContext = gitBranch !== 'detached' || gitSha !== 'unknown';
 
   function handleCanvasPaletteChange(nextColor: string) {
     setCanvasPalette(normalizeCanvasPaletteId(nextColor));
@@ -153,15 +154,19 @@ export function ShellMenu({
               <ShellWorkspaceContextDetails badge={projectIdentityBadge} copy={copy} />
               <ShellWorkspaceScopeSelector copy={copy} onScopeSelected={() => setOpen(false)} />
             </div>
-            <DropdownMenuLabel>{copy.gitContext}</DropdownMenuLabel>
-            <div
-              data-slot="shell-menu-git-context"
-              className="px-2 pb-2 text-xs text-(--text-subtle)"
-            >
-              <span>{gitBranch}</span>
-              <span className="px-1">@</span>
-              <code className="text-(--text-default)">{gitSha}</code>
-            </div>
+            {hasKnownGitContext ? (
+              <>
+                <DropdownMenuLabel>{copy.gitContext}</DropdownMenuLabel>
+                <div
+                  data-slot="shell-menu-git-context"
+                  className="px-2 pb-2 text-xs text-(--text-subtle)"
+                >
+                  <span>{gitBranch}</span>
+                  <span className="px-1">@</span>
+                  <code className="text-(--text-default)">{gitSha}</code>
+                </div>
+              </>
+            ) : null}
             <CanvasWorkspaceMenuControls />
           </>
         ) : (

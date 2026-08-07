@@ -42,7 +42,8 @@ describe('canvas copy catalog', () => {
     expect(spanishCopy.routeNeedsCanvasTitle).toBe('Crear canvas en este workspace');
     expect(spanishCopy.routeNeedsCanvasTemplateLabel).toBe('Elige una plantilla de canvas');
     expect(spanishCopy.toolbarLayoutLabel).toBe('Disposición');
-    expect(spanishCopy.toolbarProjectSnapshotMenuLabel).toBe('Proyecto');
+    expect(spanishCopy.workspaceProjectActionsMenuLabel).toBe('Acciones del proyecto');
+    expect(spanishCopy.toolbarProjectSnapshotMenuLabel).toBe('Instantáneas del proyecto');
     expect(canvasViewCopy.canvasNodePortTargetLabel).toBe('Connect incoming port');
     expect(canvasViewCopy.canvasNodePortSourceLabel).toBe('Connect outgoing port');
     expect(canvasViewCopy.canvasNodePortCompatibleWithPrefix).toBe('Compatible with');
