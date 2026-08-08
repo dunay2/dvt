@@ -373,18 +373,28 @@ scope A / models/orders.sql = A
 6. **No initial-draft fallback, selected.** Import cannot manufacture a draft
    when the requested Canvas is absent; it returns the existing typed not-found
    error before writing files or calling the external source.
+7. **Platform-resolvable live browser proof, selected.** The protected-runtime
+   proof keeps Docker Cypress on POSIX hosts and uses the repository's native
+   Cypress execution boundary on Windows. Windows pnpm dependencies are NTFS
+   junctions that do not resolve inside a Linux bind mount; native execution
+   changes no product service, fixture, assertion, authorization, or cleanup
+   semantic and makes the same live gate executable instead of skipping it.
+8. **Visible and accessible connection truth, selected.** The live proof checks
+   that the canonical connection is both rendered without truncation in the
+   source Workbench and free of serious or critical WCAG 2.0/2.1 A/AA findings.
 
 ### 13.5 Fowler opportunity matrix
 
-| Scenario                                          | Smell / risk                                 | Fowler move                                     | Required proof                                                 |
-| ------------------------------------------------- | -------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------- |
-| Connection and object travel as loose strings     | Primitive obsession / data clump             | Introduce Value Object                          | Strict `ConnectionRef` and `ConnectedSourceRef` contract tests |
-| Same object ID exists through connections A and B | Hidden authority / identity collision        | Replace derived identity with explicit identity | Two distinct nodes and stable replay per connection            |
-| Legacy node lacks connection identity             | Hidden authority / speculative compatibility | Introduce Assertion / Guard Clause              | Import fails before any mutation; no inference or migration    |
-| Canvas hides the effective source connection      | Hidden authority                             | Introduce Presentation Model                    | Localized read-only Workbench row names the connection         |
-| Scope A and B share a relative path               | Identity Map leakage                         | Make scope key explicit                         | A -> B -> A returns A, B, A for the same path                  |
-| Missing Canvas triggers initial-draft creation    | Divergent change / boundary drift            | Separate creation from import                   | Typed not-found with zero file/external writes                 |
-| Graph metadata accepts secret-shaped extras       | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                        |
+| Scenario                                          | Smell / risk                                 | Fowler move                                     | Required proof                                                  |
+| ------------------------------------------------- | -------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------- |
+| Connection and object travel as loose strings     | Primitive obsession / data clump             | Introduce Value Object                          | Strict `ConnectionRef` and `ConnectedSourceRef` contract tests  |
+| Same object ID exists through connections A and B | Hidden authority / identity collision        | Replace derived identity with explicit identity | Two distinct nodes and stable replay per connection             |
+| Legacy node lacks connection identity             | Hidden authority / speculative compatibility | Introduce Assertion / Guard Clause              | Import fails before any mutation; no inference or migration     |
+| Canvas hides the effective source connection      | Hidden authority                             | Introduce Presentation Model                    | Localized read-only Workbench row names the connection          |
+| Scope A and B share a relative path               | Identity Map leakage                         | Make scope key explicit                         | A -> B -> A returns A, B, A for the same path                   |
+| Missing Canvas triggers initial-draft creation    | Divergent change / boundary drift            | Separate creation from import                   | Typed not-found with zero file/external writes                  |
+| Graph metadata accepts secret-shaped extras       | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                         |
+| Windows Docker cannot resolve pnpm junctions      | Environment coupling / false-negative gate   | Encapsulate platform execution strategy         | Unit proof selects native Cypress on Windows; live proof passes |
 
 ### 13.6 DoR for the bounded slice
 
@@ -448,6 +458,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
   - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+  - scripts/run-canvas-source-import-live-proof.cjs
+  - scripts/run-canvas-source-import-live-proof.test.cjs
+  - docs/guides/canvas-authoring-user-manual-20260501.md
   - docs/evidence/**
   - docs/risk-register/quality/**
   - docs/**/index.md
@@ -493,7 +506,6 @@ cypressFlows:
 completionGate:
   - pnpm docs:feature-mechanization -- --feature PTH1-CONNECTED-SOURCE-TRUTH
   - pnpm --filter @dvt/contracts test
-  - pnpm --filter @dvt/contracts lint
   - pnpm --filter @dvt/contracts typecheck
   - pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
   - pnpm --filter dvt-api lint
@@ -501,6 +513,8 @@ completionGate:
   - pnpm --filter @dvt/web test:canvas
   - pnpm --filter @dvt/web lint
   - pnpm --filter @dvt/web typecheck
+  - node --test scripts/run-canvas-source-import-live-proof.test.cjs
+  - pnpm --filter @dvt/web test:e2e:source-import:live
   - pnpm verify:prepush
 redGreenCycles:
   - id: connection-reference-contract
@@ -536,6 +550,12 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
     greenTest: pnpm --filter @dvt/web test -- workspaceQueries.scope.test.tsx
+  - id: windows-live-proof-dependency-resolution
+    redTest: node --test scripts/run-canvas-source-import-live-proof.test.cjs
+    expectedFailure: The live proof always selects a Linux Docker bind mount even when Windows pnpm dependencies are NTFS junctions.
+    patchSurfaces:
+      - scripts/run-canvas-source-import-live-proof.cjs
+    greenTest: node --test scripts/run-canvas-source-import-live-proof.test.cjs
 symbols:
   - { name: CONNECTION_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
   - { name: CONNECTED_SOURCE_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
