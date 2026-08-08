@@ -156,7 +156,7 @@ describe('canvasNodeContextMenuModel', () => {
     expect(actionById(model, 'remove-node')).toBeUndefined();
   });
 
-  it('offers exact node code only when a canonical workspace-file action exists', () => {
+  it('keeps node code exclusive to the selected-node floating toolbar', () => {
     const model = buildCanvasNodeContextMenuModel({
       target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders Model' },
       selectedForExecution: false,
@@ -168,12 +168,8 @@ describe('canvasNodeContextMenuModel', () => {
       canRemoveNode: false,
     });
 
-    expect(actionIds(model)).toEqual(['inspect-node', 'open-node-code']);
-    expect(actionById(model, 'open-node-code')).toMatchObject({
-      label: 'Open node code',
-      intent: 'read',
-      disabled: false,
-    });
+    expect(actionIds(model)).toEqual(['inspect-node']);
+    expect(actionById(model, 'open-node-code')).toBeUndefined();
   });
 
   it('uses execution-selection posture to choose select or deselect intent', () => {
