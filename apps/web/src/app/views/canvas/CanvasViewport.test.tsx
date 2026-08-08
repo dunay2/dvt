@@ -90,7 +90,7 @@ describe('CanvasViewport', () => {
     expect(mockResolveNodeKindRegistration).toHaveBeenCalledWith('dvt:unknown');
     expect(xyflowState.lastReactFlowProps).toMatchObject({
       fitView: true,
-      fitViewOptions: { padding: 0.2, maxZoom: 0.82 },
+      fitViewOptions: { padding: 0.32, maxZoom: 0.82 },
       minZoom: 0.35,
       className: 'bg-(--canvas-surface)',
       nodesDraggable: true,
@@ -102,6 +102,7 @@ describe('CanvasViewport', () => {
         'minimap.ariaLabel': 'Canvas minimap',
       },
     });
+    expect(xyflowState.controlsFitViewOptions).toEqual({ padding: 0.32, maxZoom: 0.82 });
     expect(container.querySelector('[data-testid="background"]')).toBeNull();
     expect(xyflowState.miniMapMaskColor).toBe('var(--canvas-minimap-mask)');
     expect(xyflowState.miniMapMaskStrokeColor).toBe('var(--canvas-minimap-mask-stroke)');
