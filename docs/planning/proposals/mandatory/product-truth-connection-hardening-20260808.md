@@ -382,6 +382,11 @@ scope A / models/orders.sql = A
 8. **Visible and accessible connection truth, selected.** The live proof checks
    that the canonical connection is both rendered without truncation in the
    source Workbench and free of serious or critical WCAG 2.0/2.1 A/AA findings.
+9. **Discoverable bounded-dialog overflow, selected.** Source review may exceed
+   the available viewport, so its content region exposes an always-visible
+   scrollbar while the Cancel and attach actions remain fixed and reachable.
+   Browser proof must reach the selected object through that governed region;
+   shrinking or deleting review content is rejected.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -395,6 +400,7 @@ scope A / models/orders.sql = A
 | Missing Canvas triggers initial-draft creation    | Divergent change / boundary drift            | Separate creation from import                   | Typed not-found with zero file/external writes                  |
 | Graph metadata accepts secret-shaped extras       | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                         |
 | Windows Docker cannot resolve pnpm junctions      | Environment coupling / false-negative gate   | Encapsulate platform execution strategy         | Unit proof selects native Cypress on Windows; live proof passes |
+| Source review extends below a bounded dialog      | Hidden content / inaccessible navigation     | Expose bounded scrolling region                 | Visible scrollbar, reachable selected object, fixed Cancel      |
 
 ### 13.6 DoR for the bounded slice
 
@@ -457,6 +463,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/graph/graphNodeTitlePresentation.test.ts
   - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
   - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
+  - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
+  - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.focus.test.tsx
+  - apps/web/cypress/support/liveWarehouseSourceImport.ts
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - scripts/run-canvas-source-import-live-proof.cjs
   - scripts/run-canvas-source-import-live-proof.test.cjs
@@ -556,6 +565,13 @@ redGreenCycles:
     patchSurfaces:
       - scripts/run-canvas-source-import-live-proof.cjs
     greenTest: node --test scripts/run-canvas-source-import-live-proof.test.cjs
+  - id: bounded-source-review-visibility
+    redTest: pnpm --filter @dvt/web test:canvas -- SourceImportWizardFrame.focus.test.tsx
+    expectedFailure: The bounded review region does not expose a persistent scrolling affordance.
+    patchSurfaces:
+      - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
+      - apps/web/cypress/support/liveWarehouseSourceImport.ts
+    greenTest: pnpm --filter @dvt/web test:canvas -- SourceImportWizardFrame.focus.test.tsx
 symbols:
   - { name: CONNECTION_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
   - { name: CONNECTED_SOURCE_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
