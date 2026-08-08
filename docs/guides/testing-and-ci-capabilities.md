@@ -22,32 +22,32 @@ See also:
 
 ## Root Commands
 
-| Capability                     | Command                            | Source                                                                                                                                                                                             |
-| ------------------------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Full workspace build           | `pnpm build`                       | [`package.json`](../../package.json)                                                                                                                                                               |
-| Full recursive test run        | `pnpm test`                        | [`package.json`](../../package.json)                                                                                                                                                               |
-| Web PR CI test partition       | `pnpm test:web:ci`                 | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                                                                               |
-| Web changed-file test routing  | `pnpm test:web:changed`            | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                                                                               |
-| Web E2E test run               | `pnpm test:web:e2e`                | [`package.json`](../../package.json)                                                                                                                                                               |
-| Full type-check gate           | `pnpm type-check`                  | [`package.json`](../../package.json)                                                                                                                                                               |
-| Fast pre-push changed gate     | `pnpm verify:changed`              | [`package.json`](../../package.json)                                                                                                                                                               |
-| Pre-push verification gate     | `pnpm verify:prepush`              | [`package.json`](../../package.json)                                                                                                                                                               |
-| Affected local PR preflight    | `pnpm preflight:affected`          | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json)                                                                                                                             |
-| Affected CI preflight          | `pnpm preflight:affected:ci`       | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json), [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                                                               |
-| Full CI baseline               | `pnpm ci:full`                     | [`package.json`](../../package.json)                                                                                                                                                               |
-| Planning DB migration tests    | `pnpm test:planning:db:migrations` | [`package.json`](../../package.json), [`scripts/planning-db-migrate.test.cjs`](../../scripts/planning-db-migrate.test.cjs)                                                                         |
-| Changed-files auto-fix         | `pnpm fix:changed`                 | [`package.json`](../../package.json)                                                                                                                                                               |
-| Post-Git Prettier auto-format  | `pnpm postgit:format`              | [`scripts/format-git-operation-changes.cjs`](../../scripts/format-git-operation-changes.cjs), [`.husky/post-merge`](../../.husky/post-merge), [`.husky/post-checkout`](../../.husky/post-checkout) |
-| AI local preflight             | `pnpm ai:preflight`                | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                                                                                                       |
-| Changed-files lint/format gate | `node scripts/check-changed.cjs`   | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                                                                                                                     |
-| PR closeout rail               | `pnpm pr:closeout`                 | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                                                                                                                         |
-| Immediate PR check gate        | `pnpm pr:checks`                   | [`tools/ci/pr-check-triage.mjs`](../../tools/ci/pr-check-triage.mjs)                                                                                                                               |
-| CI tool contract suite         | `pnpm test:ci-tools`               | [`package.json`](../../package.json)                                                                                                                                                               |
-| Affected workspace build       | `pnpm ci:affected:build`           | [`package.json`](../../package.json)                                                                                                                                                               |
-| Affected workspace lint        | `pnpm ci:affected:lint`            | [`package.json`](../../package.json)                                                                                                                                                               |
-| Affected workspace test        | `pnpm ci:affected:test`            | [`package.json`](../../package.json)                                                                                                                                                               |
-| Affected workspace type-check  | `pnpm ci:affected:typecheck`       | [`package.json`](../../package.json)                                                                                                                                                               |
-| ADR-0000 regression gate       | `pnpm traceability:adr0`           | [`package.json`](../../package.json), [`traceability.config.json`](../../traceability.config.json)                                                                                                 |
+| Capability                       | Command                                | Source                                                                                                                                                                                             |
+| -------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Full workspace build             | `pnpm build`                           | [`package.json`](../../package.json)                                                                                                                                                               |
+| Full recursive test run          | `pnpm test`                            | [`package.json`](../../package.json)                                                                                                                                                               |
+| Web PR CI test partition         | `pnpm test:web:ci`                     | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                                                                               |
+| Web changed-file test routing    | `pnpm test:web:changed`                | [`package.json`](../../package.json), [`apps/web/vitest.suites.ts`](../../apps/web/vitest.suites.ts)                                                                                               |
+| Web E2E test run                 | `pnpm test:web:e2e`                    | [`package.json`](../../package.json)                                                                                                                                                               |
+| Full type-check gate             | `pnpm type-check`                      | [`package.json`](../../package.json)                                                                                                                                                               |
+| Fast pre-push changed gate       | `pnpm verify:changed`                  | [`package.json`](../../package.json)                                                                                                                                                               |
+| Pre-push verification gate       | `pnpm verify:prepush`                  | [`package.json`](../../package.json)                                                                                                                                                               |
+| Affected local PR preflight      | `pnpm preflight:affected`              | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json)                                                                                                                             |
+| Affected CI preflight            | `pnpm preflight:affected:ci`           | [`package.json`](../../package.json), [`turbo.json`](../../turbo.json), [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)                                                               |
+| Full CI baseline                 | `pnpm ci:full`                         | [`package.json`](../../package.json)                                                                                                                                                               |
+| Planning DB current-schema tests | `pnpm test:planning:db:current-schema` | [`package.json`](../../package.json), [`scripts/planning-db-schema.test.cjs`](../../scripts/planning-db-schema.test.cjs)                                                                           |
+| Changed-files auto-fix           | `pnpm fix:changed`                     | [`package.json`](../../package.json)                                                                                                                                                               |
+| Post-Git Prettier auto-format    | `pnpm postgit:format`                  | [`scripts/format-git-operation-changes.cjs`](../../scripts/format-git-operation-changes.cjs), [`.husky/post-merge`](../../.husky/post-merge), [`.husky/post-checkout`](../../.husky/post-checkout) |
+| AI local preflight               | `pnpm ai:preflight`                    | [`scripts/ai-preflight.cjs`](../../scripts/ai-preflight.cjs)                                                                                                                                       |
+| Changed-files lint/format gate   | `node scripts/check-changed.cjs`       | [`scripts/check-changed.cjs`](../../scripts/check-changed.cjs)                                                                                                                                     |
+| PR closeout rail                 | `pnpm pr:closeout`                     | [`scripts/pr-closeout.cjs`](../../scripts/pr-closeout.cjs)                                                                                                                                         |
+| Immediate PR check gate          | `pnpm pr:checks`                       | [`tools/ci/pr-check-triage.mjs`](../../tools/ci/pr-check-triage.mjs)                                                                                                                               |
+| CI tool contract suite           | `pnpm test:ci-tools`                   | [`package.json`](../../package.json)                                                                                                                                                               |
+| Affected workspace build         | `pnpm ci:affected:build`               | [`package.json`](../../package.json)                                                                                                                                                               |
+| Affected workspace lint          | `pnpm ci:affected:lint`                | [`package.json`](../../package.json)                                                                                                                                                               |
+| Affected workspace test          | `pnpm ci:affected:test`                | [`package.json`](../../package.json)                                                                                                                                                               |
+| Affected workspace type-check    | `pnpm ci:affected:typecheck`           | [`package.json`](../../package.json)                                                                                                                                                               |
+| ADR-0000 regression gate         | `pnpm traceability:adr0`               | [`package.json`](../../package.json), [`traceability.config.json`](../../traceability.config.json)                                                                                                 |
 
 Warm-build note:
 
@@ -255,15 +255,13 @@ Command semantics:
   exact `node --test scripts/generate-governance-*.test.cjs` suites. That keeps
   AI iteration on report rendering and DB-source normalization under the
   adjacent generator contract instead of escalating to the full planning DB
-  suite unless migrations, DB rails, or shared query-store surfaces changed.
-- Planning DB migration-only edits under `tools/planning-db/migrations/*.sql`
-  route through `pnpm test:planning:db:migrations`, which exercises
-  `scripts/planning-db-migrate.test.cjs` without running the full
-  `pnpm test:planning:db` package. When the same slice already changes
-  `scripts/planning-db-migrate.test.cjs`, the changed-file verifier runs that
-  direct suite once and does not add the wrapper command again. This is an
-  architecture contract for targeted DB-first schema validation, not a one-off
-  timing comparison.
+  suite unless the current schema, DB rails, or shared query-store surfaces changed.
+- Planning DB schema edits under `tools/planning-db/schema.sql` route through
+  `pnpm test:planning:db:current-schema`, which exercises the declarative schema,
+  canonical architecture state, and no-history policy without running the full
+  `pnpm test:planning:db` package. When the same slice already changes an adjacent
+  current-schema test, the changed-file verifier runs that direct suite once and
+  does not add the wrapper command again.
 - Command/query rail catalog inspection is DB-first. After governance import,
   `pnpm planning:db:query command-query-rails` reads
   `planning_query_store.command_query_rail_query`; use `--gaps true` for rails

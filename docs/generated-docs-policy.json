@@ -57,7 +57,7 @@
         "scripts/generated-doc-date.cjs",
         "package.json",
         "pnpm-workspace.yaml",
-        "tools/planning-db/migrations",
+        "tools/planning-db/schema.sql",
         "tools/planning-db/state/canonical-state.json",
         "scripts/planning-db-import.cjs",
         "docs/planning/status/system-governance-unit-index.units.yaml",
@@ -136,7 +136,7 @@
       "sourcePaths": [
         "scripts/generate-knowledge-intake-literature.cjs",
         "scripts/planning-db/queries/knowledge-intake-retirement-query.cjs",
-        "tools/planning-db/migrations/057_knowledge_intake_retirement_query.sql"
+        "tools/planning-db/schema.sql"
       ],
       "generatorCommand": "pnpm docs:knowledge-intake:generate",
       "tracking": "untracked",
@@ -173,7 +173,7 @@
       "sourcePaths": [
         "scripts/generate-db-surface-inventory.cjs",
         "scripts/planning-db/db-surface-inventory.cjs",
-        "tools/planning-db/migrations/059_db_surface_inventory.sql"
+        "tools/planning-db/schema.sql"
       ],
       "generatorCommand": "pnpm docs:db-surface-inventory:generate",
       "tracking": "untracked",
@@ -187,7 +187,7 @@
             ".generated-docs/planning/status/generated-db-surface-inventory.md"
           ],
           "queryView": "planning_query_store.db_governance_surface_query",
-          "importCommand": "pnpm planning:db:migrate",
+          "importCommand": "pnpm planning:db:import",
           "checkCommand": "pnpm docs:db-surface-inventory:check"
         }
       ]
@@ -201,7 +201,7 @@
       "sourcePaths": [
         "scripts/generate-dbt-project-roundtrip-capability-status.cjs",
         "scripts/planning-db/queries/dbt-project-roundtrip-capability-status-query.cjs",
-        "tools/planning-db/migrations/726_dbt_project_roundtrip_capability_truth_projection.sql"
+        "tools/planning-db/schema.sql"
       ],
       "generatorCommand": "pnpm docs:dbt-roundtrip-capabilities:generate",
       "tracking": "untracked",
@@ -215,7 +215,7 @@
             ".generated-docs/planning/status/generated-dbt-project-roundtrip-capability-status.md"
           ],
           "queryView": "planning_query_store.dbt_project_roundtrip_capability_status_query",
-          "importCommand": "pnpm planning:db:migrate",
+          "importCommand": "pnpm planning:db:import",
           "checkCommand": "pnpm docs:dbt-roundtrip-capabilities:check"
         }
       ]

@@ -236,15 +236,13 @@ is shared by all worktrees and agents on the same machine; two imports must not
 interleave their delete and insert phases.
 
 If the shared local Postgres volume rejects `planning:db:import` because an
-already-applied migration checksum no longer matches the Git-tracked migration
-file, the accepted repair path is
-`pnpm planning:db:reset -- --confirm-destroy-shared-planning-db` followed by
-`pnpm governance:refresh`. Contributors must not edit
-`planning_query_store.schema_migrations` manually. The reset command is
-destructive for the shared machine-local cache only; Git-tracked sources remain
-the bootstrap/review recovery boundary, while the DB is the canonical local
-operational source and any existing local operation overlay/audit rows are
-exported to the local backup directory before the data directory is removed.
+When the local Planning DB differs from the declarative current schema, the
+accepted repair path is
+`pnpm planning:db:reset -- --confirm-destroy-shared-planning-db`, followed by
+`pnpm planning:db:import` and `pnpm governance:refresh`. Reset is intentionally
+destructive for the shared machine-local cache: it does not preserve local rows
+or compatibility state. Git-tracked current schema and canonical state are the
+only rebuild boundary.
 
 ## Former Tracked Fan-Out
 

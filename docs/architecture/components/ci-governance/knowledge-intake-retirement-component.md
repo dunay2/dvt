@@ -140,7 +140,7 @@ flowchart LR
 - `node --test scripts/planning-db-knowledge-intake-retirement-guard.test.cjs`
 - `node --test scripts/generate-knowledge-intake-literature.test.cjs`
 - `node --test scripts/planning-db-query.test.cjs`
-- `node --test scripts/planning-db-migrate.test.cjs`
+- `node --test scripts/planning-db-schema.test.cjs`
 - `node --test tools/ci/canonization-guard.test.mjs tools/ci/*canon.test.mjs`
 - `pnpm planning:db:knowledge-intake:retirement:check`
 - `pnpm docs:knowledge-intake:check`
