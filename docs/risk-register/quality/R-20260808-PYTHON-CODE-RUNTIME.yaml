@@ -1,0 +1,45 @@
+---
+id: R-20260808-PYTHON-CODE-RUNTIME
+title: Python code execution can escape workload or evidence boundaries
+status: Open
+date: 2026-08-08
+owners:
+  - packages/@dvt/contracts
+  - packages/@dvt/temporal-python-plugin
+  - apps/temporal-worker
+  - apps/web
+severity: Critical
+probability: Medium
+context: >
+  The Python code-node vertical adds arbitrary user-authored source to an immutable plan and executes
+  it through an optional Temporal worker profile using one fresh Python process per step.
+risk: >
+  A regression in runtime binding, process isolation, input/output limits, timeout/cancellation,
+  protocol parsing, evidence mapping, logging, or deployment configuration could allow code to reach
+  worker files or networks, exhaust worker resources, retain hidden state, execute a different binary,
+  or expose source, inputs, output, credentials, and provider exceptions through workflow history,
+  run events, traces, or logs.
+mitigations:
+  - 'Keep the profile disabled by default; resolve only allowlisted server-owned python-runtime:* refs
+    and reject a plan/runtime binding mismatch before process creation.'
+  - 'Launch one fresh isolated-mode process per request and never carry a kernel, process id, namespace,
+    working directory, import cache, or mutable environment from one step to another.'
+  - 'Compile with the real Python compiler before execution and map syntax location to controlled
+    diagnostics without returning source lines or raw exception representations.'
+  - 'Bound source, JSON input, protocol envelope, stdout, stderr, JSON result, wall time, termination
+    grace period, and plan step timeout; terminate on cancellation and dispose on every outcome.'
+  - 'Persist receipt-only evidence and stable refusal codes. Architecture and negative tests assert
+    that source, input values, stdout, stderr, secrets and raw provider exceptions are absent from
+    errors, logs, events and result evidence.'
+  - 'Require a dedicated non-root worker deployment with read-only root filesystem, dropped Linux
+    capabilities, bounded temporary storage, CPU/memory/PID quotas and deny-by-default network policy
+    before admitting untrusted production code. python -I is explicitly not treated as a sandbox.'
+  - 'Keep dynamic package installation, host paths, arbitrary environment variables, persistent
+    kernels and dynamic edge result binding outside the v1 contract.'
+residual_risk: >
+  The application-level process adapter cannot itself prove host or cluster isolation. Production
+  safety depends on the deployment image, runtime class, filesystem, network and resource policies.
+  The first vertical also uses bounded JSON rather than Arrow artifacts and therefore does not yet
+  provide governed tabular exchange between Python, R and SQL nodes.
+review_after: 2026-09-08
+---
