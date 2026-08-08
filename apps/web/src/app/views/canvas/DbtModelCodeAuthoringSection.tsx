@@ -60,6 +60,11 @@ export function DbtModelCodeAuthoringSection({
               event.stopPropagation();
             }
           }}
+          onKeyUp={(event) => {
+            if (event.key === 'Backspace' || event.key === 'Delete') {
+              event.stopPropagation();
+            }
+          }}
           onChange={(event) => {
             const modelSql = event.currentTarget.value;
             onChange((currentDraft) =>
