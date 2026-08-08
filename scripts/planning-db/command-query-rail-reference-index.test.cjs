@@ -38,3 +38,30 @@ test('implementation references exclude declarative schema and executable test e
     ]
   );
 });
+
+test('explicitly unimplemented rails do not infer implementation from evidence generators', () => {
+  const rail = referenceIndex.attachCommandQueryRailRefs(
+    {
+      railName: 'ExportDbtProject',
+      railStatus: 'not-implemented',
+      symbolRefs: [],
+      documentationRefs: [],
+      sourcePath:
+        'docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md',
+    },
+    {
+      sourceFiles: [
+        {
+          path: 'scripts/generate-dbt-project-roundtrip-capability-status.cjs',
+          content: "const requiredRails = ['ExportDbtProject'];",
+        },
+      ],
+      governanceSnapshot: { files: [], components: [] },
+      referenceDocuments: [],
+    }
+  );
+
+  assert.deepEqual(rail.implementationRefs, []);
+  assert.equal(rail.implementationRefCount, 0);
+  assert.equal(rail.isGap, true);
+});
