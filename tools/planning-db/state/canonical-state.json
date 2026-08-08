@@ -83700,7 +83700,7 @@
         "No active dbt project export adapter or artifact writer implements this rail."
       ],
       "architectureGuards": [
-        "dbt project export requires an artifact writer and compatibility tests before reintroduction."
+        "dbt project export requires an artifact writer and acceptance tests before a new implementation."
       ],
       "completionGate": [
         "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"

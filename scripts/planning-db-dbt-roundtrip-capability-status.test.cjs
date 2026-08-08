@@ -39,7 +39,7 @@ test('DBT round-trip capability current schema owns normalized phase evidence an
   );
   assert.match(
     sql,
-    /feature_mechanization_local_rails_mechanization_status_check CHECK \(\(mechanization_status = ANY \(ARRAY\['closed'::text, 'documented'::text, 'implemented'::text\]\)\)\)/
+    /feature_mechanization_local_rails_mechanization_status_check CHECK \(\(mechanization_status = ANY \(ARRAY\['closed'::text, 'implemented'::text\]\)\)\)/
   );
   assert.match(architectureState, /ProjectDbtRoundtripCapabilityStatus/);
   assert.match(architectureState, /SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-DBT-ROUNDTRIP/);
@@ -79,8 +79,8 @@ test('DBT round-trip current catalog enumerates implemented and deferred rails w
   const exportEvidence = catalog.railEvidence.find(
     (evidence) => evidence.railName === 'ExportDbtProject'
   );
-  assert.equal(exportEvidence.expectedRailStatus, 'not-implemented');
-  assert.equal(exportEvidence.expectedMechanizationStatus, 'documented');
+  assert.equal(exportEvidence.expectedRailStatus, 'retired');
+  assert.equal(exportEvidence.expectedMechanizationStatus, 'closed');
   assert.equal(exportEvidence.expectedImplemented, false);
 });
 
@@ -91,11 +91,15 @@ test('DBT round-trip current catalog contains no compatibility or history state'
   assert.doesNotMatch(catalogText, /tools\/planning-db\/migrations/iu);
 });
 
-test('DBT export source authority requires no duplicate local rail decision', () => {
+test('DBT export current decision is retired without compatibility or history state', () => {
   const state = JSON.parse(fs.readFileSync(canonicalStatePath, 'utf8'));
   const decision = state.featureMechanizationRails.find(
     ({ railId }) => railId === 'current#rail-decision#command#exportdbtproject'
   );
 
-  assert.equal(decision, undefined);
+  assert.ok(decision);
+  assert.equal(decision.railStatus, 'retired');
+  assert.equal(decision.mechanizationStatus, 'closed');
+  assert.deepEqual(decision.implementationRefs, []);
+  assert.doesNotMatch(JSON.stringify(decision), /compatib|migration|history/iu);
 });
