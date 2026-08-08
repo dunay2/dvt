@@ -72,6 +72,8 @@ el atributo `lang` correspondiente para tecnologías de asistencia.
    tooltip; la explicación no permanece ocupando el Canvas.
 3. Pulsa el botón. El banco de trabajo abre el archivo exacto del nodo, no una
    plantilla genérica.
+   La acción no se repite en **Más acciones del nodo** ni en el menú de clic
+   derecho.
 4. Usa el encabezado para arrastrar el banco a otra zona del Canvas. Con teclado,
    enfoca el control **Mover banco de trabajo de código** y utiliza las teclas de
    dirección.
@@ -119,6 +121,8 @@ estrecha los controles se redistribuyen en varias líneas; Raven no sustituye
 ## 6. Añadir componentes
 
 1. Abre el menú contextual del Canvas y selecciona **Añadir…**.
+   No existe un botón fijo **Añadir componente** sobre el Canvas: el clic
+   derecho es la única entrada para esta acción.
 2. El catálogo agrupa los componentes por **Orígenes**, **Modelos**, **Seeds**,
    **Transformaciones**, **Tests**, **Salidas**, **Macros** u otras categorías
    registradas.

@@ -17,6 +17,8 @@ code_refs:
   - apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
   - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
   - apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx
+  - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+  - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
   - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
@@ -100,6 +102,10 @@ flowchart LR
   also disables React Flow's global delete key. `Backspace` and `Delete` cannot
   remove the selected node, while graph deletion outside a Workbench remains
   available through the existing command surface.
+- Node code has one visible command entry in the selected-node floating
+  toolbar. The More and right-click menus do not repeat that intent, and Add
+  Component is available only through the Canvas right-click menu; no fixed
+  button competes with the graph.
 
 # Executable outcome
 
@@ -118,7 +124,9 @@ content. The switch is performed only through the visible workspace selector;
 Authoritative graph/file reads and the visible Project Code Workbench verify
 each selected scope and reject the other scope's source identity. Clearing
 model SQL with `Backspace` also proves that the selected model remains in the
-graph before the authored SQL is entered. The Add Source dialog and each
+graph before the authored SQL is entered. Component tests prove that the top
+selected-node toolbar remains the sole node-code entry and that right-click is
+the sole Canvas entry to Add Component. The Add Source dialog and each
 connected-source Workbench remain inside
 1440x900, 1280x720, 1000x660 and 500x330 viewports. The dialog's bounded content
 and Cancel action stay visible; each Workbench keeps the exact Connection fact

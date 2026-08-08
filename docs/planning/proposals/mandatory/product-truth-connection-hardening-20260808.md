@@ -524,7 +524,7 @@ server grants scope A and scope B
 - [x] A -> B -> A through two real granted scopes proves live graph/file isolation.
 - [x] The EN/ES selector supports pointer, `Enter` and space, and Project Code visibly presents the isolated YAML in both scopes with axe-clean surfaces.
 - [x] Workbench text editing cannot leak `Backspace` or `Delete` into graph-node deletion.
-- [ ] Node code has one visible entry in the selected-node toolbar, and Add Component is available only from the Canvas right-click menu.
+- [x] Node code has one visible entry in the selected-node toolbar, and Add Component is available only from the Canvas right-click menu.
 - [x] Live Source Import persists the same physical object through two distinct real connections without reducing its existing assertions.
 - [x] Add Source and connected-source Workbench remain visible, axe-clean and cancellable across the governed viewport matrix.
 - [x] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
@@ -597,6 +597,7 @@ allowedImplementationSurfaces:
   - scripts/run-canvas-source-import-live-proof.cjs
   - scripts/run-canvas-source-import-live-proof.test.cjs
   - docs/guides/canvas-authoring-user-manual-20260501.md
+  - docs/guides/canvas-workbench-user-manual-20260806.md
   - docs/evidence/**
   - docs/risk-register/quality/**
   - docs/**/index.md
