@@ -507,8 +507,8 @@ server grants scope A and scope B
 - [x] Missing/legacy ambiguous state fails closed before mutation.
 - [x] Canvas Workbench exposes the effective connection in ES and EN.
 - [x] A -> B -> A with the same relative path proves cache isolation.
-- [ ] A -> B -> A through two real granted scopes proves live graph/file isolation.
-- [ ] Workbench text editing cannot leak `Backspace` or `Delete` into graph-node deletion.
+- [x] A -> B -> A through two real granted scopes proves live graph/file isolation.
+- [x] Workbench text editing cannot leak `Backspace` or `Delete` into graph-node deletion.
 - [x] Live Source Import persists the same physical object through two distinct real connections without reducing its existing assertions.
 - [x] Add Source and connected-source Workbench remain visible, axe-clean and cancellable across the governed viewport matrix.
 - [x] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.

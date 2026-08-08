@@ -92,8 +92,11 @@ trabajo`.
 Resultado esperado: la seleccion usa el rail `SelectWorkspaceScope`, vuelve a
 cargar el borrador, archivos y conexiones del scope elegido y no reutiliza el
 contenido de otro proyecto aunque ambos tengan una ruta como
-`models/orders.sql`. Si solo existe un proyecto autorizado, aparece `No hay otro
-proyecto disponible en esta sesion.`; no se inventan alternativas.
+`models/sources/src_public.yml`. La prueba mas exigente usa el mismo objeto
+fisico PostgreSQL en A y B, confirma que B empieza sin el grafo de A y, al
+volver, recupera las dos fuentes y `Model 1` de A. Si solo existe un proyecto
+autorizado, aparece `No hay otro proyecto disponible en esta sesion.`; no se
+inventan alternativas.
 
 ## Insertar nodos
 
@@ -174,9 +177,11 @@ captura principal, `Ejecutar` esta deshabilitado porque la barra indica
    exacto en el Workbench de codigo del proyecto.
 3. Si el nodo es nuevo o generado y aun no tiene archivo persistido, confirmar
    que se abre `More: Code` del propio nodo para revisar o editar su SQL.
-4. Para revisar el proyecto completo, abrir `Espacio de trabajo > Open project
+4. Con el editor SQL enfocado, usar `Backspace` o `Delete` y confirmar que solo
+   cambia el texto; el nodo seleccionado debe seguir en el grafo.
+5. Para revisar el proyecto completo, abrir `Espacio de trabajo > Open project
 code` y elegir un archivo del explorador.
-5. Abrir `Artefactos` para revisar artefactos sincronizados y usar `View` o
+6. Abrir `Artefactos` para revisar artefactos sincronizados y usar `View` o
    `Download` cuando esten disponibles.
 
 Resultado esperado: codigo y artefactos son vistas de inspeccion del workspace;
@@ -288,11 +293,14 @@ de rails protegidos como `ListWarehouseConnections`,
 - Importar el mismo objeto fisico mediante dos conexiones y confirmar que no se
   deduplican entre si.
 - Cambiar entre dos proyectos autorizados que compartan una ruta de archivo y
-  confirmar que cada uno conserva su propio contenido al volver.
+  un nombre de nodo; confirmar que B empieza limpio, crea su propio estado y que
+  cada uno conserva su contenido al volver A -> B -> A.
 - Abrir `Proyecto` y confirmar que `Importar` es snapshot, no conexion.
 - Confirmar que `Ejecutar` no se habilita con `Plan requerido`.
 - Pulsar `Codigo` en un nodo persistido y en uno generado; comprobar que cada
   accion abre el recurso exacto y nunca un archivo de respaldo no relacionado.
+- Borrar texto dentro del editor SQL con `Backspace` y `Delete`; comprobar que
+  el nodo seleccionado no se elimina y que el Canvas conserva su grafo.
 - Repetir la comprobacion de visibilidad a 1000x660, 1280x720 y 1440x900, con
   zoom de navegador al 100 % y al 200 %, sin texto truncado que oculte identidad
   ni controles fuera del alcance del scroll.
@@ -311,6 +319,13 @@ fuente completamente dentro del viewport, `Connection` visible con su identidad
 exacta, scroll util, cierre y `Cancel` alcanzables, cero hallazgos axe
 `serious`/`critical` y ninguna tercera fuente persistida al cancelar. No se usan
 clicks forzados.
+
+La misma prueba abre dos scopes concedidos por el servidor en una unica sesion,
+cambia mediante el selector visible, crea B desde su estado vacio, reutiliza la
+ruta `models/sources/src_public.yml` y el mismo objeto fisico, y vuelve a A. Las
+lecturas autorizadas de borrador y archivo deben devolver A, B y A sin datos
+cruzados. Tambien vacia el SQL con teclado y exige que `Model 1` permanezca antes
+de continuar la autoria.
 
 El usuario exigente debe repetir ademas el 200 % con el zoom real del navegador,
 porque el rasterizado, las preferencias de fuente y el escalado del sistema
