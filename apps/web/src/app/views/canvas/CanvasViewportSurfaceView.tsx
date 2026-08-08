@@ -26,6 +26,8 @@ import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter
 import type { CanvasGraphSearchController } from './useCanvasGraphSearchController';
 import type { CanvasGraphFilterController } from './useCanvasGraphFilterController';
 
+const CANVAS_FIT_VIEW_OPTIONS = { padding: 0.32, maxZoom: 0.82 } as const;
+
 type CanvasViewportSurfaceViewProps = Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
   resolvedCanvasPalette: CanvasPaletteId;
@@ -220,7 +222,7 @@ function CanvasViewportReactFlowSurface({
         deleteKeyCode={canEditEdges ? undefined : null}
         disableKeyboardA11y={!canSelectNodes}
         fitView={viewport == null}
-        fitViewOptions={{ padding: 0.2, maxZoom: 0.82 }}
+        fitViewOptions={CANVAS_FIT_VIEW_OPTIONS}
         minZoom={0.35}
         defaultViewport={viewport ?? undefined}
         onMoveEnd={(event, nextViewport) => {
@@ -236,7 +238,7 @@ function CanvasViewportReactFlowSurface({
         className="bg-(--canvas-surface)"
         ariaLabelConfig={buildCanvasReactFlowAriaLabelConfig(copy)}
       >
-        <Controls />
+        <Controls fitViewOptions={CANVAS_FIT_VIEW_OPTIONS} />
         <MiniMap
           pannable
           zoomable
