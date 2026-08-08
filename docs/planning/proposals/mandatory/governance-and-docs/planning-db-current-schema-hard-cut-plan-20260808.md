@@ -174,6 +174,7 @@ allowedImplementationSurfaces:
   - docs/guides/**
   - docs/runbooks/**
   - docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md
+  - docs/planning/proposals/mandatory/**
   - docs/planning/status/**
   - docs/**/index.md
   - package.json
@@ -245,16 +246,13 @@ redGreenCycles:
       - scripts/planning-db-schema.cjs
       - scripts/planning-db-schema.test.cjs
     greenTest: node --test scripts/planning-db-schema.test.cjs
-  - id: migration-artifact-recurrence-guard
+  - id: obsolete-schema-artifact-recurrence-guard
     redTest: node --test scripts/planning-db-current-schema-policy.test.cjs
-    expectedFailure: Planning DB migration directory, runner, commands, ledger, and references still exist.
+    expectedFailure: Obsolete ordered-schema directories, runners, commands, ledgers, or source references still exist.
     patchSurfaces:
       - scripts/planning-db-current-schema-policy.cjs
       - scripts/planning-db-current-schema-policy.test.cjs
       - package.json
-      - tools/planning-db/migrations/**
-      - scripts/planning-db-migrate.cjs
-      - scripts/planning-db-migrate.test.cjs
     greenTest: node --test scripts/planning-db-current-schema-policy.test.cjs
   - id: rebuild-import-integration
     redTest: node --test scripts/planning-db-content.integration.test.cjs
@@ -288,6 +286,18 @@ symbols:
     cypressCoverage: N/A
     unitTests:
       - scripts/planning-db-current-schema-policy.test.cjs
+  - name: assertCurrentRailDecisionState
+    path: scripts/planning-db-architecture-state.cjs
+    dddOwner: PlanningDbCanonicalStateImport
+    cqRails:
+      - RestorePlanningDbCanonicalArchitectureState
+      - ExportPlanningDbCanonicalArchitectureState
+    fowlerSignals:
+      - current rail decisions cannot retain historical operations
+    architectureGuard: node --test scripts/planning-db-architecture-state.test.cjs
+    cypressCoverage: N/A
+    unitTests:
+      - scripts/planning-db-architecture-state.test.cjs
 ```
 
 ## Validation Plan
