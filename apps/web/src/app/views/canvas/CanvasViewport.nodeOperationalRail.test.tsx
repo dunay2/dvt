@@ -195,27 +195,28 @@ describe('CanvasViewport node operational rail', () => {
   });
 
   it('keeps an explicitly opened popover independent from visual and execution selection', async () => {
-    const buildNodes = (selectedNodeId?: string) =>
-      [
-        {
-          id: 'source_orders',
-          position: { x: 40, y: 80 },
-          data: {
-            name: 'Orders source',
-            selectedForExecution: selectedNodeId === 'source_orders',
-          },
-          type: 'dbtNode',
+    const buildNodes = (
+      selectedNodeId?: string
+    ): CanvasViewportProps['nodesWithImpact'] => [
+      {
+        id: 'source_orders',
+        position: { x: 40, y: 80 },
+        data: {
+          name: 'Orders source',
+          selectedForExecution: selectedNodeId === 'source_orders',
         },
-        {
-          id: 'model_orders',
-          position: { x: 260, y: 80 },
-          data: {
-            name: 'Orders model',
-            selectedForExecution: selectedNodeId === 'model_orders',
-          },
-          type: 'dbtNode',
+        type: 'dbtNode',
+      },
+      {
+        id: 'model_orders',
+        position: { x: 260, y: 80 },
+        data: {
+          name: 'Orders model',
+          selectedForExecution: selectedNodeId === 'model_orders',
         },
-      ] as CanvasViewportProps['nodesWithImpact'];
+        type: 'dbtNode',
+      },
+    ];
 
     await renderViewport({ nodesWithImpact: buildNodes() });
     await openOperationalDetails('source_orders');
