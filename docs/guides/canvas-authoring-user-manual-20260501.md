@@ -302,6 +302,20 @@ de rails protegidos como `ListWarehouseConnections`,
 - Abrir `Codigo`, `Artefactos` y `Ejecuciones` y comprobar que cada vista muestra
   informacion alineada con el workspace activo.
 
+### Cobertura automatizada y comprobacion manual exigente
+
+La prueba protegida de Source Import ejecuta 1440x900, 1280x720, 1000x660 y
+500x330. Este ultimo tamano ejerce la presion de layout equivalente a ampliar al
+200 % la base 1000x660: exige dialogo dentro del viewport, scroll visible,
+`Cancel` alcanzable, cero hallazgos axe `serious`/`critical` y ninguna tercera
+fuente persistida al cancelar. No se usan clicks forzados.
+
+El usuario exigente debe repetir ademas el 200 % con el zoom real del navegador,
+porque el rasterizado, las preferencias de fuente y el escalado del sistema
+operativo no quedan completamente representados por un viewport CSS reducido.
+Si titulo, conexion, identificador, acciones o foco quedan ocultos, el resultado
+es `NO-GO` aunque la prueba automatizada sea verde.
+
 ## Diagnostico rapido
 
 | Sintoma                                  | Revision                                                         |
