@@ -124,9 +124,7 @@ describe('CanvasViewport node operational rail', () => {
   });
 
   it('does not replace health details when an embedded node control emits a node click', async () => {
-    const onNodeClick = vi.fn();
     await renderViewport({
-      onNodeClick,
       nodesWithImpact: [
         {
           id: 'source_orders',
@@ -162,7 +160,6 @@ describe('CanvasViewport node operational rail', () => {
     });
 
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
-    expect(onNodeClick).not.toHaveBeenCalled();
   });
 
   it('closes the popover when the user clicks outside it within the canvas viewport', async () => {
@@ -196,7 +193,7 @@ describe('CanvasViewport node operational rail', () => {
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
   });
 
-  it('keeps an explicitly opened popover independent from execution-selection synchronization', async () => {
+  it('keeps the operational popover independent because visual selection has no application callback', async () => {
     await renderViewport({
       nodesWithImpact: [
         {
@@ -217,35 +214,7 @@ describe('CanvasViewport node operational rail', () => {
     await openOperationalDetails('source_orders');
 
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
-
-    const onSelectionChange = xyflowState.lastReactFlowProps?.onSelectionChange as
-      | ((selection: {
-          nodes: CanvasViewportProps['nodesWithImpact'];
-          edges: CanvasViewportProps['edges'];
-        }) => void)
-      | undefined;
-    const nodes = xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact'];
-
-    await act(async () => {
-      onSelectionChange?.({ nodes: [], edges: [] });
-    });
-
-    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
-
-    await act(async () => {
-      onSelectionChange?.({
-        nodes: nodes.filter((node) => node.id === 'source_orders'),
-        edges: [],
-      });
-    });
-
-    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
-
-    await act(async () => {
-      onSelectionChange?.({ nodes: nodes.filter((node) => node.id === 'model_orders'), edges: [] });
-    });
-
-    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
+    expect(xyflowState.lastReactFlowProps?.onSelectionChange).toBeUndefined();
   });
 
   async function openOperationalDetails(nodeId: string): Promise<HTMLButtonElement> {
