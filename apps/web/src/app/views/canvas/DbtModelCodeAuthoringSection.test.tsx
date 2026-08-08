@@ -3,7 +3,7 @@
 import { fireEvent } from '@testing-library/dom';
 import React, { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasInspectorNodeDraft } from './canvasInspectorAuthoring.types';
@@ -118,5 +118,17 @@ describe('DbtModelCodeAuthoringSection', () => {
 
     expect(editor?.value).toBe('');
     expect(container.querySelector('[data-slot="model-sql-draft"]')?.textContent).toBe('');
+  });
+
+  it.each(['Backspace', 'Delete'])('keeps the %s editing key inside the SQL editor', (key) => {
+    act(() => root.render(<Harness />));
+
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]');
+    const leakedKeyDown = vi.fn();
+    container.addEventListener('keydown', leakedKeyDown);
+
+    fireEvent.keyDown(editor!, { key });
+
+    expect(leakedKeyDown).not.toHaveBeenCalled();
   });
 });
