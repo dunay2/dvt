@@ -176,6 +176,56 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', 'models/sources/src_public.yml');
     cy.contains('Stale version').should('not.exist');
 
+    const runId = String(Cypress.env('firstAuthoringRunId') ?? 'source-import-live');
+    const expectedConnectionName = `Live Postgres ${runId}`;
+    const expectedConnectionId = `live-postgres-${runId}`
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    readLiveGraphDraft(session).then((draftResponse) => {
+      expect(draftResponse.status).to.equal(200);
+      const importedSource = (
+        draftResponse.body as {
+          record: {
+            draft: {
+              nodes: Array<{
+                pluginId: string;
+                metadata?: Record<string, unknown>;
+              }>;
+            };
+          };
+        }
+      ).record.draft.nodes.find((node) => node.pluginId === 'dvt.warehouse-source');
+
+      expect(importedSource?.metadata).to.have.nested.property(
+        'connectedSourceRef.connectionRef.connectionId',
+        expectedConnectionId
+      );
+      expect(importedSource?.metadata).to.have.nested.property(
+        'connectedSourceRef.connectionRef.provider',
+        'postgres'
+      );
+      expect(importedSource?.metadata).to.have.nested.property(
+        'connectedSourceRef.sourceObjectId',
+        'relation/dvt/public/source_1'
+      );
+      expect(importedSource?.metadata).not.to.have.property('sourceObjectId');
+      expect(importedSource?.metadata).not.to.have.property('connectionType');
+    });
+
+    getVisibleCanvasNodeByCardTitle('Postgres')
+      .find('[data-slot="graph-node-card-title"]')
+      .dblclick();
+    cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
+    openNodeWorkbenchSection('general');
+    cy.get('[data-slot="canvas-node-workbench-general-section"]')
+      .should('contain.text', 'Connection')
+      .and('contain.text', expectedConnectionName)
+      .and('contain.text', 'postgres')
+      .and('contain.text', expectedConnectionId);
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+
     cy.contains('.react-flow__node', 'Postgres')
       .find('[data-slot="graph-node-operational-metric"]')
       .contains('Rows')
