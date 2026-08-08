@@ -2288,7 +2288,7 @@ test('buildAiProjectContext aggregates database project state for agent discover
           rail_status: 'declared',
           is_gap: true,
           is_duplicate: false,
-          source_path: 'docs/planning/example.md',
+          source_path: 'docs\\planning|example.md',
         },
       ],
       components: [
@@ -2387,6 +2387,10 @@ test('renderAiProjectContextMarkdown fills a reusable database context template'
   assert.match(markdown, /^# DB-first AI project context/);
   assert.match(markdown, /\| commandQueryRailGaps \| 1 \|/);
   assert.match(markdown, /QueryWidgets/);
+  assert.ok(
+    markdown.includes('docs\\\\planning\\|example.md'),
+    'Markdown table cells must escape backslashes before escaping delimiters'
+  );
   assert.match(markdown, /R-20260602-EXAMPLE/);
   assert.match(markdown, /pnpm planning:db:query command-query-rails --gaps true/);
 });
