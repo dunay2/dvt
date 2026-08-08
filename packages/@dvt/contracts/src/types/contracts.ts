@@ -1,5 +1,6 @@
 import type { $brand } from 'zod';
 
+import type { PythonCodeExecutionEvidence } from '../contracts/engine/PythonCodeExecutionEvidence.v1.js';
 import type { DbtProjectBundleRef } from './artifacts.js';
 
 /**
@@ -122,7 +123,10 @@ export interface ArtifactAcquisitionEvidence {
   durationMs: number;
 }
 
-export type StepResultEvidence = MaterializationEvidence | ArtifactAcquisitionEvidence;
+export type StepResultEvidence =
+  | MaterializationEvidence
+  | ArtifactAcquisitionEvidence
+  | PythonCodeExecutionEvidence;
 
 export interface TransformationFlowRuntimeBinding {
   previewProfile: NonBlankString;
