@@ -1,7 +1,7 @@
 /** Owned concern: declare the governed Python code authoring node kind. */
 import { FileCode2 } from 'lucide-react';
 
-import { resolveGraphNodeKindTone } from '../graph/graphVisualTokens';
+import { graphNodeKindToneClasses } from '../graph/graphVisualTokens';
 import type { NodeKindRegistration } from '../nodeTypeContracts';
 
 export const PYTHON_PLUGIN_ID = 'dvt.python' as const;
@@ -15,7 +15,7 @@ export const PYTHON_NODE_KINDS: readonly NodeKindRegistration[] = [
     role: 'transform',
     previewStepKind: 'EXECUTE_PYTHON_CODE',
     icon: FileCode2,
-    ...resolveGraphNodeKindTone(PYTHON_CODE_NODE_KIND),
+    ...graphNodeKindToneClasses.transform,
     allowsIncoming: true,
     allowsOutgoing: true,
     supportsColumns: false,
