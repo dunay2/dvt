@@ -176,6 +176,51 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
     ]);
   });
 
+  it('fails closed when every canonical node ID is owned by another source identity', async () => {
+    const connectionId = 'warehouse-backup';
+    const stableNodeId = 'src_warehouse_backup_analytics_erp_orders';
+    const collisionSuffix = sha256(JSON.stringify([connectionId, SOURCE_OBJECT.objectId])).slice(
+      0,
+      8
+    );
+    const collisionNodeId = `${stableNodeId}_${collisionSuffix}`;
+    const draftStore = createDraftStore(
+      createDraftWithSourceNodes('orders-canvas', [
+        {
+          nodeId: stableNodeId,
+          connectionId: 'occupied-stable',
+          sourceObjectId: 'relation/occupied/stable',
+        },
+        {
+          nodeId: collisionNodeId,
+          connectionId: 'occupied-collision',
+          sourceObjectId: 'relation/occupied/collision',
+        },
+      ])
+    );
+    const batchMutation = createBatchMutation();
+    const strategy = createStrategy(draftStore, batchMutation);
+    const context: WarehouseSourceImportCommandContext = {
+      ...CONTEXT,
+      connection: { ...CONTEXT.connection, id: connectionId },
+      sourceObjects: CONTEXT.sourceObjects.map((sourceObject) => ({
+        ...sourceObject,
+        connectionId,
+      })),
+    };
+
+    await expect(
+      strategy.execute(context, {
+        schemaVersion: 'canvas-authoring-authority-binding.v1',
+        canvasId: 'orders-canvas',
+        authority: { kind: 'graph-draft' },
+      })
+    ).rejects.toBeInstanceOf(WarehouseSourceImportDraftConflictError);
+
+    expect(batchMutation.apply).not.toHaveBeenCalled();
+    expect(draftStore.save).not.toHaveBeenCalled();
+  });
+
   it('fails closed on legacy source identity before publishing files', async () => {
     const draftStore = createDraftStore(
       createDraftWithLegacySourceNode('orders-canvas', 'src_warehouse_prod_analytics_erp_orders')
@@ -433,9 +478,26 @@ function createDraft(canvasId: string): WorkspaceGraphAuthoringDraft {
 }
 
 function createDraftWithSourceNode(canvasId: string, nodeId: string): WorkspaceGraphAuthoringDraft {
+  return createDraftWithSourceNodes(canvasId, [
+    {
+      nodeId,
+      connectionId: 'warehouse-prod',
+      sourceObjectId: SOURCE_OBJECT.objectId,
+    },
+  ]);
+}
+
+function createDraftWithSourceNodes(
+  canvasId: string,
+  identities: ReadonlyArray<{
+    nodeId: string;
+    connectionId: string;
+    sourceObjectId: string;
+  }>
+): WorkspaceGraphAuthoringDraft {
   const draft = createDraft(canvasId);
-  const node = {
-    id: nodeId,
+  const nodes = identities.map((identity) => ({
+    id: identity.nodeId,
     name: SOURCE_OBJECT.displayName,
     pluginId: 'dvt.warehouse-source',
     kind: 'dvt:source',
@@ -447,23 +509,27 @@ function createDraftWithSourceNode(canvasId: string, nodeId: string): WorkspaceG
         schemaVersion: 'connected-source-ref.v1',
         connectionRef: {
           schemaVersion: 'connection-ref.v1',
-          connectionId: 'warehouse-prod',
+          connectionId: identity.connectionId,
           provider: 'postgres',
         },
-        sourceObjectId: SOURCE_OBJECT.objectId,
+        sourceObjectId: identity.sourceObjectId,
       },
     },
-  };
+  }));
+  const nodeIds = identities.map((identity) => identity.nodeId);
+  const nodePositions = Object.fromEntries(
+    identities.map((identity, index) => [identity.nodeId, { x: 120 + index * 320, y: 120 }])
+  );
   return {
     ...draft,
-    nodeIds: [nodeId],
-    nodePositions: { [nodeId]: { x: 120, y: 120 } },
-    nodes: [node],
+    nodeIds,
+    nodePositions,
+    nodes,
     canvases: draft.canvases?.map((canvas) => ({
       ...canvas,
-      nodeIds: [nodeId],
-      nodePositions: { [nodeId]: { x: 120, y: 120 } },
-      nodes: [node],
+      nodeIds,
+      nodePositions,
+      nodes,
     })),
   };
 }
