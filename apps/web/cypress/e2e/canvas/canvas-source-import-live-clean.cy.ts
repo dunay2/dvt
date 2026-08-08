@@ -398,20 +398,22 @@ describe('Canvas source import live clean proof', () => {
 
     openNodeWorkbenchSection('code');
     const authoredModelSql = `select order_id, customer, amount\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
-    cy.get('[data-slot="canvas-node-workbench-code-section"]')
-      .should('not.contain.text', 'No SQL or generated code is recorded for this node.')
-      .within(() => {
-        cy.get('[data-slot="dbt-model-code-provenance"]')
-          .should('contain.text', 'models/model_1.sql')
-          .and('contain.text', 'Generated');
-        cy.get('textarea[name="dbt-model-sql"]')
-          .should('be.visible')
-          .and('contain.value', `{{ source('${expectedSourceName}', 'source_1') }}`)
-          .focus()
-          .type('{selectall}{backspace}')
-          .should('have.value', '')
-          .type(authoredModelSql, { parseSpecialCharSequences: false });
-      });
+    cy.get('[data-slot="canvas-node-workbench-code-section"]').should(
+      'not.contain.text',
+      'No SQL or generated code is recorded for this node.'
+    );
+    cy.get('[data-slot="dbt-model-code-provenance"]')
+      .should('contain.text', 'models/model_1.sql')
+      .and('contain.text', 'Generated');
+    cy.get('textarea[name="dbt-model-sql"]')
+      .should('be.visible')
+      .and('contain.value', `{{ source('${expectedSourceName}', 'source_1') }}`)
+      .focus()
+      .type('{selectall}{backspace}');
+    cy.get('textarea[name="dbt-model-sql"]').type(authoredModelSql, {
+      parseSpecialCharSequences: false,
+    });
+    cy.get('textarea[name="dbt-model-sql"]').should('have.value', authoredModelSql);
     cy.contains('[data-slot="dbt-model-code-provenance"]', 'Authored').should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-panel"]')
       .contains('button', 'Apply')
