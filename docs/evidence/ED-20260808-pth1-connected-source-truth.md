@@ -92,10 +92,12 @@ checks two distinct persisted nested identities and nodes. It opens both source
 Workbenches without forced interaction, proves their exact connections, then
 connects a source to a generated dbt model, edits and persists model SQL,
 publishes artifacts, previews the plan and opens the exact generated project
-file. The Add Source dialog remains inside 1440x900, 1280x720, 1000x660 and
-500x330 viewports; its bounded content and Cancel action stay visible, axe finds
-no serious or critical WCAG 2.0/2.1 A/AA violations, and cancellation leaves
-the two-source draft unchanged. The runner uses native Cypress on Windows
+file. The Add Source dialog and each connected-source Workbench remain inside
+1440x900, 1280x720, 1000x660 and 500x330 viewports. The dialog's bounded content
+and Cancel action stay visible; each Workbench keeps the exact Connection fact
+and its close action reachable. Axe finds no serious or critical WCAG 2.0/2.1
+A/AA violations on either surface, and cancellation leaves the two-source draft
+unchanged. The runner uses native Cypress on Windows
 because pnpm directory junctions are not resolvable inside the Linux Cypress
 container; non-Windows execution retains the container lane.
 

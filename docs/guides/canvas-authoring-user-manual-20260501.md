@@ -306,9 +306,11 @@ de rails protegidos como `ListWarehouseConnections`,
 
 La prueba protegida de Source Import ejecuta 1440x900, 1280x720, 1000x660 y
 500x330. Este ultimo tamano ejerce la presion de layout equivalente a ampliar al
-200 % la base 1000x660: exige dialogo dentro del viewport, scroll visible,
-`Cancel` alcanzable, cero hallazgos axe `serious`/`critical` y ninguna tercera
-fuente persistida al cancelar. No se usan clicks forzados.
+200 % la base 1000x660. En cada tamano exige el dialogo y el Workbench de la
+fuente completamente dentro del viewport, `Connection` visible con su identidad
+exacta, scroll util, cierre y `Cancel` alcanzables, cero hallazgos axe
+`serious`/`critical` y ninguna tercera fuente persistida al cancelar. No se usan
+clicks forzados.
 
 El usuario exigente debe repetir ademas el 200 % con el zoom real del navegador,
 porque el rasterizado, las preferencias de fuente y el escalado del sistema
