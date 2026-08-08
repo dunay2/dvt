@@ -29,6 +29,11 @@ import {
   createHttpJsonArtifactAuthoringDraft,
   validateHttpJsonArtifactAuthoringDraft,
 } from './httpJsonArtifactAuthoringModel';
+import {
+  applyPythonCodeAuthoringDraft,
+  createPythonCodeAuthoringDraft,
+  validatePythonCodeAuthoringDraft,
+} from './pythonCodeAuthoringModel';
 
 export type CanvasInspectorNodeDraftValidationContext = Readonly<{
   node: CanonicalNode;
@@ -49,6 +54,7 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
   const dvtMetadata = createDvtNodeAuthoringMetadata(node);
   const objectFilePostgresDraft = createObjectFilePostgresAuthoringDraft(node);
   const httpJsonArtifactDraft = createHttpJsonArtifactAuthoringDraft(node);
+  const pythonCodeDraft = createPythonCodeAuthoringDraft(node);
   const tags = Array.from(
     new Set(node.tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0))
   );
@@ -66,6 +72,7 @@ export function createCanvasInspectorNodeDraft(node: CanonicalNode): CanvasInspe
     ...(dvtMetadata ? { dvt: dvtMetadata } : {}),
     ...(objectFilePostgresDraft == null ? {} : { objectFilePostgres: objectFilePostgresDraft }),
     ...(httpJsonArtifactDraft == null ? {} : { httpJsonArtifact: httpJsonArtifactDraft }),
+    ...(pythonCodeDraft == null ? {} : { pythonCode: pythonCodeDraft }),
   };
 }
 
@@ -151,6 +158,11 @@ export function validateCanvasInspectorNodeDraft(
     if (!validation.ok) return { httpJsonArtifact: validation.errors };
   }
 
+  if (draft.pythonCode) {
+    const validation = validatePythonCodeAuthoringDraft(draft.pythonCode);
+    if (!validation.ok) return { pythonCode: validation.errors };
+  }
+
   return {};
 }
 
@@ -173,7 +185,8 @@ export function hasCanvasInspectorNodeDraftChanges(
     JSON.stringify(originalDraft.objectFilePostgres ?? null) !==
       JSON.stringify(draft.objectFilePostgres ?? null) ||
     JSON.stringify(originalDraft.httpJsonArtifact ?? null) !==
-      JSON.stringify(draft.httpJsonArtifact ?? null)
+      JSON.stringify(draft.httpJsonArtifact ?? null) ||
+    JSON.stringify(originalDraft.pythonCode ?? null) !== JSON.stringify(draft.pythonCode ?? null)
   );
 }
 
@@ -209,6 +222,10 @@ export function applyCanvasInspectorNodeDraft(
 
   if (draft.httpJsonArtifact) {
     return applyHttpJsonArtifactAuthoringDraft(baseNode, draft.httpJsonArtifact);
+  }
+
+  if (draft.pythonCode) {
+    return applyPythonCodeAuthoringDraft(baseNode, draft.pythonCode);
   }
 
   return baseNode;
