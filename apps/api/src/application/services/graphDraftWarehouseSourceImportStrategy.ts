@@ -1,10 +1,12 @@
-import { createHash } from 'node:crypto';
-
 import {
+  ConnectedSourceRefSchema,
   WORKSPACE_GRAPH_AUTHORING_NODE_ROLE,
   WORKSPACE_GRAPH_AUTHORING_NODE_STATUS,
   WorkspaceGraphAuthoringDraftSchema,
+  jcsCanonicalize,
+  sha256HexUtf8,
   type CanvasAuthoringAuthorityBinding,
+  type ConnectedSourceRef,
   type WorkspaceGraphAuthoringDraft,
   type WorkspaceGraphAuthoringNode,
 } from '@dvt/contracts';
@@ -21,7 +23,6 @@ import type { IWorkspaceGraphDraftStore } from '../ports/workspaceGraphDraft.js'
 import {
   resolveWorkspaceGraphDraftCanvasIds,
   WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-  WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
 } from '../ports/workspaceGraphDraft.js';
 
 import {
@@ -63,10 +64,18 @@ export class GraphDraftWarehouseSourceImportStrategy {
     }
 
     const stored = await this.deps.draftStore.read(context.scope);
-    const draft = stored
-      ? WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload)
-      : createInitialDraft(context.canvasId, context.scope.environmentId);
+    if (!stored) throw new WarehouseSourceImportCanvasNotFoundError(context.canvasId);
+    const draft = WorkspaceGraphAuthoringDraftSchema.parse(stored.draftPayload);
     assertTargetCanvas(draft, context.canvasId);
+    for (const node of readTargetCanvas(draft, context.canvasId).nodes) {
+      if (node.pluginId !== 'dvt.warehouse-source') continue;
+      const connectedSourceRef = ConnectedSourceRefSchema.safeParse(
+        node.metadata?.connectedSourceRef
+      );
+      if (!connectedSourceRef.success || node.metadata?.sourceObjectId !== undefined) {
+        throw new WarehouseSourceImportDraftConflictError();
+      }
+    }
 
     const filePlan = await buildWarehouseSourceImportFilePlan({
       context,
@@ -79,22 +88,24 @@ export class GraphDraftWarehouseSourceImportStrategy {
       batchMutation: this.deps.batchMutation,
     });
     const mutation = appendImportedSourceNodes(draft, context, filePlan.bindings);
-    const requestHash = sha256({
-      scope: context.scope,
-      canvasId: context.canvasId,
-      connectionId: context.connection.id,
-      sourceObjectIds: context.sourceObjects.map((sourceObject) => sourceObject.objectId).sort(),
-      groupingStrategy: context.groupingStrategy,
-      includeColumns: context.includeColumns,
-      addTests: context.addTests,
-      addFreshness: context.addFreshness,
-    });
+    const requestHash = sha256HexUtf8(
+      jcsCanonicalize({
+        scope: context.scope,
+        canvasId: context.canvasId,
+        connectionId: context.connection.id,
+        sourceObjectIds: context.sourceObjects.map((sourceObject) => sourceObject.objectId).sort(),
+        groupingStrategy: context.groupingStrategy,
+        includeColumns: context.includeColumns,
+        addTests: context.addTests,
+        addFreshness: context.addFreshness,
+      })
+    );
 
     try {
       const saveResult = await this.deps.draftStore.save({
         scope: context.scope,
         schemaVersion: WORKSPACE_GRAPH_DRAFT_ACTIVE_SCHEMA_VERSION,
-        expectedRevision: stored?.revision ?? WORKSPACE_GRAPH_DRAFT_INITIAL_REVISION,
+        expectedRevision: stored.revision,
         idempotencyKey: context.idempotencyKey,
         draft: mutation.draft,
         canvasIds: resolveWorkspaceGraphDraftCanvasIds(mutation.draft),
@@ -151,17 +162,32 @@ async function readPersistedImportedNodeIds(
     throw new WarehouseSourceImportDraftConflictError();
   }
 
-  const nodeIdsBySourceObjectId = new Map<string, string[]>();
+  const nodeIdsByConnectedSourceRef = new Map<string, string[]>();
   for (const node of readTargetCanvas(parsed.data, context.canvasId).nodes) {
-    const sourceObjectId = readSourceObjectId(node);
-    if (!sourceObjectId) continue;
-    const nodeIds = nodeIdsBySourceObjectId.get(sourceObjectId) ?? [];
+    if (node.pluginId !== 'dvt.warehouse-source') continue;
+    const connectedSourceRef = ConnectedSourceRefSchema.safeParse(
+      node.metadata?.connectedSourceRef
+    );
+    if (!connectedSourceRef.success || node.metadata?.sourceObjectId !== undefined) {
+      throw new WarehouseSourceImportDraftConflictError();
+    }
+    const identityKey = jcsCanonicalize(connectedSourceRef.data);
+    const nodeIds = nodeIdsByConnectedSourceRef.get(identityKey) ?? [];
     nodeIds.push(node.id);
-    nodeIdsBySourceObjectId.set(sourceObjectId, nodeIds);
+    nodeIdsByConnectedSourceRef.set(identityKey, nodeIds);
   }
 
   return context.sourceObjects.map((sourceObject) => {
-    const nodeIds = nodeIdsBySourceObjectId.get(sourceObject.objectId);
+    const connectedSourceRef: ConnectedSourceRef = {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: sourceObject.connectionId,
+        provider: context.connection.type,
+      },
+      sourceObjectId: sourceObject.objectId,
+    };
+    const nodeIds = nodeIdsByConnectedSourceRef.get(jcsCanonicalize(connectedSourceRef));
     const nodeId = nodeIds?.[0];
     if (nodeIds?.length !== 1 || !nodeId) {
       throw new WarehouseSourceImportDraftConflictError();
@@ -180,10 +206,16 @@ function appendImportedSourceNodes(
 }> {
   const target = readTargetCanvas(draft, context.canvasId);
   const existingIds = new Set(target.nodeIds);
-  const existingNodeIdBySourceObjectId = new Map<string, string>();
+  const existingNodeIdByConnectedSourceRef = new Map<string, string>();
   for (const node of target.nodes) {
-    const sourceObjectId = readSourceObjectId(node);
-    if (sourceObjectId) existingNodeIdBySourceObjectId.set(sourceObjectId, node.id);
+    if (node.pluginId !== 'dvt.warehouse-source') continue;
+    const connectedSourceRef = ConnectedSourceRefSchema.safeParse(
+      node.metadata?.connectedSourceRef
+    );
+    if (!connectedSourceRef.success || node.metadata?.sourceObjectId !== undefined) {
+      throw new WarehouseSourceImportDraftConflictError();
+    }
+    existingNodeIdByConnectedSourceRef.set(jcsCanonicalize(connectedSourceRef.data), node.id);
   }
 
   const stableIdOwners = new Map<string, Set<string>>();
@@ -198,7 +230,18 @@ function appendImportedSourceNodes(
   const selectedNodeIds: string[] = [];
   const nextPositions = { ...target.nodePositions };
   for (const sourceObject of context.sourceObjects) {
-    const existingNodeId = existingNodeIdBySourceObjectId.get(sourceObject.objectId);
+    const connectedSourceRef: ConnectedSourceRef = {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: sourceObject.connectionId,
+        provider: context.connection.type,
+      },
+      sourceObjectId: sourceObject.objectId,
+    };
+    const existingNodeId = existingNodeIdByConnectedSourceRef.get(
+      jcsCanonicalize(connectedSourceRef)
+    );
     if (existingNodeId) {
       selectedNodeIds.push(existingNodeId);
       continue;
@@ -278,12 +321,19 @@ function toSourceNode(
       buildWarehouseSourceYamlPath(sourceObject, context.groupingStrategy),
     description: `Imported source for ${sourceObject.locator.catalog}.${sourceObject.locator.schema}.${sourceObject.locator.name}`,
     metadata: {
-      sourceObjectId: sourceObject.objectId,
+      connectedSourceRef: ConnectedSourceRefSchema.parse({
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: sourceObject.connectionId,
+          provider: context.connection.type,
+        },
+        sourceObjectId: sourceObject.objectId,
+      }),
       sourceName,
       tableName,
       tableIdentifier: sourceObject.locator.name,
       connectionName: context.connection.name,
-      connectionType: context.connection.type,
       database: sourceObject.locator.catalog,
       schema: sourceObject.locator.schema,
       relationType: sourceObject.locator.relationType,
@@ -321,19 +371,6 @@ function readTargetCanvas(draft: WorkspaceGraphAuthoringDraft, canvasId: string)
   throw new WarehouseSourceImportCanvasNotFoundError(canvasId);
 }
 
-function createInitialDraft(canvasId: string, environmentId: string): WorkspaceGraphAuthoringDraft {
-  const canvas = { id: canvasId, kind: 'canvas' as const, title: 'Canvas', environmentId };
-  return {
-    canvas,
-    activeCanvasId: canvasId,
-    nodeIds: [],
-    nodePositions: {},
-    nodes: [],
-    edges: [],
-    canvases: [{ canvas, nodeIds: [], nodePositions: {}, nodes: [], edges: [] }],
-  };
-}
-
 function toStableSourceNodeId(
   sourceObject: WarehouseSourceImportCommandContext['sourceObjects'][number]
 ): string {
@@ -351,18 +388,8 @@ function toStableSourceNodeId(
 function toCollisionResistantSourceNodeId(
   sourceObject: WarehouseSourceImportCommandContext['sourceObjects'][number]
 ): string {
-  const suffix = createHash('sha256')
-    .update(JSON.stringify([sourceObject.connectionId, sourceObject.objectId]))
-    .digest('hex')
-    .slice(0, 8);
+  const suffix = sha256HexUtf8(
+    jcsCanonicalize([sourceObject.connectionId, sourceObject.objectId])
+  ).slice(0, 8);
   return `${toStableSourceNodeId(sourceObject)}_${suffix}`;
-}
-
-function readSourceObjectId(node: WorkspaceGraphAuthoringNode): string | null {
-  const sourceObjectId = node.metadata?.sourceObjectId;
-  return typeof sourceObjectId === 'string' && sourceObjectId.length > 0 ? sourceObjectId : null;
-}
-
-function sha256(value: unknown): string {
-  return createHash('sha256').update(JSON.stringify(value), 'utf8').digest('hex');
 }
