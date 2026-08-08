@@ -197,7 +197,9 @@ allowedImplementationSurfaces:
   - scripts/check-feature-mechanization*.cjs
   - tools/planning-db/**
   - tools/ci/planning-review-canon.test.mjs
+  - tools/ci/workflow-pattern-parity.test.mjs
   - tools/ci/policy/workflow-scope.json
+  - apps/web/src/app/views/canvas/CanvasSourceImportLiveProof.architecture.test.ts
   - .github/actions/**
   - .github/workflows/**
 forbiddenImplementationSurfaces:
@@ -205,7 +207,6 @@ forbiddenImplementationSurfaces:
   - packages/@dvt/adapter-postgres/**
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
-  - apps/**
 commandQueryRails:
   - name: RestorePlanningDbCanonicalArchitectureState
     type: command
