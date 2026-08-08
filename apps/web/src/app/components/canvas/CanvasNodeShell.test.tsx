@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { CanvasNodeShell } from './CanvasNodeShell';
 import type { CanvasNodeContextMenuModel } from './canvasNodeContextMenuModel';
+import { canvasNodeEmbeddedControlProps } from './canvasNodeInteractionBoundary';
 
 const CONTEXT_MENU_MODEL: CanvasNodeContextMenuModel = {
   target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders model' },
@@ -42,7 +43,7 @@ describe('CanvasNodeShell', () => {
     previousActEnvironment = globalObject.IS_REACT_ACT_ENVIRONMENT;
     globalObject.IS_REACT_ACT_ENVIRONMENT = true;
     container = document.createElement('div');
-    document.body.append(container);
+    document.body.appendChild(container);
     root = createRoot(container);
   });
 
@@ -79,6 +80,34 @@ describe('CanvasNodeShell', () => {
     });
 
     expect(openWorkbench).toHaveBeenCalledOnce();
+  });
+
+  it('does not open node code or workbench when double-click starts on an embedded node control', () => {
+    const openWorkbench = vi.fn();
+    const onContextMenuAction = vi.fn();
+
+    act(() => {
+      root.render(
+        <CanvasNodeShell
+          contextMenuModel={CONTEXT_MENU_MODEL}
+          shouldShowSourceHandle={false}
+          shouldShowTargetHandle={false}
+          onContextMenuAction={onContextMenuAction}
+          onOpenWorkbench={openWorkbench}
+        >
+          <button type="button" {...canvasNodeEmbeddedControlProps}>
+            Inline control
+          </button>
+        </CanvasNodeShell>
+      );
+    });
+
+    act(() => {
+      fireEvent.dblClick(container.querySelector('button')!);
+    });
+
+    expect(openWorkbench).not.toHaveBeenCalled();
+    expect(onContextMenuAction).not.toHaveBeenCalled();
   });
 
   it('renders graph ports through component-owned presentation slots', () => {
