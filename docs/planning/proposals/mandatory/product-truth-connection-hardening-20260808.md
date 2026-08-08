@@ -438,15 +438,20 @@ allowedImplementationSurfaces:
   - packages/@dvt/contracts/src/contracts/source-import/**
   - packages/@dvt/contracts/test/source-import/ConnectedSourceRef.v1.test.ts
   - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
+  - apps/api/src/application/services/warehouseSourceYamlIdentity.ts
   - apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts
+  - apps/api/test/application/services/warehouseSourceYaml.test.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts
+  - apps/web/src/app/plugins/graph/graphNodeTitlePresentation.ts
+  - apps/web/src/app/plugins/graph/graphNodeTitlePresentation.test.ts
   - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
   - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - docs/evidence/**
   - docs/risk-register/quality/**
   - docs/**/index.md
+  - docs/concepts/repository-map.md
   - docs/planning/status/**
 forbiddenImplementationSurfaces:
   - database migrations or migration-state compatibility
@@ -511,6 +516,13 @@ redGreenCycles:
     patchSurfaces:
       - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
     greenTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
+  - id: canonical-identity-consumers
+    redTest: pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts && pnpm --filter @dvt/web test:canvas -- graphNodeTitlePresentation.test.ts
+    expectedFailure: YAML binding identity and card title projection still consume loose object or connection type fields.
+    patchSurfaces:
+      - apps/api/src/application/services/warehouseSourceYamlIdentity.ts
+      - apps/web/src/app/plugins/graph/graphNodeTitlePresentation.ts
+    greenTest: pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts && pnpm --filter @dvt/web test:canvas -- graphNodeTitlePresentation.test.ts
   - id: visible-connection-binding
     redTest: pnpm --filter @dvt/web test:canvas -- nodePropertiesReadModel.test.ts
     expectedFailure: The Workbench read model and localized copy do not expose Connection.
