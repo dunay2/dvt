@@ -53,7 +53,7 @@ export function DbtModelCodeAuthoringSection({
           name="dbt-model-sql"
           value={editorValue}
           disabled={disabled}
-          className={inspectorVisualClasses.inspectorCodeEditor}
+          className={`${inspectorVisualClasses.inspectorCodeEditor} nokey`}
           spellCheck={false}
           onKeyDown={(event) => {
             if (event.key === 'Backspace' || event.key === 'Delete') {
