@@ -30,6 +30,11 @@ class CanvasSourceImportLiveProofRunner {
     this.pollIntervalMs = 500;
     this.postgresBootstrapScript = path.resolve(__dirname, 'run-temporal-postgres-proof.cjs');
     this.temporalPackageRoot = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
+    this.webPackageRoot = path.resolve(__dirname, '../apps/web');
+    this.localSpecPath = path.resolve(
+      this.webPackageRoot,
+      'cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts'
+    );
     this.specPath = '/repo/apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts';
     this.cypressImage = 'cypress/included:15.18.1';
     this.localAuthHost = '127.0.0.1';
@@ -279,7 +284,42 @@ class CanvasSourceImportLiveProofRunner {
     }
   }
 
-  async runCypress(args) {
+  buildCypressInvocation(args, platform = process.platform) {
+    if (platform === 'win32') {
+      const env = {
+        ...this.env,
+        CYPRESS_baseUrl: `http://127.0.0.1:${args.webPort}`,
+        CYPRESS_apiBaseUrl: `http://127.0.0.1:${args.apiPort}`,
+        CYPRESS_apiBearerToken: args.apiBearerToken,
+        CYPRESS_workspaceTenantId: args.workspaceScope.tenantId,
+        CYPRESS_workspaceProjectId: args.baseWorkspaceScope.projectId,
+        CYPRESS_workspaceEnvironmentId: args.workspaceScope.environmentId,
+        CYPRESS_firstAuthoringRunId: args.sourceImportRunId,
+        CYPRESS_requireLiveProtectedRuntime: '1',
+      };
+      delete env.ELECTRON_RUN_AS_NODE;
+
+      return {
+        command: 'pnpm.cmd',
+        args: [
+          'exec',
+          'cypress',
+          'run',
+          '--config-file',
+          'cypress.config.ts',
+          '--spec',
+          this.localSpecPath,
+        ],
+        options: {
+          cwd: this.webPackageRoot,
+          stdio: 'inherit',
+          env,
+          shell: true,
+          windowsHide: true,
+        },
+      };
+    }
+
     const repoRoot = path.resolve(__dirname, '..').replaceAll('\\', '/');
     const dockerArgs = [
       'run',
@@ -314,10 +354,19 @@ class CanvasSourceImportLiveProofRunner {
       this.specPath,
     ];
 
-    const child = spawn('docker', dockerArgs, {
-      stdio: 'inherit',
-      windowsHide: true,
-    });
+    return {
+      command: 'docker',
+      args: dockerArgs,
+      options: {
+        stdio: 'inherit',
+        windowsHide: true,
+      },
+    };
+  }
+
+  async runCypress(args) {
+    const invocation = this.buildCypressInvocation(args);
+    const child = spawn(invocation.command, invocation.args, invocation.options);
 
     const [exitCode] = await once(child, 'exit');
 
@@ -427,7 +476,9 @@ class CanvasSourceImportLiveProofRunner {
           '--strictPort',
         ],
         {
-          VITE_API_BASE_URL: `http://host.docker.internal:${this.apiPort}`,
+          VITE_API_BASE_URL: `http://${
+            process.platform === 'win32' ? '127.0.0.1' : 'host.docker.internal'
+          }:${this.apiPort}`,
           ...processContext.localProtectedRuntimeAuth.webEnv,
           VITE_DEFAULT_TENANT_ID: baseWorkspaceScope.tenantId,
           VITE_DEFAULT_PROJECT_ID: baseWorkspaceScope.projectId,

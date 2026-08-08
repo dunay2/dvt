@@ -48,6 +48,30 @@ test('source import live proof uses locally resolvable Cypress dependencies on W
   assert.equal(invocation.options.env.ELECTRON_RUN_AS_NODE, undefined);
 });
 
+test('source import live proof retains the isolated Docker Cypress lane on POSIX hosts', () => {
+  const runner = new CanvasSourceImportLiveProofRunner({});
+  const invocation = runner.buildCypressInvocation(
+    {
+      apiPort: 3300,
+      webPort: 4174,
+      apiBearerToken: 'test-token',
+      baseWorkspaceScope: { projectId: 'base-project' },
+      workspaceScope: {
+        tenantId: 'tenant-a',
+        projectId: 'proof-project',
+        environmentId: 'dev',
+      },
+      sourceImportRunId: 'run-1',
+    },
+    'linux'
+  );
+
+  assert.equal(invocation.command, 'docker');
+  assert.ok(invocation.args.includes('CYPRESS_baseUrl=http://host.docker.internal:4174'));
+  assert.ok(invocation.args.includes(runner.cypressImage));
+  assert.ok(invocation.args.includes(runner.specPath));
+});
+
 test('source import live proof uses an explicit local Temporal test server binary', async () => {
   const temporalServerPath = 'C:\\tools\\temporal-test-server.exe';
   const calls = [];
