@@ -32,6 +32,7 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
   resolvedCanvasPalette: CanvasPaletteId;
   canEditEdges: boolean;
+  canDeleteWithKeyboard: boolean;
   canMoveNodes: boolean;
   canSelectNodes: boolean;
   nodesWithImpact: Node[];
@@ -97,6 +98,7 @@ function resolveMiniMapNodeColor(node: { data?: unknown }): string {
 
 function CanvasViewportReactFlowSurface({
   canEditEdges,
+  canDeleteWithKeyboard,
   canMoveNodes,
   canSelectNodes,
   nodesWithImpact,
@@ -219,7 +221,7 @@ function CanvasViewportReactFlowSurface({
         elementsSelectable={canSelectNodes}
         selectNodesOnDrag
         multiSelectionKeyCode="Shift"
-        deleteKeyCode={canEditEdges ? undefined : null}
+        deleteKeyCode={canDeleteWithKeyboard ? undefined : null}
         disableKeyboardA11y={!canSelectNodes}
         fitView={viewport == null}
         fitViewOptions={CANVAS_FIT_VIEW_OPTIONS}
