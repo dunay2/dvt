@@ -62,6 +62,7 @@ test('current Planning DB schema is one declarative artifact without migration s
     'planning_task_trace_query',
     'planning_work_intake_query',
     'registered_planning_task',
+    'knowledge_action_work_intake_query',
   ]) {
     assert.doesNotMatch(schemaSql, new RegExp(`\\b${taskObject}\\b`, 'u'));
   }

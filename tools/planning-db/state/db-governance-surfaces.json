@@ -116,19 +116,19 @@
       "canonicalSource": "docs/planning/status/docs-task-disposition-inventory-20260510.md and its governed planning documents",
       "writeRail": "Edit the Git disposition inventory, then run pnpm governance:refresh",
       "writeRailKind": "git_edit",
-      "readQueryRail": "pnpm planning:db:query docs-disposition|task-references|feature-work",
-      "projection": "Disposition query rows and task-reference reports",
+      "readQueryRail": "pnpm planning:db:query docs-disposition",
+      "projection": "Disposition query rows and document-reference classifications",
       "validation": "pnpm governance:db:check; pnpm docs:governance:changed-files:check",
       "authorityMode": "git-indexed"
     },
     {
       "surfaceName": "Docs resolution overlays",
       "canonicalSource": "planning_query_store.doc_resolution_overlays keyed to current source hashes",
-      "writeRail": "pnpm planning:db:operate docs-disposition resolve or pnpm planning:db:operate task-gap resolve",
+      "writeRail": "pnpm planning:db:operate docs-disposition resolve",
       "writeRailKind": "db_command",
-      "readQueryRail": "pnpm planning:db:query docs-disposition --resolution <state>; pnpm planning:db:query task-gaps --resolution <state>",
-      "projection": "doc_disposition_action_query and planning_task_gap_query rows",
-      "validation": "pnpm test:planning:db; pnpm planning:db:query task-gaps --resolution all",
+      "readQueryRail": "pnpm planning:db:query docs-disposition --resolution <state>",
+      "projection": "doc_disposition_action_query rows",
+      "validation": "pnpm test:planning:db; pnpm planning:db:query docs-disposition --resolution all",
       "authorityMode": "database"
     }
   ]

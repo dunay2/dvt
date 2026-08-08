@@ -24,6 +24,7 @@ const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { applyCurrentPlanningDbSchema, schemaName } = require('./planning-db-schema.cjs');
 const {
   assertArchitectureState,
+  assertCurrentRailDecisionState,
   assertCurrentStateValue,
   restoreArchitectureState,
 } = require('./planning-db-architecture-state.cjs');
@@ -1237,7 +1238,7 @@ const pendingMarkerTerms = [
 ];
 
 const taskLikeReferencePattern =
-  /(?<![A-Za-z0-9-])(?:ADR-\d{4}|ED-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|R-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|US-\d+[A-Za-z0-9-]*|[A-Z][A-Z0-9]{1,12}(?:-[A-Z0-9][A-Z0-9]{0,24})+)(?![A-Za-z0-9-])/g;
+  /(?<![A-Za-z0-9-])(?:ADR-\d{4}|ED-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|R-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|US-\d+[A-Za-z0-9-]*|F-\d{2}|[A-Z][A-Z0-9]{1,12}(?:-[A-Z0-9][A-Z0-9]{0,24})+)(?![A-Za-z0-9-])/g;
 
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
@@ -1314,21 +1315,6 @@ function addNormalizedId(idSet, value) {
   idSet.add(normalized.toUpperCase());
 }
 
-function buildPlanningTaskReferencePattern(planningTaskIdSet) {
-  const planningTaskIds = [...new Set([...planningTaskIdSet].map((taskId) => taskId.toUpperCase()))]
-    .filter(Boolean)
-    .sort((left, right) => right.length - left.length || left.localeCompare(right));
-
-  if (planningTaskIds.length === 0) {
-    return null;
-  }
-
-  return new RegExp(
-    `(?<![A-Za-z0-9-])(?:${planningTaskIds.map(escapeRegExp).join('|')})(?![A-Za-z0-9-])`,
-    'gi'
-  );
-}
-
 function collectFeatureMechanizationReferenceIds(sourceDocuments) {
   const featureIds = new Set();
   const cycleIds = new Set();
@@ -1367,134 +1353,128 @@ function collectFeatureMechanizationReferenceIds(sourceDocuments) {
 
 function classifyTaskLikeReference(
   referenceText,
-  planningTaskIdSet,
   featureMechanizationIdSet = new Set(),
   featureMechanizationCycleIdSet = new Set()
 ) {
   const value = normalizeText(referenceText);
   const upperValue = value.toUpperCase();
 
-  if (planningTaskIdSet.has(value) || planningTaskIdSet.has(upperValue)) {
-    return { classification: 'registered_planning_task', registeredPlanningTask: true };
-  }
   if (featureMechanizationIdSet.has(value) || featureMechanizationIdSet.has(upperValue)) {
     return {
       classification: 'registered_feature_mechanization',
-      registeredPlanningTask: false,
     };
   }
   if (featureMechanizationCycleIdSet.has(value) || featureMechanizationCycleIdSet.has(upperValue)) {
-    return { classification: 'feature_mechanization_cycle', registeredPlanningTask: false };
+    return { classification: 'feature_mechanization_cycle' };
   }
   if (/^GPT-\d+(?:\.\d+)?$/.test(upperValue)) {
-    return { classification: 'model_reference', registeredPlanningTask: false };
+    return { classification: 'model_reference' };
   }
   if (/^[A-Z0-9]+-SKILL$/.test(upperValue)) {
-    return { classification: 'skill_reference', registeredPlanningTask: false };
+    return { classification: 'skill_reference' };
   }
   if (/^ED-YYYYMMDD$/.test(upperValue)) {
-    return { classification: 'evidence_template_id', registeredPlanningTask: false };
+    return { classification: 'evidence_template_id' };
   }
   if (/^ADR-XXXX$/.test(upperValue)) {
-    return { classification: 'adr_template_id', registeredPlanningTask: false };
+    return { classification: 'adr_template_id' };
   }
   if (/^ADR-(?:\d{3,4}[A-Z]?|[A-Z]\d+)$/.test(upperValue)) {
-    return { classification: 'adr_id', registeredPlanningTask: false };
+    return { classification: 'adr_id' };
   }
   if (/^ARC-\d+$/.test(upperValue)) {
-    return { classification: 'arc_level', registeredPlanningTask: false };
+    return { classification: 'arc_level' };
   }
   if (/^ED-\d{8}(?:-|$)/.test(upperValue)) {
-    return { classification: 'evidence_id', registeredPlanningTask: false };
+    return { classification: 'evidence_id' };
   }
   if (/^R-\d{8}-/.test(upperValue)) {
-    return { classification: 'risk_id', registeredPlanningTask: false };
+    return { classification: 'risk_id' };
   }
   if (/^US-/.test(upperValue)) {
-    return { classification: 'user_story', registeredPlanningTask: false };
+    return { classification: 'user_story' };
   }
   if (/^EPIC-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(upperValue)) {
-    return { classification: 'epic_reference', registeredPlanningTask: false };
+    return { classification: 'epic_reference' };
   }
   if (/^(?:[A-Z0-9]+-)*[A-Z0-9]+-US\d+$/.test(upperValue)) {
-    return { classification: 'user_story', registeredPlanningTask: false };
+    return { classification: 'user_story' };
   }
   if (/^(?:WAPO|E\d+-ARCH|WEB-(?:AUTH|GAP|PROJECT|SCOPE))-\d+$/.test(upperValue)) {
-    return { classification: 'user_story', registeredPlanningTask: false };
+    return { classification: 'user_story' };
   }
   if (/^(?:EWC|CODE-FILES)-\d+$/.test(upperValue)) {
-    return { classification: 'user_story', registeredPlanningTask: false };
+    return { classification: 'user_story' };
   }
   if (/^TASK-\d+$/.test(upperValue)) {
-    return { classification: 'example_task_reference', registeredPlanningTask: false };
+    return { classification: 'example_task_reference' };
   }
   if (/^GOV-S\d+(?:-[A-Z0-9]+)*$/.test(upperValue) || /^CDG(?:-[A-Z0-9]+)+$/.test(upperValue)) {
-    return { classification: 'governance_workstream_reference', registeredPlanningTask: false };
+    return { classification: 'governance_workstream_reference' };
   }
   if (/^RFC-\d+$/.test(upperValue)) {
-    return { classification: 'standards_reference', registeredPlanningTask: false };
+    return { classification: 'standards_reference' };
   }
   if (/^AR-[A-Z]$/.test(upperValue)) {
     return {
       classification: 'architecture_review_stream_reference',
-      registeredPlanningTask: false,
     };
   }
   if (/^(?:G\d+|F\d{2}|S\d{2}|W\d+)-/.test(upperValue)) {
-    return { classification: 'historical_gap', registeredPlanningTask: false };
+    return { classification: 'historical_gap' };
   }
   if (/^SHA-\d+$/.test(upperValue)) {
-    return { classification: 'algorithm_reference', registeredPlanningTask: false };
+    return { classification: 'algorithm_reference' };
   }
   if (/^REF-\d+$/.test(upperValue)) {
-    return { classification: 'document_reference', registeredPlanningTask: false };
+    return { classification: 'document_reference' };
   }
   if (/^(?:SSE-(?:KMS|S3)|AES-GCM)$/.test(upperValue)) {
-    return { classification: 'security_algorithm_reference', registeredPlanningTask: false };
+    return { classification: 'security_algorithm_reference' };
   }
   if (/^(?:AES|RSA|ECDSA)-\d+$/.test(upperValue) || /^HMAC-SHA\d+$/.test(upperValue)) {
-    return { classification: 'security_algorithm_reference', registeredPlanningTask: false };
+    return { classification: 'security_algorithm_reference' };
   }
   if (/^CVE-\d{4}-\d+$/.test(upperValue)) {
-    return { classification: 'security_advisory_reference', registeredPlanningTask: false };
+    return { classification: 'security_advisory_reference' };
   }
   if (/^(?:AC|AT|AU|CA|CM|CP|IA|IR|MA|MP|PE|PL|PS|RA|SA|SC|SI|SR)-\d+$/.test(upperValue)) {
-    return { classification: 'security_control_reference', registeredPlanningTask: false };
+    return { classification: 'security_control_reference' };
   }
   if (/^ISOL(?:-[A-Z0-9]+)*$/.test(upperValue)) {
-    return { classification: 'security_test_reference', registeredPlanningTask: false };
+    return { classification: 'security_test_reference' };
   }
   if (/^YYYY-MM-DD$/.test(upperValue)) {
-    return { classification: 'date_placeholder', registeredPlanningTask: false };
+    return { classification: 'date_placeholder' };
   }
   if (/^UTF-\d+$/.test(upperValue)) {
-    return { classification: 'encoding_reference', registeredPlanningTask: false };
+    return { classification: 'encoding_reference' };
   }
   if (
     /^(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY)-(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY)$/.test(upperValue)
   ) {
-    return { classification: 'currency_pair_reference', registeredPlanningTask: false };
+    return { classification: 'currency_pair_reference' };
   }
   if (/^Q\d+-Q\d+$/.test(upperValue)) {
-    return { classification: 'range_reference', registeredPlanningTask: false };
+    return { classification: 'range_reference' };
   }
   if (/^P\d+-\d+$/.test(upperValue)) {
-    return { classification: 'priority_work_item_marker', registeredPlanningTask: false };
+    return { classification: 'priority_work_item_marker' };
   }
   if (/^DL-\d+$/.test(upperValue)) {
-    return { classification: 'diagram_reference', registeredPlanningTask: false };
+    return { classification: 'diagram_reference' };
   }
   if (/^(?:AUTO-FAIL|TEST-MODE)$/.test(upperValue)) {
-    return { classification: 'policy_state_reference', registeredPlanningTask: false };
+    return { classification: 'policy_state_reference' };
   }
   if (/^CI-AUDIT$/.test(upperValue)) {
-    return { classification: 'governance_workstream_reference', registeredPlanningTask: false };
+    return { classification: 'governance_workstream_reference' };
   }
   if (/^(?:AV|CE|DW)-\d{3}$/.test(upperValue) || /^EA-\d{8}-\d+$/.test(upperValue)) {
-    return { classification: 'review_finding_reference', registeredPlanningTask: false };
+    return { classification: 'review_finding_reference' };
   }
   if (/^AR-[A-Z]\d+-INV-\d+$/.test(upperValue)) {
-    return { classification: 'review_invariant_reference', registeredPlanningTask: false };
+    return { classification: 'review_invariant_reference' };
   }
   if (
     /^EA-\d{8}$/.test(upperValue) ||
@@ -1502,45 +1482,41 @@ function classifyTaskLikeReference(
     /^TF-[A-Z0-9]+(?:-[A-Z0-9]+)*-QA-\d+$/.test(upperValue) ||
     /^AR-[A-Z](?:\d+)?(?:-[A-Z0-9]+)*$/.test(upperValue)
   ) {
-    return { classification: 'review_finding_reference', registeredPlanningTask: false };
+    return { classification: 'review_finding_reference' };
   }
   if (
     /^(?:INT|PKR|PR)-[A-Z0-9]+$/.test(upperValue) ||
     /^(?:MW|RC|TF)-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(upperValue)
   ) {
-    return { classification: 'historical_planning_reference', registeredPlanningTask: false };
+    return { classification: 'historical_planning_reference' };
   }
   if (/^(?:GAP|MVP|RESIDUAL|RISK|LEGACY|INV)-/.test(upperValue) || /^F-\d{2}/.test(upperValue)) {
-    return { classification: 'historical_planning_reference', registeredPlanningTask: false };
+    return { classification: 'historical_planning_reference' };
   }
   if (/^SYS-/.test(upperValue)) {
-    return { classification: 'governance_unit_reference', registeredPlanningTask: false };
+    return { classification: 'governance_unit_reference' };
   }
   if (/^CMD-/.test(upperValue)) {
-    return { classification: 'command_reference', registeredPlanningTask: false };
+    return { classification: 'command_reference' };
   }
   if (/^PS-[CQ]\d+/.test(upperValue)) {
-    return { classification: 'plan_store_matrix_reference', registeredPlanningTask: false };
+    return { classification: 'plan_store_matrix_reference' };
   }
-  return { classification: 'unknown_task_like_id', registeredPlanningTask: false };
+  return { classification: 'unknown_task_like_id' };
 }
 
 function extractTaskLikeReferences(
   document,
-  planningTaskIdSet,
   featureMechanizationIdSet = new Set(),
-  featureMechanizationCycleIdSet = new Set(),
-  options = {}
+  featureMechanizationCycleIdSet = new Set()
 ) {
   const raw = normalizeText(document.raw);
   const grouped = new Map();
-  const lineEntries =
-    options.lineEntries ||
-    raw.split(/\r?\n/).map((line, index) => ({
-      lineNumber: index + 1,
-      line,
-      sampleLine: line.trim().slice(0, 240),
-    }));
+  const lineEntries = raw.split(/\r?\n/).map((line, index) => ({
+    lineNumber: index + 1,
+    line,
+    sampleLine: line.trim().slice(0, 240),
+  }));
 
   function addReference(referenceText, lineEntry, options = {}) {
     const groupKey = options.groupKey || referenceText;
@@ -1573,32 +1549,11 @@ function extractTaskLikeReferences(
     }
   }
 
-  const capturedReferenceKeys = new Set(
-    [...grouped.values()].map((entry) => entry.referenceText.toUpperCase())
-  );
-  const planningTaskPattern =
-    options.planningTaskPattern || buildPlanningTaskReferencePattern(planningTaskIdSet);
-
-  if (planningTaskPattern) {
-    for (const lineEntry of lineEntries) {
-      planningTaskPattern.lastIndex = 0;
-      let match;
-      while ((match = planningTaskPattern.exec(lineEntry.line)) !== null) {
-        const matchKey = match[0].toUpperCase();
-        if (capturedReferenceKeys.has(matchKey)) {
-          continue;
-        }
-        addReference(match[0], lineEntry, { groupKey: matchKey });
-      }
-    }
-  }
-
   return [...grouped.values()]
     .sort((left, right) => left.referenceText.localeCompare(right.referenceText))
     .map((entry) => {
       const classification = classifyTaskLikeReference(
         entry.referenceText,
-        planningTaskIdSet,
         featureMechanizationIdSet,
         featureMechanizationCycleIdSet
       );
@@ -1611,7 +1566,6 @@ function extractTaskLikeReferences(
         referenceText: entry.referenceText,
         referencePrefix: referencePrefix(entry.referenceText),
         classification: classification.classification,
-        registeredPlanningTask: classification.registeredPlanningTask,
         occurrenceCount: entry.occurrenceCount,
         sampleLines: entry.sampleLines,
         sourceContentSha256: document.contentSha256,
@@ -1725,8 +1679,7 @@ function buildDocsDispositionActions(document, references, pendingHotspotThresho
       priority: 'P1',
       actionKind: 'unknown_task_like_id',
       referenceText: reference.referenceText,
-      reason:
-        'Task-like reference is not registered in planning lanes or a known governance ID family.',
+      reason: 'Task-like reference does not match a known governance ID family.',
       blocking: false,
       evidence: {
         referenceText: reference.referenceText,
@@ -1745,12 +1698,6 @@ function buildDocsDispositionActions(document, references, pendingHotspotThresho
 }
 
 function buildDocsDispositionSnapshot(options = {}) {
-  const planningTaskIdSet = new Set(
-    normalizeArray(options.planningTaskIds).flatMap((taskId) => {
-      const normalized = normalizeText(taskId);
-      return [normalized, normalized.toUpperCase()];
-    })
-  );
   const sourceDocuments = normalizeArray(options.documents).length
     ? normalizeArray(options.documents)
     : listTrackedMarkdownDocuments();
@@ -1767,7 +1714,6 @@ function buildDocsDispositionSnapshot(options = {}) {
     1,
     normalizeNumber(options.pendingHotspotThreshold) ?? 10
   );
-  const planningTaskPattern = buildPlanningTaskReferencePattern(planningTaskIdSet);
   const documents = [];
   const markers = [];
   const references = [];
@@ -1777,21 +1723,14 @@ function buildDocsDispositionSnapshot(options = {}) {
     const sourcePath = toPosix(normalizeText(sourceDocument.sourcePath));
     const raw = normalizeText(sourceDocument.raw);
     const contentSha256 = normalizeText(sourceDocument.contentSha256) || sha256(raw);
-    const lineEntries = raw.split(/\r?\n/).map((line, index) => ({
-      lineNumber: index + 1,
-      line,
-      sampleLine: line.trim().slice(0, 240),
-    }));
     const { frontmatter } = parseMarkdownFrontmatter(raw);
     const isArchive = isArchivedDocumentPath(sourcePath);
     const documentInput = { sourcePath, raw, contentSha256 };
     const documentMarkers = buildPendingMarkerRows(documentInput);
     const documentReferences = extractTaskLikeReferences(
       documentInput,
-      planningTaskIdSet,
       featureMechanizationIdSet,
-      featureMechanizationCycleIdSet,
-      { lineEntries, planningTaskPattern }
+      featureMechanizationCycleIdSet
     );
     const document = {
       documentPath: sourcePath,
@@ -1830,9 +1769,7 @@ function buildKnowledgeDocumentSnapshot(options = {}) {
   const sourceDocuments = normalizeArray(options.documents).length
     ? normalizeArray(options.documents)
     : listTrackedKnowledgeDocuments();
-  return buildKnowledgeSnapshotFromDocuments(sourceDocuments, {
-    planningTaskIds: normalizeArray(options.planningTaskIds),
-  });
+  return buildKnowledgeSnapshotFromDocuments(sourceDocuments);
 }
 
 function globToRegExp(glob) {
@@ -2516,6 +2453,11 @@ function readCanonicalStateSnapshot(snapshotPath = canonicalStatePath) {
   }
 
   assertArchitectureState(snapshot.architectureState);
+  assertCurrentStateValue(snapshot, 'canonicalState');
+  assertCurrentRailDecisionState(
+    snapshot.featureMechanizationRails,
+    snapshot.featureMechanizationRailOperations
+  );
 
   return snapshot;
 }
@@ -3113,7 +3055,6 @@ async function insertDocsDispositionSnapshot(client, snapshot) {
       'reference_text',
       'reference_prefix',
       'classification',
-      'registered_planning_task',
       'occurrence_count',
       { name: 'sample_lines', cast: 'jsonb' },
       'source_content_sha256',
@@ -3126,7 +3067,6 @@ async function insertDocsDispositionSnapshot(client, snapshot) {
       reference.referenceText,
       reference.referencePrefix,
       reference.classification,
-      reference.registeredPlanningTask,
       reference.occurrenceCount,
       toJson(reference.sampleLines),
       reference.sourceContentSha256,
@@ -3342,13 +3282,10 @@ async function importContent(options = {}) {
     await restoreArchitectureState(client, canonicalStateSnapshot.architectureState);
     await restoreDbGovernanceSurfaceCatalog(client, dbGovernanceSurfaceCatalog);
     await restoreDbtProjectRoundtripCapabilityCatalog(client, dbtProjectRoundtripCapabilityCatalog);
-    const planningTaskIds = [];
     docsDispositionSnapshot = buildDocsDispositionSnapshot({
-      planningTaskIds,
       documents: markdownDocuments,
     });
     knowledgeSnapshot = buildKnowledgeDocumentSnapshot({
-      planningTaskIds,
       documents: knowledgeDocuments,
     });
     await insertGovernanceSnapshot(client, governanceSnapshot);
@@ -3564,7 +3501,6 @@ function compareGovernanceAuxiliaryState(expected, actual) {
           'documentPath',
           'referenceText',
           'classification',
-          'registeredPlanningTask',
           'occurrenceCount',
           'sourceContentSha256',
         ],
@@ -3635,11 +3571,7 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
   const codeSymbolSnapshot =
     options.codeSymbolSnapshot || buildCodeSymbolSnapshot({ governanceSnapshot });
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
-  const docsDispositionSnapshot =
-    options.docsDispositionSnapshot ||
-    buildDocsDispositionSnapshot({
-      planningTaskIds: [],
-    });
+  const docsDispositionSnapshot = options.docsDispositionSnapshot || buildDocsDispositionSnapshot();
   const knowledgeIntakeRepositoryReferenceSnapshot =
     options.knowledgeIntakeRepositoryReferenceSnapshot ||
     buildKnowledgeIntakeRepositoryReferenceSnapshot();
@@ -3721,7 +3653,6 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       documentPath: reference.documentPath,
       referenceText: reference.referenceText,
       classification: reference.classification,
-      registeredPlanningTask: reference.registeredPlanningTask,
       occurrenceCount: reference.occurrenceCount,
       sourceContentSha256: reference.sourceContentSha256,
     })),
@@ -3833,7 +3764,6 @@ async function readGovernanceAuxiliaryState(client) {
         document_path as "documentPath",
         reference_text as "referenceText",
         classification,
-        registered_planning_task as "registeredPlanningTask",
         occurrence_count::int as "occurrenceCount",
         source_content_sha256 as "sourceContentSha256"
       from ${schemaName}.doc_task_like_references
@@ -4016,11 +3946,6 @@ function compareGovernanceAuxiliarySourceState(expected, actual) {
     keyOf: (row) => row.sourcePath,
   };
   const sections = {
-    planningSources: compareImportRows(
-      expected.planningSources,
-      actual.planningSources,
-      sourceHashComparison
-    ),
     repositoryCommandSources: compareImportRows(
       expected.repositoryCommandSources,
       actual.repositoryCommandSources,
@@ -4170,7 +4095,6 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
     buildKnowledgeIntakeRepositoryReferenceSnapshot();
 
   return {
-    planningSources: [],
     repositoryCommandSources: uniqueSourceHashRows(repositoryCommandSnapshot.commands),
     commandQueryRailSources: uniqueSourceHashRows(commandQueryRailSnapshot.rails),
     codeSymbolSources: uniqueSourceHashRows(codeSymbolSnapshot.symbols, {
@@ -4266,7 +4190,6 @@ async function checkGovernanceSourceFreshness(options = {}) {
 
 async function readGovernanceAuxiliarySourceState(client) {
   const [
-    planningSources,
     repositoryCommandSources,
     commandQueryRailSources,
     codeSymbolSources,
@@ -4276,13 +4199,6 @@ async function readGovernanceAuxiliarySourceState(client) {
     knowledgeIntakeRepositoryReferenceSources,
     riskDebtItems,
   ] = await Promise.all([
-    client.query(`
-      select
-        source_path as "sourcePath",
-        content_sha256 as "sourceContentSha256"
-      from ${schemaName}.planning_sources
-      order by source_path
-    `),
     client.query(`
       select distinct
         source_path as "sourcePath",
@@ -4345,7 +4261,6 @@ async function readGovernanceAuxiliarySourceState(client) {
   ]);
 
   return {
-    planningSources: planningSources.rows,
     repositoryCommandSources: repositoryCommandSources.rows,
     commandQueryRailSources: commandQueryRailSources.rows,
     codeSymbolSources: codeSymbolSources.rows,

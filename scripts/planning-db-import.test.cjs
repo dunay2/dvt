@@ -2039,7 +2039,6 @@ test('PR readiness snapshot clears ARC evidence and risk blockers from changed d
 test('docs disposition snapshot classifies active-doc cleanup actions and task-like references', () => {
   const snapshot = buildDocsDispositionSnapshot({
     pendingHotspotThreshold: 2,
-    planningTaskIds: ['AR-A6', 'F-28', 'S08'],
     documents: [
       {
         sourcePath: 'docs/planning/closeouts/example.md',
@@ -2083,9 +2082,9 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
   const classifications = new Map(
     snapshot.references.map((reference) => [reference.referenceText, reference.classification])
   );
-  assert.equal(classifications.get('AR-A6'), 'registered_planning_task');
-  assert.equal(classifications.get('F-28'), 'registered_planning_task');
-  assert.equal(classifications.get('S08'), 'registered_planning_task');
+  assert.equal(classifications.get('AR-A6'), 'review_finding_reference');
+  assert.equal(classifications.get('F-28'), 'historical_planning_reference');
+  assert.equal(classifications.has('S08'), false);
   assert.equal(classifications.get('WEB-123'), 'unknown_task_like_id');
   assert.equal(classifications.get('ADR-0055'), 'adr_id');
   assert.equal(classifications.get('ADR-0041A'), 'adr_id');
@@ -2159,7 +2158,6 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
 
 test('docs disposition snapshot treats closed feature mechanization ids as registered links', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [],
     featureMechanizationIds: ['VERIFY-PREPUSH-SCOPE-ROUTER-20260511'],
     documents: [
       {
@@ -2193,34 +2191,24 @@ test('docs disposition snapshot treats closed feature mechanization ids as regis
 
   assert.ok(featureReference);
   assert.equal(featureReference.classification, 'registered_feature_mechanization');
-  assert.equal(featureReference.registeredPlanningTask, false);
 
   const cycleReference = snapshot.references.find(
     (reference) => reference.referenceText === 'PREPUSH-ROUTER-WEB-SOURCE'
   );
   assert.ok(cycleReference);
   assert.equal(cycleReference.classification, 'feature_mechanization_cycle');
-  assert.equal(cycleReference.registeredPlanningTask, false);
 
   const skillReference = snapshot.references.find(
     (reference) => reference.referenceText === 'SUB-SKILL'
   );
   assert.ok(skillReference);
   assert.equal(skillReference.classification, 'skill_reference');
-  assert.equal(skillReference.registeredPlanningTask, false);
 
   assert.deepEqual(snapshot.actions, []);
 });
 
-test('docs disposition snapshot does not split lane-prefixed planning task ids into suffix references', () => {
+test('docs disposition snapshot never registers legacy planning ids as local tasks', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [
-      'C-REV-RUNTIME-CANON',
-      'D-DOCS-DISPOSITION-QUEUE-1',
-      'D-REV-CI-RETENTION-CANON',
-      'E-PROP-DISP-1',
-      'F-MAND-WORKBENCH-UX',
-    ],
     documents: [
       {
         sourcePath: 'docs/planning/status/current-work.md',
@@ -2230,61 +2218,23 @@ test('docs disposition snapshot does not split lane-prefixed planning task ids i
           'status: Active',
           'planning_type: status',
           '---',
-          '`E-PROP-DISP-1`, `F-MAND-WORKBENCH-UX`, and',
-          '`D-REV-CI-RETENTION-CANON` are Planning DB tasks.',
-          '`C-REV-RUNTIME-CANON` and `D-DOCS-DISPOSITION-QUEUE-1` are tasks too.',
+          'Historical planning mentions: AR-A6 and F-MAND-WORKBENCH-UX.',
         ].join('\n'),
       },
     ],
   });
 
-  const classifications = new Map(
-    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
+  assert.ok(snapshot.references.length > 0);
+  assert.equal(
+    snapshot.references.some(
+      (reference) => reference.classification === 'registered_planning_task'
+    ),
+    false
   );
-
-  assert.equal(classifications.get('E-PROP-DISP-1'), 'registered_planning_task');
-  assert.equal(classifications.get('F-MAND-WORKBENCH-UX'), 'registered_planning_task');
-  assert.equal(classifications.get('D-REV-CI-RETENTION-CANON'), 'registered_planning_task');
-  assert.equal(classifications.get('C-REV-RUNTIME-CANON'), 'registered_planning_task');
-  assert.equal(classifications.get('D-DOCS-DISPOSITION-QUEUE-1'), 'registered_planning_task');
-  assert.equal(classifications.has('PROP-DISP-1'), false);
-  assert.equal(classifications.has('MAND-WORKBENCH-UX'), false);
-  assert.equal(classifications.has('REV-CI-RETENTION-CANON'), false);
-  assert.equal(classifications.has('REV-RUNTIME-CANON'), false);
-  assert.equal(classifications.has('DOCS-DISPOSITION-QUEUE-1'), false);
-  assert.deepEqual(snapshot.actions, []);
-});
-
-test('docs disposition snapshot keeps planning task references case-insensitive', () => {
-  const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: ['AR-A6', 'F-MAND-WORKBENCH-UX'],
-    documents: [
-      {
-        sourcePath: 'docs/planning/status/current-work.md',
-        raw: [
-          '---',
-          'title: Current work',
-          'status: Active',
-          'planning_type: status',
-          '---',
-          'Mixed-case task mentions: ar-a6 and f-mand-workbench-ux.',
-        ].join('\n'),
-      },
-    ],
-  });
-
-  const classifications = new Map(
-    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
-  );
-
-  assert.equal(classifications.get('ar-a6'), 'registered_planning_task');
-  assert.equal(classifications.get('f-mand-workbench-ux'), 'registered_planning_task');
-  assert.deepEqual(snapshot.actions, []);
 });
 
 test('docs disposition snapshot classifies story, QA, and historical work-item ids as non-task references', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [],
     documents: [
       {
         sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/story-catalog.md',
@@ -2335,7 +2285,6 @@ test('docs disposition snapshot classifies story, QA, and historical work-item i
 
 test('docs disposition snapshot parses UTF-8 BOM frontmatter before missing-status checks', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [],
     documents: [
       {
         sourcePath: 'docs/guides/bom-frontmatter.md',
@@ -2358,7 +2307,6 @@ test('docs disposition snapshot parses UTF-8 BOM frontmatter before missing-stat
 
 test('docs disposition snapshot classifies priority markers and date placeholders as non-task references', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [],
     documents: [
       {
         sourcePath:
@@ -2389,7 +2337,6 @@ test('docs disposition snapshot classifies priority markers and date placeholder
 
 test('docs disposition snapshot keeps archived documents visible without active cleanup actions', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [],
     documents: [
       {
         sourcePath: 'docs/archive/old-program.md',

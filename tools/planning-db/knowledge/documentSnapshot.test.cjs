@@ -3,9 +3,8 @@ const assert = require('node:assert/strict');
 
 const { buildKnowledgeSnapshotFromDocuments } = require('./documentSnapshot.cjs');
 
-test('extracts mandatory proposal documents, sections, required actions, and task links', () => {
-  const snapshot = buildKnowledgeSnapshotFromDocuments(
-    [
+test('extracts mandatory proposal documents, sections, and required actions without task state', () => {
+  const snapshot = buildKnowledgeSnapshotFromDocuments([
       {
         sourcePath: 'docs/planning/proposals/mandatory/runtime-and-contracts/example-plan.md',
         raw: [
@@ -25,9 +24,7 @@ test('extracts mandatory proposal documents, sections, required actions, and tas
         ].join('\n'),
         contentSha256: 'a'.repeat(64),
       },
-    ],
-    { planningTaskIds: ['AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE'] }
-  );
+    ]);
 
   assert.equal(snapshot.documents.length, 1);
   assert.equal(snapshot.documents[0].documentType, 'proposal');
@@ -36,13 +33,11 @@ test('extracts mandatory proposal documents, sections, required actions, and tas
   assert.equal(snapshot.proposals[0].proposalStatus, 'Review');
   assert.equal(snapshot.actions.length, 1);
   assert.equal(snapshot.actions[0].required, true);
-  assert.equal(snapshot.actionLinks[0].targetType, 'task');
-  assert.equal(snapshot.actionLinks[0].targetId, 'AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE');
+  assert.deepEqual(snapshot.actionLinks, []);
 });
 
 test('keeps governance reference ids out of task links', () => {
-  const snapshot = buildKnowledgeSnapshotFromDocuments(
-    [
+  const snapshot = buildKnowledgeSnapshotFromDocuments([
       {
         sourcePath: 'docs/planning/proposals/mandatory/runtime-and-contracts/reference-plan.md',
         raw: [
@@ -56,19 +51,13 @@ test('keeps governance reference ids out of task links', () => {
         ].join('\n'),
         contentSha256: 'f'.repeat(64),
       },
-    ],
-    { planningTaskIds: ['AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE'] }
-  );
+    ]);
 
-  assert.deepEqual(
-    snapshot.actionLinks.map((link) => link.targetId),
-    ['AR-A4-CUSTOM-POLICY-NAMESPACE-FREEZE']
-  );
+  assert.deepEqual(snapshot.actionLinks, []);
 });
 
-test('links short-prefix planning task ids from proposal action lines', () => {
-  const snapshot = buildKnowledgeSnapshotFromDocuments(
-    [
+test('does not elevate historical planning ids into local action links', () => {
+  const snapshot = buildKnowledgeSnapshotFromDocuments([
       {
         sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/f17c-plan.md',
         raw: [
@@ -84,14 +73,10 @@ test('links short-prefix planning task ids from proposal action lines', () => {
         ].join('\n'),
         contentSha256: '1'.repeat(64),
       },
-    ],
-    { planningTaskIds: ['F-17-C', 'F-21'] }
-  );
+    ]);
 
-  assert.deepEqual(
-    snapshot.actionLinks.map((link) => link.targetId),
-    ['F-17-C', 'F-21']
-  );
+  assert.deepEqual(snapshot.actions, []);
+  assert.deepEqual(snapshot.actionLinks, []);
 });
 
 test('ignores declarative UX rules that only mention action nouns', () => {
@@ -147,9 +132,8 @@ test('keeps explicit unowned action lines as planning intake', () => {
   );
 });
 
-test('ignores stale task references and action section headings', () => {
-  const snapshot = buildKnowledgeSnapshotFromDocuments(
-    [
+test('keeps explicit historical task prose as action text without local task links', () => {
+  const snapshot = buildKnowledgeSnapshotFromDocuments([
       {
         sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/legacy-f29-plan.md',
         raw: [
@@ -168,25 +152,17 @@ test('ignores stale task references and action section headings', () => {
         ].join('\n'),
         contentSha256: '4'.repeat(64),
       },
-    ],
-    { planningTaskIds: ['E-PROP-DISP-1'] }
-  );
+    ]);
 
   assert.deepEqual(
     snapshot.actions.map((action) => action.summary),
     [
+      '[Task: F-29] Add Canvas workbench tab route state model.',
       '[Task: E-PROP-DISP-1] Add Canvas workbench tab read model.',
       'Update route tests and shell chrome tests to assert the new navigation shape.',
     ]
   );
-  assert.deepEqual(snapshot.actionLinks, [
-    {
-      actionId: 'docs-planning-proposals-mandatory-frontend-and-ux-legacy-f29-plan-md::A1',
-      targetType: 'task',
-      targetId: 'E-PROP-DISP-1',
-      relationType: 'implements',
-    },
-  ]);
+  assert.deepEqual(snapshot.actionLinks, []);
 });
 
 test('classifies Fowler analysis and review documents without making them tasks', () => {

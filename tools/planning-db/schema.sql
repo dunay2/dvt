@@ -34,6 +34,20 @@ CREATE SCHEMA planning_query_store;
 
 
 --
+-- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+
+--
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+
+
+--
 -- Name: assert_governance_component_local_definition_invariants(text); Type: FUNCTION; Schema: planning_query_store; Owner: -
 --
 
@@ -4351,297 +4365,6 @@ CREATE VIEW planning_query_store.canvas_cq_rail_drift_query AS
 
 
 --
--- Name: planning_task_local_definitions; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.planning_task_local_definitions (
-    lane_id text NOT NULL,
-    task_id text NOT NULL,
-    source_path text NOT NULL,
-    source_content_sha256 text NOT NULL,
-    parent_task_id text,
-    priority text,
-    status text NOT NULL,
-    objective text DEFAULT ''::text NOT NULL,
-    dependency text,
-    target text,
-    complexity text,
-    effort_points numeric(8,2),
-    progress_pct numeric(5,2),
-    evidence_refs jsonb DEFAULT '[]'::jsonb NOT NULL,
-    status_reason text,
-    last_verified date,
-    created_by text NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    raw_task jsonb NOT NULL,
-    CONSTRAINT planning_task_local_definitions_effort_points_check CHECK (((effort_points IS NULL) OR (effort_points >= (0)::numeric))),
-    CONSTRAINT planning_task_local_definitions_progress_pct_check CHECK (((progress_pct IS NULL) OR ((progress_pct >= (0)::numeric) AND (progress_pct <= (100)::numeric)))),
-    CONSTRAINT planning_task_local_definitions_source_content_sha256_check CHECK ((source_content_sha256 ~ '^[a-f0-9]{64}$'::text)),
-    CONSTRAINT planning_task_local_definitions_status_check CHECK ((status = ANY (ARRAY['queued'::text, 'in_progress'::text, 'blocked'::text, 'review'::text, 'done'::text])))
-);
-
-
---
--- Name: planning_task_local_state; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.planning_task_local_state (
-    lane_id text NOT NULL,
-    task_id text NOT NULL,
-    source_path text NOT NULL,
-    base_source_content_sha256 text NOT NULL,
-    revision integer NOT NULL,
-    status text NOT NULL,
-    progress_pct numeric(5,2),
-    evidence_refs jsonb DEFAULT '[]'::jsonb NOT NULL,
-    status_reason text,
-    claimed_by text,
-    claim_token text,
-    claim_expires_at timestamp with time zone,
-    updated_at timestamp with time zone DEFAULT now() NOT NULL,
-    raw_overlay jsonb DEFAULT '{}'::jsonb NOT NULL,
-    CONSTRAINT planning_task_local_state_base_source_content_sha256_check CHECK ((base_source_content_sha256 ~ '^[a-f0-9]{64}$'::text)),
-    CONSTRAINT planning_task_local_state_progress_pct_check CHECK (((progress_pct IS NULL) OR ((progress_pct >= (0)::numeric) AND (progress_pct <= (100)::numeric)))),
-    CONSTRAINT planning_task_local_state_revision_check CHECK ((revision >= 0)),
-    CONSTRAINT planning_task_local_state_status_check CHECK ((status = ANY (ARRAY['queued'::text, 'in_progress'::text, 'blocked'::text, 'review'::text, 'done'::text])))
-);
-
-
---
--- Name: planning_task_local_tombstones; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.planning_task_local_tombstones (
-    lane_id text NOT NULL,
-    task_id text NOT NULL,
-    source_path text NOT NULL,
-    base_source_content_sha256 text NOT NULL,
-    deleted_by text NOT NULL,
-    deleted_at timestamp with time zone DEFAULT now() NOT NULL,
-    status_reason text,
-    CONSTRAINT planning_task_local_tombstones_base_source_content_sha256_check CHECK ((base_source_content_sha256 ~ '^[a-f0-9]{64}$'::text))
-);
-
-
---
--- Name: planning_tasks; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.planning_tasks (
-    lane_id text NOT NULL,
-    task_id text NOT NULL,
-    parent_task_id text,
-    priority text,
-    status text NOT NULL,
-    objective text DEFAULT ''::text NOT NULL,
-    dependency text,
-    target text,
-    complexity text,
-    effort_points numeric(8,2),
-    progress_pct numeric(5,2),
-    evidence_refs jsonb DEFAULT '[]'::jsonb NOT NULL,
-    status_reason text,
-    last_verified date,
-    source_path text NOT NULL,
-    source_content_sha256 text NOT NULL,
-    raw_task jsonb NOT NULL,
-    CONSTRAINT planning_tasks_effort_points_check CHECK (((effort_points IS NULL) OR (effort_points >= (0)::numeric))),
-    CONSTRAINT planning_tasks_progress_pct_check CHECK (((progress_pct IS NULL) OR ((progress_pct >= (0)::numeric) AND (progress_pct <= (100)::numeric)))),
-    CONSTRAINT planning_tasks_source_content_sha256_check CHECK ((source_content_sha256 ~ '^[a-f0-9]{64}$'::text))
-);
-
-
---
--- Name: planning_effective_tasks; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_effective_tasks AS
- WITH imported_task_rows AS (
-         SELECT task.lane_id,
-            task.task_id,
-            task.parent_task_id,
-            task.priority,
-            COALESCE(local.status, task.status) AS status,
-            task.status AS base_status,
-            task.objective,
-            task.dependency,
-            task.target,
-            task.complexity,
-            task.effort_points,
-            COALESCE(local.progress_pct, task.progress_pct) AS progress_pct,
-            COALESCE(local.evidence_refs, task.evidence_refs) AS evidence_refs,
-                CASE
-                    WHEN (local.task_id IS NULL) THEN task.status_reason
-                    ELSE local.status_reason
-                END AS status_reason,
-            task.last_verified,
-            task.source_path,
-            task.source_content_sha256,
-            COALESCE(local.base_source_content_sha256, task.source_content_sha256) AS base_source_content_sha256,
-            COALESCE(local.revision, 0) AS revision,
-            local.claimed_by,
-            local.claim_token,
-            local.claim_expires_at,
-            local.updated_at AS local_updated_at,
-            task.raw_task
-           FROM (planning_query_store.planning_tasks task
-             LEFT JOIN planning_query_store.planning_task_local_state local ON (((local.lane_id = task.lane_id) AND (local.task_id = task.task_id) AND (local.base_source_content_sha256 = task.source_content_sha256))))
-          WHERE (NOT (EXISTS ( SELECT 1
-                   FROM planning_query_store.planning_task_local_tombstones tombstone
-                  WHERE ((tombstone.lane_id = task.lane_id) AND (tombstone.task_id = task.task_id) AND (tombstone.base_source_content_sha256 = task.source_content_sha256)))))
-        ), local_definition_rows AS (
-         SELECT local_definition.lane_id,
-            local_definition.task_id,
-            local_definition.parent_task_id,
-            local_definition.priority,
-            COALESCE(local.status, local_definition.status) AS status,
-            local_definition.status AS base_status,
-            local_definition.objective,
-            local_definition.dependency,
-            local_definition.target,
-            local_definition.complexity,
-            local_definition.effort_points,
-            COALESCE(local.progress_pct, local_definition.progress_pct) AS progress_pct,
-            COALESCE(local.evidence_refs, local_definition.evidence_refs) AS evidence_refs,
-                CASE
-                    WHEN (local.task_id IS NULL) THEN local_definition.status_reason
-                    ELSE local.status_reason
-                END AS status_reason,
-            local_definition.last_verified,
-            local_definition.source_path,
-            local_definition.source_content_sha256,
-            COALESCE(local.base_source_content_sha256, local_definition.source_content_sha256) AS base_source_content_sha256,
-            COALESCE(local.revision, 0) AS revision,
-            local.claimed_by,
-            local.claim_token,
-            local.claim_expires_at,
-            local.updated_at AS local_updated_at,
-            local_definition.raw_task
-           FROM ((planning_query_store.planning_task_local_definitions local_definition
-             LEFT JOIN planning_query_store.planning_tasks imported_task ON (((imported_task.lane_id = local_definition.lane_id) AND (imported_task.task_id = local_definition.task_id))))
-             LEFT JOIN planning_query_store.planning_task_local_state local ON (((local.lane_id = local_definition.lane_id) AND (local.task_id = local_definition.task_id) AND (local.base_source_content_sha256 = local_definition.source_content_sha256))))
-          WHERE ((imported_task.task_id IS NULL) AND (NOT (EXISTS ( SELECT 1
-                   FROM planning_query_store.planning_task_local_tombstones tombstone
-                  WHERE ((tombstone.lane_id = local_definition.lane_id) AND (tombstone.task_id = local_definition.task_id) AND (tombstone.base_source_content_sha256 = local_definition.source_content_sha256))))))
-        )
- SELECT imported_task_rows.lane_id,
-    imported_task_rows.task_id,
-    imported_task_rows.parent_task_id,
-    imported_task_rows.priority,
-    imported_task_rows.status,
-    imported_task_rows.base_status,
-    imported_task_rows.objective,
-    imported_task_rows.dependency,
-    imported_task_rows.target,
-    imported_task_rows.complexity,
-    imported_task_rows.effort_points,
-    imported_task_rows.progress_pct,
-    imported_task_rows.evidence_refs,
-    imported_task_rows.status_reason,
-    imported_task_rows.last_verified,
-    imported_task_rows.source_path,
-    imported_task_rows.source_content_sha256,
-    imported_task_rows.base_source_content_sha256,
-    imported_task_rows.revision,
-    imported_task_rows.claimed_by,
-    imported_task_rows.claim_token,
-    imported_task_rows.claim_expires_at,
-    imported_task_rows.local_updated_at,
-    imported_task_rows.raw_task
-   FROM imported_task_rows
-UNION ALL
- SELECT local_definition_rows.lane_id,
-    local_definition_rows.task_id,
-    local_definition_rows.parent_task_id,
-    local_definition_rows.priority,
-    local_definition_rows.status,
-    local_definition_rows.base_status,
-    local_definition_rows.objective,
-    local_definition_rows.dependency,
-    local_definition_rows.target,
-    local_definition_rows.complexity,
-    local_definition_rows.effort_points,
-    local_definition_rows.progress_pct,
-    local_definition_rows.evidence_refs,
-    local_definition_rows.status_reason,
-    local_definition_rows.last_verified,
-    local_definition_rows.source_path,
-    local_definition_rows.source_content_sha256,
-    local_definition_rows.base_source_content_sha256,
-    local_definition_rows.revision,
-    local_definition_rows.claimed_by,
-    local_definition_rows.claim_token,
-    local_definition_rows.claim_expires_at,
-    local_definition_rows.local_updated_at,
-    local_definition_rows.raw_task
-   FROM local_definition_rows;
-
-
---
--- Name: canvas_uxdb_traceability_query; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.canvas_uxdb_traceability_query AS
- WITH criteria AS (
-         SELECT criterion.criterion_code,
-            criterion.criterion_kind,
-            criterion.criterion_title,
-            criterion.canonical_task_id,
-            criterion.task_priority,
-            criterion.priority_rank,
-            criterion.source_path,
-            criterion.action_hint
-           FROM ( VALUES ('UX-001'::text,'ux_rule'::text,'Graph is the base mode, not a tab.'::text,'E-CANVAS-TOPBAR-MINIMAL-1'::text,'P0'::text,10,'buzon/TAREA.TXT'::text,'Remove view-tab thinking from the base Canvas shell and keep graph as the permanent work surface.'::text), ('UX-002'::text,'ux_rule'::text,'Graph, Code and Log must not be top-level navigation tabs.'::text,'E-CANVAS-TOPBAR-MINIMAL-1'::text,'P0'::text,20,'buzon/TAREA.TXT'::text,'Retire Graph|Code|Log navigation and route Code/Log into contextual surfaces.'::text), ('UX-003'::text,'ux_rule'::text,'Code opens contextually while the graph remains visible.'::text,'E-CANVAS-SQL-CONTEXT-WORKBENCH-1'::text,'P0'::text,30,'buzon/TAREA.TXT'::text,'Implement graph plus SQL split workbench through the node/project code rails.'::text), ('UX-004'::text,'ux_rule'::text,'Log lives in the bottom operational drawer.'::text,'E-CANVAS-BOTTOM-DRAWER-OPS-1'::text,'P0'::text,40,'buzon/TAREA.TXT'::text,'Move log, readiness and sync details into the bottom drawer.'::text), ('UX-005'::text,'ux_rule'::text,'The base state must not have a fixed left resource panel.'::text,'E-CANVAS-LEGACY-PALETTE-RETIRE-1'::text,'P0'::text,50,'buzon/TAREA.TXT'::text,'Retire the permanent palette/resource panel after contextual insertion and Add Source are authoritative.'::text), ('UX-006'::text,'ux_rule'::text,'The base state must not have a fixed right multiuse inspector.'::text,'E-CANVAS-NODE-WORKBENCH-1'::text,'P0'::text,60,'buzon/TAREA.TXT'::text,'Move node detail into contextual workbench surfaces and keep global diagnostics in the drawer.'::text), ('UX-007'::text,'ux_rule'::text,'Insertion actions originate from the canvas coordinate.'::text,'E-CANVAS-SPATIAL-ADD-NODES-1'::text,'P0'::text,70,'buzon/TAREA.TXT'::text,'Create source/model/transformation/test/output nodes from canvas context coordinates.'::text), ('UX-008'::text,'ux_rule'::text,'Node actions originate from the node.'::text,'E-CANVAS-NODE-WORKBENCH-1'::text,'P0'::text,80,'buzon/TAREA.TXT'::text,'Keep node editing and run-from-node commands tied to selected node context.'::text), ('UX-009'::text,'ux_rule'::text,'CanvasContextMenu and NodeContextMenu are different grammars.'::text,'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1'::text,'P0'::text,90,'buzon/TAREA.TXT'::text,'Implement CanvasContextMenu and NodeContextMenu through separate governed rails.'::text), ('UX-010'::text,'ux_rule'::text,'Execution readiness is not a permanent top banner.'::text,'E-CANVAS-EXECUTION-PREVIEW-READINESS-1'::text,'P0'::text,100,'buzon/TAREA.TXT'::text,'Keep top readiness compact and move details to Problems and Preview.'::text), ('UX-011'::text,'ux_rule'::text,'Plan is renamed to Preview execution plan.'::text,'E-CANVAS-EXECUTION-PREVIEW-READINESS-1'::text,'P0'::text,110,'buzon/TAREA.TXT'::text,'Rename ambiguous Plan actions and expose execution preview scope/order/blockers.'::text), ('UX-012'::text,'ux_rule'::text,'Sources appear only inside the Add Source flow.'::text,'E-CANVAS-LEGACY-PALETTE-RETIRE-1'::text,'P0'::text,120,'buzon/TAREA.TXT'::text,'Remove fixed source explorer chrome and open source browsing contextually.'::text), ('UX-013'::text,'ux_rule'::text,'Insert appears from canvas context or command palette, not permanent chrome.'::text,'E-CANVAS-SPATIAL-ADD-NODES-1'::text,'P0'::text,130,'buzon/TAREA.TXT'::text,'Route insertion through spatial canvas rails and later command palette entries.'::text), ('UX-014'::text,'ux_rule'::text,'Project becomes File or Workspace, not a loose toolbar button.'::text,'E-CANVAS-GLOBAL-MENU-BAR-1'::text,'P0'::text,140,'buzon/TAREA.TXT'::text,'Move project-level actions under global File/Workspace menus.'::text), ('UX-015'::text,'ux_rule'::text,'Node Workbench is contextual to the active node.'::text,'E-CANVAS-NODE-WORKBENCH-1'::text,'P0'::text,150,'buzon/TAREA.TXT'::text,'Create typed node workbench sections instead of persistent mixed inspector UI.'::text), ('UX-016'::text,'ux_flow'::text,'Add Source opens as a contextual dialog with Connections, Browse, Metadata and Selected.'::text,'E-CANVAS-ADD-SOURCE-LIVE-FLOW-1'::text,'P0'::text,160,'buzon/TAREA.TXT'::text,'Use the existing Add Source live-flow task and finish any remaining browser-proof source selection regressions through follow-up criteria.'::text), ('UX-017'::text,'ux_flow'::text,'Project Explorer opens on demand.'::text,'E-CANVAS-PROJECT-EXPLORER-CONTEXTUAL-1'::text,'P1'::text,170,'buzon/TAREA.TXT'::text,'Keep project exploration contextual and out of base graph chrome.'::text), ('UX-018'::text,'ux_flow'::text,'Command palette reuses the same rails as contextual menus.'::text,'E-CANVAS-COMMAND-PALETTE-1'::text,'P1'::text,180,'buzon/TAREA.TXT'::text,'Add command palette as an accelerator after canonical menu rails exist.'::text), ('UX-019'::text,'ux_flow'::text,'Bottom drawer exposes Log, Problems, Runs and Preview.'::text,'E-CANVAS-BOTTOM-DRAWER-OPS-1'::text,'P0'::text,190,'buzon/TAREA.TXT'::text,'Make the operational drawer the single home for diagnostic and run surfaces.'::text), ('UX-020'::text,'ux_flow'::text,'Execution preview shows scope, order, affected nodes, skipped nodes, blockers and estimates.'::text,'E-CANVAS-EXECUTION-PREVIEW-READINESS-1'::text,'P0'::text,200,'buzon/TAREA.TXT'::text,'Implement the Preview rail before enabling governed Run.'::text), ('UX-021'::text,'ux_flow'::text,'Source/model/transform nodes show columns, types, constraints and metadata.'::text,'E-CANVAS-COLUMN-METADATA-SELECTION-1'::text,'P0'::text,210,'buzon/TAREA.TXT'::text,'Expose available metadata in workbench sections and cards without placeholder unknowns when data exists.'::text), ('UX-022'::text,'ux_flow'::text,'Supported transforms allow column selection.'::text,'E-CANVAS-COLUMN-METADATA-SELECTION-1'::text,'P0'::text,220,'buzon/TAREA.TXT'::text,'Add selectable column state only through the owning rail when supported.'::text), ('UX-023'::text,'ux_flow'::text,'DBT tests explain target model, target column, severity and assertion meaning.'::text,'E-CANVAS-DBT-TEST-SEMANTICS-WORKBENCH-1'::text,'P0'::text,230,'buzon/TAREA.TXT'::text,'Move test semantics into the workbench and avoid duplicating test property actions in node menus.'::text), ('UX-024'::text,'ux_flow'::text,'Output/Sink requires exact database, schema, table and write strategy.'::text,'E-CANVAS-SINK-TARGET-WORKBENCH-1'::text,'P0'::text,240,'buzon/TAREA.TXT'::text,'Implement exact sink target configuration and readiness validation.'::text), ('UX-025'::text,'ux_flow'::text,'Node cards show professional runtime metrics.'::text,'E-CANVAS-NODE-CARD-METRICS-P0-1'::text,'P0'::text,250,'buzon/TAREA.TXT'::text,'Add records, bytes, state, last execution, duration and warnings where available.'::text), ('UX-026'::text,'ux_flow'::text,'DBT and DVT surfaces use strategy boundaries.'::text,'E-CANVAS-SURFACE-STRATEGY-DBT-DVT-1'::text,'P0'::text,260,'buzon/TAREA.TXT'::text,'Select cards and workbench sections by DBT/DVT strategy instead of route-level ad hoc JSX.'::text), ('UX-027'::text,'ux_flow'::text,'Presentation components must be real components, not ad hoc JSX and embedded styles.'::text,'E-CANVAS-COMPONENT-PRESENTATION-SYSTEM-1'::text,'P0'::text,270,'buzon/TAREA.TXT'::text,'Extract templates, presenters and tested presentational components before broad UI iteration.'::text), ('UX-028'::text,'ux_test'::text,'DVT flow must be browser-proven end to end without fake draft intercepts.'::text,'E-DVT-FLOW-E2E-PROOF-1'::text,'P0'::text,280,'buzon/TAREA.TXT'::text,'Prove DVT source, column selection, SQL transform, sink, preview, readiness and run gating in browser.'::text), ('UX-029'::text,'ux_test'::text,'DBT flow must be browser-proven end to end.'::text,'E-DBT-FLOW-E2E-PROOF-1'::text,'P0'::text,290,'buzon/TAREA.TXT'::text,'Prove DBT source/model/test/output authoring with metadata and preview/run behavior.'::text), ('DB-001'::text,'db_rule'::text,'Planning DB is the source of truth for specification, analysis, components, C&Q, tests and evidence.'::text,'E-CANVAS-UXDB-SPEC-PERSISTENCE-1'::text,'P0'::text,300,'buzon/TAREA.TXT'::text,'Persist the UX specification as queryable Planning DB records before closing UI slices.'::text), ('DB-002'::text,'db_rule'::text,'Markdown in buzon is an intake/export surface, not primary authority.'::text,'E-CANVAS-UXDB-SPEC-PERSISTENCE-1'::text,'P0'::text,310,'buzon/TAREA.TXT'::text,'Keep buzon/TAREA.TXT as source evidence while DB rows own review and implementation state.'::text), ('DB-003'::text,'db_rule'::text,'AI task plan, decisions, changes, evidence and results must be persisted.'::text,'E-CANVAS-UXDB-TRACEABILITY-REVIEW-1'::text,'P0'::text,320,'buzon/TAREA.TXT'::text,'Use Planning DB task operations and traceability queries instead of free-form progress notes.'::text), ('DB-004'::text,'db_rule'::text,'UI components must have DB representation.'::text,'E-CANVAS-UXDB-SPEC-PERSISTENCE-1'::text,'P0'::text,330,'buzon/TAREA.TXT'::text,'Register component surfaces and ownership in Planning DB before claiming completion.'::text), ('DB-005'::text,'db_rule'::text,'Commands and queries must be explicitly modeled.'::text,'E-CANVAS-UXDB-SPEC-PERSISTENCE-1'::text,'P0'::text,340,'buzon/TAREA.TXT'::text,'Represent externally visible actions through command/query rails before implementation.'::text), ('DB-006'::text,'db_rule'::text,'Tests and acceptance criteria must be persisted.'::text,'E-CANVAS-UXDB-ACCEPTANCE-CATALOG-1'::text,'P0'::text,350,'buzon/TAREA.TXT'::text,'Persist the acceptance catalog and test definitions before closing Canvas P0.'::text), ('DB-007'::text,'db_rule'::text,'External references and UX patterns must be traceable.'::text,'E-CANVAS-UXDB-SPEC-PERSISTENCE-1'::text,'P0'::text,360,'buzon/TAREA.TXT'::text,'Keep references as DB facts tied to decisions and component tasks.'::text), ('DB-008'::text,'db_rule'::text,'Human documentation must be generated/exported from DB.'::text,'E-CANVAS-UXDB-EXPORT-1'::text,'P1'::text,370,'buzon/TAREA.TXT'::text,'Generate reports/manuals from Planning DB records and register export provenance.'::text), ('DB-009'::text,'db_rule'::text,'Decisions need state, justification and links to components/tasks/tests.'::text,'E-CANVAS-UXDB-SPEC-PERSISTENCE-1'::text,'P0'::text,380,'buzon/TAREA.TXT'::text,'Make each UX decision inspectable through task and component traceability.'::text), ('DB-010'::text,'db_rule'::text,'No important specification may live only in Markdown.'::text,'E-CANVAS-UXDB-TRACEABILITY-REVIEW-1'::text,'P0'::text,390,'buzon/TAREA.TXT'::text,'Expose this criterion map as a Planning DB query and keep follow-up implementation DB-first.'::text)) criterion(criterion_code, criterion_kind, criterion_title, canonical_task_id, task_priority, priority_rank, source_path, action_hint)
-        ), criteria_with_owner_counts AS (
-         SELECT criteria_1.criterion_code,
-            criteria_1.criterion_kind,
-            criteria_1.criterion_title,
-            criteria_1.canonical_task_id,
-            criteria_1.task_priority,
-            criteria_1.priority_rank,
-            criteria_1.source_path,
-            criteria_1.action_hint,
-            (count(*) OVER (PARTITION BY criteria_1.criterion_code))::integer AS duplicate_owner_count
-           FROM criteria criteria_1
-        ), tasks AS (
-         SELECT planning_effective_tasks.task_id,
-            planning_effective_tasks.priority,
-            planning_effective_tasks.status,
-            planning_effective_tasks.progress_pct,
-            planning_effective_tasks.claimed_by,
-            planning_effective_tasks.objective,
-            planning_effective_tasks.evidence_refs
-           FROM planning_query_store.planning_effective_tasks
-        )
- SELECT criteria.criterion_code,
-    criteria.criterion_kind,
-    criteria.criterion_title,
-    criteria.canonical_task_id,
-    COALESCE(tasks.priority, criteria.task_priority) AS task_priority,
-    COALESCE(tasks.status, 'missing-task'::text) AS task_status,
-        CASE
-            WHEN (tasks.task_id IS NULL) THEN 'missing-task'::text
-            WHEN (criteria.duplicate_owner_count > 1) THEN 'duplicate-owner'::text
-            WHEN (tasks.status = 'done'::text) THEN 'closed'::text
-            WHEN (tasks.status = 'review'::text) THEN 'review'::text
-            WHEN (tasks.status = 'in_progress'::text) THEN 'in-progress'::text
-            WHEN (tasks.status = 'queued'::text) THEN 'not-started'::text
-            WHEN (tasks.status = 'blocked'::text) THEN 'blocked'::text
-            ELSE 'needs-review'::text
-        END AS coverage_state,
-    criteria.duplicate_owner_count,
-        CASE
-            WHEN (criteria.duplicate_owner_count > 1) THEN 'duplicate-owner'::text
-            ELSE 'single-owner'::text
-        END AS duplicate_state,
-    criteria.source_path,
-    criteria.action_hint,
-    jsonb_build_object('source_path', 'buzon/TAREA.TXT', 'criterionTitle', criteria.criterion_title, 'priorityRank', criteria.priority_rank, 'taskObjective', COALESCE(tasks.objective, ''::text), 'progressPct', tasks.progress_pct, 'claimedBy', tasks.claimed_by, 'evidenceRefs', COALESCE(tasks.evidence_refs, '[]'::jsonb)) AS metadata
-   FROM (criteria_with_owner_counts criteria
-     LEFT JOIN tasks ON ((tasks.task_id = criteria.canonical_task_id)));
-
-
---
 -- Name: code_symbols; Type: TABLE; Schema: planning_query_store; Owner: -
 --
 
@@ -5236,7 +4959,6 @@ CREATE TABLE planning_query_store.doc_task_like_references (
     reference_text text NOT NULL,
     reference_prefix text NOT NULL,
     classification text NOT NULL,
-    registered_planning_task boolean DEFAULT false NOT NULL,
     occurrence_count integer NOT NULL,
     sample_lines jsonb DEFAULT '[]'::jsonb NOT NULL,
     source_content_sha256 text NOT NULL,
@@ -5255,7 +4977,6 @@ CREATE VIEW planning_query_store.doc_task_reference_query AS
     reference_text,
     reference_prefix,
     classification,
-    registered_planning_task,
     occurrence_count,
     sample_lines,
     source_content_sha256,
@@ -5432,7 +5153,7 @@ CREATE VIEW planning_query_store.governance_component_engineering_record_query A
           GROUP BY component_1.component_id
         ), component_requirement_refs AS (
          SELECT component_1.component_id,
-            COALESCE(jsonb_agg(jsonb_build_object('reference', reference.reference_text, 'classification', reference.classification, 'documentPath', reference.document_path, 'registeredPlanningTask', reference.registered_planning_task) ORDER BY reference.document_path, reference.reference_text), '[]'::jsonb) AS requirement_refs
+            COALESCE(jsonb_agg(jsonb_build_object('reference', reference.reference_text, 'classification', reference.classification, 'documentPath', reference.document_path) ORDER BY reference.document_path, reference.reference_text), '[]'::jsonb) AS requirement_refs
            FROM ((planning_query_store.governance_component_query component_1
              JOIN LATERAL jsonb_array_elements_text(component_1.governance_refs) doc(path) ON (true))
              JOIN planning_query_store.doc_task_reference_query reference ON ((reference.document_path = doc.path)))
@@ -6104,8 +5825,8 @@ CREATE TABLE planning_query_store.db_governance_surfaces (
     updated_by text NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     raw_surface jsonb DEFAULT '{}'::jsonb NOT NULL,
-    CONSTRAINT db_governance_surfaces_database_write_check CHECK (((authority_mode <> 'database'::text) OR (write_rail_kind = 'db_command'::text))),
     CONSTRAINT db_governance_surfaces_authority_mode_check CHECK ((authority_mode = ANY (ARRAY['repository-export'::text, 'database'::text, 'generated'::text, 'git-indexed'::text, 'hybrid-indexed'::text]))),
+    CONSTRAINT db_governance_surfaces_database_write_check CHECK (((authority_mode <> 'database'::text) OR (write_rail_kind = 'db_command'::text))),
     CONSTRAINT db_governance_surfaces_revision_check CHECK ((revision >= 0)),
     CONSTRAINT db_governance_surfaces_source_content_sha256_check CHECK ((source_content_sha256 ~ '^[a-f0-9]{64}$'::text)),
     CONSTRAINT db_governance_surfaces_write_rail_kind_check CHECK ((write_rail_kind = ANY (ARRAY['db_command'::text, 'import'::text, 'git_edit'::text, 'generated'::text, 'none'::text, 'bootstrap_export'::text])))
@@ -6283,17 +6004,13 @@ CREATE TABLE planning_query_store.doc_resolution_overlays (
     issue_kind text NOT NULL,
     document_path text,
     reference_text text,
-    lane_id text,
-    task_id text,
     resolution_status text NOT NULL,
     resolved_by text NOT NULL,
     resolved_at timestamp with time zone DEFAULT now() NOT NULL,
     reason text NOT NULL,
-    target_lane_id text,
-    target_task_id text,
     source_content_sha256 text,
     raw_resolution jsonb DEFAULT '{}'::jsonb NOT NULL,
-    CONSTRAINT doc_resolution_overlays_resolution_scope_check CHECK ((resolution_scope = ANY (ARRAY['docs_disposition'::text, 'task_gap'::text]))),
+    CONSTRAINT doc_resolution_overlays_resolution_scope_check CHECK ((resolution_scope = 'docs_disposition'::text)),
     CONSTRAINT doc_resolution_overlays_resolution_status_check CHECK ((resolution_status = ANY (ARRAY['resolved'::text, 'accepted'::text, 'ignored'::text, 'linked'::text]))),
     CONSTRAINT doc_resolution_overlays_source_content_sha256_check CHECK (((source_content_sha256 IS NULL) OR (source_content_sha256 ~ '^[a-f0-9]{64}$'::text)))
 );
@@ -6321,9 +6038,7 @@ CREATE VIEW planning_query_store.doc_disposition_action_query AS
     COALESCE(resolution.resolution_status, 'pending'::text) AS resolution_status,
     resolution.resolved_by,
     resolution.resolved_at,
-    resolution.reason AS resolution_reason,
-    resolution.target_lane_id,
-    resolution.target_task_id
+    resolution.reason AS resolution_reason
    FROM ((planning_query_store.doc_disposition_actions action
      JOIN planning_query_store.doc_disposition_documents document ON ((document.document_path = action.document_path)))
      LEFT JOIN planning_query_store.doc_resolution_overlays resolution ON (((resolution.resolution_scope = 'docs_disposition'::text) AND (resolution.issue_kind = action.action_kind) AND (COALESCE(resolution.document_path, ''::text) = COALESCE(action.document_path, ''::text)) AND (COALESCE(resolution.reference_text, ''::text) = COALESCE(action.reference_text, ''::text)) AND (resolution.source_content_sha256 = action.source_content_sha256))));
@@ -6386,8 +6101,8 @@ CREATE TABLE planning_query_store.doc_resolution_operations (
     source_content_sha256 text,
     payload jsonb DEFAULT '{}'::jsonb NOT NULL,
     created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT doc_resolution_operations_operation_type_check CHECK ((operation_type = ANY (ARRAY['docs_disposition_resolve'::text, 'task_gap_resolve'::text]))),
-    CONSTRAINT doc_resolution_operations_resolution_scope_check CHECK ((resolution_scope = ANY (ARRAY['docs_disposition'::text, 'task_gap'::text]))),
+    CONSTRAINT doc_resolution_operations_operation_type_check CHECK ((operation_type = 'docs_disposition_resolve'::text)),
+    CONSTRAINT doc_resolution_operations_resolution_scope_check CHECK ((resolution_scope = 'docs_disposition'::text)),
     CONSTRAINT doc_resolution_operations_resolution_status_check CHECK ((resolution_status = ANY (ARRAY['resolved'::text, 'accepted'::text, 'ignored'::text, 'linked'::text]))),
     CONSTRAINT doc_resolution_operations_source_content_sha256_check CHECK (((source_content_sha256 IS NULL) OR (source_content_sha256 ~ '^[a-f0-9]{64}$'::text)))
 );
@@ -8134,37 +7849,6 @@ CREATE VIEW planning_query_store.knowledge_action_query AS
 
 
 --
--- Name: knowledge_action_work_intake_query; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.knowledge_action_work_intake_query AS
- SELECT
-        CASE
-            WHEN (mandatory = true) THEN 115
-            ELSE 220
-        END AS rank_score,
-        CASE
-            WHEN (mandatory = true) THEN 'P1'::text
-            ELSE 'P2'::text
-        END AS priority,
-    'knowledge_action'::text AS intake_kind,
-    ('knowledge_action:'::text || action_id) AS item_id,
-    NULL::text AS lane_id,
-    NULL::text AS task_id,
-    document_path,
-    document_path AS source_path,
-    summary AS title,
-    'Required knowledge action has no registered planning task link.'::text AS reason,
-    (((('pnpm planning:db:query knowledge-actions --status '::text || quote_literal(status)) || ' --path '::text) || quote_literal(document_path)) || ' --limit 30'::text) AS suggested_query,
-    'knowledge_action_query'::text AS source_view,
-    source_content_sha256
-   FROM planning_query_store.knowledge_action_query action
-  WHERE ((required = true) AND (lower(COALESCE(status, ''::text)) <> ALL (ARRAY['deferred'::text, 'done'::text, 'rejected'::text, 'resolved'::text, 'superseded'::text])) AND (NOT (EXISTS ( SELECT 1
-           FROM jsonb_array_elements(action.links) link(value)
-          WHERE ((link.value ->> 'targetType'::text) = 'task'::text)))));
-
-
---
 -- Name: knowledge_document_query; Type: VIEW; Schema: planning_query_store; Owner: -
 --
 
@@ -8326,326 +8010,6 @@ CREATE VIEW planning_query_store.knowledge_mandatory_proposal_binding_gap AS
 
 
 --
--- Name: planning_artifacts; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.planning_artifacts (
-    artifact_path text NOT NULL,
-    artifact_kind text NOT NULL,
-    source_table text NOT NULL,
-    content_sha256 text,
-    source_content_sha256 text,
-    exported_at timestamp with time zone DEFAULT now() NOT NULL,
-    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
-    CONSTRAINT planning_artifacts_content_sha256_check CHECK (((content_sha256 IS NULL) OR (content_sha256 ~ '^[a-f0-9]{64}$'::text))),
-    CONSTRAINT planning_artifacts_source_content_sha256_check CHECK (((source_content_sha256 IS NULL) OR (source_content_sha256 ~ '^[a-f0-9]{64}$'::text)))
-);
-
-
---
--- Name: planning_open_tasks; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_open_tasks AS
- SELECT lane_id,
-    task_id,
-    parent_task_id,
-    priority,
-    status,
-    base_status,
-    objective,
-    dependency,
-    target,
-    complexity,
-    effort_points,
-    progress_pct,
-    evidence_refs,
-    status_reason,
-    last_verified,
-    source_path,
-    source_content_sha256,
-    base_source_content_sha256,
-    revision,
-    claimed_by,
-    claim_token,
-    claim_expires_at,
-    local_updated_at,
-    raw_task
-   FROM planning_query_store.planning_effective_tasks
-  WHERE (status <> ALL (ARRAY['done'::text, 'blocked'::text]));
-
-
---
--- Name: planning_claim_recovery_tasks; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_claim_recovery_tasks AS
- SELECT lane_id,
-    task_id,
-    parent_task_id,
-    priority,
-    status,
-    base_status,
-    objective,
-    dependency,
-    target,
-    complexity,
-    effort_points,
-    progress_pct,
-    evidence_refs,
-    status_reason,
-    last_verified,
-    source_path,
-    source_content_sha256,
-    base_source_content_sha256,
-    revision,
-    claimed_by,
-    claim_token,
-    claim_expires_at,
-    local_updated_at,
-    raw_task,
-        CASE
-            WHEN ((lower(status) = 'in_progress'::text) AND (claimed_by IS NULL)) THEN 'in_progress_claim_missing'::text
-            WHEN ((lower(status) = 'in_progress'::text) AND (claim_expires_at IS NOT NULL) AND (claim_expires_at <= now())) THEN 'in_progress_claim_expired'::text
-            WHEN ((lower(status) = 'review'::text) AND (claimed_by IS NULL)) THEN 'review_claim_missing'::text
-            WHEN ((lower(status) = 'review'::text) AND (claim_expires_at IS NOT NULL) AND (claim_expires_at <= now())) THEN 'review_claim_expired'::text
-            WHEN ((lower(status) = 'queued'::text) AND (claimed_by IS NOT NULL) AND (claim_expires_at IS NOT NULL) AND (claim_expires_at <= now())) THEN 'queued_claim_expired'::text
-            WHEN ((lower(status) = 'queued'::text) AND (claimed_by IS NOT NULL) AND (claim_expires_at IS NULL)) THEN 'queued_claim_without_expiry'::text
-            WHEN ((lower(status) = 'queued'::text) AND (claimed_by IS NULL) AND (claim_expires_at IS NOT NULL)) THEN 'queued_claim_owner_missing'::text
-            ELSE 'claim_recovery_required'::text
-        END AS recovery_reason
-   FROM planning_query_store.planning_open_tasks task
-  WHERE (((lower(status) = ANY (ARRAY['in_progress'::text, 'review'::text])) AND ((claimed_by IS NULL) OR (claim_expires_at IS NULL) OR (claim_expires_at <= now()))) OR ((lower(status) = 'queued'::text) AND (((claimed_by IS NOT NULL) AND ((claim_expires_at IS NULL) OR (claim_expires_at <= now()))) OR ((claimed_by IS NULL) AND (claim_expires_at IS NOT NULL)))));
-
-
---
--- Name: planning_lanes; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.planning_lanes (
-    lane_id text NOT NULL,
-    source_path text NOT NULL,
-    title text NOT NULL,
-    owner text NOT NULL,
-    status text NOT NULL,
-    last_reviewed date,
-    goal text DEFAULT ''::text NOT NULL,
-    expected_outcome jsonb DEFAULT '[]'::jsonb NOT NULL,
-    header_markdown text DEFAULT ''::text NOT NULL,
-    source_content_sha256 text NOT NULL,
-    raw_lane jsonb NOT NULL,
-    CONSTRAINT planning_lanes_source_content_sha256_check CHECK ((source_content_sha256 ~ '^[a-f0-9]{64}$'::text))
-);
-
-
---
--- Name: planning_local_operations; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.planning_local_operations (
-    operation_id text NOT NULL,
-    idempotency_key text NOT NULL,
-    operation_type text NOT NULL,
-    actor text NOT NULL,
-    lane_id text NOT NULL,
-    task_id text NOT NULL,
-    source_path text NOT NULL,
-    base_source_content_sha256 text NOT NULL,
-    expected_revision integer,
-    previous_revision integer NOT NULL,
-    resulting_revision integer NOT NULL,
-    payload jsonb DEFAULT '{}'::jsonb NOT NULL,
-    created_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT planning_local_operations_base_source_content_sha256_check CHECK ((base_source_content_sha256 ~ '^[a-f0-9]{64}$'::text)),
-    CONSTRAINT planning_local_operations_expected_revision_check CHECK (((expected_revision IS NULL) OR (expected_revision >= 0))),
-    CONSTRAINT planning_local_operations_operation_type_check CHECK ((operation_type = ANY (ARRAY['task_claim'::text, 'task_release'::text, 'task_update'::text, 'task_create'::text, 'task_delete'::text]))),
-    CONSTRAINT planning_local_operations_previous_revision_check CHECK ((previous_revision >= 0)),
-    CONSTRAINT planning_local_operations_resulting_revision_check CHECK ((resulting_revision >= 0))
-);
-
-
---
--- Name: planning_task_dependencies; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_task_dependencies AS
- SELECT task.lane_id,
-    task.task_id,
-    (entry.dependency_order)::integer AS dependency_order,
-    NULLIF("substring"(btrim(entry.dependency_entry), '^[^[:space:]]+'::text), ''::text) AS dependency_task_id,
-    btrim(entry.dependency_entry) AS dependency_text,
-    task.source_path,
-    task.source_content_sha256
-   FROM (planning_query_store.planning_effective_tasks task
-     CROSS JOIN LATERAL regexp_split_to_table(COALESCE(task.dependency, ''::text), ',|\mand\M'::text) WITH ORDINALITY entry(dependency_entry, dependency_order))
-  WHERE ((btrim(COALESCE(task.dependency, ''::text)) <> ''::text) AND (lower(btrim(COALESCE(task.dependency, ''::text))) <> 'none'::text) AND (btrim(entry.dependency_entry) <> ''::text));
-
-
---
--- Name: planning_next_tasks; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_next_tasks AS
- WITH missing_dependencies AS (
-         SELECT dependency.lane_id,
-            dependency.task_id
-           FROM (planning_query_store.planning_task_dependencies dependency
-             LEFT JOIN planning_query_store.planning_effective_tasks prerequisite ON (((prerequisite.task_id = dependency.dependency_task_id) AND (lower(prerequisite.status) = 'done'::text))))
-          WHERE ((dependency.dependency_task_id IS NOT NULL) AND (lower(dependency.dependency_task_id) <> 'none'::text) AND (prerequisite.task_id IS NULL))
-        )
- SELECT lane_id,
-    task_id,
-    parent_task_id,
-    priority,
-    status,
-    base_status,
-    objective,
-    dependency,
-    target,
-    complexity,
-    effort_points,
-    progress_pct,
-    evidence_refs,
-    status_reason,
-    last_verified,
-    source_path,
-    source_content_sha256,
-    base_source_content_sha256,
-    revision,
-    claimed_by,
-    claim_token,
-    claim_expires_at,
-    local_updated_at,
-    raw_task
-   FROM planning_query_store.planning_open_tasks candidate
-  WHERE ((((lower(status) = ANY (ARRAY['in_progress'::text, 'review'::text])) AND (claimed_by IS NOT NULL) AND (claim_expires_at IS NOT NULL) AND (claim_expires_at > now())) OR ((lower(status) = 'queued'::text) AND (claimed_by IS NULL) AND (claim_expires_at IS NULL))) AND (NOT (EXISTS ( SELECT 1
-           FROM missing_dependencies missing
-          WHERE ((missing.lane_id = candidate.lane_id) AND (missing.task_id = candidate.task_id))))));
-
-
---
--- Name: planning_task_evidence_refs; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_task_evidence_refs AS
- SELECT task.lane_id,
-    task.task_id,
-    (evidence.evidence_order)::integer AS evidence_order,
-    evidence.evidence_ref,
-    task.source_path,
-    task.source_content_sha256
-   FROM (planning_query_store.planning_effective_tasks task
-     CROSS JOIN LATERAL jsonb_array_elements_text(COALESCE(task.evidence_refs, '[]'::jsonb)) WITH ORDINALITY evidence(evidence_ref, evidence_order));
-
-
---
--- Name: planning_task_gap_raw_query; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_task_gap_raw_query AS
- WITH task_document_links AS (
-         SELECT DISTINCT task.lane_id,
-            task.task_id,
-            reference.document_path
-           FROM (planning_query_store.planning_effective_tasks task
-             JOIN planning_query_store.doc_task_reference_query reference ON (((upper(reference.reference_text) = upper(task.task_id)) AND (reference.registered_planning_task = true))))
-        ), document_governed_work_links AS (
-         SELECT DISTINCT reference.document_path
-           FROM planning_query_store.doc_task_reference_query reference
-          WHERE ((reference.registered_planning_task = true) OR (reference.classification = 'registered_feature_mechanization'::text))
-        )
- SELECT 'done_or_review_without_evidence'::text AS gap_kind,
-    'P1'::text AS severity,
-    task.lane_id,
-    task.task_id,
-    NULL::text AS document_path,
-    'Task is in review or done without evidence refs.'::text AS reason,
-    task.source_path,
-    task.source_content_sha256
-   FROM planning_query_store.planning_effective_tasks task
-  WHERE ((lower(task.status) = ANY (ARRAY['done'::text, 'review'::text])) AND (NOT (EXISTS ( SELECT 1
-           FROM planning_query_store.planning_task_evidence_refs evidence
-          WHERE ((evidence.lane_id = task.lane_id) AND (evidence.task_id = task.task_id))))))
-UNION ALL
- SELECT 'open_without_source_document'::text AS gap_kind,
-    'P2'::text AS severity,
-    task.lane_id,
-    task.task_id,
-    NULL::text AS document_path,
-    'Open task has no task-referencing document and no evidence refs.'::text AS reason,
-    task.source_path,
-    task.source_content_sha256
-   FROM planning_query_store.planning_effective_tasks task
-  WHERE ((lower(task.status) <> ALL (ARRAY['done'::text, 'blocked'::text])) AND (NOT (EXISTS ( SELECT 1
-           FROM task_document_links link
-          WHERE ((link.lane_id = task.lane_id) AND (link.task_id = task.task_id))))) AND (NOT (EXISTS ( SELECT 1
-           FROM planning_query_store.planning_task_evidence_refs evidence
-          WHERE ((evidence.lane_id = task.lane_id) AND (evidence.task_id = task.task_id))))))
-UNION ALL
- SELECT 'active_review_without_task_link'::text AS gap_kind,
-    'P1'::text AS severity,
-    NULL::text AS lane_id,
-    NULL::text AS task_id,
-    document.document_path,
-    'Active review document has no registered planning task or governed work link.'::text AS reason,
-    document.document_path AS source_path,
-    document.source_content_sha256
-   FROM planning_query_store.doc_disposition_document_query document
-  WHERE ((document.is_active = true) AND (document.document_path ~~ 'docs/planning/reviews/%'::text) AND (lower(COALESCE(NULLIF(document.status, ''::text), 'missing'::text)) = ANY (ARRAY['active'::text, 'review'::text, 'in_progress'::text])) AND (NOT (EXISTS ( SELECT 1
-           FROM document_governed_work_links link
-          WHERE (link.document_path = document.document_path)))))
-UNION ALL
- SELECT 'mandatory_proposal_without_task_link'::text AS gap_kind,
-    'P1'::text AS severity,
-    NULL::text AS lane_id,
-    NULL::text AS task_id,
-    document.document_path,
-    'Mandatory active proposal has no registered planning task or governed work link.'::text AS reason,
-    document.document_path AS source_path,
-    document.source_content_sha256
-   FROM planning_query_store.doc_disposition_document_query document
-  WHERE ((document.is_active = true) AND (document.document_path ~~ 'docs/planning/proposals/mandatory/%'::text) AND (lower(COALESCE(NULLIF(document.status, ''::text), 'missing'::text)) = ANY (ARRAY['active'::text, 'draft'::text, 'proposed'::text, 'review'::text, 'missing'::text])) AND (NOT (EXISTS ( SELECT 1
-           FROM document_governed_work_links link
-          WHERE (link.document_path = document.document_path)))))
-UNION ALL
- SELECT DISTINCT 'task_linked_document_with_disposition_action'::text AS gap_kind,
-    action.priority AS severity,
-    task.lane_id,
-    task.task_id,
-    action.document_path,
-    action.reason,
-    action.document_path AS source_path,
-    action.source_content_sha256
-   FROM ((planning_query_store.doc_disposition_action_query action
-     JOIN planning_query_store.doc_task_reference_query reference ON (((reference.document_path = action.document_path) AND (reference.registered_planning_task = true) AND (action.reference_text IS NOT NULL) AND (upper(reference.reference_text) = upper(action.reference_text)))))
-     JOIN planning_query_store.planning_effective_tasks task ON ((upper(task.task_id) = upper(reference.reference_text))))
-  WHERE (action.resolution_status = 'pending'::text);
-
-
---
--- Name: planning_task_gap_query; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_task_gap_query AS
- SELECT gap.gap_kind,
-    gap.severity,
-    gap.lane_id,
-    gap.task_id,
-    gap.document_path,
-    gap.reason,
-    gap.source_path,
-    gap.source_content_sha256,
-    COALESCE(resolution.resolution_status, 'pending'::text) AS resolution_status,
-    resolution.resolved_by,
-    resolution.resolved_at,
-    resolution.reason AS resolution_reason,
-    resolution.target_lane_id,
-    resolution.target_task_id
-   FROM (planning_query_store.planning_task_gap_raw_query gap
-     LEFT JOIN planning_query_store.doc_resolution_overlays resolution ON (((resolution.resolution_scope = 'task_gap'::text) AND (resolution.issue_kind = gap.gap_kind) AND (COALESCE(resolution.document_path, ''::text) = COALESCE(gap.document_path, ''::text)) AND (COALESCE(resolution.lane_id, ''::text) = COALESCE(gap.lane_id, ''::text)) AND (COALESCE(resolution.task_id, ''::text) = COALESCE(gap.task_id, ''::text)) AND (resolution.source_content_sha256 = gap.source_content_sha256))));
-
-
---
 -- Name: pr_readiness_checks; Type: TABLE; Schema: planning_query_store; Owner: -
 --
 
@@ -8717,6 +8081,51 @@ CREATE VIEW planning_query_store.pr_readiness_query AS
 
 
 --
+-- Name: repository_commands; Type: TABLE; Schema: planning_query_store; Owner: -
+--
+
+CREATE TABLE planning_query_store.repository_commands (
+    command_id text NOT NULL,
+    command_type text NOT NULL,
+    command_name text,
+    command_path text,
+    command_text text,
+    domain text NOT NULL,
+    sensitivity text NOT NULL,
+    runtime_fanout boolean DEFAULT false NOT NULL,
+    changed_file_validation_relevant boolean DEFAULT true NOT NULL,
+    referenced_files jsonb DEFAULT '[]'::jsonb NOT NULL,
+    source_path text NOT NULL,
+    source_content_sha256 text NOT NULL,
+    raw_command jsonb NOT NULL,
+    imported_at timestamp with time zone DEFAULT now() NOT NULL,
+    CONSTRAINT repository_commands_command_type_check CHECK ((command_type = ANY (ARRAY['package_script'::text, 'command_file'::text])))
+);
+
+
+--
+-- Name: repository_command_query; Type: VIEW; Schema: planning_query_store; Owner: -
+--
+
+CREATE VIEW planning_query_store.repository_command_query AS
+ SELECT command_id,
+    command_type,
+    command_name,
+    command_path,
+    command_text,
+    domain,
+    sensitivity,
+    runtime_fanout,
+    changed_file_validation_relevant,
+    referenced_files,
+    jsonb_array_length(referenced_files) AS referenced_file_count,
+    source_path,
+    source_content_sha256,
+    imported_at
+   FROM planning_query_store.repository_commands;
+
+
+--
 -- Name: risk_debt_items; Type: TABLE; Schema: planning_query_store; Owner: -
 --
 
@@ -8763,544 +8172,6 @@ CREATE VIEW planning_query_store.risk_debt_query AS
     (lower(COALESCE(status, ''::text)) <> ALL (ARRAY['accepted'::text, 'closed'::text, 'done'::text, 'mitigated'::text, 'resolved'::text, 'superseded'::text])) AS is_open,
     source_content_sha256
    FROM planning_query_store.risk_debt_items;
-
-
---
--- Name: planning_work_intake_query; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_work_intake_query AS
- SELECT ((
-        CASE
-            WHEN (COALESCE(task.priority, ''::text) ~* '^P?[0-9]+$'::text) THEN (regexp_replace(task.priority, '^P'::text, ''::text, 'i'::text))::integer
-            ELSE 9
-        END * 100) + 5) AS rank_score,
-    task.priority,
-    'next_task'::text AS intake_kind,
-    task.task_id AS item_id,
-    task.lane_id,
-    task.task_id,
-    NULL::text AS document_path,
-    task.source_path,
-    task.objective AS title,
-        CASE
-            WHEN (lower(task.status) = ANY (ARRAY['in_progress'::text, 'review'::text])) THEN (('Dependency-satisfied active planning task with a live claim by '::text || task.claimed_by) || '.'::text)
-            ELSE 'Dependency-satisfied queued planning task with no active or stale claim.'::text
-        END AS reason,
-    (('pnpm planning:db:query task-trace --task '::text || quote_literal(task.task_id)) || ' --limit 30'::text) AS suggested_query,
-    'planning_next_tasks'::text AS source_view,
-    task.source_content_sha256
-   FROM planning_query_store.planning_next_tasks task
-UNION ALL
- SELECT ((
-        CASE
-            WHEN (COALESCE(task.priority, ''::text) ~* '^P?[0-9]+$'::text) THEN (regexp_replace(task.priority, '^P'::text, ''::text, 'i'::text))::integer
-            ELSE 9
-        END * 100) + 8) AS rank_score,
-    task.priority,
-    'claim_recovery'::text AS intake_kind,
-    task.task_id AS item_id,
-    task.lane_id,
-    task.task_id,
-    NULL::text AS document_path,
-    task.source_path,
-    task.objective AS title,
-    ('Planning task requires claim recovery: '::text || task.recovery_reason) AS reason,
-    ((('pnpm planning:db:operate task show --lane '::text || quote_literal(task.lane_id)) || ' --task '::text) || quote_literal(task.task_id)) AS suggested_query,
-    'planning_claim_recovery_tasks'::text AS source_view,
-    task.source_content_sha256
-   FROM planning_query_store.planning_claim_recovery_tasks task
-UNION ALL
- SELECT ((
-        CASE
-            WHEN (COALESCE(gap.severity, ''::text) ~* '^P?[0-9]+$'::text) THEN (regexp_replace(gap.severity, '^P'::text, ''::text, 'i'::text))::integer
-            ELSE 9
-        END * 100) + 10) AS rank_score,
-    gap.severity AS priority,
-    'task_gap'::text AS intake_kind,
-    ((('task_gap:'::text || gap.gap_kind) || ':'::text) || COALESCE(gap.task_id, gap.document_path, gap.source_path)) AS item_id,
-    gap.lane_id,
-    gap.task_id,
-    gap.document_path,
-    gap.source_path,
-    gap.gap_kind AS title,
-    gap.reason,
-        CASE
-            WHEN (gap.task_id IS NOT NULL) THEN (('pnpm planning:db:query task-trace --task '::text || quote_literal(gap.task_id)) || ' --limit 30'::text)
-            WHEN (gap.document_path IS NOT NULL) THEN (('pnpm planning:db:query task-gaps --path '::text || quote_literal(gap.document_path)) || ' --limit 30'::text)
-            ELSE (('pnpm planning:db:query task-gaps --kind '::text || quote_literal(gap.gap_kind)) || ' --limit 30'::text)
-        END AS suggested_query,
-    'planning_task_gap_query'::text AS source_view,
-    gap.source_content_sha256
-   FROM planning_query_store.planning_task_gap_query gap
-  WHERE (gap.resolution_status = 'pending'::text)
-UNION ALL
- SELECT knowledge_action_work_intake_query.rank_score,
-    knowledge_action_work_intake_query.priority,
-    knowledge_action_work_intake_query.intake_kind,
-    knowledge_action_work_intake_query.item_id,
-    knowledge_action_work_intake_query.lane_id,
-    knowledge_action_work_intake_query.task_id,
-    knowledge_action_work_intake_query.document_path,
-    knowledge_action_work_intake_query.source_path,
-    knowledge_action_work_intake_query.title,
-    knowledge_action_work_intake_query.reason,
-    knowledge_action_work_intake_query.suggested_query,
-    knowledge_action_work_intake_query.source_view,
-    knowledge_action_work_intake_query.source_content_sha256
-   FROM planning_query_store.knowledge_action_work_intake_query
-UNION ALL
- SELECT ((
-        CASE
-            WHEN (COALESCE(action.priority, ''::text) ~* '^P?[0-9]+$'::text) THEN (regexp_replace(action.priority, '^P'::text, ''::text, 'i'::text))::integer
-            ELSE 9
-        END * 100) + 20) AS rank_score,
-    action.priority,
-    'docs_disposition'::text AS intake_kind,
-    action.action_id AS item_id,
-    NULL::text AS lane_id,
-    NULL::text AS task_id,
-    action.document_path,
-    action.document_path AS source_path,
-    action.action_kind AS title,
-    action.reason,
-    (((('pnpm planning:db:query docs-disposition --kind '::text || quote_literal(action.action_kind)) || ' --path '::text) || quote_literal(action.document_path)) || ' --limit 30'::text) AS suggested_query,
-    'doc_disposition_action_query'::text AS source_view,
-    action.source_content_sha256
-   FROM planning_query_store.doc_disposition_action_query action
-  WHERE (action.resolution_status = 'pending'::text)
-UNION ALL
- SELECT ((
-        CASE
-            WHEN (COALESCE(debt.priority, ''::text) ~* '^P?[0-9]+$'::text) THEN (regexp_replace(debt.priority, '^P'::text, ''::text, 'i'::text))::integer
-            ELSE 9
-        END * 100) + 25) AS rank_score,
-    debt.priority,
-    'risk_debt'::text AS intake_kind,
-    debt.risk_id AS item_id,
-    NULL::text AS lane_id,
-    debt.risk_id AS task_id,
-    debt.source_path AS document_path,
-    debt.source_path,
-    debt.title,
-    ((('Open risk-register debt: severity='::text || debt.severity) || ', probability='::text) || debt.probability) AS reason,
-    (('pnpm planning:db:query debt --path '::text || quote_literal(debt.source_path)) || ' --limit 30'::text) AS suggested_query,
-    'risk_debt_query'::text AS source_view,
-    debt.source_content_sha256
-   FROM planning_query_store.risk_debt_query debt
-  WHERE (debt.is_open = true)
-UNION ALL
- SELECT ((
-        CASE
-            WHEN (COALESCE(remediation.priority, ''::text) ~* '^P?[0-9]+$'::text) THEN (regexp_replace(remediation.priority, '^P'::text, ''::text, 'i'::text))::integer
-            ELSE 9
-        END * 100) + 30) AS rank_score,
-    remediation.priority,
-    'governance_remediation'::text AS intake_kind,
-    remediation.task_id AS item_id,
-    NULL::text AS lane_id,
-    remediation.task_id,
-    NULL::text AS document_path,
-    remediation.source_path,
-    COALESCE(remediation.component_unit, remediation.task_type, remediation.task_id) AS title,
-    remediation.reason,
-    (('pnpm planning:db:query remediation --kind '::text || quote_literal(remediation.task_type)) || ' --limit 30'::text) AS suggested_query,
-    'governance_remediation_query'::text AS source_view,
-    remediation.source_content_sha256
-   FROM planning_query_store.governance_remediation_query remediation
-UNION ALL
- SELECT 0 AS rank_score,
-    'P0'::text AS priority,
-    'pr_readiness'::text AS intake_kind,
-    readiness.readiness_id AS item_id,
-    NULL::text AS lane_id,
-    NULL::text AS task_id,
-    NULL::text AS document_path,
-    readiness.source_path,
-    readiness.effective_arc_level AS title,
-    ('PR readiness blocker: '::text || COALESCE(NULLIF((readiness.missing_requirements)::text, '[]'::text), 'inspect required checks'::text)) AS reason,
-    'pnpm planning:db:query pr-readiness --limit 20'::text AS suggested_query,
-    'pr_readiness_query'::text AS source_view,
-    readiness.source_content_sha256
-   FROM planning_query_store.pr_readiness_query readiness
-  WHERE (readiness.blocking = true);
-
-
---
--- Name: planning_real_work_query; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_real_work_query AS
- WITH task_dependency_rollup AS (
-         SELECT task.lane_id,
-            task.task_id,
-            (count(dependency.dependency_task_id) FILTER (WHERE ((dependency.dependency_task_id IS NOT NULL) AND (lower(dependency.dependency_task_id) <> 'none'::text))))::integer AS dependency_count,
-            (count(dependency.dependency_task_id) FILTER (WHERE ((dependency.dependency_task_id IS NOT NULL) AND (lower(dependency.dependency_task_id) <> 'none'::text) AND (prerequisite.task_id IS NULL))))::integer AS missing_dependency_count,
-            COALESCE(jsonb_agg(dependency.dependency_task_id ORDER BY dependency.dependency_task_id) FILTER (WHERE ((dependency.dependency_task_id IS NOT NULL) AND (lower(dependency.dependency_task_id) <> 'none'::text) AND (prerequisite.task_id IS NULL))), '[]'::jsonb) AS missing_dependencies
-           FROM ((planning_query_store.planning_open_tasks task
-             LEFT JOIN planning_query_store.planning_task_dependencies dependency ON (((dependency.lane_id = task.lane_id) AND (dependency.task_id = task.task_id))))
-             LEFT JOIN planning_query_store.planning_effective_tasks prerequisite ON (((prerequisite.task_id = dependency.dependency_task_id) AND (lower(prerequisite.status) = 'done'::text))))
-          GROUP BY task.lane_id, task.task_id
-        ), task_rows AS (
-         SELECT ((
-                CASE
-                    WHEN (COALESCE(task.priority, ''::text) ~* '^P?[0-9]+$'::text) THEN (regexp_replace(task.priority, '^P'::text, ''::text, 'i'::text))::integer
-                    ELSE 9
-                END * 100) +
-                CASE
-                    WHEN (recovery.task_id IS NOT NULL) THEN 0
-                    WHEN (next_task.task_id IS NOT NULL) THEN 5
-                    WHEN (COALESCE(dependency.missing_dependency_count, 0) > 0) THEN 50
-                    ELSE 40
-                END) AS rank_score,
-            task.priority,
-            'planning_task'::text AS work_kind,
-            task.task_id AS work_id,
-            task.lane_id,
-            task.task_id,
-            NULL::text AS document_path,
-            task.source_path,
-            task.objective AS title,
-                CASE
-                    WHEN (recovery.task_id IS NOT NULL) THEN 'claim_recovery'::text
-                    WHEN (next_task.task_id IS NOT NULL) THEN 'actionable_now'::text
-                    WHEN (COALESCE(dependency.missing_dependency_count, 0) > 0) THEN 'blocked_by_dependency'::text
-                    ELSE 'open_not_actionable'::text
-                END AS work_status,
-            1 AS open_item_count,
-            1 AS linked_task_count,
-            COALESCE(dependency.dependency_count, 0) AS dependency_count,
-            COALESCE(dependency.missing_dependency_count, 0) AS missing_dependency_count,
-            COALESCE(dependency.missing_dependencies, '[]'::jsonb) AS missing_dependencies,
-                CASE
-                    WHEN (recovery.task_id IS NOT NULL) THEN 'Planning task requires claim recovery before prioritization.'::text
-                    WHEN (next_task.task_id IS NOT NULL) THEN 'Planning task is dependency-satisfied and actionable now.'::text
-                    WHEN (COALESCE(dependency.missing_dependency_count, 0) > 0) THEN 'Planning task is open but blocked by unfinished dependencies.'::text
-                    ELSE 'Planning task is open but not selected by the actionable-next route.'::text
-                END AS reason,
-            (('pnpm planning:db:query task-trace --task '::text || quote_literal(task.task_id)) || ' --limit 30'::text) AS suggested_query,
-            'planning_open_tasks'::text AS source_view,
-            task.source_content_sha256
-           FROM (((planning_query_store.planning_open_tasks task
-             LEFT JOIN planning_query_store.planning_next_tasks next_task ON (((next_task.lane_id = task.lane_id) AND (next_task.task_id = task.task_id))))
-             LEFT JOIN planning_query_store.planning_claim_recovery_tasks recovery ON (((recovery.lane_id = task.lane_id) AND (recovery.task_id = task.task_id))))
-             LEFT JOIN task_dependency_rollup dependency ON (((dependency.lane_id = task.lane_id) AND (dependency.task_id = task.task_id))))
-        ), intake_ranked AS (
-         SELECT intake.rank_score,
-            intake.priority,
-            intake.intake_kind,
-            intake.item_id,
-            intake.lane_id,
-            intake.task_id,
-            intake.document_path,
-            intake.source_path,
-            intake.title,
-            intake.reason,
-            intake.suggested_query,
-            intake.source_view,
-            intake.source_content_sha256,
-                CASE
-                    WHEN (COALESCE(intake.priority, ''::text) ~* '^P?[0-9]+$'::text) THEN (regexp_replace(intake.priority, '^P'::text, ''::text, 'i'::text))::integer
-                    ELSE 9
-                END AS priority_rank,
-            COALESCE(intake.source_path, intake.document_path, intake.item_id) AS work_source_path,
-                CASE
-                    WHEN (intake.intake_kind = ANY (ARRAY['docs_disposition'::text, 'task_gap'::text])) THEN ((((intake.intake_kind || ':'::text) || COALESCE(intake.title, intake.item_id)) || ':'::text) || COALESCE(intake.source_path, intake.document_path, intake.item_id))
-                    ELSE ((intake.intake_kind || ':'::text) || COALESCE(intake.source_path, intake.document_path, intake.item_id))
-                END AS work_group_key
-           FROM planning_query_store.planning_work_intake_query intake
-          WHERE (intake.intake_kind <> ALL (ARRAY['next_task'::text, 'claim_recovery'::text]))
-        ), intake_rows AS (
-         SELECT min(intake.rank_score) AS rank_score,
-            (array_agg(intake.priority ORDER BY intake.priority_rank, intake.priority))[1] AS priority,
-            intake.intake_kind AS work_kind,
-            intake.work_group_key AS work_id,
-                CASE
-                    WHEN (count(DISTINCT intake.lane_id) FILTER (WHERE (intake.lane_id IS NOT NULL)) = 1) THEN max(intake.lane_id)
-                    ELSE NULL::text
-                END AS lane_id,
-                CASE
-                    WHEN (count(DISTINCT intake.task_id) FILTER (WHERE (intake.task_id IS NOT NULL)) = 1) THEN max(intake.task_id)
-                    ELSE NULL::text
-                END AS task_id,
-            min(intake.document_path) FILTER (WHERE (intake.document_path IS NOT NULL)) AS document_path,
-            intake.work_source_path AS source_path,
-            (((((count(*))::integer || ' unresolved '::text) || replace(intake.intake_kind, '_'::text, ' '::text)) || ' item(s): '::text) || min(intake.title)) AS title,
-                CASE intake.intake_kind
-                    WHEN 'task_gap'::text THEN 'task_lineage_gap'::text
-                    WHEN 'knowledge_action'::text THEN 'unlinked_required_action'::text
-                    WHEN 'docs_disposition'::text THEN 'document_disposition_pending'::text
-                    WHEN 'risk_debt'::text THEN 'open_risk_debt'::text
-                    WHEN 'governance_remediation'::text THEN 'governance_remediation'::text
-                    WHEN 'pr_readiness'::text THEN 'pr_readiness_blocker'::text
-                    ELSE 'intake_pending'::text
-                END AS work_status,
-            (count(*))::integer AS open_item_count,
-            (count(DISTINCT intake.task_id) FILTER (WHERE (intake.task_id IS NOT NULL)))::integer AS linked_task_count,
-            0 AS dependency_count,
-            0 AS missing_dependency_count,
-            '[]'::jsonb AS missing_dependencies,
-            (((((count(*))::integer || ' pending item(s) from '::text) || string_agg(DISTINCT intake.source_view, ', '::text ORDER BY intake.source_view)) || '. Sample: '::text) || min(intake.reason)) AS reason,
-            (array_agg(intake.suggested_query ORDER BY intake.rank_score, intake.item_id))[1] AS suggested_query,
-            string_agg(DISTINCT intake.source_view, ', '::text ORDER BY intake.source_view) AS source_view,
-            min(intake.source_content_sha256) AS source_content_sha256
-           FROM intake_ranked intake
-          GROUP BY intake.intake_kind, intake.work_source_path, intake.work_group_key
-        )
- SELECT task_rows.rank_score,
-    task_rows.priority,
-    task_rows.work_kind,
-    task_rows.work_id,
-    task_rows.lane_id,
-    task_rows.task_id,
-    task_rows.document_path,
-    task_rows.source_path,
-    task_rows.title,
-    task_rows.work_status,
-    task_rows.open_item_count,
-    task_rows.linked_task_count,
-    task_rows.dependency_count,
-    task_rows.missing_dependency_count,
-    task_rows.missing_dependencies,
-    task_rows.reason,
-    task_rows.suggested_query,
-    task_rows.source_view,
-    task_rows.source_content_sha256
-   FROM task_rows
-UNION ALL
- SELECT intake_rows.rank_score,
-    intake_rows.priority,
-    intake_rows.work_kind,
-    intake_rows.work_id,
-    intake_rows.lane_id,
-    intake_rows.task_id,
-    intake_rows.document_path,
-    intake_rows.source_path,
-    intake_rows.title,
-    intake_rows.work_status,
-    intake_rows.open_item_count,
-    intake_rows.linked_task_count,
-    intake_rows.dependency_count,
-    intake_rows.missing_dependency_count,
-    intake_rows.missing_dependencies,
-    intake_rows.reason,
-    intake_rows.suggested_query,
-    intake_rows.source_view,
-    intake_rows.source_content_sha256
-   FROM intake_rows;
-
-
---
--- Name: planning_sources; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.planning_sources (
-    source_path text NOT NULL,
-    source_type text NOT NULL,
-    content_sha256 text NOT NULL,
-    source_bytes bigint NOT NULL,
-    imported_at timestamp with time zone DEFAULT now() NOT NULL,
-    metadata jsonb DEFAULT '{}'::jsonb NOT NULL,
-    raw_source jsonb,
-    source_authority text DEFAULT 'database'::text NOT NULL,
-    raw_source_text text,
-    CONSTRAINT planning_sources_content_sha256_check CHECK ((content_sha256 ~ '^[a-f0-9]{64}$'::text)),
-    CONSTRAINT planning_sources_source_authority_check CHECK ((source_authority = ANY (ARRAY['database'::text, 'git-bootstrap'::text]))),
-    CONSTRAINT planning_sources_source_bytes_check CHECK ((source_bytes >= 0)),
-    CONSTRAINT planning_sources_source_type_check CHECK ((source_type = 'planning_lane'::text))
-);
-
-
---
--- Name: planning_task_status_events; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_task_status_events AS
- SELECT concat('effective:', task.lane_id, ':', task.task_id, ':', task.revision) AS event_id,
-    'effective_state'::text AS event_kind,
-    task.lane_id,
-    task.task_id,
-    task.status,
-    task.progress_pct,
-    task.claimed_by AS actor,
-    COALESCE(task.local_updated_at, now()) AS occurred_at,
-    task.source_path,
-    task.source_content_sha256,
-    jsonb_build_object('baseStatus', task.base_status, 'revision', task.revision, 'statusReason', task.status_reason) AS raw_event
-   FROM planning_query_store.planning_effective_tasks task
-UNION ALL
- SELECT operation.operation_id AS event_id,
-    operation.operation_type AS event_kind,
-    operation.lane_id,
-    operation.task_id,
-    (operation.payload ->> 'status'::text) AS status,
-    (NULLIF((operation.payload ->> 'progressPct'::text), ''::text))::numeric(5,2) AS progress_pct,
-    operation.actor,
-    operation.created_at AS occurred_at,
-    operation.source_path,
-    operation.base_source_content_sha256 AS source_content_sha256,
-    operation.payload AS raw_event
-   FROM planning_query_store.planning_local_operations operation
-  WHERE (operation.operation_type = ANY (ARRAY['task_create'::text, 'task_update'::text, 'task_delete'::text]));
-
-
---
--- Name: planning_task_trace_query; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.planning_task_trace_query AS
- WITH task_document_links AS (
-         SELECT task.lane_id,
-            task.task_id,
-            task.priority,
-            task.status,
-            task.progress_pct,
-                CASE
-                    WHEN ((reference.document_path ~~ 'docs/planning/reviews/%'::text) OR (lower(COALESCE(document.planning_type, ''::text)) = 'review'::text)) THEN 'review'::text
-                    WHEN ((reference.document_path ~~ 'docs/planning/proposals/%'::text) OR (lower(COALESCE(document.planning_type, ''::text)) ~~ '%proposal%'::text)) THEN 'proposal'::text
-                    WHEN ((reference.document_path ~~ 'docs/planning/closeouts/%'::text) OR (lower(COALESCE(document.planning_type, ''::text)) = 'closeout'::text)) THEN 'closeout'::text
-                    WHEN (reference.document_path ~~ 'docs/evidence/%'::text) THEN 'evidence_doc'::text
-                    WHEN (reference.document_path ~~ 'docs/risk-register/%'::text) THEN 'risk_doc'::text
-                    ELSE 'source_doc'::text
-                END AS trace_kind,
-            reference.document_path AS trace_ref,
-            COALESCE(NULLIF(document.status, ''::text), '-'::text) AS trace_status,
-            COALESCE(NULLIF(document.title, ''::text), reference.document_path) AS trace_detail,
-            reference.document_path,
-            reference.source_content_sha256,
-            40 AS trace_order
-           FROM ((planning_query_store.planning_effective_tasks task
-             JOIN planning_query_store.doc_task_reference_query reference ON (((upper(reference.reference_text) = upper(task.task_id)) AND (reference.registered_planning_task = true))))
-             JOIN planning_query_store.doc_disposition_document_query document ON ((document.document_path = reference.document_path)))
-        )
- SELECT task.lane_id,
-    task.task_id,
-    task.priority,
-    task.status,
-    task.progress_pct,
-    'task'::text AS trace_kind,
-    task.task_id AS trace_ref,
-    task.status AS trace_status,
-    task.objective AS trace_detail,
-    NULL::text AS document_path,
-    task.source_path,
-    task.source_content_sha256,
-    0 AS trace_order
-   FROM planning_query_store.planning_effective_tasks task
-UNION ALL
- SELECT task.lane_id,
-    task.task_id,
-    task.priority,
-    task.status,
-    task.progress_pct,
-    'parent'::text AS trace_kind,
-    task.parent_task_id AS trace_ref,
-    COALESCE(parent.status, 'missing'::text) AS trace_status,
-    COALESCE(parent.objective, 'Parent task is not present in the effective task view.'::text) AS trace_detail,
-    NULL::text AS document_path,
-    task.source_path,
-    task.source_content_sha256,
-    5 AS trace_order
-   FROM (planning_query_store.planning_effective_tasks task
-     LEFT JOIN planning_query_store.planning_effective_tasks parent ON ((parent.task_id = task.parent_task_id)))
-  WHERE (NULLIF(task.parent_task_id, ''::text) IS NOT NULL)
-UNION ALL
- SELECT task.lane_id,
-    task.task_id,
-    task.priority,
-    task.status,
-    task.progress_pct,
-    'dependency'::text AS trace_kind,
-    dependency.dependency_task_id AS trace_ref,
-    COALESCE(prerequisite.status, 'missing'::text) AS trace_status,
-    dependency.dependency_text AS trace_detail,
-    NULL::text AS document_path,
-    dependency.source_path,
-    dependency.source_content_sha256,
-    (10 + dependency.dependency_order) AS trace_order
-   FROM ((planning_query_store.planning_effective_tasks task
-     JOIN planning_query_store.planning_task_dependencies dependency ON (((dependency.lane_id = task.lane_id) AND (dependency.task_id = task.task_id))))
-     LEFT JOIN planning_query_store.planning_effective_tasks prerequisite ON ((prerequisite.task_id = dependency.dependency_task_id)))
-UNION ALL
- SELECT task.lane_id,
-    task.task_id,
-    task.priority,
-    task.status,
-    task.progress_pct,
-    'evidence_ref'::text AS trace_kind,
-    evidence.evidence_ref AS trace_ref,
-    COALESCE(NULLIF(document.status, ''::text), '-'::text) AS trace_status,
-    COALESCE(NULLIF(document.title, ''::text), evidence.evidence_ref) AS trace_detail,
-        CASE
-            WHEN (evidence.evidence_ref ~~ 'docs/%'::text) THEN evidence.evidence_ref
-            ELSE NULL::text
-        END AS document_path,
-    evidence.source_path,
-    evidence.source_content_sha256,
-    (30 + evidence.evidence_order) AS trace_order
-   FROM ((planning_query_store.planning_effective_tasks task
-     JOIN planning_query_store.planning_task_evidence_refs evidence ON (((evidence.lane_id = task.lane_id) AND (evidence.task_id = task.task_id))))
-     LEFT JOIN planning_query_store.doc_disposition_document_query document ON ((document.document_path = evidence.evidence_ref)))
-UNION ALL
- SELECT task_document_links.lane_id,
-    task_document_links.task_id,
-    task_document_links.priority,
-    task_document_links.status,
-    task_document_links.progress_pct,
-    task_document_links.trace_kind,
-    task_document_links.trace_ref,
-    task_document_links.trace_status,
-    task_document_links.trace_detail,
-    task_document_links.document_path,
-    task_document_links.document_path AS source_path,
-    task_document_links.source_content_sha256,
-    task_document_links.trace_order
-   FROM task_document_links;
-
-
---
--- Name: repository_commands; Type: TABLE; Schema: planning_query_store; Owner: -
---
-
-CREATE TABLE planning_query_store.repository_commands (
-    command_id text NOT NULL,
-    command_type text NOT NULL,
-    command_name text,
-    command_path text,
-    command_text text,
-    domain text NOT NULL,
-    sensitivity text NOT NULL,
-    runtime_fanout boolean DEFAULT false NOT NULL,
-    changed_file_validation_relevant boolean DEFAULT true NOT NULL,
-    referenced_files jsonb DEFAULT '[]'::jsonb NOT NULL,
-    source_path text NOT NULL,
-    source_content_sha256 text NOT NULL,
-    raw_command jsonb NOT NULL,
-    imported_at timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT repository_commands_command_type_check CHECK ((command_type = ANY (ARRAY['package_script'::text, 'command_file'::text])))
-);
-
-
---
--- Name: repository_command_query; Type: VIEW; Schema: planning_query_store; Owner: -
---
-
-CREATE VIEW planning_query_store.repository_command_query AS
- SELECT command_id,
-    command_type,
-    command_name,
-    command_path,
-    command_text,
-    domain,
-    sensitivity,
-    runtime_fanout,
-    changed_file_validation_relevant,
-    referenced_files,
-    jsonb_array_length(referenced_files) AS referenced_file_count,
-    source_path,
-    source_content_sha256,
-    imported_at
-   FROM planning_query_store.repository_commands;
 
 
 --
@@ -10064,78 +8935,6 @@ ALTER TABLE ONLY planning_query_store.knowledge_proposals
 
 
 --
--- Name: planning_artifacts planning_artifacts_pkey; Type: CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_artifacts
-    ADD CONSTRAINT planning_artifacts_pkey PRIMARY KEY (artifact_path);
-
-
---
--- Name: planning_lanes planning_lanes_pkey; Type: CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_lanes
-    ADD CONSTRAINT planning_lanes_pkey PRIMARY KEY (lane_id);
-
-
---
--- Name: planning_local_operations planning_local_operations_idempotency_key_key; Type: CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_local_operations
-    ADD CONSTRAINT planning_local_operations_idempotency_key_key UNIQUE (idempotency_key);
-
-
---
--- Name: planning_local_operations planning_local_operations_pkey; Type: CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_local_operations
-    ADD CONSTRAINT planning_local_operations_pkey PRIMARY KEY (operation_id);
-
-
---
--- Name: planning_sources planning_sources_pkey; Type: CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_sources
-    ADD CONSTRAINT planning_sources_pkey PRIMARY KEY (source_path);
-
-
---
--- Name: planning_task_local_definitions planning_task_local_definitions_pkey; Type: CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_task_local_definitions
-    ADD CONSTRAINT planning_task_local_definitions_pkey PRIMARY KEY (lane_id, task_id);
-
-
---
--- Name: planning_task_local_state planning_task_local_state_pkey; Type: CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_task_local_state
-    ADD CONSTRAINT planning_task_local_state_pkey PRIMARY KEY (lane_id, task_id);
-
-
---
--- Name: planning_task_local_tombstones planning_task_local_tombstones_pkey; Type: CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_task_local_tombstones
-    ADD CONSTRAINT planning_task_local_tombstones_pkey PRIMARY KEY (lane_id, task_id);
-
-
---
--- Name: planning_tasks planning_tasks_pkey; Type: CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_tasks
-    ADD CONSTRAINT planning_tasks_pkey PRIMARY KEY (lane_id, task_id);
-
-
---
 -- Name: pr_readiness_checks pr_readiness_checks_pkey; Type: CONSTRAINT; Schema: planning_query_store; Owner: -
 --
 
@@ -10503,7 +9302,7 @@ CREATE INDEX db_governance_surface_operations_surface_idx ON planning_query_stor
 
 
 --
--- Name: db_governance_surfaces_state_idx; Type: INDEX; Schema: planning_query_store; Owner: -
+-- Name: db_governance_surfaces_authority_idx; Type: INDEX; Schema: planning_query_store; Owner: -
 --
 
 CREATE INDEX db_governance_surfaces_authority_idx ON planning_query_store.db_governance_surfaces USING btree (authority_mode, surface_name);
@@ -10562,7 +9361,7 @@ CREATE INDEX doc_resolution_operations_scope_idx ON planning_query_store.doc_res
 -- Name: doc_resolution_overlays_scope_idx; Type: INDEX; Schema: planning_query_store; Owner: -
 --
 
-CREATE INDEX doc_resolution_overlays_scope_idx ON planning_query_store.doc_resolution_overlays USING btree (resolution_scope, issue_kind, document_path, lane_id, task_id);
+CREATE INDEX doc_resolution_overlays_scope_idx ON planning_query_store.doc_resolution_overlays USING btree (resolution_scope, issue_kind, document_path);
 
 
 --
@@ -11032,76 +9831,6 @@ CREATE INDEX knowledge_intake_repository_references_target_idx ON planning_query
 --
 
 CREATE INDEX knowledge_intake_repository_references_target_lookup_idx ON planning_query_store.knowledge_intake_repository_references USING btree (target_document_path, source_path, relation_type);
-
-
---
--- Name: planning_artifacts_kind_idx; Type: INDEX; Schema: planning_query_store; Owner: -
---
-
-CREATE INDEX planning_artifacts_kind_idx ON planning_query_store.planning_artifacts USING btree (artifact_kind, artifact_path);
-
-
---
--- Name: planning_local_operations_task_idx; Type: INDEX; Schema: planning_query_store; Owner: -
---
-
-CREATE INDEX planning_local_operations_task_idx ON planning_query_store.planning_local_operations USING btree (lane_id, task_id, created_at);
-
-
---
--- Name: planning_sources_type_hash_idx; Type: INDEX; Schema: planning_query_store; Owner: -
---
-
-CREATE INDEX planning_sources_type_hash_idx ON planning_query_store.planning_sources USING btree (source_type, content_sha256);
-
-
---
--- Name: planning_task_dependencies_dependency_idx; Type: INDEX; Schema: planning_query_store; Owner: -
---
-
-CREATE INDEX planning_task_dependencies_dependency_idx ON planning_query_store.planning_tasks USING btree (task_id);
-
-
---
--- Name: planning_task_local_definitions_status_idx; Type: INDEX; Schema: planning_query_store; Owner: -
---
-
-CREATE INDEX planning_task_local_definitions_status_idx ON planning_query_store.planning_task_local_definitions USING btree (status, lane_id, task_id);
-
-
---
--- Name: planning_task_local_state_claim_idx; Type: INDEX; Schema: planning_query_store; Owner: -
---
-
-CREATE INDEX planning_task_local_state_claim_idx ON planning_query_store.planning_task_local_state USING btree (claimed_by, claim_expires_at) WHERE (claimed_by IS NOT NULL);
-
-
---
--- Name: planning_task_local_state_status_idx; Type: INDEX; Schema: planning_query_store; Owner: -
---
-
-CREATE INDEX planning_task_local_state_status_idx ON planning_query_store.planning_task_local_state USING btree (status, lane_id, task_id);
-
-
---
--- Name: planning_task_local_tombstones_source_idx; Type: INDEX; Schema: planning_query_store; Owner: -
---
-
-CREATE INDEX planning_task_local_tombstones_source_idx ON planning_query_store.planning_task_local_tombstones USING btree (lane_id, task_id, base_source_content_sha256);
-
-
---
--- Name: planning_tasks_parent_idx; Type: INDEX; Schema: planning_query_store; Owner: -
---
-
-CREATE INDEX planning_tasks_parent_idx ON planning_query_store.planning_tasks USING btree (lane_id, parent_task_id) WHERE (parent_task_id IS NOT NULL);
-
-
---
--- Name: planning_tasks_status_priority_idx; Type: INDEX; Schema: planning_query_store; Owner: -
---
-
-CREATE INDEX planning_tasks_status_priority_idx ON planning_query_store.planning_tasks USING btree (status, priority, lane_id);
 
 
 --
@@ -11746,27 +10475,10 @@ ALTER TABLE ONLY planning_query_store.knowledge_proposals
 
 
 --
--- Name: planning_lanes planning_lanes_source_path_fkey; Type: FK CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_lanes
-    ADD CONSTRAINT planning_lanes_source_path_fkey FOREIGN KEY (source_path) REFERENCES planning_query_store.planning_sources(source_path) ON DELETE CASCADE;
-
-
---
--- Name: planning_tasks planning_tasks_lane_id_fkey; Type: FK CONSTRAINT; Schema: planning_query_store; Owner: -
---
-
-ALTER TABLE ONLY planning_query_store.planning_tasks
-    ADD CONSTRAINT planning_tasks_lane_id_fkey FOREIGN KEY (lane_id) REFERENCES planning_query_store.planning_lanes(lane_id) ON DELETE CASCADE;
-
-
---
 -- Name: risk_debt_items risk_debt_items_source_path_fkey; Type: FK CONSTRAINT; Schema: planning_query_store; Owner: -
 --
 
 ALTER TABLE ONLY planning_query_store.risk_debt_items
     ADD CONSTRAINT risk_debt_items_source_path_fkey FOREIGN KEY (source_path) REFERENCES planning_query_store.governance_files(path) ON DELETE CASCADE;
-
 
 -- End of Planning DB current declarative schema.

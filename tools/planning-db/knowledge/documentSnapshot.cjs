@@ -87,15 +87,6 @@ function sectionRows(documentId, body) {
   return sections;
 }
 
-function normalizeTaskIdSet(taskIds = []) {
-  return new Set(taskIds.map((taskId) => normalizeText(taskId).toUpperCase()).filter(Boolean));
-}
-
-function extractTaskIds(text, planningTaskIds) {
-  const candidates = normalizeText(text).match(/[A-Z][A-Z0-9]*(?:-[A-Z0-9]+){1,}/g) ?? [];
-  return [...new Set(candidates)].filter((taskId) => planningTaskIds.has(taskId.toUpperCase()));
-}
-
 function actionStatusFromLine(line) {
   if (/^\s*[-*]\s+\[[xX]\]/.test(line)) {
     return 'done';
@@ -112,7 +103,7 @@ function actionStatusFromLine(line) {
   return 'proposed';
 }
 
-function actionRows(document, body, planningTaskIds) {
+function actionRows(document, body) {
   const actions = [];
   const links = [];
   const actionLinePattern = /^\s*[-*]\s+(?:\[[ xX]\]\s*)?(.+)$/;
@@ -124,12 +115,9 @@ function actionRows(document, body, planningTaskIds) {
       return true;
     }
     if (/^\s*[-*]\s+(?:\[[ xX]\]\s*)?\[Task:/i.test(line)) {
-      return extractTaskIds(line, planningTaskIds).length > 0;
-    }
-    if (/^\s*[-*]\s+(?:\[[ xX]\]\s*)?Task:/i.test(line)) {
       return true;
     }
-    if (extractTaskIds(line, planningTaskIds).length > 0) {
+    if (/^\s*[-*]\s+(?:\[[ xX]\]\s*)?Task:/i.test(line)) {
       return true;
     }
     if (
@@ -159,7 +147,7 @@ function actionRows(document, body, planningTaskIds) {
       continue;
     }
     const summary = match[1].trim();
-    if (!isActionLine(line, summary, planningTaskIds)) {
+    if (!isActionLine(line, summary)) {
       continue;
     }
     const actionId = `${document.documentId}::A${actions.length + 1}`;
@@ -172,22 +160,13 @@ function actionRows(document, body, planningTaskIds) {
       required: document.mandatory,
       lineNumber: lineIndex + 1,
     });
-    for (const taskId of extractTaskIds(line, planningTaskIds)) {
-      links.push({
-        actionId,
-        targetType: 'task',
-        targetId: taskId,
-        relationType: 'implements',
-      });
-    }
   }
   return { actions, links };
 }
 
-function buildKnowledgeSnapshotFromDocuments(sourceDocuments = [], options = {}) {
+function buildKnowledgeSnapshotFromDocuments(sourceDocuments = []) {
   const knowledgeSources = sourceDocuments.filter((entry) => isKnowledgePath(entry.sourcePath));
   const knownDocumentIds = new Set(knowledgeSources.map((source) => slugify(source.sourcePath)));
-  const planningTaskIds = normalizeTaskIdSet(options.planningTaskIds || []);
   const snapshot = {
     documents: [],
     sections: [],
@@ -223,7 +202,7 @@ function buildKnowledgeSnapshotFromDocuments(sourceDocuments = [], options = {})
       });
     }
     snapshot.documentLinks.push(...documentLinks(document, body, knownDocumentIds, slugify));
-    const extracted = actionRows(document, body, planningTaskIds);
+    const extracted = actionRows(document, body);
     snapshot.actions.push(...extracted.actions);
     snapshot.actionLinks.push(...extracted.links);
   }
