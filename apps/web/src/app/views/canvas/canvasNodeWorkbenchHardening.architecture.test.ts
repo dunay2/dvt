@@ -16,12 +16,16 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(CanvasNodeShellSource).toContain('export function resolveCanvasNodeDoubleClickAction');
     expect(CanvasNodeShellSource).toContain("action.id === 'open-node-code' && !action.disabled");
     expect(CanvasNodeShellSource).toContain("action.id === 'inspect-node' && !action.disabled");
+    expect(CanvasNodeShellSource).toContain('isCanvasNodeEmbeddedControlTarget(event.target)');
     expect(CanvasNodeShellSource).toContain("if (action === 'open-node-code')");
     expect(CanvasNodeShellSource).toContain('onContextMenuAction(action);');
     expect(CanvasNodeShellSource).toContain("if (action === 'open-workbench')");
     expect(CanvasNodeShellSource).toContain('onOpenWorkbench?.();');
 
     expect(DbtNodeComponentSource).not.toContain('const handleOpenWorkbench = () => {');
+    expect(DbtNodeComponentSource).toContain("data.presentationTruth?.code.kind === 'inline'");
+    expect(DbtNodeComponentSource).toContain("data.presentationTruth?.code.kind === 'generated'");
+    expect(DbtNodeComponentSource).toContain("data.onInspectNode?.(id, 'code');");
     expect(DbtNodeComponentSource).toContain(
       "typeof data.onInspectNode === 'function' ? () => data.onInspectNode?.(id, null) : undefined"
     );
