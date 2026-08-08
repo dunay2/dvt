@@ -53,6 +53,10 @@ export class ImportWarehouseSourcesUseCase {
       );
     }
 
+    const authorityBinding = await this.deps.authorityPolicy.resolve({
+      ...input.scope,
+      canvasId: request.data.canvasId,
+    });
     const { connection, sourceObjects: catalogSourceObjects } =
       await this.deps.sourceObjectReader.read(input.scope, request.data.connectionId);
     const sourceObjects = request.data.objects.map(({ objectId }) => {
@@ -79,10 +83,6 @@ export class ImportWarehouseSourcesUseCase {
       addTests: request.data.addTests,
       addFreshness: request.data.addFreshness,
     };
-    const authorityBinding = await this.deps.authorityPolicy.resolve({
-      ...input.scope,
-      canvasId: request.data.canvasId,
-    });
 
     let strategyResult: WarehouseSourceImportStrategyResult;
     try {
