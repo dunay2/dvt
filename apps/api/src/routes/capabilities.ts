@@ -2,12 +2,14 @@ import {
   ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY,
   LOAD_OBJECT_FILE_TO_POSTGRES_REQUIRED_CAPABILITY,
 } from '@dvt/contracts';
+import { EXECUTE_PYTHON_CODE_REQUIRED_CAPABILITY } from '@dvt/contracts/python-code';
 import type { FastifyInstance } from 'fastify';
 
 import { resolveTemporalProviderAdapterCapabilities } from '../modules/providerAdapters/createTemporalProviderAdapterFactory.js';
 import type { Env } from '../plugins/env.js';
 
 const OBJECT_FILE_POSTGRES_PLUGIN_ID = 'dvt.object-file-postgres';
+const PYTHON_PLUGIN_ID = 'dvt.python';
 
 const CAPABILITIES_RESPONSE_SCHEMA = {
   type: 'object',
@@ -39,6 +41,7 @@ export async function capabilitiesRoutes(app: FastifyInstance, opts: { env: Env 
   const httpJsonAvailable = temporalCapabilities.has(
     ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY
   );
+  const pythonAvailable = temporalCapabilities.has(EXECUTE_PYTHON_CODE_REQUIRED_CAPABILITY);
 
   app.get(
     '/capabilities',
@@ -70,6 +73,16 @@ export async function capabilitiesRoutes(app: FastifyInstance, opts: { env: Env 
             : {
                 reason: opts.env.TEMPORAL_ADDRESS
                   ? 'Temporal object-file PostgreSQL execution is disabled'
+                  : 'Temporal runtime is not configured',
+              }),
+        },
+        [PYTHON_PLUGIN_ID]: {
+          available: pythonAvailable,
+          ...(pythonAvailable
+            ? {}
+            : {
+                reason: opts.env.TEMPORAL_ADDRESS
+                  ? 'Temporal Python code execution is disabled'
                   : 'Temporal runtime is not configured',
               }),
         },
