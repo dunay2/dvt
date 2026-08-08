@@ -43,7 +43,6 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
-  onSelectionChange?: ReactFlowProps<Node, Edge>['onSelectionChange'];
   onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
   onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
@@ -108,7 +107,6 @@ function CanvasViewportReactFlowSurface({
   onConnect,
   onReconnect,
   onNodeClick,
-  onSelectionChange,
   onViewportChange,
   onNodeDrag,
   onNodeDragStop,
@@ -200,7 +198,6 @@ function CanvasViewportReactFlowSurface({
         onNodeClick={handleNodeClick}
         onPaneClick={handlePaneClick}
         onNodeDragStop={handleNodeDragStop}
-        onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
         nodesDraggable={canMoveNodes}
         nodesConnectable={canEditEdges}
@@ -333,8 +330,17 @@ export function CanvasViewportSurfaceView({
         />
       )}
       {renderContextMenuView ? (
-        <CanvasContextMenuView presenter={contextMenuPresenter} ariaLabel={contextMenuLabel} copy={copy} />
+        <CanvasContextMenuView
+          ariaLabel={contextMenuLabel}
+          model={contextMenuPresenter.model}
+          menuRef={contextMenuPresenter.menuRef}
+          onCanvasAction={contextMenuPresenter.handleCanvasAction}
+          onCreateNodeAction={contextMenuPresenter.handleCreateNodeAction}
+          onEdgeAction={contextMenuPresenter.handleEdgeAction}
+        />
       ) : null}
     </div>
   );
 }
+
+export type { CanvasViewportSurfaceViewProps };
