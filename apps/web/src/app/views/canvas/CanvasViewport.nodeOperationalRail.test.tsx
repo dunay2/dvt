@@ -124,9 +124,7 @@ describe('CanvasViewport node operational rail', () => {
   });
 
   it('does not replace health details when an embedded node control emits a node click', async () => {
-    const onNodeClick = vi.fn();
     await renderViewport({
-      onNodeClick,
       nodesWithImpact: [
         {
           id: 'source_orders',
@@ -162,7 +160,7 @@ describe('CanvasViewport node operational rail', () => {
     });
 
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
-    expect(onNodeClick).not.toHaveBeenCalled();
+    expect(document.body.querySelector('[data-slot="canvas-node-floating-toolbar"]')).toBeNull();
   });
 
   it('closes the popover when the user clicks outside it within the canvas viewport', async () => {
@@ -196,55 +194,39 @@ describe('CanvasViewport node operational rail', () => {
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).toBeNull();
   });
 
-  it('keeps an explicitly opened popover independent from execution-selection synchronization', async () => {
-    await renderViewport({
-      nodesWithImpact: [
+  it('keeps an explicitly opened popover independent from visual and execution selection', async () => {
+    const buildNodes = (selectedNodeId?: string) =>
+      [
         {
           id: 'source_orders',
           position: { x: 40, y: 80 },
-          data: { name: 'Orders source', selectedForExecution: false },
+          data: {
+            name: 'Orders source',
+            selectedForExecution: selectedNodeId === 'source_orders',
+          },
           type: 'dbtNode',
         },
         {
           id: 'model_orders',
           position: { x: 260, y: 80 },
-          data: { name: 'Orders model', selectedForExecution: false },
+          data: {
+            name: 'Orders model',
+            selectedForExecution: selectedNodeId === 'model_orders',
+          },
           type: 'dbtNode',
         },
-      ] as CanvasViewportProps['nodesWithImpact'],
-    });
+      ] as CanvasViewportProps['nodesWithImpact'];
 
+    await renderViewport({ nodesWithImpact: buildNodes() });
     await openOperationalDetails('source_orders');
 
+    expect(xyflowState.lastReactFlowProps?.onSelectionChange).toBeUndefined();
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
 
-    const onSelectionChange = xyflowState.lastReactFlowProps?.onSelectionChange as
-      | ((selection: {
-          nodes: CanvasViewportProps['nodesWithImpact'];
-          edges: CanvasViewportProps['edges'];
-        }) => void)
-      | undefined;
-    const nodes = xyflowState.lastReactFlowProps?.nodes as CanvasViewportProps['nodesWithImpact'];
-
-    await act(async () => {
-      onSelectionChange?.({ nodes: [], edges: [] });
-    });
-
+    await renderViewport({ nodesWithImpact: buildNodes('source_orders') });
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
 
-    await act(async () => {
-      onSelectionChange?.({
-        nodes: nodes.filter((node) => node.id === 'source_orders'),
-        edges: [],
-      });
-    });
-
-    expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
-
-    await act(async () => {
-      onSelectionChange?.({ nodes: nodes.filter((node) => node.id === 'model_orders'), edges: [] });
-    });
-
+    await renderViewport({ nodesWithImpact: buildNodes('model_orders') });
     expect(container.querySelector('[data-slot="graph-node-health-popover"]')).not.toBeNull();
   });
 
