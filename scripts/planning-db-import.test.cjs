@@ -1500,6 +1500,21 @@ test('planning DB import reads and validates the canonical DB-authored state sna
   }
 });
 
+test('canonical Planning DB recovery references the live architecture restore owner', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const canonicalState = fs.readFileSync(
+    path.join(__dirname, '..', 'tools', 'planning-db', 'state', 'canonical-state.json'),
+    'utf8'
+  );
+
+  assert.doesNotMatch(canonicalState, /restoreArchitectureComponentStatusOverrides/u);
+  assert.match(
+    canonicalState,
+    /scripts\/planning-db-architecture-state\.cjs#restoreArchitectureState/u
+  );
+});
+
 test('planning DB import restores the declarative current governance surface catalog', async () => {
   const fs = require('node:fs');
   const os = require('node:os');
