@@ -14,6 +14,7 @@ import {
   SourceObjectNotFoundError,
   UnsupportedSourceObjectImportError,
 } from '../../../src/application/ports/warehouseSourceImport.js';
+import { CanvasAuthoringAuthorityMissingError } from '../../../src/application/services/canvasAuthoringAuthorityPolicy.js';
 import { ImportWarehouseSourcesUseCase } from '../../../src/application/services/importWarehouseSourcesUseCase.js';
 import type { WarehouseSourceImportStrategyResult } from '../../../src/application/services/warehouseSourceImportPlan.js';
 import { InvalidWarehouseSourceYamlError } from '../../../src/application/services/warehouseSourceYaml.js';
@@ -164,6 +165,25 @@ describe('ImportWarehouseSourcesUseCase', () => {
     );
     expect(harness.sourceObjectReader.read).not.toHaveBeenCalled();
     expect(harness.authorityPolicy.resolve).not.toHaveBeenCalled();
+  });
+
+  it('rejects missing Canvas authority before external source discovery', async () => {
+    const harness = createHarness(GRAPH_AUTHORITY);
+    harness.authorityPolicy.resolve.mockRejectedValueOnce(
+      new CanvasAuthoringAuthorityMissingError(INPUT.canvasId)
+    );
+
+    await expect(harness.useCase.execute(INPUT)).rejects.toBeInstanceOf(
+      CanvasAuthoringAuthorityMissingError
+    );
+
+    expect(harness.authorityPolicy.resolve).toHaveBeenCalledWith({
+      ...SCOPE,
+      canvasId: INPUT.canvasId,
+    });
+    expect(harness.sourceObjectReader.read).not.toHaveBeenCalled();
+    expect(harness.graphDraftStrategy.execute).not.toHaveBeenCalled();
+    expect(harness.dbtProjectFilesStrategy.execute).not.toHaveBeenCalled();
   });
 
   it('rejects missing and non-relational source identities before mutation', async () => {
