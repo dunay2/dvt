@@ -1,4 +1,6 @@
 /** Owned concern: project canonical node metadata into a passive table-like Inspector read model. */
+import { ConnectedSourceRefSchema } from '@dvt/contracts';
+
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { CanvasNodePresentationCopy } from '../canvas/canvasNodePresentationCopy.contract';
 import type {
@@ -45,6 +47,7 @@ export const NODE_PROPERTY_ROW_ID = Object.freeze({
   plugin: 'plugin',
   package: 'package',
   materialization: 'materialization',
+  connection: 'connection',
   database: 'database',
   schema: 'schema',
   table: 'table',
@@ -234,6 +237,21 @@ function buildGeneralRows(
       metadata.materialized
     )
   );
+  const connectedSourceRef = ConnectedSourceRefSchema.safeParse(metadata.connectedSourceRef);
+  if (connectedSourceRef.success) {
+    addRow(
+      rows,
+      NODE_PROPERTY_ROW_ID.connection,
+      'Connection',
+      [
+        readString(metadata.connectionName),
+        connectedSourceRef.data.connectionRef.provider,
+        connectedSourceRef.data.connectionRef.connectionId,
+      ]
+        .filter((value): value is string => value != null)
+        .join(' · ')
+    );
+  }
   addRow(
     rows,
     NODE_PROPERTY_ROW_ID.database,
