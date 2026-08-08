@@ -71,3 +71,37 @@ test('live planning DB exports architecture mechanization through the canonical 
     fs.rmSync(outputRoot, { recursive: true, force: true });
   }
 });
+
+test('failed live import preserves the previously committed Planning DB', async () => {
+  await importContent({ databaseUrl: dbUrl(), silent: true });
+
+  const client = new Client({ connectionString: dbUrl() });
+  await client.connect();
+  try {
+    const before = await client.query(`select count(*)::int as count from architecture.component`);
+    let currentSchemaApplied = false;
+    const faultingClient = {
+      async query(sql, params) {
+        const statement = String(sql);
+        if (/CREATE SCHEMA architecture;/u.test(statement)) {
+          currentSchemaApplied = true;
+        }
+        if (currentSchemaApplied && /insert into architecture\."?component"?/iu.test(statement)) {
+          throw new Error('planned import failure after current-schema replacement');
+        }
+        return client.query(sql, params);
+      },
+    };
+
+    await assert.rejects(
+      importContent({ client: faultingClient, silent: true }),
+      /planned import failure after current-schema replacement/iu
+    );
+
+    const after = await client.query(`select count(*)::int as count from architecture.component`);
+    assert.equal(after.rows[0].count, before.rows[0].count);
+    assert.ok(after.rows[0].count > 0);
+  } finally {
+    await client.end();
+  }
+});
