@@ -25,7 +25,7 @@ evidence:
     - pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts warehouseSourceYaml.test.ts
     - pnpm --filter dvt-api lint
     - pnpm --filter dvt-api typecheck
-    - pnpm --filter @dvt/web test:canvas
+    - pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2
     - pnpm --filter @dvt/web lint
     - pnpm --filter @dvt/web typecheck
     - node --test scripts/run-canvas-source-import-live-proof.test.cjs
@@ -89,3 +89,10 @@ the Linux Cypress container; non-Windows execution retains the container lane.
 
 No database migration, compatibility state, dual-read path, stub, fixture draft
 or fake-success route is introduced.
+
+The complete Canvas focus config is run with two explicit workers. The local
+default worker fan-out made the unchanged 1,000-node layout CPU benchmark exceed
+its 30-second budget under contention, while one-worker CI mode exceeded the
+20-minute agent command window. Two workers executed every Canvas test with the
+same benchmark and unchanged budget successfully; no file or assertion was
+excluded.

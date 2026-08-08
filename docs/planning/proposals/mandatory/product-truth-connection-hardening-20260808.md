@@ -482,6 +482,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
   - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
   - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts
+  - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
   - apps/web/cypress/support/liveWarehouseSourceImport.ts
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - scripts/run-canvas-source-import-live-proof.cjs
@@ -490,6 +492,7 @@ allowedImplementationSurfaces:
   - docs/evidence/**
   - docs/risk-register/quality/**
   - docs/**/index.md
+  - docs/.manifest.json
   - docs/concepts/repository-map.md
   - docs/planning/status/**
 forbiddenImplementationSurfaces:
@@ -536,7 +539,7 @@ completionGate:
   - pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
   - pnpm --filter dvt-api lint
   - pnpm --filter dvt-api typecheck
-  - pnpm --filter @dvt/web test:canvas
+  - pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2
   - pnpm --filter @dvt/web lint
   - pnpm --filter @dvt/web typecheck
   - node --test scripts/run-canvas-source-import-live-proof.test.cjs
@@ -609,4 +612,5 @@ symbols:
   - { name: ConnectionRef, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Replace Primitive with Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
   - { name: ConnectedSourceRefSchema, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Replace Primitive with Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
   - { name: ConnectedSourceRef, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Replace Primitive with Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
+  - { name: assertNoSeriousAccessibilityViolations, path: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, dddOwner: ConnectedSourceRefVisibilityProof, cqRails: [GetWorkspaceGraphDraft], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:source-import:live] }
 ```
