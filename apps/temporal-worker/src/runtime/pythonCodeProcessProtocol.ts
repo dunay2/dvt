@@ -1,10 +1,9 @@
+import { JsonValueSchema, type JsonValue } from '@dvt/contracts/python-code';
 import type {
-  JsonValue,
   PythonRuntimeExecutionOutcome,
   PythonRuntimeFailureCode,
   PythonRuntimeFailurePhase,
 } from '@dvt/temporal-python-plugin';
-import { JsonValueSchema } from '@dvt/contracts/python-code';
 
 export const PYTHON_CODE_PROCESS_WRAPPER = String.raw`
 import contextlib
@@ -62,6 +61,9 @@ def _failure(code, phase, line=None, column=None, classification="rejected"):
 
 try:
     request = _json_load(sys.stdin)
+    if request.get("protocolVersion") != "python-json-v1":
+        _failure("PYTHON_RUNTIME_PROTOCOL_INVALID", "protocol", classification="runtime")
+        raise SystemExit(0)
     source = request["source"]
     inputs = request["inputs"]
     limits = request["limits"]
