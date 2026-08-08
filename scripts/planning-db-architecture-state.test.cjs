@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const {
   architectureStateTableNames,
   assertArchitectureState,
+  assertCurrentRailDecisionState,
   assertCurrentStateValue,
   readArchitectureState,
   restoreArchitectureState,
@@ -52,6 +53,32 @@ test('current-state export rejects Planning DB history instead of translating it
   );
   const date = new Date('2026-08-08T00:00:00.000Z');
   assert.equal(assertCurrentStateValue(date), date);
+});
+
+test('current rail decisions reject duplicate identities and operation history', () => {
+  const decision = {
+    railId: 'current#rail-decision#query#readcomponent',
+    railType: 'query',
+    normalizedRailName: 'readcomponent',
+  };
+
+  assert.doesNotThrow(() => assertCurrentRailDecisionState([decision], []));
+  assert.throws(
+    () =>
+      assertCurrentRailDecisionState(
+        [decision],
+        [{ railId: decision.railId, operationId: 'history' }]
+      ),
+    /cannot retain operations/iu
+  );
+  assert.throws(
+    () =>
+      assertCurrentRailDecisionState(
+        [decision, { ...decision, railId: `${decision.railId}-duplicate` }],
+        []
+      ),
+    /duplicate query:readcomponent/iu
+  );
 });
 
 test('architecture state export reads every table deterministically', async () => {

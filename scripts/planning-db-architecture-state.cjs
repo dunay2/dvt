@@ -106,13 +106,36 @@ function assertCurrentStateValue(value, location = 'currentState') {
     return value;
   }
   if (
-    /tools\/planning-db\/migrations|scripts\/planning-db-migrate|pnpm planning:db:migrate|test:planning:db:migrations|schema_migrations|migration_state|PreserveLocalFeatureMechanizationRails|mergeCanonicalFeatureMechanizationRails/iu.test(
+    /tools\/planning-db\/migrations|scripts\/planning-db-migrate|pnpm planning:db:migrate|test:planning:db:migrations|schema_migrations|migration_state|PreserveLocalFeatureMechanizationRails|mergeCanonicalFeatureMechanizationRails|planning[- _]db[- _]migrations?|(?:Apply|Validate)PlanningDbMigrations|PreparePlanningDbForCiGate/iu.test(
       value
     )
   ) {
     throw new Error(`Planning DB ${location} contains forbidden history semantics.`);
   }
   return value;
+}
+
+function assertCurrentRailDecisionState(rails, operations) {
+  const currentDecisionPrefix = 'current#rail-decision#';
+  const identities = new Set();
+
+  for (const rail of rails) {
+    if (!rail?.railId?.startsWith(currentDecisionPrefix)) continue;
+    const identity = `${rail.railType}:${rail.normalizedRailName}`;
+    if (identities.has(identity)) {
+      throw new Error(`Planning DB current rail decisions contain duplicate ${identity}.`);
+    }
+    identities.add(identity);
+  }
+
+  const historyOperation = operations.find((operation) =>
+    operation?.railId?.startsWith(currentDecisionPrefix)
+  );
+  if (historyOperation) {
+    throw new Error(
+      `Planning DB current rail decision ${historyOperation.railId} cannot retain operations.`
+    );
+  }
 }
 
 function sortArchitectureState(snapshot) {
@@ -200,6 +223,7 @@ async function restoreArchitectureState(client, snapshot) {
 module.exports = {
   architectureStateTableNames,
   assertArchitectureState,
+  assertCurrentRailDecisionState,
   assertCurrentStateValue,
   readArchitectureState,
   restoreArchitectureState,

@@ -4948,16 +4948,16 @@
       },
       {
         "component_id": "SYS-DOCS-PLANNING-STATE",
-        "name": "Planning state documentation",
+        "name": "Planning architecture state documentation",
         "kind": "module",
         "layer": "infra",
-        "owner": "PlanningStateReadModel",
+        "owner": "Architecture Governance",
         "repo_path": "docs/planning/state",
-        "public_contract": "Planning state documentation boundary.",
+        "public_contract": "Current planning architecture and governance-state documentation boundary.",
         "runtime": "none",
         "criticality": "high",
-        "status": "review",
-        "maturity_score": 76,
+        "status": "implemented",
+        "maturity_score": 90,
         "parent_component_id": "SYS-DOCS-GOVERNANCE-PLANNING",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
@@ -9555,22 +9555,6 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "component_id": "SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
-        "name": "Web Canvas residual route surfaces",
-        "kind": "ui-view",
-        "layer": "ui",
-        "owner": "Frontend / Canvas",
-        "repo_path": "tools/planning-db/schema.sql",
-        "public_contract": "Deprecated zero-file Canvas residual route bucket retained only as historical Planning DB deprecation evidence.",
-        "runtime": "browser",
-        "criticality": "low",
-        "status": "deprecated",
-        "maturity_score": 0,
-        "parent_component_id": "SYS-WEB-VIEW-CANVAS",
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-08T02:15:56.066074+00:00"
-      },
-      {
         "component_id": "SYS-WEB-VIEW-CANVAS-ROUTE",
         "name": "Web Canvas route shell",
         "kind": "ui-view",
@@ -10348,7 +10332,7 @@
         "title": "Canvas component registry ownership reconciliation",
         "owner": "Frontend / Planning DB",
         "status": "implemented",
-        "rationale": "The Canvas component drift query exposed UI files whose owners were either absent or duplicated. This migration fixes the Planning DB vocabulary before further TAREA.TXT implementation changes by registering node card owners, mapping presentation files to their existing components, and deleting the stale DVT SQL transform ownership over the DVT authoring selector.",
+        "rationale": "Canvas component ownership is explicit: node-card presentation files belong to their focused UI components and the authoring selector has one DVT owner.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "ListCanvasComponentRegistryDrift",
         "approved_at": "2026-08-07T00:49:55.642226+00:00",
@@ -10645,20 +10629,6 @@
         "rationale": "The Canvas-first redesign must not proceed from raw Markdown or route-local UI vocabulary. TAREA.TXT is persisted as typed Planning DB records so UI slices can reuse one vocabulary, one component map, and one command/query rail map.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "ListCanvasUxdbSpecification",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "CANVAS-UXDB-TRACEABILITY-REVIEW-20260626",
-        "work_item_id": "E-CANVAS-UXDB-TRACEABILITY-REVIEW-1",
-        "title": "Canvas UX database traceability review backlog",
-        "owner": "Frontend / Planning DB",
-        "status": "review",
-        "rationale": "TAREA.TXT defines a large graph-first UX and database specification. The implementation must proceed through canonical Planning DB tasks, components, and command/query rails instead of ad hoc Markdown or duplicate UI slices.",
-        "fowler_signal": "hidden_authority",
-        "rail_ref": "ListCanvasUxdbTraceability",
         "approved_at": "2026-08-07T00:49:55.642226+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-07T00:49:55.642226+00:00",
@@ -11141,20 +11111,6 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "design_id": "PLANNING-DB-CI-GOVERNANCE-MIGRATION-CATALOG-MAPPING-20260618",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "CI governance Planning DB migration catalog mapping",
-        "owner": "Architecture / Planning DB / CI",
-        "status": "review",
-        "rationale": "Planning DB migrations are executable governance facts and should not remain as direct files under SYS-CI-GOVERNANCE-ROOT. This design maps the migration directory to its own component and assigns vitest.config.ts to CI tooling.",
-        "fowler_signal": "hidden_authority",
-        "rail_ref": "ApplyPlanningDbMigrations;ValidatePlanningDbMigrations;ValidateComponentIntegrity",
-        "approved_at": null,
-        "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
         "design_id": "PLANNING-DB-CI-GOVERNANCE-REMAINING-TOOL-LEAF-MAPPING-20260618",
         "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
         "title": "CI governance remaining tool leaf mapping",
@@ -11230,7 +11186,7 @@
         "title": "CI tools leaf component mapping",
         "owner": "Architecture / Planning DB / CI",
         "status": "review",
-        "rationale": "SYS-CI-GOVERNANCE-TOOLS-CI still owns 79 live tools/ci files directly. The files represent distinct CI responsibilities: scope and matrix routing, PR quality, architecture boundary guards, documentation canon checks, repository command cataloging, CI harness utilities, and native web harness execution. This migration turns the existing component into an aggregate and creates responsibility-owned leaves so Planning DB component profiles can answer files, commands, queries, ports, adapters, contracts, tests, docs, relations, Fowler/DDD basis, and maturity without a side inventory. No tools/ci file is deprecated in this slice because every mapped file is active CI governance tooling.",
+        "rationale": "SYS-CI-GOVERNANCE-TOOLS-CI is an aggregate whose responsibility-owned leaves map current scope routing, PR quality, architecture guards, documentation checks, command cataloging, harness utilities, and native web harness execution.",
         "fowler_signal": "responsibility_overload",
         "rail_ref": "ReadComponentProfile;ValidateComponentIntegrity;ClassifyRepositoryChangeScope;ValidatePrMetadata;CheckArchitectureDependencies;ValidateDocsCanon;ReadRepositoryCommandCatalog;RunCiToolTestSuite;RunWebCypressNative",
         "approved_at": null,
@@ -11275,20 +11231,6 @@
         "rationale": "component_integrity_query spent most of its time checking component repo paths against a materialized CTE, which prevented existing file_path indexes from being used. The path coverage branch must query component_engineering_file_ownership_projection directly with split existence predicates.",
         "fowler_signal": "evolutionary_architecture",
         "rail_ref": "CheckPlanningDbComponentIntegrity",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Planning DB component post-import anchor sanitization",
-        "owner": "Architecture / Planning DB",
-        "status": "review",
-        "rationale": "A recovered Planning DB can retain imported architecture rows while current_schema reports the historical sanitization migrations as applied. The integrity rail requires unique repo_path anchors and real filesystem-backed component paths, so this migration reapplies the governed canonical anchors after imports without deleting history or weakening the checks.",
-        "fowler_signal": "hidden_authority",
-        "rail_ref": "RecordArchitectureComponent;CheckPlanningDbComponentIntegrity",
         "approved_at": "2026-08-07T00:49:55.642226+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-07T00:49:55.642226+00:00",
@@ -11370,7 +11312,7 @@
         "title": "Typed command/query implementation evidence",
         "owner": "Governance / Planning DB",
         "status": "implemented",
-        "rationale": "Repository tests, Cypress specs, fixtures, and catalog migrations are evidence surfaces rather than product implementations. Excluding them prevents a planned or retired rail from becoming implemented through name matching alone.",
+        "rationale": "Repository tests, Cypress specs, fixtures, and catalog evidence are validation surfaces rather than product implementations, so name matching cannot promote a planned or retired rail to implemented.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "ImportCommandQueryRailCatalog",
         "approved_at": "2026-08-07T00:49:55.642226+00:00",
@@ -11426,23 +11368,9 @@
         "title": "Planning closeout cohort leaf restoration",
         "owner": "Architecture / Planning DB / Documentation",
         "status": "review",
-        "rationale": "SYS-DOCS-PLANNING-CLOSEOUTS directly owned 439 tracked closeout files after migration 187 deprecated the month cohorts because they did not have unique physical directories. Current Planning DB ownership supports governed file patterns, so the canonical model is an aggregate closeout component with active cohort leaves for date-coded and legacy records. Old closeout evidence is not deprecated by age; only obsolete planning-catalog-to-cohort relations are deprecated because the aggregate is the correct parent.",
+        "rationale": "Planning closeouts use one aggregate with active governed-pattern leaves for date-coded and legacy evidence; obsolete planning-catalog relations are absent.",
         "fowler_signal": "responsibility_overload",
         "rail_ref": "ReadPlanningCloseoutRecords;ReadPlanningCloseoutRecords202603;ReadPlanningCloseoutRecords202604;ReadPlanningCloseoutRecords202605;ReadPlanningCloseoutRecords202606;ReadPlanningLegacyCloseoutRecords",
-        "approved_at": null,
-        "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Planning closeout cohort relation drift repair",
-        "owner": "Architecture / Planning DB / Documentation",
-        "status": "review",
-        "rationale": "Migration 198 used relation status drift to signal obsolete planning-catalog-to-closeout-cohort relations, but component_relation has no deprecated state and architecture-drift treats drift as an error. The coherent model keeps the historical relation IDs for compatibility, repoints their source to SYS-DOCS-PLANNING-CLOSEOUTS, and removes the duplicate relation IDs created in 198.",
-        "fowler_signal": "boundary_drift",
-        "rail_ref": "ReadPlanningCloseoutRecords;ValidateComponentIntegrity;ReadArchitectureDrift",
         "approved_at": null,
         "supersedes_id": null,
         "created_at": "2026-08-07T00:49:55.642226+00:00",
@@ -11597,48 +11525,6 @@
         "rationale": "Local component splits already own tracked files through Planning DB ownership. This design promotes those facts into architecture.component, component relations, and validation evidence so component-integrity can treat the database as the coherent component map.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "ValidateComponentIntegrity",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-MIGRATION-CATALOG-200S-LEAF-MAPPING-20260619",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Planning DB migration catalog 200-series leaf mapping",
-        "owner": "Architecture / Planning DB / CI",
-        "status": "review",
-        "rationale": "Migration 197 correctly modeled SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS-LEAF-MAPPING as the owner for component leaf-mapping migrations from 180 onward, but its ownership patterns stopped at 18*.sql and 19*.sql. The Canvas controller component mapping migrations 200 through 202 therefore fell back to the migration aggregate and component-quality reported file_without_leaf_component. This migration extends the governed ownership pattern to the 200-series migration files without creating a parallel inventory or deprecating executable migration history.",
-        "fowler_signal": "boundary_drift",
-        "rail_ref": "ReadPlanningDbLeafMappingMigrations;ReadComponentProfile;ValidateComponentIntegrity",
-        "approved_at": null,
-        "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-MIGRATION-CATALOG-LEAF-MAPPING-20260619",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Planning DB migration catalog leaf component mapping",
-        "owner": "Architecture / Planning DB / CI",
-        "status": "review",
-        "rationale": "SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS directly owned every tracked Planning DB migration file and pointed at 001_content_read_model.sql as its repo path. This split keeps the aggregate at tools/planning-db/schema.sql and creates semantic migration-era child components so component-profile can answer files, tests, contracts, ports, relations, and Fowler/DDD basis without a side inventory. No migration files are deprecated in this slice; old or non-functional migrations require explicit retirement evidence because applied migrations remain executable history.",
-        "fowler_signal": "responsibility_overload",
-        "rail_ref": "ReadComponentProfile;ValidateComponentIntegrity;ReadPlanningDbFoundationMigrations;ReadPlanningDbRailIntegrityMigrations;ReadPlanningDbApiWebHardeningMigrations;ReadPlanningDbComponentAuthorityMigrations;ReadPlanningDbLeafMappingMigrations",
-        "approved_at": null,
-        "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-MIGRATION-ORDINAL-UNIQUENESS-20260717",
-        "work_item_id": "A-PLANNING-MIGRATION-ORDINAL-UNIQUENESS-1",
-        "title": "Planning DB migration ordinal uniqueness boundary",
-        "owner": "Architecture / Planning DB / CI",
-        "status": "implemented",
-        "rationale": "Planning DB records applied migrations by complete filename stem, and historical numeric ordinals contain parallel-branch collisions. Renaming those applied files would replay their SQL. The migrator therefore fingerprints the immutable pre-722 filename history and requires unique ordinals at and above 722 before reading SQL or connecting to PostgreSQL.",
-        "fowler_signal": "evolutionary_architecture",
-        "rail_ref": "PreparePlanningDbForCiGate",
         "approved_at": "2026-08-07T00:49:55.642226+00:00",
         "supersedes_id": null,
         "created_at": "2026-08-07T00:49:55.642226+00:00",
@@ -11860,7 +11746,7 @@
         "title": "Temporal workflow runtime aggregate path canonicalization",
         "owner": "Architecture / Planning DB / Adapters",
         "status": "review",
-        "rationale": "Migration 213 kept SYS-ADAPTERS-TEMPORAL-WORKFLOW-RUNTIME as an aggregate but anchored it to packages/@dvt/adapter-temporal/src/workflows/RunPlanWorkflow.ts, which is the canonical repo_path for the entrypoint leaf. The aggregate must use the workflow runtime directory as a unique existing anchor while leaf components own concrete files to avoid duplicate_repo_path drift.",
+        "rationale": "The Temporal workflow runtime aggregate owns its directory anchor while focused leaf components own concrete workflow files, preserving unique current repo paths.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "ValidateComponentIntegrity;ReadComponentProfile",
         "approved_at": null,
@@ -11944,7 +11830,7 @@
         "title": "Web Canvas architecture maturity evidence",
         "owner": "Architecture / Planning DB / Frontend",
         "status": "review",
-        "rationale": "Fresh Planning DB migrations exposed Web Canvas architecture components with implemented status but missing responsibilities, contains relations, required tests, or duplicate repo paths. This design records existing tests and parent-child intent without creating a parallel inventory.",
+        "rationale": "The current Planning DB state exposed Web Canvas architecture components with implemented status but missing responsibilities, contains relations, required tests, or duplicate repo paths. This design records existing tests and parent-child intent without creating a parallel inventory.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "RecordArchitectureComponent;RecordArchitectureRelation;RecordArchitectureTestEvidence;CheckPlanningDbComponentIntegrity",
         "approved_at": "2026-08-07T00:49:55.642226+00:00",
@@ -12098,7 +11984,7 @@
         "title": "Web Canvas draft lifecycle aggregate path canonicalization",
         "owner": "Architecture / Planning DB / Frontend",
         "status": "review",
-        "rationale": "Migration 210 kept SYS-WEB-CANVAS-DRAFT-LIFECYCLE as an aggregate but anchored it to apps/web/src/app/views/canvas, which collides with the existing SYS-WEB-CANVAS-CONTROLLER-INTERACTION aggregate identity. The aggregate must use a unique existing implementation anchor while leaf components own concrete draft lifecycle files to avoid duplicate_repo_path drift.",
+        "rationale": "The Canvas draft-lifecycle aggregate uses a unique current architecture anchor while focused leaves own concrete lifecycle files.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "ValidateComponentIntegrity;ReadComponentProfile",
         "approved_at": null,
@@ -12518,7 +12404,7 @@
         "title": "Web Canvas parallel test drift reconciliation",
         "owner": "Architecture / Planning DB / Frontend",
         "status": "implemented",
-        "rationale": "Parallel Web Canvas work replaced the monolithic viewport graph-model and legacy-guide tests with split, tracked test files after earlier Planning DB migrations had repointed to the old surfaces. This design reconciles the DB authority to the real filesystem and records old paths as deprecated excludes instead of recreating stub files.",
+        "rationale": "Parallel Web Canvas work replaced the monolithic viewport graph-model and legacy-guide tests with split, tracked test files after the Planning DB state had referenced the old surfaces. This design reconciles current DB authority to the real filesystem and records old paths as deprecated excludes instead of recreating stub files.",
         "fowler_signal": "hidden_authority",
         "rail_ref": "CreateGovernanceComponent;RecordArchitectureComponent;RecordArchitectureRelation;RecordArchitectureTestEvidence;DetectGovernedSourceDrift;CheckPlanningDbComponentIntegrity",
         "approved_at": "2026-08-07T00:49:55.642226+00:00",
@@ -12574,123 +12460,11 @@
         "title": "Web Canvas shell chrome parent path canonicalization",
         "owner": "Architecture / Planning DB / Web Canvas",
         "status": "implemented",
-        "rationale": "Migration 219 moved concrete CanvasCenterSurface.tsx and CanvasShell.tsx ownership to shell chrome leaves. Existing aggregate architecture rows for SYS-WEB-CANVAS-GRAPH-SURFACE and SYS-WEB-CANVAS-SHELL-MAIN-PANEL still used those concrete files as repo_path anchors, producing duplicate_repo_path findings. Aggregates now point at unique canonical architecture documents while leaves own concrete files.",
+        "rationale": "Canvas graph and shell aggregates use unique current architecture anchors while shell-chrome leaves own the concrete presentation files.",
         "fowler_signal": "boundary_drift",
         "rail_ref": "ValidateComponentIntegrity;ReadComponentProfile;ReadCanvasShellCenterSurface;ComposeCanvasShellChrome",
         "approved_at": "2026-08-07T00:49:55.642226+00:00",
         "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LEGACY-LOCAL-RAIL-RECONCILIATION-20260625",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Reconcile legacy Canvas source import dialog local rails",
-        "owner": "Architecture / Planning DB / Frontend",
-        "status": "implemented",
-        "rationale": "The import snapshot can preserve older OpenCanvasSourceImportDialog local rail rows that point to untracked source import dialog host migration files and removed CanvasSourceImportDialogHost symbols. The active SourceImportWizard implementation is already covered by the retirement design and tracked migration 257, so this migration consolidates legacy rail rows onto that tracked source and removes raw_manifest.featureId to keep retirement metadata out of full feature manifest validation.",
-        "fowler_signal": "boundary_drift",
-        "rail_ref": "ValidateSourceDrift;ValidateFeatureMechanizationImplementation",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-MANIFEST-SANITIZE-20260625",
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-MANIFEST-SANITIZE-20260625",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Sanitize Canvas source import dialog local rail manifest",
-        "owner": "Architecture / Planning DB / Frontend",
-        "status": "implemented",
-        "rationale": "The retired OpenCanvasSourceImportDialog local rail stores reconciliation metadata, not the authoritative feature mechanization manifest. Leaving raw_manifest.featureId present makes docs:feature-mechanization:implementation validate the local retirement row as a sparse feature manifest. This migration removes featureId from the local raw_manifest while preserving feature_id and retirement metadata for command/query rail projections.",
-        "fowler_signal": "boundary_drift",
-        "rail_ref": "ValidateSourceDrift;ValidateFeatureMechanizationImplementation",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-SOURCE-RECONCILIATION-20260625",
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-SOURCE-RECONCILIATION-20260625",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Reconcile Canvas source import dialog local rail source",
-        "owner": "Architecture / Planning DB / Frontend",
-        "status": "implemented",
-        "rationale": "governed_source_drift_query still reported tools/planning-db/schema.sql when governance import restored the existing local rail after migration 257 had already run. This migration repairs the rail by stale source path and records metadata consumed by reconcileDeprecatedLocalRailSources so later imports keep the source on a tracked retirement migration.",
-        "fowler_signal": "boundary_drift",
-        "rail_ref": "ValidateSourceDrift;ValidateComponentIntegrity",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625",
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-OWNERSHIP-20260625",
-        "work_item_id": "DVT-CANVAS-P0-PRO-FLOW-1",
-        "title": "Canvas source import dialog host ownership reconciliation",
-        "owner": "Frontend / Canvas",
-        "status": "review",
-        "rationale": "CanvasSourceImportDialogHost.tsx and useCanvasSourceImportDialogState.ts are active SourceImportDialog boundary files. They must resolve through component_engineering_file_ownership_query to a concrete source-import leaf before the professional Canvas UX work continues, otherwise SYS-WEB-ROOT and preview-transformation ownership drift hide the real component boundary.",
-        "fowler_signal": "boundary_drift",
-        "rail_ref": "OpenCanvasSourceImportDialog;ImportWarehouseSources",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Retire phantom Canvas source import dialog host component",
-        "owner": "Architecture / Planning DB / Frontend",
-        "status": "implemented",
-        "rationale": "The Planning DB carried SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST as a review component backed by CanvasSourceImportDialogHost.tsx and a local feature manifest backed by tools/planning-db/schema.sql Neither file is tracked. The active implementation is CanvasShell rendering SourceImportWizard and the existing SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD component tree. This migration preserves audit history, retires the phantom host, and redirects shell chrome dependency evidence to the real wizard component.",
-        "fowler_signal": "boundary_drift",
-        "rail_ref": "ValidateComponentIntegrity;ValidateSourceDrift;ReadComponentProfile",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-POST-IMPORT-FEATURE-MANIFEST-RECONCILIATION-20260625",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Reconcile post-import Canvas source import dialog feature manifest row",
-        "owner": "Architecture / Planning DB / Frontend",
-        "status": "implemented",
-        "rationale": "A governance import can restore the historic OpenCanvasSourceImportDialog local feature manifest after the earlier reconciliation migration has already run. This migration repairs that restored row onto a tracked 264 source, removes sparse feature-manifest markers, and records deprecated source metadata so later imports preserve the DB-local retirement state.",
-        "fowler_signal": "boundary_drift",
-        "rail_ref": "ValidateFeatureMechanizationImplementation;ValidateSourceDrift",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RESTORED-FEATURE-MANIFEST-RECONCILIATION-20260625",
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RELATION-RETIREMENT-20260625",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Delete stale Canvas source import dialog host relation",
-        "owner": "Architecture / Planning DB / Frontend",
-        "status": "implemented",
-        "rationale": "The prior migration retired SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST but left REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-DIALOG-HOST in status drift. Relation drift is an active architecture error, not a retired state. The real shell dependency is REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-WIZARD, so the stale relation is deleted while the retirement design keeps the audit trail.",
-        "fowler_signal": "boundary_drift",
-        "rail_ref": "ValidateComponentIntegrity;ValidateArchitectureDrift",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625",
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RESTORED-FEATURE-MANIFEST-RECONCILIATION-20260625",
-        "work_item_id": "PLANNING-DB-COMPONENT-INTEGRITY-VOCABULARY-RAIL-20260612",
-        "title": "Reconcile restored Canvas source import dialog feature manifest row",
-        "owner": "Architecture / Planning DB / Frontend",
-        "status": "implemented",
-        "rationale": "A restored OpenCanvasSourceImportDialog local feature manifest can point to tools/planning-db/schema.sql and still carry sparse raw_manifest.featureId plus removed CanvasSourceImportDialogHost symbols. This migration moves the row to a tracked 263 reconciliation source and converts it into retirement metadata so feature-mechanization validation reads the canonical governed plan instead.",
-        "fowler_signal": "boundary_drift",
-        "rail_ref": "ValidateFeatureMechanizationImplementation;ValidateSourceDrift",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LEGACY-LOCAL-RAIL-RECONCILIATION-20260625",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -12700,7 +12474,7 @@
         "title": "Web Canvas source import frame composite",
         "owner": "Architecture / Planning DB / Frontend",
         "status": "review",
-        "rationale": "The source import frame is a composite boundary under the source import wizard. Fresh Planning DB migrations need this parent component before creating frame presentation and test leaves, otherwise child architecture rows depend on local operate-only state.",
+        "rationale": "The source import frame is a composite boundary under the source import wizard. The current Planning DB state needs this parent component before frame presentation and test leaves can exist, otherwise child architecture rows depend on local operate-only state.",
         "fowler_signal": "responsibility_overload",
         "rail_ref": "CreateArchitectureDesign;CreateGovernanceComponent;RecordArchitectureComponent;RecordArchitectureRelation;RecordArchitectureTestEvidence;CheckPlanningDbComponentIntegrity",
         "approved_at": "2026-08-07T00:49:55.642226+00:00",
@@ -13059,20 +12833,6 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "design_id": "WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625",
-        "work_item_id": "DVT-CANVAS-UXDB-SOURCE-DIALOG-1",
-        "title": "Canvas contextual source import dialog host",
-        "owner": "Frontend / Canvas / Planning DB",
-        "status": "superseded",
-        "rationale": "CanvasShell no longer owns SourceImportWizard state directly. CanvasSourceImportDialogHost and useCanvasSourceImportDialogState are files inside the canonical SourceImportDialog component and own only the contextual open/close presentation boundary. Superseded by PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625 because the declared dialog host source and migration are not tracked.",
-        "fowler_signal": "responsibility_overload",
-        "rail_ref": "OpenCanvasSourceImportDialog;ImportWarehouseSources",
-        "approved_at": "2026-08-07T00:49:55.642226+00:00",
-        "supersedes_id": null,
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
         "design_id": "WEB-CANVAS-VISUAL-PALETTE-TOKEN-CLASSIFICATION-20260626",
         "work_item_id": "E-CANVAS-LEGACY-PALETTE-RETIRE-1",
         "title": "Canvas visual palette token classification",
@@ -13324,16 +13084,6 @@
         "subject_id": "SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-CATALOGS",
         "evidence_kind": "test",
         "source_ref": "node --test scripts/planning-db/command-query-rail-reference-index.test.cjs",
-        "result_state": "pass",
-        "recorded_at": "2026-08-07T00:49:55.642226+00:00",
-        "source_content_sha256": null
-      },
-      {
-        "evidence_id": "EV-PLANNING-DB-MIGRATION-ORDINAL-UNIQUENESS",
-        "subject_kind": "component",
-        "subject_id": "SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-CORE",
-        "evidence_kind": "test",
-        "source_ref": "node --test scripts/planning-db-schema.test.cjs",
         "result_state": "pass",
         "recorded_at": "2026-08-07T00:49:55.642226+00:00",
         "source_content_sha256": null
@@ -14475,9 +14225,9 @@
         "contract_ref": "Shared generated document date policy helper.",
         "compatibility": "internal",
         "status": "implemented",
-        "validation_command": "node --test scripts/generate-code-status.test.cjs scripts/generate-workboard.test.cjs",
+        "validation_command": "node --test scripts/generate-code-status.test.cjs",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-08T06:20:34.674783+00:00"
       },
       {
         "contract_id": "CONTRACT-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DB-SURFACE-SURFACE",
@@ -15836,12 +15586,12 @@
         "contract_id": "CONTRACT-SYS-DOCS-PLANNING-STATE-DOCS",
         "contract_kind": "type",
         "owner_component_id": "SYS-DOCS-PLANNING-STATE",
-        "contract_ref": "Planning state documentation boundary.",
+        "contract_ref": "Current planning architecture and governance-state documentation boundary.",
         "compatibility": "internal",
         "status": "implemented",
-        "validation_command": "pnpm docs:workboard:generate && pnpm docs:workboard:check",
+        "validation_command": "pnpm docs:sync:check",
         "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
+        "updated_at": "2026-08-08T06:20:34.674783+00:00"
       },
       {
         "contract_id": "CONTRACT-SYS-DOCS-PLANNING-STATUS-DOCS",
@@ -20627,15 +20377,6 @@
         "observability_id": "OBS-WEB-VIEW-CANVAS-COMPONENT-TELEMETRY",
         "component_id": "SYS-WEB-VIEW-CANVAS",
         "signal_name": "Component-level browser telemetry is not applicable; Canvas route health is exposed through user-visible route states and required architecture tests.",
-        "signal_kind": "dashboard",
-        "required": true,
-        "status": "not_applicable",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "observability_id": "OBS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES-COMPONENT-TELEMETRY",
-        "component_id": "SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
-        "signal_name": "Component-level browser telemetry is not applicable; residual Canvas surfaces expose recoverable UI states and required presentation tests.",
         "signal_kind": "dashboard",
         "required": true,
         "status": "not_applicable",
@@ -34108,24 +33849,6 @@
         "updated_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "relation_id": "REL-WEB-CANVAS-VIEW-CONTAINS-RESIDUAL-SURFACES",
-        "source_component_id": "SYS-WEB-VIEW-CANVAS",
-        "target_component_id": "SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
-        "relation_type": "contains",
-        "direction": "outbound",
-        "sync_async": "sync",
-        "contract_id": null,
-        "failure_mode": "Historical relation retained for traceability; target component is deprecated because live Canvas residual files now resolve to concrete child components.",
-        "authorization_scope": "internal-ui-component-ownership",
-        "source_refs": [
-          "tools/planning-db/schema.sql",
-          "SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES"
-        ],
-        "status": "implemented",
-        "created_at": "2026-08-07T00:49:55.642226+00:00",
-        "updated_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
         "relation_id": "REL-WEB-CANVAS-VIEW-CONTAINS-ROUTE",
         "source_component_id": "SYS-WEB-VIEW-CANVAS",
         "target_component_id": "SYS-WEB-VIEW-CANVAS-ROUTE",
@@ -37275,8 +36998,8 @@
       {
         "responsibility_id": "RESP-SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-CORE",
         "component_id": "SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-CORE",
-        "responsibility": "Run and validate Planning DB migrations, imports, exports, checks, and integrity gates.",
-        "reason_to_change": "Planning DB lifecycle, schema migration, import/export, or integrity behavior changes.",
+        "responsibility": "Replace and validate the Planning DB current schema, imports, exports, checks, and integrity gates.",
+        "reason_to_change": "Planning DB current-schema replacement, import/export, or integrity behavior changes.",
         "ddd_owner": "PlanningDbLifecycle",
         "status": "proposed",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
@@ -38661,9 +38384,9 @@
       {
         "responsibility_id": "RESP-SYS-DOCS-PLANNING-STATE",
         "component_id": "SYS-DOCS-PLANNING-STATE",
-        "responsibility": "Own planning control tower, lane snapshots, workboard views, and active planning state exports.",
-        "reason_to_change": "Planning state, lane snapshot, workboard, route, or planning-control changes.",
-        "ddd_owner": "PlanningStateReadModel",
+        "responsibility": "Own current planning architecture, governance boundaries, and GitHub delivery workflow documentation.",
+        "reason_to_change": "Architecture-governance documentation or GitHub delivery workflow changes.",
+        "ddd_owner": "ArchitectureGovernanceDocumentation",
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -39129,7 +38852,7 @@
       {
         "responsibility_id": "RESP-SYS-REPO-METADATA-INFRA-DB-MIGRATIONS",
         "component_id": "SYS-REPO-METADATA-INFRA-DB-MIGRATIONS",
-        "responsibility": "Separate historical infrastructure database migrations from Planning DB migrations and runtime packages.",
+        "responsibility": "Own product and infrastructure database migration assets independently from the Planning DB current-schema artifact and runtime packages.",
         "reason_to_change": "Infrastructure DB schema, artifact store SQL, start-run intent SQL, or database bootstrap ownership changes.",
         "ddd_owner": "InfrastructureDatabaseMigrationCatalog",
         "status": "implemented",
@@ -39165,7 +38888,7 @@
       {
         "responsibility_id": "RESP-SYS-REPO-METADATA-PLANNING-DB-INFRA",
         "component_id": "SYS-REPO-METADATA-PLANNING-DB-INFRA",
-        "responsibility": "Map Planning DB docker infrastructure separately from Planning DB schema, scripts, and migrations.",
+        "responsibility": "Map Planning DB container infrastructure separately from its current schema, import, export, and validation scripts.",
         "reason_to_change": "Planning DB container topology, local DB service wiring, or Planning DB infrastructure bootstrap changes.",
         "ddd_owner": "PlanningDbLocalInfrastructure",
         "status": "implemented",
@@ -40941,15 +40664,6 @@
         "responsibility": "Coordinate Canvas route state, contextual workbench, shell main panel, route tests, and residual Canvas route surfaces.",
         "reason_to_change": "Canvas route-level state, shell composition, or contextual workbench routing changes.",
         "ddd_owner": "CanvasViewComposite",
-        "status": "proposed",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "responsibility_id": "RESP-SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
-        "component_id": "SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
-        "responsibility": "Keep the Canvas directory owned while focused child leaves continue to split graph, shell, node, context menu, and source import surfaces.",
-        "reason_to_change": "Canvas route surface file change that has not yet been assigned to a more focused child component.",
-        "ddd_owner": "CanvasResidualRouteSurfaces",
         "status": "proposed",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -45185,11 +44899,11 @@
       {
         "test_id": "TEST-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION",
         "component_id": "SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION",
-        "test_path": "scripts/generate-workboard.test.cjs",
+        "test_path": "scripts/generate-code-status.test.cjs",
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "node --test scripts/generate-workboard.test.cjs scripts/generate-code-status.test.cjs scripts/generate-db-surface-inventory.test.cjs scripts/generate-planning-lanes.test.cjs",
+        "validation_command": "node --test scripts/generate-code-status.test.cjs scripts/generate-db-surface-inventory.test.cjs",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -45209,7 +44923,7 @@
         "test_kind": "unit",
         "coverage_level": "behavior",
         "required": true,
-        "validation_command": "node --test scripts/generate-code-status.test.cjs scripts/generate-workboard.test.cjs",
+        "validation_command": "node --test scripts/generate-code-status.test.cjs",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46689,7 +46403,7 @@
         "test_kind": "architecture",
         "coverage_level": "boundary",
         "required": true,
-        "validation_command": "pnpm planning:db:query component-profile --component SYS-DOCS-GOVERNANCE-PLANNING --no-refresh --limit 80 && pnpm docs:workboard:check",
+        "validation_command": "pnpm planning:db:query component-profile --component SYS-DOCS-GOVERNANCE-PLANNING --no-refresh --limit 80 && pnpm docs:sync:check",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -46995,11 +46709,11 @@
       {
         "test_id": "TEST-SYS-DOCS-PLANNING-STATE-DOCS",
         "component_id": "SYS-DOCS-PLANNING-STATE",
-        "test_path": "scripts/generate-workboard.cjs",
+        "test_path": "scripts/sync-docs.cjs",
         "test_kind": "architecture",
         "coverage_level": "boundary",
         "required": true,
-        "validation_command": "pnpm docs:workboard:generate && pnpm docs:workboard:check",
+        "validation_command": "pnpm docs:sync:check",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
@@ -51483,16 +51197,6 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "test_id": "TEST-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
-        "component_id": "SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
-        "test_path": "apps/web/src/app/views/canvas/CanvasStateViews.test.tsx",
-        "test_kind": "unit",
-        "coverage_level": "behavior",
-        "required": true,
-        "validation_command": "pnpm --filter @dvt/web test:presentation:run -- src/app/views/canvas/CanvasStateViews.test.tsx",
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
         "test_id": "TEST-WEB-VIEW-CANVAS-ROUTE",
         "component_id": "SYS-WEB-VIEW-CANVAS-ROUTE",
         "test_path": "apps/web/src/app/views/Canvas.routeStates.smoke.test.tsx",
@@ -53676,9 +53380,7 @@
         "direction": "inbound",
         "input_contract_id": "CONTRACT-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DATE-POLICY-SURFACE",
         "output_contract_id": null,
-        "negative_tests": [
-          "node --test scripts/generate-code-status.test.cjs scripts/generate-workboard.test.cjs"
-        ],
+        "negative_tests": ["node --test scripts/generate-code-status.test.cjs"],
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -53690,9 +53392,7 @@
         "direction": "inbound",
         "input_contract_id": "CONTRACT-SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DATE-POLICY-SURFACE",
         "output_contract_id": null,
-        "negative_tests": [
-          "node --test scripts/generate-code-status.test.cjs scripts/generate-workboard.test.cjs"
-        ],
+        "negative_tests": ["node --test scripts/generate-code-status.test.cjs"],
         "status": "implemented",
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -56035,14 +55735,14 @@
       {
         "port_id": "PORT-SYS-DOCS-PLANNING-STATE-READPLANNINGSTATE",
         "component_id": "SYS-DOCS-PLANNING-STATE",
-        "port_name": "ReadPlanningState",
+        "port_name": "ReadPlanningArchitectureState",
         "port_kind": "query",
         "direction": "inbound",
         "input_contract_id": "CONTRACT-SYS-DOCS-PLANNING-STATE-DOCS",
         "output_contract_id": "CONTRACT-SYS-DOCS-PLANNING-STATE-DOCS",
         "negative_tests": [
-          "missing documentation ownership",
-          "misclassified planning lifecycle folder",
+          "missing architecture documentation ownership",
+          "misclassified governance lifecycle folder",
           "component-profile documentation gap"
         ],
         "status": "implemented",
@@ -66546,14 +66246,6 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "design_id": "PLANNING-DB-CI-DOCS-GENERATION-INTEGRITY-FOLLOWUP-20260618",
-        "subject_kind": "path",
-        "subject_id": "scripts/generate-workboard.cjs",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
         "design_id": "PLANNING-DB-CI-DOCS-GENERATION-LEAF-MAPPING-20260618",
         "subject_kind": "component",
         "subject_id": "SYS-ADAPTERS-POSTGRES-RUN-STATE-STORE",
@@ -66748,23 +66440,7 @@
       {
         "design_id": "PLANNING-DB-CI-DOCS-GENERATION-LEAF-MAPPING-20260618",
         "subject_kind": "path",
-        "subject_id": "scripts/generate-planning-lanes.cjs",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-CI-DOCS-GENERATION-LEAF-MAPPING-20260618",
-        "subject_kind": "path",
         "subject_id": "scripts/generate-spec-traceability-report.cjs",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-CI-DOCS-GENERATION-LEAF-MAPPING-20260618",
-        "subject_kind": "path",
-        "subject_id": "scripts/generate-workboard.cjs",
         "scope_kind": "may_update",
         "required": true,
         "created_at": "2026-08-07T00:49:55.642226+00:00"
@@ -66869,38 +66545,6 @@
         "design_id": "PLANNING-DB-CI-DOCS-GENERATION-LEAF-MAPPING-20260618",
         "subject_kind": "test",
         "subject_id": "TEST-SYS-RUNTIME-STATE-STORE-SNAPSHOT-BACKFILL-CLI",
-        "scope_kind": "may_create",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-CI-GOVERNANCE-MIGRATION-CATALOG-MAPPING-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-CI-GOVERNANCE-TOOLS-CI",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-CI-GOVERNANCE-MIGRATION-CATALOG-MAPPING-20260618",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-CI-GOVERNANCE-MIGRATION-CATALOG-MAPPING-20260618",
-        "subject_kind": "path",
-        "subject_id": "vitest.config.ts",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-CI-GOVERNANCE-MIGRATION-CATALOG-MAPPING-20260618",
-        "subject_kind": "test",
-        "subject_id": "TEST-SYS-CI-GOVERNANCE-PLANNING-DB-MIGRATIONS",
         "scope_kind": "may_create",
         "required": true,
         "created_at": "2026-08-07T00:49:55.642226+00:00"
@@ -68586,142 +68230,6 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-CI-GOVERNANCE-ROOT",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-CI-GOVERNANCE-SCRIPTS",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-CONTRACTS-PACKAGE-TESTS",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-CONTRACTS-ROOT",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-OBSERVABILITY-ROOT",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-PLANNER-ROOT",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-PLANSTORE-API-COMPOSITION",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-PLANSTORE-ARTIFACTS-PACKAGE-SHELL",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-PLANSTORE-CONTRACTS",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-PLANSTORE-ENGINE-FETCH",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-PLANSTORE-POSTGRES",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-PLANSTORE-TEMPORAL-COMPOSITION",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-REPO-METADATA-FOWLER-INBOX",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-REPO-METADATA-INFRA-DB-MIGRATIONS",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-REPO-METADATA-ROOT",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-TRACEABILITY-ROOT",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-COMPONENT-INTEGRITY-POST-IMPORT-ANCHOR-SANITIZATION-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-WORKERS-ROOT",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
         "design_id": "PLANNING-DB-CONTRACTS-PACKAGE-TEST-LEAF-COMPONENTS-20260619",
         "subject_kind": "component",
         "subject_id": "SYS-ADAPTERS-ROOT",
@@ -69893,94 +69401,6 @@
         "design_id": "PLANNING-DB-DOCS-CLOSEOUT-COHORT-LEAF-RESTORE-20260619",
         "subject_kind": "path",
         "subject_id": "docs/planning/closeouts/index.md",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "component",
-        "subject_id": "SYS-DOCS-PLANNING-CLOSEOUTS",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "relation",
-        "subject_id": "REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-202603",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "relation",
-        "subject_id": "REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-202604",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "relation",
-        "subject_id": "REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-202605",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "relation",
-        "subject_id": "REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-202606",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "relation",
-        "subject_id": "REL-DOCS-PLANNING-CLOSEOUTS-CONTAINS-LEGACY",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "relation",
-        "subject_id": "REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS-202603",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "relation",
-        "subject_id": "REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS-202604",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "relation",
-        "subject_id": "REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS-202605",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "relation",
-        "subject_id": "REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS-202606",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-DOCS-CLOSEOUT-RELATION-DRIFT-REPAIR-20260619",
-        "subject_kind": "relation",
-        "subject_id": "REL-DOCS-PLANNING-CONTAINS-CLOSEOUTS-LEGACY",
         "scope_kind": "may_update",
         "required": true,
         "created_at": "2026-08-07T00:49:55.642226+00:00"
@@ -71622,54 +71042,6 @@
         "subject_kind": "test",
         "subject_id": "scripts/planning-db-frontend-mechanical-truth-inventory.test.cjs",
         "scope_kind": "must_prove",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-MIGRATION-CATALOG-200S-LEAF-MAPPING-20260619",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-MIGRATION-CATALOG-LEAF-MAPPING-20260619",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-MIGRATION-ORDINAL-UNIQUENESS-20260717",
-        "subject_kind": "check",
-        "subject_id": "PreparePlanningDbForCiGate",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-MIGRATION-ORDINAL-UNIQUENESS-20260717",
-        "subject_kind": "component",
-        "subject_id": "SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-CORE",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-MIGRATION-ORDINAL-UNIQUENESS-20260717",
-        "subject_kind": "path",
-        "subject_id": "scripts/planning-db-schema.cjs",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-MIGRATION-ORDINAL-UNIQUENESS-20260717",
-        "subject_kind": "test",
-        "subject_id": "TEST-SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-CORE",
-        "scope_kind": "may_update",
         "required": true,
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -78291,14 +77663,6 @@
       },
       {
         "design_id": "PLANNING-DB-WEB-CANVAS-RESIDUAL-SPLIT-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-RESIDUAL-SPLIT-20260618",
         "subject_kind": "path",
         "subject_id": "apps/web/src/app/views/canvas/%",
         "scope_kind": "may_update",
@@ -78518,14 +77882,6 @@
         "subject_kind": "component",
         "subject_id": "SYS-WEB-CANVAS-CONTROLLER-INTERACTION",
         "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-RESIDUAL-SURFACES-DEPRECATION-20260619",
-        "subject_kind": "component",
-        "subject_id": "SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
-        "scope_kind": "may_update",
         "required": true,
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -79062,190 +78418,6 @@
         "subject_kind": "path",
         "subject_id": "docs/architecture/components/web/graph/canvas-fowler-canon-component.md",
         "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LEGACY-LOCAL-RAIL-RECONCILIATION-20260625",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LEGACY-LOCAL-RAIL-RECONCILIATION-20260625",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LEGACY-LOCAL-RAIL-RECONCILIATION-20260625",
-        "subject_kind": "query",
-        "subject_id": "DVT-CANVAS-UXDB-SOURCE-DIALOG-1:OpenCanvasSourceImportDialog",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-MANIFEST-SANITIZE-20260625",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-MANIFEST-SANITIZE-20260625",
-        "subject_kind": "query",
-        "subject_id": "DVT-CANVAS-UXDB-SOURCE-DIALOG-1:OpenCanvasSourceImportDialog",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-SOURCE-RECONCILIATION-20260625",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-SOURCE-RECONCILIATION-20260625",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-LOCAL-RAIL-SOURCE-RECONCILIATION-20260625",
-        "subject_kind": "query",
-        "subject_id": "DVT-CANVAS-UXDB-SOURCE-DIALOG-1:OpenCanvasSourceImportDialog",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625",
-        "subject_kind": "component",
-        "subject_id": "SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625",
-        "subject_kind": "component",
-        "subject_id": "SYS-WEB-CANVAS-SOURCE-IMPORT-WIZARD",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625",
-        "subject_kind": "path",
-        "subject_id": "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625",
-        "subject_kind": "relation",
-        "subject_id": "REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-DIALOG-HOST",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-PHANTOM-RETIREMENT-20260625",
-        "subject_kind": "relation",
-        "subject_id": "REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-WIZARD",
-        "scope_kind": "may_create",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-POST-IMPORT-FEATURE-MANIFEST-RECONCILIATION-20260625",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-POST-IMPORT-FEATURE-MANIFEST-RECONCILIATION-20260625",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-POST-IMPORT-FEATURE-MANIFEST-RECONCILIATION-20260625",
-        "subject_kind": "query",
-        "subject_id": "DVT-CANVAS-UXDB-SOURCE-DIALOG-1:OpenCanvasSourceImportDialog",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RELATION-RETIREMENT-20260625",
-        "subject_kind": "component",
-        "subject_id": "SYS-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RELATION-RETIREMENT-20260625",
-        "subject_kind": "relation",
-        "subject_id": "REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-DIALOG-HOST",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RELATION-RETIREMENT-20260625",
-        "subject_kind": "relation",
-        "subject_id": "REL-WEB-CANVAS-SHELL-CHROME-USES-SOURCE-IMPORT-WIZARD",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RESTORED-FEATURE-MANIFEST-RECONCILIATION-20260625",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_delete",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RESTORED-FEATURE-MANIFEST-RECONCILIATION-20260625",
-        "subject_kind": "path",
-        "subject_id": "tools/planning-db/schema.sql",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-RESTORED-FEATURE-MANIFEST-RECONCILIATION-20260625",
-        "subject_kind": "query",
-        "subject_id": "DVT-CANVAS-UXDB-SOURCE-DIALOG-1:OpenCanvasSourceImportDialog",
-        "scope_kind": "may_update",
         "required": true,
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
@@ -80101,14 +79273,6 @@
         "design_id": "PLANNING-DB-WEB-ROOT-FILESYSTEM-LEAF-COMPONENTS-20260618",
         "subject_kind": "component",
         "subject_id": "SYS-WEB-SRC-TESTING",
-        "scope_kind": "may_create",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "PLANNING-DB-WEB-ROOT-FILESYSTEM-LEAF-COMPONENTS-20260618",
-        "subject_kind": "component",
-        "subject_id": "SYS-WEB-VIEW-CANVAS-RESIDUAL-SURFACES",
         "scope_kind": "may_create",
         "required": true,
         "created_at": "2026-08-07T00:49:55.642226+00:00"
@@ -82850,78 +82014,6 @@
         "created_at": "2026-08-07T00:49:55.642226+00:00"
       },
       {
-        "design_id": "WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625",
-        "subject_kind": "component",
-        "subject_id": "SYS-WEB-CANVAS-SHELL-CHROME",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625",
-        "subject_kind": "component",
-        "subject_id": "web.component.canvas.SourceImportDialog",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625",
-        "subject_kind": "path",
-        "subject_id": "apps/web/src/app/views/canvas/CanvasShell.architecture.test.tsx",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625",
-        "subject_kind": "path",
-        "subject_id": "apps/web/src/app/views/canvas/CanvasShell.tsx",
-        "scope_kind": "may_update",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625",
-        "subject_kind": "path",
-        "subject_id": "apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx",
-        "scope_kind": "may_create",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625",
-        "subject_kind": "path",
-        "subject_id": "apps/web/src/app/views/canvas/useCanvasSourceImportDialogState.ts",
-        "scope_kind": "may_create",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625",
-        "subject_kind": "query",
-        "subject_id": "ImportWarehouseSources",
-        "scope_kind": "may_reference",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625",
-        "subject_kind": "query",
-        "subject_id": "OpenCanvasSourceImportDialog",
-        "scope_kind": "may_create",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
-        "design_id": "WEB-CANVAS-SOURCE-IMPORT-DIALOG-HOST-20260625",
-        "subject_kind": "test",
-        "subject_id": "CanvasShell.architecture.test.tsx",
-        "scope_kind": "must_prove",
-        "required": true,
-        "created_at": "2026-08-07T00:49:55.642226+00:00"
-      },
-      {
         "design_id": "WORKSPACE-FILE-REVISION-CAS-20260711",
         "subject_kind": "component",
         "subject_id": "SYS-API-APPLICATION-PORTS",
@@ -83706,7 +82798,7 @@
         "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md",
-      "sourceContentSha256": "11143ec595d5da515db3f899c69f21347d08542bfa7ff4752c92b813b0a9fa82",
+      "sourceContentSha256": "ac2b795912edf181dab2cb8b88b775374cce8a826f957edf7a9e4615abc405a4",
       "rawRail": {
         "name": "ExportDbtProject",
         "type": "command",
@@ -84586,7 +83678,7 @@
         "pnpm planning:db:integrity:check"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md",
-      "sourceContentSha256": "175e2db461a1f876b4db7149d711e1297630ea33cb597a1ea6f29c18bfd563ef",
+      "sourceContentSha256": "febd44af3c1b310091ff742fb7ddee0d0ecf7348b24bc43a3cb9899baf4bce0c",
       "rawRail": {
         "name": "ValidateContractReferences",
         "type": "command",
@@ -84650,7 +83742,7 @@
         "pnpm planning:db:integrity:check"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md",
-      "sourceContentSha256": "175e2db461a1f876b4db7149d711e1297630ea33cb597a1ea6f29c18bfd563ef",
+      "sourceContentSha256": "febd44af3c1b310091ff742fb7ddee0d0ecf7348b24bc43a3cb9899baf4bce0c",
       "rawRail": {
         "name": "ValidateRfc2119Language",
         "type": "command",
@@ -84916,6 +84008,291 @@
       "revision": 1,
       "createdBy": "codex",
       "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#enforceplanningdbcurrentschema",
+      "featureId": "PLANNING-DB-CURRENT-SCHEMA-HARD-CUT-20260808",
+      "mechanizationStatus": "implemented",
+      "railName": "EnforcePlanningDbCurrentSchema",
+      "normalizedRailName": "enforceplanningdbcurrentschema",
+      "railType": "query",
+      "dddOwner": "PlanningDbCurrentSchemaPolicy",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        {
+          "name": "assertNoPlanningDbMigrationArtifacts",
+          "path": "scripts/planning-db-current-schema-policy.cjs",
+          "dddOwner": "PlanningDbCurrentSchemaPolicy",
+          "unitTests": ["scripts/planning-db-current-schema-policy.test.cjs"]
+        }
+      ],
+      "implementationRefs": [
+        {
+          "name": "assertNoPlanningDbMigrationArtifacts",
+          "path": "scripts/planning-db-current-schema-policy.cjs",
+          "dddOwner": "PlanningDbCurrentSchemaPolicy",
+          "unitTests": ["scripts/planning-db-current-schema-policy.test.cjs"],
+          "sourceKind": "manifest_symbol"
+        }
+      ],
+      "documentationRefs": [],
+      "governingSources": [
+        "AGENTS.md",
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/guides/ai-work-protocol.md",
+        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+        "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/planning/state/planning-control-tower.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+        "docs/adr/index.md",
+        "docs/adr/adr-catalog.md",
+        "docs/adr/adr-implementation-status.md",
+        "docs/.manifest.json",
+        "docs/architecture/components/ci-governance/**",
+        "docs/generated-docs-policy.json",
+        "docs/guides/**",
+        "docs/runbooks/**",
+        "docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md",
+        "docs/planning/status/**",
+        "docs/**/index.md",
+        "package.json",
+        "scripts/planning-db*.cjs",
+        "scripts/planning-db/**",
+        "scripts/planning-db-operate-tests/**",
+        "scripts/planning-db-query-tests/**",
+        "scripts/governance-db*.cjs",
+        "scripts/governance-refresh*.cjs",
+        "scripts/generate-*.cjs",
+        "scripts/local-validation-plan.cjs",
+        "scripts/pr-closeout*.cjs",
+        "scripts/verify-*.cjs",
+        "scripts/check-generated-docs-policy*.cjs",
+        "tools/planning-db/**",
+        "tools/ci/policy/workflow-scope.json",
+        ".github/actions/**",
+        ".github/workflows/**"
+      ],
+      "architectureGuards": [
+        "node --test scripts/planning-db-schema.test.cjs",
+        "node --test scripts/planning-db-current-schema-policy.test.cjs",
+        "pnpm docs:feature-mechanization:implementation"
+      ],
+      "completionGate": [
+        "node --test scripts/planning-db-schema.test.cjs scripts/planning-db-current-schema-policy.test.cjs scripts/planning-db-import.test.cjs",
+        "pnpm test:planning:db:integration",
+        "pnpm governance:refresh",
+        "pnpm verify:prepush"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md",
+      "sourceContentSha256": "024af93c509646595a67eb5e19260108f4f4ff23cd1facd400a7699e4eaf6e3a",
+      "rawRail": {
+        "name": "EnforcePlanningDbCurrentSchema",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "PlanningDbCurrentSchemaPolicy"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "applyCurrentPlanningDbSchema",
+            "path": "scripts/planning-db-schema.cjs",
+            "cqRails": ["RestorePlanningDbCanonicalArchitectureState"],
+            "dddOwner": "PlanningDbCanonicalStateImport",
+            "unitTests": ["scripts/planning-db-schema.test.cjs"],
+            "fowlerSignals": [
+              "one current schema replaces ordered historical transitions"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-schema.test.cjs"
+          },
+          {
+            "name": "assertNoPlanningDbMigrationArtifacts",
+            "path": "scripts/planning-db-current-schema-policy.cjs",
+            "cqRails": ["EnforcePlanningDbCurrentSchema"],
+            "dddOwner": "PlanningDbCurrentSchemaPolicy",
+            "unitTests": ["scripts/planning-db-current-schema-policy.test.cjs"],
+            "fowlerSignals": [
+              "fitness function prevents migration-state recurrence"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-current-schema-policy.test.cjs"
+          },
+          {
+            "name": "assertCurrentRailDecisionState",
+            "path": "scripts/planning-db-architecture-state.cjs",
+            "cqRails": [
+              "RestorePlanningDbCanonicalArchitectureState",
+              "ExportPlanningDbCanonicalArchitectureState"
+            ],
+            "dddOwner": "PlanningDbCanonicalStateImport",
+            "unitTests": ["scripts/planning-db-architecture-state.test.cjs"],
+            "fowlerSignals": [
+              "current rail decisions cannot retain historical operations"
+            ],
+            "cypressCoverage": "N/A",
+            "architectureGuard": "node --test scripts/planning-db-architecture-state.test.cjs"
+          }
+        ],
+        "version": 1,
+        "featureId": "PLANNING-DB-CURRENT-SCHEMA-HARD-CUT-20260808",
+        "userStories": [
+          "As a governance operator, I rebuild Planning DB from current truth without replaying history.",
+          "As a reviewer, I can prove no migration ledger or compatibility path remains."
+        ],
+        "cypressFlows": ["N/A - repository governance database surface"],
+        "domainObjects": [
+          {
+            "name": "PlanningDbCanonicalStateImport",
+            "type": "application service",
+            "owner": "Planning DB"
+          },
+          {
+            "name": "PlanningDbCanonicalStateExport",
+            "type": "application service",
+            "owner": "Planning DB"
+          },
+          {
+            "name": "PlanningDbCurrentSchemaPolicy",
+            "type": "policy",
+            "owner": "Architecture / CI"
+          }
+        ],
+        "fowlerSignals": [
+          "migration history duplicates Git history",
+          "applied migration state is hidden compatibility authority",
+          "delivery-state SQL competes with current canonical inputs"
+        ],
+        "completionGate": [
+          "node --test scripts/planning-db-schema.test.cjs scripts/planning-db-current-schema-policy.test.cjs scripts/planning-db-import.test.cjs",
+          "pnpm test:planning:db:integration",
+          "pnpm governance:refresh",
+          "pnpm verify:prepush"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "current-schema-bootstrap",
+            "redTest": "node --test scripts/planning-db-schema.test.cjs",
+            "greenTest": "node --test scripts/planning-db-schema.test.cjs",
+            "patchSurfaces": [
+              "tools/planning-db/schema.sql",
+              "scripts/planning-db-schema.cjs",
+              "scripts/planning-db-schema.test.cjs"
+            ],
+            "expectedFailure": "Planning DB has no single destructive current-schema bootstrap owner."
+          },
+          {
+            "id": "obsolete-schema-artifact-recurrence-guard",
+            "redTest": "node --test scripts/planning-db-current-schema-policy.test.cjs",
+            "greenTest": "node --test scripts/planning-db-current-schema-policy.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-current-schema-policy.cjs",
+              "scripts/planning-db-current-schema-policy.test.cjs",
+              "package.json"
+            ],
+            "expectedFailure": "Obsolete ordered-schema directories, runners, commands, ledgers, or source references still exist."
+          },
+          {
+            "id": "rebuild-import-integration",
+            "redTest": "node --test scripts/planning-db-content.integration.test.cjs",
+            "greenTest": "node --test scripts/planning-db-content.integration.test.cjs",
+            "patchSurfaces": [
+              "scripts/planning-db-import.cjs",
+              "scripts/planning-db-content.integration.test.cjs",
+              "scripts/planning-db-query.cjs",
+              "scripts/planning-db-operate.cjs"
+            ],
+            "expectedFailure": "Import still applies migrations and preserves migration state."
+          }
+        ],
+        "componentGuides": [
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md"
+        ],
+        "governingSources": [
+          "AGENTS.md",
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/planning/state/planning-control-tower.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RestorePlanningDbCanonicalArchitectureState",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "PlanningDbCanonicalStateImport"
+          },
+          {
+            "name": "ExportPlanningDbCanonicalArchitectureState",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "PlanningDbCanonicalStateExport"
+          },
+          {
+            "name": "EnforcePlanningDbCurrentSchema",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "PlanningDbCurrentSchemaPolicy"
+          }
+        ],
+        "architectureGuards": [
+          "node --test scripts/planning-db-schema.test.cjs",
+          "node --test scripts/planning-db-current-schema-policy.test.cjs",
+          "pnpm docs:feature-mechanization:implementation"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "docs/adr/ADR-0063-planning-db-current-schema-rebuild.md",
+          "docs/adr/index.md",
+          "docs/adr/adr-catalog.md",
+          "docs/adr/adr-implementation-status.md",
+          "docs/.manifest.json",
+          "docs/architecture/components/ci-governance/**",
+          "docs/generated-docs-policy.json",
+          "docs/guides/**",
+          "docs/runbooks/**",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md",
+          "docs/planning/proposals/mandatory/**",
+          "docs/planning/status/**",
+          "docs/**/index.md",
+          "package.json",
+          "scripts/planning-db*.cjs",
+          "scripts/planning-db/**",
+          "scripts/planning-db-operate-tests/**",
+          "scripts/planning-db-query-tests/**",
+          "scripts/governance-db*.cjs",
+          "scripts/governance-refresh*.cjs",
+          "scripts/generate-*.cjs",
+          "scripts/local-validation-plan.cjs",
+          "scripts/pr-closeout*.cjs",
+          "scripts/verify-*.cjs",
+          "scripts/check-generated-docs-policy*.cjs",
+          "tools/planning-db/**",
+          "tools/ci/policy/workflow-scope.json",
+          ".github/actions/**",
+          ".github/workflows/**"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "infra/db/migrations/**",
+          "packages/@dvt/adapter-postgres/**",
+          "packages/@dvt/contracts/**",
+          "packages/@dvt/engine/**",
+          "apps/**"
+        ]
+      },
+      "revision": 0,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T06:20:34.674Z"
     },
     {
       "railId": "current#rail-decision#query#getplanrecordbyref",
@@ -85340,200 +84717,6 @@
             "type": "query",
             "status": "implemented",
             "dddOwner": "Workspace artifact preview read model"
-          }
-        ],
-        "mechanizationStatus": "implemented",
-        "noHumanDecisionsRemaining": true
-      },
-      "revision": 1,
-      "createdBy": "codex",
-      "createdAt": "2026-08-08T00:00:00.000Z"
-    },
-    {
-      "railId": "current#rail-decision#query#querygovernedfeaturework",
-      "featureId": "GOV-S3-PLANNING-STATE-QUERY-STORE",
-      "mechanizationStatus": "implemented",
-      "railName": "QueryGovernedFeatureWork",
-      "normalizedRailName": "querygovernedfeaturework",
-      "railType": "query",
-      "dddOwner": "DocsDispositionQueue",
-      "railStatus": "implemented",
-      "symbolRefs": [
-        "tools/planning-db/schema.sql#planning_work_intake_query",
-        "scripts/planning-db-query.cjs#feature-work",
-        "scripts/planning-db-query.test.cjs#readFeatureWorkRows"
-      ],
-      "implementationRefs": [
-        "tools/planning-db/schema.sql#planning_work_intake_query",
-        "scripts/planning-db-query.cjs#feature-work",
-        "scripts/planning-db-query.test.cjs#readFeatureWorkRows"
-      ],
-      "documentationRefs": [
-        "docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md"
-      ],
-      "governingSources": [
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/planning/status/governance-document-rule-inventory.md"
-      ],
-      "allowedImplementationSurfaces": [
-        "pnpm planning:db:query feature-work",
-        "planning_query_store.planning_work_intake_query"
-      ],
-      "architectureGuards": [
-        "Governed feature work must come from DB views, not ad hoc document scans."
-      ],
-      "completionGate": ["node --test scripts/planning-db-query.test.cjs"],
-      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md",
-      "sourceContentSha256": "7a2926c039498ec2a9211f1e23d752bb2265874fdc612dfe3934b198f796da52",
-      "rawRail": {
-        "name": "QueryGovernedFeatureWork",
-        "type": "query",
-        "status": "implemented",
-        "dddOwner": "DocsDispositionQueue"
-      },
-      "rawManifest": {
-        "version": 1,
-        "featureId": "GOV-S3-PLANNING-STATE-QUERY-STORE",
-        "governingSources": [
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/planning/status/governance-document-rule-inventory.md"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "QueryGovernedFeatureWork",
-            "type": "query",
-            "status": "implemented",
-            "dddOwner": "DocsDispositionQueue"
-          }
-        ],
-        "mechanizationStatus": "implemented",
-        "noHumanDecisionsRemaining": true
-      },
-      "revision": 1,
-      "createdBy": "codex",
-      "createdAt": "2026-08-08T00:00:00.000Z"
-    },
-    {
-      "railId": "current#rail-decision#query#queryplanningnexttasks",
-      "featureId": "POST-MERGE-PLANNING-CLOSEOUT-GUARDRAIL-20260508",
-      "mechanizationStatus": "implemented",
-      "railName": "QueryPlanningNextTasks",
-      "normalizedRailName": "queryplanningnexttasks",
-      "railType": "query",
-      "dddOwner": "Planning query store",
-      "railStatus": "implemented",
-      "symbolRefs": [
-        "tools/planning-db/schema.sql#planning_next_tasks",
-        "tools/planning-db/schema.sql#planning_next_tasks",
-        "scripts/planning-db-query.cjs#readNextTaskRows",
-        "scripts/planning-db-query.test.cjs#readNextTaskRows"
-      ],
-      "implementationRefs": [
-        "tools/planning-db/schema.sql#planning_next_tasks",
-        "tools/planning-db/schema.sql#planning_next_tasks",
-        "scripts/planning-db-query.cjs#readNextTaskRows",
-        "scripts/planning-db-query.test.cjs#readNextTaskRows"
-      ],
-      "documentationRefs": [
-        "docs/planning/proposals/mandatory/governance-and-docs/post-merge-planning-closeout-drift-problem-20260508.md"
-      ],
-      "governingSources": [
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/planning/status/governance-document-rule-inventory.md"
-      ],
-      "allowedImplementationSurfaces": [
-        "pnpm planning:db:query next",
-        "planning_query_store.planning_next_tasks"
-      ],
-      "architectureGuards": [
-        "Next-task routing must respect dependency and claim recovery boundaries."
-      ],
-      "completionGate": ["node --test scripts/planning-db-query.test.cjs"],
-      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/post-merge-planning-closeout-drift-problem-20260508.md",
-      "sourceContentSha256": "56f37a0f00e01021f1cb8b2bfc81e515ec92c3d953ead263b14e33576dae6360",
-      "rawRail": {
-        "name": "QueryPlanningNextTasks",
-        "type": "query",
-        "status": "implemented",
-        "dddOwner": "Planning query store"
-      },
-      "rawManifest": {
-        "version": 1,
-        "featureId": "POST-MERGE-PLANNING-CLOSEOUT-GUARDRAIL-20260508",
-        "governingSources": [
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/planning/status/governance-document-rule-inventory.md"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "QueryPlanningNextTasks",
-            "type": "query",
-            "status": "implemented",
-            "dddOwner": "Planning query store"
-          }
-        ],
-        "mechanizationStatus": "implemented",
-        "noHumanDecisionsRemaining": true
-      },
-      "revision": 1,
-      "createdBy": "codex",
-      "createdAt": "2026-08-08T00:00:00.000Z"
-    },
-    {
-      "railId": "current#rail-decision#query#queryplanningopentasks",
-      "featureId": "POST-MERGE-PLANNING-CLOSEOUT-GUARDRAIL-20260508",
-      "mechanizationStatus": "implemented",
-      "railName": "QueryPlanningOpenTasks",
-      "normalizedRailName": "queryplanningopentasks",
-      "railType": "query",
-      "dddOwner": "Planning query store",
-      "railStatus": "implemented",
-      "symbolRefs": [
-        "tools/planning-db/schema.sql#planning_open_tasks",
-        "scripts/planning-db-query.cjs#readOpenTaskRows",
-        "scripts/planning-db-query.test.cjs#readOpenTaskRows"
-      ],
-      "implementationRefs": [
-        "tools/planning-db/schema.sql#planning_open_tasks",
-        "scripts/planning-db-query.cjs#readOpenTaskRows",
-        "scripts/planning-db-query.test.cjs#readOpenTaskRows"
-      ],
-      "documentationRefs": [
-        "docs/planning/proposals/mandatory/governance-and-docs/post-merge-planning-closeout-drift-problem-20260508.md"
-      ],
-      "governingSources": [
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/planning/status/governance-document-rule-inventory.md"
-      ],
-      "allowedImplementationSurfaces": [
-        "pnpm planning:db:query open",
-        "planning_query_store.planning_open_tasks"
-      ],
-      "architectureGuards": [
-        "Open-task status logic must stay in the DB view, not duplicated in CLI code."
-      ],
-      "completionGate": ["node --test scripts/planning-db-query.test.cjs"],
-      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/post-merge-planning-closeout-drift-problem-20260508.md",
-      "sourceContentSha256": "56f37a0f00e01021f1cb8b2bfc81e515ec92c3d953ead263b14e33576dae6360",
-      "rawRail": {
-        "name": "QueryPlanningOpenTasks",
-        "type": "query",
-        "status": "implemented",
-        "dddOwner": "Planning query store"
-      },
-      "rawManifest": {
-        "version": 1,
-        "featureId": "POST-MERGE-PLANNING-CLOSEOUT-GUARDRAIL-20260508",
-        "governingSources": [
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/planning/status/governance-document-rule-inventory.md"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "QueryPlanningOpenTasks",
-            "type": "query",
-            "status": "implemented",
-            "dddOwner": "Planning query store"
           }
         ],
         "mechanizationStatus": "implemented",
@@ -99505,7 +98688,7 @@
         "node --test scripts/planning-db-operate.test.cjs"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/feature-mechanization-db-first-read-model-plan-20260605.md",
-      "sourceContentSha256": "095876e4e10e9cc690b065448b206f75e30a4af54bd72596b4611cbf47e7278c",
+      "sourceContentSha256": "e238d0d099cbe10779795635b925d316c43a978ce4608d964295478c1d5e88e5",
       "rawRail": {
         "name": "RecordFeatureMechanizationRail",
         "type": "command",
@@ -100022,273 +99205,6 @@
       "revision": 0,
       "createdBy": "codex",
       "createdAt": "2026-08-02T09:32:58.301Z"
-    },
-    {
-      "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
-      "featureId": "GD-REV-PLANNING-CANON",
-      "mechanizationStatus": "implemented",
-      "railName": "ValidatePlanningReviewBoardTraceability",
-      "normalizedRailName": "validateplanningreviewboardtraceability",
-      "railType": "query",
-      "dddOwner": "PlanningBoardTraceability",
-      "railStatus": "implemented",
-      "symbolRefs": ["tools/ci/planning-review-canon.test.mjs#requiredFiles"],
-      "implementationRefs": [
-        "tools/ci/planning-review-canon.test.mjs#requiredFiles"
-      ],
-      "documentationRefs": [
-        "docs/planning/state/github-mvp-issue-workflow.md",
-        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
-      ],
-      "governingSources": [
-        "AGENTS.md",
-        "docs/planning/status/governance-document-rule-inventory.md",
-        "docs/architecture/command-query-rail-governance.md",
-        "docs/architecture/fowler-opportunity-planning-governance.md"
-      ],
-      "allowedImplementationSurfaces": [
-        ".github/actions/prepare-planning-db/action.yml",
-        ".github/workflows/ci.yml",
-        ".github/workflows/pr-quality-gate.yml",
-        ".gitignore",
-        "AGENTS.md",
-        "package.json",
-        "docs/DOCS_README.md",
-        "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-        "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
-        "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
-        "docs/architecture/components/ci-governance/**",
-        "docs/architecture/components/engine/roadmap/engine-phases.md",
-        "docs/architecture/components/web/**",
-        "docs/architecture/system-delivery-status.md",
-        "docs/generated-docs-policy.json",
-        "docs/guides/*.md",
-        "docs/planning/gaps/**",
-        "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
-        "docs/planning/reviews/review-status-board.md",
-        "docs/planning/reviews/sprints/index.md",
-        "docs/planning/roadmap/**",
-        "docs/planning/state/**",
-        "docs/planning/status/docs-task-disposition-inventory-20260510.md",
-        "docs/planning/templates/execution-work-item-template.md",
-        "docs/runbooks/*.md",
-        "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
-        "scripts/README.md",
-        "scripts/check-feature-mechanization*",
-        "scripts/closeout-changed.test.cjs",
-        "scripts/docs-*.cjs",
-        "scripts/generate-planning-lanes*",
-        "scripts/generate-workboard*",
-        "scripts/governance-*.cjs",
-        "scripts/local-validation-plan.cjs",
-        "scripts/planning-db*.cjs",
-        "scripts/planning-db/**",
-        "scripts/planning-db-operate-tests/**",
-        "scripts/planning-github-status-projection*",
-        "scripts/sync-docs.cjs",
-        "scripts/verify-changed.test.cjs",
-        "tools/ci/**",
-        "tools/planning-db/state/canonical-state.json",
-        "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
-        "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md",
-        "docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md",
-        "docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md",
-        "docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md",
-        "docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md",
-        "docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md",
-        "docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md",
-        "docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md"
-      ],
-      "architectureGuards": [
-        "node --test tools/ci/planning-review-canon.test.mjs"
-      ],
-      "completionGate": [
-        "node --test tools/ci/planning-review-canon.test.mjs",
-        "pnpm planning:db:integrity:check",
-        "pnpm verify:prepush"
-      ],
-      "sourcePath": "tools/ci/planning-review-canon.test.mjs",
-      "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
-      "rawRail": {
-        "name": "ValidatePlanningReviewBoardTraceability",
-        "type": "query",
-        "status": "implemented",
-        "dddOwner": "PlanningBoardTraceability"
-      },
-      "rawManifest": {
-        "symbols": [
-          {
-            "name": "requiredFiles",
-            "path": "tools/ci/planning-review-canon.test.mjs",
-            "cqRails": ["ValidatePlanningReviewBoardTraceability"],
-            "dddOwner": "PlanningBoardTraceability",
-            "unitTests": ["tools/ci/planning-review-canon.test.mjs"],
-            "fowlerSignals": [
-              "single_source_of_truth",
-              "semantic_fitness_function"
-            ],
-            "cypressCoverage": "not applicable: repository governance query",
-            "architectureGuard": "node --test tools/ci/planning-review-canon.test.mjs"
-          }
-        ],
-        "version": 1,
-        "featureId": "GD-REV-PLANNING-CANON",
-        "userStories": [
-          "docs/architecture/components/ci-governance/planning-review-canon-user-stories.md"
-        ],
-        "cypressFlows": ["not applicable: repository governance query"],
-        "domainObjects": ["PlanningReviewBoardTraceability"],
-        "fowlerSignals": [
-          "single_source_of_truth",
-          "semantic_fitness_function"
-        ],
-        "completionGate": [
-          "node --test tools/ci/planning-review-canon.test.mjs",
-          "pnpm planning:db:integrity:check",
-          "pnpm verify:prepush"
-        ],
-        "redGreenCycles": [
-          {
-            "id": "validateplanningreviewboardtraceability-record",
-            "redTest": "node --test tools/ci/planning-review-canon.test.mjs",
-            "greenTest": "node --test tools/ci/planning-review-canon.test.mjs",
-            "patchSurfaces": [
-              ".github/actions/prepare-planning-db/action.yml",
-              ".github/workflows/ci.yml",
-              ".github/workflows/pr-quality-gate.yml",
-              ".gitignore",
-              "AGENTS.md",
-              "package.json",
-              "docs/DOCS_README.md",
-              "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-              "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
-              "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
-              "docs/architecture/components/ci-governance/**",
-              "docs/architecture/components/engine/roadmap/engine-phases.md",
-              "docs/architecture/components/web/**",
-              "docs/architecture/system-delivery-status.md",
-              "docs/generated-docs-policy.json",
-              "docs/guides/*.md",
-              "docs/planning/gaps/**",
-              "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
-              "docs/planning/reviews/review-status-board.md",
-              "docs/planning/reviews/sprints/index.md",
-              "docs/planning/roadmap/**",
-              "docs/planning/state/**",
-              "docs/planning/status/docs-task-disposition-inventory-20260510.md",
-              "docs/planning/templates/execution-work-item-template.md",
-              "docs/runbooks/*.md",
-              "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
-              "scripts/README.md",
-              "scripts/check-feature-mechanization*",
-              "scripts/closeout-changed.test.cjs",
-              "scripts/docs-*.cjs",
-              "scripts/generate-planning-lanes*",
-              "scripts/generate-workboard*",
-              "scripts/governance-*.cjs",
-              "scripts/local-validation-plan.cjs",
-              "scripts/planning-db*.cjs",
-              "scripts/planning-db/**",
-              "scripts/planning-db-operate-tests/**",
-              "scripts/planning-github-status-projection*",
-              "scripts/sync-docs.cjs",
-              "scripts/verify-changed.test.cjs",
-              "tools/ci/**",
-              "tools/planning-db/state/canonical-state.json",
-              "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
-              "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md",
-              "docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md",
-              "docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md",
-              "docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md",
-              "docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md",
-              "docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md",
-              "docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md",
-              "docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md"
-            ],
-            "expectedFailure": "Review governance recreates local task lifecycle, lane state, or generated workboard authority beside GitHub Issues."
-          }
-        ],
-        "componentGuides": [
-          "docs/architecture/components/ci-governance/planning-review-canon-component.md"
-        ],
-        "governingSources": [
-          "AGENTS.md",
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "commandQueryRails": [
-          {
-            "name": "ValidatePlanningReviewBoardTraceability",
-            "type": "query",
-            "status": "implemented",
-            "dddOwner": "PlanningBoardTraceability"
-          }
-        ],
-        "architectureGuards": [
-          "node --test tools/ci/planning-review-canon.test.mjs"
-        ],
-        "implementationPlan": "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-        "mechanizationStatus": "implemented",
-        "noHumanDecisionsRemaining": true,
-        "allowedImplementationSurfaces": [
-          ".github/actions/prepare-planning-db/action.yml",
-          ".github/workflows/ci.yml",
-          ".github/workflows/pr-quality-gate.yml",
-          ".gitignore",
-          "AGENTS.md",
-          "package.json",
-          "docs/DOCS_README.md",
-          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
-          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
-          "docs/architecture/components/ci-governance/**",
-          "docs/architecture/components/engine/roadmap/engine-phases.md",
-          "docs/architecture/components/web/**",
-          "docs/architecture/system-delivery-status.md",
-          "docs/generated-docs-policy.json",
-          "docs/guides/*.md",
-          "docs/planning/gaps/**",
-          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
-          "docs/planning/reviews/review-status-board.md",
-          "docs/planning/reviews/sprints/index.md",
-          "docs/planning/roadmap/**",
-          "docs/planning/state/**",
-          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
-          "docs/planning/templates/execution-work-item-template.md",
-          "docs/runbooks/*.md",
-          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
-          "scripts/README.md",
-          "scripts/check-feature-mechanization*",
-          "scripts/closeout-changed.test.cjs",
-          "scripts/docs-*.cjs",
-          "scripts/generate-planning-lanes*",
-          "scripts/generate-workboard*",
-          "scripts/governance-*.cjs",
-          "scripts/local-validation-plan.cjs",
-          "scripts/planning-db*.cjs",
-          "scripts/planning-db/**",
-          "scripts/planning-db-operate-tests/**",
-          "scripts/planning-github-status-projection*",
-          "scripts/sync-docs.cjs",
-          "scripts/verify-changed.test.cjs",
-          "tools/ci/**",
-          "tools/planning-db/state/canonical-state.json",
-          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md",
-          "docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md"
-        ],
-        "forbiddenImplementationSurfaces": ["apps/**"]
-      },
-      "revision": 2,
-      "createdBy": "codex",
-      "createdAt": "2026-07-31T11:30:50.789Z"
     },
     {
       "railId": "local#MVP-144-PROTECTED-START-RUN-OTEL#command#exportobservabilitytoopentelemetry",
@@ -111964,7 +110880,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "311312ff74404f0c893a364d79982d491fda658f51cd8adc1bec993cfda3262d",
+      "sourceContentSha256": "8a2f755d1fcf79c06596ceea1fafdb26c0e4f96c2e54e738967128535cf0cb9b",
       "rawRail": {
         "name": "ExportPlanningDbCanonicalArchitectureState",
         "type": "command",
@@ -111997,7 +110913,7 @@
         "version": 1,
         "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
         "userStories": [
-          "A governance maintainer exports current architecture state without local task lifecycle or lane snapshots."
+          "A governance maintainer exports current architecture state without local delivery state."
         ],
         "cypressFlows": ["not applicable: repository governance CLI"],
         "domainObjects": ["PlanningDbCanonicalArchitectureState"],
@@ -112067,14 +110983,15 @@
       "railStatus": "implemented",
       "symbolRefs": [
         "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
-        "scripts/planning-db-import.cjs#restoreArchitectureComponentStatusOverrides"
+        "scripts/planning-db-architecture-state.cjs#restoreArchitectureState"
       ],
       "implementationRefs": [
         "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
-        "scripts/planning-db-import.cjs#restoreArchitectureComponentStatusOverrides"
+        "scripts/planning-db-architecture-state.cjs#restoreArchitectureState"
       ],
       "documentationRefs": [
-        "docs/architecture/command-query-rail-governance.md"
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md"
       ],
       "governingSources": [
         "AGENTS.md",
@@ -112093,8 +111010,8 @@
         "pnpm planning:db:export:check",
         "pnpm verify:prepush"
       ],
-      "sourcePath": "docs/architecture/command-query-rail-governance.md",
-      "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
+      "sourcePath": "scripts/planning-db-import.cjs",
+      "sourceContentSha256": "d11d0feb26277bdd535e2285c65c702091a7e7fed8aace3199bebdd7a686589f",
       "rawRail": {
         "name": "RestorePlanningDbCanonicalArchitectureState",
         "type": "command",
@@ -112114,14 +111031,17 @@
             "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
           },
           {
-            "name": "restoreArchitectureComponentStatusOverrides",
-            "path": "scripts/planning-db-import.cjs",
+            "name": "restoreArchitectureState",
+            "path": "scripts/planning-db-architecture-state.cjs",
             "cqRails": ["RestorePlanningDbCanonicalArchitectureState"],
             "dddOwner": "PlanningDbCanonicalStateImport",
-            "unitTests": ["scripts/planning-db-import.test.cjs"],
+            "unitTests": [
+              "scripts/planning-db-architecture-state.test.cjs",
+              "scripts/planning-db-import.test.cjs"
+            ],
             "fowlerSignals": ["gateway", "data_mapper"],
             "cypressCoverage": "not applicable: repository governance CLI",
-            "architectureGuard": "node --test scripts/planning-db-import.test.cjs"
+            "architectureGuard": "node --test scripts/planning-db-architecture-state.test.cjs scripts/planning-db-import.test.cjs"
           }
         ],
         "version": 1,
@@ -116984,141 +115904,6 @@
   ],
   "featureMechanizationRailOperations": [
     {
-      "operationId": "78bca955-9cfd-49e5-92e4-4a302e84f70e",
-      "idempotencyKey": "codex-20260731-export-canonical-architecture-state",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicalarchitecturestate",
-      "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "0ec8df8917bab22135984599d5ac18d62a4949f9877217e836b039757fb53e1c",
-      "expectedRevision": null,
-      "previousRevision": null,
-      "resultingRevision": 0,
-      "payload": {
-        "redTest": "node --test scripts/planning-db-export.test.cjs",
-        "dddOwner": "PlanningDbCanonicalStateExport",
-        "railName": "ExportPlanningDbCanonicalArchitectureState",
-        "railType": "command",
-        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
-        "greenTest": "node --test scripts/planning-db-export.test.cjs",
-        "sourceRef": "scripts/planning-db-export.cjs",
-        "unitTests": ["scripts/planning-db-export.test.cjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "A governance maintainer exports current architecture state without local task lifecycle or lane snapshots."
-        ],
-        "cypressFlows": ["not applicable: repository governance CLI"],
-        "domainObjects": ["PlanningDbCanonicalArchitectureState"],
-        "fowlerSignals": ["gateway", "data_mapper"],
-        "patchSurfaces": [],
-        "completionGate": [
-          "node --test scripts/planning-db-export.test.cjs",
-          "pnpm planning:db:export:check",
-          "pnpm verify:prepush"
-        ],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "expectedFailure": "The canonical export contains retired local task state or omits current DB-authored architecture state.",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "architectureGuards": [
-          "node --test scripts/planning-db-export.test.cjs"
-        ],
-        "implementationPlan": "Planning DB export serializes only current DB-authored architecture and feature-mechanization state for deterministic Git recovery.",
-        "implementationRefs": [
-          "scripts/planning-db-export.cjs#PlanningDbExportRunner",
-          "scripts/planning-db-export.cjs#canonicalStateArtifactPath"
-        ],
-        "normalizedRailName": "exportplanningdbcanonicalarchitecturestate",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "0ec8df8917bab22135984599d5ac18d62a4949f9877217e836b039757fb53e1c",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db-export.cjs",
-          "scripts/planning-db-export.test.cjs",
-          "tools/planning-db/state/canonical-state.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "docs/planning/state/agent-lane-*.yaml"
-        ]
-      },
-      "createdAt": "2026-07-31T10:13:21.589Z"
-    },
-    {
-      "operationId": "09a05e88-1c5b-4d4d-a997-0c95d6f84d2a",
-      "idempotencyKey": "codex-20260731-export-canonical-architecture-state-fowler-governance",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730#command#exportplanningdbcanonicalarchitecturestate",
-      "sourcePath": "scripts/planning-db-export.cjs",
-      "sourceContentSha256": "0ec8df8917bab22135984599d5ac18d62a4949f9877217e836b039757fb53e1c",
-      "expectedRevision": 0,
-      "previousRevision": 0,
-      "resultingRevision": 1,
-      "payload": {
-        "redTest": "node --test scripts/planning-db-export.test.cjs",
-        "dddOwner": "PlanningDbCanonicalStateExport",
-        "railName": "ExportPlanningDbCanonicalArchitectureState",
-        "railType": "command",
-        "featureId": "PLANNING-DB-CANONICAL-STATE-RECOVERY-20260730",
-        "greenTest": "node --test scripts/planning-db-export.test.cjs",
-        "sourceRef": "scripts/planning-db-export.cjs",
-        "unitTests": ["scripts/planning-db-export.test.cjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "A governance maintainer exports current architecture state without local task lifecycle or lane snapshots."
-        ],
-        "cypressFlows": ["not applicable: repository governance CLI"],
-        "domainObjects": ["PlanningDbCanonicalArchitectureState"],
-        "fowlerSignals": ["gateway", "data_mapper"],
-        "patchSurfaces": [],
-        "completionGate": [
-          "node --test scripts/planning-db-export.test.cjs",
-          "pnpm planning:db:export:check",
-          "pnpm verify:prepush"
-        ],
-        "componentGuides": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "expectedFailure": "The canonical export contains retired local task state or omits current DB-authored architecture state.",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/architecture/command-query-rail-governance.md"
-        ],
-        "architectureGuards": [
-          "node --test scripts/planning-db-export.test.cjs"
-        ],
-        "implementationPlan": "Planning DB export serializes only current DB-authored architecture and feature-mechanization state for deterministic Git recovery.",
-        "implementationRefs": [
-          "scripts/planning-db-export.cjs#PlanningDbExportRunner",
-          "scripts/planning-db-export.cjs#canonicalStateArtifactPath"
-        ],
-        "normalizedRailName": "exportplanningdbcanonicalarchitecturestate",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "0ec8df8917bab22135984599d5ac18d62a4949f9877217e836b039757fb53e1c",
-        "allowedImplementationSurfaces": [
-          "scripts/planning-db-export.cjs",
-          "scripts/planning-db-export.test.cjs",
-          "tools/planning-db/state/canonical-state.json"
-        ],
-        "forbiddenImplementationSurfaces": [
-          "docs/planning/state/agent-lane-*.yaml"
-        ]
-      },
-      "createdAt": "2026-07-31T11:28:34.885Z"
-    },
-    {
       "operationId": "d089b95c-d51d-4ef2-897e-5f1d5104368e",
       "idempotencyKey": "codex-20260731-validate-changed-document-filenames",
       "operationType": "feature_mechanization_rail_record",
@@ -117219,438 +116004,6 @@
         "forbiddenImplementationSurfaces": ["apps/**"]
       },
       "createdAt": "2026-07-31T11:29:35.729Z"
-    },
-    {
-      "operationId": "b3493573-d8a9-4304-926e-35e0f54b7e55",
-      "idempotencyKey": "codex-20260731-github-mvp-task-authority-traceability",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
-      "sourcePath": "tools/ci/planning-review-canon.test.mjs",
-      "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
-      "expectedRevision": null,
-      "previousRevision": null,
-      "resultingRevision": 0,
-      "payload": {
-        "redTest": "node --test tools/ci/planning-review-canon.test.mjs",
-        "dddOwner": "PlanningBoardTraceability",
-        "railName": "ValidatePlanningReviewBoardTraceability",
-        "railType": "query",
-        "featureId": "GD-REV-PLANNING-CANON",
-        "greenTest": "node --test tools/ci/planning-review-canon.test.mjs",
-        "sourceRef": "tools/ci/planning-review-canon.test.mjs",
-        "unitTests": ["tools/ci/planning-review-canon.test.mjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "docs/architecture/components/ci-governance/planning-review-canon-user-stories.md"
-        ],
-        "cypressFlows": ["not applicable: repository governance query"],
-        "domainObjects": ["PlanningReviewBoardTraceability"],
-        "fowlerSignals": [
-          "single_source_of_truth",
-          "semantic_fitness_function"
-        ],
-        "patchSurfaces": [],
-        "completionGate": [
-          "node --test tools/ci/planning-review-canon.test.mjs",
-          "pnpm planning:db:integrity:check",
-          "pnpm verify:prepush"
-        ],
-        "componentGuides": [
-          "docs/architecture/components/ci-governance/planning-review-canon-component.md"
-        ],
-        "expectedFailure": "Review governance recreates local task lifecycle, lane state, or generated workboard authority beside GitHub Issues.",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/planning/state/github-mvp-issue-workflow.md",
-          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
-        ],
-        "architectureGuards": [
-          "node --test tools/ci/planning-review-canon.test.mjs"
-        ],
-        "implementationPlan": "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-        "implementationRefs": [
-          "tools/ci/planning-review-canon.test.mjs#requiredFiles"
-        ],
-        "normalizedRailName": "validateplanningreviewboardtraceability",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
-        "allowedImplementationSurfaces": [
-          ".github/actions/prepare-planning-db/action.yml",
-          ".github/workflows/ci.yml",
-          ".github/workflows/pr-quality-gate.yml",
-          ".gitignore",
-          "AGENTS.md",
-          "package.json",
-          "docs/DOCS_README.md",
-          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
-          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
-          "docs/architecture/components/ci-governance/**",
-          "docs/architecture/components/engine/roadmap/engine-phases.md",
-          "docs/architecture/components/web/**",
-          "docs/architecture/system-delivery-status.md",
-          "docs/generated-docs-policy.json",
-          "docs/guides/*.md",
-          "docs/planning/gaps/**",
-          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
-          "docs/planning/reviews/review-status-board.md",
-          "docs/planning/reviews/sprints/index.md",
-          "docs/planning/roadmap/**",
-          "docs/planning/state/**",
-          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
-          "docs/planning/templates/execution-work-item-template.md",
-          "docs/runbooks/*.md",
-          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
-          "scripts/README.md",
-          "scripts/check-feature-mechanization*",
-          "scripts/closeout-changed.test.cjs",
-          "scripts/docs-*.cjs",
-          "scripts/generate-planning-lanes*",
-          "scripts/generate-workboard*",
-          "scripts/governance-*.cjs",
-          "scripts/local-validation-plan.cjs",
-          "scripts/planning-db*.cjs",
-          "scripts/planning-db/**",
-          "scripts/planning-db-operate-tests/**",
-          "scripts/planning-github-status-projection*",
-          "scripts/sync-docs.cjs",
-          "scripts/verify-changed.test.cjs",
-          "tools/ci/**",
-          "tools/planning-db/state/canonical-state.json"
-        ],
-        "forbiddenImplementationSurfaces": ["apps/**"]
-      },
-      "createdAt": "2026-07-31T11:30:50.789Z"
-    },
-    {
-      "operationId": "0ee212af-aeda-4783-b5ef-aff1dd4a2771",
-      "idempotencyKey": "codex-gd-review-paths-20260731",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
-      "sourcePath": "tools/ci/planning-review-canon.test.mjs",
-      "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
-      "expectedRevision": 0,
-      "previousRevision": 0,
-      "resultingRevision": 1,
-      "payload": {
-        "redTest": "node --test tools/ci/planning-review-canon.test.mjs",
-        "dddOwner": "PlanningBoardTraceability",
-        "railName": "ValidatePlanningReviewBoardTraceability",
-        "railType": "query",
-        "featureId": "GD-REV-PLANNING-CANON",
-        "greenTest": "node --test tools/ci/planning-review-canon.test.mjs",
-        "sourceRef": "tools/ci/planning-review-canon.test.mjs",
-        "unitTests": ["tools/ci/planning-review-canon.test.mjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "docs/architecture/components/ci-governance/planning-review-canon-user-stories.md"
-        ],
-        "cypressFlows": ["not applicable: repository governance query"],
-        "domainObjects": ["PlanningReviewBoardTraceability"],
-        "fowlerSignals": [
-          "single_source_of_truth",
-          "semantic_fitness_function"
-        ],
-        "patchSurfaces": [
-          ".github/actions/prepare-planning-db/action.yml",
-          ".github/workflows/ci.yml",
-          ".github/workflows/pr-quality-gate.yml",
-          ".gitignore",
-          "AGENTS.md",
-          "package.json",
-          "docs/DOCS_README.md",
-          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
-          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
-          "docs/architecture/components/ci-governance/**",
-          "docs/architecture/components/engine/roadmap/engine-phases.md",
-          "docs/architecture/components/web/**",
-          "docs/architecture/system-delivery-status.md",
-          "docs/generated-docs-policy.json",
-          "docs/guides/*.md",
-          "docs/planning/gaps/**",
-          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
-          "docs/planning/reviews/review-status-board.md",
-          "docs/planning/reviews/sprints/index.md",
-          "docs/planning/roadmap/**",
-          "docs/planning/state/**",
-          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
-          "docs/planning/templates/execution-work-item-template.md",
-          "docs/runbooks/*.md",
-          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
-          "scripts/README.md",
-          "scripts/check-feature-mechanization*",
-          "scripts/closeout-changed.test.cjs",
-          "scripts/docs-*.cjs",
-          "scripts/generate-planning-lanes*",
-          "scripts/generate-workboard*",
-          "scripts/governance-*.cjs",
-          "scripts/local-validation-plan.cjs",
-          "scripts/planning-db*.cjs",
-          "scripts/planning-db/**",
-          "scripts/planning-db-operate-tests/**",
-          "scripts/planning-github-status-projection*",
-          "scripts/sync-docs.cjs",
-          "scripts/verify-changed.test.cjs",
-          "tools/ci/**",
-          "tools/planning-db/state/canonical-state.json",
-          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md"
-        ],
-        "completionGate": [
-          "node --test tools/ci/planning-review-canon.test.mjs",
-          "pnpm planning:db:integrity:check",
-          "pnpm verify:prepush"
-        ],
-        "componentGuides": [
-          "docs/architecture/components/ci-governance/planning-review-canon-component.md"
-        ],
-        "expectedFailure": "Review governance recreates local task lifecycle, lane state, or generated workboard authority beside GitHub Issues.",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/planning/state/github-mvp-issue-workflow.md",
-          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
-        ],
-        "architectureGuards": [
-          "node --test tools/ci/planning-review-canon.test.mjs"
-        ],
-        "implementationPlan": "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-        "implementationRefs": [
-          "tools/ci/planning-review-canon.test.mjs#requiredFiles"
-        ],
-        "normalizedRailName": "validateplanningreviewboardtraceability",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
-        "allowedImplementationSurfaces": [
-          ".github/actions/prepare-planning-db/action.yml",
-          ".github/workflows/ci.yml",
-          ".github/workflows/pr-quality-gate.yml",
-          ".gitignore",
-          "AGENTS.md",
-          "package.json",
-          "docs/DOCS_README.md",
-          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
-          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
-          "docs/architecture/components/ci-governance/**",
-          "docs/architecture/components/engine/roadmap/engine-phases.md",
-          "docs/architecture/components/web/**",
-          "docs/architecture/system-delivery-status.md",
-          "docs/generated-docs-policy.json",
-          "docs/guides/*.md",
-          "docs/planning/gaps/**",
-          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
-          "docs/planning/reviews/review-status-board.md",
-          "docs/planning/reviews/sprints/index.md",
-          "docs/planning/roadmap/**",
-          "docs/planning/state/**",
-          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
-          "docs/planning/templates/execution-work-item-template.md",
-          "docs/runbooks/*.md",
-          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
-          "scripts/README.md",
-          "scripts/check-feature-mechanization*",
-          "scripts/closeout-changed.test.cjs",
-          "scripts/docs-*.cjs",
-          "scripts/generate-planning-lanes*",
-          "scripts/generate-workboard*",
-          "scripts/governance-*.cjs",
-          "scripts/local-validation-plan.cjs",
-          "scripts/planning-db*.cjs",
-          "scripts/planning-db/**",
-          "scripts/planning-db-operate-tests/**",
-          "scripts/planning-github-status-projection*",
-          "scripts/sync-docs.cjs",
-          "scripts/verify-changed.test.cjs",
-          "tools/ci/**",
-          "tools/planning-db/state/canonical-state.json",
-          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md"
-        ],
-        "forbiddenImplementationSurfaces": ["apps/**"]
-      },
-      "createdAt": "2026-07-31T12:50:30.216Z"
-    },
-    {
-      "operationId": "eb5a1376-137f-43f7-998c-40c8053ffb00",
-      "idempotencyKey": "codex-gd-review-authority-refs-20260731",
-      "operationType": "feature_mechanization_rail_record",
-      "actor": "codex",
-      "railId": "local#GD-REV-PLANNING-CANON#query#validateplanningreviewboardtraceability",
-      "sourcePath": "tools/ci/planning-review-canon.test.mjs",
-      "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
-      "expectedRevision": 1,
-      "previousRevision": 1,
-      "resultingRevision": 2,
-      "payload": {
-        "redTest": "node --test tools/ci/planning-review-canon.test.mjs",
-        "dddOwner": "PlanningBoardTraceability",
-        "railName": "ValidatePlanningReviewBoardTraceability",
-        "railType": "query",
-        "featureId": "GD-REV-PLANNING-CANON",
-        "greenTest": "node --test tools/ci/planning-review-canon.test.mjs",
-        "sourceRef": "tools/ci/planning-review-canon.test.mjs",
-        "unitTests": ["tools/ci/planning-review-canon.test.mjs"],
-        "railStatus": "implemented",
-        "userStories": [
-          "docs/architecture/components/ci-governance/planning-review-canon-user-stories.md"
-        ],
-        "cypressFlows": ["not applicable: repository governance query"],
-        "domainObjects": ["PlanningReviewBoardTraceability"],
-        "fowlerSignals": [
-          "single_source_of_truth",
-          "semantic_fitness_function"
-        ],
-        "patchSurfaces": [
-          ".github/actions/prepare-planning-db/action.yml",
-          ".github/workflows/ci.yml",
-          ".github/workflows/pr-quality-gate.yml",
-          ".gitignore",
-          "AGENTS.md",
-          "package.json",
-          "docs/DOCS_README.md",
-          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
-          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
-          "docs/architecture/components/ci-governance/**",
-          "docs/architecture/components/engine/roadmap/engine-phases.md",
-          "docs/architecture/components/web/**",
-          "docs/architecture/system-delivery-status.md",
-          "docs/generated-docs-policy.json",
-          "docs/guides/*.md",
-          "docs/planning/gaps/**",
-          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
-          "docs/planning/reviews/review-status-board.md",
-          "docs/planning/reviews/sprints/index.md",
-          "docs/planning/roadmap/**",
-          "docs/planning/state/**",
-          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
-          "docs/planning/templates/execution-work-item-template.md",
-          "docs/runbooks/*.md",
-          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
-          "scripts/README.md",
-          "scripts/check-feature-mechanization*",
-          "scripts/closeout-changed.test.cjs",
-          "scripts/docs-*.cjs",
-          "scripts/generate-planning-lanes*",
-          "scripts/generate-workboard*",
-          "scripts/governance-*.cjs",
-          "scripts/local-validation-plan.cjs",
-          "scripts/planning-db*.cjs",
-          "scripts/planning-db/**",
-          "scripts/planning-db-operate-tests/**",
-          "scripts/planning-github-status-projection*",
-          "scripts/sync-docs.cjs",
-          "scripts/verify-changed.test.cjs",
-          "tools/ci/**",
-          "tools/planning-db/state/canonical-state.json",
-          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md",
-          "docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md"
-        ],
-        "completionGate": [
-          "node --test tools/ci/planning-review-canon.test.mjs",
-          "pnpm planning:db:integrity:check",
-          "pnpm verify:prepush"
-        ],
-        "componentGuides": [
-          "docs/architecture/components/ci-governance/planning-review-canon-component.md"
-        ],
-        "expectedFailure": "Review governance recreates local task lifecycle, lane state, or generated workboard authority beside GitHub Issues.",
-        "governingSources": [
-          "AGENTS.md",
-          "docs/planning/status/governance-document-rule-inventory.md",
-          "docs/architecture/command-query-rail-governance.md",
-          "docs/architecture/fowler-opportunity-planning-governance.md"
-        ],
-        "documentationRefs": [
-          "docs/planning/state/github-mvp-issue-workflow.md",
-          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md"
-        ],
-        "architectureGuards": [
-          "node --test tools/ci/planning-review-canon.test.mjs"
-        ],
-        "implementationPlan": "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-        "implementationRefs": [
-          "tools/ci/planning-review-canon.test.mjs#requiredFiles"
-        ],
-        "normalizedRailName": "validateplanningreviewboardtraceability",
-        "mechanizationStatus": "implemented",
-        "sourceContentSha256": "d407e39148c213da34fa1b73db01721e567bff399f21fc9854300eb846e0a212",
-        "allowedImplementationSurfaces": [
-          ".github/actions/prepare-planning-db/action.yml",
-          ".github/workflows/ci.yml",
-          ".github/workflows/pr-quality-gate.yml",
-          ".gitignore",
-          "AGENTS.md",
-          "package.json",
-          "docs/DOCS_README.md",
-          "docs/adr/ADR-0061-github-mvp-task-authority-and-planning-db-architecture-boundary.md",
-          "docs/adr/adr-0055-planning-db-canonical-operational-source.md",
-          "docs/architecture/components/api/protected-runtime-command-query-rail-design.md",
-          "docs/architecture/components/ci-governance/**",
-          "docs/architecture/components/engine/roadmap/engine-phases.md",
-          "docs/architecture/components/web/**",
-          "docs/architecture/system-delivery-status.md",
-          "docs/generated-docs-policy.json",
-          "docs/guides/*.md",
-          "docs/planning/gaps/**",
-          "docs/planning/proposals/mandatory/governance-and-docs/planning-review-canon-plan-20260524.md",
-          "docs/planning/reviews/review-status-board.md",
-          "docs/planning/reviews/sprints/index.md",
-          "docs/planning/roadmap/**",
-          "docs/planning/state/**",
-          "docs/planning/status/docs-task-disposition-inventory-20260510.md",
-          "docs/planning/templates/execution-work-item-template.md",
-          "docs/runbooks/*.md",
-          "packages/@dvt/engine/test/architecture/workflowEngineCanonicalMapHardcut.architecture.test.ts",
-          "scripts/README.md",
-          "scripts/check-feature-mechanization*",
-          "scripts/closeout-changed.test.cjs",
-          "scripts/docs-*.cjs",
-          "scripts/generate-planning-lanes*",
-          "scripts/generate-workboard*",
-          "scripts/governance-*.cjs",
-          "scripts/local-validation-plan.cjs",
-          "scripts/planning-db*.cjs",
-          "scripts/planning-db/**",
-          "scripts/planning-db-operate-tests/**",
-          "scripts/planning-github-status-projection*",
-          "scripts/sync-docs.cjs",
-          "scripts/verify-changed.test.cjs",
-          "tools/ci/**",
-          "tools/planning-db/state/canonical-state.json",
-          "docs/planning/reviews/20260402-f03-shell-health-banner-hard-qa-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260402-f03-shell-health-fowler-hard-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260404-mvp-e1-f03-hard-qa-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260407-principal-architecture-review-progress-and-diagrams.md",
-          "docs/planning/reviews/architecture-and-governance/20260410-runtime-and-shared-kernel-risk-triage-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260411-project-architecture-strengths-weaknesses-fowler-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260421-canvas-handler-seams-fowler-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260421-canvas-route-composition-fowler-review.md",
-          "docs/planning/reviews/architecture-and-governance/20260422-canvas-runtime-truth-hardcut-review.md"
-        ],
-        "forbiddenImplementationSurfaces": ["apps/**"]
-      },
-      "createdAt": "2026-07-31T14:42:19.087Z"
     },
     {
       "operationId": "3fbd9ffd-d61b-4c21-b6b8-277d827104b9",
