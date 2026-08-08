@@ -201,8 +201,6 @@ export function buildCanvasShellProps(overrides?: CanvasShellPropsOverrides): Ca
       onEdgesChange: vi.fn(),
       onConnect: vi.fn(),
       onReconnect: vi.fn(),
-      onNodeClick: vi.fn(),
-      onSelectionChange: vi.fn(),
       onViewportChange: vi.fn(),
       onDrop: vi.fn(),
       onDragOver: vi.fn(),
