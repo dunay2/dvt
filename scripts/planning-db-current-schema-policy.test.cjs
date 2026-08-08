@@ -12,7 +12,7 @@ test('current-schema policy rejects Planning DB migration paths and executable s
     ['scripts/example.cjs', "const { runMigrations } = require('./planning-db-migrate.cjs');"],
     [
       'tools/planning-db/state/canonical-state.json',
-      '{"sourcePath":"tools/planning-db/migrations/123_old_state.sql"}',
+      '{"policy":"Planning DB applied_migration_identity compatibility"}',
     ],
     ['docs/archive/old.md', 'schema_migrations and planning:db:migrate are historical here'],
     ['infra/db/migrations/runtime.sql', 'create table runtime_migration_state(id text);'],
@@ -22,11 +22,12 @@ test('current-schema policy rejects Planning DB migration paths and executable s
     ],
     [
       'docs/planning/proposals/mandatory/governance-and-docs/example.md',
-      'Run tools/planning-db/migrations before the governance query.',
+      'Active operator guidance must not retain tools/planning-db/migrations/123_old.sql.',
     ],
   ]);
   const filePaths = [
     'tools/planning-db/migrations/001_old.sql',
+    'tools/planning-db/legacy-bootstrap.sql',
     'scripts/planning-db-migrate.cjs',
     ...contents.keys(),
   ];
@@ -46,8 +47,9 @@ test('current-schema policy rejects Planning DB migration paths and executable s
       ['package.json', 'planning:db:migrate command'],
       ['scripts/example.cjs', 'Planning DB migration executable semantics'],
       ['scripts/planning-db-migrate.cjs', 'Planning DB migration runner'],
+      ['tools/planning-db/legacy-bootstrap.sql', 'Parallel Planning DB SQL owner'],
       ['tools/planning-db/migrations/001_old.sql', 'Planning DB migration directory'],
-      ['tools/planning-db/state/canonical-state.json', 'Planning DB migration source reference'],
+      ['tools/planning-db/state/canonical-state.json', 'Planning DB migration-state semantics'],
     ]
   );
 });
