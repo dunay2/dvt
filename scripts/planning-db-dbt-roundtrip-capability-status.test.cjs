@@ -86,3 +86,16 @@ test('DBT round-trip current catalog contains no compatibility or history state'
   assert.doesNotMatch(catalogText, /schema_migrations|migration_state|planning-db-migrate/iu);
   assert.doesNotMatch(catalogText, /tools\/planning-db\/migrations/iu);
 });
+
+test('DBT export current rail decision matches source authority without compatibility state', () => {
+  const state = JSON.parse(fs.readFileSync(canonicalStatePath, 'utf8'));
+  const decision = state.featureMechanizationRails.find(
+    ({ railId }) => railId === 'current#rail-decision#command#exportdbtproject'
+  );
+
+  assert.ok(decision);
+  assert.equal(decision.railStatus, 'not-implemented');
+  assert.equal(decision.mechanizationStatus, 'documented');
+  assert.deepEqual(decision.implementationRefs, []);
+  assert.doesNotMatch(JSON.stringify(decision), /compatib|migration|history/iu);
+});
