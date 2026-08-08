@@ -261,6 +261,7 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', expectedConnectionId);
     cy.contains('[data-slot="canvas-node-workbench-general-section"] dt', 'Connection')
       .next('dd')
+      .scrollIntoView()
       .should('be.visible')
       .and(($value) => {
         const element = $value.get(0);
