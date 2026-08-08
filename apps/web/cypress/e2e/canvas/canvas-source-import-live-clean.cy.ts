@@ -412,7 +412,8 @@ describe('Canvas source import live clean proof', () => {
           .should('have.value', '')
           .type(authoredModelSql, { parseSpecialCharSequences: false });
         cy.get('[data-slot="dbt-model-code-provenance"]').should('contain.text', 'Authored');
-        cy.contains('button', 'Apply').should('be.enabled').click();
+        cy.contains('button', 'Apply').should('be.enabled');
+        cy.contains('button', 'Apply').click();
       });
     waitForLiveDraftModelSqlSaved(session, authoredModelSql);
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
