@@ -2,7 +2,9 @@
 import type { Node } from '@xyflow/react';
 
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
+import { PYTHON_CODE_NODE_KIND } from '../../plugins/python/pythonNodeTypeCatalog';
 import type { CanonicalNode } from '../../types/canonical';
+import { seedPythonCodeNodeMetadata } from './pythonCodeAuthoringModel';
 
 type CanvasAuthoringNodeCommand = Readonly<{
   canonicalNode: CanonicalNode;
@@ -25,39 +27,29 @@ const FIRST_AUTHORING_NODE_POSITION = { x: 160, y: 120 } as const;
 
 function slugifyNodeKind(kind: string): string {
   const lastSegment = kind.slice(kind.lastIndexOf(':') + 1);
-
   return buildSlugFromAsciiWords(lastSegment);
 }
 
 function buildSlugFromAsciiWords(value: string): string {
   const words: string[] = [];
   let currentWord = '';
-
   for (const character of value) {
     if (isAsciiAlphaNumeric(character)) {
       currentWord += character.toLowerCase();
       continue;
     }
-
     if (currentWord.length > 0) {
       words.push(currentWord);
       currentWord = '';
     }
   }
-
-  if (currentWord.length > 0) {
-    words.push(currentWord);
-  }
-
+  if (currentWord.length > 0) words.push(currentWord);
   return words.join('-');
 }
 
 function isAsciiAlphaNumeric(character: string): boolean {
   const codePoint = character.codePointAt(0);
-  if (codePoint == null) {
-    return false;
-  }
-
+  if (codePoint == null) return false;
   return (
     (codePoint >= 48 && codePoint <= 57) ||
     (codePoint >= 65 && codePoint <= 90) ||
@@ -68,11 +60,7 @@ function isAsciiAlphaNumeric(character: string): boolean {
 function resolveNextAuthoringNodeIndex(baseId: string, existingNodes: readonly Node[]): number {
   const existingIds = new Set(existingNodes.map((node) => node.id));
   let nextIndex = 1;
-
-  while (existingIds.has(`${baseId}-${nextIndex}`)) {
-    nextIndex += 1;
-  }
-
+  while (existingIds.has(`${baseId}-${nextIndex}`)) nextIndex += 1;
   return nextIndex;
 }
 
@@ -82,20 +70,14 @@ function normalizeNodeKind(kind: string): string {
 
 function readNodePluginKind(node: Node): string | null {
   const data = node.data;
-  if (data == null || typeof data !== 'object' || !('pluginKind' in data)) {
-    return null;
-  }
-
+  if (data == null || typeof data !== 'object' || !('pluginKind' in data)) return null;
   const pluginKind = data.pluginKind;
   return typeof pluginKind === 'string' ? pluginKind : null;
 }
 
 function resolveBottommostNode(nodes: readonly Node[]): Node | null {
   return nodes.reduce<Node | null>((bottommost, node) => {
-    if (bottommost == null) {
-      return node;
-    }
-
+    if (bottommost == null) return node;
     return node.position.y > bottommost.position.y ? node : bottommost;
   }, null);
 }
@@ -103,10 +85,7 @@ function resolveBottommostNode(nodes: readonly Node[]): Node | null {
 function resolveCatalogAuthoringNodePosition(args: {
   registration: NodeKindRegistration;
   existingNodes: readonly Node[];
-}): {
-  x: number;
-  y: number;
-} {
+}): { x: number; y: number } {
   const { registration, existingNodes } = args;
   const normalizedRegistrationKind = normalizeNodeKind(registration.kind);
   const sameKindNodes = existingNodes.filter((node) => {
@@ -114,25 +93,15 @@ function resolveCatalogAuthoringNodePosition(args: {
     return pluginKind != null && normalizeNodeKind(pluginKind) === normalizedRegistrationKind;
   });
   const anchorNode = resolveBottommostNode(sameKindNodes) ?? resolveBottommostNode(existingNodes);
-
-  if (anchorNode == null) {
-    return FIRST_AUTHORING_NODE_POSITION;
-  }
-
-  return {
-    x: anchorNode.position.x,
-    y: anchorNode.position.y + CATALOG_NODE_VERTICAL_OFFSET,
-  };
+  if (anchorNode == null) return FIRST_AUTHORING_NODE_POSITION;
+  return { x: anchorNode.position.x, y: anchorNode.position.y + CATALOG_NODE_VERTICAL_OFFSET };
 }
 
 function mergeSeedMetadata(
   baseMetadata: CanonicalNode['metadata'],
   seedMetadata: Record<string, unknown> | undefined
 ): CanonicalNode['metadata'] {
-  if (seedMetadata == null) {
-    return baseMetadata;
-  }
-
+  if (seedMetadata == null) return baseMetadata;
   const baseConfig =
     baseMetadata?.config !== null &&
     typeof baseMetadata?.config === 'object' &&
@@ -145,14 +114,17 @@ function mergeSeedMetadata(
     !Array.isArray(seedMetadata.config)
       ? (seedMetadata.config as Record<string, unknown>)
       : {};
-
   return {
     ...baseMetadata,
     ...seedMetadata,
-    config: {
-      ...baseConfig,
-      ...seedConfig,
-    },
+    config: { ...baseConfig, ...seedConfig },
+  };
+}
+
+function buildBaseMetadata(registration: NodeKindRegistration): Record<string, unknown> {
+  return {
+    typeLabel: registration.label,
+    ...(registration.kind === PYTHON_CODE_NODE_KIND ? seedPythonCodeNodeMetadata() : {}),
   };
 }
 
@@ -165,9 +137,6 @@ export function buildAuthoringNodeCommand(
   const baseId = `${registration.pluginId}-${slugifyNodeKind(registration.kind)}`;
   const nextIndex = resolveNextAuthoringNodeIndex(baseId, existingNodes);
   const id = `${baseId}-${nextIndex}`;
-  const baseMetadata = {
-    typeLabel: registration.label,
-  };
 
   return {
     canonicalNode: {
@@ -178,7 +147,7 @@ export function buildAuthoringNodeCommand(
       role: registration.role,
       status: 'idle',
       tags: ['authoring', ...(seed?.tags ?? [])],
-      metadata: mergeSeedMetadata(baseMetadata, seed?.metadata),
+      metadata: mergeSeedMetadata(buildBaseMetadata(registration), seed?.metadata),
     },
     position:
       requestedPosition ?? resolveCatalogAuthoringNodePosition({ registration, existingNodes }),
