@@ -82798,7 +82798,7 @@
         "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md",
-      "sourceContentSha256": "398162900dbdf8f47d01b36389fbd48e1ac1661bcf9659fdd2a82aec4ec1db40",
+      "sourceContentSha256": "54949bdef4b0fdb45853756bc05db0055bb92b845d07a79ac84de55cd5ca646c",
       "rawRail": {
         "name": "ExportDbtProject",
         "type": "command",
@@ -84088,7 +84088,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md",
-      "sourceContentSha256": "024af93c509646595a67eb5e19260108f4f4ff23cd1facd400a7699e4eaf6e3a",
+      "sourceContentSha256": "61950f07dd021a38f902fa890076d9dd435c254d01679e8c754ff3856fd763fe",
       "rawRail": {
         "name": "EnforcePlanningDbCurrentSchema",
         "type": "query",
