@@ -172,9 +172,12 @@ allowedImplementationSurfaces:
   - docs/adr/adr-implementation-status.md
   - docs/.manifest.json
   - docs/architecture/components/ci-governance/**
+  - docs/architecture/components/web/frontend-command-query-rail-inventory.md
+  - docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md
   - docs/generated-docs-policy.json
   - docs/guides/**
   - docs/runbooks/**
+  - docs/planning/archive/proposals/**
   - docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md
   - docs/planning/proposals/mandatory/**
   - docs/planning/status/**
@@ -191,7 +194,9 @@ allowedImplementationSurfaces:
   - scripts/pr-closeout*.cjs
   - scripts/verify-*.cjs
   - scripts/check-generated-docs-policy*.cjs
+  - scripts/check-feature-mechanization*.cjs
   - tools/planning-db/**
+  - tools/ci/planning-review-canon.test.mjs
   - tools/ci/policy/workflow-scope.json
   - .github/actions/**
   - .github/workflows/**
