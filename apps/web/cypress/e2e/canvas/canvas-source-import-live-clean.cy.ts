@@ -272,8 +272,11 @@ describe('Canvas source import live clean proof', () => {
       }
     });
 
-    getVisibleCanvasNodeByCardTitle('Postgres')
-      .find('[data-slot="graph-node-card-title"]')
+    cy.get('button.react-flow__controls-fitview').should('be.visible').click();
+    cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
+      .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
+      .should('have.length', 2)
+      .first()
       .dblclick();
     cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
     openNodeWorkbenchSection('general');
@@ -291,6 +294,22 @@ describe('Canvas source import live clean proof', () => {
         expect(element.scrollWidth).to.be.at.most(element.clientWidth);
         expect(getComputedStyle(element).textOverflow).not.to.equal('ellipsis');
       });
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+
+    cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
+      .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
+      .should('have.length', 2)
+      .last()
+      .dblclick();
+    cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
+    openNodeWorkbenchSection('general');
+    cy.get('[data-slot="canvas-node-workbench-general-section"]')
+      .should('contain.text', 'Connection')
+      .and('contain.text', expectedSecondaryConnectionName)
+      .and('contain.text', 'postgres')
+      .and('contain.text', expectedSecondaryConnectionId);
     assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
