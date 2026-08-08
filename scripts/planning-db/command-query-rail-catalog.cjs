@@ -80,6 +80,22 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
     );
   }
 
+  function isCurrentRailAuthorityDocument(document) {
+    const sourcePath = toPosix(document.sourcePath || document.path || '');
+    if (
+      sourcePath.startsWith('docs/archive/') ||
+      sourcePath.includes('/archive/') ||
+      sourcePath.includes('/superseded/') ||
+      sourcePath.includes('/_archive/')
+    ) {
+      return false;
+    }
+
+    const raw = normalizeText(document.raw ?? document.content);
+    const frontmatter = raw.match(/^\uFEFF?---\s*\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/)?.[1] || '';
+    return !/^status:\s*["']?(?:archived|superseded)["']?\s*$/im.test(frontmatter);
+  }
+
   function buildManifestRailRows(documents) {
     const rails = [];
 
@@ -154,14 +170,18 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
       : listTrackedFeatureMechanizationDocuments();
     const usesCustomDocs = normalizeArray(options.docs).length > 0;
 
+    const referenceDocuments =
+      options.referenceDocuments === undefined
+        ? usesCustomDocs
+          ? []
+          : listTrackedMarkdownDocuments()
+        : normalizeArray(options.referenceDocuments);
+
     return {
-      documents: sourceDocuments.map(normalizeFeatureMechanizationDocument),
-      referenceDocuments:
-        options.referenceDocuments === undefined
-          ? usesCustomDocs
-            ? []
-            : listTrackedMarkdownDocuments()
-          : normalizeArray(options.referenceDocuments),
+      documents: sourceDocuments
+        .filter(isCurrentRailAuthorityDocument)
+        .map(normalizeFeatureMechanizationDocument),
+      referenceDocuments: referenceDocuments.filter(isCurrentRailAuthorityDocument),
       sourceFiles:
         options.sourceFiles === undefined
           ? usesCustomDocs
@@ -211,6 +231,7 @@ function createCommandQueryRailCatalogComponent(deps = {}) {
     extractSpecificRailNamesFromText,
     inferRailTypeFromName,
     isCommandQueryRailGap,
+    isCurrentRailAuthorityDocument,
     isSpecificCommandQueryRailName,
     listTrackedCommandQuerySourceFiles,
     listTrackedFeatureMechanizationDocuments,
