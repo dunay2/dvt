@@ -411,10 +411,12 @@ describe('Canvas source import live clean proof', () => {
           .type('{selectall}{backspace}')
           .should('have.value', '')
           .type(authoredModelSql, { parseSpecialCharSequences: false });
-        cy.get('[data-slot="dbt-model-code-provenance"]').should('contain.text', 'Authored');
-        cy.contains('button', 'Apply').should('be.enabled');
-        cy.contains('button', 'Apply').click();
       });
+    cy.contains('[data-slot="dbt-model-code-provenance"]', 'Authored').should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-panel"]')
+      .contains('button', 'Apply')
+      .should('be.enabled');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').contains('button', 'Apply').click();
     waitForLiveDraftModelSqlSaved(session, authoredModelSql);
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
