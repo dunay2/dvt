@@ -41,13 +41,6 @@ import type {
   NodeKindRegistration,
 } from './nodeTypeContracts';
 
-// ---------------------------------------------------------------------------
-// PluginContributions — v1 public contract
-//
-// A plugin author exports one of these. No lifecycle, no registration ceremony.
-// The shell reads contributions directly from PLUGIN_REGISTRY.
-// ---------------------------------------------------------------------------
-
 export type PluginContributions = {
   id: string;
   displayName: LocalizableString;
@@ -56,7 +49,6 @@ export type PluginContributions = {
   envFlag?: string;
   backendPluginId?: string;
   capabilities?: PluginCapabilityId[];
-
   views?: ViewContribution[];
   routeHeaderContributions?: RouteHeaderContribution[];
   commandPaletteContributions?: CommandPaletteContribution[];
@@ -72,32 +64,18 @@ export type PluginContributions = {
   produces?: PluginDataPort[];
   consumes?: PluginDataPort[];
   sourceImport?: readonly SourceImportContribution[];
-
-  /**
-   * Optional run adapter — normalises plugin-specific run data to CanonicalRun.
-   * The shell calls mapToCanonical() when it needs a unified view of a run
-   * (e.g. for the inspector History panel, overlay context with run status).
-   */
   runAdapter?: {
     mapToCanonical: (run: unknown) => CanonicalRun | null;
   };
 };
 
-// ---------------------------------------------------------------------------
-// PLUGIN_REGISTRY — static composition, order is explicit
-//
-// Add new plugins here. Order matters only for tie-breaking (first registered
-// renderer at equal priority wins). Dependencies are resolved by composition,
-// not topological sort.
-// ---------------------------------------------------------------------------
-
-// Imported lazily to avoid circular deps during module init
 import { costContributions } from './cost/costContributions';
 import { dbtContributions } from './dbt/dbtContributions';
 import { dvtContributions, dvtWarehouseSourceContributions } from './dvt/dvtContributions';
 import { monitoringContributions } from './monitoring/monitoringContributions';
 import { httpJsonContributions } from './httpJson/httpJsonContributions';
 import { objectFilePostgresContributions } from './objectFilePostgres/objectFilePostgresContributions';
+import { pythonContributions } from './python/pythonContributions';
 
 export type RuntimeCapabilities = {
   plugins: Record<string, { available: boolean; reason?: string }>;
@@ -122,19 +100,13 @@ export type SourceImportContribution = {
 };
 
 function getEnvFlagValue(envFlag: string | undefined): string | boolean | undefined {
-  if (!envFlag) {
-    return undefined;
-  }
-
+  if (!envFlag) return undefined;
   return (import.meta.env as Record<string, string | boolean | undefined>)[envFlag];
 }
 
 function isPluginEnabled(plugin: PluginContributions): boolean {
   const envFlagValue = getEnvFlagValue(plugin.envFlag);
-  if (envFlagValue == null) {
-    return true;
-  }
-
+  if (envFlagValue == null) return true;
   return envFlagValue !== 'false' && envFlagValue !== false;
 }
 
@@ -146,13 +118,8 @@ function isPluginAvailableAtRuntime(
   plugin: PluginContributions,
   capabilities?: RuntimeCapabilities
 ): boolean {
-  if (!isPluginEnabled(plugin)) {
-    return false;
-  }
-
-  if (!capabilities) {
-    return !requiresBackendCapability(plugin);
-  }
+  if (!isPluginEnabled(plugin)) return false;
+  if (!capabilities) return !requiresBackendCapability(plugin);
 
   const capabilityIds = Array.from(
     new Set([plugin.backendPluginId, plugin.id].filter((id): id is string => id != null))
@@ -160,11 +127,7 @@ function isPluginAvailableAtRuntime(
   const runtimeInfos = capabilityIds
     .map((pluginId) => capabilities.plugins[pluginId])
     .filter((info): info is { available: boolean; reason?: string } => info != null);
-
-  if (runtimeInfos.length === 0) {
-    return !requiresBackendCapability(plugin);
-  }
-
+  if (runtimeInfos.length === 0) return !requiresBackendCapability(plugin);
   return runtimeInfos.every((info) => info.available);
 }
 
@@ -172,6 +135,7 @@ const ALL_PLUGIN_CONTRIBUTIONS: PluginContributions[] = [
   dbtContributions,
   httpJsonContributions,
   objectFilePostgresContributions,
+  pythonContributions,
   dvtWarehouseSourceContributions,
   dvtContributions,
   monitoringContributions,
@@ -184,10 +148,6 @@ export const PLUGIN_REGISTRY: PluginContributions[] =
 export function getRuntimePlugins(capabilities?: RuntimeCapabilities): PluginContributions[] {
   return PLUGIN_REGISTRY.filter((plugin) => isPluginAvailableAtRuntime(plugin, capabilities));
 }
-
-// ---------------------------------------------------------------------------
-// Helper functions — shell reads contributions through these
-// ---------------------------------------------------------------------------
 
 export function getAllViews(capabilities?: RuntimeCapabilities): ViewContribution[] {
   return getRuntimePlugins(capabilities).flatMap((p) => p.views ?? []);
@@ -205,12 +165,9 @@ export function getSourceImportOptions(
   const optionsById = new Map<SourceImportOptionId, SourceImportOptionContribution>();
   for (const contribution of getSourceImportContributions(capabilities)) {
     for (const option of contribution.options) {
-      if (!optionsById.has(option.id)) {
-        optionsById.set(option.id, option);
-      }
+      if (!optionsById.has(option.id)) optionsById.set(option.id, option);
     }
   }
-
   return Array.from(optionsById.values()).sort((left, right) => left.order - right.order);
 }
 
@@ -292,7 +249,6 @@ export function getAllCanvasRuntimeRegistrations(
       const availableNodeKinds = registration.nodeKinds.filter((nodeKind) =>
         availablePluginIds.has(nodeKind.pluginId)
       );
-
       return availableNodeKinds.length === registration.nodeKinds.length
         ? registration
         : { ...registration, nodeKinds: availableNodeKinds };
@@ -305,7 +261,6 @@ export function getAllCanvasKinds(
   locale: string = getApplicationLanguage()
 ): CanvasKindRegistration[] {
   const language = locale.trim().toLowerCase().split('-')[0] ?? 'en';
-
   return getAllCanvasRuntimeRegistrations(capabilities).map((registration) => {
     const localizedCopy = registration.localizedCopy?.[language];
     return {
@@ -337,20 +292,14 @@ export function mapRunToCanonical(
 ): CanonicalRun | null {
   for (const plugin of getRuntimePlugins(capabilities)) {
     const runAdapter = plugin.runAdapter;
-    if (!runAdapter) {
-      continue;
-    }
-
+    if (!runAdapter) continue;
     try {
       const canonicalRun = runAdapter.mapToCanonical(run);
-      if (canonicalRun) {
-        return canonicalRun;
-      }
+      if (canonicalRun) return canonicalRun;
     } catch {
       continue;
     }
   }
-
   return null;
 }
 
@@ -358,32 +307,20 @@ export function getRegisteredPluginIds(capabilities?: RuntimeCapabilities): Read
   return new Set(getRuntimePlugins(capabilities).map((plugin) => plugin.id));
 }
 
-/**
- * Returns the highest-priority renderer for the given kind.
- * Falls back to the provided fallback component if none registered.
- */
 export function getNodeRenderer(
   kind: PluginNodeKind,
   fallback: React.ComponentType<NodeRendererProps>,
   capabilities?: RuntimeCapabilities
 ): React.ComponentType<NodeRendererProps> {
   let best: { priority: number; component: React.ComponentType<NodeRendererProps> } | null = null;
-
   for (const plugin of getRuntimePlugins(capabilities)) {
     const reg = plugin.nodeRenderers?.get(kind);
     if (!reg) continue;
-    if (!best || reg.priority > best.priority) {
-      best = reg;
-    }
+    if (!best || reg.priority > best.priority) best = reg;
   }
-
   return best?.component ?? fallback;
 }
 
-/**
- * Returns all inspector panels that should show for the given node,
- * sorted by order ascending.
- */
 export function getInspectorPanels(
   node: CanonicalNode,
   ctx: InspectorContext,
@@ -403,13 +340,8 @@ export function getInspectorPanels(
   return panels;
 }
 
-/**
- * Returns a map from pluginId → { connectionRules, produces, consumes }
- * for use by the canvas connection evaluator.
- */
 export function getPluginPortMap(capabilities?: RuntimeCapabilities): PluginPortMap {
   const map = new Map<string, PluginPortDescriptor>();
-
   for (const plugin of getRuntimePlugins(capabilities)) {
     map.set(plugin.id, {
       connectionRules: plugin.connectionRules ?? [],
@@ -417,7 +349,6 @@ export function getPluginPortMap(capabilities?: RuntimeCapabilities): PluginPort
       consumes: plugin.consumes ?? [],
     });
   }
-
   return map;
 }
 
