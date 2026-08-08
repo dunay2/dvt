@@ -43,7 +43,6 @@ type CanvasViewportSurfaceViewProps = Readonly<{
   onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
-  onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
   onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
   onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
@@ -108,7 +107,6 @@ function CanvasViewportReactFlowSurface({
   onConnect,
   onReconnect,
   onNodeClick,
-  onSelectionChange,
   onViewportChange,
   onNodeDrag,
   onNodeDragStop,
@@ -138,11 +136,6 @@ function CanvasViewportReactFlowSurface({
   const handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']> = (event, node) => {
     contextMenuPresenter.closeContextMenu();
     onNodeClick(event, node);
-  };
-  const handleSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']> = (
-    selection
-  ) => {
-    onSelectionChange(selection);
   };
   const handleNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']> = (
     event,
@@ -205,7 +198,6 @@ function CanvasViewportReactFlowSurface({
         onNodeClick={handleNodeClick}
         onPaneClick={handlePaneClick}
         onNodeDragStop={handleNodeDragStop}
-        onSelectionChange={handleSelectionChange}
         nodeTypes={nodeTypes}
         nodesDraggable={canMoveNodes}
         nodesConnectable={canEditEdges}
