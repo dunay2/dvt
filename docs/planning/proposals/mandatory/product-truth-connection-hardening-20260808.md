@@ -423,6 +423,10 @@ scope A / models/orders.sql = A
     stable ID and its connection-qualified collision-resistant ID are already
     owned by another identity, import raises a draft conflict. It never reports
     the foreign node as selected and never searches for an ungoverned suffix.
+15. **Canonical boundary strings, selected.** Connection, provider and physical
+    object identifiers reject leading or trailing whitespace rather than
+    trimming it after admission. JCS therefore cannot treat visually identical
+    values as distinct identities, and the contract performs no silent repair.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -441,6 +445,7 @@ scope A / models/orders.sql = A
 | One edge still requires hidden selected-source ID | Data clump / duplicated decision             | Derive from the single explicit relationship    | One edge generates and validates; zero or ambiguous edges fail closed |
 | External probe precedes Canvas admission          | Temporal coupling / misplaced responsibility | Move statements before extraction               | Missing authority performs zero source-object reads                   |
 | Derived node ID is owned by another identity      | Identity collision / false idempotency       | Guard Clause                                    | Conflict occurs before file or draft mutation                         |
+| Identity differs only by exterior whitespace      | Primitive ambiguity / duplicate value        | Introduce Assertion                             | Strict contract rejects exterior-whitespace variants                  |
 
 ### 13.6 DoR for the bounded slice
 
@@ -595,6 +600,12 @@ redGreenCycles:
       - apps/api/src/application/services/warehouseSourceYamlIdentity.ts
       - apps/web/src/app/plugins/graph/graphNodeTitlePresentation.ts
     greenTest: pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts && pnpm --filter @dvt/web test:canvas -- graphNodeTitlePresentation.test.ts
+  - id: canonical-identity-boundary-strings
+    redTest: pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts
+    expectedFailure: Non-blank identifiers with exterior whitespace are admitted and hash as distinct product identities.
+    patchSurfaces:
+      - packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts
+    greenTest: pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts
   - id: command-admission-before-discovery
     redTest: pnpm --filter dvt-api test -- importWarehouseSourcesUseCase.test.ts
     expectedFailure: A missing Canvas authority still calls the external source-object reader before failing.
