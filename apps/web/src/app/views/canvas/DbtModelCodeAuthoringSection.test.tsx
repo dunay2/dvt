@@ -120,6 +120,14 @@ describe('DbtModelCodeAuthoringSection', () => {
     expect(container.querySelector('[data-slot="model-sql-draft"]')?.textContent).toBe('');
   });
 
+  it('opts the SQL editor out of React Flow global keyboard commands', () => {
+    act(() => root.render(<Harness />));
+
+    const editor = container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]');
+
+    expect(editor?.classList).toContain('nokey');
+  });
+
   it.each(['Backspace', 'Delete'])('keeps the %s editing key inside the SQL editor', (key) => {
     act(() => root.render(<Harness />));
 
