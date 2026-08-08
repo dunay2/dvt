@@ -116,9 +116,6 @@ function CanvasShellViewport({
   | 'onOpenCanvasSettings'
   | 'contextMenuPresenter'
 >): JSX.Element {
-  const handleNodeClick: CanvasShellGraphCommands['onNodeClick'] = (event, node) => {
-    graphCommands.onNodeClick(event, node);
-  };
   const nodeWorkbenchVisible = isCanvasNodeWorkbenchVisible({
     focusMode: layout.focusMode,
     inspectorPanelVisible: layout.inspectorPanelVisible,
@@ -148,8 +145,6 @@ function CanvasShellViewport({
       onEdgesChange={graphCommands.onEdgesChange}
       onConnect={graphCommands.onConnect}
       onReconnect={graphCommands.onReconnect}
-      onNodeClick={handleNodeClick}
-      onSelectionChange={graphCommands.onSelectionChange}
       onViewportChange={graphCommands.onViewportChange}
       onDrop={graphCommands.onDrop}
       onDragOver={graphCommands.onDragOver}
