@@ -1,0 +1,38 @@
+---
+id: R-20260808-PTH1-CONNECTED-SOURCE-TRUTH
+title: Connected source identity can collide or cross workspace boundaries
+status: Open
+date: 2026-08-08
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: High
+probability: Low
+context: >
+  PTH1 persists connection-qualified warehouse source identity in the workspace graph draft and
+  consumes it in source YAML, Canvas presentation, dbt projection and scoped file queries.
+risk: >
+  A regression that deduplicates by physical object alone, accepts legacy ambiguous metadata,
+  guesses a connection or file path, or omits tenant/project/environment from a query key could show
+  or execute data from the wrong connection, node or workspace.
+mitigations:
+  - 'Use one strict versioned ConnectedSourceRef contract and reject unknown fields, credentials,
+    legacy top-level identity and malformed existing draft nodes before mutation.'
+  - 'Build dedupe and source-YAML identity from JCS-canonical connectionId plus sourceObjectId.'
+  - 'Partition graph, file-tree and file-content queries by the complete server-granted workspace
+    scope, with an A/B/A colliding-path regression proof.'
+  - 'Project connection facts only from the validated canonical reference, show the full visible
+    identifier and never infer missing truth from names or labels.'
+  - 'Use the single compatible incoming edge as dbt origin; fail closed for zero, ambiguity or an
+    explicitly disconnected selection.'
+  - 'Route code actions only to an explicit persisted path or the exact node authoring surface;
+    reject guessed paths and unrelated fallback files.'
+  - 'Run the protected live source-import proof with PostgreSQL, API authorization, Temporal,
+    Cypress visibility checks and axe serious/critical checks.'
+residual_risk: >
+  The MVP proves PostgreSQL source import and one dbt model within one browser session. Revoked
+  connection reconciliation, cross-session collaborative edits and additional warehouse providers
+  require their own product slices and evidence.
+review_after: 2026-09-08
+---
