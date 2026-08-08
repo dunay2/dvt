@@ -121,7 +121,7 @@ export function DvtSqlTransformAuthoringSection({
         <div className={showCode ? 'mt-4 space-y-2' : 'space-y-2'}>
           <div className="flex items-center justify-between gap-3">
             <h4 className={inspectorVisualClasses.contextPanelSectionTitle}>
-              {canvasViewCopy.nodePresentationColumnsLabel}
+              {canvasViewCopy.nodePresentationColumnsLabel} ({canvasViewCopy.inspectorDbtOriginLabel})
             </h4>
             {columnOptions.length > 0 ? (
               <span className={inspectorVisualClasses.inspectorSubtle}>
