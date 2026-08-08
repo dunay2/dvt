@@ -458,6 +458,64 @@ test('command/query rail snapshot joins documented rails with source implementat
   assert.equal(archiveWidget.documentationRefs.length, 1);
 });
 
+test('command/query rail snapshot excludes archived documents from current rail authority', () => {
+  const docs = [
+    {
+      path: 'docs/planning/proposals/mandatory/widgets.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: WIDGET-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: ListWidgets',
+        '    type: query',
+        '    dddOwner: WidgetReadModel',
+        'symbols: []',
+        '```',
+      ].join('\n'),
+    },
+  ];
+  const referenceDocuments = [
+    {
+      path: 'docs/architecture/components/widgets/widget-rail-catalog.md',
+      content: [
+        '| Rail | Type | Status | Owner |',
+        '| --- | --- | --- | --- |',
+        '| `ListWidgets` | query | implemented | WidgetReadModel |',
+      ].join('\n'),
+    },
+    {
+      path: 'docs/planning/archive/proposals/retired-widget-plan.md',
+      content: [
+        '| Rail | Type | Status | Owner |',
+        '| --- | --- | --- | --- |',
+        '| `ListWidgets` | query | implemented | HistoricalWidgetReadModel |',
+        '| `CreatePlanningTaskDefinition` | command | planned | RetiredPlanningRegistry |',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({
+    docs,
+    referenceDocuments,
+    sourceFiles: [],
+  });
+
+  assert.equal(
+    snapshot.rails.some((rail) => rail.railName === 'CreatePlanningTaskDefinition'),
+    false
+  );
+  const listWidgets = snapshot.rails.find((rail) => rail.railName === 'ListWidgets');
+  assert.deepEqual(listWidgets.documentationRefs, [
+    {
+      name: 'ListWidgets',
+      path: 'docs/architecture/components/widgets/widget-rail-catalog.md',
+      sourceKind: 'documentation',
+    },
+  ]);
+});
+
 test('command/query rail snapshot keeps canonical rail names when API aliases appear in notes', () => {
   const referenceDocuments = [
     {
