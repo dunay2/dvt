@@ -84,7 +84,8 @@ trabajo`.
 2. Revisar el tenant, proyecto y entorno activos en `Contexto del proyecto`.
    Esos campos son informativos; no se editan escribiendo sobre ellos.
 3. En `Proyectos disponibles en esta sesion`, elegir el scope
-   `tenant / proyecto / entorno` deseado.
+   `tenant / proyecto / entorno` deseado. Con teclado, llevar el foco a la
+   opcion y pulsar `Enter` o espacio.
 4. Confirmar que el menu se cierra y que la barra superior muestra el proyecto
    nuevo antes de continuar.
 5. Volver al proyecto anterior con el mismo selector cuando sea necesario.
@@ -97,6 +98,10 @@ fisico PostgreSQL en A y B, confirma que B empieza sin el grafo de A y, al
 volver, recupera las dos fuentes y `Model 1` de A. Si solo existe un proyecto
 autorizado, aparece `No hay otro proyecto disponible en esta sesion.`; no se
 inventan alternativas.
+
+Comprobacion exigente: repetir A -> B en ingles y B -> A en espanol. El nombre
+visible de `Project/Proyecto` debe cambiar antes que el grafo; el selector debe
+tener foco visible y no presentar hallazgos axe `serious` o `critical`.
 
 ## Insertar nodos
 
@@ -111,6 +116,8 @@ Resultado esperado: el menu contextual solo muestra acciones del canvas y no
 mezcla propiedades de nodos. En un canvas `dbt`, las acciones crean tipos
 compatibles con dbt; en un canvas DVT, crean tipos compatibles con el flujo DVT.
 La insercion de nodos no sustituye al importador de fuentes gobernadas.
+`Anadir componente` no debe ocupar un boton fijo sobre el Canvas: el unico
+acceso al catalogo es el menu contextual abierto con click derecho.
 
 ## Usar el explorador de proyecto
 
@@ -180,7 +187,9 @@ captura principal, `Ejecutar` esta deshabilitado porque la barra indica
 4. Con el editor SQL enfocado, usar `Backspace` o `Delete` y confirmar que solo
    cambia el texto; el nodo seleccionado debe seguir en el grafo.
 5. Para revisar el proyecto completo, abrir `Espacio de trabajo > Open project
-code` y elegir un archivo del explorador.
+code` y elegir un archivo del explorador. En la prueba de aislamiento, abrir
+   `models/sources/src_public.yml` en B y en A y confirmar visualmente que cada
+   archivo contiene su propia identidad de fuente y no la del otro proyecto.
 6. Abrir `Artefactos` para revisar artefactos sincronizados y usar `View` o
    `Download` cuando esten disponibles.
 
@@ -188,6 +197,11 @@ Resultado esperado: codigo y artefactos son vistas de inspeccion del workspace;
 no sustituyen el grafo, no fabrican rutas `models/<nombre>.sql` y nunca deben
 mostrar el primer archivo disponible o contenido de otro nodo como sustituto
 del recurso seleccionado.
+
+La accion `Abrir codigo del nodo` no debe repetirse en `Mas acciones` ni en el
+menu de click derecho. Si aparece ahi, o si esa copia no abre exactamente el
+mismo recurso, el resultado es `NO-GO`; la unica entrada es el icono superior
+de la barra flotante del nodo seleccionado.
 
 ## Casos de uso con evidencia parcial
 
@@ -281,6 +295,8 @@ de rails protegidos como `ListWarehouseConnections`,
 - Confirmar que no existe panel fijo `Project Resources` ni accion `Add data`
   en el modo base del grafo.
 - Crear un nodo y verificar que queda visible en el mismo contexto del grafo.
+- Confirmar que no existe un boton fijo `Anadir componente`; abrir el catalogo
+  solamente con click derecho sobre una zona vacia.
 - Seleccionar un nodo y revisar que el workbench contextual muestra datos del
   nodo real.
 - Abrir `Add source` desde el menu contextual y comprobar conexiones, tablas,
@@ -295,10 +311,14 @@ de rails protegidos como `ListWarehouseConnections`,
 - Cambiar entre dos proyectos autorizados que compartan una ruta de archivo y
   un nombre de nodo; confirmar que B empieza limpio, crea su propio estado y que
   cada uno conserva su contenido al volver A -> B -> A.
+- Repetir el selector con `Enter` o espacio en ingles y espanol; comprobar foco
+  visible, `Project/Proyecto` actualizado y cero hallazgos axe graves.
 - Abrir `Proyecto` y confirmar que `Importar` es snapshot, no conexion.
 - Confirmar que `Ejecutar` no se habilita con `Plan requerido`.
 - Pulsar `Codigo` en un nodo persistido y en uno generado; comprobar que cada
   accion abre el recurso exacto y nunca un archivo de respaldo no relacionado.
+- Abrir `Mas acciones` y el menu contextual del nodo; confirmar que ninguno
+  repite `Abrir codigo del nodo`.
 - Borrar texto dentro del editor SQL con `Backspace` y `Delete`; comprobar que
   el nodo seleccionado no se elimina y que el Canvas conserva su grafo.
 - Repetir la comprobacion de visibilidad a 1000x660, 1280x720 y 1440x900, con
@@ -324,8 +344,11 @@ La misma prueba abre dos scopes concedidos por el servidor en una unica sesion,
 cambia mediante el selector visible, crea B desde su estado vacio, reutiliza la
 ruta `models/sources/src_public.yml` y el mismo objeto fisico, y vuelve a A. Las
 lecturas autorizadas de borrador y archivo deben devolver A, B y A sin datos
-cruzados. Tambien vacia el SQL con teclado y exige que `Model 1` permanezca antes
-de continuar la autoria.
+cruzados. Ademas abre el YAML exacto en Project Code para B y A, rechaza
+visualmente la identidad del otro scope y revisa selector/Workbench con axe.
+Tambien vacia el SQL con teclado y exige que `Model 1` permanezca antes de
+continuar la autoria; el Canvas suspende sus atajos globales de borrado mientras
+el Workbench contextual posee el teclado.
 
 El usuario exigente debe repetir ademas el 200 % con el zoom real del navegador,
 porque el rasterizado, las preferencias de fuente y el escalado del sistema

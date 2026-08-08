@@ -16,8 +16,10 @@ code_refs:
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
   - apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
   - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
+  - apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx
   - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.tsx
   - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
   - apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.tsx
   - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
@@ -32,6 +34,8 @@ evidence:
     - pnpm --filter dvt-api lint
     - pnpm --filter dvt-api typecheck
     - pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2
+    - pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx DbtModelCodeAuthoringSection.test.tsx
+    - pnpm --filter @dvt/web test:shell-session -- ShellWorkspaceScopeSelector.test.tsx
     - pnpm --filter @dvt/web lint
     - pnpm --filter @dvt/web typecheck
     - node --test scripts/run-canvas-source-import-live-proof.test.cjs
@@ -74,9 +78,11 @@ flowchart LR
 - Workspace file-tree and file-content caches include the full scope key. The
   query-level A/B/A proof uses the colliding path `models/orders.sql`. The
   live-product proof grants two real scopes in one authenticated session, uses
-  the visible selector, authors the same `models/sources/src_public.yml` path
-  from the same physical PostgreSQL relation, and recovers A after B without
-  graph or file leakage.
+  the visible selector by keyboard in English and Spanish, authors the same
+  `models/sources/src_public.yml` path from the same physical PostgreSQL
+  relation, presents each distinct YAML in Project Code, and recovers A after B
+  without graph or file leakage. Axe finds no serious or critical finding in
+  the selector or Project Code Workbench.
 - The Inspector shows connection name, provider and identifier without
   truncating the identity or exposing credentials. Missing or malformed
   canonical identity stays absent rather than being guessed.
@@ -88,8 +94,12 @@ flowchart LR
   fallback file.
 - Exterior whitespace is rejected at the identity boundary, and reserved
   connection-qualified node-ID collisions fail before file or draft mutation.
-- Destructive text-editing keys are owned by the focused Workbench SQL editor;
-  `Backspace` and `Delete` do not bubble into React Flow node deletion.
+- Destructive text-editing keys are owned by the focused Workbench SQL editor.
+  The editor opts out through React Flow's `nokey` boundary and contains its
+  keydown/keyup events; while any contextual Workbench is active, the Canvas
+  also disables React Flow's global delete key. `Backspace` and `Delete` cannot
+  remove the selected node, while graph deletion outside a Workbench remains
+  available through the existing command surface.
 
 # Executable outcome
 
@@ -104,9 +114,11 @@ and Environment, observes an empty graph, creates its dbt Canvas, imports the
 same physical source to the same relative YAML path under a distinct Connection,
 then returns to the first scope and recovers its two sources, model and file
 content. The switch is performed only through the visible workspace selector;
-authoritative graph and file reads verify each selected scope. Clearing model
-SQL with `Backspace` also proves that the selected model remains in the graph
-before the authored SQL is entered. The Add Source dialog and each
+`Enter` activates the selector in English for B and in Spanish for A.
+Authoritative graph/file reads and the visible Project Code Workbench verify
+each selected scope and reject the other scope's source identity. Clearing
+model SQL with `Backspace` also proves that the selected model remains in the
+graph before the authored SQL is entered. The Add Source dialog and each
 connected-source Workbench remain inside
 1440x900, 1280x720, 1000x660 and 500x330 viewports. The dialog's bounded content
 and Cancel action stay visible; each Workbench keeps the exact Connection fact

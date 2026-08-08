@@ -459,11 +459,22 @@ server grants scope A and scope B
     Direct storage seeding, browser-only scope invention, or an API-only switch
     is rejected because it would not prove the product interaction or query
     invalidation boundary.
-19. **Workbench editor owns destructive keystrokes, selected.** When a textarea
-    in the contextual Workbench has focus, `Backspace` and `Delete` remain text
-    editing input and must not bubble into React Flow node deletion. Explicit
-    Canvas deletion outside an editor remains governed by the existing graph
-    command surface; the fix does not create another delete command.
+19. **Workbench owns destructive keystrokes, selected.** The SQL textarea uses
+    React Flow's `nokey` boundary and contains keydown/keyup. More importantly,
+    while any contextual Workbench is active, the Canvas passes
+    `deleteKeyCode=null` to React Flow. `Backspace` and `Delete` remain editing
+    input even if an event escapes; explicit Canvas deletion outside a
+    Workbench remains governed by the existing graph command surface.
+20. **Localized keyboard scope presentation, selected.** The visible workspace
+    selector activates an explicitly granted option with `Enter` or space in
+    English and Spanish. The protected proof must also open the colliding YAML
+    in Project Code for B and A, reject the other scope's identity, and run axe
+    against both selector and Workbench surfaces.
+21. **One command per product intent, selected.** Node code opens only from the
+    selected-node floating toolbar; the More/right-click menus keep Workbench
+    and modeler actions but cannot repeat `Open node code`. Add Component opens
+    only from the Canvas right-click menu, so no fixed primary button competes
+    with the graph or duplicates the contextual command.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -486,7 +497,10 @@ server grants scope A and scope B
 | Fit view places a node under Add Component         | Presentation collision / hidden interaction  | Move shared options to the action owner         | Both live source nodes remain actionable after Fit view               |
 | Add Source clips actions under viewport pressure   | Hidden command / inaccessible cancellation   | Introduce Parameter Object for viewport proof   | Four-size live matrix keeps Cancel visible and closes without import  |
 | A and B reuse graph/file names in one live session | Hidden authority / Identity Map leakage      | Make scope key explicit at query boundaries     | Visible A -> B -> A switch recovers distinct graph and YAML state     |
-| Backspace in Workbench removes the selected node   | Event leakage / feature envy                 | Encapsulate event ownership                     | Editor clears text while the selected graph node remains present      |
+| Backspace in Workbench removes the selected node   | Event leakage / feature envy                 | Encapsulate event ownership at shortcut owner   | React Flow delete is disabled while Workbench owns keyboard input     |
+| Scope changes only by pointer or API               | Inaccessible command / hidden presentation   | Expose command through accessible presentation  | EN/ES keyboard A -> B -> A plus visible isolated YAML and axe         |
+| Code appears in toolbar and contextual menus       | Duplicated command / divergent behavior      | Consolidate conditional expression              | Only the selected-node floating toolbar exposes node code             |
+| Add Component appears fixed and on right-click     | Duplicated command / cluttered interface     | Remove dead UI and keep contextual command      | No fixed button; right-click opens the governed catalog               |
 
 ### 13.6 DoR for the bounded slice
 
@@ -508,7 +522,9 @@ server grants scope A and scope B
 - [x] Canvas Workbench exposes the effective connection in ES and EN.
 - [x] A -> B -> A with the same relative path proves cache isolation.
 - [x] A -> B -> A through two real granted scopes proves live graph/file isolation.
+- [x] The EN/ES selector supports pointer, `Enter` and space, and Project Code visibly presents the isolated YAML in both scopes with axe-clean surfaces.
 - [x] Workbench text editing cannot leak `Backspace` or `Delete` into graph-node deletion.
+- [ ] Node code has one visible entry in the selected-node toolbar, and Add Component is available only from the Canvas right-click menu.
 - [x] Live Source Import persists the same physical object through two distinct real connections without reducing its existing assertions.
 - [x] Add Source and connected-source Workbench remain visible, axe-clean and cancellable across the governed viewport matrix.
 - [x] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
@@ -550,6 +566,11 @@ allowedImplementationSurfaces:
   - apps/api/test/application/services/warehouseSourceYaml.test.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts
+  - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+  - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+  - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
+  - apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx
+  - apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.test.tsx
   - apps/web/src/app/plugins/graph/graphNodeTitlePresentation.ts
   - apps/web/src/app/plugins/graph/graphNodeTitlePresentation.test.ts
   - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
@@ -564,7 +585,10 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
   - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.contextMenu.test.tsx
+  - apps/web/src/app/views/canvas/canvasNodeMapper.ts
   - apps/web/src/app/views/canvas/canvasViewportXyflowTestAdapter.tsx
   - apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.tsx
   - apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.test.tsx
@@ -627,6 +651,7 @@ completionGate:
   - pnpm --filter dvt-api lint
   - pnpm --filter dvt-api typecheck
   - pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2
+  - pnpm --filter @dvt/web test:shell-session -- ShellWorkspaceScopeSelector.test.tsx
   - pnpm --filter @dvt/web lint
   - pnpm --filter @dvt/web typecheck
   - node --test scripts/run-canvas-source-import-live-proof.test.cjs
@@ -692,14 +717,42 @@ redGreenCycles:
       - scripts/run-canvas-source-import-live-proof.test.cjs
       - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
     greenTest: pnpm --filter @dvt/web test:e2e:source-import:live
+  - id: workspace-selector-keyboard-activation
+    redTest: pnpm --filter @dvt/web test:shell-session -- ShellWorkspaceScopeSelector.test.tsx
+    expectedFailure: The visible granted-scope option does not dispatch SelectWorkspaceScope from Enter or Space.
+    patchSurfaces:
+      - apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx
+      - apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.test.tsx
+      - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    greenTest: pnpm --filter @dvt/web test:shell-session -- ShellWorkspaceScopeSelector.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live
+  - id: single-node-code-command-entry
+    redTest: pnpm --filter @dvt/web test:canvas -- canvasNodeContextMenuModel.test.ts
+    expectedFailure: Open node code is duplicated in the selected-node toolbar and contextual More/right-click menus.
+    patchSurfaces:
+      - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+      - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
+      - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+      - apps/web/src/app/views/canvas/canvasNodeMapper.ts
+    greenTest: pnpm --filter @dvt/web test:canvas -- canvasNodeContextMenuModel.test.ts
+  - id: context-only-add-component-command
+    redTest: pnpm --filter @dvt/web test:canvas -- CanvasViewport.contextMenu.test.tsx CanvasViewport.test.tsx
+    expectedFailure: Canvas renders a fixed Add Component button in addition to the governed right-click catalog command.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.contextMenu.test.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+    greenTest: pnpm --filter @dvt/web test:canvas -- CanvasViewport.contextMenu.test.tsx CanvasViewport.test.tsx
   - id: workbench-editor-destructive-key-isolation
     redTest: pnpm --filter @dvt/web test:canvas -- DbtModelCodeAuthoringSection.test.tsx
     expectedFailure: Backspace in the focused SQL editor bubbles to React Flow and deletes the selected model node.
     patchSurfaces:
       - apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.tsx
       - apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.test.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.tsx
+      - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
       - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
-    greenTest: pnpm --filter @dvt/web test:canvas -- DbtModelCodeAuthoringSection.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live
+    greenTest: pnpm --filter @dvt/web test:canvas -- DbtModelCodeAuthoringSection.test.tsx CanvasViewport.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live
   - id: windows-live-proof-dependency-resolution
     redTest: node --test scripts/run-canvas-source-import-live-proof.test.cjs
     expectedFailure: The live proof always selects a Linux Docker bind mount even when Windows pnpm dependencies are NTFS junctions.
