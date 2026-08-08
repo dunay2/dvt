@@ -393,26 +393,27 @@ scope A / models/orders.sql = A
     unrelated existing file is rejected. The project-file Workbench remains
     authoritative only when the node exposes a real workspace-file path.
 11. **Single explicit edge as origin, selected.** When a dbt model has exactly
-    one compatible incoming edge, that edge is the complete origin decision;
-    requiring a duplicate hidden `selectedSourceId` would create two sources of
-    truth. Zero compatible origins, multiple unselected origins, or an explicit
-    selection that is not connected continue to fail closed.
+    one compatible incoming edge, that edge is the complete origin decision for
+    both artifact generation and authoring validation; requiring a duplicate
+    hidden `selectedSourceId` would create two sources of truth. Zero compatible
+    origins, multiple unselected origins, or an explicit selection that is not
+    connected continue to fail closed.
 
 ### 13.5 Fowler opportunity matrix
 
-| Scenario                                          | Smell / risk                                 | Fowler move                                     | Required proof                                                  |
-| ------------------------------------------------- | -------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------- |
-| Connection and object travel as loose strings     | Primitive obsession / data clump             | Introduce Value Object                          | Strict `ConnectionRef` and `ConnectedSourceRef` contract tests  |
-| Same object ID exists through connections A and B | Hidden authority / identity collision        | Replace derived identity with explicit identity | Two distinct nodes and stable replay per connection             |
-| Legacy node lacks connection identity             | Hidden authority / speculative compatibility | Introduce Assertion / Guard Clause              | Import fails before any mutation; no inference or migration     |
-| Canvas hides the effective source connection      | Hidden authority                             | Introduce Presentation Model                    | Localized read-only Workbench row names the connection          |
-| Scope A and B share a relative path               | Identity Map leakage                         | Make scope key explicit                         | A -> B -> A returns A, B, A for the same path                   |
-| Missing Canvas triggers initial-draft creation    | Divergent change / boundary drift            | Separate creation from import                   | Typed not-found with zero file/external writes                  |
-| Graph metadata accepts secret-shaped extras       | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                         |
-| Windows Docker cannot resolve pnpm junctions      | Environment coupling / false-negative gate   | Encapsulate platform execution strategy         | Unit proof selects native Cypress on Windows; live proof passes |
-| Source review extends below a bounded dialog      | Hidden content / inaccessible navigation     | Expose bounded scrolling region                 | Visible scrollbar, reachable selected object, fixed Cancel      |
-| Missing node file falls back to another file      | Hidden authority / semantic substitution     | Replace guessed path with explicit strategy     | Generated model opens node code; persisted path opens Workbench |
-| One edge still requires hidden selected-source ID | Data clump / duplicated decision             | Derive from the single explicit relationship    | One edge generates; zero or ambiguous edges fail closed         |
+| Scenario                                          | Smell / risk                                 | Fowler move                                     | Required proof                                                        |
+| ------------------------------------------------- | -------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------- |
+| Connection and object travel as loose strings     | Primitive obsession / data clump             | Introduce Value Object                          | Strict `ConnectionRef` and `ConnectedSourceRef` contract tests        |
+| Same object ID exists through connections A and B | Hidden authority / identity collision        | Replace derived identity with explicit identity | Two distinct nodes and stable replay per connection                   |
+| Legacy node lacks connection identity             | Hidden authority / speculative compatibility | Introduce Assertion / Guard Clause              | Import fails before any mutation; no inference or migration           |
+| Canvas hides the effective source connection      | Hidden authority                             | Introduce Presentation Model                    | Localized read-only Workbench row names the connection                |
+| Scope A and B share a relative path               | Identity Map leakage                         | Make scope key explicit                         | A -> B -> A returns A, B, A for the same path                         |
+| Missing Canvas triggers initial-draft creation    | Divergent change / boundary drift            | Separate creation from import                   | Typed not-found with zero file/external writes                        |
+| Graph metadata accepts secret-shaped extras       | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                               |
+| Windows Docker cannot resolve pnpm junctions      | Environment coupling / false-negative gate   | Encapsulate platform execution strategy         | Unit proof selects native Cypress on Windows; live proof passes       |
+| Source review extends below a bounded dialog      | Hidden content / inaccessible navigation     | Expose bounded scrolling region                 | Visible scrollbar, reachable selected object, fixed Cancel            |
+| Missing node file falls back to another file      | Hidden authority / semantic substitution     | Replace guessed path with explicit strategy     | Generated model opens node code; persisted path opens Workbench       |
+| One edge still requires hidden selected-source ID | Data clump / duplicated decision             | Derive from the single explicit relationship    | One edge generates and validates; zero or ambiguous edges fail closed |
 
 ### 13.6 DoR for the bounded slice
 
@@ -595,11 +596,12 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/CanvasShell.tsx
     greenTest: pnpm --filter @dvt/web test:canvas -- CanvasShell.graphSurface.test.tsx
   - id: single-connected-dbt-origin
-    redTest: pnpm --filter @dvt/web test:canvas -- canvasDbtModelArtifactProjection.test.ts
-    expectedFailure: One explicit compatible incoming edge still requires a duplicate selectedSourceId.
+    redTest: pnpm --filter @dvt/web test:canvas -- canvasDbtModelArtifactProjection.test.ts canvasInspectorAuthoringModel.test.ts
+    expectedFailure: One explicit compatible incoming edge still requires a duplicate selectedSourceId in generation or authoring validation.
     patchSurfaces:
       - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
-    greenTest: pnpm --filter @dvt/web test:canvas -- canvasDbtModelArtifactProjection.test.ts
+      - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts
+    greenTest: pnpm --filter @dvt/web test:canvas -- canvasDbtModelArtifactProjection.test.ts canvasInspectorAuthoringModel.test.ts
 symbols:
   - { name: CONNECTION_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
   - { name: CONNECTED_SOURCE_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
