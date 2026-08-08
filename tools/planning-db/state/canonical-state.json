@@ -84064,6 +84064,7 @@
         "docs/planning/status/**",
         "docs/**/index.md",
         "package.json",
+        "traceability.manifest.json",
         "scripts/planning-db*.cjs",
         "scripts/planning-db/**",
         "scripts/planning-db-operate-tests/**",
@@ -84096,7 +84097,7 @@
         "pnpm verify:prepush"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/planning-db-current-schema-hard-cut-plan-20260808.md",
-      "sourceContentSha256": "c3f9539ae4ea49304a1c10c56ef7cab88ecba68c6f35ff467915687ef8f9d235",
+      "sourceContentSha256": "e04b87ff02608a7f402536da7d284d86e11db67e25b627b9aba5bbf2f0f4fc4c",
       "rawRail": {
         "name": "EnforcePlanningDbCurrentSchema",
         "type": "query",
@@ -84277,6 +84278,7 @@
           "docs/planning/status/**",
           "docs/**/index.md",
           "package.json",
+          "traceability.manifest.json",
           "scripts/planning-db*.cjs",
           "scripts/planning-db/**",
           "scripts/planning-db-operate-tests/**",
