@@ -387,6 +387,11 @@ scope A / models/orders.sql = A
    scrollbar while the Cancel and attach actions remain fixed and reachable.
    Browser proof must reach the selected object through that governed region;
    shrinking or deleting review content is rejected.
+10. **Exact node-code authority, selected.** A graph-draft model without a
+    persisted workspace file must open its node-owned generated/authoring code
+    surface. Fabricating `models/<name>.sql` and silently falling back to an
+    unrelated existing file is rejected. The project-file Workbench remains
+    authoritative only when the node exposes a real workspace-file path.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -401,6 +406,7 @@ scope A / models/orders.sql = A
 | Graph metadata accepts secret-shaped extras       | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                         |
 | Windows Docker cannot resolve pnpm junctions      | Environment coupling / false-negative gate   | Encapsulate platform execution strategy         | Unit proof selects native Cypress on Windows; live proof passes |
 | Source review extends below a bounded dialog      | Hidden content / inaccessible navigation     | Expose bounded scrolling region                 | Visible scrollbar, reachable selected object, fixed Cancel      |
+| Missing node file falls back to another file      | Hidden authority / semantic substitution     | Replace guessed path with explicit strategy     | Generated model opens node code; persisted path opens Workbench |
 
 ### 13.6 DoR for the bounded slice
 
@@ -465,6 +471,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
   - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
   - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.focus.test.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
   - apps/web/cypress/support/liveWarehouseSourceImport.ts
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - scripts/run-canvas-source-import-live-proof.cjs
@@ -566,12 +574,18 @@ redGreenCycles:
       - scripts/run-canvas-source-import-live-proof.cjs
     greenTest: node --test scripts/run-canvas-source-import-live-proof.test.cjs
   - id: bounded-source-review-visibility
-    redTest: pnpm --filter @dvt/web test:canvas -- SourceImportWizardFrame.focus.test.tsx
+    redTest: pnpm --filter @dvt/web test:presentation -- SourceImportWizardFrame.focus.test.tsx
     expectedFailure: The bounded review region does not expose a persistent scrolling affordance.
     patchSurfaces:
       - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
       - apps/web/cypress/support/liveWarehouseSourceImport.ts
-    greenTest: pnpm --filter @dvt/web test:canvas -- SourceImportWizardFrame.focus.test.tsx
+    greenTest: pnpm --filter @dvt/web test:presentation -- SourceImportWizardFrame.focus.test.tsx
+  - id: exact-node-code-authority
+    redTest: pnpm --filter @dvt/web test:canvas -- CanvasShell.graphSurface.test.tsx
+    expectedFailure: A dbt model without a persisted path fabricates a file name and opens an unrelated workspace file.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/CanvasShell.tsx
+    greenTest: pnpm --filter @dvt/web test:canvas -- CanvasShell.graphSurface.test.tsx
 symbols:
   - { name: CONNECTION_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
   - { name: CONNECTED_SOURCE_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
