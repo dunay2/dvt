@@ -129,7 +129,7 @@ test('planning DB query CLI prints root help without opening a DB connection', (
   assert.match(result.stdout, /Usage:/);
   assert.match(result.stdout, /component-metadata/);
   assert.match(result.stdout, /canvas-uxdb-specification/);
-  assert.match(result.stdout, /canvas-uxdb-traceability/);
+  assert.doesNotMatch(result.stdout, /canvas-uxdb-traceability/);
   assert.match(result.stdout, /feature-mechanization/);
   assert.doesNotMatch(result.stderr, /Unknown planning DB query|Missing value/);
 });
@@ -831,6 +831,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
     'task-gaps',
     'focus',
     'real-work',
+    'canvas-uxdb-traceability',
   ]) {
     assert.throws(
       () => resolveQueryName(retiredQuery),
