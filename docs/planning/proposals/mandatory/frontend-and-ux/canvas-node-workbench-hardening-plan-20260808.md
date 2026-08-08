@@ -39,22 +39,21 @@ The repository already has the required owners:
 - Graph Draft DVT/dbt authoring persists through `CanvasDraftSession` / CAS;
 - file-backed dbt SQL/YAML remain project-file authoritative;
 - execution selection is explicit and independent from ordinary React Flow visual selection;
-- `CanvasViewCopy` plus the Canvas copy catalogs own EN/ES presentation copy.
+- `CanvasViewCopy` plus the Canvas/node-presentation copy adapters own EN/ES presentation copy.
 
 Therefore this hardening converges entry points onto those owners instead of creating alternatives.
 
 ## Integration of PR #2261
 
-PR #2261 (`hardening/canvas-workbench-ux`) overlapped this slice and contained two stronger local decisions. They are absorbed into #2266 rather than keeping parallel implementations:
+PR #2261 (`hardening/canvas-workbench-ux`) overlapped this slice and contained stronger local decisions. They are absorbed into #2266 rather than keeping parallel implementations:
 
 1. **Double-click ownership moves to `CanvasNodeShell`.** It resolves the preferred gesture from the same `CanvasNodeContextMenuModel` that governs visible node actions. Enabled `open-node-code` wins; otherwise enabled `inspect-node` falls back to the existing Workbench; disabled actions fail closed; execution-selection actions are never double-click targets.
-2. **Workbench help reuses canonical Canvas copy.** The temporary `canvasCopy.nodeWorkbench.ts` owner is removed. The header uses `inspectorEditablePropertiesTitle` / `inspectorEditablePropertiesDescription`, while preserving the existing localized close copy.
-
-The focused #2261 double-click test and stronger header interaction assertions are also absorbed. Its duplicate implementation plan is not copied; this document remains the canonical plan for #2266.
+2. **Workbench help reuses canonical Canvas copy.** The temporary `canvasCopy.nodeWorkbench.ts` owner is removed. The header uses `inspectorEditablePropertiesTitle` / `inspectorEditablePropertiesDescription`, while preserving existing localized close copy.
+3. **The focused double-click and stronger header interaction tests are retained.** The duplicate #2261 implementation plan is not copied; this document remains the canonical plan for #2266.
 
 ## Selected behavior
 
-- Double-click is code-first **only when the existing action model says Code is enabled**.
+- Double-click is code-first only when the existing action model says Code is enabled.
 - If Code is unavailable but Inspect/Workbench is enabled, double-click opens the existing general Workbench.
 - Explicit context-menu `Open workbench` remains the passive/general inspection path.
 - Floating-toolbar Code and context-menu Code continue to use the same code command.
@@ -62,7 +61,7 @@ The focused #2261 double-click test and stronger header interaction assertions a
 - Only the explicit execution-selection command mutates execution intent.
 - Workbench `?` and `X` are separate right-side controls outside the drag handle.
 - Workbench help is contextual; permanent explanatory header prose is not added.
-- DVT input-column presentation uses existing Canvas copy and retains its input meaning (`Columns (Input)` / localized equivalent) instead of collapsing to generic `Columns`.
+- DVT selectable transform columns retain the **input** role meaning. The UI composes the existing Columns label with the canonical node-presentation role vocabulary, yielding `Columns (Input)` / `Columnas (Entrada)` rather than generic `Columns` or the different concept `Origin`.
 - No connection-domain change is made.
 
 ## Authoring authority matrix
@@ -86,6 +85,7 @@ The focused #2261 double-click test and stronger header interaction assertions a
 - Removed unconsumed Inspector `modelerActions` projection after consumer audit.
 - Removed the temporary Workbench-specific localization file after #2261 proved existing Canvas copy already owns that message.
 - Removed dbt-specific double-click branching after centralizing gesture policy in `CanvasNodeShell`.
+- Reused the existing node-presentation role copy for DVT input semantics instead of introducing another copy family.
 - Kept explicit execution selection, Graph Draft CAS persistence, project-file/YAML persistence, local floating-toolbar click behavior, search/filter/drag/zoom/context menus, and existing plugin/action models.
 
 ## QA findings already incorporated
@@ -96,6 +96,7 @@ Remote CI/review caught real defects during this slice and they were fixed witho
 - an accidental stale `CanvasContextMenuView` call signature;
 - an over-broad raw-source localization assertion matching `selectedColumns`;
 - loss of the `Input columns` semantic when copy was reduced to generic `Columns`;
+- the follow-up distinction between `Origin` and the actual `Input` role, resolved through canonical node-presentation role copy;
 - the temporary duplicate Workbench copy owner;
 - generated Repository Map drift after Web source/test counts changed;
 - #2261's original `CanvasNodeShell` double-click fixture, which needed an enabled Inspect action in its context model;
@@ -159,6 +160,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/DvtSqlTransformAuthoringSection.tsx
   - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
+  - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
   - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
   - apps/web/src/app/views/canvas/canvasShell.types.ts
   - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
@@ -269,6 +271,7 @@ redGreenCycles:
     expectedFailure: Generic localized Columns copy loses the fact that the selectable columns are transform inputs.
     patchSurfaces:
       - apps/web/src/app/views/canvas/DvtSqlTransformAuthoringSection.tsx
+      - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
     greenTest: apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
   - id: live-authority-proof
     redTest: existing live flows encoded double-click as generic inspection instead of code-first intent.
