@@ -398,13 +398,18 @@ scope A / models/orders.sql = A
     hidden `selectedSourceId` would create two sources of truth. Zero compatible
     origins, multiple unselected origins, or an explicit selection that is not
     connected continue to fail closed.
+12. **Two real connections for collision proof, selected.** The protected live
+    flow creates two independently identified Postgres connections that expose
+    the same `relation/dvt/public/source_1`, imports through both, and reads the
+    persisted draft back. Two distinct canonical refs and nodes are required;
+    an in-memory collision test alone is insufficient for #2256 acceptance.
 
 ### 13.5 Fowler opportunity matrix
 
 | Scenario                                          | Smell / risk                                 | Fowler move                                     | Required proof                                                        |
 | ------------------------------------------------- | -------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------- |
 | Connection and object travel as loose strings     | Primitive obsession / data clump             | Introduce Value Object                          | Strict `ConnectionRef` and `ConnectedSourceRef` contract tests        |
-| Same object ID exists through connections A and B | Hidden authority / identity collision        | Replace derived identity with explicit identity | Two distinct nodes and stable replay per connection                   |
+| Same object ID exists through connections A and B | Hidden authority / identity collision        | Replace derived identity with explicit identity | Live import persists two distinct nodes and refs for the same object  |
 | Legacy node lacks connection identity             | Hidden authority / speculative compatibility | Introduce Assertion / Guard Clause              | Import fails before any mutation; no inference or migration           |
 | Canvas hides the effective source connection      | Hidden authority                             | Introduce Presentation Model                    | Localized read-only Workbench row names the connection                |
 | Scope A and B share a relative path               | Identity Map leakage                         | Make scope key explicit                         | A -> B -> A returns A, B, A for the same path                         |
@@ -434,7 +439,7 @@ scope A / models/orders.sql = A
 - [ ] Missing/legacy ambiguous state fails closed before mutation.
 - [ ] Canvas Workbench exposes the effective connection in ES and EN.
 - [ ] A -> B -> A with the same relative path proves cache isolation.
-- [ ] Existing live Source Import proof passes without reducing its assertions.
+- [ ] Live Source Import persists the same physical object through two distinct real connections without reducing its existing assertions.
 - [ ] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
 - [ ] No debt, stub, skipped check, disabled rule, or migration is introduced.
 
@@ -585,6 +590,13 @@ redGreenCycles:
     patchSurfaces:
       - scripts/run-canvas-source-import-live-proof.cjs
     greenTest: node --test scripts/run-canvas-source-import-live-proof.test.cjs
+  - id: live-connected-source-collision
+    redTest: pnpm --filter @dvt/web test:e2e:source-import:live
+    expectedFailure: The protected flow imports one real connection only, so two connection-qualified references to the same physical object are not proven end to end.
+    patchSurfaces:
+      - apps/web/cypress/support/liveWarehouseSourceImport.ts
+      - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    greenTest: pnpm --filter @dvt/web test:e2e:source-import:live
   - id: bounded-source-review-visibility
     redTest: pnpm --filter @dvt/web test:presentation -- SourceImportWizardFrame.focus.test.tsx
     expectedFailure: The bounded review region does not expose a persistent scrolling affordance.
