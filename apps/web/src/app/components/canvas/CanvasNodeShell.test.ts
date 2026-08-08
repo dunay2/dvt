@@ -42,4 +42,19 @@ describe('resolveCanvasNodeDoubleClickAction', () => {
       )
     ).toBeNull();
   });
+
+  it('never treats execution-selection commands as a double-click target', () => {
+    expect(
+      resolveCanvasNodeDoubleClickAction(
+        buildModel([
+          {
+            id: 'select-node-for-execution',
+            label: 'Select for execution',
+            intent: 'command',
+            disabled: false,
+          },
+        ])
+      )
+    ).toBeNull();
+  });
 });
