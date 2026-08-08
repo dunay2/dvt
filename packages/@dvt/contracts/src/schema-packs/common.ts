@@ -4,6 +4,7 @@
  */
 import { z } from 'zod';
 
+import { PythonCodeExecutionEvidenceSchema } from '../contracts/engine/PythonCodeExecutionEvidence.v1.js';
 import {
   RunExecutionContextRefSchema,
   RunExecutionContextSchema,
@@ -19,6 +20,7 @@ import {
   STRICT_ISO_UTC_STRING_MESSAGE,
 } from '../utils/contractPrimitives.js';
 
+export { PythonCodeExecutionEvidenceSchema } from '../contracts/engine/PythonCodeExecutionEvidence.v1.js';
 export { RunExecutionPolicySchema } from '../contracts/engine/RunExecutionPolicy.v1.js';
 export {
   RunExecutionContextRefSchema,
@@ -180,6 +182,7 @@ export const ArtifactAcquisitionEvidenceSchema = z
 export const StepResultEvidenceSchema = z.union([
   MaterializationEvidenceSchema,
   ArtifactAcquisitionEvidenceSchema,
+  PythonCodeExecutionEvidenceSchema,
 ]);
 
 export const RunExecutionEvidenceSchema = z
