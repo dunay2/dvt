@@ -364,6 +364,10 @@ test('PR quality gate consumes prepush-equivalent scope outputs for expensive ga
 
 test('PR quality gate prepares planning DB before DB-first feature implementation checks', () => {
   const prQualityGate = readFileSync('.github/workflows/pr-quality-gate.yml', 'utf8');
+  const preparePlanningDbAction = readFileSync(
+    '.github/actions/prepare-planning-db/action.yml',
+    'utf8'
+  );
   const prepareDbStep = namedWorkflowStep(
     prQualityGate,
     'Prepare planning DB for DB-backed validation'
@@ -398,11 +402,13 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
     capabilityTruthStep,
     "steps.scope.outputs.governance_global_relevant == 'true'"
   );
-  assertWorkflowContains(prQualityGate, 'import-governance:');
+  assert.doesNotMatch(prQualityGate, /import-governance:/u);
+  assertWorkflowContains(preparePlanningDbAction, 'pnpm planning:db:import');
+  assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
   assert.equal(
     countWorkflowCommand(prepareDbStep, "steps.scope.outputs.governance_global_relevant == 'true'"),
-    2,
-    'governance scope must activate both DB preparation and governance import'
+    1,
+    'governance scope must activate the single current-schema preparation action'
   );
   assertWorkflowContains(prQualityGate, 'GIT_BASE:');
   assertWorkflowContains(prQualityGate, 'github.event.pull_request.base.sha');
@@ -411,6 +417,10 @@ test('PR quality gate prepares planning DB before DB-first feature implementatio
 
 test('main full CI prepares DB-first planning projections before the full baseline', () => {
   const ciWorkflow = readFileSync('.github/workflows/ci.yml', 'utf8');
+  const preparePlanningDbAction = readFileSync(
+    '.github/actions/prepare-planning-db/action.yml',
+    'utf8'
+  );
   const prepareDbIndex = ciWorkflow.indexOf('Prepare planning DB for full CI baseline');
   const prepareDbActionIndex = ciWorkflow.indexOf('uses: ./.github/actions/prepare-planning-db');
   const fullBaselineIndex = ciWorkflow.indexOf('run: pnpm ci:full');
@@ -420,7 +430,9 @@ test('main full CI prepares DB-first planning projections before the full baseli
   assert.notEqual(fullBaselineIndex, -1);
   assert.ok(prepareDbIndex < prepareDbActionIndex);
   assert.ok(prepareDbActionIndex < fullBaselineIndex);
-  assertWorkflowContains(ciWorkflow, "import-governance: 'true'");
+  assert.doesNotMatch(ciWorkflow, /import-governance:/u);
+  assertWorkflowContains(preparePlanningDbAction, 'pnpm planning:db:import');
+  assert.doesNotMatch(preparePlanningDbAction, /planning:db:migrate/u);
 });
 
 test('PR quality traceability runs after implementation mechanization to avoid dirty generated diffs', () => {
