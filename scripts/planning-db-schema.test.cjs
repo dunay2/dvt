@@ -40,6 +40,30 @@ test('current Planning DB schema is one declarative artifact without migration s
   assert.doesNotMatch(schemaSql, /schema_migrations/iu);
   assert.doesNotMatch(schemaSql, /migration_state/iu);
   assert.doesNotMatch(schemaSql, /migration checksum|applied migration/iu);
+  for (const taskObject of [
+    'planning_artifacts',
+    'planning_lanes',
+    'planning_local_operations',
+    'planning_sources',
+    'planning_task_local_definitions',
+    'planning_task_local_state',
+    'planning_task_local_tombstones',
+    'planning_tasks',
+    'planning_claim_recovery_tasks',
+    'planning_effective_tasks',
+    'planning_next_tasks',
+    'planning_open_tasks',
+    'planning_real_work_query',
+    'planning_task_dependencies',
+    'planning_task_evidence_refs',
+    'planning_task_gap_query',
+    'planning_task_gap_raw_query',
+    'planning_task_status_events',
+    'planning_task_trace_query',
+    'planning_work_intake_query',
+  ]) {
+    assert.doesNotMatch(schemaSql, new RegExp(`\\b${taskObject}\\b`, 'u'));
+  }
   assert.doesNotThrow(() => assertCurrentPlanningDbSchema(schemaSql));
 });
 

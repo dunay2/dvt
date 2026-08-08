@@ -35,6 +35,18 @@ test('current-state export rejects Planning DB history instead of translating it
     () => assertCurrentStateValue({ railName: 'PreserveLocalFeatureMechanizationRails' }),
     /forbidden history semantics/iu
   );
+  assert.throws(
+    () => assertCurrentStateValue({ railName: 'ApplyPlanningDbMigrations' }),
+    /forbidden history semantics/iu
+  );
+  assert.throws(
+    () => assertCurrentStateValue({ railName: 'PreparePlanningDbForCiGate' }),
+    /forbidden history semantics/iu
+  );
+  assert.throws(
+    () => assertCurrentStateValue({ rationale: 'Retain Planning DB migration ordinal history.' }),
+    /forbidden history semantics/iu
+  );
   assert.doesNotThrow(() =>
     assertCurrentStateValue({ railId: 'current#rail-decision#query#current-schema' })
   );
