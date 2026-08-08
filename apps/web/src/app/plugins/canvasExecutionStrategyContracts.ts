@@ -12,6 +12,11 @@ export type CanvasExecutionStrategy =
       sourceFamily: 'dbt';
     }
   | {
+      kind: 'python_code_preview';
+      previewProfile: 'planner-generic-v1';
+      sourceFamily: 'python-code';
+    }
+  | {
       kind: 'dbt_project_file_preview';
       previewProfile: 'planner-generic-v1';
       sourceFamily: 'dbt';
