@@ -47,9 +47,10 @@ test('buildPrCloseoutPlan commits before the only full prepush validation and pu
   assert.equal(ids.includes('closeout-lease-acquire'), false);
   assert.equal(ids.includes('closeout-lease-release'), false);
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
-  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'planning-db-import'));
-  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'governance-refresh'));
+  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'governance-refresh'));
   assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'assert-no-unstaged'));
+  assert.equal(ids.includes('planning-db-import'), false);
+  assert.equal(ids.filter((id) => id === 'governance-refresh').length, 1);
   assert.ok(indexOf(ids, 'assert-no-unstaged') < indexOf(ids, 'commit'));
   assert.ok(indexOf(ids, 'commit') < indexOf(ids, 'verify-prepush'));
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
@@ -484,9 +485,10 @@ test('buildPrCloseoutPlan keeps Planning DB through mixed workspace and governan
   const ids = stepIds(plan);
 
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'planning-db-up'));
-  assert.ok(indexOf(ids, 'planning-db-import') < indexOf(ids, 'governance-refresh'));
+  assert.ok(indexOf(ids, 'planning-db-health') < indexOf(ids, 'governance-refresh'));
   assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'planning-db-release'));
-  assert.equal(ids.filter((id) => id === 'planning-db-import').length, 1);
+  assert.equal(ids.includes('planning-db-import'), false);
+  assert.equal(ids.filter((id) => id === 'governance-refresh').length, 1);
   assert.equal(ids.includes('docs-status-repository-map'), false);
 });
 
@@ -573,6 +575,8 @@ test('buildPrCloseoutPlan refreshes governance for mandatory planning proposals'
 
   assert.ok(indexOf(ids, 'planning-db-ownership') < indexOf(ids, 'governance-refresh'));
   assert.ok(indexOf(ids, 'governance-refresh') < indexOf(ids, 'commit'));
+  assert.equal(ids.includes('planning-db-import'), false);
+  assert.equal(ids.filter((id) => id === 'governance-refresh').length, 1);
   assert.ok(indexOf(ids, 'verify-prepush') < indexOf(ids, 'planning-db-release'));
 });
 
