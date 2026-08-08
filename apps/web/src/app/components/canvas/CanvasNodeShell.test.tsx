@@ -13,7 +13,20 @@ import type { CanvasNodeContextMenuModel } from './canvasNodeContextMenuModel';
 
 const CONTEXT_MENU_MODEL: CanvasNodeContextMenuModel = {
   target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders model' },
-  actionGroups: [],
+  actionGroups: [
+    {
+      id: 'workbench',
+      label: 'Workbench',
+      actions: [
+        {
+          id: 'inspect-node',
+          label: 'Open workbench',
+          intent: 'read',
+          disabled: false,
+        },
+      ],
+    },
+  ],
 };
 
 const canvasNodeShellCssPath = resolve(import.meta.dirname, 'CanvasNodeShell.module.css');
