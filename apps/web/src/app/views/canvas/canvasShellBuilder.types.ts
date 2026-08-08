@@ -127,8 +127,6 @@ export type CanvasShellGraphCommandsBuilderArgs = Readonly<{
     | 'onEdgesChange'
     | 'onConnect'
     | 'onReconnect'
-    | 'handleNodeClick'
-    | 'onSelectionChange'
     | 'handleViewportChange'
     | 'handleDrop'
     | 'handleDragOver'
