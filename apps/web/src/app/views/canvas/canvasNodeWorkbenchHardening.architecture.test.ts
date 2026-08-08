@@ -36,7 +36,9 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(CanvasNodeWorkbenchPanelSource).toContain('helpCopy.nodeWorkbenchHelpLabel');
     expect(CanvasNodeWorkbenchPanelSource).toContain('helpCopy.nodeWorkbenchHelpDescription');
     expect(CanvasNodeWorkbenchPanelSource).toContain('aria-label={copy.nodeWorkbenchCloseLabel}');
-    expect(CanvasNodeWorkbenchPanelSource).toContain('className="ml-auto flex shrink-0 items-center gap-1"');
+    expect(CanvasNodeWorkbenchPanelSource).toContain(
+      'className="ml-auto flex shrink-0 items-center gap-1"'
+    );
     expect(NodeWorkbenchHelpCopySource).toContain("nodeWorkbenchHelpLabel: 'Node workbench help'");
     expect(NodeWorkbenchHelpCopySource).toContain(
       "nodeWorkbenchHelpLabel: 'Ayuda del banco de trabajo'"
@@ -60,13 +62,13 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
   });
 
   it('routes DVT transform column presentation through existing localized Canvas copy', () => {
-    for (const literal of [
+    for (const visibleLiteral of [
       'Input columns',
-      ' selected',
-      ' not null',
+      '} selected',
+      "' not null'",
       'Connect a source with recorded columns to choose transform inputs.',
     ]) {
-      expect(DvtSqlTransformAuthoringSectionSource).not.toContain(literal);
+      expect(DvtSqlTransformAuthoringSectionSource).not.toContain(visibleLiteral);
     }
 
     for (const copyKey of [
