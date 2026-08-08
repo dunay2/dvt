@@ -28,14 +28,10 @@ function buildArgs(
       inspectorNode: null,
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
-      inspectorNodeSelectedForExecution: false,
       inspectorGraphNodes: [],
       inspectorGraphEdges: [],
       canEditInspectorNode: true,
       applyInspectorNodeDraft: vi.fn(),
-      handleDuplicateNode: vi.fn(),
-      handleToggleNodeSelection: vi.fn(),
-      handleRemoveNode: vi.fn(),
       activeRunId: null,
       registeredPlugins: new Set(['dvt']),
       runtimeCapabilities: undefined,
@@ -129,30 +125,23 @@ describe('buildCanvasShellPanels', () => {
     ]);
   });
 
-  it('projects inspector modeler actions from route-owned graph handlers', () => {
-    const inspectorNode = buildInspectorNode();
-    const handleDuplicateNode = vi.fn();
-    const handleToggleNodeSelection = vi.fn();
-    const handleRemoveNode = vi.fn();
+  it('projects only the authoring contract consumed by the node Workbench', () => {
+    const onApplyNodeDraft = vi.fn();
     const panels = buildCanvasShellPanels(
       buildArgs({
         panelState: {
           ...buildArgs().panelState,
-          inspectorNode,
-          inspectorNodeSelectedForExecution: true,
-          handleDuplicateNode,
-          handleToggleNodeSelection,
-          handleRemoveNode,
+          inspectorNode: buildInspectorNode(),
+          applyInspectorNodeDraft: onApplyNodeDraft,
         },
       })
     );
 
-    expect(panels.inspectorAuthoring.modelerActions).toMatchObject({
-      selectedForExecution: true,
-      onDuplicateNode: handleDuplicateNode,
-      onToggleNodeSelection: handleToggleNodeSelection,
-      onRemoveNode: handleRemoveNode,
+    expect(panels.inspectorAuthoring).toEqual({
+      canEditNode: true,
+      onApplyNodeDraft,
     });
+    expect(panels.inspectorAuthoring).not.toHaveProperty('modelerActions');
   });
 
   it('keeps node workbench tab preference only while an inspector node is active', () => {
@@ -189,62 +178,5 @@ describe('buildCanvasShellPanels', () => {
       inspectorPreferredTabId: null,
       inspectorPreferredTabRequestId: 0,
     });
-  });
-
-  it('keeps inspector execution selection available when graph mutation is blocked but planning is allowed', () => {
-    const inspectorNode = buildInspectorNode();
-    const handleToggleNodeSelection = vi.fn();
-    const panels = buildCanvasShellPanels(
-      buildArgs({
-        panelState: {
-          ...buildArgs().panelState,
-          inspectorNode,
-          handleToggleNodeSelection,
-        },
-        userPermissions: {
-          canPlan: true,
-          canRun: true,
-          canEditEdges: false,
-          canPersistGraphDraft: false,
-          canManagePlugins: false,
-          canManageRBAC: false,
-        },
-      })
-    );
-
-    expect(panels.inspectorAuthoring.modelerActions).toMatchObject({
-      selectedForExecution: false,
-      onToggleNodeSelection: handleToggleNodeSelection,
-    });
-    expect(panels.inspectorAuthoring.modelerActions?.onDuplicateNode).toBeUndefined();
-    expect(panels.inspectorAuthoring.modelerActions?.onRemoveNode).toBeUndefined();
-  });
-
-  it('keeps inspector execution selection unavailable when planning and running are blocked', () => {
-    const inspectorNode = buildInspectorNode();
-    const panels = buildCanvasShellPanels(
-      buildArgs({
-        panelState: {
-          ...buildArgs().panelState,
-          inspectorNode,
-          handleToggleNodeSelection: vi.fn(),
-        },
-        userPermissions: {
-          canPlan: false,
-          canRun: false,
-          canEditEdges: false,
-          canPersistGraphDraft: false,
-          canManagePlugins: false,
-          canManageRBAC: false,
-        },
-      })
-    );
-
-    expect(panels.inspectorAuthoring.modelerActions).toMatchObject({
-      selectedForExecution: false,
-    });
-    expect(panels.inspectorAuthoring.modelerActions?.onToggleNodeSelection).toBeUndefined();
-    expect(panels.inspectorAuthoring.modelerActions?.onDuplicateNode).toBeUndefined();
-    expect(panels.inspectorAuthoring.modelerActions?.onRemoveNode).toBeUndefined();
   });
 });
