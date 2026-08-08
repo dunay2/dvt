@@ -162,9 +162,13 @@ function resolveOriginProjection(
   metadata: DbtNodeAuthoringMetadata
 ): DbtModelOriginProjection | DbtModelArtifactProjectionResult {
   const selectedSourceId = metadata.selectedSourceId.trim();
-  const origin = resolveCompatibleDbtModelOrigins(args).find(
-    (candidate) => candidate.id === selectedSourceId
-  );
+  const compatibleOrigins = resolveCompatibleDbtModelOrigins(args);
+  const origin =
+    selectedSourceId.length > 0
+      ? compatibleOrigins.find((candidate) => candidate.id === selectedSourceId)
+      : compatibleOrigins.length === 1
+        ? compatibleOrigins[0]
+        : undefined;
 
   if (origin == null) {
     return {
