@@ -1,5 +1,5 @@
 /** Owned concern: render the React Flow node shell around a precomputed Canvas node body. */
-import { type DragEventHandler, type ReactNode } from 'react';
+import { type DragEventHandler, type MouseEvent, type ReactNode } from 'react';
 
 import { ContextMenu, ContextMenuTrigger } from '../ui/context-menu';
 import { cn } from '../ui/utils';
@@ -13,6 +13,7 @@ import type {
   CanvasNodeContextMenuActionId,
   CanvasNodeContextMenuModel,
 } from './canvasNodeContextMenuModel';
+import { isCanvasNodeEmbeddedControlTarget } from './canvasNodeInteractionBoundary';
 import styles from './CanvasNodeShell.module.css';
 
 type CanvasNodeShellProps = Readonly<{
@@ -66,7 +67,11 @@ export function CanvasNodeShell({
   onDragOver,
   onDrop,
 }: CanvasNodeShellProps): JSX.Element {
-  const handleDoubleClick = (): void => {
+  const handleDoubleClick = (event: MouseEvent<HTMLDivElement>): void => {
+    if (isCanvasNodeEmbeddedControlTarget(event.target)) {
+      return;
+    }
+
     const action = resolveCanvasNodeDoubleClickAction(contextMenuModel);
     if (action === 'open-node-code') {
       onContextMenuAction(action);
