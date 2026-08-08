@@ -52,6 +52,12 @@ export function ShellWorkspaceScopeSelector({
             scope.tenantId === selection.selectedScope.tenantId &&
             scope.projectId === selection.selectedScope.projectId &&
             scope.environmentId === selection.selectedScope.environmentId;
+          const selectScope = () => {
+            const result = workspaceScopeSelection.selectWorkspaceScope(scope);
+            if (result.status === WORKSPACE_SCOPE_SELECTION_STATUS.selected) {
+              onScopeSelected?.();
+            }
+          };
           return (
             <Button
               key={`${scope.tenantId}:${scope.projectId}:${scope.environmentId}`}
@@ -61,10 +67,11 @@ export function ShellWorkspaceScopeSelector({
               className="h-auto justify-start whitespace-normal px-2 py-1.5 text-left text-xs"
               aria-pressed={isSelected}
               aria-label={`${isSelected ? copy.currentProject : copy.availableProjects}: ${formatWorkspaceScope(scope)}`}
-              onClick={() => {
-                const result = workspaceScopeSelection.selectWorkspaceScope(scope);
-                if (result.status === WORKSPACE_SCOPE_SELECTION_STATUS.selected) {
-                  onScopeSelected?.();
+              onClick={selectScope}
+              onKeyDown={(event) => {
+                if ((event.key === 'Enter' || event.key === ' ') && !event.repeat) {
+                  event.preventDefault();
+                  selectScope();
                 }
               }}
             >
