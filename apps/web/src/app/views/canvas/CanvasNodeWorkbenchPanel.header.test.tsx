@@ -1,39 +1,29 @@
 // @vitest-environment jsdom
 
 /** Owned concern: prove the contextual Workbench header exposes compact localized help and close controls. */
+import { fireEvent } from '@testing-library/dom';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { CanonicalNode } from '../../types/canonical';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
+import type { CanonicalNode } from '../../types/canonical';
 import { CanvasNodeWorkbenchPanel } from './CanvasNodeWorkbenchPanel';
 
 const NODE: CanonicalNode = {
   id: 'source.orders',
   name: 'Orders Source',
-  pluginId: 'dvt',
+  pluginId: 'dvt.warehouse-source',
   kind: 'dvt:source',
   role: 'input',
   status: 'idle',
   tags: [],
-  metadata: {},
+  metadata: {
+    database: 'analytics',
+    schema: 'raw',
+    tableName: 'orders',
+  },
 };
-
-function renderPanel(root: Root): void {
-  act(() => {
-    root.render(
-      <CanvasNodeWorkbenchPanel
-        node={NODE}
-        nodes={[NODE]}
-        edges={[]}
-        activeRunId={null}
-        authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
-        onClose={vi.fn()}
-      />
-    );
-  });
-}
 
 describe('CanvasNodeWorkbenchPanel header hardening', () => {
   let container: HTMLDivElement;
@@ -57,36 +47,68 @@ describe('CanvasNodeWorkbenchPanel header hardening', () => {
     vi.clearAllMocks();
   });
 
-  it('renders help before close as separate labelled icon controls', () => {
-    renderPanel(root);
+  function renderPanel(onClose = vi.fn()): ReturnType<typeof vi.fn> {
+    act(() => {
+      root.render(
+        <CanvasNodeWorkbenchPanel
+          node={NODE}
+          nodes={[NODE]}
+          edges={[]}
+          activeRunId={null}
+          authoring={{ canEditNode: true, onApplyNodeDraft: vi.fn() }}
+          dragHandleProps={{
+            'aria-label': 'Move node workbench',
+            'data-slot': 'canvas-node-workbench-drag-handle',
+            role: 'button',
+            tabIndex: 0,
+          }}
+          onClose={onClose}
+        />
+      );
+    });
+    return onClose;
+  }
 
-    const helpButton = container.querySelector<HTMLButtonElement>(
+  it('keeps contextual help and close as right-side accessible actions outside the drag handle', () => {
+    const onClose = renderPanel();
+    const actions = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-header-actions"]'
+    );
+    const dragHandle = container.querySelector<HTMLElement>(
+      '[data-slot="canvas-node-workbench-drag-handle"]'
+    );
+    const help = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-node-workbench-help"]'
     );
-    const closeButton = container.querySelector<HTMLButtonElement>(
+    const close = container.querySelector<HTMLButtonElement>(
       '[data-slot="canvas-node-workbench-close"]'
     );
 
-    expect(helpButton).not.toBeNull();
-    expect(closeButton).not.toBeNull();
-    expect(helpButton?.getAttribute('aria-label')).toBe('Node workbench help');
-    expect(closeButton?.getAttribute('aria-label')).toBe('Close');
-    expect(helpButton?.querySelector('svg')).not.toBeNull();
-    expect(closeButton?.querySelector('svg')).not.toBeNull();
-    expect(helpButton?.compareDocumentPosition(closeButton!)).toBe(
-      Node.DOCUMENT_POSITION_FOLLOWING
-    );
+    expect(actions).not.toBeNull();
+    expect(actions?.className).toContain('ml-auto');
+    expect(dragHandle?.contains(actions!)).toBe(false);
+    expect(help?.getAttribute('aria-label')).toBe('Editable properties');
+    expect(close?.getAttribute('aria-label')).toBe('Close');
+    expect(help?.querySelector('svg')).not.toBeNull();
+    expect(close?.querySelector('svg')).not.toBeNull();
+    expect(help?.compareDocumentPosition(close!)).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+
+    act(() => {
+      fireEvent.click(close!);
+    });
+
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 
-  it('switches the help label with the application language without changing the control owner', () => {
+  it('uses the existing Canvas localization owner for Spanish help and close labels', () => {
     useApplicationLanguageStore.getState().configureApplicationLanguage('es');
-    renderPanel(root);
+    renderPanel();
 
     expect(
       container
         .querySelector('[data-slot="canvas-node-workbench-help"]')
         ?.getAttribute('aria-label')
-    ).toBe('Ayuda del banco de trabajo');
+    ).toBe('Propiedades editables');
     expect(
       container
         .querySelector('[data-slot="canvas-node-workbench-close"]')
