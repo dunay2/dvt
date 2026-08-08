@@ -120,9 +120,10 @@ estrecha los controles se redistribuyen en varias líneas; Raven no sustituye
 
 ## 6. Añadir componentes
 
-1. Abre el menú contextual del Canvas y selecciona **Añadir…**.
+1. Abre el menú contextual del Canvas con clic derecho o con `Shift+F10` y
+   selecciona **Añadir…**.
    No existe un botón fijo **Añadir componente** sobre el Canvas: el clic
-   derecho es la única entrada para esta acción.
+   derecho o su equivalente de teclado abren la única entrada para esta acción.
 2. El catálogo agrupa los componentes por **Orígenes**, **Modelos**, **Seeds**,
    **Transformaciones**, **Tests**, **Salidas**, **Macros** u otras categorías
    registradas.

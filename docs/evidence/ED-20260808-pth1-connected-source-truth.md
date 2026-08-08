@@ -104,8 +104,9 @@ flowchart LR
   available through the existing command surface.
 - Node code has one visible command entry in the selected-node floating
   toolbar. The More and right-click menus do not repeat that intent, and Add
-  Component is available only through the Canvas right-click menu; no fixed
-  button competes with the graph.
+  Component is available only through the Canvas context menu, opened by
+  right-click or its `Shift+F10` keyboard equivalent; no fixed button competes
+  with the graph.
 
 # Executable outcome
 
