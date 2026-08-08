@@ -28,6 +28,10 @@ describe('capabilitiesRoutes', () => {
             available: false,
             reason: 'Temporal runtime is not configured',
           },
+          'dvt.python': {
+            available: false,
+            reason: 'Temporal runtime is not configured',
+          },
           cost: {
             available: false,
             reason: 'Backend cost capability is not implemented yet',
@@ -82,6 +86,32 @@ describe('capabilitiesRoutes', () => {
       expect(response.json()).toMatchObject({
         plugins: {
           'dvt.http-json': {
+            available: true,
+          },
+        },
+      });
+    } finally {
+      await app.close();
+    }
+  });
+
+  it('publishes Python availability from the Temporal adapter capability set', async () => {
+    const app = Fastify({ logger: false });
+    await app.register(capabilitiesRoutes, {
+      prefix: '/',
+      env: loadEnv({
+        TEMPORAL_ADDRESS: 'temporal.test:7233',
+        DVT_TEMPORAL_PYTHON_ENABLED: 'true',
+      }),
+    });
+
+    try {
+      const response = await app.inject({ method: 'GET', url: '/capabilities' });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toMatchObject({
+        plugins: {
+          'dvt.python': {
             available: true,
           },
         },
