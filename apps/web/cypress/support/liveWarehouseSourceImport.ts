@@ -94,6 +94,7 @@ export function importLivePostgresSource(
   cy.get('[data-source-import-review-object="relation/dvt/public/source_1"]', {
     timeout: 20_000,
   })
+    .scrollIntoView()
     .should('be.visible')
     .and('contain.text', '3 rows')
     .and('contain.text', '32 KB')
