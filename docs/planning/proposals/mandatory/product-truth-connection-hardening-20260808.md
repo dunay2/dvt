@@ -432,11 +432,12 @@ scope A / models/orders.sql = A
     keep node actions outside the persistent Add Component overlay. Browser
     proof must double-click both imported sources without forced interaction.
 17. **Viewport and cancellation matrix, selected.** The live Add Source dialog
-    remains visible, scrollable, axe-clean and cancellable at 1440x900,
+    and connected-source Workbench remain visible and axe-clean at 1440x900,
     1280x720, 1000x660 and a 500x330 CSS viewport that exercises the layout
-    pressure produced by 200% zoom from the 1000x660 baseline. Cancel must close
-    the dialog without importing a third source; viewport pressure never
-    authorizes hidden actions or clipped product truth.
+    pressure produced by 200% zoom from the 1000x660 baseline. Add Source stays
+    scrollable and cancellable; Cancel must close the dialog without importing
+    a third source. Viewport pressure never authorizes hidden actions or clipped
+    product truth.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -681,6 +682,12 @@ redGreenCycles:
       - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
       - apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
       - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
+    greenTest: pnpm --filter @dvt/web test:e2e:source-import:live
+  - id: live-connection-workbench-viewport-matrix
+    redTest: pnpm --filter @dvt/web test:e2e:source-import:live
+    expectedFailure: The live proof checks connected-source Workbench visibility only at the default viewport.
+    patchSurfaces:
+      - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
     greenTest: pnpm --filter @dvt/web test:e2e:source-import:live
   - id: exact-node-code-authority
     redTest: pnpm --filter @dvt/web test:canvas -- CanvasShell.graphSurface.test.tsx
