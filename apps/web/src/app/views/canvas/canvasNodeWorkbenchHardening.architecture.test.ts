@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import DbtNodeComponentSource from '../../components/canvas/DbtNodeComponent.tsx?raw';
 import CanvasNodeShellSource from '../../components/canvas/CanvasNodeShell.tsx?raw';
 import CanvasInspectorAuthoringContractSource from './canvasInspectorAuthoring.types.ts?raw';
+import CanvasNodePresentationCopySource from './canvasNodePresentationCopy.ts?raw';
 import CanvasNodeWorkbenchPanelSource from './CanvasNodeWorkbenchPanel.tsx?raw';
 import CanvasShellPanelsBuilderSource from './canvasShellPanelsBuilder.ts?raw';
 import CanvasViewportSource from './CanvasViewport.tsx?raw';
@@ -59,7 +60,7 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(CanvasShellPanelsBuilderSource).not.toContain('inspectorNodeSelectedForExecution');
   });
 
-  it('routes DVT transform column presentation through existing localized Canvas copy without losing input meaning', () => {
+  it('routes DVT transform column presentation through canonical localized role copy without losing input meaning', () => {
     for (const visibleLiteral of [
       'Input columns',
       '} selected',
@@ -71,12 +72,16 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
 
     for (const copyKey of [
       'nodePresentationColumnsLabel',
-      'inspectorDbtOriginLabel',
       'dvtFlowGuideColumnsLabel',
       'dvtFlowGuideRequiredLabel',
       'dvtFlowGuideColumnsMissingMessage',
     ]) {
       expect(DvtSqlTransformAuthoringSectionSource).toContain(`canvasViewCopy.${copyKey}`);
     }
+
+    expect(DvtSqlTransformAuthoringSectionSource).toContain('buildCanvasNodePresentationCopy');
+    expect(DvtSqlTransformAuthoringSectionSource).toContain('valueLabels?.input');
+    expect(CanvasNodePresentationCopySource).toContain("input: 'Input'");
+    expect(CanvasNodePresentationCopySource).toContain("input: 'Entrada'");
   });
 });
