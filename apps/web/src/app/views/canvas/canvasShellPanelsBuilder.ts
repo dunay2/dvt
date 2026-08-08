@@ -36,7 +36,6 @@ export function buildCanvasShellPanels({
     routePresentation.canvasDocuments.find(
       (canvas) => canvas.id === routePresentation.activeCanvasId
     ) ?? null;
-  const canSelectExecution = userPermissions.canPlan || userPermissions.canRun;
 
   return {
     authoringNodeKinds: resolveActiveCanvasAuthoringNodeKinds({
@@ -60,24 +59,6 @@ export function buildCanvasShellPanels({
     inspectorAuthoring: {
       canEditNode: panelState.canEditInspectorNode,
       onApplyNodeDraft: panelState.applyInspectorNodeDraft,
-      ...(panelState.inspectorNode == null
-        ? {}
-        : {
-            modelerActions: {
-              selectedForExecution: panelState.inspectorNodeSelectedForExecution,
-              ...(canSelectExecution
-                ? {
-                    onToggleNodeSelection: panelState.handleToggleNodeSelection,
-                  }
-                : {}),
-              ...(userPermissions.canEditEdges
-                ? {
-                    onDuplicateNode: panelState.handleDuplicateNode,
-                    onRemoveNode: panelState.handleRemoveNode,
-                  }
-                : {}),
-            },
-          }),
     },
     inspectorWorkbenchContributions: [],
     activeRunId: panelState.activeRunId,
