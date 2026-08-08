@@ -436,13 +436,12 @@ governingSources:
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md
   - packages/@dvt/contracts/src/contracts/source-import/**
-  - packages/@dvt/contracts/test/**
+  - packages/@dvt/contracts/test/source-import/ConnectedSourceRef.v1.test.ts
   - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
-  - apps/api/test/application/graphDraftWarehouseSourceImportStrategy.test.ts
+  - apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts
   - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
-  - apps/web/src/app/views/canvas/canvasNodePresentationCopy.test.ts
   - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - docs/evidence/**
@@ -513,12 +512,12 @@ redGreenCycles:
       - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
     greenTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
   - id: visible-connection-binding
-    redTest: pnpm --filter @dvt/web test:canvas -- nodePropertiesReadModel.test.ts canvasNodePresentationCopy.test.ts
+    redTest: pnpm --filter @dvt/web test:canvas -- nodePropertiesReadModel.test.ts
     expectedFailure: The Workbench read model and localized copy do not expose Connection.
     patchSurfaces:
       - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
       - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
-    greenTest: pnpm --filter @dvt/web test:canvas -- nodePropertiesReadModel.test.ts canvasNodePresentationCopy.test.ts
+    greenTest: pnpm --filter @dvt/web test:canvas -- nodePropertiesReadModel.test.ts
   - id: workspace-colliding-path-isolation
     redTest: pnpm --filter @dvt/web test -- workspaceQueries.scope.test.tsx
     expectedFailure: Existing proof does not exercise the same relative path across A and B.
