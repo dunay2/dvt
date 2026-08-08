@@ -116655,12 +116655,13 @@
         "implementationPlan": "Restore versioned current architecture state after the schema is available.",
         "implementationRefs": [
           "scripts/planning-db-import.cjs#readCanonicalStateSnapshot",
-          "scripts/planning-db-import.cjs#restoreArchitectureComponentStatusOverrides"
+          "scripts/planning-db-architecture-state.cjs#restoreArchitectureState"
         ],
         "normalizedRailName": "restoreplanningdbcanonicalarchitecturestate",
         "mechanizationStatus": "implemented",
         "sourceContentSha256": "299db429d53a474eaa7c0ef7a195833d842f54ad2f7c914cc4c75a903e9adbdc",
         "allowedImplementationSurfaces": [
+          "scripts/planning-db-architecture-state.cjs",
           "scripts/planning-db-import.cjs",
           "scripts/planning-db-import.test.cjs",
           "tools/planning-db/state/canonical-state.json"
