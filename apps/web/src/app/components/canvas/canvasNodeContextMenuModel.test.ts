@@ -162,7 +162,6 @@ describe('canvasNodeContextMenuModel', () => {
       selectedForExecution: false,
       canMutateGraph: false,
       canInspectNode: true,
-      canOpenNodeCode: true,
       canDuplicateNode: false,
       canToggleNodeSelection: false,
       canRemoveNode: false,

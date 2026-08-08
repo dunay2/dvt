@@ -129,7 +129,6 @@ export function mapCanonicalNodeToCanvasNode({
       portCompatibility: toPortCompatibilityViewModel(portCompatibility, copy),
       contextMenuCopy: {
         openWorkbenchLabel: copy.canvasNodeContextOpenWorkbenchLabel,
-        openCodeLabel: copy.canvasNodeToolbarCodeLabel,
         workbenchGroupLabel: copy.canvasNodeContextWorkbenchGroupLabel,
         executeGroupLabel: copy.canvasNodeContextExecuteGroupLabel,
         editGroupLabel: copy.canvasNodeContextEditGroupLabel,
@@ -250,7 +249,6 @@ export function mapDroppedCanonicalNodeToCanvasNode(
       },
       contextMenuCopy: {
         openWorkbenchLabel: copy.canvasNodeContextOpenWorkbenchLabel,
-        openCodeLabel: copy.canvasNodeToolbarCodeLabel,
         workbenchGroupLabel: copy.canvasNodeContextWorkbenchGroupLabel,
         executeGroupLabel: copy.canvasNodeContextExecuteGroupLabel,
         editGroupLabel: copy.canvasNodeContextEditGroupLabel,
