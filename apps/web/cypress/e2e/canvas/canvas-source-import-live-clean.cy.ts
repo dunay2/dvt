@@ -185,6 +185,17 @@ describe('Canvas source import live clean proof', () => {
   it('imports a warehouse source, connects it to a dbt model, and previews without draft seeding', () => {
     const session = resolveLiveFirstAuthoringWorkspaceSession('dbt');
     const expectedSourceName = expectedLivePostgresSourceName();
+    const runId = String(Cypress.env('firstAuthoringRunId') ?? 'source-import-live');
+    const secondaryConnectionSuffix = 'Secondary';
+    const expectedConnectionName = `Live Postgres ${runId}`;
+    const expectedSecondaryConnectionName = `${expectedConnectionName} ${secondaryConnectionSuffix}`;
+    const toExpectedConnectionId = (name: string) =>
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    const expectedConnectionId = toExpectedConnectionId(expectedConnectionName);
+    const expectedSecondaryConnectionId = toExpectedConnectionId(expectedSecondaryConnectionName);
 
     assertLiveFirstAuthoringDraftScopeIsClean('dbt');
     visitCleanDbtCanvas();
@@ -212,15 +223,14 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', 'models/sources/src_public.yml');
     cy.contains('Stale version').should('not.exist');
 
-    const runId = String(Cypress.env('firstAuthoringRunId') ?? 'source-import-live');
-    const expectedConnectionName = `Live Postgres ${runId}`;
-    const expectedConnectionId = `live-postgres-${runId}`
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    openCanvasContextMenuAt(820, 500);
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    importLivePostgresSource({ kind: 'graph-draft' }, secondaryConnectionSuffix);
+
     readLiveGraphDraft(session).then((draftResponse) => {
       expect(draftResponse.status).to.equal(200);
-      const importedSource = (
+      const importedSources = (
         draftResponse.body as {
           record: {
             draft: {
@@ -231,22 +241,35 @@ describe('Canvas source import live clean proof', () => {
             };
           };
         }
-      ).record.draft.nodes.find((node) => node.pluginId === 'dvt.warehouse-source');
+      ).record.draft.nodes.filter((node) => node.pluginId === 'dvt.warehouse-source');
 
-      expect(importedSource?.metadata).to.have.nested.property(
-        'connectedSourceRef.connectionRef.connectionId',
-        expectedConnectionId
-      );
-      expect(importedSource?.metadata).to.have.nested.property(
-        'connectedSourceRef.connectionRef.provider',
-        'postgres'
-      );
-      expect(importedSource?.metadata).to.have.nested.property(
-        'connectedSourceRef.sourceObjectId',
-        'relation/dvt/public/source_1'
-      );
-      expect(importedSource?.metadata).not.to.have.property('sourceObjectId');
-      expect(importedSource?.metadata).not.to.have.property('connectionType');
+      expect(importedSources).to.have.length(2);
+      expect(
+        importedSources.map((node) => node.metadata?.connectedSourceRef)
+      ).to.deep.include.members([
+        {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: expectedConnectionId,
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/public/source_1',
+        },
+        {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: expectedSecondaryConnectionId,
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/public/source_1',
+        },
+      ]);
+      for (const importedSource of importedSources) {
+        expect(importedSource.metadata).not.to.have.property('sourceObjectId');
+        expect(importedSource.metadata).not.to.have.property('connectionType');
+      }
     });
 
     getVisibleCanvasNodeByCardTitle('Postgres')
