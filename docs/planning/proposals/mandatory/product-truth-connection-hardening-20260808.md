@@ -566,6 +566,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
   - apps/web/src/app/views/canvas/canvasViewportXyflowTestAdapter.tsx
+  - apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.tsx
+  - apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.test.tsx
   - apps/web/cypress/support/liveWarehouseSourceImport.ts
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - scripts/run-canvas-source-import-live-proof.cjs
