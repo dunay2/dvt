@@ -70,7 +70,7 @@ function createCommandQueryRailReferenceIndexComponent(deps = {}) {
       return false;
     }
 
-    if (normalizedPath.startsWith('tools/planning-db/migrations/')) {
+    if (normalizedPath === 'tools/planning-db/schema.sql') {
       return false;
     }
 

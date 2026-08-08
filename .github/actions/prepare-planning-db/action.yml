@@ -1,20 +1,12 @@
 # yaml-language-server: $schema=https://json.schemastore.org/github-action.json
 name: Prepare planning DB
-description: Start, migrate, and optionally import DB-first governance projections for CI gates
-
-inputs:
-  import-governance:
-    description: Import governance and command/query projections after migration
-    required: false
-    default: 'false'
+description: Start and rebuild the current Planning DB state for CI gates
 
 runs:
   using: composite
   steps:
     - name: Prepare planning DB
       shell: bash
-      env:
-        IMPORT_GOVERNANCE: ${{ inputs.import-governance }}
       run: |
         set -euo pipefail
 
@@ -31,7 +23,4 @@ runs:
           sleep 2
         done
 
-        pnpm planning:db:migrate
-        if [[ "${IMPORT_GOVERNANCE}" == "true" ]]; then
-          pnpm planning:db:import -- --if-stale
-        fi
+        pnpm planning:db:import

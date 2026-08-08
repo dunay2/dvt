@@ -9,7 +9,11 @@ const {
   canonicalArtifactPaths,
   canonicalStateArtifactPath,
 } = require('./planning-db-export.cjs');
-const { restoreArchitectureComponentStatusOverrides } = require('./planning-db-import.cjs');
+const { architectureStateTableNames } = require('./planning-db-architecture-state.cjs');
+
+function emptyArchitectureState() {
+  return Object.fromEntries(architectureStateTableNames.map((tableName) => [tableName, []]));
+}
 
 function createCanonicalStateFixture(repoRoot) {
   const runner = new PlanningDbExportRunner({
@@ -18,6 +22,7 @@ function createCanonicalStateFixture(repoRoot) {
     path,
     repoRoot,
     schemaName: 'planning_query_store',
+    readArchitectureState: async () => architectureState,
   });
   const rail = {
     railId: 'local#MVP#query#readcomponent',
@@ -57,15 +62,15 @@ function createCanonicalStateFixture(repoRoot) {
     payload: { railName: rail.railName },
     createdAt: '2026-07-31T10:00:00.000Z',
   };
-  const architectureComponentStatusOverride = {
-    componentId: 'SYS-WEB-EXAMPLE',
-    status: 'deprecated',
-  };
+  const architectureState = emptyArchitectureState();
+  architectureState.component = [
+    {
+      component_id: 'SYS-WEB-EXAMPLE',
+      status: 'deprecated',
+    },
+  ];
   const client = {
     async query(sql) {
-      if (String(sql).includes('architecture.component')) {
-        return { rows: [architectureComponentStatusOverride] };
-      }
       if (String(sql).includes('operation.operation_id as "operationId"')) {
         return { rows: [operation] };
       }
@@ -76,7 +81,7 @@ function createCanonicalStateFixture(repoRoot) {
     },
   };
 
-  return { architectureComponentStatusOverride, client, operation, rail, runner };
+  return { architectureState, client, operation, rail, runner };
 }
 
 test('planning DB export accepts canonical-state options only', () => {
@@ -90,9 +95,16 @@ test('planning DB export accepts canonical-state options only', () => {
   assert.deepEqual(canonicalArtifactPaths, [canonicalStateArtifactPath]);
 });
 
-test('planning DB export reads current architecture state and operated feature rails', async () => {
-  const runner = new PlanningDbExportRunner();
+test('planning DB export reads current architecture state and every current feature rail', async () => {
   const capturedSql = [];
+  let architectureReads = 0;
+  const runner = new PlanningDbExportRunner({
+    schemaName: 'planning_query_store',
+    readArchitectureState: async () => {
+      architectureReads += 1;
+      return emptyArchitectureState();
+    },
+  });
   const client = {
     async query(sql) {
       capturedSql.push(String(sql));
@@ -103,48 +115,15 @@ test('planning DB export reads current architecture state and operated feature r
   await runner.readCanonicalStateRows(client);
 
   assert.match(capturedSql[0], /feature_mechanization_local_rails/u);
-  assert.match(capturedSql[0], /feature_mechanization_local_operations/u);
-  assert.match(capturedSql[0], /source_path not like 'tools\/planning-db\/migrations\/%'/u);
+  assert.doesNotMatch(capturedSql[0], /feature_mechanization_local_operations/u);
+  assert.doesNotMatch(capturedSql[0], /rail_status not in/u);
   assert.match(capturedSql[1], /feature_mechanization_local_operations/u);
-  assert.match(capturedSql[2], /from architecture\.component/u);
-  assert.match(capturedSql[2], /where status = 'deprecated'/u);
-  assert.doesNotMatch(capturedSql[2], /architecture\.design_operations/u);
-});
-
-test('planning DB component status overrides round-trip without operation history', async () => {
-  const restoredComponents = new Map();
-  const client = {
-    async query(sql, params = []) {
-      const statement = String(sql);
-      if (statement.includes('update architecture.component')) {
-        const overrides = JSON.parse(params[0]);
-        for (const override of overrides) {
-          restoredComponents.set(override.componentId, override.status);
-        }
-        return { rowCount: overrides.length };
-      }
-      if (statement.includes('from architecture.component')) {
-        return {
-          rows: [...restoredComponents].map(([componentId, status]) => ({
-            componentId,
-            status,
-          })),
-        };
-      }
-      return { rows: [] };
-    },
-  };
-  const override = { componentId: 'SYS-WEB-EXAMPLE', status: 'deprecated' };
-
-  await restoreArchitectureComponentStatusOverrides(client, [override]);
-  const snapshot = await new PlanningDbExportRunner().readCanonicalStateRows(client);
-
-  assert.deepEqual(snapshot.architectureComponentStatusOverrides, [override]);
+  assert.equal(architectureReads, 1);
 });
 
 test('planning DB export writes deterministic current architecture state', async () => {
   const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-canonical-state-'));
-  const { architectureComponentStatusOverride, client, operation, rail, runner } =
+  const { architectureState, client, operation, rail, runner } =
     createCanonicalStateFixture('C:/repo');
 
   try {
@@ -154,9 +133,7 @@ test('planning DB export writes deterministic current architecture state', async
     );
 
     assert.equal(snapshot.schemaVersion, 1);
-    assert.deepEqual(snapshot.architectureComponentStatusOverrides, [
-      architectureComponentStatusOverride,
-    ]);
+    assert.deepEqual(snapshot.architectureState, architectureState);
     assert.deepEqual(snapshot.featureMechanizationRails, [rail]);
     assert.deepEqual(snapshot.featureMechanizationRailOperations, [operation]);
     assert.deepEqual(result.canonicalArtifactPaths, [canonicalStateArtifactPath]);

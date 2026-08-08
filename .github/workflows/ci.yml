@@ -166,8 +166,6 @@ jobs:
 
       - name: Prepare planning DB for full CI baseline
         uses: ./.github/actions/prepare-planning-db
-        with:
-          import-governance: 'true'
 
       - name: Run full CI baseline
         run: pnpm ci:full

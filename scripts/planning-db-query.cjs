@@ -9,7 +9,7 @@
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
-const { schemaName } = require('./planning-db-migrate.cjs');
+const { schemaName } = require('./planning-db-schema.cjs');
 const { runPlanningImport } = require('./planning-db-import.cjs');
 const {
   buildCommandQueryRailRows,
@@ -4250,7 +4250,7 @@ function formatQueryError(error) {
   if (hasConnectionRefusal) {
     return [
       'Planning DB is unavailable.',
-      'Run `pnpm planning:db:up`, then `pnpm planning:db:migrate` and `pnpm planning:db:import` if the database has not been seeded.',
+      'Run `pnpm planning:db:up`, then `pnpm planning:db:import` to rebuild the current state.',
       `Details: ${details.join('; ')}`,
     ].join(' ');
   }

@@ -16,12 +16,12 @@ const defaultOutputPath = path.join(
   'status',
   'generated-db-surface-inventory.md'
 );
-const migrationStateOrder = [
-  'DB-first',
-  'Hybrid indexed',
-  'Bootstrap/export',
-  'Generated-only',
-  'Git-first indexed',
+const authorityModeOrder = [
+  'database',
+  'hybrid-indexed',
+  'repository-export',
+  'generated',
+  'git-indexed',
 ];
 
 function databaseUrl() {
@@ -57,9 +57,9 @@ function markdownTable(headers, rows) {
   ].join('\n');
 }
 
-function migrationStateRank(state) {
-  const index = migrationStateOrder.indexOf(state);
-  return index === -1 ? migrationStateOrder.length : index;
+function authorityModeRank(state) {
+  const index = authorityModeOrder.indexOf(state);
+  return index === -1 ? authorityModeOrder.length : index;
 }
 
 function buildDbSurfaceInventorySelect() {
@@ -72,21 +72,21 @@ function buildDbSurfaceInventorySelect() {
       read_query_rail,
       projection,
       validation,
-      migration_state,
+      authority_mode,
       source_ref,
       source_content_sha256,
       revision,
       updated_by,
-      db_first_eligible,
-      db_first_blocker
+      database_write_eligible,
+      database_write_blocker
     from ${sourceView}
     order by
-      case migration_state
-        when 'DB-first' then 1
-        when 'Hybrid indexed' then 2
-        when 'Bootstrap/export' then 3
-        when 'Generated-only' then 4
-        when 'Git-first indexed' then 5
+      case authority_mode
+        when 'database' then 1
+        when 'hybrid-indexed' then 2
+        when 'repository-export' then 3
+        when 'generated' then 4
+        when 'git-indexed' then 5
         else 6
       end,
       surface_name`;
@@ -101,40 +101,40 @@ function normalizeDbSurfaceRow(row) {
     readQueryRail: textValue(row.read_query_rail ?? row.readQueryRail),
     projection: textValue(row.projection),
     validation: textValue(row.validation),
-    migrationState: textValue(row.migration_state ?? row.migrationState),
+    authorityMode: textValue(row.authority_mode ?? row.authorityMode),
     sourceRef: textValue(row.source_ref ?? row.sourceRef),
     sourceContentSha256: textValue(row.source_content_sha256 ?? row.sourceContentSha256),
     revision: numericValue(row.revision),
     updatedBy: textValue(row.updated_by ?? row.updatedBy),
-    dbFirstEligible: booleanValue(row.db_first_eligible ?? row.dbFirstEligible),
-    dbFirstBlocker: textValue(row.db_first_blocker ?? row.dbFirstBlocker, ''),
+    databaseWriteEligible: booleanValue(row.database_write_eligible ?? row.databaseWriteEligible),
+    databaseWriteBlocker: textValue(row.database_write_blocker ?? row.databaseWriteBlocker, ''),
   };
 }
 
 function sortDbSurfaceRows(rows) {
   return [...rows].map(normalizeDbSurfaceRow).sort((left, right) => {
     return (
-      migrationStateRank(left.migrationState) - migrationStateRank(right.migrationState) ||
+      authorityModeRank(left.authorityMode) - authorityModeRank(right.authorityMode) ||
       left.surfaceName.localeCompare(right.surfaceName)
     );
   });
 }
 
 function buildSummaryRows(rows) {
-  const states = new Map(migrationStateOrder.map((state) => [state, 0]));
-  let dbFirstEligible = 0;
+  const states = new Map(authorityModeOrder.map((state) => [state, 0]));
+  let databaseWriteEligible = 0;
 
   for (const row of rows) {
-    states.set(row.migrationState, (states.get(row.migrationState) || 0) + 1);
-    if (row.dbFirstEligible) {
-      dbFirstEligible += 1;
+    states.set(row.authorityMode, (states.get(row.authorityMode) || 0) + 1);
+    if (row.databaseWriteEligible) {
+      databaseWriteEligible += 1;
     }
   }
 
   return [
     ['Total surfaces', String(rows.length)],
-    ['DB-first eligible surfaces', String(dbFirstEligible)],
-    ...migrationStateOrder.map((state) => [state, String(states.get(state) || 0)]),
+    ['Database-write eligible surfaces', String(databaseWriteEligible)],
+    ...authorityModeOrder.map((state) => [state, String(states.get(state) || 0)]),
   ];
 }
 
@@ -155,7 +155,7 @@ function renderDbSurfaceInventory(rows) {
     '',
     `Source view: \`${sourceView}\`.`,
     '',
-    'The tracked status page is only a stable navigation pointer. This local render is the DB-first reading surface for DB governance surface state.',
+    'The tracked status page is only a stable navigation pointer. This local render is the database reading surface for DB governance surface state.',
     '',
     '## Summary',
     '',
@@ -164,7 +164,7 @@ function renderDbSurfaceInventory(rows) {
     '## Query Shortcuts',
     '',
     '- `pnpm planning:db:query db-surfaces --limit 30`',
-    '- `pnpm planning:db:query db-surfaces --state DB-first --limit 30`',
+    '- `pnpm planning:db:query db-surfaces --state database --limit 30`',
     '- `pnpm planning:db:query db-surfaces --kind db_command --limit 30`',
     '',
     '## Surfaces',
@@ -172,9 +172,9 @@ function renderDbSurfaceInventory(rows) {
     markdownTable(
       [
         'Surface',
-        'Migration state',
+        'Authority mode',
         'Write rail kind',
-        'DB-first eligible',
+        'Database-write eligible',
         'Read/query rail',
         'Projection',
         'Validation',
@@ -183,9 +183,9 @@ function renderDbSurfaceInventory(rows) {
       ],
       sortedRows.map((row) => [
         row.surfaceName,
-        row.migrationState,
+        row.authorityMode,
         row.writeRailKind,
-        row.dbFirstEligible ? 'true' : 'false',
+        row.databaseWriteEligible ? 'true' : 'false',
         row.readQueryRail,
         row.projection,
         row.validation,

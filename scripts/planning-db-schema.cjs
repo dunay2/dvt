@@ -75,6 +75,29 @@ async function applyCurrentPlanningDbSchema(options = {}) {
   return result;
 }
 
+async function assertPlanningDbCurrentSchemaReady(client) {
+  const result = await client.query(
+    `select
+       to_regclass('planning_query_store.command_query_rails') is not null as has_query_store,
+       to_regclass('component_engineering.component_metadata_query') is not null as has_component_engineering,
+       to_regclass('architecture.component') is not null as has_architecture,
+       to_regclass('planning_query_store.schema_migrations') is null as has_no_migration_ledger,
+       not exists (
+         select 1
+         from information_schema.columns
+         where table_schema in ('architecture', 'component_engineering', 'planning_query_store')
+           and column_name = 'migration_state'
+       ) as has_no_migration_state`
+  );
+  const state = result.rows[0] || {};
+  if (Object.values(state).some((value) => value !== true)) {
+    throw new Error(
+      'Planning DB is not on the current schema. Run `pnpm planning:db:import` to replace it.'
+    );
+  }
+  return state;
+}
+
 async function main() {
   await applyCurrentPlanningDbSchema();
 }
@@ -88,6 +111,7 @@ if (require.main === module) {
 
 module.exports = {
   applyCurrentPlanningDbSchema,
+  assertPlanningDbCurrentSchemaReady,
   assertCurrentPlanningDbSchema,
   currentSchemaPath,
   databaseUrl,

@@ -177,7 +177,7 @@
   });
 
   test('prepush validation stamp can survive branch upstream changes for the same content', () => {
-    const changedFiles = ['scripts/planning-db-migrate.test.cjs'];
+    const changedFiles = ['scripts/planning-db-schema.test.cjs'];
     const stamp = buildPrepushStamp(changedFiles, {
       full: false,
       stateFingerprint: 'manual-main-upstream-state',

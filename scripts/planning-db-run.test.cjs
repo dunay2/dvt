@@ -153,51 +153,30 @@ test('planResetDataDir requires explicit shared DB destruction confirmation', ()
   );
 });
 
-test('planResetDataDir resolves the shared data directory and backup path', () => {
+test('planResetDataDir resolves only the shared data directory', () => {
   const plan = planResetDataDir({
     confirmDestroySharedPlanningDb: true,
-    now: '2026-05-07T10:00:00.000Z',
   });
 
   assert.equal(path.normalize(plan.dataDir), path.normalize(defaultDataDir));
-  assert.equal(
-    path.normalize(plan.backupPath),
-    path.normalize(
-      'C:\\dvt\\planning-db\\backups\\planning-local-operations-20260507T100000000Z.json'
-    )
-  );
 });
 
-test('resetPlanningDb starts Compose before backing up and only then removes data', async () => {
+test('resetPlanningDb destroys old state before starting the empty database', async () => {
   const calls = [];
   const plan = planResetDataDir({
     confirmDestroySharedPlanningDb: true,
-    now: '2026-05-07T10:00:00.000Z',
   });
 
   await resetPlanningDb({
     confirmDestroySharedPlanningDb: true,
-    now: '2026-05-07T10:00:00.000Z',
     runCompose: (args) => calls.push(['compose', args]),
     waitForPlanningDbReady: () => calls.push(['wait-ready']),
-    readLocalOperationBackup: async () => {
-      calls.push(['backup']);
-      return { localTaskState: [], localOperations: [] };
-    },
-    writeLocalOperationBackup: () => {
-      calls.push(['write-backup']);
-      return null;
-    },
     logger: { log: () => {} },
     rmSync: (target, options) => calls.push(['rm', target, options]),
     mkdirSync: (target, options) => calls.push(['mkdir', target, options]),
   });
 
   assert.deepEqual(calls, [
-    ['compose', ['up', '-d']],
-    ['wait-ready'],
-    ['backup'],
-    ['write-backup'],
     ['compose', ['down']],
     ['rm', plan.dataDir, { recursive: true, force: true }],
     ['mkdir', plan.dataDir, { recursive: true }],

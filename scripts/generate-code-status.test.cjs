@@ -7,7 +7,6 @@ const test = require('node:test');
 const yaml = require('js-yaml');
 const { Client } = require('pg');
 
-const { runMigrations } = require('./planning-db-migrate.cjs');
 const { importContent } = require('./planning-db-import.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 
@@ -435,7 +434,7 @@ test('policy names actual inputs and the minimal generator command', () => {
   assert.ok(entry.sourcePaths.includes('package.json'));
   assert.ok(entry.sourcePaths.includes('pnpm-workspace.yaml'));
   assert.ok(entry.sourcePaths.includes('scripts/generated-doc-date.cjs'));
-  assert.ok(entry.sourcePaths.includes('tools/planning-db/migrations'));
+  assert.ok(entry.sourcePaths.includes('tools/planning-db/schema.sql'));
   assert.ok(entry.sourcePaths.includes('tools/planning-db/state/canonical-state.json'));
   assert.ok(entry.sourcePaths.includes('scripts/planning-db-import.cjs'));
   assert.ok(
@@ -550,7 +549,9 @@ test('Repository Map publication provisions the pinned Zensical runtime first', 
   assert.doesNotMatch(installZensical.run, /--upgrade/u);
 
   const lockedRequirements = fs.readFileSync(zensicalRequirementsPath, 'utf8');
-  const directRequirements = fs.readFileSync(zensicalRequirementsInputPath, 'utf8');
+  const directRequirements = fs
+    .readFileSync(zensicalRequirementsInputPath, 'utf8')
+    .replaceAll('\r\n', '\n');
   assert.equal(directRequirements, 'pip==26.0.1\nzensical==0.0.39\n');
   assert.match(lockedRequirements, /\.github\/requirements\/zensical\.in/u);
   assert.match(lockedRequirements, /^pip==26\.0\.1\s+\\$/mu);
@@ -559,10 +560,9 @@ test('Repository Map publication provisions the pinned Zensical runtime first', 
 });
 
 test(
-  'live Planning DB migration/import renders current workspaces without false document bindings',
+  'live Planning DB current-state import renders workspaces without false document bindings',
   { skip: process.env.DVT_REPOSITORY_MAP_INTEGRATION !== '1' },
   async () => {
-    await runMigrations({ databaseUrl: dbUrl(), silent: true });
     await importContent({ databaseUrl: dbUrl(), silent: true });
     const client = new Client({ connectionString: dbUrl() });
     await client.connect();

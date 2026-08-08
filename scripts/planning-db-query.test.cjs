@@ -433,7 +433,7 @@ test('documentation panel query behavior lives in a focused read-model component
   assert.equal(documentationPanelComponent.readDocumentationPanelRows, readDocumentationPanelRows);
 });
 
-test('Canvas UX DB-first traceability query behavior lives in a focused read-model component', () => {
+test('Canvas UX database traceability query behavior lives in a focused read-model component', () => {
   const canvasTraceabilityComponent = require('./planning-db/queries/canvas-uxdb-traceability-query.cjs');
 
   assert.equal(
@@ -446,7 +446,7 @@ test('Canvas UX DB-first traceability query behavior lives in a focused read-mod
   );
 });
 
-test('Canvas UX DB-first specification query behavior lives in a focused read-model component', () => {
+test('Canvas UX database specification query behavior lives in a focused read-model component', () => {
   const canvasSpecificationComponent = require('./planning-db/queries/canvas-uxdb-specification-query.cjs');
 
   assert.equal(
@@ -846,7 +846,7 @@ test('parseArgs parses DB surface inventory query filters', () => {
     '--surface',
     'Architecture design authority',
     '--state',
-    'DB-first',
+    'database',
     '--kind',
     'db_command',
     '--limit',
@@ -855,7 +855,7 @@ test('parseArgs parses DB surface inventory query filters', () => {
 
   assert.equal(command.queryName, 'db-surfaces');
   assert.equal(command.filters.surface, 'Architecture design authority');
-  assert.equal(command.filters.state, 'DB-first');
+  assert.equal(command.filters.state, 'database');
   assert.equal(command.filters.kind, 'db_command');
   assert.equal(command.filters.limit, 5);
 });
@@ -933,7 +933,7 @@ test('parseArgs rejects common --filter for queries without matching predicates'
   }
 });
 
-test('parseArgs parses governance query filters for DB-first governance inspection', () => {
+test('parseArgs parses governance query filters for database governance inspection', () => {
   const command = parseArgs([
     'files',
     '--component',
@@ -957,7 +957,7 @@ test('parseArgs parses governance query filters for DB-first governance inspecti
   });
 });
 
-test('parseArgs parses governance unit tree filters for DB-first parent navigation', () => {
+test('parseArgs parses governance unit tree filters for database parent navigation', () => {
   const command = parseArgs([
     'units',
     '--unit',
@@ -981,7 +981,7 @@ test('parseArgs parses governance unit tree filters for DB-first parent navigati
   });
 });
 
-test('parseArgs parses repository command query filters for DB-first catalog inspection', () => {
+test('parseArgs parses repository command query filters for database catalog inspection', () => {
   const command = parseArgs([
     'commands',
     '--command-domain',
@@ -1002,7 +1002,7 @@ test('parseArgs parses repository command query filters for DB-first catalog ins
   });
 });
 
-test('parseArgs parses command/query rail catalog filters for DB-first gap and duplicate inspection', () => {
+test('parseArgs parses command/query rail catalog filters for database gap and duplicate inspection', () => {
   const command = parseArgs([
     'command-query-rails',
     '--type',
@@ -1070,7 +1070,7 @@ test('parseArgs parses AI project context format and discovery filters', () => {
   );
 });
 
-test('parseArgs parses frontend mechanical truth filters for DB-first screen inspection', () => {
+test('parseArgs parses frontend mechanical truth filters for database screen inspection', () => {
   const command = parseArgs([
     'frontend-surfaces',
     '--kind',
@@ -1097,7 +1097,7 @@ test('parseArgs parses frontend mechanical truth filters for DB-first screen ins
   });
 });
 
-test('parseArgs parses frontend component reflection filters for DB-first component inspection', () => {
+test('parseArgs parses frontend component reflection filters for database component inspection', () => {
   assert.deepEqual(parseArgs(['frontend-components', '--filter', 'SourceImport', '--limit', '5']), {
     queryName: 'frontend-components',
     filters: {
@@ -1559,16 +1559,16 @@ test('buildComponentIntegrityRows shows component validation findings', () => {
   );
 });
 
-test('buildDbSurfaceRows shows DB authority and migration state for operators', () => {
+test('buildDbSurfaceRows shows DB authority and authority mode for operators', () => {
   assert.deepEqual(
     buildDbSurfaceRows([
       {
         surface_name: 'Architecture design authority',
-        migration_state: 'DB-first',
+        authority_mode: 'database',
         write_rail_kind: 'db_command',
         read_query_rail: 'pnpm planning:db:query architecture-designs',
-        source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
-        db_first_eligible: true,
+        source_ref: 'tools/planning-db/schema.sql',
+        database_write_eligible: true,
         revision: 0,
         updated_by: 'migration',
       },
@@ -1576,12 +1576,12 @@ test('buildDbSurfaceRows shows DB authority and migration state for operators', 
     [
       [
         'Architecture design authority',
-        'DB-first',
+        'database',
         'db_command',
         'true',
         '0',
         'migration',
-        'tools/planning-db/migrations/059_db_surface_inventory.sql',
+        'tools/planning-db/schema.sql',
       ],
     ]
   );
@@ -1647,7 +1647,7 @@ test('knowledge intake lifecycle query modules expose canonical rails', () => {
   }
 });
 
-test('parseArgs parses docs disposition queue filters for DB-first cleanup work', () => {
+test('parseArgs parses docs disposition queue filters for database cleanup work', () => {
   const command = parseArgs([
     'docs-disposition',
     '--priority',
@@ -1848,7 +1848,7 @@ test('parseArgs rejects unknown resolution filters before querying the DB', () =
   );
 });
 
-test('parseArgs parses risk debt query filters for DB-first debt work selection', () => {
+test('parseArgs parses risk debt query filters for database debt work selection', () => {
   const command = parseArgs([
     'debt',
     '--priority',
@@ -1875,7 +1875,7 @@ test('parseArgs parses risk debt query filters for DB-first debt work selection'
   });
 });
 
-test('parseArgs parses component engineering record filters for DB-first governance inspection', () => {
+test('parseArgs parses component engineering record filters for database governance inspection', () => {
   const command = parseArgs(['cer', '--component', 'SYS-API-HTTP-ENTRYPOINTS', '--limit', '1']);
 
   assert.deepEqual(command, {
@@ -2099,7 +2099,7 @@ test('formatQueryError preserves nested connection failures for unavailable DB',
   assert.match(message, /pnpm planning:db:up/);
 });
 
-test('runQuery does not refresh governance projections by default for DB-first reads', async () => {
+test('runQuery does not refresh governance projections by default for database reads', async () => {
   const events = [];
   const client = {
     async query(sql, params) {
@@ -2129,7 +2129,7 @@ test('runQuery does not refresh governance projections by default for DB-first r
     client,
     print: false,
     runPlanningImport: async () => {
-      throw new Error('DB-first query must not import governance by default');
+      throw new Error('database query must not import governance by default');
     },
   });
 
@@ -2282,7 +2282,7 @@ test('buildHashDriftRows exposes hash drift as an explicit heavy query result', 
   assert.deepEqual(buildHashDriftRows({ governanceHashDrift: 3 }), [['governance.hash_drift', 3]]);
 });
 
-test('buildAiProjectContext aggregates DB-first project state for agent discovery', () => {
+test('buildAiProjectContext aggregates database project state for agent discovery', () => {
   const context = buildAiProjectContext(
     {
       summary: {
@@ -2363,7 +2363,7 @@ test('buildAiProjectContext aggregates DB-first project state for agent discover
   );
 });
 
-test('renderAiProjectContextMarkdown fills a reusable DB-first context template', () => {
+test('renderAiProjectContextMarkdown fills a reusable database context template', () => {
   const context = buildAiProjectContext(
     {
       summary: {
@@ -2667,7 +2667,7 @@ test('readCommandQueryRailRows filters command/query rails by broad search text'
   assert.deepEqual(captured.params, ['%Warehouse%', '%warehouse%', 5]);
 });
 
-test('readCommandQueryRailRows normalizes spaced rail filters for camel-case DB-first terms', async () => {
+test('readCommandQueryRailRows normalizes spaced rail filters for camel-case database terms', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -2693,7 +2693,7 @@ test('readCommandQueryRailRows normalizes spaced rail filters for camel-case DB-
   assert.deepEqual(captured.params, ['%Source Import%', '%sourceimport%', 5]);
 });
 
-test('readCreationIntentRows queries existing rails from the DB-first rail catalog', async () => {
+test('readCreationIntentRows queries existing rails from the database rail catalog', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -2759,7 +2759,7 @@ test('readCreationIntentRows canonicalizes retired execution preview intent alia
   ]);
 });
 
-test('buildKnowledgeIntakeRetirementRows exposes DB-first retirement posture', () => {
+test('buildKnowledgeIntakeRetirementRows exposes database retirement posture', () => {
   assert.deepEqual(
     buildKnowledgeIntakeRetirementRows([
       {
@@ -2776,7 +2776,7 @@ test('buildKnowledgeIntakeRetirementRows exposes DB-first retirement posture', (
   );
 });
 
-test('readKnowledgeIntakeRetirementRows queries the DB-first intake retirement view', async () => {
+test('readKnowledgeIntakeRetirementRows queries the database intake retirement view', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -2809,7 +2809,7 @@ test('readKnowledgeIntakeRetirementRows queries the DB-first intake retirement v
   ]);
 });
 
-test('buildKnowledgeIntakeReferenceRows exposes DB-first intake backrefs', () => {
+test('buildKnowledgeIntakeReferenceRows exposes database intake backrefs', () => {
   assert.deepEqual(
     buildKnowledgeIntakeReferenceRows([
       {
@@ -2876,7 +2876,7 @@ test('readKnowledgeIntakeReferenceRows queries DB repository backrefs and owners
   assert.deepEqual(captured.params, ['buzon/example.md', 'ci-governance', 5]);
 });
 
-test('readDbSurfaceRows queries the DB-first surface inventory view with real predicates', async () => {
+test('readDbSurfaceRows queries the database surface inventory view with real predicates', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -2888,17 +2888,17 @@ test('readDbSurfaceRows queries the DB-first surface inventory view with real pr
 
   await readDbSurfaceRows(client, {
     surface: 'Architecture design authority',
-    state: 'DB-first',
+    state: 'database',
     kind: 'db_command',
     limit: 5,
   });
 
   assert.match(captured.sql, /from planning_query_store\.db_governance_surface_query/);
   assert.match(captured.sql, /surface_name = \$1/);
-  assert.match(captured.sql, /migration_state = \$2/);
+  assert.match(captured.sql, /authority_mode = \$2/);
   assert.match(captured.sql, /write_rail_kind = \$3/);
   assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, ['Architecture design authority', 'DB-first', 'db_command', 5]);
+  assert.deepEqual(captured.params, ['Architecture design authority', 'database', 'db_command', 5]);
 });
 
 test('readDocumentationLifecycleRows queries DB lifecycle facts with logical predicates', async () => {
@@ -2941,7 +2941,7 @@ test('readDocumentationLifecycleRows queries DB lifecycle facts with logical pre
   ]);
 });
 
-test('runQuery dispatches knowledge-intake through the DB-first retirement query', async () => {
+test('runQuery dispatches knowledge-intake through the database retirement query', async () => {
   const client = {
     async query() {
       return {
@@ -2988,10 +2988,10 @@ test('runQuery dispatches DB surface inventory through the DB query rail', async
         rows: [
           {
             surface_name: 'Architecture design authority',
-            migration_state: 'DB-first',
+            authority_mode: 'database',
             write_rail_kind: 'db_command',
-            source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
-            db_first_eligible: true,
+            source_ref: 'tools/planning-db/schema.sql',
+            database_write_eligible: true,
             revision: 0,
             updated_by: 'migration',
           },
@@ -3002,7 +3002,7 @@ test('runQuery dispatches DB surface inventory through the DB query rail', async
 
   const rows = await runQuery({
     queryName: 'db-surfaces',
-    filters: { state: 'DB-first', limit: 5 },
+    filters: { state: 'database', limit: 5 },
     client,
     print: false,
   });
@@ -3010,17 +3010,17 @@ test('runQuery dispatches DB surface inventory through the DB query rail', async
   assert.deepEqual(rows, [
     [
       'Architecture design authority',
-      'DB-first',
+      'database',
       'db_command',
       'true',
       '0',
       'migration',
-      'tools/planning-db/migrations/059_db_surface_inventory.sql',
+      'tools/planning-db/schema.sql',
     ],
   ]);
 });
 
-test('runQuery dispatches knowledge-intake references through the DB-first link query', async () => {
+test('runQuery dispatches knowledge-intake references through the database link query', async () => {
   const client = {
     async query() {
       return {
@@ -3057,7 +3057,7 @@ test('runQuery dispatches knowledge-intake references through the DB-first link 
   ]);
 });
 
-test('runQuery dispatches documentation-lifecycle through the DB-first lifecycle query', async () => {
+test('runQuery dispatches documentation-lifecycle through the database lifecycle query', async () => {
   const client = {
     async query(sql) {
       assert.match(sql, /documentation_lifecycle_query/);
@@ -3139,7 +3139,7 @@ test('buildDocumentationPanelRows exposes relational panel fields without prose 
   ]);
 });
 
-test('readDocumentationPanelRows queries DB-first panel facts with entity and gap filters', async () => {
+test('readDocumentationPanelRows queries database panel facts with entity and gap filters', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -3200,7 +3200,7 @@ test('readDocumentationPanelRows defaults unscoped reads to actionable panel gap
   assert.deepEqual(captured.params, [7]);
 });
 
-test('runQuery dispatches documentation-panels through the DB-first panel map', async () => {
+test('runQuery dispatches documentation-panels through the database panel map', async () => {
   const client = {
     async query(sql) {
       assert.match(sql, /documentation_panel_query/);
@@ -3422,7 +3422,7 @@ test('readArchitectureFitnessGapRows queries DB-owned prioritized architecture g
   ]);
 });
 
-test('runQuery dispatches architecture-fitness through the DB-first fitness read model', async () => {
+test('runQuery dispatches architecture-fitness through the database fitness read model', async () => {
   const client = {
     async query(sql) {
       assert.match(sql, /component_fitness_query/);
@@ -3464,7 +3464,7 @@ test('runQuery dispatches architecture-fitness through the DB-first fitness read
   ]);
 });
 
-test('runQuery dispatches architecture-fitness-gaps through the DB-first summary read model', async () => {
+test('runQuery dispatches architecture-fitness-gaps through the database summary read model', async () => {
   const client = {
     async query(sql) {
       assert.match(sql, /component_fitness_gap_summary_query/);
@@ -3520,7 +3520,7 @@ test('runQuery dispatches architecture-fitness-gaps through the DB-first summary
   ]);
 });
 
-test('readComponentRoadmapRows queries the DB-first component roadmap with gap filters', async () => {
+test('readComponentRoadmapRows queries the database component roadmap with gap filters', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -3555,7 +3555,7 @@ test('readComponentRoadmapRows queries the DB-first component roadmap with gap f
   ]);
 });
 
-test('runQuery dispatches component-roadmap through the DB-first component map', async () => {
+test('runQuery dispatches component-roadmap through the database component map', async () => {
   const client = {
     async query(sql) {
       assert.match(sql, /component_roadmap_query/);
@@ -4502,8 +4502,7 @@ test('readComponentProfileRows uses frontend inventory for frontend components',
               component_status: 'current',
               frontend_owner: 'Canvas / Source import',
               cq_rails: 'OpenCanvasSourceImportDialog;ImportWarehouseSources',
-              source_path:
-                'tools/planning-db/migrations/569_source_import_dialog_dbfirst_component_source.sql',
+              source_path: 'tools/planning-db/schema.sql',
             },
           ],
         };
@@ -4542,10 +4541,7 @@ test('readComponentProfileRows uses frontend inventory for frontend components',
   });
 
   assert.equal(profile.component.component_id, 'web.component.canvas.SourceImportDialog');
-  assert.equal(
-    profile.component.parent_component_id,
-    'tools/planning-db/migrations/569_source_import_dialog_dbfirst_component_source.sql'
-  );
+  assert.equal(profile.component.parent_component_id, 'tools/planning-db/schema.sql');
   assert.equal(
     profile.files[0].path,
     'apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx'
@@ -4798,7 +4794,7 @@ test('buildArchitecture rows expose Fowler-relevant authority columns', () => {
     buildArchitectureDesignRows([
       {
         design_id: 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
-        work_item_id: 'DB-FIRST',
+        work_item_id: 'DATABASE-AUTHORITY',
         status: 'review',
         owner: 'Architecture',
         rail_ref: 'CreateArchitectureDesign',
@@ -4808,7 +4804,7 @@ test('buildArchitecture rows expose Fowler-relevant authority columns', () => {
     [
       [
         'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
-        'DB-FIRST',
+        'DATABASE-AUTHORITY',
         'review',
         'Architecture',
         'CreateArchitectureDesign',

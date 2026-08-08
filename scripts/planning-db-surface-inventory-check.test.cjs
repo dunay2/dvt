@@ -23,10 +23,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm governance:db:query files',
     projection: 'docs/.manifest.json',
     validation: 'pnpm governance:db:check',
-    migration_state: 'Hybrid indexed',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'hybrid-indexed',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: false,
+    database_write_eligible: false,
   },
   {
     surface_name: 'Architecture design authority',
@@ -36,10 +36,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query architecture-designs',
     projection: 'DB authority rows',
     validation: 'pnpm test:planning:db',
-    migration_state: 'DB-first',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'database',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: true,
+    database_write_eligible: true,
   },
   {
     surface_name: 'Governance component definition',
@@ -49,10 +49,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query component-tree',
     projection: 'Effective scalar component definition rows',
     validation: 'pnpm test:planning:db',
-    migration_state: 'DB-first',
-    source_ref: 'tools/planning-db/migrations/060_component_definition_surface_db_first.sql',
+    authority_mode: 'database',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: true,
+    database_write_eligible: true,
   },
   {
     surface_name: 'Governance remediation queue',
@@ -62,10 +62,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm governance:db:query remediation',
     projection: 'remediation queue',
     validation: 'pnpm docs:governance:remediation-queue:check',
-    migration_state: 'Generated-only',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'generated',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: false,
+    database_write_eligible: false,
   },
   {
     surface_name: 'ADR and contract decisions',
@@ -75,10 +75,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm governance:db:query files',
     projection: 'docs indexes',
     validation: 'pnpm docs:sync:check',
-    migration_state: 'Git-first indexed',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'git-indexed',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: false,
+    database_write_eligible: false,
   },
   {
     surface_name: 'Risk and evidence records',
@@ -88,10 +88,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm governance:db:query files',
     projection: 'risk and evidence indexes',
     validation: 'pnpm docs:arc:evidence:check',
-    migration_state: 'Git-first indexed',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'git-indexed',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: false,
+    database_write_eligible: false,
   },
   {
     surface_name: 'Repository command catalog',
@@ -101,10 +101,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query commands',
     projection: 'command rows',
     validation: 'pnpm docs:feature-mechanization:implementation',
-    migration_state: 'Hybrid indexed',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'hybrid-indexed',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: false,
+    database_write_eligible: false,
   },
   {
     surface_name: 'Command/query rail catalog',
@@ -114,10 +114,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query command-query-rails',
     projection: 'command_query_rail_query',
     validation: 'pnpm test:planning:db',
-    migration_state: 'Hybrid indexed',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'hybrid-indexed',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: false,
+    database_write_eligible: false,
   },
   {
     surface_name: 'Knowledge intake literature',
@@ -127,10 +127,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query knowledge-intake',
     projection: '.generated-docs/planning/status/generated-knowledge-intake-literature.md',
     validation: 'pnpm docs:knowledge-intake:check',
-    migration_state: 'Hybrid indexed',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'hybrid-indexed',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: false,
+    database_write_eligible: false,
   },
   {
     surface_name: 'Documentation lifecycle catalog',
@@ -140,10 +140,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query documentation-lifecycle',
     projection: 'planning_query_store.documentation_lifecycle_query',
     validation: 'pnpm test:planning:db',
-    migration_state: 'Hybrid indexed',
-    source_ref: 'tools/planning-db/migrations/065_documentation_lifecycle_query.sql',
+    authority_mode: 'hybrid-indexed',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: false,
+    database_write_eligible: false,
   },
   {
     surface_name: 'AI project context',
@@ -153,10 +153,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query ai-project-context',
     projection: 'in-memory aggregate',
     validation: 'pnpm planning:db:inventory:check',
-    migration_state: 'Hybrid indexed',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'hybrid-indexed',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: false,
+    database_write_eligible: false,
   },
   {
     surface_name: 'Docs task disposition inventory',
@@ -166,10 +166,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query docs-disposition',
     projection: 'disposition rows',
     validation: 'pnpm docs:governance:changed-files:check',
-    migration_state: 'Git-first indexed',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'git-indexed',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: false,
+    database_write_eligible: false,
   },
   {
     surface_name: 'Docs resolution overlays',
@@ -179,10 +179,10 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query docs-disposition --resolution all',
     projection: 'doc_disposition_action_query',
     validation: 'pnpm test:planning:db',
-    migration_state: 'DB-first',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    authority_mode: 'database',
+    source_ref: 'tools/planning-db/schema.sql',
     source_content_sha256: surfaceHash,
-    db_first_eligible: true,
+    database_write_eligible: true,
   },
 ];
 
@@ -214,12 +214,12 @@ test('DB surface inventory validator rejects missing required surfaces', () => {
   assert.match(result.errors.join('\n'), /Architecture design authority/);
 });
 
-test('DB surface inventory validator rejects DB-first labels on imported or read-only surfaces', () => {
+test('DB surface inventory validator rejects database labels on imported or read-only surfaces', () => {
   const { validateDbSurfaceInventoryRows } = loadInventoryCheck();
   const result = validateDbSurfaceInventoryRows(
     fixtureRows.map((row) =>
       row.surface_name === 'AI project context'
-        ? { ...row, migration_state: 'DB-first', db_first_eligible: false }
+        ? { ...row, authority_mode: 'database', database_write_eligible: false }
         : row
     )
   );
@@ -229,7 +229,7 @@ test('DB surface inventory validator rejects DB-first labels on imported or read
   assert.match(result.errors.join('\n'), /write rail kind/);
 });
 
-test('DB surface inventory validator keeps component definition command rail DB-first', () => {
+test('DB surface inventory validator keeps component definition command rail database', () => {
   const { validateDbSurfaceInventoryRows } = loadInventoryCheck();
   const result = validateDbSurfaceInventoryRows([
     ...fixtureRows,
@@ -241,16 +241,16 @@ test('DB surface inventory validator keeps component definition command rail DB-
       read_query_rail: 'pnpm planning:db:query component-tree',
       projection: 'Effective scalar component definition rows',
       validation: 'pnpm test:planning:db',
-      migration_state: 'Hybrid indexed',
-      source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+      authority_mode: 'hybrid-indexed',
+      source_ref: 'tools/planning-db/schema.sql',
       source_content_sha256: surfaceHash,
-      db_first_eligible: false,
+      database_write_eligible: false,
     },
   ]);
 
   assert.equal(result.ok, false);
   assert.match(result.errors.join('\n'), /Governance component definition/);
-  assert.match(result.errors.join('\n'), /migration state "DB-first"/);
+  assert.match(result.errors.join('\n'), /authority mode "database"/);
 });
 
 test('package scripts expose and gate the DB surface inventory check', () => {
@@ -260,14 +260,14 @@ test('package scripts expose and gate the DB surface inventory check', () => {
     packageJson.scripts['planning:db:inventory:check'],
     'node scripts/planning-db-surface-inventory-check.cjs'
   );
-  assert.doesNotMatch(scriptSource, /planning-db-migrate|runMigrations/);
+  assert.match(scriptSource, /readDbSurfaceRows/);
   assert.match(
     packageJson.scripts['test:planning:db'],
     /planning-db-surface-inventory-check\.test\.cjs/
   );
-  assert.equal(
-    packageJson.scripts['test:planning:db:migrations'],
-    'node --test scripts/planning-db-migrate.test.cjs'
+  assert.match(
+    packageJson.scripts['test:planning:db:current-schema'],
+    /planning-db-schema\.test\.cjs/
   );
   assert.match(packageJson.scripts['ci:docs'], /planning:db:inventory:check/);
   assert.equal(packageJson.scripts['verify:changed'], 'node scripts/verify-changed.cjs');

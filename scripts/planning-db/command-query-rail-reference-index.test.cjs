@@ -7,10 +7,10 @@ const {
 
 const referenceIndex = createCommandQueryRailReferenceIndexComponent();
 
-test('implementation references exclude governance migrations and executable test evidence', () => {
+test('implementation references exclude declarative schema and executable test evidence', () => {
   const sourceFiles = [
     {
-      path: 'tools/planning-db/migrations/226_reconcile_remaining_frontend_gap_rails.sql',
+      path: 'tools/planning-db/schema.sql',
       content: "select 'ImportDbtProject';",
     },
     {

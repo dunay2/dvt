@@ -289,17 +289,12 @@ function buildPrCloseoutPlan(options = {}) {
     args: ['planning:db:health', '--wait'],
   });
   pushStepOnce(steps, {
-    id: 'planning-db-migrate',
+    id: 'planning-db-import',
     command: 'pnpm',
-    args: ['planning:db:migrate'],
+    args: ['planning:db:import'],
   });
 
   if (repositoryMapSourceChanged && !governanceRefreshChanged) {
-    pushStepOnce(steps, {
-      id: 'planning-db-import',
-      command: 'pnpm',
-      args: ['planning:db:import', '--', '--if-stale'],
-    });
     pushStepOnce(steps, {
       id: 'docs-status-repository-map',
       command: 'pnpm',

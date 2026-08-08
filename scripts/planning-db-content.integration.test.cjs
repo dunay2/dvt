@@ -3,7 +3,6 @@ const assert = require('node:assert/strict');
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
-const { runMigrations } = require('./planning-db-migrate.cjs');
 const { buildGovernanceFileSnapshot, importContent } = require('./planning-db-import.cjs');
 const { PlanningDbExportRunner, canonicalStateArtifactPath } = require('./planning-db-export.cjs');
 const { readHashDriftSummary, readSummary } = require('./planning-db-query.cjs');
@@ -15,7 +14,6 @@ function dbUrl() {
 test('live planning DB imports governance files without a local task mirror', async () => {
   const governanceSnapshot = buildGovernanceFileSnapshot();
 
-  await runMigrations({ databaseUrl: dbUrl(), silent: true });
   await importContent({ databaseUrl: dbUrl(), silent: true });
   await importContent({ databaseUrl: dbUrl(), silent: true });
 
@@ -59,7 +57,6 @@ test('live planning DB exports architecture mechanization through the canonical 
   const path = require('node:path');
   const outputRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-export-live-'));
 
-  await runMigrations({ databaseUrl: dbUrl(), silent: true });
   await importContent({ databaseUrl: dbUrl(), silent: true });
 
   try {

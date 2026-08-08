@@ -20,9 +20,9 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query architecture-designs',
     projection: 'DB authority rows',
     validation: 'pnpm test:planning:db',
-    migration_state: 'DB-first',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
-    db_first_eligible: true,
+    authority_mode: 'database',
+    source_ref: 'tools/planning-db/schema.sql',
+    database_write_eligible: true,
     revision: 0,
     updated_by: 'migration',
   },
@@ -34,9 +34,9 @@ const fixtureRows = [
     read_query_rail: 'pnpm planning:db:query knowledge-intake',
     projection: '.generated-docs/planning/status/generated-knowledge-intake-literature.md',
     validation: 'pnpm docs:knowledge-intake:check',
-    migration_state: 'Hybrid indexed',
-    source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
-    db_first_eligible: false,
+    authority_mode: 'hybrid-indexed',
+    source_ref: 'tools/planning-db/schema.sql',
+    database_write_eligible: false,
     revision: 0,
     updated_by: 'migration',
   },
@@ -59,8 +59,8 @@ test('DB surface inventory render is deterministic and timestamp-free', () => {
   assert.match(first, /Source view: `planning_query_store\.db_governance_surface_query`/);
   assert.match(first, /Architecture design authority/);
   assert.match(first, /Knowledge intake literature/);
-  assert.match(first, /DB-first/);
-  assert.match(first, /Hybrid indexed/);
+  assert.match(first, /database/);
+  assert.match(first, /hybrid-indexed/);
   assert.doesNotMatch(first, /Generated (at|on)/i);
   assert.doesNotMatch(first, /\d{4}-\d{2}-\d{2}T\d{2}:/);
 });

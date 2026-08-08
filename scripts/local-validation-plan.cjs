@@ -57,8 +57,15 @@ const PLANNING_WORKFLOW_SCRIPT_TESTS = Object.freeze({
     'scripts/planning-db-knowledge-intake-retirement-guard.test.cjs',
   'scripts/planning-db-import.cjs': 'scripts/planning-db-import.test.cjs',
   'scripts/planning-db-import.test.cjs': 'scripts/planning-db-import.test.cjs',
-  'scripts/planning-db-migrate.cjs': 'scripts/planning-db-migrate.test.cjs',
-  'scripts/planning-db-migrate.test.cjs': 'scripts/planning-db-migrate.test.cjs',
+  'scripts/planning-db-schema.cjs': 'scripts/planning-db-schema.test.cjs',
+  'scripts/planning-db-schema.test.cjs': 'scripts/planning-db-schema.test.cjs',
+  'scripts/planning-db-architecture-state.cjs': 'scripts/planning-db-architecture-state.test.cjs',
+  'scripts/planning-db-architecture-state.test.cjs':
+    'scripts/planning-db-architecture-state.test.cjs',
+  'scripts/planning-db-current-schema-policy.cjs':
+    'scripts/planning-db-current-schema-policy.test.cjs',
+  'scripts/planning-db-current-schema-policy.test.cjs':
+    'scripts/planning-db-current-schema-policy.test.cjs',
   'scripts/planning-db-operate.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate.test.cjs': 'scripts/planning-db-operate.test.cjs',
   'scripts/planning-db-operate-tests/architecture-parse.test.cjs':
@@ -188,7 +195,7 @@ const VERIFY_CHANGED_GROUPS = Object.freeze({
     step('governance-db-import', 'pnpm', 'governance:db:import'),
     step('planning-db-inventory-check', 'pnpm', 'planning:db:inventory:check'),
     step('planning-db-integrity-check', 'pnpm', 'planning:db:integrity:check'),
-    step('test-planning-db-migrations', 'pnpm', 'test:planning:db:migrations'),
+    step('test-planning-db-current-schema', 'pnpm', 'test:planning:db:current-schema'),
     step('test-planning-db', 'pnpm', 'test:planning:db'),
   ]),
   developerWorkflowSelfTest: Object.freeze([
@@ -224,9 +231,17 @@ function hasPlanningDbFullSuiteChange(changedFiles) {
   );
 }
 
-function hasPlanningDbMigrationChange(changedFiles) {
+function hasPlanningDbCurrentSchemaChange(changedFiles) {
   return changedFiles.some((filePath) =>
-    /^tools\/planning-db\/migrations\/.+\.sql$/u.test(filePath)
+    [
+      'tools/planning-db/schema.sql',
+      'scripts/planning-db-schema.cjs',
+      'scripts/planning-db-schema.test.cjs',
+      'scripts/planning-db-architecture-state.cjs',
+      'scripts/planning-db-architecture-state.test.cjs',
+      'scripts/planning-db-current-schema-policy.cjs',
+      'scripts/planning-db-current-schema-policy.test.cjs',
+    ].includes(filePath)
   );
 }
 
@@ -357,10 +372,10 @@ function buildVerifyChangedPlan(files) {
   const directPlanningWorkflowTestSteps = planningWorkflowTestSteps(changedFiles);
   pushSteps(plan, directPlanningWorkflowTestSteps);
   pushSteps(plan, ciToolingTestSteps(changedFiles));
-  const runsMigrationTestDirectly = directPlanningWorkflowTestSteps.some(
-    (nextStep) => commandLabel(nextStep) === 'node --test scripts/planning-db-migrate.test.cjs'
+  const runsCurrentSchemaTestDirectly = directPlanningWorkflowTestSteps.some(
+    (nextStep) => commandLabel(nextStep) === 'node --test scripts/planning-db-schema.test.cjs'
   );
-  if (hasPlanningDbMigrationChange(changedFiles) && !runsMigrationTestDirectly) {
+  if (hasPlanningDbCurrentSchemaChange(changedFiles) && !runsCurrentSchemaTestDirectly) {
     pushStepOnce(plan, VERIFY_CHANGED_GROUPS.planningDb[3]);
   }
   if (hasPlanningDbFullSuiteChange(changedFiles)) {
@@ -435,7 +450,7 @@ module.exports = {
   hasWebChange,
   hasPlanningDbChange,
   hasPlanningDbFullSuiteChange,
-  hasPlanningDbMigrationChange,
+  hasPlanningDbCurrentSchemaChange,
   normalizeChangedFiles,
   planningWorkflowTestSteps,
 };

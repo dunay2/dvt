@@ -1,6 +1,6 @@
 /**
  * @file scripts/planning-db-operate.cjs
- * @ownedConcern Execute DB-first architecture and governance command rails with idempotent audit.
+ * @ownedConcern Execute database architecture and governance command rails with idempotent audit.
  * @baseline ADR-0055: Planning DB canonical operational source
  * @decision Keep operational writes behind explicit command rails instead of direct generated-file edits.
  * @consequence Architecture, docs resolutions, and governance component definitions share
@@ -11,11 +11,11 @@ const crypto = require('node:crypto');
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
-const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
+const { assertPlanningDbCurrentSchemaReady, schemaName } = require('./planning-db-schema.cjs');
 const componentEngineeringSchemaName = 'component_engineering';
 const { runArchitectureFitnessScan } = require('./planning-db/architecture-fitness/scan.cjs');
 const {
-  allowedDbSurfaceMigrationStates,
+  allowedDbSurfaceAuthorityModes,
   allowedDbSurfaceWriteRailKinds,
 } = require('./planning-db/db-surface-inventory.cjs');
 const {
@@ -286,10 +286,10 @@ const operationHelp = Object.freeze({
   'db-surface': {
     operations: ['upsert'],
     usage:
-      'pnpm planning:db:operate db-surface upsert --surface <name> --migration-state <state> --write-rail-kind <kind> --actor <actor>',
+      'pnpm planning:db:operate db-surface upsert --surface <name> --authority-mode <state> --write-rail-kind <kind> --actor <actor>',
     details: [
       'UpsertDbGovernanceSurface records the DB surface inventory through a DB command rail.',
-      'DB-first surfaces require --write-rail-kind db_command and a source-content hash.',
+      'database surfaces require --write-rail-kind db_command and a source-content hash.',
     ],
   },
   'architecture-design': {
@@ -297,7 +297,7 @@ const operationHelp = Object.freeze({
     usage:
       'pnpm planning:db:operate architecture-design create --design <DESIGN-ID> --actor <actor>',
     details: [
-      'CreateArchitectureDesign records DB-first architecture authority before implementation.',
+      'CreateArchitectureDesign records database architecture authority before implementation.',
       'Requires --work-item, --title, --owner, --rationale, --rail-ref, --scope, --source-ref, and --source-content-sha256.',
     ],
   },
@@ -342,7 +342,7 @@ const operationHelp = Object.freeze({
     usage:
       'pnpm planning:db:operate architecture-fitness scan --design <DESIGN-ID> --scan <SCAN-ID> --actor <actor>',
     details: [
-      'RecordArchitectureFitnessScan records observed repository dependencies against a DB-first architecture design.',
+      'RecordArchitectureFitnessScan records observed repository dependencies against a database architecture design.',
       'Requires --root, --source-ref, --source-content-sha256, and an existing architecture design.',
     ],
   },
@@ -371,7 +371,7 @@ const operationHelp = Object.freeze({
     usage:
       'pnpm planning:db:operate feature-mechanization record --feature <FEATURE-ID> --rail <RailName> --type <command|query> --actor <actor>',
     details: [
-      'RecordFeatureMechanizationRail stores a DB-first command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
+      'RecordFeatureMechanizationRail stores a database command/query rail declaration and a valid feature-mechanization manifest projection without editing Markdown manifests.',
       'Requires --ddd-owner, --implementation-plan, --source-ref, --source-content-sha256, governance/doc/surface/validation fields, and at least one --implementation-ref in path#symbol form.',
     ],
   },
@@ -585,11 +585,11 @@ function validateFowlerAnalysisRetirementDecisionStatus(value) {
   return value;
 }
 
-function validateDbSurfaceMigrationState(value) {
-  if (!allowedDbSurfaceMigrationStates.has(value)) {
+function validateDbSurfaceAuthorityMode(value) {
+  if (!allowedDbSurfaceAuthorityModes.has(value)) {
     throw new Error(
-      `Invalid DB surface migration state "${value}". Expected: ${[
-        ...allowedDbSurfaceMigrationStates,
+      `Invalid DB surface authority mode "${value}". Expected: ${[
+        ...allowedDbSurfaceAuthorityModes,
       ].join(', ')}.`
     );
   }
@@ -1309,7 +1309,7 @@ function operationPayload(command) {
       readQueryRail: command.readQueryRail,
       projection: command.projection,
       validation: command.validation,
-      migrationState: command.migrationState,
+      authorityMode: command.authorityMode,
       sourceRef: command.sourceRef,
       sourceContentSha256: command.sourceContentSha256,
     };
@@ -2340,7 +2340,7 @@ function validateDbSurfaceUpsertCommand(command) {
     ['read-query-rail', command.readQueryRail],
     ['projection', command.projection],
     ['validation', command.validation],
-    ['migration-state', command.migrationState],
+    ['authority-mode', command.authorityMode],
     ['source-ref', command.sourceRef],
     ['source-content-sha256', command.sourceContentSha256],
     ['actor', command.actor],
@@ -2352,9 +2352,9 @@ function validateDbSurfaceUpsertCommand(command) {
     }
   }
 
-  if (command.migrationState === 'DB-first' && command.writeRailKind !== 'db_command') {
+  if (command.authorityMode === 'database' && command.writeRailKind !== 'db_command') {
     throw new Error(
-      `DB-FIRST-WRITE-RAIL-MISMATCH: DB-first surface "${command.surfaceName}" requires write rail kind db_command.`
+      `DATABASE-AUTHORITY-WRITE-RAIL-MISMATCH: database surface "${command.surfaceName}" requires write rail kind db_command.`
     );
   }
 
@@ -2376,7 +2376,7 @@ function parseDbSurfaceCommand(action, args) {
     readQueryRail: requireOption(options, 'readQueryRail'),
     projection: requireOption(options, 'projection'),
     validation: requireOption(options, 'validation'),
-    migrationState: validateDbSurfaceMigrationState(requireOption(options, 'migrationState')),
+    authorityMode: validateDbSurfaceAuthorityMode(requireOption(options, 'authorityMode')),
     sourceRef: requireOption(options, 'sourceRef'),
     sourceContentSha256: validateSha256(
       requireOption(options, 'sourceContentSha256'),
@@ -3586,7 +3586,7 @@ function planDbSurfaceUpsertOperation({ command, existingSurface, operationId, n
     readQueryRail: command.readQueryRail,
     projection: command.projection,
     validation: command.validation,
-    migrationState: command.migrationState,
+    authorityMode: command.authorityMode,
     sourceRef: command.sourceRef,
     sourceContentSha256: command.sourceContentSha256,
     revision: resultingRevision,
@@ -5014,7 +5014,7 @@ async function writePlannedDbSurfaceUpsertOperation(client, planned) {
   await client.query(
     `insert into ${schemaName}.db_governance_surfaces
       (surface_name, canonical_source, write_rail, write_rail_kind, read_query_rail,
-       projection, validation, migration_state, source_ref, source_content_sha256,
+       projection, validation, authority_mode, source_ref, source_content_sha256,
        revision, updated_by, updated_at, raw_surface)
      values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::jsonb)
      on conflict (surface_name) do update set
@@ -5024,7 +5024,7 @@ async function writePlannedDbSurfaceUpsertOperation(client, planned) {
        read_query_rail = excluded.read_query_rail,
        projection = excluded.projection,
        validation = excluded.validation,
-       migration_state = excluded.migration_state,
+       authority_mode = excluded.authority_mode,
        source_ref = excluded.source_ref,
        source_content_sha256 = excluded.source_content_sha256,
        revision = excluded.revision,
@@ -5039,7 +5039,7 @@ async function writePlannedDbSurfaceUpsertOperation(client, planned) {
       planned.surface.readQueryRail,
       planned.surface.projection,
       planned.surface.validation,
-      planned.surface.migrationState,
+      planned.surface.authorityMode,
       planned.surface.sourceRef,
       planned.surface.sourceContentSha256,
       planned.surface.revision,
@@ -5350,7 +5350,7 @@ async function applyDocsResolutionOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const sourceRow = await readDocsDispositionAction(client, command);
@@ -5396,7 +5396,7 @@ async function applyArchitectureDesignCreateOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
@@ -5437,7 +5437,7 @@ async function applyArchitectureComponentRecordOperation(command, options = {}) 
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
@@ -5486,7 +5486,7 @@ async function applyArchitectureRelationRecordOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
@@ -5535,7 +5535,7 @@ async function applyArchitectureContractRecordOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
@@ -5582,7 +5582,7 @@ async function applyArchitecturePortRecordOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
@@ -5637,7 +5637,7 @@ async function applyArchitectureFitnessScanOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
@@ -5689,7 +5689,7 @@ async function applyArchitectureTestRecordOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
@@ -5736,7 +5736,7 @@ async function applyArchitectureObservabilityRecordOperation(command, options = 
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingArchitectureDesignOperation(client, command.idempotencyKey);
@@ -5786,7 +5786,7 @@ async function applyComponentCreateOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingComponentOperation(client, command.idempotencyKey);
@@ -5829,7 +5829,7 @@ async function applyComponentReparentOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingComponentOperation(client, command.idempotencyKey);
@@ -5878,7 +5878,7 @@ async function applyDbSurfaceUpsertOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existingOperation = await readExistingDbSurfaceOperation(client, command.idempotencyKey);
@@ -5919,7 +5919,7 @@ async function applyFeatureMechanizationRailRecordOperation(command, options = {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingFeatureMechanizationOperation(
@@ -5968,7 +5968,7 @@ async function applyFowlerAnalysisOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingFowlerAnalysisOperation(client, command.idempotencyKey);
@@ -6269,7 +6269,7 @@ module.exports = {
   planDocsResolutionOperation,
   validateArchitectureDesignStatus,
   validateComponentStatus,
-  validateDbSurfaceMigrationState,
+  validateDbSurfaceAuthorityMode,
   validateDbSurfaceWriteRailKind,
   validateGovernanceRefreshRunState,
   resolveOperateHelpRequest,

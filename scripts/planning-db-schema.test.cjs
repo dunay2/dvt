@@ -5,6 +5,7 @@ const assert = require('node:assert/strict');
 
 const {
   applyCurrentPlanningDbSchema,
+  assertPlanningDbCurrentSchemaReady,
   assertCurrentPlanningDbSchema,
   currentSchemaPath,
   schemaName,
@@ -40,6 +41,33 @@ test('current Planning DB schema is one declarative artifact without migration s
   assert.doesNotMatch(schemaSql, /migration_state/iu);
   assert.doesNotMatch(schemaSql, /migration checksum|applied migration/iu);
   assert.doesNotThrow(() => assertCurrentPlanningDbSchema(schemaSql));
+});
+
+test('schema readiness rejects missing or legacy state without mutating the database', async () => {
+  const readyClient = {
+    query: async () => ({
+      rows: [
+        {
+          has_query_store: true,
+          has_component_engineering: true,
+          has_architecture: true,
+          has_no_migration_ledger: true,
+          has_no_migration_state: true,
+        },
+      ],
+    }),
+  };
+  assert.equal(
+    (await assertPlanningDbCurrentSchemaReady(readyClient)).has_no_migration_state,
+    true
+  );
+
+  await assert.rejects(
+    assertPlanningDbCurrentSchemaReady({
+      query: async () => ({ rows: [{ has_query_store: true, has_no_migration_ledger: false }] }),
+    }),
+    /pnpm planning:db:import/iu
+  );
 });
 
 test('current schema validation rejects migration ledgers and wrong schema ownership', () => {

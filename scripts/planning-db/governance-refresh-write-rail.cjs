@@ -4,7 +4,7 @@ const crypto = require('node:crypto');
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('../planning-db-run.cjs');
-const { runMigrations, schemaName } = require('../planning-db-migrate.cjs');
+const { assertPlanningDbCurrentSchemaReady, schemaName } = require('../planning-db-schema.cjs');
 
 const allowedRunStates = new Set(['accepted', 'passed', 'failed']);
 const defaultCommandName = 'pnpm governance:refresh';
@@ -398,7 +398,7 @@ async function applyGovernanceRefreshRunRecordOperation(command, options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
+    await assertPlanningDbCurrentSchemaReady(client);
     await client.query('begin');
 
     const existing = await readExistingGovernanceRefreshRunOperation(

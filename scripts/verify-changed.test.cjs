@@ -40,10 +40,7 @@ test('buildVerifyChangedPlan keeps docs-only iteration on changed-file gates', (
 });
 
 test('buildVerifyChangedPlan adds planning DB validation for planning query-store changes', () => {
-  const labels = labelsFor([
-    'scripts/planning-db-query.cjs',
-    'tools/planning-db/migrations/022_component_engineering_record_query.sql',
-  ]);
+  const labels = labelsFor(['scripts/planning-db-query.cjs', 'tools/planning-db/schema.sql']);
 
   assert.equal(labels.filter((label) => label === 'pnpm governance:db:import').length, 1);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
@@ -59,7 +56,10 @@ test('buildVerifyChangedPlan adds planning DB validation for planning query-stor
     labels.filter((label) => label === 'node --test scripts/planning-db-query.test.cjs').length,
     1
   );
-  assert.equal(labels.filter((label) => label === 'pnpm test:planning:db:migrations').length, 1);
+  assert.equal(
+    labels.filter((label) => label === 'pnpm test:planning:db:current-schema').length,
+    1
+  );
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
@@ -73,29 +73,27 @@ test('buildVerifyChangedPlan runs the buzon retirement guard before markdown gat
   );
 });
 
-test('buildVerifyChangedPlan routes migration-only changes to the migration suite', () => {
-  const labels = labelsFor([
-    'tools/planning-db/migrations/022_component_engineering_record_query.sql',
-  ]);
+test('buildVerifyChangedPlan routes schema-only changes to the current-schema suite', () => {
+  const labels = labelsFor(['tools/planning-db/schema.sql']);
 
   assert.equal(labels.filter((label) => label === 'pnpm governance:db:import').length, 1);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:inventory:check').length, 1);
   assert.equal(labels.filter((label) => label === 'pnpm planning:db:integrity:check').length, 1);
-  assert.equal(labels.filter((label) => label === 'pnpm test:planning:db:migrations').length, 1);
+  assert.equal(
+    labels.filter((label) => label === 'pnpm test:planning:db:current-schema').length,
+    1
+  );
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
-test('buildVerifyChangedPlan avoids duplicate migration tests when the suite is already direct', () => {
-  const labels = labelsFor([
-    'scripts/planning-db-migrate.test.cjs',
-    'tools/planning-db/migrations/022_component_engineering_record_query.sql',
-  ]);
+test('buildVerifyChangedPlan avoids duplicate schema tests when the suite is already direct', () => {
+  const labels = labelsFor(['scripts/planning-db-schema.test.cjs', 'tools/planning-db/schema.sql']);
 
   assert.equal(
-    labels.filter((label) => label === 'node --test scripts/planning-db-migrate.test.cjs').length,
+    labels.filter((label) => label === 'node --test scripts/planning-db-schema.test.cjs').length,
     1
   );
-  assert.ok(!labels.includes('pnpm test:planning:db:migrations'));
+  assert.ok(!labels.includes('pnpm test:planning:db:current-schema'));
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
@@ -104,8 +102,8 @@ test('buildVerifyChangedPlan keeps mixed docs and planning DB slices targeted an
     'docs/guides/testing-and-ci-capabilities.md',
     'scripts/planning-db-import.cjs',
     'scripts/planning-db-import.test.cjs',
-    'scripts/planning-db-migrate.test.cjs',
-    'tools/planning-db/migrations/053_command_query_rail_catalog.sql',
+    'scripts/planning-db-schema.test.cjs',
+    'tools/planning-db/schema.sql',
   ]);
 
   assert.deepEqual(labels, [...new Set(labels)]);
@@ -114,10 +112,10 @@ test('buildVerifyChangedPlan keeps mixed docs and planning DB slices targeted an
     1
   );
   assert.equal(
-    labels.filter((label) => label === 'node --test scripts/planning-db-migrate.test.cjs').length,
+    labels.filter((label) => label === 'node --test scripts/planning-db-schema.test.cjs').length,
     1
   );
-  assert.ok(!labels.includes('pnpm test:planning:db:migrations'));
+  assert.ok(!labels.includes('pnpm test:planning:db:current-schema'));
   assert.ok(!labels.includes('pnpm test:planning:db'));
 });
 
