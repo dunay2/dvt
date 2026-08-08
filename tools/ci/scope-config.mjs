@@ -43,6 +43,7 @@ function readWorkflowScopePolicy() {
     'workspace_temporal_worker',
     'workspace_temporal_dbt_plugin',
     'workspace_temporal_http_json_plugin',
+    'workspace_temporal_python_plugin',
     'workspace_temporal_object_file_postgres_plugin',
     'workspace_web',
     'workspace_artifacts',
@@ -141,6 +142,12 @@ export const WORKSPACE_ENTRIES = [
     name: 'temporal-http-json-plugin',
     pkg: '@dvt/temporal-http-json-plugin',
     patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_http_json_plugin,
+  },
+  {
+    key: 'temporal_python_plugin',
+    name: 'temporal-python-plugin',
+    pkg: '@dvt/temporal-python-plugin',
+    patterns: WORKFLOW_SCOPE_POLICY.workspace_temporal_python_plugin,
   },
   {
     key: 'temporal_object_file_postgres_plugin',
@@ -348,6 +355,7 @@ export const TEST_SCOPE_PATTERNS = {
   temporal_worker: ['apps/temporal-worker/**'],
   temporal_dbt_plugin: ['packages/@dvt/temporal-dbt-plugin/**'],
   temporal_http_json_plugin: WORKFLOW_SCOPE_POLICY.workspace_temporal_http_json_plugin,
+  temporal_python_plugin: WORKFLOW_SCOPE_POLICY.workspace_temporal_python_plugin,
   temporal_object_file_postgres_plugin:
     WORKFLOW_SCOPE_POLICY.workspace_temporal_object_file_postgres_plugin,
   web: ['apps/web/**', ...WEB_FRONTEND_TEST_GOVERNANCE_PATTERNS],

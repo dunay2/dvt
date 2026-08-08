@@ -27,7 +27,10 @@
     "scripts/validate-arc-evidence-frontmatter.cjs",
     ".markdownlint*"
   ],
-  "docs_structure_changed": ["docs/**", "scripts/sync-docs.cjs"],
+  "docs_structure_changed": [
+    "docs/**",
+    "scripts/sync-docs.cjs"
+  ],
   "generated_status_relevant": [
     "apps/**",
     "packages/**",
@@ -163,35 +166,92 @@
     "traceability.config.json",
     "docs/adr/**"
   ],
-  "workspace_api": ["apps/api/**"],
-  "workspace_lineage_worker": ["apps/lineage-worker/**"],
-  "workspace_outbox_worker": ["apps/outbox-worker/**"],
-  "workspace_projector_worker": ["apps/projector-worker/**"],
-  "workspace_temporal_worker": ["apps/temporal-worker/**"],
-  "workspace_temporal_dbt_plugin": ["packages/@dvt/temporal-dbt-plugin/**"],
+  "workspace_api": [
+    "apps/api/**"
+  ],
+  "workspace_lineage_worker": [
+    "apps/lineage-worker/**"
+  ],
+  "workspace_outbox_worker": [
+    "apps/outbox-worker/**"
+  ],
+  "workspace_projector_worker": [
+    "apps/projector-worker/**"
+  ],
+  "workspace_temporal_worker": [
+    "apps/temporal-worker/**"
+  ],
+  "workspace_temporal_dbt_plugin": [
+    "packages/@dvt/temporal-dbt-plugin/**"
+  ],
   "workspace_temporal_http_json_plugin": [
     "packages/@dvt/temporal-http-json-plugin/**"
   ],
   "workspace_temporal_object_file_postgres_plugin": [
     "packages/@dvt/temporal-object-file-postgres-plugin/**"
   ],
-  "workspace_web": ["apps/web/**"],
-  "workspace_artifacts": ["packages/@dvt/artifacts/**"],
-  "workspace_crypto": ["packages/@dvt/canonical/**"],
-  "workspace_delivery": ["packages/@dvt/delivery/**"],
-  "workspace_dsl": ["packages/@dvt/dsl/**"],
-  "workspace_contracts": ["packages/@dvt/contracts/**"],
-  "workspace_engine": ["packages/@dvt/engine/**"],
-  "workspace_observability": ["packages/@dvt/observability/**"],
-  "workspace_observability_otel": ["packages/@dvt/observability-otel/**"],
-  "workspace_plan_interpreter": ["packages/@dvt/plan-interpreter/**"],
-  "workspace_plan_verifier": ["packages/@dvt/plan-verifier/**"],
-  "workspace_planner": ["packages/@dvt/planner/**"],
-  "workspace_planner_contracts": ["packages/@dvt/planner-contracts/**"],
-  "workspace_run_domain": ["packages/@dvt/run-domain/**"],
-  "workspace_state_store": ["packages/@dvt/state-store/**"],
-  "workspace_traceability_service": ["packages/@dvt/traceability-service/**"],
-  "workspace_adapter_postgres": ["packages/@dvt/adapter-postgres/**"],
-  "workspace_adapter_temporal": ["packages/@dvt/adapter-temporal/**"],
-  "workspace_cli": ["packages/@dvt/cli/**"]
+  "workspace_web": [
+    "apps/web/**"
+  ],
+  "workspace_artifacts": [
+    "packages/@dvt/artifacts/**"
+  ],
+  "workspace_crypto": [
+    "packages/@dvt/canonical/**"
+  ],
+  "workspace_delivery": [
+    "packages/@dvt/delivery/**"
+  ],
+  "workspace_dsl": [
+    "packages/@dvt/dsl/**"
+  ],
+  "workspace_contracts": [
+    "packages/@dvt/contracts/**"
+  ],
+  "workspace_engine": [
+    "packages/@dvt/engine/**"
+  ],
+  "workspace_observability": [
+    "packages/@dvt/observability/**"
+  ],
+  "workspace_observability_otel": [
+    "packages/@dvt/observability-otel/**"
+  ],
+  "workspace_plan_interpreter": [
+    "packages/@dvt/plan-interpreter/**"
+  ],
+  "workspace_plan_verifier": [
+    "packages/@dvt/plan-verifier/**"
+  ],
+  "workspace_planner": [
+    "packages/@dvt/planner/**"
+  ],
+  "workspace_planner_contracts": [
+    "packages/@dvt/planner-contracts/**"
+  ],
+  "workspace_run_domain": [
+    "packages/@dvt/run-domain/**"
+  ],
+  "workspace_state_store": [
+    "packages/@dvt/state-store/**"
+  ],
+  "workspace_traceability_service": [
+    "packages/@dvt/traceability-service/**"
+  ],
+  "workspace_adapter_postgres": [
+    "packages/@dvt/adapter-postgres/**"
+  ],
+  "workspace_adapter_temporal": [
+    "packages/@dvt/adapter-temporal/**"
+  ],
+  "workspace_cli": [
+    "packages/@dvt/cli/**"
+  ],
+  "workspace_temporal_python_plugin": [
+    "packages/@dvt/temporal-python-plugin/**",
+    "packages/@dvt/adapter-temporal/**",
+    "packages/@dvt/contracts/**",
+    "packages/@dvt/engine/**",
+    "tools/ci/**"
+  ]
 }
