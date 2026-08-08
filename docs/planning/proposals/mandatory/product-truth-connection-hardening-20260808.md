@@ -121,27 +121,23 @@ Graph dependency between nodes. This is the current dbt `origin` meaning and rem
 
 ## 4. Proposed minimal contracts
 
-Names are provisional; semantics are not.
+For the #2256 slice, the names and versioned shapes below are frozen before TDD.
 
 ```ts
 type ConnectionRef = Readonly<{
+  schemaVersion: 'connection-ref.v1';
   connectionId: string;
   provider: string;
 }>;
 
 type ConnectedSourceRef = Readonly<{
-  connectionId: string;
-  sourceObjectId: string;
-}>;
-
-type NodeResourceBinding = Readonly<{
-  bindingId: string;
-  capability: 'read' | 'write' | 'read-write' | 'dbt-target';
+  schemaVersion: 'connected-source-ref.v1';
   connectionRef: ConnectionRef;
+  sourceObjectId: string;
 }>;
 ```
 
-The first implementation should add only fields required by current Postgres Source Import and the first dbt target vertical. Do not create a generic resource framework.
+The first implementation adds only the fields required by current Postgres Source Import. `NodeResourceBinding` and the dbt target binding remain outside this slice so that the product does not acquire a generic resource framework before a real command owns it.
 
 ## 5. Required invariants
 
@@ -156,7 +152,7 @@ The first implementation should add only fields required by current Postgres Sou
 
 ## 6. Canvas representation decision
 
-#2256 must choose the smallest truthful rendering.
+#2256 chooses the smallest truthful rendering.
 
 ### Option A — compact first-class connection node
 
@@ -174,6 +170,11 @@ Use this when graph topology, planner analysis, or explicit branch switching gai
 Keep the Connection as a domain resource and render its binding explicitly in Canvas/Workbench.
 
 Use this when a graph node would add topology without independent behavior.
+
+**Decision for PTH1:** Option B. The selected source node exposes a read-only,
+localized Connection fact in the existing Workbench. Source Import remains the
+only mutation command. An editable control is forbidden until an authoritative
+binding command exists.
 
 A hidden global/default connection is not an allowed third option.
 
@@ -289,3 +290,246 @@ This proposal does not replace existing owners:
 - cross-connection transfer implementation before #2256/#2257 are proven;
 - secret storage in graph or plan;
 - replacing current domain owners with a new subsystem.
+
+## 13. PTH1 bounded implementation brief
+
+### 13.1 Mode, baseline, and exact slice
+
+- Think-First mode: Full.
+- Baseline: `main@32cfaf6d31fa5ca789bdb390def95d27f5d71f59`.
+- Feature ID: `PTH1-CONNECTED-SOURCE-TRUTH`.
+- Primary issue: #2256, under #2254.
+- Existing studies consumed: #2170, #2171, #2173, #2174, #2176, and #2195.
+- Included: canonical connection-bound source identity; fail-closed handling of
+  legacy ambiguous nodes and missing drafts; deterministic JCS hashes; visible
+  read-only Canvas binding; A -> B -> A cache proof with a colliding path.
+- Deferred: #2257 dbt target binding, runtime capability truth from #2176,
+  additional providers, a connection node, and the complete #2255 product
+  acceptance suite.
+
+### 13.2 Governing command/query rails
+
+Planning DB queries confirm that the intent already has owners; no parallel rail
+is introduced:
+
+| Intent                                         | Rail                                            | Kind    | Owner / application boundary           |
+| ---------------------------------------------- | ----------------------------------------------- | ------- | -------------------------------------- |
+| Persist imported sources in Graph Draft        | `ImportWarehouseSources`                        | command | Warehouse Source Import / API strategy |
+| Read the authoritative draft                   | `GetWorkspaceGraphDraft`                        | query   | Workspace Graph Draft read model       |
+| Discover source objects through one connection | `ListWarehouseConnectionSourceObjects`          | query   | Warehouse Source Import                |
+| Change active granted scope                    | `SelectWorkspaceScope`                          | command | Web session scope selection            |
+| Read scope-bound workspace files               | `ListWorkspaceFiles`, `GetWorkspaceFileContent` | query   | Workspace Files                        |
+
+The import command owns all mutation. Canvas/Workbench projects the persisted
+reference; it does not infer or mutate it.
+
+### 13.3 Current and target flow
+
+```text
+CURRENT
+connection selection
+  -> sourceObjectId
+  -> Graph Draft metadata.sourceObjectId
+  -> replay/dedup by sourceObjectId alone
+  -> two connections can alias one node
+```
+
+```text
+TARGET
+WarehouseConnection + SourceObject
+  -> ConnectedSourceRef(connectionId, provider, sourceObjectId)
+  -> strict contract validation (no unknown/secret fields)
+  -> Graph Draft metadata.connectedSourceRef
+  -> replay/dedup by canonical JCS identity
+  -> Workbench shows the effective connection
+  -> missing/legacy ambiguous identity fails closed before mutation
+```
+
+```text
+WORKSPACE CACHE PROOF
+scope A / models/orders.sql = A
+  -> select scope B / models/orders.sql = B
+  -> select scope A / models/orders.sql = A
+  -> no key, cache, file, graph, or artifact state crosses scope
+```
+
+### 13.4 Decision rationale
+
+1. **Option B, read-only Workbench fact, selected.** A first-class connection
+   node would add topology without independent behavior. The existing import
+   rail is authoritative and the binding must still be visible.
+2. **Canonical nested value objects, selected.** A `ConnectedSourceRef` contains
+   a `ConnectionRef`; loose `connectionId`/`sourceObjectId` string pairs would
+   preserve primitive obsession and permit provider drift.
+3. **Strict versioned schemas, selected.** Unknown properties are rejected so
+   passwords, tokens, and connection strings cannot silently enter graph
+   metadata through this contract.
+4. **Fail closed, selected.** A node carrying only the former
+   `metadata.sourceObjectId` is not upgraded, guessed, or treated as compatible.
+   There are no database migrations or compatibility state. Re-import requires
+   unambiguous canonical identity.
+5. **Shared JCS hashing, selected.** Request and identity hashes reuse the
+   repository canonicalizer instead of local `JSON.stringify` order.
+6. **No initial-draft fallback, selected.** Import cannot manufacture a draft
+   when the requested Canvas is absent; it returns the existing typed not-found
+   error before writing files or calling the external source.
+
+### 13.5 Fowler opportunity matrix
+
+| Scenario                                          | Smell / risk                                 | Fowler move                                     | Required proof                                                 |
+| ------------------------------------------------- | -------------------------------------------- | ----------------------------------------------- | -------------------------------------------------------------- |
+| Connection and object travel as loose strings     | Primitive obsession / data clump             | Introduce Value Object                          | Strict `ConnectionRef` and `ConnectedSourceRef` contract tests |
+| Same object ID exists through connections A and B | Hidden authority / identity collision        | Replace derived identity with explicit identity | Two distinct nodes and stable replay per connection            |
+| Legacy node lacks connection identity             | Hidden authority / speculative compatibility | Introduce Assertion / Guard Clause              | Import fails before any mutation; no inference or migration    |
+| Canvas hides the effective source connection      | Hidden authority                             | Introduce Presentation Model                    | Localized read-only Workbench row names the connection         |
+| Scope A and B share a relative path               | Identity Map leakage                         | Make scope key explicit                         | A -> B -> A returns A, B, A for the same path                  |
+| Missing Canvas triggers initial-draft creation    | Divergent change / boundary drift            | Separate creation from import                   | Typed not-found with zero file/external writes                 |
+| Graph metadata accepts secret-shaped extras       | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                        |
+
+### 13.6 DoR for the bounded slice
+
+- [x] Product outcome and negative behavior are stated.
+- [x] Existing related studies and current code were inspected.
+- [x] Owning command/query rails were queried from Planning DB and reused.
+- [x] Current and target flows are diagrammed.
+- [x] Fowler opportunities and rejected alternatives are recorded.
+- [x] No human design decision remains for the declared patch surfaces.
+- [x] Red tests, green tests, architecture guard, and live proof are named below.
+- [x] No migration, compatibility layer, provider placeholder, or new subsystem is allowed.
+
+### 13.7 DoD for the bounded slice
+
+- [ ] Canonical contracts reject ambiguous or secret-bearing payloads.
+- [ ] Import persists/replays using the complete connected-source identity.
+- [ ] Two connections exposing the same object ID never alias.
+- [ ] Missing/legacy ambiguous state fails closed before mutation.
+- [ ] Canvas Workbench exposes the effective connection in ES and EN.
+- [ ] A -> B -> A with the same relative path proves cache isolation.
+- [ ] Existing live Source Import proof passes without reducing its assertions.
+- [ ] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
+- [ ] No debt, stub, skipped check, disabled rule, or migration is introduced.
+
+## 14. Feature mechanization
+
+```feature-mechanization
+version: 1
+featureId: PTH1-CONNECTED-SOURCE-TRUTH
+mechanizationStatus: implemented
+noHumanDecisionsRemaining: true
+implementationPlan: docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md
+componentGuides:
+  - docs/architecture/components/source-import.md
+  - docs/architecture/components/workspace-graph-draft.md
+  - docs/architecture/components/web/frontend-component-inventory.md
+userStories:
+  - As a Canvas author I can see which connection qualifies an imported source.
+  - As a workspace user I can switch between scopes with colliding paths without stale data.
+  - As an operator I get an explicit failure instead of guessed legacy connection state.
+governingSources:
+  - docs/planning/status/governance-document-rule-inventory.md
+  - docs/guides/ai-work-protocol.md
+  - docs/architecture/command-query-rail-governance.md
+  - docs/architecture/fowler-opportunity-planning-governance.md
+  - docs/adr/0061-server-owned-effective-workspace-context.md
+  - docs/adr/0058-warehouse-source-import.md
+  - docs/adr/0060-dbt-project-source-authority.md
+allowedImplementationSurfaces:
+  - docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md
+  - packages/@dvt/contracts/src/contracts/source-import/**
+  - packages/@dvt/contracts/test/**
+  - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
+  - apps/api/test/application/graphDraftWarehouseSourceImportStrategy.test.ts
+  - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
+  - apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts
+  - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
+  - apps/web/src/app/views/canvas/canvasNodePresentationCopy.test.ts
+  - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
+  - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+  - docs/evidence/**
+  - docs/risk-register/quality/**
+  - docs/**/index.md
+  - docs/planning/status/**
+forbiddenImplementationSurfaces:
+  - database migrations or migration-state compatibility
+  - packages/@dvt/engine/**
+  - packages/@dvt/planner/**
+  - packages/@dvt/adapter-*/**
+  - new API routes, services, providers, registries, or fake adapters
+  - dbt target binding or runtime connection resolution from issue 2257
+commandQueryRails:
+  - name: ImportWarehouseSources
+    type: command
+    dddOwner: Warehouse Source Import
+  - name: GetWorkspaceGraphDraft
+    type: query
+    dddOwner: Workspace Graph Draft
+  - name: SelectWorkspaceScope
+    type: command
+    dddOwner: Web session workspace selection
+  - name: GetWorkspaceFileContent
+    type: query
+    dddOwner: Workspace Files
+domainObjects:
+  - ConnectionRef
+  - ConnectedSourceRef
+  - WarehouseConnection
+  - SourceObject
+  - WorkspaceGraphDraft
+fowlerSignals:
+  - Primitive obsession
+  - Data clump
+  - Hidden authority
+  - Identity Map leakage
+  - Boundary drift
+architectureGuards:
+  - pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH
+  - GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs
+cypressFlows:
+  - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+completionGate:
+  - pnpm docs:feature-mechanization -- --feature PTH1-CONNECTED-SOURCE-TRUTH
+  - pnpm --filter @dvt/contracts test
+  - pnpm --filter @dvt/contracts lint
+  - pnpm --filter @dvt/contracts typecheck
+  - pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
+  - pnpm --filter dvt-api lint
+  - pnpm --filter dvt-api typecheck
+  - pnpm --filter @dvt/web test:canvas
+  - pnpm --filter @dvt/web lint
+  - pnpm --filter @dvt/web typecheck
+  - pnpm verify:prepush
+redGreenCycles:
+  - id: connection-reference-contract
+    redTest: pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts
+    expectedFailure: ConnectionRefSchema and ConnectedSourceRefSchema are not exported.
+    patchSurfaces:
+      - packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts
+      - packages/@dvt/contracts/src/contracts/source-import/index.ts
+    greenTest: pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts
+  - id: connection-qualified-import
+    redTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
+    expectedFailure: Import aliases identical source object IDs across connections and accepts legacy ambiguous metadata.
+    patchSurfaces:
+      - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
+    greenTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
+  - id: visible-connection-binding
+    redTest: pnpm --filter @dvt/web test:canvas -- nodePropertiesReadModel.test.ts canvasNodePresentationCopy.test.ts
+    expectedFailure: The Workbench read model and localized copy do not expose Connection.
+    patchSurfaces:
+      - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
+      - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
+    greenTest: pnpm --filter @dvt/web test:canvas -- nodePropertiesReadModel.test.ts canvasNodePresentationCopy.test.ts
+  - id: workspace-colliding-path-isolation
+    redTest: pnpm --filter @dvt/web test -- workspaceQueries.scope.test.tsx
+    expectedFailure: Existing proof does not exercise the same relative path across A and B.
+    patchSurfaces:
+      - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
+    greenTest: pnpm --filter @dvt/web test -- workspaceQueries.scope.test.tsx
+symbols:
+  - { name: CONNECTION_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
+  - { name: CONNECTED_SOURCE_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
+  - { name: ConnectionRefSchema, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Replace Primitive with Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
+  - { name: ConnectionRef, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Replace Primitive with Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
+  - { name: ConnectedSourceRefSchema, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Replace Primitive with Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
+  - { name: ConnectedSourceRef, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Replace Primitive with Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
+```
