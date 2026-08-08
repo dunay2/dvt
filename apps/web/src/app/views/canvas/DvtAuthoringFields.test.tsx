@@ -190,7 +190,7 @@ describe('DvtAuthoringFields', () => {
       `input[name="dvt-transform-column"][value="${source.id}.id"]`
     ) as HTMLInputElement | null;
 
-    expect(container.textContent).toContain('Input columns');
+    expect(container.textContent).toContain('Columns (Input)');
     expect(container.textContent).toContain('src_warehouse_prod_analytics_erp_orders');
     expect(container.textContent).toContain('id');
     expect(container.textContent).toContain('number');
