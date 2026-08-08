@@ -284,7 +284,7 @@ describe('Canvas source import live clean proof', () => {
       cy.viewport(viewport.width, viewport.height);
       cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 })
         .should('be.visible')
-        .then(($dialog) => {
+        .should(($dialog) => {
           const bounds = $dialog.get(0).getBoundingClientRect();
           expect(bounds.left).to.be.at.least(0);
           expect(bounds.top).to.be.at.least(0);
