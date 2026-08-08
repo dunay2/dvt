@@ -72,4 +72,34 @@ describe('SourceImportWizardFrame focus', () => {
     });
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('keeps bounded review overflow discoverable while footer actions remain visible', async () => {
+    await act(async () =>
+      root.render(
+        <SourceImportWizardFrame
+          open
+          activeContentId="selected"
+          isResultStep={false}
+          isProcessing={false}
+          canImport
+          sections={<button type="button">Selected</button>}
+          onClose={vi.fn()}
+          onDone={vi.fn()}
+          onImport={vi.fn()}
+        >
+          <div style={{ height: 1200 }}>Selected source review</div>
+        </SourceImportWizardFrame>
+      )
+    );
+
+    const scrollRegion = document.body.querySelector(
+      '[data-slot="source-import-wizard-content-scroll"]'
+    );
+    const scrollbar = scrollRegion?.querySelector('[data-slot="scroll-area-scrollbar"]');
+
+    expect(scrollRegion).not.toBeNull();
+    expect(scrollbar?.getAttribute('data-state')).toBe('visible');
+    expect(document.body.textContent).toContain('Cancel');
+    expect(document.body.textContent).toContain('Attach sources to canvas');
+  });
 });
