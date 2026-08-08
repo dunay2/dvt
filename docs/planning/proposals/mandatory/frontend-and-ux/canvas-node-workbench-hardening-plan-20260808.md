@@ -133,7 +133,9 @@ flowchart LR
 
 Mode: **Full** because user-visible behavior changes and live-browser proof are required.
 
-The initial plan correctly bounded the product owners, but the red/green consumer audit showed that the dead React Flow seams and exhausted Inspector projection crossed additional existing shell forwarding files. Those files were not a new subsystem; they were the exact forwarding chain that had to be removed to make the seam truly disappear. This plan records that scope correction explicitly rather than leaving the final diff outside mechanization.
+The initial plan correctly bounded the product owners, but the red/green consumer audit showed that the dead React Flow seams and exhausted Inspector projection crossed additional existing shell forwarding files. Those files were not a new subsystem; they were the exact forwarding chain that had to be removed to make the seam truly disappear.
+
+The first remote Code Quality typecheck then found five tests/harnesses that still encoded the removed no-op callback contract. They are now part of the same reduction boundary: the tests are changed to prove the absence of application visual-selection commands and to retain only explicit inspect/execution-selection behavior. The failure also exposed one accidental stale `CanvasContextMenuView` call shape in the rewritten viewport surface; the canonical menu prop contract is restored rather than adding compatibility.
 
 No product/backend/connection scope was added. No package under contracts, engine, planner, adapters, infra DB, or Planning DB is touched.
 
@@ -146,6 +148,8 @@ No product/backend/connection scope was added. No package under contracts, engin
 - Source-wide audit found no product consumer of Inspector `modelerActions`; the DTO/projection and tests that only asserted that dead wiring were removed.
 - DVT transform copy reuses existing localized semantic copy rather than introducing synonymous strings.
 - Existing live dbt flows were updated so general authoring uses the explicit Workbench command and double-click proves code-first behavior.
+- Remote Code Quality reproduced stale test/harness consumers of the deleted callback seam. Those consumers were reduced instead of restoring compatibility callbacks.
+- The same CI pass caught a stale context-menu call signature introduced during reduction; the existing `CanvasContextMenuView` contract remains the sole owner.
 
 ## Regression Baseline
 
@@ -194,7 +198,11 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/Canvas.test.controller.defaults.ts
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.header.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
+  - apps/web/src/app/views/canvas/CanvasShell.testHarness.tsx
   - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.testHarness.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
   - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
   - apps/web/src/app/views/canvas/DvtSqlTransformAuthoringSection.tsx
@@ -208,6 +216,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
   - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
   - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.selection.test.tsx
   - apps/web/src/app/views/canvas/useCanvasGraphHandlers.types.ts
   - apps/web/src/app/views/canvas/useCanvasSelectionHandlers.ts
   - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
@@ -302,6 +311,11 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
       - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
       - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+      - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
+      - apps/web/src/app/views/canvas/CanvasShell.testHarness.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.testHarness.tsx
+      - apps/web/src/app/views/canvas/useCanvasGraphHandlers.selection.test.tsx
     greenTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
   - id: w4-localization
     redTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
