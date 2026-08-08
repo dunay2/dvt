@@ -17,8 +17,16 @@ export const ConnectionRefSchema = z
     schemaVersion: z.literal(CONNECTION_REF_SCHEMA_VERSION),
     connectionId: z
       .string()
-      .refine((value) => value.trim().length > 0, 'Expected a non-blank string.'),
-    provider: z.string().refine((value) => value.trim().length > 0, 'Expected a non-blank string.'),
+      .refine(
+        (value) => value.length > 0 && value === value.trim(),
+        'Expected a non-blank string without exterior whitespace.'
+      ),
+    provider: z
+      .string()
+      .refine(
+        (value) => value.length > 0 && value === value.trim(),
+        'Expected a non-blank string without exterior whitespace.'
+      ),
   })
   .strict();
 
@@ -28,7 +36,10 @@ export const ConnectedSourceRefSchema = z
     connectionRef: ConnectionRefSchema,
     sourceObjectId: z
       .string()
-      .refine((value) => value.trim().length > 0, 'Expected a non-blank string.'),
+      .refine(
+        (value) => value.length > 0 && value === value.trim(),
+        'Expected a non-blank string without exterior whitespace.'
+      ),
   })
   .strict();
 
