@@ -20,6 +20,10 @@ test('current-schema policy rejects Planning DB migration paths and executable s
       'packages/@dvt/adapter-postgres/src/PostgresSchemaManager.ts',
       'export const runMigrations = true;',
     ],
+    [
+      'docs/planning/proposals/mandatory/governance-and-docs/example.md',
+      'Run tools/planning-db/migrations before the governance query.',
+    ],
   ]);
   const filePaths = [
     'tools/planning-db/migrations/001_old.sql',
@@ -35,6 +39,10 @@ test('current-schema policy rejects Planning DB migration paths and executable s
   assert.deepEqual(
     artifacts.map(({ path, reason }) => [path, reason]),
     [
+      [
+        'docs/planning/proposals/mandatory/governance-and-docs/example.md',
+        'Planning DB migration source reference',
+      ],
       ['package.json', 'planning:db:migrate command'],
       ['scripts/example.cjs', 'Planning DB migration executable semantics'],
       ['scripts/planning-db-migrate.cjs', 'Planning DB migration runner'],
