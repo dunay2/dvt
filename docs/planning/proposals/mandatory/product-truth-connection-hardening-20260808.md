@@ -459,6 +459,11 @@ server grants scope A and scope B
     Direct storage seeding, browser-only scope invention, or an API-only switch
     is rejected because it would not prove the product interaction or query
     invalidation boundary.
+19. **Workbench editor owns destructive keystrokes, selected.** When a textarea
+    in the contextual Workbench has focus, `Backspace` and `Delete` remain text
+    editing input and must not bubble into React Flow node deletion. Explicit
+    Canvas deletion outside an editor remains governed by the existing graph
+    command surface; the fix does not create another delete command.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -481,6 +486,7 @@ server grants scope A and scope B
 | Fit view places a node under Add Component         | Presentation collision / hidden interaction  | Move shared options to the action owner         | Both live source nodes remain actionable after Fit view               |
 | Add Source clips actions under viewport pressure   | Hidden command / inaccessible cancellation   | Introduce Parameter Object for viewport proof   | Four-size live matrix keeps Cancel visible and closes without import  |
 | A and B reuse graph/file names in one live session | Hidden authority / Identity Map leakage      | Make scope key explicit at query boundaries     | Visible A -> B -> A switch recovers distinct graph and YAML state     |
+| Backspace in Workbench removes the selected node   | Event leakage / feature envy                 | Encapsulate event ownership                     | Editor clears text while the selected graph node remains present      |
 
 ### 13.6 DoR for the bounded slice
 
@@ -502,6 +508,7 @@ server grants scope A and scope B
 - [x] Canvas Workbench exposes the effective connection in ES and EN.
 - [x] A -> B -> A with the same relative path proves cache isolation.
 - [ ] A -> B -> A through two real granted scopes proves live graph/file isolation.
+- [ ] Workbench text editing cannot leak `Backspace` or `Delete` into graph-node deletion.
 - [x] Live Source Import persists the same physical object through two distinct real connections without reducing its existing assertions.
 - [x] Add Source and connected-source Workbench remain visible, axe-clean and cancellable across the governed viewport matrix.
 - [x] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
@@ -683,6 +690,14 @@ redGreenCycles:
       - scripts/run-canvas-source-import-live-proof.test.cjs
       - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
     greenTest: pnpm --filter @dvt/web test:e2e:source-import:live
+  - id: workbench-editor-destructive-key-isolation
+    redTest: pnpm --filter @dvt/web test:canvas -- DbtModelCodeAuthoringSection.test.tsx
+    expectedFailure: Backspace in the focused SQL editor bubbles to React Flow and deletes the selected model node.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.tsx
+      - apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.test.tsx
+      - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    greenTest: pnpm --filter @dvt/web test:canvas -- DbtModelCodeAuthoringSection.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live
   - id: windows-live-proof-dependency-resolution
     redTest: node --test scripts/run-canvas-source-import-live-proof.test.cjs
     expectedFailure: The live proof always selects a Linux Docker bind mount even when Windows pnpm dependencies are NTFS junctions.
