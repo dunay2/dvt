@@ -9,6 +9,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./python-code": {
+      "types": "./dist/python-code.d.ts",
+      "import": "./dist/python-code.js",
+      "default": "./dist/python-code.js"
     }
   },
   "private": true,
