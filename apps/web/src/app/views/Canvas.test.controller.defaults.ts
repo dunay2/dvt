@@ -25,7 +25,6 @@ type CanvasWorkbenchDefaultsDto = {
   inspectorNode: CanvasController['inspectorNode'];
   inspectorPreferredTabId: CanvasController['inspectorPreferredTabId'];
   inspectorPreferredTabRequestId: CanvasController['inspectorPreferredTabRequestId'];
-  inspectorNodeSelectedForExecution: CanvasController['inspectorNodeSelectedForExecution'];
   inspectorGraphNodes: CanvasController['inspectorGraphNodes'];
   inspectorGraphEdges: CanvasController['inspectorGraphEdges'];
   canEditInspectorNode: CanvasController['canEditInspectorNode'];
@@ -144,7 +143,6 @@ function buildDefaultCanvasWorkbenchState(): CanvasWorkbenchDefaultsDto {
     inspectorNode: null,
     inspectorPreferredTabId: null,
     inspectorPreferredTabRequestId: 0,
-    inspectorNodeSelectedForExecution: false,
     inspectorGraphNodes: [],
     inspectorGraphEdges: [],
     canEditInspectorNode: true,
@@ -279,8 +277,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
   | 'onEdgesChange'
   | 'onConnect'
   | 'onReconnect'
-  | 'handleNodeClick'
-  | 'onSelectionChange'
   | 'handleViewportChange'
   | 'handleNodeDrag'
   | 'handleNodeDragStop'
@@ -323,8 +319,6 @@ export function buildDefaultCanvasControllerCallbacks(): Pick<
     onEdgesChange: vi.fn(),
     onConnect: vi.fn(),
     onReconnect: vi.fn(),
-    handleNodeClick: vi.fn(),
-    onSelectionChange: vi.fn(),
     handleViewportChange: vi.fn(),
     handleNodeDrag: vi.fn(),
     handleNodeDragStop: vi.fn(),
