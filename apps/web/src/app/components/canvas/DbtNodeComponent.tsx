@@ -218,12 +218,19 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const portTone = NODE_ROLE_PORT_TONES[role];
   const canMutateNodeCommands = data.canMutateGraph === true;
   const canAttachSchema = canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function';
+  const canOpenCodeThroughWorkbench =
+    typeof data.onInspectNode === 'function' &&
+    (data.presentationTruth?.code.kind === 'inline' ||
+      data.presentationTruth?.code.kind === 'generated');
+  const canOpenNodeCode =
+    (data.canOpenNodeCode === true && typeof data.onOpenNodeCode === 'function') ||
+    canOpenCodeThroughWorkbench;
   const contextMenuModel = buildCanvasNodeContextMenuModel({
     target: { kind: 'node', nodeId: id, nodeName: data.name },
     selectedForExecution,
     canMutateGraph: canMutateNodeCommands,
     canInspectNode: typeof data.onInspectNode === 'function',
-    canOpenNodeCode: data.canOpenNodeCode === true && typeof data.onOpenNodeCode === 'function',
+    canOpenNodeCode,
     canDuplicateNode: typeof data.onDuplicateNode === 'function',
     canToggleNodeSelection: typeof data.onToggleNodeSelection === 'function',
     canRemoveNode: typeof data.onRemoveNode === 'function',
@@ -266,7 +273,13 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
         data.onInspectNode?.(id, null);
         return;
       case 'open-node-code':
-        data.onOpenNodeCode?.(id);
+        if (typeof data.onOpenNodeCode === 'function') {
+          data.onOpenNodeCode(id);
+          return;
+        }
+        if (canOpenCodeThroughWorkbench) {
+          data.onInspectNode?.(id, 'code');
+        }
         return;
       case 'duplicate-node':
         data.onDuplicateNode?.(id);
