@@ -30,14 +30,14 @@ describe('CanvasShell graph base surface', () => {
     unmountShell();
   });
 
-  it('resolves the canonical dbt model file when a legacy draft omitted its path', () => {
+  it('does not fabricate a dbt model workspace path when the draft omitted it', () => {
     expect(
       resolveWorkspaceFilePath({
         name: 'Model 1',
         pluginKind: 'dbt:model',
         status: 'idle',
       })
-    ).toBe('models/model_1.sql');
+    ).toBeNull();
   });
 
   it('keeps node selection separate from contextual node workbench opening', async () => {
