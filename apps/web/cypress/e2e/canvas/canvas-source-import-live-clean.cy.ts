@@ -272,6 +272,41 @@ describe('Canvas source import live clean proof', () => {
       }
     });
 
+    openCanvasContextMenuAt(640, 420);
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    for (const viewport of [
+      { width: 1440, height: 900 },
+      { width: 1280, height: 720 },
+      { width: 1000, height: 660 },
+      { width: 500, height: 330 },
+    ]) {
+      cy.viewport(viewport.width, viewport.height);
+      cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 })
+        .should('be.visible')
+        .then(($dialog) => {
+          const bounds = $dialog.get(0).getBoundingClientRect();
+          expect(bounds.left).to.be.at.least(0);
+          expect(bounds.top).to.be.at.least(0);
+          expect(bounds.right).to.be.at.most(viewport.width);
+          expect(bounds.bottom).to.be.at.most(viewport.height);
+        });
+      cy.get('[data-slot="source-import-wizard-content-scroll"]').should('be.visible');
+      cy.contains('[role="dialog"] button', 'Cancel').should('be.visible').and('be.enabled');
+      assertNoSeriousAccessibilityViolations('[role="dialog"][data-state="open"]');
+    }
+    cy.contains('[role="dialog"] button', 'Cancel').click();
+    cy.contains('[role="dialog"]', 'Add source').should('not.exist');
+    readLiveGraphDraft(session).then((draftResponse) => {
+      const importedSources = (
+        draftResponse.body as {
+          record: { draft: { nodes: Array<{ pluginId: string }> } };
+        }
+      ).record.draft.nodes.filter((node) => node.pluginId === 'dvt.warehouse-source');
+      expect(importedSources).to.have.length(2);
+    });
+    cy.viewport(1000, 660);
+
     cy.get('button.react-flow__controls-fitview').should('be.visible').click();
     cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
       .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
