@@ -174,6 +174,8 @@ describe('GraphDraftWarehouseSourceImportStrategy', () => {
         connectionRef: expect.objectContaining({ connectionId: 'warehouse-backup' }),
       }),
     ]);
+    const savedPositions = vi.mocked(draftStore.save).mock.calls[0]?.[0].draft.nodePositions ?? {};
+    expect(new Set(savedNodes.map((node) => JSON.stringify(savedPositions[node.id]))).size).toBe(2);
   });
 
   it('fails closed when every canonical node ID is owned by another source identity', async () => {
