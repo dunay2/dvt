@@ -114,10 +114,12 @@ One responsibility has one owner:
 - **Expected outcome:** no Planning DB migration concept remains; current state
   is rebuilt deterministically.
 - **Risks:** missing a final schema object, retaining stale migration source
-  references, or publishing a partial rebuild.
+  references, allowing archived documents to act as current rail authority, or
+  publishing a partial rebuild.
 - **Mitigations:** produce the schema from the verified current database, compare
-  object inventories, apply transactionally, add a recurrence guard, and run
-  two real-DB cycles.
+  object inventories, exclude archived and superseded documents from current
+  rail discovery, apply transactionally, add a recurrence guard, and run two
+  real-DB cycles.
 - **Out of scope:** product runtime databases, adapters, contracts, frontend,
   API behavior, and compatibility.
 - **Libraries evaluated:** none adopted; PostgreSQL and `pg` are sufficient.

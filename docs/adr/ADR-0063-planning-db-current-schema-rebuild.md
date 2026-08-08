@@ -57,6 +57,10 @@ Git remains the history, review, and recovery boundary. The existing
 The migration-policy rail is retired and replaced by a current-schema fitness
 rule that rejects migration artifacts.
 
+Archived and superseded documents remain historical evidence only. Current
+command/query rail discovery and implementation evidence MUST exclude them so
+that a retired delivery record cannot create or satisfy a current rail.
+
 This decision applies only to Planning DB. Product runtime databases,
 `infra/db/migrations/**`, and `@dvt/adapter-postgres` schema management remain
 outside its boundary.
