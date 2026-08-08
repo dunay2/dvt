@@ -397,7 +397,7 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', 'amount');
 
     openNodeWorkbenchSection('code');
-    const authoredModelSql = `select order_id, customer\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
+    const authoredModelSql = `select order_id, customer, amount\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
     cy.get('[data-slot="canvas-node-workbench-code-section"]')
       .should('not.contain.text', 'No SQL or generated code is recorded for this node.')
       .within(() => {
