@@ -577,7 +577,15 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', 'customer')
       .and('contain.text', 'amount');
 
-    openNodeWorkbenchSection('code');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    getVisibleCanvasNodeByCardTitle('Model 1')
+      .find('[data-slot="graph-node-card"]')
+      .click('center');
+    cy.get('[data-slot="canvas-node-floating-toolbar"] button[data-toolbar-action="code"]')
+      .should('have.attr', 'aria-label', 'Open node code')
+      .click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
     const authoredModelSql = `select order_id, customer, amount\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
     cy.get('[data-slot="canvas-node-workbench-code-section"]').should(
       'not.contain.text',
