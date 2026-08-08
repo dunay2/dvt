@@ -281,23 +281,6 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     }
   };
 
-  const handleOpenWorkbench = () => {
-    if (data.canOpenNodeCode === true && typeof data.onOpenNodeCode === 'function') {
-      data.onOpenNodeCode(id);
-      return;
-    }
-
-    if (data.canOpenNodeCode === false) {
-      data.onInspectNode?.(id, null);
-      return;
-    }
-
-    data.onInspectNode?.(id, 'code');
-  };
-
-  const canOpenWorkbench =
-    typeof data.onInspectNode === 'function' || typeof data.onOpenNodeCode === 'function';
-
   return (
     <CanvasNodeShell
       contextMenuModel={contextMenuModel}
@@ -310,7 +293,9 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       sourcePortCompatibility={data.portCompatibility?.source}
       targetPortCompatibility={data.portCompatibility?.target}
       onContextMenuAction={handleContextMenuAction}
-      onOpenWorkbench={canOpenWorkbench ? handleOpenWorkbench : undefined}
+      onOpenWorkbench={
+        typeof data.onInspectNode === 'function' ? () => data.onInspectNode?.(id, null) : undefined
+      }
       onDragOver={handleSchemaResourceDragOver}
       onDrop={handleSchemaResourceDrop}
     >
