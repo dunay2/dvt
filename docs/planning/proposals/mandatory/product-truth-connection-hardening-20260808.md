@@ -392,6 +392,11 @@ scope A / models/orders.sql = A
     surface. Fabricating `models/<name>.sql` and silently falling back to an
     unrelated existing file is rejected. The project-file Workbench remains
     authoritative only when the node exposes a real workspace-file path.
+11. **Single explicit edge as origin, selected.** When a dbt model has exactly
+    one compatible incoming edge, that edge is the complete origin decision;
+    requiring a duplicate hidden `selectedSourceId` would create two sources of
+    truth. Zero compatible origins, multiple unselected origins, or an explicit
+    selection that is not connected continue to fail closed.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -407,6 +412,7 @@ scope A / models/orders.sql = A
 | Windows Docker cannot resolve pnpm junctions      | Environment coupling / false-negative gate   | Encapsulate platform execution strategy         | Unit proof selects native Cypress on Windows; live proof passes |
 | Source review extends below a bounded dialog      | Hidden content / inaccessible navigation     | Expose bounded scrolling region                 | Visible scrollbar, reachable selected object, fixed Cancel      |
 | Missing node file falls back to another file      | Hidden authority / semantic substitution     | Replace guessed path with explicit strategy     | Generated model opens node code; persisted path opens Workbench |
+| One edge still requires hidden selected-source ID | Data clump / duplicated decision             | Derive from the single explicit relationship    | One edge generates; zero or ambiguous edges fail closed         |
 
 ### 13.6 DoR for the bounded slice
 
@@ -473,6 +479,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.focus.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.tsx
   - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
+  - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
+  - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
   - apps/web/cypress/support/liveWarehouseSourceImport.ts
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - scripts/run-canvas-source-import-live-proof.cjs
@@ -586,6 +594,12 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/src/app/views/canvas/CanvasShell.tsx
     greenTest: pnpm --filter @dvt/web test:canvas -- CanvasShell.graphSurface.test.tsx
+  - id: single-connected-dbt-origin
+    redTest: pnpm --filter @dvt/web test:canvas -- canvasDbtModelArtifactProjection.test.ts
+    expectedFailure: One explicit compatible incoming edge still requires a duplicate selectedSourceId.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
+    greenTest: pnpm --filter @dvt/web test:canvas -- canvasDbtModelArtifactProjection.test.ts
 symbols:
   - { name: CONNECTION_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
   - { name: CONNECTED_SOURCE_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
