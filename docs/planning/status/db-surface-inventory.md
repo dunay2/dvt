@@ -20,7 +20,7 @@ surface is generated locally under
 - `docs/planning/status/governance-document-rule-inventory.md`
 - `docs/adr/adr-0055-planning-db-canonical-operational-source.md`
 - `docs/architecture/command-query-rail-governance.md`
-- `tools/planning-db/migrations/059_db_surface_inventory.sql`
+- `tools/planning-db/schema.sql`
 - `scripts/planning-db-operate.cjs`
 - `scripts/planning-db-query.cjs`
 - `scripts/generate-db-surface-inventory.cjs`
@@ -51,7 +51,7 @@ surface is generated locally under
 ## Operator Commands
 
 ```bash
-pnpm planning:db:migrate
+pnpm planning:db:import
 pnpm planning:db:query db-surfaces --limit 30
 pnpm planning:db:inventory:check
 pnpm docs:db-surface-inventory:generate

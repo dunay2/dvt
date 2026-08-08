@@ -916,6 +916,7 @@ async function readFeatureMechanizationManifestsFromDb(options = {}) {
           1 as projection_priority
         from planning_query_store.command_query_rail_manifest_query
         where raw_manifest ? 'featureId'
+          and rail_id not like 'current#rail-decision#%'
         union all
         select
           rail_id,
@@ -926,6 +927,7 @@ async function readFeatureMechanizationManifestsFromDb(options = {}) {
           0 as projection_priority
         from planning_query_store.feature_mechanization_local_rails
         where raw_manifest ? 'featureId'
+          and rail_id not like 'current#rail-decision#%'
       ),
       ranked_manifest_rows as (
         select

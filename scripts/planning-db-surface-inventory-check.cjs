@@ -5,36 +5,36 @@ const { Client } = require('pg');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 const { textValue } = require('./planning-db/query-format.cjs');
 const {
-  allowedDbSurfaceMigrationStates,
+  allowedDbSurfaceAuthorityModes,
   allowedDbSurfaceWriteRailKinds,
   readDbSurfaceRows,
   sourceView,
 } = require('./planning-db/db-surface-inventory.cjs');
 
 const requiredSurfaces = [
-  { surfaceName: 'Governance file inventory', migrationState: 'Hybrid indexed' },
+  { surfaceName: 'Governance file inventory', authorityMode: 'hybrid-indexed' },
   {
     surfaceName: 'Architecture design authority',
-    migrationState: 'DB-first',
+    authorityMode: 'database',
     writeRailKind: 'db_command',
   },
   {
     surfaceName: 'Governance component definition',
-    migrationState: 'DB-first',
+    authorityMode: 'database',
     writeRailKind: 'db_command',
   },
-  { surfaceName: 'Governance remediation queue', migrationState: 'Generated-only' },
-  { surfaceName: 'ADR and contract decisions', migrationState: 'Git-first indexed' },
-  { surfaceName: 'Risk and evidence records', migrationState: 'Git-first indexed' },
-  { surfaceName: 'Repository command catalog', migrationState: 'Hybrid indexed' },
-  { surfaceName: 'Command/query rail catalog', migrationState: 'Hybrid indexed' },
-  { surfaceName: 'Knowledge intake literature', migrationState: 'Hybrid indexed' },
-  { surfaceName: 'Documentation lifecycle catalog', migrationState: 'Hybrid indexed' },
-  { surfaceName: 'AI project context', migrationState: 'Hybrid indexed' },
-  { surfaceName: 'Docs task disposition inventory', migrationState: 'Git-first indexed' },
+  { surfaceName: 'Governance remediation queue', authorityMode: 'generated' },
+  { surfaceName: 'ADR and contract decisions', authorityMode: 'git-indexed' },
+  { surfaceName: 'Risk and evidence records', authorityMode: 'git-indexed' },
+  { surfaceName: 'Repository command catalog', authorityMode: 'hybrid-indexed' },
+  { surfaceName: 'Command/query rail catalog', authorityMode: 'hybrid-indexed' },
+  { surfaceName: 'Knowledge intake literature', authorityMode: 'hybrid-indexed' },
+  { surfaceName: 'Documentation lifecycle catalog', authorityMode: 'hybrid-indexed' },
+  { surfaceName: 'AI project context', authorityMode: 'hybrid-indexed' },
+  { surfaceName: 'Docs task disposition inventory', authorityMode: 'git-indexed' },
   {
     surfaceName: 'Docs resolution overlays',
-    migrationState: 'DB-first',
+    authorityMode: 'database',
     writeRailKind: 'db_command',
   },
 ];
@@ -56,11 +56,11 @@ function normalizeRow(row) {
     readQueryRail: textValue(row.read_query_rail ?? row.readQueryRail, ''),
     projection: textValue(row.projection, ''),
     validation: textValue(row.validation, ''),
-    migrationState: textValue(row.migration_state ?? row.migrationState, ''),
+    authorityMode: textValue(row.authority_mode ?? row.authorityMode, ''),
     sourceRef: textValue(row.source_ref ?? row.sourceRef, ''),
     sourceContentSha256: textValue(row.source_content_sha256 ?? row.sourceContentSha256, ''),
-    dbFirstEligible: booleanValue(row.db_first_eligible ?? row.dbFirstEligible),
-    dbFirstBlocker: textValue(row.db_first_blocker ?? row.dbFirstBlocker, ''),
+    databaseWriteEligible: booleanValue(row.database_write_eligible ?? row.databaseWriteEligible),
+    databaseWriteBlocker: textValue(row.database_write_blocker ?? row.databaseWriteBlocker, ''),
   };
 }
 
@@ -96,9 +96,9 @@ function validateDbSurfaceInventoryRows(rows, options = {}) {
 
     validateRequiredText(row, errors);
 
-    if (!allowedDbSurfaceMigrationStates.has(row.migrationState)) {
+    if (!allowedDbSurfaceAuthorityModes.has(row.authorityMode)) {
       errors.push(
-        `${source}: surface "${row.surfaceName}" has invalid migration state "${row.migrationState}".`
+        `${source}: surface "${row.surfaceName}" has invalid authority mode "${row.authorityMode}".`
       );
     }
 
@@ -112,15 +112,15 @@ function validateDbSurfaceInventoryRows(rows, options = {}) {
       errors.push(`${source}: surface "${row.surfaceName}" has invalid source content hash.`);
     }
 
-    if (row.migrationState === 'DB-first') {
+    if (row.authorityMode === 'database') {
       if (row.writeRailKind !== 'db_command') {
         errors.push(
-          `${source}: surface "${row.surfaceName}" is DB-first but write rail kind is "${row.writeRailKind}" instead of "db_command".`
+          `${source}: surface "${row.surfaceName}" is database but write rail kind is "${row.writeRailKind}" instead of "db_command".`
         );
       }
-      if (!row.dbFirstEligible || row.dbFirstBlocker) {
+      if (!row.databaseWriteEligible || row.databaseWriteBlocker) {
         errors.push(
-          `${source}: surface "${row.surfaceName}" is DB-first but the read model marks it blocked.`
+          `${source}: surface "${row.surfaceName}" is database but the read model marks it blocked.`
         );
       }
     }
@@ -133,9 +133,9 @@ function validateDbSurfaceInventoryRows(rows, options = {}) {
       errors.push(`${source}: missing required surface "${required.surfaceName}".`);
       continue;
     }
-    if (row.migrationState !== required.migrationState) {
+    if (row.authorityMode !== required.authorityMode) {
       errors.push(
-        `${source}: surface "${required.surfaceName}" must have migration state "${required.migrationState}", found "${row.migrationState}".`
+        `${source}: surface "${required.surfaceName}" must have authority mode "${required.authorityMode}", found "${row.authorityMode}".`
       );
     }
     if (required.writeRailKind && row.writeRailKind !== required.writeRailKind) {

@@ -17,7 +17,6 @@ const {
   buildComponentEngineeringComponentMetadataRows,
   buildComponentRoadmapRows,
   buildCanvasUxdbSpecificationRows,
-  buildCanvasUxdbTraceabilityRows,
   buildArchitectureComponentRows,
   buildArchitectureDependencyClassificationRows,
   buildArchitectureDependencyObservationRows,
@@ -90,7 +89,6 @@ const {
   readComponentEngineeringComponentMetadataRows,
   readComponentRoadmapRows,
   readCanvasUxdbSpecificationRows,
-  readCanvasUxdbTraceabilityRows,
   readArchitectureComponentRows,
   readArchitectureDependencyClassificationRows,
   readArchitectureDependencyObservationRows,
@@ -129,7 +127,7 @@ test('planning DB query CLI prints root help without opening a DB connection', (
   assert.match(result.stdout, /Usage:/);
   assert.match(result.stdout, /component-metadata/);
   assert.match(result.stdout, /canvas-uxdb-specification/);
-  assert.match(result.stdout, /canvas-uxdb-traceability/);
+  assert.doesNotMatch(result.stdout, /canvas-uxdb-traceability/);
   assert.match(result.stdout, /feature-mechanization/);
   assert.doesNotMatch(result.stderr, /Unknown planning DB query|Missing value/);
 });
@@ -178,7 +176,6 @@ test('planning DB query limit parsing lives in one canonical helper', () => {
     'planning-db/frontend-mechanical-truth-inventory.cjs',
     'planning-db/queries/code-symbol-query.cjs',
     'planning-db/queries/canvas-uxdb-specification-query.cjs',
-    'planning-db/queries/canvas-uxdb-traceability-query.cjs',
     'planning-db/queries/command-query-rail-query.cjs',
     'planning-db/queries/component-architecture-fitness-query.cjs',
     'planning-db/queries/component-integrity-query.cjs',
@@ -215,7 +212,6 @@ test('planning DB query filtering helpers live in one canonical helper', () => {
     'planning-db/frontend-mechanical-truth-inventory.cjs',
     'planning-db/queries/code-symbol-query.cjs',
     'planning-db/queries/canvas-uxdb-specification-query.cjs',
-    'planning-db/queries/canvas-uxdb-traceability-query.cjs',
     'planning-db/queries/command-query-rail-query.cjs',
     'planning-db/queries/component-architecture-fitness-query.cjs',
     'planning-db/queries/component-integrity-query.cjs',
@@ -433,20 +429,7 @@ test('documentation panel query behavior lives in a focused read-model component
   assert.equal(documentationPanelComponent.readDocumentationPanelRows, readDocumentationPanelRows);
 });
 
-test('Canvas UX DB-first traceability query behavior lives in a focused read-model component', () => {
-  const canvasTraceabilityComponent = require('./planning-db/queries/canvas-uxdb-traceability-query.cjs');
-
-  assert.equal(
-    canvasTraceabilityComponent.buildCanvasUxdbTraceabilityRows,
-    buildCanvasUxdbTraceabilityRows
-  );
-  assert.equal(
-    canvasTraceabilityComponent.readCanvasUxdbTraceabilityRows,
-    readCanvasUxdbTraceabilityRows
-  );
-});
-
-test('Canvas UX DB-first specification query behavior lives in a focused read-model component', () => {
+test('Canvas UX database specification query behavior lives in a focused read-model component', () => {
   const canvasSpecificationComponent = require('./planning-db/queries/canvas-uxdb-specification-query.cjs');
 
   assert.equal(
@@ -831,6 +814,7 @@ test('resolveQueryName defaults to summary and rejects unknown query names', () 
     'task-gaps',
     'focus',
     'real-work',
+    'canvas-uxdb-traceability',
   ]) {
     assert.throws(
       () => resolveQueryName(retiredQuery),
@@ -846,7 +830,7 @@ test('parseArgs parses DB surface inventory query filters', () => {
     '--surface',
     'Architecture design authority',
     '--state',
-    'DB-first',
+    'database',
     '--kind',
     'db_command',
     '--limit',
@@ -855,7 +839,7 @@ test('parseArgs parses DB surface inventory query filters', () => {
 
   assert.equal(command.queryName, 'db-surfaces');
   assert.equal(command.filters.surface, 'Architecture design authority');
-  assert.equal(command.filters.state, 'DB-first');
+  assert.equal(command.filters.state, 'database');
   assert.equal(command.filters.kind, 'db_command');
   assert.equal(command.filters.limit, 5);
 });
@@ -933,7 +917,7 @@ test('parseArgs rejects common --filter for queries without matching predicates'
   }
 });
 
-test('parseArgs parses governance query filters for DB-first governance inspection', () => {
+test('parseArgs parses governance query filters for database governance inspection', () => {
   const command = parseArgs([
     'files',
     '--component',
@@ -957,7 +941,7 @@ test('parseArgs parses governance query filters for DB-first governance inspecti
   });
 });
 
-test('parseArgs parses governance unit tree filters for DB-first parent navigation', () => {
+test('parseArgs parses governance unit tree filters for database parent navigation', () => {
   const command = parseArgs([
     'units',
     '--unit',
@@ -981,7 +965,7 @@ test('parseArgs parses governance unit tree filters for DB-first parent navigati
   });
 });
 
-test('parseArgs parses repository command query filters for DB-first catalog inspection', () => {
+test('parseArgs parses repository command query filters for database catalog inspection', () => {
   const command = parseArgs([
     'commands',
     '--command-domain',
@@ -1002,7 +986,7 @@ test('parseArgs parses repository command query filters for DB-first catalog ins
   });
 });
 
-test('parseArgs parses command/query rail catalog filters for DB-first gap and duplicate inspection', () => {
+test('parseArgs parses command/query rail catalog filters for database gap and duplicate inspection', () => {
   const command = parseArgs([
     'command-query-rails',
     '--type',
@@ -1070,7 +1054,7 @@ test('parseArgs parses AI project context format and discovery filters', () => {
   );
 });
 
-test('parseArgs parses frontend mechanical truth filters for DB-first screen inspection', () => {
+test('parseArgs parses frontend mechanical truth filters for database screen inspection', () => {
   const command = parseArgs([
     'frontend-surfaces',
     '--kind',
@@ -1097,7 +1081,7 @@ test('parseArgs parses frontend mechanical truth filters for DB-first screen ins
   });
 });
 
-test('parseArgs parses frontend component reflection filters for DB-first component inspection', () => {
+test('parseArgs parses frontend component reflection filters for database component inspection', () => {
   assert.deepEqual(parseArgs(['frontend-components', '--filter', 'SourceImport', '--limit', '5']), {
     queryName: 'frontend-components',
     filters: {
@@ -1559,16 +1543,16 @@ test('buildComponentIntegrityRows shows component validation findings', () => {
   );
 });
 
-test('buildDbSurfaceRows shows DB authority and migration state for operators', () => {
+test('buildDbSurfaceRows shows DB authority and authority mode for operators', () => {
   assert.deepEqual(
     buildDbSurfaceRows([
       {
         surface_name: 'Architecture design authority',
-        migration_state: 'DB-first',
+        authority_mode: 'database',
         write_rail_kind: 'db_command',
         read_query_rail: 'pnpm planning:db:query architecture-designs',
-        source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
-        db_first_eligible: true,
+        source_ref: 'tools/planning-db/schema.sql',
+        database_write_eligible: true,
         revision: 0,
         updated_by: 'migration',
       },
@@ -1576,12 +1560,12 @@ test('buildDbSurfaceRows shows DB authority and migration state for operators', 
     [
       [
         'Architecture design authority',
-        'DB-first',
+        'database',
         'db_command',
         'true',
         '0',
         'migration',
-        'tools/planning-db/migrations/059_db_surface_inventory.sql',
+        'tools/planning-db/schema.sql',
       ],
     ]
   );
@@ -1647,7 +1631,7 @@ test('knowledge intake lifecycle query modules expose canonical rails', () => {
   }
 });
 
-test('parseArgs parses docs disposition queue filters for DB-first cleanup work', () => {
+test('parseArgs parses docs disposition queue filters for database cleanup work', () => {
   const command = parseArgs([
     'docs-disposition',
     '--priority',
@@ -1848,7 +1832,7 @@ test('parseArgs rejects unknown resolution filters before querying the DB', () =
   );
 });
 
-test('parseArgs parses risk debt query filters for DB-first debt work selection', () => {
+test('parseArgs parses risk debt query filters for database debt work selection', () => {
   const command = parseArgs([
     'debt',
     '--priority',
@@ -1875,7 +1859,7 @@ test('parseArgs parses risk debt query filters for DB-first debt work selection'
   });
 });
 
-test('parseArgs parses component engineering record filters for DB-first governance inspection', () => {
+test('parseArgs parses component engineering record filters for database governance inspection', () => {
   const command = parseArgs(['cer', '--component', 'SYS-API-HTTP-ENTRYPOINTS', '--limit', '1']);
 
   assert.deepEqual(command, {
@@ -2099,7 +2083,7 @@ test('formatQueryError preserves nested connection failures for unavailable DB',
   assert.match(message, /pnpm planning:db:up/);
 });
 
-test('runQuery does not refresh governance projections by default for DB-first reads', async () => {
+test('runQuery does not refresh governance projections by default for database reads', async () => {
   const events = [];
   const client = {
     async query(sql, params) {
@@ -2129,7 +2113,7 @@ test('runQuery does not refresh governance projections by default for DB-first r
     client,
     print: false,
     runPlanningImport: async () => {
-      throw new Error('DB-first query must not import governance by default');
+      throw new Error('database query must not import governance by default');
     },
   });
 
@@ -2282,7 +2266,7 @@ test('buildHashDriftRows exposes hash drift as an explicit heavy query result', 
   assert.deepEqual(buildHashDriftRows({ governanceHashDrift: 3 }), [['governance.hash_drift', 3]]);
 });
 
-test('buildAiProjectContext aggregates DB-first project state for agent discovery', () => {
+test('buildAiProjectContext aggregates database project state for agent discovery', () => {
   const context = buildAiProjectContext(
     {
       summary: {
@@ -2363,7 +2347,7 @@ test('buildAiProjectContext aggregates DB-first project state for agent discover
   );
 });
 
-test('renderAiProjectContextMarkdown fills a reusable DB-first context template', () => {
+test('renderAiProjectContextMarkdown fills a reusable database context template', () => {
   const context = buildAiProjectContext(
     {
       summary: {
@@ -2379,7 +2363,7 @@ test('renderAiProjectContextMarkdown fills a reusable DB-first context template'
           ddd_owner: 'WidgetReadModel',
           rail_status: 'declared',
           is_gap: true,
-          source_path: 'docs/planning/example.md',
+          source_path: 'docs\\planning|example.md',
         },
       ],
       components: [],
@@ -2403,6 +2387,10 @@ test('renderAiProjectContextMarkdown fills a reusable DB-first context template'
   assert.match(markdown, /^# DB-first AI project context/);
   assert.match(markdown, /\| commandQueryRailGaps \| 1 \|/);
   assert.match(markdown, /QueryWidgets/);
+  assert.ok(
+    markdown.includes('docs\\\\planning\\|example.md'),
+    'Markdown table cells must escape backslashes before escaping delimiters'
+  );
   assert.match(markdown, /R-20260602-EXAMPLE/);
   assert.match(markdown, /pnpm planning:db:query command-query-rails --gaps true/);
 });
@@ -2667,7 +2655,7 @@ test('readCommandQueryRailRows filters command/query rails by broad search text'
   assert.deepEqual(captured.params, ['%Warehouse%', '%warehouse%', 5]);
 });
 
-test('readCommandQueryRailRows normalizes spaced rail filters for camel-case DB-first terms', async () => {
+test('readCommandQueryRailRows normalizes spaced rail filters for camel-case database terms', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -2693,7 +2681,7 @@ test('readCommandQueryRailRows normalizes spaced rail filters for camel-case DB-
   assert.deepEqual(captured.params, ['%Source Import%', '%sourceimport%', 5]);
 });
 
-test('readCreationIntentRows queries existing rails from the DB-first rail catalog', async () => {
+test('readCreationIntentRows queries existing rails from the database rail catalog', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -2759,7 +2747,7 @@ test('readCreationIntentRows canonicalizes retired execution preview intent alia
   ]);
 });
 
-test('buildKnowledgeIntakeRetirementRows exposes DB-first retirement posture', () => {
+test('buildKnowledgeIntakeRetirementRows exposes database retirement posture', () => {
   assert.deepEqual(
     buildKnowledgeIntakeRetirementRows([
       {
@@ -2776,7 +2764,7 @@ test('buildKnowledgeIntakeRetirementRows exposes DB-first retirement posture', (
   );
 });
 
-test('readKnowledgeIntakeRetirementRows queries the DB-first intake retirement view', async () => {
+test('readKnowledgeIntakeRetirementRows queries the database intake retirement view', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -2809,7 +2797,7 @@ test('readKnowledgeIntakeRetirementRows queries the DB-first intake retirement v
   ]);
 });
 
-test('buildKnowledgeIntakeReferenceRows exposes DB-first intake backrefs', () => {
+test('buildKnowledgeIntakeReferenceRows exposes database intake backrefs', () => {
   assert.deepEqual(
     buildKnowledgeIntakeReferenceRows([
       {
@@ -2876,7 +2864,7 @@ test('readKnowledgeIntakeReferenceRows queries DB repository backrefs and owners
   assert.deepEqual(captured.params, ['buzon/example.md', 'ci-governance', 5]);
 });
 
-test('readDbSurfaceRows queries the DB-first surface inventory view with real predicates', async () => {
+test('readDbSurfaceRows queries the database surface inventory view with real predicates', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -2888,17 +2876,17 @@ test('readDbSurfaceRows queries the DB-first surface inventory view with real pr
 
   await readDbSurfaceRows(client, {
     surface: 'Architecture design authority',
-    state: 'DB-first',
+    state: 'database',
     kind: 'db_command',
     limit: 5,
   });
 
   assert.match(captured.sql, /from planning_query_store\.db_governance_surface_query/);
   assert.match(captured.sql, /surface_name = \$1/);
-  assert.match(captured.sql, /migration_state = \$2/);
+  assert.match(captured.sql, /authority_mode = \$2/);
   assert.match(captured.sql, /write_rail_kind = \$3/);
   assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, ['Architecture design authority', 'DB-first', 'db_command', 5]);
+  assert.deepEqual(captured.params, ['Architecture design authority', 'database', 'db_command', 5]);
 });
 
 test('readDocumentationLifecycleRows queries DB lifecycle facts with logical predicates', async () => {
@@ -2941,7 +2929,7 @@ test('readDocumentationLifecycleRows queries DB lifecycle facts with logical pre
   ]);
 });
 
-test('runQuery dispatches knowledge-intake through the DB-first retirement query', async () => {
+test('runQuery dispatches knowledge-intake through the database retirement query', async () => {
   const client = {
     async query() {
       return {
@@ -2988,10 +2976,10 @@ test('runQuery dispatches DB surface inventory through the DB query rail', async
         rows: [
           {
             surface_name: 'Architecture design authority',
-            migration_state: 'DB-first',
+            authority_mode: 'database',
             write_rail_kind: 'db_command',
-            source_ref: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
-            db_first_eligible: true,
+            source_ref: 'tools/planning-db/schema.sql',
+            database_write_eligible: true,
             revision: 0,
             updated_by: 'migration',
           },
@@ -3002,7 +2990,7 @@ test('runQuery dispatches DB surface inventory through the DB query rail', async
 
   const rows = await runQuery({
     queryName: 'db-surfaces',
-    filters: { state: 'DB-first', limit: 5 },
+    filters: { state: 'database', limit: 5 },
     client,
     print: false,
   });
@@ -3010,17 +2998,17 @@ test('runQuery dispatches DB surface inventory through the DB query rail', async
   assert.deepEqual(rows, [
     [
       'Architecture design authority',
-      'DB-first',
+      'database',
       'db_command',
       'true',
       '0',
       'migration',
-      'tools/planning-db/migrations/059_db_surface_inventory.sql',
+      'tools/planning-db/schema.sql',
     ],
   ]);
 });
 
-test('runQuery dispatches knowledge-intake references through the DB-first link query', async () => {
+test('runQuery dispatches knowledge-intake references through the database link query', async () => {
   const client = {
     async query() {
       return {
@@ -3057,7 +3045,7 @@ test('runQuery dispatches knowledge-intake references through the DB-first link 
   ]);
 });
 
-test('runQuery dispatches documentation-lifecycle through the DB-first lifecycle query', async () => {
+test('runQuery dispatches documentation-lifecycle through the database lifecycle query', async () => {
   const client = {
     async query(sql) {
       assert.match(sql, /documentation_lifecycle_query/);
@@ -3139,7 +3127,7 @@ test('buildDocumentationPanelRows exposes relational panel fields without prose 
   ]);
 });
 
-test('readDocumentationPanelRows queries DB-first panel facts with entity and gap filters', async () => {
+test('readDocumentationPanelRows queries database panel facts with entity and gap filters', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -3200,7 +3188,7 @@ test('readDocumentationPanelRows defaults unscoped reads to actionable panel gap
   assert.deepEqual(captured.params, [7]);
 });
 
-test('runQuery dispatches documentation-panels through the DB-first panel map', async () => {
+test('runQuery dispatches documentation-panels through the database panel map', async () => {
   const client = {
     async query(sql) {
       assert.match(sql, /documentation_panel_query/);
@@ -3422,7 +3410,7 @@ test('readArchitectureFitnessGapRows queries DB-owned prioritized architecture g
   ]);
 });
 
-test('runQuery dispatches architecture-fitness through the DB-first fitness read model', async () => {
+test('runQuery dispatches architecture-fitness through the database fitness read model', async () => {
   const client = {
     async query(sql) {
       assert.match(sql, /component_fitness_query/);
@@ -3464,7 +3452,7 @@ test('runQuery dispatches architecture-fitness through the DB-first fitness read
   ]);
 });
 
-test('runQuery dispatches architecture-fitness-gaps through the DB-first summary read model', async () => {
+test('runQuery dispatches architecture-fitness-gaps through the database summary read model', async () => {
   const client = {
     async query(sql) {
       assert.match(sql, /component_fitness_gap_summary_query/);
@@ -3520,7 +3508,7 @@ test('runQuery dispatches architecture-fitness-gaps through the DB-first summary
   ]);
 });
 
-test('readComponentRoadmapRows queries the DB-first component roadmap with gap filters', async () => {
+test('readComponentRoadmapRows queries the database component roadmap with gap filters', async () => {
   const captured = { sql: '', params: null };
   const client = {
     async query(sql, params) {
@@ -3555,7 +3543,7 @@ test('readComponentRoadmapRows queries the DB-first component roadmap with gap f
   ]);
 });
 
-test('runQuery dispatches component-roadmap through the DB-first component map', async () => {
+test('runQuery dispatches component-roadmap through the database component map', async () => {
   const client = {
     async query(sql) {
       assert.match(sql, /component_roadmap_query/);
@@ -4230,60 +4218,6 @@ test('readArchitectureDesignRows queries the DB architecture design authority vi
   ]);
 });
 
-test('readCanvasUxdbTraceabilityRows queries DB-owned TAREA traceability coverage', async () => {
-  const captured = { sql: '', params: null };
-  const client = {
-    async query(sql, params) {
-      captured.sql = sql;
-      captured.params = params;
-      return { rows: [] };
-    },
-  };
-
-  await readCanvasUxdbTraceabilityRows(client, {
-    taskId: 'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
-    kind: 'ux_rule',
-    state: 'ready',
-    limit: 5,
-  });
-
-  assert.match(captured.sql, /from planning_query_store\.canvas_uxdb_traceability_query/);
-  assert.match(captured.sql, /canonical_task_id = \$1/);
-  assert.match(captured.sql, /criterion_kind = \$2/);
-  assert.match(captured.sql, /coverage_state = \$3/);
-  assert.match(captured.sql, /limit \$4/);
-  assert.deepEqual(captured.params, ['E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1', 'ux_rule', 'ready', 5]);
-});
-
-test('buildCanvasUxdbTraceabilityRows formats canonical owner and duplicate state', () => {
-  assert.deepEqual(
-    buildCanvasUxdbTraceabilityRows([
-      {
-        criterion_code: 'UX-009',
-        criterion_kind: 'ux_rule',
-        canonical_task_id: 'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
-        task_status: 'queued',
-        coverage_state: 'ready',
-        duplicate_owner_count: 0,
-        duplicate_state: 'single-owner',
-        action_hint:
-          'Implement CanvasContextMenu and NodeContextMenu through separate governed rails.',
-      },
-    ]),
-    [
-      [
-        'UX-009',
-        'ux_rule',
-        'E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1',
-        'queued',
-        'ready',
-        'single-owner',
-        'Implement CanvasContextMenu and NodeContextMenu through separate governed rails.',
-      ],
-    ]
-  );
-});
-
 test('readCanvasUxdbSpecificationRows queries DB-owned TAREA specification records', async () => {
   const captured = { sql: '', params: null };
   const client = {
@@ -4502,8 +4436,7 @@ test('readComponentProfileRows uses frontend inventory for frontend components',
               component_status: 'current',
               frontend_owner: 'Canvas / Source import',
               cq_rails: 'OpenCanvasSourceImportDialog;ImportWarehouseSources',
-              source_path:
-                'tools/planning-db/migrations/569_source_import_dialog_dbfirst_component_source.sql',
+              source_path: 'tools/planning-db/schema.sql',
             },
           ],
         };
@@ -4542,10 +4475,7 @@ test('readComponentProfileRows uses frontend inventory for frontend components',
   });
 
   assert.equal(profile.component.component_id, 'web.component.canvas.SourceImportDialog');
-  assert.equal(
-    profile.component.parent_component_id,
-    'tools/planning-db/migrations/569_source_import_dialog_dbfirst_component_source.sql'
-  );
+  assert.equal(profile.component.parent_component_id, 'tools/planning-db/schema.sql');
   assert.equal(
     profile.files[0].path,
     'apps/web/src/app/views/canvas/CanvasSourceImportDialogHost.tsx'
@@ -4798,7 +4728,7 @@ test('buildArchitecture rows expose Fowler-relevant authority columns', () => {
     buildArchitectureDesignRows([
       {
         design_id: 'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
-        work_item_id: 'DB-FIRST',
+        work_item_id: 'DATABASE-AUTHORITY',
         status: 'review',
         owner: 'Architecture',
         rail_ref: 'CreateArchitectureDesign',
@@ -4808,7 +4738,7 @@ test('buildArchitecture rows expose Fowler-relevant authority columns', () => {
     [
       [
         'ENGINE-ARCHITECTURE-AUTHORITY-PILOT',
-        'DB-FIRST',
+        'DATABASE-AUTHORITY',
         'review',
         'Architecture',
         'CreateArchitectureDesign',

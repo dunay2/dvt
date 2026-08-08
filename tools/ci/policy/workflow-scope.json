@@ -55,7 +55,7 @@
     "scripts/generated-doc-date.cjs",
     "scripts/governance-refresh.cjs",
     "scripts/planning-db-import.cjs",
-    "tools/planning-db/migrations/**",
+    "tools/planning-db/schema.sql",
     "tools/planning-db/state/canonical-state.json",
     "tools/ci/policy/workflow-scope.json",
     ".github/requirements/zensical.in",

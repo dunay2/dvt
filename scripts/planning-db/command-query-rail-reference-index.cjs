@@ -70,7 +70,7 @@ function createCommandQueryRailReferenceIndexComponent(deps = {}) {
       return false;
     }
 
-    if (normalizedPath.startsWith('tools/planning-db/migrations/')) {
+    if (normalizedPath === 'tools/planning-db/schema.sql') {
       return false;
     }
 
@@ -291,18 +291,27 @@ function createCommandQueryRailReferenceIndexComponent(deps = {}) {
     return index;
   }
 
+  function shouldInferImplementationRefs(railStatus) {
+    return !/^(missing|planned|unimplemented|not-implemented)$/iu.test(normalizeText(railStatus));
+  }
+
   function attachCommandQueryRailRefs(rail, options) {
+    const inferredImplementationRefs = shouldInferImplementationRefs(rail.railStatus)
+      ? [
+          ...(options.sourceImplementationRefIndex
+            ? refsFromIndex(options.sourceImplementationRefIndex, rail.railName)
+            : collectSourceImplementationRefs(rail.railName, options.sourceFiles)),
+          ...(options.governanceImplementationRefIndex
+            ? refsFromIndex(options.governanceImplementationRefIndex, rail.railName)
+            : collectGovernanceImplementationRefs(rail.railName, options.governanceSnapshot)),
+        ]
+      : [];
     const implementationRefs = dedupeCommandQueryRefs([
       ...normalizeArray(rail.symbolRefs).map((ref) => ({
         ...ref,
         sourceKind: ref.sourceKind || 'manifest_symbol',
       })),
-      ...(options.sourceImplementationRefIndex
-        ? refsFromIndex(options.sourceImplementationRefIndex, rail.railName)
-        : collectSourceImplementationRefs(rail.railName, options.sourceFiles)),
-      ...(options.governanceImplementationRefIndex
-        ? refsFromIndex(options.governanceImplementationRefIndex, rail.railName)
-        : collectGovernanceImplementationRefs(rail.railName, options.governanceSnapshot)),
+      ...inferredImplementationRefs,
     ]);
     const documentationRefs = dedupeCommandQueryRefs([
       ...normalizeArray(rail.documentationRefs),

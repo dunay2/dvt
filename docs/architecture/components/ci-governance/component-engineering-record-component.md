@@ -36,7 +36,7 @@ components, and every tracked file must resolve to exactly one leaf component.
 | ------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------- |
 | `pnpm docs:governance:unit-coverage`                                | command | Validates unit hierarchy, parent closure, and exact file ownership      |
 | `pnpm docs:governance:file-component-index`                         | command | Generates local file/component inspection artifacts                     |
-| `pnpm planning:db:migrate`                                          | command | Installs component engineering tree and drift views                     |
+| `pnpm planning:db:import`                                           | command | Rebuilds the current component engineering tree and drift views         |
 | `pnpm planning:db:query component-tree --component <component_id>`  | query   | Reads recursive component hierarchy rows                                |
 | `pnpm planning:db:query component-drift --component <component_id>` | query   | Reads mechanical component engineering drift rows                       |
 | `component_engineering_component_tree_query`                        | view    | DB-first component tree with parent, direct, and descendant file counts |

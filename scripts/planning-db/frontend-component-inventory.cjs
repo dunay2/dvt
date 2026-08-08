@@ -3,7 +3,7 @@ const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const { schemaName } = require('../planning-db-migrate.cjs');
+const { schemaName } = require('../planning-db-schema.cjs');
 const {
   countField,
   headerIndexes,

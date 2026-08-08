@@ -369,6 +369,11 @@ test('readFeatureMechanizationManifestsFromDb imports and queries DB manifests',
   assert.equal(queryCalls.length, 2);
   assert.match(queryCalls[1].sql, /planning_query_store\.command_query_rail_manifest_query/);
   assert.match(queryCalls[1].sql, /planning_query_store\.feature_mechanization_local_rails/);
+  assert.equal(
+    queryCalls[1].sql.match(/rail_id not like 'current#rail-decision#%'/g)?.length,
+    2,
+    'current rail decisions must be excluded from both feature-manifest projections'
+  );
   assert.match(queryCalls[1].sql, /partition by rail_id/);
   assert.doesNotMatch(queryCalls[1].sql, /distinct on/i);
   assert.deepEqual(result, [

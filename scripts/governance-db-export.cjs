@@ -12,7 +12,7 @@ const dependencies = (() => {
     yaml: require('js-yaml'),
     Client: require('pg').Client,
     defaultPgUrl: require('./planning-db-run.cjs').defaultPgUrl,
-    schemaName: require('./planning-db-migrate.cjs').schemaName,
+    schemaName: require('./planning-db-schema.cjs').schemaName,
     repoRoot: path.resolve(__dirname, '..'),
   };
 })();

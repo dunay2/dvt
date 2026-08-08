@@ -146,10 +146,7 @@ test('feature mechanization row builders expose DB-first operator views', () => 
         rail_count: 3,
         symbol_count: 4,
         validation_count: 5,
-        source_paths: [
-          'docs/planning/example.md',
-          'tools/planning-db/migrations/620_feature_mechanization_feature_set_union.sql',
-        ],
+        source_paths: ['docs/planning/example.md', 'tools/planning-db/schema.sql'],
       },
     ]),
     [
@@ -161,7 +158,7 @@ test('feature mechanization row builders expose DB-first operator views', () => 
         3,
         4,
         5,
-        '["docs/planning/example.md","tools/planning-db/migrations/620_feature_mechanization_feature_set_union.sql"]',
+        '["docs/planning/example.md","tools/planning-db/schema.sql"]',
       ],
     ]
   );

@@ -25,30 +25,30 @@ const {
   insertKnowledgeIntakeRepositoryReferences,
   insertRepositoryCommandSnapshot,
   listChangedFiles,
-  mergeCanonicalFeatureMechanizationRails,
   normalizeText,
   parseArgs,
   readCanonicalStateSnapshot,
+  readDbGovernanceSurfaceCatalog,
+  readDbtProjectRoundtripCapabilityCatalog,
   readTrackedDocumentPaths,
-  readLocalFeatureMechanizationRails,
-  reconcileDeprecatedLocalRailSources,
-  reconcileRetiredPlanningState,
-  reconcileRetiredLocalTaskSurfaces,
-  reconcileSupersededCiPolicyValidationSplitComponents,
-  reconcileSupersededCanvasNodeWorkbenchPanel,
-  reconcileRetiredPlanningTaskAuthorityComponents,
   refreshCodeSymbolMaterializedProjection,
   refreshComponentTreeMaterializedProjection,
   refreshComponentFileOwnershipMaterializedProjection,
   refreshComponentRuleEvaluationMaterializedProjection,
-  restoreArchitectureComponentStatusOverrides,
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
+  restoreDbGovernanceSurfaceCatalog,
+  restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,
   sha256,
 } = require('./planning-db-import.cjs');
 const { governanceGeneratedPath } = require('./governance-generated-paths.cjs');
-const { schemaName } = require('./planning-db-migrate.cjs');
+const { architectureStateTableNames } = require('./planning-db-architecture-state.cjs');
+const { schemaName } = require('./planning-db-schema.cjs');
+
+function emptyArchitectureState() {
+  return Object.fromEntries(architectureStateTableNames.map((tableName) => [tableName, []]));
+}
 
 function generatedSourceFixture(sourcePath, parsed, rawSourceText = JSON.stringify(parsed)) {
   return {
@@ -273,51 +273,6 @@ const governanceFileSnapshotFixture = (() => {
   return readSnapshot;
 })();
 
-test('planning import reconciles retired local task lifecycle state', async () => {
-  const sql = [];
-  const client = {
-    async query(statement) {
-      sql.push(String(statement).replace(/\s+/gu, ' ').trim());
-      return { rows: [] };
-    },
-  };
-
-  await reconcileRetiredPlanningState(client);
-
-  assert.deepEqual(sql, [
-    `delete from ${schemaName}.doc_resolution_operations where resolution_scope = 'task_gap'`,
-    `delete from ${schemaName}.doc_resolution_overlays where resolution_scope = 'task_gap'`,
-    `delete from ${schemaName}.planning_artifacts where artifact_kind in ('workboard', 'open-task-route') or artifact_path in ( 'docs/planning/state/execution-workboard.md', 'docs/planning/state/open-task-route.md' )`,
-    `delete from ${schemaName}.planning_task_local_state`,
-    `delete from ${schemaName}.planning_task_local_definitions`,
-    `delete from ${schemaName}.planning_task_local_tombstones`,
-    `delete from ${schemaName}.planning_local_operations`,
-    `delete from ${schemaName}.planning_sources`,
-    `delete from ${schemaName}.db_governance_surface_operations where surface_name = any($1::text[])`,
-    `delete from ${schemaName}.db_governance_surfaces where surface_name = any($1::text[])`,
-  ]);
-});
-
-test('planning import removes retired lane and workboard inventory surfaces', async () => {
-  const calls = [];
-  const client = {
-    async query(sql, params) {
-      calls.push({ sql: String(sql).replace(/\s+/gu, ' ').trim(), params });
-      return { rows: [] };
-    },
-  };
-
-  await reconcileRetiredLocalTaskSurfaces(client);
-
-  assert.equal(calls.length, 2);
-  assert.match(calls[0].sql, /delete from planning_query_store\.db_governance_surface_operations/u);
-  assert.match(calls[1].sql, /delete from planning_query_store\.db_governance_surfaces/u);
-  assert.deepEqual(calls[0].params, [
-    ['Planning task lifecycle', 'Planning lane registry', 'Workboard and open task route'],
-  ]);
-  assert.deepEqual(calls[1].params, calls[0].params);
-});
-
 test('planning DB import parses its single architecture-governance scope', () => {
   assert.deepEqual(
     parseArgs(['--', '--if-stale', '--database-url', 'postgres://example/planning']),
@@ -503,6 +458,64 @@ test('command/query rail snapshot joins documented rails with source implementat
   assert.equal(archiveWidget.documentationRefs.length, 1);
 });
 
+test('command/query rail snapshot excludes archived documents from current rail authority', () => {
+  const docs = [
+    {
+      path: 'docs/planning/proposals/mandatory/widgets.md',
+      content: [
+        '```feature-mechanization',
+        'version: 1',
+        'featureId: WIDGET-FEATURE',
+        'mechanizationStatus: implemented',
+        'commandQueryRails:',
+        '  - name: ListWidgets',
+        '    type: query',
+        '    dddOwner: WidgetReadModel',
+        'symbols: []',
+        '```',
+      ].join('\n'),
+    },
+  ];
+  const referenceDocuments = [
+    {
+      path: 'docs/architecture/components/widgets/widget-rail-catalog.md',
+      content: [
+        '| Rail | Type | Status | Owner |',
+        '| --- | --- | --- | --- |',
+        '| `ListWidgets` | query | implemented | WidgetReadModel |',
+      ].join('\n'),
+    },
+    {
+      path: 'docs/planning/archive/proposals/retired-widget-plan.md',
+      content: [
+        '| Rail | Type | Status | Owner |',
+        '| --- | --- | --- | --- |',
+        '| `ListWidgets` | query | implemented | HistoricalWidgetReadModel |',
+        '| `CreatePlanningTaskDefinition` | command | planned | RetiredPlanningRegistry |',
+      ].join('\n'),
+    },
+  ];
+
+  const snapshot = buildCommandQueryRailSnapshot({
+    docs,
+    referenceDocuments,
+    sourceFiles: [],
+  });
+
+  assert.equal(
+    snapshot.rails.some((rail) => rail.railName === 'CreatePlanningTaskDefinition'),
+    false
+  );
+  const listWidgets = snapshot.rails.find((rail) => rail.railName === 'ListWidgets');
+  assert.deepEqual(listWidgets.documentationRefs, [
+    {
+      name: 'ListWidgets',
+      path: 'docs/architecture/components/widgets/widget-rail-catalog.md',
+      sourceKind: 'documentation',
+    },
+  ]);
+});
+
 test('command/query rail snapshot keeps canonical rail names when API aliases appear in notes', () => {
   const referenceDocuments = [
     {
@@ -602,9 +615,8 @@ test('command/query rail catalog ignores tracked source files deleted in the wor
   ]);
 });
 
-test('planning DB import reconciles retired task state when governance sources are fresh', async () => {
+test('planning DB import leaves a fresh current-state projection untouched', async () => {
   const calls = [];
-  const reconciliations = [];
   const logs = [];
 
   const result = await runPlanningImport(
@@ -615,7 +627,6 @@ test('planning DB import reconciles retired task state when governance sources a
     {
       checkGovernanceDatabase: async () => ({ ok: true }),
       checkGovernanceAuxiliaryProjections: async () => ({ ok: true }),
-      reconcileRetiredPlanningDatabase: async (options) => reconciliations.push(options),
       importContent: async (options) => {
         calls.push(options);
         return { governanceFiles: 99 };
@@ -625,7 +636,6 @@ test('planning DB import reconciles retired task state when governance sources a
   );
 
   assert.deepEqual(calls, []);
-  assert.deepEqual(reconciliations, [{ databaseUrl: 'postgres://example/planning' }]);
   assert.deepEqual(result.importedScopes, []);
   assert.deepEqual(result.skippedScopes, ['governance']);
   assert.match(logs.join('\n'), /skipped fresh scopes: governance/);
@@ -790,7 +800,6 @@ test('planning DB import skips governance through source freshness before rebuil
       checkGovernanceAuxiliaryProjections: async () => {
         throw new Error('full auxiliary projection check should not run for fresh sources');
       },
-      reconcileRetiredPlanningDatabase: async () => {},
       importContent: async (options) => {
         calls.push(options);
         return { governanceFiles: 3, governanceComponents: 2 };
@@ -852,7 +861,6 @@ test('planning DB import skips governance through core source freshness before f
         throw new Error('full governance DB check should not run for fresh core sources');
       },
       checkGovernanceAuxiliarySourceFreshness: async () => ({ ok: true }),
-      reconcileRetiredPlanningDatabase: async () => {},
       importContent: async (options) => {
         calls.push(options);
         return { governanceFiles: 3, governanceComponents: 2 };
@@ -1391,161 +1399,9 @@ test('frontend mechanical truth import reloads surface rows with JSONB metadata'
   assert.equal(insertQuery.params[5], JSON.stringify(['monitoring']));
 });
 
-test('planning DB import reconciles deprecated DB-local rail source paths after snapshot reload', async () => {
+test('planning DB import restores canonical feature mechanization rails', async () => {
   const queries = [];
-
-  await reconcileDeprecatedLocalRailSources({
-    query: async (sql, params = []) => {
-      queries.push({ sql: String(sql), params });
-    },
-  });
-
-  assert.equal(queries.length, 1);
-  assert.match(queries[0].sql, /feature_mechanization_local_rails/);
-  assert.match(queries[0].sql, /stale_source_overrides/);
-  assert.match(
-    queries[0].sql,
-    /265_restore_canvas_source_import_dialog_symbols_after_post_import_reconcile\.sql/
-  );
-  assert.match(
-    queries[0].sql,
-    /264_reconcile_post_import_canvas_source_import_dialog_feature_manifest\.sql/
-  );
-  assert.match(queries[0].sql, /deprecatedSourcePaths/);
-  assert.match(queries[0].sql, /currentImplementationSourcePath/);
-  assert.match(queries[0].sql, /source_path_overridden/);
-  assert.match(queries[0].sql, /source_path_missing/);
-  assert.match(queries[0].sql, /source_path_deprecated/);
-  assert.match(queries[0].sql, /governance_files source_file/);
-  assert.match(queries[0].sql, /governance_files current_file/);
-  assert.match(queries[0].sql, /mechanization_status = case/);
-  assert.match(queries[0].sql, /rail_status = case/);
-  assert.match(queries[0].sql, /- 'featureId' - 'symbols'/);
-  assert.match(queries[0].sql, /raw_rail = coalesce/);
-  assert.match(queries[0].sql, /planning-db-import-reconcile-deprecated-local-rail-sources/);
-  assert.match(queries[0].sql, /governance_files/);
-  assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
-  assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
-});
-
-test('planning DB import keeps Canvas node workbench panel authority when implementation files exist', async () => {
-  const queries = [];
-
-  await reconcileSupersededCanvasNodeWorkbenchPanel({
-    query: async (sql, params = []) => {
-      queries.push({ sql: String(sql), params });
-      return { rows: [{ file_count: 2 }] };
-    },
-  });
-
-  assert.equal(queries.length, 1);
-  assert.match(queries[0].sql, /governance_files/);
-  assert.match(queries[0].sql, /CanvasNodeWorkbenchPanel\.tsx/);
-  assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
-  assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
-});
-
-test('planning DB import reasserts superseded Canvas node workbench panel authority when files are absent', async () => {
-  const queries = [];
-
-  await reconcileSupersededCanvasNodeWorkbenchPanel({
-    query: async (sql, params = []) => {
-      queries.push({ sql: String(sql), params });
-      if (queries.length === 1) {
-        return { rows: [{ file_count: 0 }] };
-      }
-      return { rows: [] };
-    },
-  });
-
-  assert.equal(queries.length, 2);
-  const retirementQuery = queries[1];
-  assert.match(retirementQuery.sql, /SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL/);
-  assert.match(retirementQuery.sql, /CanvasNodeWorkbenchPanel\.tsx/);
-  assert.match(retirementQuery.sql, /governance_component_local_definitions/);
-  assert.match(retirementQuery.sql, /architecture\.component/);
-  assert.match(retirementQuery.sql, /architecture\.component_port/);
-  assert.match(retirementQuery.sql, /architecture\.component_relation/);
-  assert.match(retirementQuery.sql, /governance_component_files/);
-  assert.match(retirementQuery.sql, /governance_files/);
-  assert.match(retirementQuery.sql, /status = 'deprecated'/);
-  assert.match(retirementQuery.sql, /status = 'superseded'/);
-  assert.doesNotMatch(retirementQuery.sql, /truncate\s+/i);
-});
-
-test('planning DB import keeps active CI policy validation split components when files exist', async () => {
-  const queries = [];
-
-  await reconcileSupersededCiPolicyValidationSplitComponents({
-    query: async (sql, params = []) => {
-      queries.push({ sql: String(sql), params });
-      return { rows: [{ file_count: 2 }] };
-    },
-  });
-
-  assert.equal(queries.length, 1);
-  assert.match(queries[0].sql, /policy-validation-files\.cjs/);
-  assert.match(queries[0].sql, /policy-validation-text\.cjs/);
-  assert.doesNotMatch(queries[0].sql, /delete\s+from/i);
-  assert.doesNotMatch(queries[0].sql, /truncate\s+/i);
-});
-
-test('planning DB import retires phantom CI policy validation split components when files are absent', async () => {
-  const queries = [];
-
-  await reconcileSupersededCiPolicyValidationSplitComponents({
-    query: async (sql, params = []) => {
-      queries.push({ sql: String(sql), params });
-      if (queries.length === 1) {
-        return { rows: [{ file_count: 0 }] };
-      }
-      return { rows: [] };
-    },
-  });
-
-  assert.equal(queries.length, 2);
-  const retirementQuery = queries[1];
-  assert.match(retirementQuery.sql, /SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES/);
-  assert.match(retirementQuery.sql, /SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT/);
-  assert.match(retirementQuery.sql, /status = 'deprecated'/);
-  assert.match(retirementQuery.sql, /status = 'superseded'/);
-  assert.match(retirementQuery.sql, /governance_component_local_definitions/);
-  assert.match(retirementQuery.sql, /governance_component_local_ownership_patterns/);
-  assert.match(retirementQuery.sql, /scripts\/policy-validation-files\.cjs/);
-  assert.match(retirementQuery.sql, /scripts\/policy-validation-text\.cjs/);
-  assert.doesNotMatch(retirementQuery.sql, /truncate\s+/i);
-});
-
-test('planning DB import removes retired local task authority components', async () => {
-  const queries = [];
-
-  await reconcileRetiredPlanningTaskAuthorityComponents({
-    query: async (sql, params = []) => {
-      queries.push({ sql: String(sql), params });
-      return { rows: [] };
-    },
-  });
-
-  assert.equal(queries.length, 1);
-  const reconciliationQuery = queries[0].sql;
-  for (const componentId of [
-    'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS',
-    'SYS-PLANNING-GITHUB-ISSUE-ADAPTER',
-    'SYS-PLANNING-GITHUB-PROJECTION-POLICY',
-  ]) {
-    assert.match(reconciliationQuery, new RegExp(componentId));
-  }
-  assert.match(reconciliationQuery, /delete from architecture\.component_flow_step/);
-  assert.match(reconciliationQuery, /delete from architecture\.component_relation/);
-  assert.match(reconciliationQuery, /delete from architecture\.contract/);
-  assert.match(reconciliationQuery, /delete from architecture\.component/);
-  assert.match(reconciliationQuery, /governance_component_local_definitions/);
-  assert.doesNotMatch(reconciliationQuery, /truncate\s+/i);
-});
-
-test('planning DB import preserves DB-local feature mechanization rails during governance reload', async () => {
-  const queries = [];
-  const localRails = [
+  const canonicalRails = [
     {
       railId: 'local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties',
       featureId: 'WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619',
@@ -1577,21 +1433,13 @@ test('planning DB import preserves DB-local feature mechanization rails during g
     },
   ];
 
-  const readRows = await readLocalFeatureMechanizationRails({
-    query: async (sql) => {
-      queries.push({ sql: String(sql), params: [] });
-      return { rows: localRails };
-    },
-  });
-  assert.equal(readRows[0].railId, localRails[0].railId);
-
   await restoreLocalFeatureMechanizationRails(
     {
       query: async (sql, params = []) => {
         queries.push({ sql: String(sql), params });
       },
     },
-    localRails
+    canonicalRails
   );
 
   const insertQuery = queries.find((query) =>
@@ -1602,8 +1450,8 @@ test('planning DB import preserves DB-local feature mechanization rails during g
   assert.match(insertQuery.sql, /raw_manifest/);
   assert.match(insertQuery.sql, /revision = greatest/);
   assert.match(insertQuery.sql, /feature_mechanization_local_rails\.revision/);
-  assert.equal(insertQuery.params[0], localRails[0].railId);
-  assert.equal(insertQuery.params[1], localRails[0].featureId);
+  assert.equal(insertQuery.params[0], canonicalRails[0].railId);
+  assert.equal(insertQuery.params[1], canonicalRails[0].featureId);
 
   const hashRefreshQuery = queries.find((query) =>
     query.sql.includes('update planning_query_store.feature_mechanization_local_rails rail')
@@ -1631,7 +1479,7 @@ test('planning DB import reads and validates the canonical DB-authored state sna
       snapshotPath,
       JSON.stringify({
         schemaVersion: 1,
-        architectureComponentStatusOverrides: [],
+        architectureState: emptyArchitectureState(),
         featureMechanizationRails: [rail],
         featureMechanizationRailOperations: [],
       }),
@@ -1639,7 +1487,7 @@ test('planning DB import reads and validates the canonical DB-authored state sna
     );
 
     const snapshot = readCanonicalStateSnapshot(snapshotPath);
-    assert.deepEqual(snapshot.architectureComponentStatusOverrides, []);
+    assert.deepEqual(snapshot.architectureState, emptyArchitectureState());
     assert.deepEqual(snapshot.featureMechanizationRails, [rail]);
 
     fs.writeFileSync(snapshotPath, JSON.stringify({ schemaVersion: 2 }), 'utf8');
@@ -1652,52 +1500,128 @@ test('planning DB import reads and validates the canonical DB-authored state sna
   }
 });
 
-test('planning DB import restores canonical architecture component status overrides', async () => {
-  const queries = [];
-  const override = {
-    componentId: 'SYS-WEB-EXAMPLE',
-    status: 'deprecated',
-  };
-
-  await restoreArchitectureComponentStatusOverrides(
-    {
-      query: async (sql, params = []) => {
-        queries.push({ sql: String(sql), params });
-        return { rowCount: 1 };
-      },
-    },
-    [override]
+test('canonical Planning DB recovery references the live architecture restore owner', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const canonicalState = fs.readFileSync(
+    path.join(__dirname, '..', 'tools', 'planning-db', 'state', 'canonical-state.json'),
+    'utf8'
   );
 
-  assert.equal(queries.length, 1);
-  assert.match(queries[0].sql, /update architecture\.component/u);
-  assert.match(queries[0].sql, /status = override\.status/u);
-  assert.equal(queries[0].params[0], JSON.stringify([override]));
+  assert.doesNotMatch(canonicalState, /restoreArchitectureComponentStatusOverrides/u);
+  assert.match(
+    canonicalState,
+    /scripts\/planning-db-architecture-state\.cjs#restoreArchitectureState/u
+  );
 });
 
-test('planning DB import keeps a newer local rail over an older canonical snapshot', () => {
-  const canonicalRail = {
-    railId: 'local#PLANNING-DB-RECOVERY#query#checkstate',
-    featureId: 'PLANNING-DB-RECOVERY',
-    revision: 1,
-    railStatus: 'declared',
+test('planning DB import restores the declarative current governance surface catalog', async () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-surface-catalog-'));
+  const catalogPath = path.join(tempRoot, 'db-governance-surfaces.json');
+  const surface = {
+    surfaceName: 'Architecture design authority',
+    canonicalSource: 'architecture.design',
+    writeRail: 'pnpm planning:db:operate architecture-design create',
+    writeRailKind: 'db_command',
+    readQueryRail: 'pnpm planning:db:query architecture-designs',
+    projection: 'Current architecture rows',
+    validation: 'pnpm planning:db:current-schema:check',
+    authorityMode: 'database',
   };
-  const newerLocalRail = {
-    ...canonicalRail,
-    revision: 2,
-    railStatus: 'implemented',
-  };
-  const canonicalOnlyRail = {
-    railId: 'local#PLANNING-DB-RECOVERY#command#exportstate',
-    featureId: 'PLANNING-DB-RECOVERY',
-    revision: 0,
-    railStatus: 'implemented',
-  };
+  const queries = [];
 
-  assert.deepEqual(
-    mergeCanonicalFeatureMechanizationRails([canonicalRail, canonicalOnlyRail], [newerLocalRail]),
-    [canonicalOnlyRail, newerLocalRail]
-  );
+  try {
+    fs.writeFileSync(
+      catalogPath,
+      JSON.stringify({ schemaVersion: 1, surfaces: [surface] }),
+      'utf8'
+    );
+
+    const catalog = readDbGovernanceSurfaceCatalog(catalogPath);
+    assert.deepEqual(catalog.surfaces, [surface]);
+    await restoreDbGovernanceSurfaceCatalog(
+      {
+        query: async (sql, params = []) => queries.push({ sql: String(sql), params }),
+      },
+      catalog,
+      { catalogPath }
+    );
+
+    assert.equal(queries.length, 1);
+    assert.match(queries[0].sql, /db_governance_surfaces/u);
+    assert.equal(queries[0].params[0], surface.surfaceName);
+    assert.equal(queries[0].params[7], 'database');
+    assert.match(queries[0].params[9], /^[a-f0-9]{64}$/u);
+
+    fs.writeFileSync(
+      catalogPath,
+      JSON.stringify({ schemaVersion: 1, surfaces: [{ ...surface, migrationState: 'legacy' }] }),
+      'utf8'
+    );
+    assert.throws(
+      () => readDbGovernanceSurfaceCatalog(catalogPath),
+      /forbidden field migrationState/u
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('planning DB import restores the current DBT round-trip capability catalog', async () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-dbt-capabilities-'));
+  const catalogPath = path.join(tempRoot, 'dbt-project-roundtrip-capabilities.json');
+  const catalogValue = {
+    schemaVersion: 1,
+    phases: [
+      { phaseId: 'phase-2', phaseOrder: 2, phaseName: 'Read projection', expectedRailCount: 1 },
+    ],
+    railEvidence: [
+      {
+        evidenceId: 'E-PHASE-2',
+        phaseId: 'phase-2',
+        railName: 'ProjectDbtGraphFromFiles',
+        expectedRailType: 'query',
+        expectedRailStatus: 'implemented',
+        expectedMechanizationStatus: 'implemented',
+        expectedIsGap: false,
+        expectedImplemented: true,
+        reviewedPrUrl: 'https://github.com/dunay2/dvt/pull/1954',
+        reviewedCommitSha: '2894552f66ae5405edb0593679e785fa495d2998',
+        evidenceSummary: 'Reviewed current capability.',
+      },
+    ],
+  };
+  const queries = [];
+
+  try {
+    fs.writeFileSync(catalogPath, JSON.stringify(catalogValue), 'utf8');
+    const catalog = readDbtProjectRoundtripCapabilityCatalog(catalogPath);
+    await restoreDbtProjectRoundtripCapabilityCatalog(
+      { query: async (sql, params = []) => queries.push({ sql: String(sql), params }) },
+      catalog,
+      { catalogPath }
+    );
+
+    assert.equal(queries.length, 2);
+    assert.match(queries[0].sql, /dbt_project_roundtrip_phases/u);
+    assert.match(queries[1].sql, /dbt_project_roundtrip_phase_rail_evidence/u);
+    assert.equal(queries[0].params[0], 'phase-2');
+    assert.equal(queries[1].params[2], 'ProjectDbtGraphFromFiles');
+
+    fs.writeFileSync(catalogPath, JSON.stringify({ ...catalogValue, railEvidence: [] }), 'utf8');
+    assert.throws(
+      () => readDbtProjectRoundtripCapabilityCatalog(catalogPath),
+      /expects 1 rails but declares 0/u
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
 });
 
 test('planning DB import restores canonical feature rail operations idempotently', async () => {
@@ -2188,7 +2112,6 @@ test('PR readiness snapshot clears ARC evidence and risk blockers from changed d
 test('docs disposition snapshot classifies active-doc cleanup actions and task-like references', () => {
   const snapshot = buildDocsDispositionSnapshot({
     pendingHotspotThreshold: 2,
-    planningTaskIds: ['AR-A6', 'F-28', 'S08'],
     documents: [
       {
         sourcePath: 'docs/planning/closeouts/example.md',
@@ -2232,9 +2155,9 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
   const classifications = new Map(
     snapshot.references.map((reference) => [reference.referenceText, reference.classification])
   );
-  assert.equal(classifications.get('AR-A6'), 'registered_planning_task');
-  assert.equal(classifications.get('F-28'), 'registered_planning_task');
-  assert.equal(classifications.get('S08'), 'registered_planning_task');
+  assert.equal(classifications.get('AR-A6'), 'review_finding_reference');
+  assert.equal(classifications.get('F-28'), 'historical_planning_reference');
+  assert.equal(classifications.has('S08'), false);
   assert.equal(classifications.get('WEB-123'), 'unknown_task_like_id');
   assert.equal(classifications.get('ADR-0055'), 'adr_id');
   assert.equal(classifications.get('ADR-0041A'), 'adr_id');
@@ -2308,7 +2231,6 @@ test('docs disposition snapshot classifies active-doc cleanup actions and task-l
 
 test('docs disposition snapshot treats closed feature mechanization ids as registered links', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [],
     featureMechanizationIds: ['VERIFY-PREPUSH-SCOPE-ROUTER-20260511'],
     documents: [
       {
@@ -2342,34 +2264,24 @@ test('docs disposition snapshot treats closed feature mechanization ids as regis
 
   assert.ok(featureReference);
   assert.equal(featureReference.classification, 'registered_feature_mechanization');
-  assert.equal(featureReference.registeredPlanningTask, false);
 
   const cycleReference = snapshot.references.find(
     (reference) => reference.referenceText === 'PREPUSH-ROUTER-WEB-SOURCE'
   );
   assert.ok(cycleReference);
   assert.equal(cycleReference.classification, 'feature_mechanization_cycle');
-  assert.equal(cycleReference.registeredPlanningTask, false);
 
   const skillReference = snapshot.references.find(
     (reference) => reference.referenceText === 'SUB-SKILL'
   );
   assert.ok(skillReference);
   assert.equal(skillReference.classification, 'skill_reference');
-  assert.equal(skillReference.registeredPlanningTask, false);
 
   assert.deepEqual(snapshot.actions, []);
 });
 
-test('docs disposition snapshot does not split lane-prefixed planning task ids into suffix references', () => {
+test('docs disposition snapshot never registers legacy planning ids as local tasks', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [
-      'C-REV-RUNTIME-CANON',
-      'D-DOCS-DISPOSITION-QUEUE-1',
-      'D-REV-CI-RETENTION-CANON',
-      'E-PROP-DISP-1',
-      'F-MAND-WORKBENCH-UX',
-    ],
     documents: [
       {
         sourcePath: 'docs/planning/status/current-work.md',
@@ -2379,61 +2291,23 @@ test('docs disposition snapshot does not split lane-prefixed planning task ids i
           'status: Active',
           'planning_type: status',
           '---',
-          '`E-PROP-DISP-1`, `F-MAND-WORKBENCH-UX`, and',
-          '`D-REV-CI-RETENTION-CANON` are Planning DB tasks.',
-          '`C-REV-RUNTIME-CANON` and `D-DOCS-DISPOSITION-QUEUE-1` are tasks too.',
+          'Historical planning mentions: AR-A6 and F-MAND-WORKBENCH-UX.',
         ].join('\n'),
       },
     ],
   });
 
-  const classifications = new Map(
-    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
+  assert.ok(snapshot.references.length > 0);
+  assert.equal(
+    snapshot.references.some(
+      (reference) => reference.classification === 'registered_planning_task'
+    ),
+    false
   );
-
-  assert.equal(classifications.get('E-PROP-DISP-1'), 'registered_planning_task');
-  assert.equal(classifications.get('F-MAND-WORKBENCH-UX'), 'registered_planning_task');
-  assert.equal(classifications.get('D-REV-CI-RETENTION-CANON'), 'registered_planning_task');
-  assert.equal(classifications.get('C-REV-RUNTIME-CANON'), 'registered_planning_task');
-  assert.equal(classifications.get('D-DOCS-DISPOSITION-QUEUE-1'), 'registered_planning_task');
-  assert.equal(classifications.has('PROP-DISP-1'), false);
-  assert.equal(classifications.has('MAND-WORKBENCH-UX'), false);
-  assert.equal(classifications.has('REV-CI-RETENTION-CANON'), false);
-  assert.equal(classifications.has('REV-RUNTIME-CANON'), false);
-  assert.equal(classifications.has('DOCS-DISPOSITION-QUEUE-1'), false);
-  assert.deepEqual(snapshot.actions, []);
-});
-
-test('docs disposition snapshot keeps planning task references case-insensitive', () => {
-  const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: ['AR-A6', 'F-MAND-WORKBENCH-UX'],
-    documents: [
-      {
-        sourcePath: 'docs/planning/status/current-work.md',
-        raw: [
-          '---',
-          'title: Current work',
-          'status: Active',
-          'planning_type: status',
-          '---',
-          'Mixed-case task mentions: ar-a6 and f-mand-workbench-ux.',
-        ].join('\n'),
-      },
-    ],
-  });
-
-  const classifications = new Map(
-    snapshot.references.map((reference) => [reference.referenceText, reference.classification])
-  );
-
-  assert.equal(classifications.get('ar-a6'), 'registered_planning_task');
-  assert.equal(classifications.get('f-mand-workbench-ux'), 'registered_planning_task');
-  assert.deepEqual(snapshot.actions, []);
 });
 
 test('docs disposition snapshot classifies story, QA, and historical work-item ids as non-task references', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [],
     documents: [
       {
         sourcePath: 'docs/planning/proposals/mandatory/frontend-and-ux/story-catalog.md',
@@ -2484,7 +2358,6 @@ test('docs disposition snapshot classifies story, QA, and historical work-item i
 
 test('docs disposition snapshot parses UTF-8 BOM frontmatter before missing-status checks', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [],
     documents: [
       {
         sourcePath: 'docs/guides/bom-frontmatter.md',
@@ -2507,7 +2380,6 @@ test('docs disposition snapshot parses UTF-8 BOM frontmatter before missing-stat
 
 test('docs disposition snapshot classifies priority markers and date placeholders as non-task references', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [],
     documents: [
       {
         sourcePath:
@@ -2538,7 +2410,6 @@ test('docs disposition snapshot classifies priority markers and date placeholder
 
 test('docs disposition snapshot keeps archived documents visible without active cleanup actions', () => {
   const snapshot = buildDocsDispositionSnapshot({
-    planningTaskIds: [],
     documents: [
       {
         sourcePath: 'docs/archive/old-program.md',

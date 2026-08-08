@@ -31,20 +31,22 @@ test('planning review canonization preserves GitHub issue task authority', () =>
     '## Invariants',
     '## Transitions',
     '## Consumers',
-    '## Command And Query Rail',
+    '## Command And Query Boundary',
     '## Semantic Fitness Function',
     '## Diagrams',
   ]) {
     assert.match(componentGuide, new RegExp(escapeRegExp(requiredHeading)));
   }
-  for (const rail of ['ValidatePlanningReviewBoardTraceability']) {
-    assert.match(
-      componentGuide,
-      new RegExp(escapeRegExp(rail)),
-      `component must define rail ${rail}`
-    );
-  }
+  assertContains(
+    'docs/architecture/components/ci-governance/planning-review-canon-component.md',
+    'No repository command/query rail is declared'
+  );
+  assertContains(
+    'docs/architecture/components/ci-governance/planning-review-canon-component.md',
+    'tools/ci/planning-review-canon.test.mjs'
+  );
   for (const retiredToken of [
+    'ValidatePlanningReviewBoardTraceability',
     'ClassifyPlanningReviewIntake',
     'RecordPlanningReviewFollowUp',
     'planning:db:operate task',

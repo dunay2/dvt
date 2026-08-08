@@ -8,7 +8,7 @@ const { Client } = require('pg');
 const yaml = require('js-yaml');
 const { readFileIndexFromDisk } = require('./generate-governance-file-component-index.cjs');
 const { generatedStatusDir, governanceGeneratedPath } = require('./governance-generated-paths.cjs');
-const { schemaName } = require('./planning-db-migrate.cjs');
+const { schemaName } = require('./planning-db-schema.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
 
 const statusDir = generatedStatusDir;

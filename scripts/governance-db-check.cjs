@@ -1,7 +1,7 @@
 const { Client } = require('pg');
 
 const { buildGovernanceFileSnapshot, databaseUrl } = require('./planning-db-import.cjs');
-const { schemaName } = require('./planning-db-migrate.cjs');
+const { schemaName } = require('./planning-db-schema.cjs');
 
 function normalizeComparable(value) {
   if (value === undefined) {

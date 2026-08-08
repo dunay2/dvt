@@ -6,7 +6,7 @@ const { appendBooleanFilter, appendFilter } = require('../query-filter.cjs');
 const { parseLimit } = require('../query-limit.cjs');
 
 function createDocumentationLifecycleReadModelComponent(deps = {}) {
-  const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
+  const { schemaName } = deps.schema || require('../../planning-db-schema.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
 
   function buildDocumentationLifecycleRows(rows) {

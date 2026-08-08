@@ -7,10 +7,10 @@ const {
 
 const referenceIndex = createCommandQueryRailReferenceIndexComponent();
 
-test('implementation references exclude governance migrations and executable test evidence', () => {
+test('implementation references exclude declarative schema and executable test evidence', () => {
   const sourceFiles = [
     {
-      path: 'tools/planning-db/migrations/226_reconcile_remaining_frontend_gap_rails.sql',
+      path: 'tools/planning-db/schema.sql',
       content: "select 'ImportDbtProject';",
     },
     {
@@ -37,4 +37,31 @@ test('implementation references exclude governance migrations and executable tes
       },
     ]
   );
+});
+
+test('explicitly unimplemented rails do not infer implementation from evidence generators', () => {
+  const rail = referenceIndex.attachCommandQueryRailRefs(
+    {
+      railName: 'ExportDbtProject',
+      railStatus: 'not-implemented',
+      symbolRefs: [],
+      documentationRefs: [],
+      sourcePath:
+        'docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md',
+    },
+    {
+      sourceFiles: [
+        {
+          path: 'scripts/generate-dbt-project-roundtrip-capability-status.cjs',
+          content: "const requiredRails = ['ExportDbtProject'];",
+        },
+      ],
+      governanceSnapshot: { files: [], components: [] },
+      referenceDocuments: [],
+    }
+  );
+
+  assert.deepEqual(rail.implementationRefs, []);
+  assert.equal(rail.implementationRefCount, 0);
+  assert.equal(rail.isGap, true);
 });

@@ -7,11 +7,17 @@ const dependencies = (() => {
 
   return {
     fs: require('node:fs'),
+    crypto: require('node:crypto'),
     os: require('node:os'),
     path,
     Client: require('pg').Client,
     defaultPgUrl: require('./planning-db-run.cjs').defaultPgUrl,
-    schemaName: require('./planning-db-migrate.cjs').schemaName,
+    schemaName: require('./planning-db-schema.cjs').schemaName,
+    readArchitectureState: require('./planning-db-architecture-state.cjs').readArchitectureState,
+    assertCurrentRailDecisionState: require('./planning-db-architecture-state.cjs')
+      .assertCurrentRailDecisionState,
+    assertCurrentStateValue: require('./planning-db-architecture-state.cjs')
+      .assertCurrentStateValue,
     repoRoot: path.resolve(__dirname, '..'),
   };
 })();
@@ -21,7 +27,7 @@ const canonicalArtifactPaths = [canonicalStateArtifactPath];
 
 class PlanningDbExportRunner {
   constructor(deps = dependencies) {
-    this.deps = deps;
+    this.deps = { ...dependencies, ...deps };
   }
 
   databaseUrl(value) {
@@ -84,12 +90,9 @@ class PlanningDbExportRunner {
   }
 
   async readCanonicalStateRows(client) {
-    const [
-      featureMechanizationRails,
-      featureMechanizationRailOperations,
-      architectureComponentStatusOverrides,
-    ] = await Promise.all([
-      client.query(`
+    const [featureMechanizationRails, featureMechanizationRailOperations, architectureState] =
+      await Promise.all([
+        client.query(`
         select
           rail.rail_id as "railId",
           rail.feature_id as "featureId",
@@ -114,15 +117,9 @@ class PlanningDbExportRunner {
           rail.created_by as "createdBy",
           rail.created_at as "createdAt"
         from ${this.deps.schemaName}.feature_mechanization_local_rails rail
-        where rail.source_path not like 'tools/planning-db/migrations/%'
-          and exists (
-            select 1
-            from ${this.deps.schemaName}.feature_mechanization_local_operations operation
-            where operation.rail_id = rail.rail_id
-          )
         order by rail.rail_id
       `),
-      client.query(`
+        client.query(`
         select
           operation.operation_id as "operationId",
           operation.idempotency_key as "idempotencyKey",
@@ -141,23 +138,38 @@ class PlanningDbExportRunner {
           select 1
           from ${this.deps.schemaName}.feature_mechanization_local_rails rail
           where rail.rail_id = operation.rail_id
-            and rail.source_path not like 'tools/planning-db/migrations/%'
         )
         order by operation.created_at, operation.operation_id
       `),
-      client.query(`
-        select
-          component_id as "componentId",
-          status
-        from architecture.component
-        where status = 'deprecated'
-        order by component_id
-      `),
-    ]);
+        this.deps.readArchitectureState(client),
+      ]);
+
+    this.deps.assertCurrentStateValue(featureMechanizationRails.rows, 'featureMechanizationRails');
+    this.deps.assertCurrentStateValue(
+      featureMechanizationRailOperations.rows,
+      'featureMechanizationRailOperations'
+    );
+    this.deps.assertCurrentRailDecisionState(
+      featureMechanizationRails.rows,
+      featureMechanizationRailOperations.rows
+    );
+    const currentRails = featureMechanizationRails.rows.map((rail) => {
+      const sourcePath = this.deps.path.resolve(this.deps.repoRoot, rail.sourcePath);
+      if (!this.deps.fs.existsSync(sourcePath)) {
+        return rail;
+      }
+      return {
+        ...rail,
+        sourceContentSha256: this.deps.crypto
+          .createHash('sha256')
+          .update(this.deps.fs.readFileSync(sourcePath))
+          .digest('hex'),
+      };
+    });
 
     return {
-      architectureComponentStatusOverrides: architectureComponentStatusOverrides.rows,
-      featureMechanizationRails: featureMechanizationRails.rows,
+      architectureState,
+      featureMechanizationRails: currentRails,
       featureMechanizationRailOperations: featureMechanizationRailOperations.rows,
     };
   }
@@ -170,7 +182,7 @@ class PlanningDbExportRunner {
       `${JSON.stringify(
         {
           schemaVersion: 1,
-          architectureComponentStatusOverrides: snapshotRows.architectureComponentStatusOverrides,
+          architectureState: snapshotRows.architectureState,
           featureMechanizationRails: snapshotRows.featureMechanizationRails,
           featureMechanizationRailOperations: snapshotRows.featureMechanizationRailOperations,
         },
@@ -302,8 +314,7 @@ class PlanningDbExportRunner {
       }
 
       return {
-        canonicalArchitectureComponentStatusOverrides:
-          canonicalStateRows.architectureComponentStatusOverrides.length,
+        canonicalArchitectureComponents: canonicalStateRows.architectureState.component.length,
         canonicalFeatureMechanizationRails: canonicalStateRows.featureMechanizationRails.length,
         outputRoot,
         canonicalArtifactPaths,

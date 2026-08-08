@@ -7,7 +7,7 @@ const {
 const { parseLimit } = require('../query-limit.cjs');
 
 function createCommandQueryRailReadModelComponent(deps = {}) {
-  const { schemaName } = deps.migration || require('../../planning-db-migrate.cjs');
+  const { schemaName } = deps.schema || require('../../planning-db-schema.cjs');
   const shared = deps.shared || require('../command-query-rail-shared.cjs');
   const defaultSchemaName = deps.schemaName || schemaName;
   const { canonicalizeRailName } = shared;

@@ -1,7 +1,7 @@
 {
   "component": "@dvt/traceability-service",
   "version": "0.1.0",
-  "generated": "2026-08-06",
+  "generated": "2026-08-08",
   "repo": {
     "sha": "local"
   },
@@ -1153,7 +1153,8 @@
     {
       "number": "ADR-0061",
       "decisions": [
-        "Keep MVP task lifecycle in GitHub Issues and expose only architecture and governance DB reads."
+        "Keep MVP task lifecycle in GitHub Issues and expose only architecture and governance DB reads.",
+        "Rebuild and validate the current Planning DB state before serving refreshed queries."
       ],
       "implemented_by": ["scripts/planning-db-query.cjs"],
       "title": "ADR-0061 - GitHub MVP Task Authority And Planning DB Architecture Boundary"
@@ -1165,6 +1166,15 @@
       ],
       "implemented_by": ["apps/api/src/application/ports/workspaceContext.ts"],
       "title": "ADR-0062 - Server-Owned Effective Workspace Context"
+    },
+    {
+      "number": "ADR-0063",
+      "decisions": [
+        "Keep MVP task lifecycle in GitHub Issues and expose only architecture and governance DB reads.",
+        "Rebuild and validate the current Planning DB state before serving refreshed queries."
+      ],
+      "implemented_by": ["scripts/planning-db-query.cjs"],
+      "title": "ADR-0063 - Planning DB Current-Schema Rebuild"
     }
   ]
 }

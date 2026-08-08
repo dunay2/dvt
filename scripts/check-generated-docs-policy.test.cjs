@@ -188,7 +188,7 @@ test('DB-backed surface inventory can be declared as an ignored local artifact',
             {
               artifacts: ['.generated-docs/planning/status/generated-db-surface-inventory.md'],
               queryView: 'planning_query_store.db_governance_surface_query',
-              importCommand: 'pnpm planning:db:migrate',
+              importCommand: 'pnpm planning:db:import',
               checkCommand: 'pnpm docs:db-surface-inventory:check',
             },
           ],
@@ -200,7 +200,7 @@ test('DB-backed surface inventory can be declared as an ignored local artifact',
     {
       'docs:db-surface-inventory:generate': 'node scripts/generate-db-surface-inventory.cjs',
       'docs:db-surface-inventory:check': 'node scripts/generate-db-surface-inventory.cjs --check',
-      'planning:db:migrate': 'node scripts/planning-db-migrate.cjs',
+      'planning:db:import': 'node scripts/planning-db-import.cjs',
     }
   );
 
@@ -227,7 +227,7 @@ test('DB-backed DBT round-trip capability status can be declared as an ignored l
             {
               artifacts: [artifact],
               queryView: 'planning_query_store.dbt_project_roundtrip_capability_status_query',
-              importCommand: 'pnpm planning:db:migrate',
+              importCommand: 'pnpm planning:db:import',
               checkCommand: 'pnpm docs:dbt-roundtrip-capabilities:check',
             },
           ],
@@ -241,7 +241,7 @@ test('DB-backed DBT round-trip capability status can be declared as an ignored l
         'node scripts/generate-dbt-project-roundtrip-capability-status.cjs',
       'docs:dbt-roundtrip-capabilities:check':
         'node scripts/generate-dbt-project-roundtrip-capability-status.cjs --check',
-      'planning:db:migrate': 'node scripts/planning-db-migrate.cjs',
+      'planning:db:import': 'node scripts/planning-db-import.cjs',
     }
   );
 

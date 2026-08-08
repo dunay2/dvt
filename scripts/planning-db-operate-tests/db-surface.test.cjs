@@ -3,7 +3,7 @@ const {
   assert,
   parseArgs,
   planDbSurfaceUpsertOperation,
-  validateDbSurfaceMigrationState,
+  validateDbSurfaceAuthorityMode,
   validateDbSurfaceWriteRailKind,
   writePlannedDbSurfaceUpsertOperation,
 } = require('./helpers.cjs');
@@ -26,10 +26,10 @@ test('parseArgs builds a DB surface upsert command with structured authority fie
     'DB authority rows',
     '--validation',
     'pnpm test:planning:db',
-    '--migration-state',
-    'DB-first',
+    '--authority-mode',
+    'database',
     '--source-ref',
-    'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    'tools/planning-db/schema.sql',
     '--source-content-sha256',
     'a'.repeat(64),
     '--actor',
@@ -41,11 +41,11 @@ test('parseArgs builds a DB surface upsert command with structured authority fie
   assert.equal(command.kind, 'db_surface_upsert');
   assert.equal(command.surfaceName, 'Architecture design authority');
   assert.equal(command.writeRailKind, 'db_command');
-  assert.equal(command.migrationState, 'DB-first');
+  assert.equal(command.authorityMode, 'database');
   assert.equal(command.actor, 'codex');
 });
 
-test('parseArgs rejects DB-first DB surface commands without a DB command write rail', () => {
+test('parseArgs rejects database DB surface commands without a DB command write rail', () => {
   assert.throws(
     () =>
       parseArgs([
@@ -65,8 +65,8 @@ test('parseArgs rejects DB-first DB surface commands without a DB command write 
         '.generated-docs/planning/status/generated-knowledge-intake-literature.md',
         '--validation',
         'pnpm governance:refresh',
-        '--migration-state',
-        'DB-first',
+        '--authority-mode',
+        'database',
         '--source-ref',
         'docs/planning/status/db-surface-inventory.md',
         '--source-content-sha256',
@@ -74,16 +74,16 @@ test('parseArgs rejects DB-first DB surface commands without a DB command write 
         '--actor',
         'codex',
       ]),
-    /DB-FIRST-WRITE-RAIL-MISMATCH/
+    /DATABASE-AUTHORITY-WRITE-RAIL-MISMATCH/
   );
 });
 
 test('DB surface validators accept only governed migration and write rail kinds', () => {
-  assert.equal(validateDbSurfaceMigrationState('Hybrid indexed'), 'Hybrid indexed');
+  assert.equal(validateDbSurfaceAuthorityMode('hybrid-indexed'), 'hybrid-indexed');
   assert.equal(validateDbSurfaceWriteRailKind('db_command'), 'db_command');
   assert.throws(
-    () => validateDbSurfaceMigrationState('mostly-db-first'),
-    /Invalid DB surface migration state/
+    () => validateDbSurfaceAuthorityMode('mostly-db-first'),
+    /Invalid DB surface authority mode/
   );
   assert.throws(
     () => validateDbSurfaceWriteRailKind('spreadsheet'),
@@ -110,10 +110,10 @@ test('DB surface upsert planner emits a DB surface row and audit row', () => {
     'DB authority rows',
     '--validation',
     'pnpm test:planning:db',
-    '--migration-state',
-    'DB-first',
+    '--authority-mode',
+    'database',
     '--source-ref',
-    'tools/planning-db/migrations/059_db_surface_inventory.sql',
+    'tools/planning-db/schema.sql',
     '--source-content-sha256',
     'a'.repeat(64),
     '--actor',
@@ -131,7 +131,7 @@ test('DB surface upsert planner emits a DB surface row and audit row', () => {
 
   assert.equal(planned.surface.surfaceName, 'Architecture design authority');
   assert.equal(planned.surface.writeRailKind, 'db_command');
-  assert.equal(planned.surface.migrationState, 'DB-first');
+  assert.equal(planned.surface.authorityMode, 'database');
   assert.equal(planned.surface.revision, 3);
   assert.equal(planned.audit.operationType, 'db_surface_upsert');
   assert.equal(planned.audit.previousRevision, 2);
@@ -155,8 +155,8 @@ test('writePlannedDbSurfaceUpsertOperation persists surface and audit rows', asy
       readQueryRail: 'pnpm planning:db:query architecture-designs',
       projection: 'DB authority rows',
       validation: 'pnpm test:planning:db',
-      migrationState: 'DB-first',
-      sourceRef: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+      authorityMode: 'database',
+      sourceRef: 'tools/planning-db/schema.sql',
       sourceContentSha256: 'a'.repeat(64),
       revision: 3,
       updatedBy: 'codex',
@@ -168,11 +168,11 @@ test('writePlannedDbSurfaceUpsertOperation persists surface and audit rows', asy
       operationType: 'db_surface_upsert',
       actor: 'codex',
       surfaceName: 'Architecture design authority',
-      sourceRef: 'tools/planning-db/migrations/059_db_surface_inventory.sql',
+      sourceRef: 'tools/planning-db/schema.sql',
       sourceContentSha256: 'a'.repeat(64),
       previousRevision: 2,
       resultingRevision: 3,
-      payload: { migrationState: 'DB-first' },
+      payload: { authorityMode: 'database' },
       createdAt: '2026-06-05T12:00:00.000Z',
     },
   };
@@ -186,6 +186,6 @@ test('writePlannedDbSurfaceUpsertOperation persists surface and audit rows', asy
   );
   assert.equal(queries[0].params[0], 'Architecture design authority');
   assert.equal(queries[0].params[3], 'db_command');
-  assert.equal(queries[0].params[7], 'DB-first');
+  assert.equal(queries[0].params[7], 'database');
   assert.equal(queries[1].params[4], 'Architecture design authority');
 });

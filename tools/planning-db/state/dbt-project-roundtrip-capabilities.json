@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "phases": [
+    {
+      "phaseId": "phase-2",
+      "phaseOrder": 2,
+      "phaseName": "dbt analysis and read-only file projection",
+      "expectedRailCount": 1
+    },
+    {
+      "phaseId": "phase-3",
+      "phaseOrder": 3,
+      "phaseName": "Import and file-backed Source Import",
+      "expectedRailCount": 2
+    },
+    {
+      "phaseId": "phase-4",
+      "phaseOrder": 4,
+      "phaseName": "File-backed Preview and Run",
+      "expectedRailCount": 4
+    },
+    {
+      "phaseId": "phase-6",
+      "phaseOrder": 6,
+      "phaseName": "Export",
+      "expectedRailCount": 1
+    }
+  ],
+  "railEvidence": [
+    {
+      "evidenceId": "DBT-ROUNDTRIP-PHASE2-PROJECT-FILES",
+      "phaseId": "phase-2",
+      "railName": "ProjectDbtGraphFromFiles",
+      "expectedRailType": "query",
+      "expectedRailStatus": "declared",
+      "expectedMechanizationStatus": "implemented",
+      "expectedIsGap": false,
+      "expectedImplemented": true,
+      "reviewedPrUrl": "https://github.com/dunay2/dvt/pull/1954",
+      "reviewedCommitSha": "2894552f66ae5405edb0593679e785fa495d2998",
+      "evidenceSummary": "PR 1954 completed the protected file projection and its browser read model."
+    },
+    {
+      "evidenceId": "DBT-ROUNDTRIP-PHASE3-VALIDATE-IMPORT",
+      "phaseId": "phase-3",
+      "railName": "ValidateDbtProjectImport",
+      "expectedRailType": "query",
+      "expectedRailStatus": "declared",
+      "expectedMechanizationStatus": "documented",
+      "expectedIsGap": false,
+      "expectedImplemented": true,
+      "reviewedPrUrl": "https://github.com/dunay2/dvt/pull/1959",
+      "reviewedCommitSha": "998882623da73fe8abeffa1248a3b31e9ff59ae6",
+      "evidenceSummary": "PR 1959 completed protected import validation with typed diagnostics."
+    },
+    {
+      "evidenceId": "DBT-ROUNDTRIP-PHASE3-IMPORT",
+      "phaseId": "phase-3",
+      "railName": "ImportDbtProject",
+      "expectedRailType": "command",
+      "expectedRailStatus": "declared",
+      "expectedMechanizationStatus": "documented",
+      "expectedIsGap": false,
+      "expectedImplemented": true,
+      "reviewedPrUrl": "https://github.com/dunay2/dvt/pull/1959",
+      "reviewedCommitSha": "998882623da73fe8abeffa1248a3b31e9ff59ae6",
+      "evidenceSummary": "PR 1959 completed durable import authority, recovery, and strict browser proof."
+    },
+    {
+      "evidenceId": "DBT-ROUNDTRIP-PHASE4-BUILD-PLANNER-SOURCE",
+      "phaseId": "phase-4",
+      "railName": "BuildDbtPlannerGraphSource",
+      "expectedRailType": "query",
+      "expectedRailStatus": "declared",
+      "expectedMechanizationStatus": "implemented",
+      "expectedIsGap": false,
+      "expectedImplemented": true,
+      "reviewedPrUrl": "https://github.com/dunay2/dvt/pull/1962",
+      "reviewedCommitSha": "f65d187319db03651c000e7907f4ddb8f3b0ea17",
+      "evidenceSummary": "PR 1962 adapted the existing planner-source query to file-authoritative projection."
+    },
+    {
+      "evidenceId": "DBT-ROUNDTRIP-PHASE4-PREVIEW",
+      "phaseId": "phase-4",
+      "railName": "PreviewExecutionPlan",
+      "expectedRailType": "command",
+      "expectedRailStatus": "implemented",
+      "expectedMechanizationStatus": "documented",
+      "expectedIsGap": false,
+      "expectedImplemented": true,
+      "reviewedPrUrl": "https://github.com/dunay2/dvt/pull/1962",
+      "reviewedCommitSha": "f65d187319db03651c000e7907f4ddb8f3b0ea17",
+      "evidenceSummary": "PR 1962 bound Preview to analyzed file revision and authorized target identity."
+    },
+    {
+      "evidenceId": "DBT-ROUNDTRIP-PHASE4-READINESS",
+      "phaseId": "phase-4",
+      "railName": "ObservePlanRunReadiness",
+      "expectedRailType": "query",
+      "expectedRailStatus": "declared",
+      "expectedMechanizationStatus": "closed",
+      "expectedIsGap": false,
+      "expectedImplemented": true,
+      "reviewedPrUrl": "https://github.com/dunay2/dvt/pull/1962",
+      "reviewedCommitSha": "f65d187319db03651c000e7907f4ddb8f3b0ea17",
+      "evidenceSummary": "PR 1962 mapped file-projection diagnostics and revision posture into readiness."
+    },
+    {
+      "evidenceId": "DBT-ROUNDTRIP-PHASE4-START-RUN",
+      "phaseId": "phase-4",
+      "railName": "StartRun",
+      "expectedRailType": "command",
+      "expectedRailStatus": "implemented",
+      "expectedMechanizationStatus": "documented",
+      "expectedIsGap": false,
+      "expectedImplemented": true,
+      "reviewedPrUrl": "https://github.com/dunay2/dvt/pull/1962",
+      "reviewedCommitSha": "f65d187319db03651c000e7907f4ddb8f3b0ea17",
+      "evidenceSummary": "PR 1962 admitted only revision-matched, secret-free DBT bundles into StartRun."
+    },
+    {
+      "evidenceId": "DBT-ROUNDTRIP-PHASE6-EXPORT-DEFERRED",
+      "phaseId": "phase-6",
+      "railName": "ExportDbtProject",
+      "expectedRailType": "command",
+      "expectedRailStatus": "retired",
+      "expectedMechanizationStatus": "closed",
+      "expectedIsGap": true,
+      "expectedImplemented": false,
+      "reviewedPrUrl": "https://github.com/dunay2/dvt/pull/1818",
+      "reviewedCommitSha": "800be353aee4bf85c03be671e142fe7d5dd11df1",
+      "evidenceSummary": "The accepted 0.2.0 plan baseline kept authoritative export deferred and fail-closed."
+    }
+  ]
+}

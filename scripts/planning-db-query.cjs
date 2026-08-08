@@ -2,14 +2,16 @@
  * @file scripts/planning-db-query.cjs
  * @ownedConcern Expose DB-owned architecture and governance read models through one operator query command.
  * @baseline ADR-0061: GitHub MVP task authority and Planning DB architecture boundary
+ * @baseline ADR-0063: Planning DB current-schema rebuild
  * @decision Keep MVP task lifecycle in GitHub Issues and expose only architecture and governance DB reads.
- * @consequence The CLI cannot create a second local task backlog or workboard.
+ * @decision Rebuild and validate the current Planning DB state before serving refreshed queries.
+ * @consequence The CLI cannot create a second task backlog or read a compatibility projection.
  * @version 1.0.0
  */
 const { Client } = require('pg');
 
 const { defaultPgUrl } = require('./planning-db-run.cjs');
-const { schemaName } = require('./planning-db-migrate.cjs');
+const { schemaName } = require('./planning-db-schema.cjs');
 const { runPlanningImport } = require('./planning-db-import.cjs');
 const {
   buildCommandQueryRailRows,
@@ -81,10 +83,6 @@ const {
   buildCanvasUxdbSpecificationRows,
   readCanvasUxdbSpecificationRows,
 } = require('./planning-db/queries/canvas-uxdb-specification-query.cjs');
-const {
-  buildCanvasUxdbTraceabilityRows,
-  readCanvasUxdbTraceabilityRows,
-} = require('./planning-db/queries/canvas-uxdb-traceability-query.cjs');
 const {
   buildCanvasCqRailDriftRows,
   readCanvasCqRailDriftRows,
@@ -184,7 +182,6 @@ const knownQueries = new Set([
   'canvas-cq-rail-drift',
   'canvas-component-registry-drift',
   'canvas-uxdb-specification',
-  'canvas-uxdb-traceability',
   'component-profile',
   'governance-refresh-runs',
   'mandatory-proposal-gaps',
@@ -265,11 +262,7 @@ const governanceProjectionQueryNames = new Set([
   'canvas-cq-rail-drift',
   'canvas-component-registry-drift',
 ]);
-const taskIdCommonFilterQueryNames = new Set([
-  'canvas-cq-rail-drift',
-  'canvas-uxdb-specification',
-  'canvas-uxdb-traceability',
-]);
+const taskIdCommonFilterQueryNames = new Set(['canvas-cq-rail-drift', 'canvas-uxdb-specification']);
 const featureIdCommonFilterQueryNames = new Set([
   'feature-mechanization',
   'feature-mechanization-components',
@@ -458,11 +451,6 @@ function buildPlanningDbQueryHelpText(queryName) {
       examples.push(
         `  pnpm planning:db:query ${queryName} --filter E-CANVAS-UXDB-SPEC-PERSISTENCE-1 --limit 20`,
         `  pnpm planning:db:query ${queryName} --kind context_action --rail ResolveCanvasContextMenu --limit 20`
-      );
-    } else if (queryName === 'canvas-uxdb-traceability') {
-      examples.push(
-        `  pnpm planning:db:query ${queryName} --filter E-CANVAS-CONTEXT-MENU-HUMAN-PROOF-1 --limit 20`,
-        `  pnpm planning:db:query ${queryName} --kind ux_rule --state not-started --limit 20`
       );
     } else if (queryName === 'architecture-dependency-observations') {
       examples.push(
@@ -866,7 +854,6 @@ function parseArgs(args = process.argv.slice(2)) {
         queryName === 'canvas-cq-rail-drift' ||
         queryName === 'canvas-component-registry-drift' ||
         queryName === 'canvas-uxdb-specification' ||
-        queryName === 'canvas-uxdb-traceability' ||
         queryName === 'governance-refresh-runs' ||
         queryName === 'db-surfaces' ||
         queryName === 'component-integrity' ||
@@ -1099,7 +1086,9 @@ function buildAiProjectContext(snapshot = {}, options = {}) {
 }
 
 function markdownCell(value) {
-  return compactText(Array.isArray(value) ? value.join(', ') : value).replace(/\|/g, '\\|');
+  return compactText(Array.isArray(value) ? value.join(', ') : value)
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|');
 }
 
 function markdownTable(headers, rows) {
@@ -1871,9 +1860,7 @@ function docsDispositionActionSelect() {
       resolution_status,
       resolved_by,
       resolved_at,
-      resolution_reason,
-      target_lane_id,
-      target_task_id
+      resolution_reason
     from ${schemaName}.doc_disposition_action_query`;
 }
 
@@ -3861,15 +3848,6 @@ async function runQuery(options = {}) {
       return specificationRows;
     }
 
-    if (queryName === 'canvas-uxdb-traceability') {
-      const rows = await readCanvasUxdbTraceabilityRows(client, options.filters || {});
-      const traceabilityRows = buildCanvasUxdbTraceabilityRows(rows);
-      if (options.print !== false) {
-        printTaskRows(traceabilityRows);
-      }
-      return traceabilityRows;
-    }
-
     if (queryName === 'governance-refresh-runs') {
       const rows = await readGovernanceRefreshRunRows(client, options.filters || {});
       const refreshRows = buildGovernanceRefreshRunRows(rows);
@@ -4250,7 +4228,7 @@ function formatQueryError(error) {
   if (hasConnectionRefusal) {
     return [
       'Planning DB is unavailable.',
-      'Run `pnpm planning:db:up`, then `pnpm planning:db:migrate` and `pnpm planning:db:import` if the database has not been seeded.',
+      'Run `pnpm planning:db:up`, then `pnpm planning:db:import` to rebuild the current state.',
       `Details: ${details.join('; ')}`,
     ].join(' ');
   }
@@ -4329,7 +4307,6 @@ module.exports = {
   buildCanvasCqRailDriftRows,
   buildCanvasComponentRegistryDriftRows,
   buildCanvasUxdbSpecificationRows,
-  buildCanvasUxdbTraceabilityRows,
   buildMandatoryProposalGapRows,
   buildPrReadinessRows,
   buildCommandQueryRailRows,
@@ -4418,7 +4395,6 @@ module.exports = {
   readCanvasCqRailDriftRows,
   readCanvasComponentRegistryDriftRows,
   readCanvasUxdbSpecificationRows,
-  readCanvasUxdbTraceabilityRows,
   readKnowledgeIntakeReferenceRows,
   readKnowledgeIntakeRetirementRows,
   readMandatoryProposalGapRows,

@@ -1,7 +1,6 @@
 const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client } = require('pg');
 
 const repoRoot = path.resolve(__dirname, '..');
 const composeFile = path.join(repoRoot, 'infra', 'planning-db', 'docker-compose.yml');
@@ -54,10 +53,6 @@ function ensureDataDir() {
   fs.mkdirSync(process.env.DVT_PLANNING_DB_DATA_DIR || defaultDataDir, { recursive: true });
 }
 
-function timestampForFile(value = new Date()) {
-  return new Date(value).toISOString().replace(/[-:.]/g, '');
-}
-
 function assertSafeDataDir(dataDir) {
   const resolved = path.resolve(dataDir);
   const parsed = path.parse(resolved);
@@ -78,15 +73,7 @@ function planResetDataDir(options = {}) {
   const dataDir = assertSafeDataDir(
     options.dataDir || process.env.DVT_PLANNING_DB_DATA_DIR || defaultDataDir
   );
-  const backupDir = path.join(path.dirname(dataDir), 'backups');
-  return {
-    dataDir,
-    backupDir,
-    backupPath: path.join(
-      backupDir,
-      `planning-local-operations-${timestampForFile(options.now)}.json`
-    ),
-  };
+  return { dataDir };
 }
 
 function buildComposeArgs(actionArgs, prefixArgs = ['compose']) {
@@ -290,105 +277,13 @@ function runPlanningDbHealth(args = [], options = {}) {
   ]);
 }
 
-async function readLocalOperationBackup(options = {}) {
-  const client = options.client || new Client({ connectionString: defaultPgUrl });
-  const ownsClient = !options.client;
-
-  if (ownsClient) {
-    await client.connect();
-  }
-
-  try {
-    const tableResult = await client.query(
-      `select
-         to_regclass('planning_query_store.planning_task_local_state') as local_state,
-         to_regclass('planning_query_store.planning_local_operations') as local_operations`
-    );
-    const tables = tableResult.rows[0] || {};
-    if (!tables.local_state && !tables.local_operations) {
-      return {
-        localTaskState: [],
-        localOperations: [],
-      };
-    }
-
-    const localTaskState = tables.local_state
-      ? await client.query(
-          'select * from planning_query_store.planning_task_local_state order by lane_id, task_id'
-        )
-      : { rows: [] };
-    const localOperations = tables.local_operations
-      ? await client.query(
-          'select * from planning_query_store.planning_local_operations order by created_at, operation_id'
-        )
-      : { rows: [] };
-
-    return {
-      localTaskState: localTaskState.rows,
-      localOperations: localOperations.rows,
-    };
-  } finally {
-    if (ownsClient) {
-      await client.end();
-    }
-  }
-}
-
-function writeLocalOperationBackup(plan, backup, options = {}) {
-  const hasRows = backup.localTaskState.length > 0 || backup.localOperations.length > 0;
-  if (!hasRows) {
-    return null;
-  }
-
-  const generatedAt = new Date(options.now || new Date()).toISOString();
-  fs.mkdirSync(plan.backupDir, { recursive: true });
-  fs.writeFileSync(
-    plan.backupPath,
-    JSON.stringify(
-      {
-        generatedAt,
-        localTaskState: backup.localTaskState,
-        localOperations: backup.localOperations,
-      },
-      null,
-      2
-    )
-  );
-
-  return plan.backupPath;
-}
-
 async function resetPlanningDb(options = {}) {
   const plan = planResetDataDir(options);
   const runComposeFn = options.runCompose || runCompose;
   const waitForReadyFn = options.waitForPlanningDbReady || waitForPlanningDbReady;
-  const readBackupFn = options.readLocalOperationBackup || readLocalOperationBackup;
-  const writeBackupFn = options.writeLocalOperationBackup || writeLocalOperationBackup;
   const rmSyncFn = options.rmSync || fs.rmSync;
   const mkdirSyncFn = options.mkdirSync || fs.mkdirSync;
   const logger = options.logger || console;
-  runComposeFn(['up', '-d']);
-  waitForReadyFn();
-
-  let backup;
-  try {
-    backup = await readBackupFn();
-  } catch (error) {
-    throw new Error(
-      `Unable to read planning DB local-operation backup before reset: ${
-        error.message || error.code || error.name
-      }`,
-      { cause: error }
-    );
-  }
-  const backupPath = writeBackupFn(plan, backup, options);
-
-  if (backupPath) {
-    logger.log(`[planning:db:reset] local operation backup written to ${backupPath}`);
-  } else {
-    logger.log('[planning:db:reset] no local operation rows found for backup');
-  }
-
   runComposeFn(['down']);
   rmSyncFn(plan.dataDir, { recursive: true, force: true });
   mkdirSyncFn(plan.dataDir, { recursive: true });
@@ -467,7 +362,6 @@ module.exports = {
   ensureDataDir,
   isPlanningDbActive,
   planResetDataDir,
-  readLocalOperationBackup,
   resolveComposeCommand,
   runPlanningDbHealth,
   runPlanningDbUp,
@@ -475,5 +369,4 @@ module.exports = {
   resetComposeCommandCache,
   runComposeQuiet,
   waitForPlanningDbReady,
-  writeLocalOperationBackup,
 };

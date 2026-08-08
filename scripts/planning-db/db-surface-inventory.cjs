@@ -1,15 +1,15 @@
 /** Owned concern: expose DB-governed surface inventory rows through Planning DB queries. */
-const { schemaName } = require('../planning-db-migrate.cjs');
+const { schemaName } = require('../planning-db-schema.cjs');
 const { appendFilter } = require('./query-filter.cjs');
 const { textValue } = require('./query-format.cjs');
 
 const sourceView = `${schemaName}.db_governance_surface_query`;
-const allowedDbSurfaceMigrationStates = new Set([
-  'Bootstrap/export',
-  'DB-first',
-  'Generated-only',
-  'Git-first indexed',
-  'Hybrid indexed',
+const allowedDbSurfaceAuthorityModes = new Set([
+  'repository-export',
+  'database',
+  'generated',
+  'git-indexed',
+  'hybrid-indexed',
 ]);
 const allowedDbSurfaceWriteRailKinds = new Set([
   'db_command',
@@ -31,9 +31,9 @@ function parseLimit(value, fallback = 20) {
 function buildDbSurfaceRows(rows) {
   return rows.map((row) => [
     textValue(row.surface_name ?? row.surfaceName),
-    textValue(row.migration_state ?? row.migrationState),
+    textValue(row.authority_mode ?? row.authorityMode),
     textValue(row.write_rail_kind ?? row.writeRailKind),
-    String(Boolean(row.db_first_eligible ?? row.dbFirstEligible)),
+    String(Boolean(row.database_write_eligible ?? row.databaseWriteEligible)),
     String(row.revision ?? 0),
     textValue(row.updated_by ?? row.updatedBy),
     textValue(row.source_ref ?? row.sourceRef),
@@ -44,7 +44,7 @@ async function readDbSurfaceRows(client, filters = {}) {
   const params = [];
   const predicates = [];
   appendFilter(predicates, params, 'surface_name', filters.surface);
-  appendFilter(predicates, params, 'migration_state', filters.state);
+  appendFilter(predicates, params, 'authority_mode', filters.state);
   appendFilter(predicates, params, 'write_rail_kind', filters.kind);
   appendFilter(predicates, params, 'source_ref', filters.path);
 
@@ -60,23 +60,23 @@ async function readDbSurfaceRows(client, filters = {}) {
        read_query_rail,
        projection,
        validation,
-       migration_state,
+       authority_mode,
        source_ref,
        source_content_sha256,
        revision,
        updated_by,
        updated_at,
-       db_first_eligible,
-       db_first_blocker
+       database_write_eligible,
+       database_write_blocker
      from ${sourceView}
      ${predicates.length > 0 ? `where ${predicates.join(' and ')}` : ''}
      order by
-       case migration_state
-         when 'DB-first' then 1
-         when 'Hybrid indexed' then 2
-         when 'Bootstrap/export' then 3
-         when 'Generated-only' then 4
-         when 'Git-first indexed' then 5
+       case authority_mode
+         when 'database' then 1
+         when 'hybrid-indexed' then 2
+         when 'repository-export' then 3
+         when 'generated' then 4
+         when 'git-indexed' then 5
          else 6
        end,
        surface_name
@@ -88,7 +88,7 @@ async function readDbSurfaceRows(client, filters = {}) {
 }
 
 module.exports = {
-  allowedDbSurfaceMigrationStates,
+  allowedDbSurfaceAuthorityModes,
   allowedDbSurfaceWriteRailKinds,
   buildDbSurfaceRows,
   readDbSurfaceRows,

@@ -21,7 +21,13 @@ const {
 const { buildCoverageReport } = require('./generate-governance-coverage-report.cjs');
 const { buildRemediationQueue } = require('./generate-governance-remediation-queue.cjs');
 const { defaultPgUrl } = require('./planning-db-run.cjs');
-const { runMigrations, schemaName } = require('./planning-db-migrate.cjs');
+const { applyCurrentPlanningDbSchema, schemaName } = require('./planning-db-schema.cjs');
+const {
+  assertArchitectureState,
+  assertCurrentRailDecisionState,
+  assertCurrentStateValue,
+  restoreArchitectureState,
+} = require('./planning-db-architecture-state.cjs');
 const {
   buildKnowledgeSnapshotFromDocuments,
 } = require('../tools/planning-db/knowledge/documentSnapshot.cjs');
@@ -41,6 +47,20 @@ const canonicalStatePath = path.join(
   'planning-db',
   'state',
   'canonical-state.json'
+);
+const dbGovernanceSurfaceCatalogPath = path.join(
+  repoRoot,
+  'tools',
+  'planning-db',
+  'state',
+  'db-governance-surfaces.json'
+);
+const dbtProjectRoundtripCapabilityCatalogPath = path.join(
+  repoRoot,
+  'tools',
+  'planning-db',
+  'state',
+  'dbt-project-roundtrip-capabilities.json'
 );
 const governanceFileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
 const governanceComponentIndexPath = governanceGeneratedPath(
@@ -1218,7 +1238,7 @@ const pendingMarkerTerms = [
 ];
 
 const taskLikeReferencePattern =
-  /(?<![A-Za-z0-9-])(?:ADR-\d{4}|ED-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|R-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|US-\d+[A-Za-z0-9-]*|[A-Z][A-Z0-9]{1,12}(?:-[A-Z0-9][A-Z0-9]{0,24})+)(?![A-Za-z0-9-])/g;
+  /(?<![A-Za-z0-9-])(?:ADR-\d{4}|ED-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|R-\d{8}-[A-Za-z0-9][A-Za-z0-9-]*|US-\d+[A-Za-z0-9-]*|F-\d{2}|[A-Z][A-Z0-9]{1,12}(?:-[A-Z0-9][A-Z0-9]{0,24})+)(?![A-Za-z0-9-])/g;
 
 function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
@@ -1295,21 +1315,6 @@ function addNormalizedId(idSet, value) {
   idSet.add(normalized.toUpperCase());
 }
 
-function buildPlanningTaskReferencePattern(planningTaskIdSet) {
-  const planningTaskIds = [...new Set([...planningTaskIdSet].map((taskId) => taskId.toUpperCase()))]
-    .filter(Boolean)
-    .sort((left, right) => right.length - left.length || left.localeCompare(right));
-
-  if (planningTaskIds.length === 0) {
-    return null;
-  }
-
-  return new RegExp(
-    `(?<![A-Za-z0-9-])(?:${planningTaskIds.map(escapeRegExp).join('|')})(?![A-Za-z0-9-])`,
-    'gi'
-  );
-}
-
 function collectFeatureMechanizationReferenceIds(sourceDocuments) {
   const featureIds = new Set();
   const cycleIds = new Set();
@@ -1348,134 +1353,128 @@ function collectFeatureMechanizationReferenceIds(sourceDocuments) {
 
 function classifyTaskLikeReference(
   referenceText,
-  planningTaskIdSet,
   featureMechanizationIdSet = new Set(),
   featureMechanizationCycleIdSet = new Set()
 ) {
   const value = normalizeText(referenceText);
   const upperValue = value.toUpperCase();
 
-  if (planningTaskIdSet.has(value) || planningTaskIdSet.has(upperValue)) {
-    return { classification: 'registered_planning_task', registeredPlanningTask: true };
-  }
   if (featureMechanizationIdSet.has(value) || featureMechanizationIdSet.has(upperValue)) {
     return {
       classification: 'registered_feature_mechanization',
-      registeredPlanningTask: false,
     };
   }
   if (featureMechanizationCycleIdSet.has(value) || featureMechanizationCycleIdSet.has(upperValue)) {
-    return { classification: 'feature_mechanization_cycle', registeredPlanningTask: false };
+    return { classification: 'feature_mechanization_cycle' };
   }
   if (/^GPT-\d+(?:\.\d+)?$/.test(upperValue)) {
-    return { classification: 'model_reference', registeredPlanningTask: false };
+    return { classification: 'model_reference' };
   }
   if (/^[A-Z0-9]+-SKILL$/.test(upperValue)) {
-    return { classification: 'skill_reference', registeredPlanningTask: false };
+    return { classification: 'skill_reference' };
   }
   if (/^ED-YYYYMMDD$/.test(upperValue)) {
-    return { classification: 'evidence_template_id', registeredPlanningTask: false };
+    return { classification: 'evidence_template_id' };
   }
   if (/^ADR-XXXX$/.test(upperValue)) {
-    return { classification: 'adr_template_id', registeredPlanningTask: false };
+    return { classification: 'adr_template_id' };
   }
   if (/^ADR-(?:\d{3,4}[A-Z]?|[A-Z]\d+)$/.test(upperValue)) {
-    return { classification: 'adr_id', registeredPlanningTask: false };
+    return { classification: 'adr_id' };
   }
   if (/^ARC-\d+$/.test(upperValue)) {
-    return { classification: 'arc_level', registeredPlanningTask: false };
+    return { classification: 'arc_level' };
   }
   if (/^ED-\d{8}(?:-|$)/.test(upperValue)) {
-    return { classification: 'evidence_id', registeredPlanningTask: false };
+    return { classification: 'evidence_id' };
   }
   if (/^R-\d{8}-/.test(upperValue)) {
-    return { classification: 'risk_id', registeredPlanningTask: false };
+    return { classification: 'risk_id' };
   }
   if (/^US-/.test(upperValue)) {
-    return { classification: 'user_story', registeredPlanningTask: false };
+    return { classification: 'user_story' };
   }
   if (/^EPIC-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(upperValue)) {
-    return { classification: 'epic_reference', registeredPlanningTask: false };
+    return { classification: 'epic_reference' };
   }
   if (/^(?:[A-Z0-9]+-)*[A-Z0-9]+-US\d+$/.test(upperValue)) {
-    return { classification: 'user_story', registeredPlanningTask: false };
+    return { classification: 'user_story' };
   }
   if (/^(?:WAPO|E\d+-ARCH|WEB-(?:AUTH|GAP|PROJECT|SCOPE))-\d+$/.test(upperValue)) {
-    return { classification: 'user_story', registeredPlanningTask: false };
+    return { classification: 'user_story' };
   }
   if (/^(?:EWC|CODE-FILES)-\d+$/.test(upperValue)) {
-    return { classification: 'user_story', registeredPlanningTask: false };
+    return { classification: 'user_story' };
   }
   if (/^TASK-\d+$/.test(upperValue)) {
-    return { classification: 'example_task_reference', registeredPlanningTask: false };
+    return { classification: 'example_task_reference' };
   }
   if (/^GOV-S\d+(?:-[A-Z0-9]+)*$/.test(upperValue) || /^CDG(?:-[A-Z0-9]+)+$/.test(upperValue)) {
-    return { classification: 'governance_workstream_reference', registeredPlanningTask: false };
+    return { classification: 'governance_workstream_reference' };
   }
   if (/^RFC-\d+$/.test(upperValue)) {
-    return { classification: 'standards_reference', registeredPlanningTask: false };
+    return { classification: 'standards_reference' };
   }
   if (/^AR-[A-Z]$/.test(upperValue)) {
     return {
       classification: 'architecture_review_stream_reference',
-      registeredPlanningTask: false,
     };
   }
   if (/^(?:G\d+|F\d{2}|S\d{2}|W\d+)-/.test(upperValue)) {
-    return { classification: 'historical_gap', registeredPlanningTask: false };
+    return { classification: 'historical_gap' };
   }
   if (/^SHA-\d+$/.test(upperValue)) {
-    return { classification: 'algorithm_reference', registeredPlanningTask: false };
+    return { classification: 'algorithm_reference' };
   }
   if (/^REF-\d+$/.test(upperValue)) {
-    return { classification: 'document_reference', registeredPlanningTask: false };
+    return { classification: 'document_reference' };
   }
   if (/^(?:SSE-(?:KMS|S3)|AES-GCM)$/.test(upperValue)) {
-    return { classification: 'security_algorithm_reference', registeredPlanningTask: false };
+    return { classification: 'security_algorithm_reference' };
   }
   if (/^(?:AES|RSA|ECDSA)-\d+$/.test(upperValue) || /^HMAC-SHA\d+$/.test(upperValue)) {
-    return { classification: 'security_algorithm_reference', registeredPlanningTask: false };
+    return { classification: 'security_algorithm_reference' };
   }
   if (/^CVE-\d{4}-\d+$/.test(upperValue)) {
-    return { classification: 'security_advisory_reference', registeredPlanningTask: false };
+    return { classification: 'security_advisory_reference' };
   }
   if (/^(?:AC|AT|AU|CA|CM|CP|IA|IR|MA|MP|PE|PL|PS|RA|SA|SC|SI|SR)-\d+$/.test(upperValue)) {
-    return { classification: 'security_control_reference', registeredPlanningTask: false };
+    return { classification: 'security_control_reference' };
   }
   if (/^ISOL(?:-[A-Z0-9]+)*$/.test(upperValue)) {
-    return { classification: 'security_test_reference', registeredPlanningTask: false };
+    return { classification: 'security_test_reference' };
   }
   if (/^YYYY-MM-DD$/.test(upperValue)) {
-    return { classification: 'date_placeholder', registeredPlanningTask: false };
+    return { classification: 'date_placeholder' };
   }
   if (/^UTF-\d+$/.test(upperValue)) {
-    return { classification: 'encoding_reference', registeredPlanningTask: false };
+    return { classification: 'encoding_reference' };
   }
   if (
     /^(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY)-(?:USD|EUR|GBP|JPY|CAD|AUD|CHF|CNY)$/.test(upperValue)
   ) {
-    return { classification: 'currency_pair_reference', registeredPlanningTask: false };
+    return { classification: 'currency_pair_reference' };
   }
   if (/^Q\d+-Q\d+$/.test(upperValue)) {
-    return { classification: 'range_reference', registeredPlanningTask: false };
+    return { classification: 'range_reference' };
   }
   if (/^P\d+-\d+$/.test(upperValue)) {
-    return { classification: 'priority_work_item_marker', registeredPlanningTask: false };
+    return { classification: 'priority_work_item_marker' };
   }
   if (/^DL-\d+$/.test(upperValue)) {
-    return { classification: 'diagram_reference', registeredPlanningTask: false };
+    return { classification: 'diagram_reference' };
   }
   if (/^(?:AUTO-FAIL|TEST-MODE)$/.test(upperValue)) {
-    return { classification: 'policy_state_reference', registeredPlanningTask: false };
+    return { classification: 'policy_state_reference' };
   }
   if (/^CI-AUDIT$/.test(upperValue)) {
-    return { classification: 'governance_workstream_reference', registeredPlanningTask: false };
+    return { classification: 'governance_workstream_reference' };
   }
   if (/^(?:AV|CE|DW)-\d{3}$/.test(upperValue) || /^EA-\d{8}-\d+$/.test(upperValue)) {
-    return { classification: 'review_finding_reference', registeredPlanningTask: false };
+    return { classification: 'review_finding_reference' };
   }
   if (/^AR-[A-Z]\d+-INV-\d+$/.test(upperValue)) {
-    return { classification: 'review_invariant_reference', registeredPlanningTask: false };
+    return { classification: 'review_invariant_reference' };
   }
   if (
     /^EA-\d{8}$/.test(upperValue) ||
@@ -1483,45 +1482,41 @@ function classifyTaskLikeReference(
     /^TF-[A-Z0-9]+(?:-[A-Z0-9]+)*-QA-\d+$/.test(upperValue) ||
     /^AR-[A-Z](?:\d+)?(?:-[A-Z0-9]+)*$/.test(upperValue)
   ) {
-    return { classification: 'review_finding_reference', registeredPlanningTask: false };
+    return { classification: 'review_finding_reference' };
   }
   if (
     /^(?:INT|PKR|PR)-[A-Z0-9]+$/.test(upperValue) ||
     /^(?:MW|RC|TF)-[A-Z0-9]+(?:-[A-Z0-9]+)*$/.test(upperValue)
   ) {
-    return { classification: 'historical_planning_reference', registeredPlanningTask: false };
+    return { classification: 'historical_planning_reference' };
   }
   if (/^(?:GAP|MVP|RESIDUAL|RISK|LEGACY|INV)-/.test(upperValue) || /^F-\d{2}/.test(upperValue)) {
-    return { classification: 'historical_planning_reference', registeredPlanningTask: false };
+    return { classification: 'historical_planning_reference' };
   }
   if (/^SYS-/.test(upperValue)) {
-    return { classification: 'governance_unit_reference', registeredPlanningTask: false };
+    return { classification: 'governance_unit_reference' };
   }
   if (/^CMD-/.test(upperValue)) {
-    return { classification: 'command_reference', registeredPlanningTask: false };
+    return { classification: 'command_reference' };
   }
   if (/^PS-[CQ]\d+/.test(upperValue)) {
-    return { classification: 'plan_store_matrix_reference', registeredPlanningTask: false };
+    return { classification: 'plan_store_matrix_reference' };
   }
-  return { classification: 'unknown_task_like_id', registeredPlanningTask: false };
+  return { classification: 'unknown_task_like_id' };
 }
 
 function extractTaskLikeReferences(
   document,
-  planningTaskIdSet,
   featureMechanizationIdSet = new Set(),
-  featureMechanizationCycleIdSet = new Set(),
-  options = {}
+  featureMechanizationCycleIdSet = new Set()
 ) {
   const raw = normalizeText(document.raw);
   const grouped = new Map();
-  const lineEntries =
-    options.lineEntries ||
-    raw.split(/\r?\n/).map((line, index) => ({
-      lineNumber: index + 1,
-      line,
-      sampleLine: line.trim().slice(0, 240),
-    }));
+  const lineEntries = raw.split(/\r?\n/).map((line, index) => ({
+    lineNumber: index + 1,
+    line,
+    sampleLine: line.trim().slice(0, 240),
+  }));
 
   function addReference(referenceText, lineEntry, options = {}) {
     const groupKey = options.groupKey || referenceText;
@@ -1554,32 +1549,11 @@ function extractTaskLikeReferences(
     }
   }
 
-  const capturedReferenceKeys = new Set(
-    [...grouped.values()].map((entry) => entry.referenceText.toUpperCase())
-  );
-  const planningTaskPattern =
-    options.planningTaskPattern || buildPlanningTaskReferencePattern(planningTaskIdSet);
-
-  if (planningTaskPattern) {
-    for (const lineEntry of lineEntries) {
-      planningTaskPattern.lastIndex = 0;
-      let match;
-      while ((match = planningTaskPattern.exec(lineEntry.line)) !== null) {
-        const matchKey = match[0].toUpperCase();
-        if (capturedReferenceKeys.has(matchKey)) {
-          continue;
-        }
-        addReference(match[0], lineEntry, { groupKey: matchKey });
-      }
-    }
-  }
-
   return [...grouped.values()]
     .sort((left, right) => left.referenceText.localeCompare(right.referenceText))
     .map((entry) => {
       const classification = classifyTaskLikeReference(
         entry.referenceText,
-        planningTaskIdSet,
         featureMechanizationIdSet,
         featureMechanizationCycleIdSet
       );
@@ -1592,7 +1566,6 @@ function extractTaskLikeReferences(
         referenceText: entry.referenceText,
         referencePrefix: referencePrefix(entry.referenceText),
         classification: classification.classification,
-        registeredPlanningTask: classification.registeredPlanningTask,
         occurrenceCount: entry.occurrenceCount,
         sampleLines: entry.sampleLines,
         sourceContentSha256: document.contentSha256,
@@ -1706,8 +1679,7 @@ function buildDocsDispositionActions(document, references, pendingHotspotThresho
       priority: 'P1',
       actionKind: 'unknown_task_like_id',
       referenceText: reference.referenceText,
-      reason:
-        'Task-like reference is not registered in planning lanes or a known governance ID family.',
+      reason: 'Task-like reference does not match a known governance ID family.',
       blocking: false,
       evidence: {
         referenceText: reference.referenceText,
@@ -1726,12 +1698,6 @@ function buildDocsDispositionActions(document, references, pendingHotspotThresho
 }
 
 function buildDocsDispositionSnapshot(options = {}) {
-  const planningTaskIdSet = new Set(
-    normalizeArray(options.planningTaskIds).flatMap((taskId) => {
-      const normalized = normalizeText(taskId);
-      return [normalized, normalized.toUpperCase()];
-    })
-  );
   const sourceDocuments = normalizeArray(options.documents).length
     ? normalizeArray(options.documents)
     : listTrackedMarkdownDocuments();
@@ -1748,7 +1714,6 @@ function buildDocsDispositionSnapshot(options = {}) {
     1,
     normalizeNumber(options.pendingHotspotThreshold) ?? 10
   );
-  const planningTaskPattern = buildPlanningTaskReferencePattern(planningTaskIdSet);
   const documents = [];
   const markers = [];
   const references = [];
@@ -1758,21 +1723,14 @@ function buildDocsDispositionSnapshot(options = {}) {
     const sourcePath = toPosix(normalizeText(sourceDocument.sourcePath));
     const raw = normalizeText(sourceDocument.raw);
     const contentSha256 = normalizeText(sourceDocument.contentSha256) || sha256(raw);
-    const lineEntries = raw.split(/\r?\n/).map((line, index) => ({
-      lineNumber: index + 1,
-      line,
-      sampleLine: line.trim().slice(0, 240),
-    }));
     const { frontmatter } = parseMarkdownFrontmatter(raw);
     const isArchive = isArchivedDocumentPath(sourcePath);
     const documentInput = { sourcePath, raw, contentSha256 };
     const documentMarkers = buildPendingMarkerRows(documentInput);
     const documentReferences = extractTaskLikeReferences(
       documentInput,
-      planningTaskIdSet,
       featureMechanizationIdSet,
-      featureMechanizationCycleIdSet,
-      { lineEntries, planningTaskPattern }
+      featureMechanizationCycleIdSet
     );
     const document = {
       documentPath: sourcePath,
@@ -1811,9 +1769,7 @@ function buildKnowledgeDocumentSnapshot(options = {}) {
   const sourceDocuments = normalizeArray(options.documents).length
     ? normalizeArray(options.documents)
     : listTrackedKnowledgeDocuments();
-  return buildKnowledgeSnapshotFromDocuments(sourceDocuments, {
-    planningTaskIds: normalizeArray(options.planningTaskIds),
-  });
+  return buildKnowledgeSnapshotFromDocuments(sourceDocuments);
 }
 
 function globToRegExp(glob) {
@@ -1994,54 +1950,6 @@ function buildPrReadinessSnapshot(options = {}) {
     source: policySource,
     readiness,
   };
-}
-
-async function retireLocalTaskLifecycle(client) {
-  await client.query(
-    `delete from ${schemaName}.doc_resolution_operations
-     where resolution_scope = 'task_gap'`
-  );
-  await client.query(
-    `delete from ${schemaName}.doc_resolution_overlays
-     where resolution_scope = 'task_gap'`
-  );
-  await client.query(
-    `delete from ${schemaName}.planning_artifacts
-     where artifact_kind in ('workboard', 'open-task-route')
-        or artifact_path in (
-          'docs/planning/state/execution-workboard.md',
-          'docs/planning/state/open-task-route.md'
-        )`
-  );
-  await client.query(`delete from ${schemaName}.planning_task_local_state`);
-  await client.query(`delete from ${schemaName}.planning_task_local_definitions`);
-  await client.query(`delete from ${schemaName}.planning_task_local_tombstones`);
-  await client.query(`delete from ${schemaName}.planning_local_operations`);
-}
-
-async function reconcileRetiredLocalTaskSurfaces(client) {
-  const retiredSurfaceNames = [
-    'Planning task lifecycle',
-    'Planning lane registry',
-    'Workboard and open task route',
-  ];
-
-  await client.query(
-    `delete from ${schemaName}.db_governance_surface_operations
-     where surface_name = any($1::text[])`,
-    [retiredSurfaceNames]
-  );
-  await client.query(
-    `delete from ${schemaName}.db_governance_surfaces
-     where surface_name = any($1::text[])`,
-    [retiredSurfaceNames]
-  );
-}
-
-async function reconcileRetiredPlanningState(client) {
-  await retireLocalTaskLifecycle(client);
-  await client.query(`delete from ${schemaName}.planning_sources`);
-  await reconcileRetiredLocalTaskSurfaces(client);
 }
 
 async function clearGovernanceSnapshotTables(client) {
@@ -2522,39 +2430,6 @@ async function insertCommandQueryRailSnapshot(client, snapshot) {
   );
 }
 
-async function readLocalFeatureMechanizationRails(client) {
-  const result = await client.query(`
-    select
-      rail_id as "railId",
-      feature_id as "featureId",
-      mechanization_status as "mechanizationStatus",
-      rail_name as "railName",
-      normalized_rail_name as "normalizedRailName",
-      rail_type as "railType",
-      ddd_owner as "dddOwner",
-      rail_status as "railStatus",
-      symbol_refs as "symbolRefs",
-      implementation_refs as "implementationRefs",
-      documentation_refs as "documentationRefs",
-      governing_sources as "governingSources",
-      allowed_implementation_surfaces as "allowedImplementationSurfaces",
-      architecture_guards as "architectureGuards",
-      completion_gate as "completionGate",
-      source_path as "sourcePath",
-      source_content_sha256 as "sourceContentSha256",
-      raw_rail as "rawRail",
-      raw_manifest as "rawManifest",
-      revision,
-      created_by as "createdBy",
-      created_at as "createdAt",
-      updated_at as "updatedAt"
-    from ${schemaName}.feature_mechanization_local_rails
-    order by rail_id
-  `);
-
-  return result.rows;
-}
-
 function readCanonicalStateSnapshot(snapshotPath = canonicalStatePath) {
   if (!fs.existsSync(snapshotPath)) {
     throw new Error(`Missing Planning DB canonical state snapshot: ${snapshotPath}`);
@@ -2568,70 +2443,203 @@ function readCanonicalStateSnapshot(snapshotPath = canonicalStatePath) {
   }
 
   if (
-    !Array.isArray(snapshot.architectureComponentStatusOverrides) ||
+    !snapshot.architectureState ||
     !Array.isArray(snapshot.featureMechanizationRails) ||
     !Array.isArray(snapshot.featureMechanizationRailOperations)
   ) {
     throw new Error(
-      'Planning DB canonical state must contain architectureComponentStatusOverrides, featureMechanizationRails, and featureMechanizationRailOperations arrays.'
+      'Planning DB canonical state must contain architectureState, featureMechanizationRails, and featureMechanizationRailOperations.'
     );
   }
 
-  for (const override of snapshot.architectureComponentStatusOverrides) {
-    if (typeof override?.componentId !== 'string' || override.status !== 'deprecated') {
-      throw new Error(
-        'Planning DB canonical state contains an invalid architecture component status override.'
-      );
-    }
-  }
+  assertArchitectureState(snapshot.architectureState);
+  assertCurrentStateValue(snapshot, 'canonicalState');
+  assertCurrentRailDecisionState(
+    snapshot.featureMechanizationRails,
+    snapshot.featureMechanizationRailOperations
+  );
 
   return snapshot;
 }
 
-async function restoreArchitectureComponentStatusOverrides(client, overrides) {
-  if (!Array.isArray(overrides) || overrides.length === 0) {
-    return;
+function readDbGovernanceSurfaceCatalog(catalogPath = dbGovernanceSurfaceCatalogPath) {
+  if (!fs.existsSync(catalogPath)) {
+    throw new Error(`Missing Planning DB governance surface catalog: ${catalogPath}`);
   }
 
-  const result = await client.query(
-    `
-      update architecture.component component
-      set
-        status = override.status,
-        updated_at = now()
-      from jsonb_to_recordset($1::jsonb) as override(
-        "componentId" text,
-        status text
-      )
-      where component.component_id = override."componentId"
-        and override.status = 'deprecated'
-    `,
-    [JSON.stringify(overrides)]
-  );
-
-  if (result.rowCount !== overrides.length) {
+  const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+  if (catalog?.schemaVersion !== 1 || !Array.isArray(catalog.surfaces)) {
     throw new Error(
-      `Planning DB canonical state references ${overrides.length - result.rowCount} unknown architecture component(s).`
+      'Planning DB governance surface catalog must use schemaVersion 1 and contain surfaces.'
     );
   }
-}
 
-function mergeCanonicalFeatureMechanizationRails(canonicalRails, localRails) {
-  const railsById = new Map();
-
-  for (const rail of canonicalRails) {
-    railsById.set(rail.railId, rail);
+  const names = new Set();
+  for (const [index, surface] of catalog.surfaces.entries()) {
+    for (const field of [
+      'surfaceName',
+      'canonicalSource',
+      'writeRail',
+      'writeRailKind',
+      'readQueryRail',
+      'projection',
+      'validation',
+      'authorityMode',
+    ]) {
+      if (typeof surface?.[field] !== 'string' || surface[field].trim() === '') {
+        throw new Error(`Planning DB governance surface catalog row ${index} is missing ${field}.`);
+      }
+    }
+    if (names.has(surface.surfaceName)) {
+      throw new Error(`Duplicate Planning DB governance surface "${surface.surfaceName}".`);
+    }
+    names.add(surface.surfaceName);
   }
 
-  for (const rail of localRails) {
-    const canonicalRail = railsById.get(rail.railId);
-    if (!canonicalRail || Number(rail.revision) >= Number(canonicalRail.revision)) {
-      railsById.set(rail.railId, rail);
+  assertCurrentStateValue(catalog, 'dbGovernanceSurfaceCatalog');
+  return catalog;
+}
+
+async function restoreDbGovernanceSurfaceCatalog(client, catalog, options = {}) {
+  const catalogPath = options.catalogPath || dbGovernanceSurfaceCatalogPath;
+  const sourceRef = path.relative(repoRoot, catalogPath).replaceAll('\\', '/');
+  const sourceContentSha256 = sha256(fs.readFileSync(catalogPath));
+
+  await insertRows(
+    client,
+    'db_governance_surfaces',
+    [
+      'surface_name',
+      'canonical_source',
+      'write_rail',
+      'write_rail_kind',
+      'read_query_rail',
+      'projection',
+      'validation',
+      'authority_mode',
+      'source_ref',
+      'source_content_sha256',
+      'revision',
+      'updated_by',
+      { name: 'raw_surface', cast: 'jsonb' },
+    ],
+    catalog.surfaces,
+    (surface) => [
+      surface.surfaceName,
+      surface.canonicalSource,
+      surface.writeRail,
+      surface.writeRailKind,
+      surface.readQueryRail,
+      surface.projection,
+      surface.validation,
+      surface.authorityMode,
+      sourceRef,
+      sourceContentSha256,
+      1,
+      'current-schema',
+      toJson({ authorityMode: surface.authorityMode, catalogVersion: catalog.schemaVersion }),
+    ]
+  );
+}
+
+function readDbtProjectRoundtripCapabilityCatalog(
+  catalogPath = dbtProjectRoundtripCapabilityCatalogPath
+) {
+  if (!fs.existsSync(catalogPath)) {
+    throw new Error(`Missing DBT project round-trip capability catalog: ${catalogPath}`);
+  }
+
+  const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+  if (
+    catalog?.schemaVersion !== 1 ||
+    !Array.isArray(catalog.phases) ||
+    !Array.isArray(catalog.railEvidence)
+  ) {
+    throw new Error(
+      'DBT project round-trip capability catalog must use schemaVersion 1 and contain phases and railEvidence.'
+    );
+  }
+
+  const phasesById = new Map(catalog.phases.map((phase) => [phase.phaseId, phase]));
+  if (phasesById.size !== catalog.phases.length) {
+    throw new Error('DBT project round-trip capability catalog contains duplicate phase IDs.');
+  }
+  const evidenceIds = new Set();
+  for (const evidence of catalog.railEvidence) {
+    if (!phasesById.has(evidence.phaseId)) {
+      throw new Error(
+        `DBT round-trip evidence ${evidence.evidenceId} references an unknown phase.`
+      );
+    }
+    if (evidenceIds.has(evidence.evidenceId)) {
+      throw new Error(`Duplicate DBT round-trip evidence ID "${evidence.evidenceId}".`);
+    }
+    evidenceIds.add(evidence.evidenceId);
+  }
+  for (const phase of catalog.phases) {
+    const actualCount = catalog.railEvidence.filter(
+      (evidence) => evidence.phaseId === phase.phaseId
+    ).length;
+    if (actualCount !== phase.expectedRailCount) {
+      throw new Error(
+        `DBT round-trip phase ${phase.phaseId} expects ${phase.expectedRailCount} rails but declares ${actualCount}.`
+      );
     }
   }
 
-  return [...railsById.values()].sort((left, right) =>
-    String(left.railId).localeCompare(String(right.railId))
+  assertCurrentStateValue(catalog, 'dbtProjectRoundtripCapabilityCatalog');
+  return catalog;
+}
+
+async function restoreDbtProjectRoundtripCapabilityCatalog(client, catalog, options = {}) {
+  const catalogPath = options.catalogPath || dbtProjectRoundtripCapabilityCatalogPath;
+  const sourcePath = path.relative(repoRoot, catalogPath).replaceAll('\\', '/');
+
+  await insertRows(
+    client,
+    'dbt_project_roundtrip_phases',
+    ['phase_id', 'phase_order', 'phase_name', 'expected_rail_count', 'source_path'],
+    catalog.phases,
+    (phase) => [
+      phase.phaseId,
+      phase.phaseOrder,
+      phase.phaseName,
+      phase.expectedRailCount,
+      sourcePath,
+    ]
+  );
+  await insertRows(
+    client,
+    'dbt_project_roundtrip_phase_rail_evidence',
+    [
+      'evidence_id',
+      'phase_id',
+      'rail_name',
+      'expected_rail_type',
+      'expected_rail_status',
+      'expected_mechanization_status',
+      'expected_is_gap',
+      'expected_implemented',
+      'reviewed_pr_url',
+      'reviewed_commit_sha',
+      'evidence_summary',
+      'source_path',
+    ],
+    catalog.railEvidence,
+    (evidence) => [
+      evidence.evidenceId,
+      evidence.phaseId,
+      evidence.railName,
+      evidence.expectedRailType,
+      evidence.expectedRailStatus,
+      evidence.expectedMechanizationStatus,
+      evidence.expectedIsGap,
+      evidence.expectedImplemented,
+      evidence.reviewedPrUrl,
+      evidence.reviewedCommitSha,
+      evidence.evidenceSummary,
+      sourcePath,
+    ]
   );
 }
 
@@ -2811,415 +2819,6 @@ async function insertFrontendMechanicalTruthSnapshot(client, snapshot) {
       toJson(surface.rawSurface),
     ]
   );
-}
-
-async function reconcileDeprecatedLocalRailSources(client) {
-  await client.query(`
-    with stale_source_overrides(stale_source_path, current_source_path, declared_status) as (
-      values
-        (
-          'tools/planning-db/migrations/265_restore_canvas_source_import_dialog_symbols_after_post_import_reconcile.sql',
-          'tools/planning-db/migrations/264_reconcile_post_import_canvas_source_import_dialog_feature_manifest.sql',
-          'retired'
-        )
-    ),
-    deprecated_local_rails as (
-      select
-        rail.rail_id,
-        coalesce(
-          override.current_source_path,
-          nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
-          nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
-        ) as current_source_path,
-        coalesce(
-          override.declared_status,
-          nullif(rail.raw_rail->>'status', ''),
-          nullif(rail.raw_manifest->>'status', ''),
-          rail.rail_status
-        ) as declared_status,
-        override.stale_source_path is not null as source_path_overridden,
-        source_file.path is null as source_path_missing,
-        exists (
-          select 1
-          from jsonb_array_elements_text(
-            coalesce(
-              rail.raw_rail->'deprecatedSourcePaths',
-              rail.raw_manifest->'deprecatedSourcePaths',
-              '[]'::jsonb
-            )
-          ) deprecated_source(path)
-          where deprecated_source.path = rail.source_path
-        ) as source_path_deprecated
-      from ${schemaName}.feature_mechanization_local_rails rail
-      left join stale_source_overrides override
-        on override.stale_source_path = rail.source_path
-      left join ${schemaName}.governance_files source_file
-        on source_file.path = rail.source_path
-      join ${schemaName}.governance_files current_file
-        on current_file.path = coalesce(
-          override.current_source_path,
-          nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
-          nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
-        )
-      where coalesce(
-          override.current_source_path,
-          nullif(rail.raw_rail->>'currentImplementationSourcePath', ''),
-          nullif(rail.raw_manifest->>'currentImplementationSourcePath', '')
-        ) is not null
-    )
-    update ${schemaName}.feature_mechanization_local_rails rail
-    set
-      mechanization_status = case
-        when deprecated_local_rails.declared_status = 'retired' then 'closed'
-        else rail.mechanization_status
-      end,
-      rail_status = case
-        when deprecated_local_rails.declared_status = 'retired' then 'retired'
-        else rail.rail_status
-      end,
-      source_path = deprecated_local_rails.current_source_path,
-      source_content_sha256 = coalesce(
-        (
-          select file_ref.content_hash
-          from ${schemaName}.governance_files file_ref
-          where file_ref.path = deprecated_local_rails.current_source_path
-        ),
-        rail.source_content_sha256
-      ),
-      raw_manifest = (
-        case
-          when deprecated_local_rails.declared_status = 'retired' then
-            coalesce(rail.raw_manifest, '{}'::jsonb) - 'featureId' - 'symbols'
-          else coalesce(rail.raw_manifest, '{}'::jsonb)
-        end
-      ) || jsonb_build_object(
-          'currentImplementationSourcePath',
-          deprecated_local_rails.current_source_path,
-          'sourcePathReconciledBy',
-          'planning-db-import-reconcile-deprecated-local-rail-sources'
-        ),
-      raw_rail = coalesce(rail.raw_rail, '{}'::jsonb) || jsonb_build_object(
-          'status',
-          deprecated_local_rails.declared_status,
-          'currentImplementationSourcePath',
-          deprecated_local_rails.current_source_path,
-          'sourcePathReconciledBy',
-          'planning-db-import-reconcile-deprecated-local-rail-sources'
-        ),
-      revision = rail.revision + 1,
-      updated_at = now()
-    from deprecated_local_rails
-    where rail.rail_id = deprecated_local_rails.rail_id
-      and rail.source_path <> deprecated_local_rails.current_source_path
-      and (
-        deprecated_local_rails.source_path_overridden
-        or
-        deprecated_local_rails.source_path_deprecated
-        or deprecated_local_rails.source_path_missing
-      )
-  `);
-}
-
-async function reconcileSupersededCanvasNodeWorkbenchPanel(client) {
-  const activePanelFiles = await client.query(`
-    select count(*)::int as file_count
-    from ${schemaName}.governance_files
-    where path in (
-      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
-      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
-    )
-  `);
-  const activePanelFileCount = Number(activePanelFiles.rows?.[0]?.file_count || 0);
-  if (activePanelFileCount >= 2) {
-    return;
-  }
-
-  await client.query(`
-    update architecture.design
-    set
-      status = 'superseded',
-      rationale = 'Superseded by PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-FINAL-RETIREMENT-GUARD-20260619 because the active filesystem has no CanvasNodeWorkbenchPanel source or test files.',
-      updated_at = now()
-    where design_id in (
-      'PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-POST-IMPORT-AUTHORITY-20260619',
-      'PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-PROFILE-REASSERTION-20260619',
-      'PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-EFFECTIVE-REACTIVATION-20260619',
-      'PLANNING-DB-WEB-CANVAS-NODE-WORKBENCH-PANEL-REACTIVATION-20260619'
-    );
-
-    delete from ${schemaName}.feature_mechanization_local_rails
-    where rail_id = 'local#WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619#query#inspectcanvasnodeproperties'
-       or feature_id = 'WEB-CANVAS-NODE-WORKBENCH-PANEL-20260619'
-       or source_path in (
-         'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
-         'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
-       );
-
-    delete from ${schemaName}.governance_component_local_ownership_patterns
-    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL'
-      and pattern in (
-        'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
-        'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
-      );
-
-    delete from ${schemaName}.governance_component_local_semantic_items
-    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
-
-    insert into ${schemaName}.governance_component_local_semantic_items (
-      component_id,
-      item_kind,
-      item_value,
-      item_order
-    )
-    values
-      (
-        'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
-        'responsibility',
-        'Superseded audit-only Canvas node workbench panel; no tracked implementation files exist in this branch.',
-        0
-      ),
-      (
-        'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
-        'reason_to_change',
-        'Only changes when a governed migration reintroduces real CanvasNodeWorkbenchPanel implementation files.',
-        0
-      ),
-      (
-        'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
-        'governance_ref',
-        'tools/planning-db/migrations/237_final_canvas_node_workbench_panel_retirement_guard.sql',
-        0
-      ),
-      (
-        'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
-        'fowler_signal',
-        'boundary_drift',
-        0
-      ),
-      (
-        'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
-        'transition',
-        'Retirement remains in force until tracked CanvasNodeWorkbenchPanel source and test files exist.',
-        0
-      )
-    on conflict (component_id, item_kind, item_value) do update set
-      item_order = excluded.item_order;
-
-    update ${schemaName}.governance_component_local_definitions
-    set
-      status = 'superseded',
-      owned_concern = 'Superseded audit-only component. CanvasNodeWorkbenchPanel.tsx and CanvasNodeWorkbenchPanel.test.tsx are not tracked; active overlay presentation is owned by SYS-WEB-CANVAS-NODE-WORKBENCH-OVERLAY and SYS-WEB-CANVAS-INSPECTOR-PANEL.',
-      ddd_owner = 'CanvasNodeWorkbenchDuplicateResolution',
-      cq_rails = 'none - post-import retirement reconciliation',
-      source_path = 'tools/planning-db/migrations/237_final_canvas_node_workbench_panel_retirement_guard.sql',
-      source_content_sha256 = coalesce(
-        (
-          select file_ref.content_hash
-          from ${schemaName}.governance_files file_ref
-          where file_ref.path = 'tools/planning-db/migrations/237_final_canvas_node_workbench_panel_retirement_guard.sql'
-          limit 1
-        ),
-        source_content_sha256
-      ),
-      revision = greatest(revision, 1) + 1
-    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
-
-    update architecture.component
-    set
-      owner = 'CanvasNodeWorkbenchDuplicateResolution',
-      repo_path = '${schemaName}.governance_component_local_definitions#SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
-      public_contract = 'Deprecated audit-only component. CanvasNodeWorkbenchPanel.tsx is not tracked; active presentation uses SYS-WEB-CANVAS-NODE-WORKBENCH-OVERLAY and SYS-WEB-CANVAS-INSPECTOR-PANEL.',
-      status = 'deprecated',
-      maturity_score = null,
-      updated_at = now()
-    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
-
-    update architecture.component_responsibility
-    set
-      responsibility = 'Superseded audit-only component retained to document neutralized CanvasNodeWorkbenchPanel rehydrations.',
-      reason_to_change = 'A real implementation would require tracked CanvasNodeWorkbenchPanel source and test files plus governed ownership.',
-      ddd_owner = 'CanvasNodeWorkbenchDuplicateResolution',
-      status = 'implemented'
-    where responsibility_id = 'RESP-SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
-
-    update architecture.contract
-    set
-      contract_ref = '${schemaName}.governance_component_local_definitions#SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL',
-      compatibility = 'internal',
-      status = 'implemented',
-      validation_command = 'pnpm planning:db:query component-profile --component SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL --no-refresh --limit 80',
-      updated_at = now()
-    where owner_component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
-
-    delete from architecture.component_port
-    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
-
-    delete from architecture.component_relation
-    where relation_id in (
-      'REL-WEB-CANVAS-NODE-WORKBENCH-CONTAINS-PANEL',
-      'REL-WEB-CANVAS-NODE-WORKBENCH-OVERLAY-DEPENDS-ON-PANEL'
-    );
-
-    update architecture.component_test
-    set
-      test_path = 'scripts/planning-db-migrate.test.cjs',
-      test_kind = 'architecture',
-      coverage_level = 'boundary',
-      required = true,
-      validation_command = 'node --test scripts/planning-db-migrate.test.cjs'
-    where component_id = 'SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL';
-
-    update architecture.component_observability
-    set
-      signal_name = 'Neutralized Canvas node workbench panel retirement is observable through component-profile, files query absence, source-drift, and migration evidence.',
-      required = true,
-      status = 'implemented'
-    where observability_id in (
-      'OBS-SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL-COMPONENT-PROFILE',
-      'OBS-SYS-WEB-CANVAS-NODE-WORKBENCH-PANEL-PHANTOM-RETIREMENT'
-    );
-
-    delete from ${schemaName}.governance_component_files
-    where path in (
-      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
-      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
-    );
-
-    delete from ${schemaName}.governance_files
-    where path in (
-      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx',
-      'apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx'
-      );
-  `);
-}
-
-async function reconcileSupersededCiPolicyValidationSplitComponents(client) {
-  const activePolicySplitFiles = await client.query(`
-    select count(*)::int as file_count
-    from ${schemaName}.governance_files
-    where path in (
-      'scripts/policy-validation-files.cjs',
-      'scripts/policy-validation-text.cjs'
-    )
-  `);
-  const activePolicySplitFileCount = Number(activePolicySplitFiles.rows?.[0]?.file_count || 0);
-  if (activePolicySplitFileCount > 0) {
-    return;
-  }
-
-  await client.query(`
-    with phantom_components(component_id, replacement_contract) as (
-      values
-        (
-          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES',
-          'Superseded phantom split: scripts/policy-validation-files.cjs does not exist. Policy validation file discovery is owned by the active repository policy validation component.'
-        ),
-        (
-          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT',
-          'Superseded phantom split: scripts/policy-validation-text.cjs does not exist. Policy validation text normalization is owned by the active repository policy validation component.'
-        )
-    )
-    update architecture.component component
-    set
-      status = 'deprecated',
-      repo_path = 'planning_query_store.governance_component_local_definitions#' || component.component_id,
-      public_contract = phantom_components.replacement_contract,
-      updated_at = now()
-    from phantom_components
-    where component.component_id = phantom_components.component_id;
-
-    with phantom_components(component_id, replacement_contract) as (
-      values
-        (
-          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES',
-          'Superseded phantom split: scripts/policy-validation-files.cjs does not exist. Policy validation file discovery is owned by the active repository policy validation component.'
-        ),
-        (
-          'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT',
-          'Superseded phantom split: scripts/policy-validation-text.cjs does not exist. Policy validation text normalization is owned by the active repository policy validation component.'
-        )
-    )
-    update ${schemaName}.governance_component_local_definitions definition
-    set
-      status = 'superseded',
-      source_path = 'planning_query_store.governance_component_local_definitions#'
-        || definition.component_id,
-      source_content_sha256 =
-        md5(definition.component_id || ':policy-validation-phantom-superseded')
-        || md5(definition.component_id || ':planning-db-import'),
-      owned_concern = phantom_components.replacement_contract,
-      revision = greatest(definition.revision, 1) + 1
-    from phantom_components
-    where definition.component_id = phantom_components.component_id;
-
-    delete from ${schemaName}.governance_component_local_ownership_patterns
-    where component_id in (
-      'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-FILES',
-      'SYS-CI-GOVERNANCE-SCRIPTS-POLICY-VALIDATION-TEXT'
-    )
-    and pattern in (
-      'scripts/policy-validation-files.cjs',
-      'scripts/policy-validation-text.cjs'
-    );
-  `);
-}
-
-async function reconcileRetiredPlanningTaskAuthorityComponents(client) {
-  await client.query(`
-    with retired_component(component_id) as (
-      values
-        ('SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS'),
-        ('SYS-PLANNING-GITHUB-ISSUE-ADAPTER'),
-        ('SYS-PLANNING-GITHUB-PROJECTION-POLICY')
-    )
-    delete from architecture.component_flow_step
-    where component_id in (select component_id from retired_component);
-
-    with retired_component(component_id) as (
-      values
-        ('SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS'),
-        ('SYS-PLANNING-GITHUB-ISSUE-ADAPTER'),
-        ('SYS-PLANNING-GITHUB-PROJECTION-POLICY')
-    )
-    delete from architecture.component_flow
-    where entry_component_id in (select component_id from retired_component)
-       or exit_component_id in (select component_id from retired_component);
-
-    with retired_component(component_id) as (
-      values
-        ('SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS'),
-        ('SYS-PLANNING-GITHUB-ISSUE-ADAPTER'),
-        ('SYS-PLANNING-GITHUB-PROJECTION-POLICY')
-    )
-    delete from architecture.component_relation
-    where source_component_id in (select component_id from retired_component)
-       or target_component_id in (select component_id from retired_component);
-
-    with retired_component(component_id) as (
-      values
-        ('SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS'),
-        ('SYS-PLANNING-GITHUB-ISSUE-ADAPTER'),
-        ('SYS-PLANNING-GITHUB-PROJECTION-POLICY')
-    )
-    delete from architecture.contract
-    where owner_component_id in (select component_id from retired_component);
-
-    delete from ${schemaName}.governance_component_local_ownership_patterns
-    where component_id = 'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS';
-
-    delete from ${schemaName}.governance_component_local_semantic_items
-    where component_id = 'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS';
-
-    delete from ${schemaName}.governance_component_local_definitions
-    where component_id = 'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS';
-
-    delete from architecture.component
-    where component_id in (
-      'SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-PLANNING-VIEWS',
-      'SYS-PLANNING-GITHUB-ISSUE-ADAPTER',
-      'SYS-PLANNING-GITHUB-PROJECTION-POLICY'
-    );
-  `);
 }
 
 async function insertFrontendComponentReflectionSnapshot(client, snapshot) {
@@ -3456,7 +3055,6 @@ async function insertDocsDispositionSnapshot(client, snapshot) {
       'reference_text',
       'reference_prefix',
       'classification',
-      'registered_planning_task',
       'occurrence_count',
       { name: 'sample_lines', cast: 'jsonb' },
       'source_content_sha256',
@@ -3469,7 +3067,6 @@ async function insertDocsDispositionSnapshot(client, snapshot) {
       reference.referenceText,
       reference.referencePrefix,
       reference.classification,
-      reference.registeredPlanningTask,
       reference.occurrenceCount,
       toJson(reference.sampleLines),
       reference.sourceContentSha256,
@@ -3668,6 +3265,8 @@ async function importContent(options = {}) {
         .filter((sourcePath) => /^buzon\/.*\.md$/i.test(toPosix(sourcePath))),
     });
   const canonicalStateSnapshot = readCanonicalStateSnapshot();
+  const dbGovernanceSurfaceCatalog = readDbGovernanceSurfaceCatalog();
+  const dbtProjectRoundtripCapabilityCatalog = readDbtProjectRoundtripCapabilityCatalog();
   let docsDispositionSnapshot;
   let knowledgeSnapshot;
   const client = options.client || new Client({ connectionString: url });
@@ -3678,19 +3277,17 @@ async function importContent(options = {}) {
   }
 
   try {
-    await runMigrations({ client, silent: true });
-    const localFeatureMechanizationRails = await readLocalFeatureMechanizationRails(client);
     await beginImportTransaction(client);
-    const planningTaskIds = [];
+    await applyCurrentPlanningDbSchema({ client, silent: true, manageTransaction: false });
+    await restoreArchitectureState(client, canonicalStateSnapshot.architectureState);
+    await restoreDbGovernanceSurfaceCatalog(client, dbGovernanceSurfaceCatalog);
+    await restoreDbtProjectRoundtripCapabilityCatalog(client, dbtProjectRoundtripCapabilityCatalog);
     docsDispositionSnapshot = buildDocsDispositionSnapshot({
-      planningTaskIds,
       documents: markdownDocuments,
     });
     knowledgeSnapshot = buildKnowledgeDocumentSnapshot({
-      planningTaskIds,
       documents: knowledgeDocuments,
     });
-    await reconcileRetiredPlanningState(client);
     await insertGovernanceSnapshot(client, governanceSnapshot);
     await refreshComponentTreeMaterializedProjection(client);
     await refreshComponentFileOwnershipMaterializedProjection(client);
@@ -3710,23 +3307,12 @@ async function importContent(options = {}) {
     );
     await restoreLocalFeatureMechanizationRails(
       client,
-      mergeCanonicalFeatureMechanizationRails(
-        canonicalStateSnapshot.featureMechanizationRails,
-        localFeatureMechanizationRails
-      )
+      canonicalStateSnapshot.featureMechanizationRails
     );
     await restoreLocalFeatureMechanizationOperations(
       client,
       canonicalStateSnapshot.featureMechanizationRailOperations
     );
-    await restoreArchitectureComponentStatusOverrides(
-      client,
-      canonicalStateSnapshot.architectureComponentStatusOverrides
-    );
-    await reconcileDeprecatedLocalRailSources(client);
-    await reconcileSupersededCanvasNodeWorkbenchPanel(client);
-    await reconcileSupersededCiPolicyValidationSplitComponents(client);
-    await reconcileRetiredPlanningTaskAuthorityComponents(client);
     await refreshComponentTreeMaterializedProjection(client);
     await refreshComponentFileOwnershipMaterializedProjection(client);
     await refreshComponentRuleEvaluationMaterializedProjection(client);
@@ -3915,7 +3501,6 @@ function compareGovernanceAuxiliaryState(expected, actual) {
           'documentPath',
           'referenceText',
           'classification',
-          'registeredPlanningTask',
           'occurrenceCount',
           'sourceContentSha256',
         ],
@@ -3986,11 +3571,7 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
   const codeSymbolSnapshot =
     options.codeSymbolSnapshot || buildCodeSymbolSnapshot({ governanceSnapshot });
   const prReadinessSnapshot = options.prReadinessSnapshot || buildPrReadinessSnapshot();
-  const docsDispositionSnapshot =
-    options.docsDispositionSnapshot ||
-    buildDocsDispositionSnapshot({
-      planningTaskIds: [],
-    });
+  const docsDispositionSnapshot = options.docsDispositionSnapshot || buildDocsDispositionSnapshot();
   const knowledgeIntakeRepositoryReferenceSnapshot =
     options.knowledgeIntakeRepositoryReferenceSnapshot ||
     buildKnowledgeIntakeRepositoryReferenceSnapshot();
@@ -4072,7 +3653,6 @@ async function buildGovernanceAuxiliaryExpectedState(options = {}) {
       documentPath: reference.documentPath,
       referenceText: reference.referenceText,
       classification: reference.classification,
-      registeredPlanningTask: reference.registeredPlanningTask,
       occurrenceCount: reference.occurrenceCount,
       sourceContentSha256: reference.sourceContentSha256,
     })),
@@ -4184,7 +3764,6 @@ async function readGovernanceAuxiliaryState(client) {
         document_path as "documentPath",
         reference_text as "referenceText",
         classification,
-        registered_planning_task as "registeredPlanningTask",
         occurrence_count::int as "occurrenceCount",
         source_content_sha256 as "sourceContentSha256"
       from ${schemaName}.doc_task_like_references
@@ -4367,11 +3946,6 @@ function compareGovernanceAuxiliarySourceState(expected, actual) {
     keyOf: (row) => row.sourcePath,
   };
   const sections = {
-    planningSources: compareImportRows(
-      expected.planningSources,
-      actual.planningSources,
-      sourceHashComparison
-    ),
     repositoryCommandSources: compareImportRows(
       expected.repositoryCommandSources,
       actual.repositoryCommandSources,
@@ -4521,7 +4095,6 @@ async function buildGovernanceAuxiliarySourceExpectedState(options = {}) {
     buildKnowledgeIntakeRepositoryReferenceSnapshot();
 
   return {
-    planningSources: [],
     repositoryCommandSources: uniqueSourceHashRows(repositoryCommandSnapshot.commands),
     commandQueryRailSources: uniqueSourceHashRows(commandQueryRailSnapshot.rails),
     codeSymbolSources: uniqueSourceHashRows(codeSymbolSnapshot.symbols, {
@@ -4617,7 +4190,6 @@ async function checkGovernanceSourceFreshness(options = {}) {
 
 async function readGovernanceAuxiliarySourceState(client) {
   const [
-    planningSources,
     repositoryCommandSources,
     commandQueryRailSources,
     codeSymbolSources,
@@ -4627,13 +4199,6 @@ async function readGovernanceAuxiliarySourceState(client) {
     knowledgeIntakeRepositoryReferenceSources,
     riskDebtItems,
   ] = await Promise.all([
-    client.query(`
-      select
-        source_path as "sourcePath",
-        content_sha256 as "sourceContentSha256"
-      from ${schemaName}.planning_sources
-      order by source_path
-    `),
     client.query(`
       select distinct
         source_path as "sourcePath",
@@ -4696,7 +4261,6 @@ async function readGovernanceAuxiliarySourceState(client) {
   ]);
 
   return {
-    planningSources: planningSources.rows,
     repositoryCommandSources: repositoryCommandSources.rows,
     commandQueryRailSources: commandQueryRailSources.rows,
     codeSymbolSources: codeSymbolSources.rows,
@@ -4723,30 +4287,6 @@ async function checkGovernanceAuxiliarySourceFreshness(options = {}) {
   try {
     const actual = options.actual || (await readGovernanceAuxiliarySourceState(client));
     return compareGovernanceAuxiliarySourceState(expected, actual);
-  } finally {
-    if (ownsClient) {
-      await client.end();
-    }
-  }
-}
-
-async function reconcileRetiredPlanningDatabase(options = {}) {
-  const client =
-    options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
-  const ownsClient = !options.client;
-
-  if (ownsClient) {
-    await client.connect();
-  }
-
-  try {
-    await runMigrations({ client, silent: true });
-    await beginImportTransaction(client);
-    await reconcileRetiredPlanningState(client);
-    await client.query('commit');
-  } catch (error) {
-    await client.query('rollback');
-    throw error;
   } finally {
     if (ownsClient) {
       await client.end();
@@ -4806,15 +4346,11 @@ async function runPlanningImport(options = {}, deps = {}) {
   const actualDeps = {
     importContent,
     logger: console,
-    reconcileRetiredPlanningDatabase,
     ...deps,
   };
   const skippedScopes = [];
 
   if (options.ifStale && (await isGovernanceFresh(options, actualDeps))) {
-    await actualDeps.reconcileRetiredPlanningDatabase({
-      databaseUrl: options.databaseUrl,
-    });
     skippedScopes.push('governance');
   }
 
@@ -4903,7 +4439,6 @@ module.exports = {
   insertGovernanceSnapshot,
   insertCodeSymbolSnapshot,
   insertRows,
-  mergeCanonicalFeatureMechanizationRails,
   insertDocsDispositionSnapshot,
   insertCommandQueryRailSnapshot,
   insertFrontendComponentReflectionSnapshot,
@@ -4917,18 +4452,12 @@ module.exports = {
   parseArgs,
   readTrackedDocumentPaths,
   readCanonicalStateSnapshot,
-  readLocalFeatureMechanizationRails,
+  readDbGovernanceSurfaceCatalog,
+  readDbtProjectRoundtripCapabilityCatalog,
   readGovernanceSourceState,
   readGovernanceAuxiliarySourceState,
   readGovernanceAuxiliaryState,
   readYamlSource,
-  reconcileDeprecatedLocalRailSources,
-  reconcileRetiredPlanningDatabase,
-  reconcileRetiredPlanningState,
-  reconcileRetiredLocalTaskSurfaces,
-  reconcileSupersededCiPolicyValidationSplitComponents,
-  reconcileSupersededCanvasNodeWorkbenchPanel,
-  reconcileRetiredPlanningTaskAuthorityComponents,
   refreshCodeSymbolMaterializedProjection,
   refreshComponentTreeMaterializedProjection,
   refreshComponentFileOwnershipMaterializedProjection,
@@ -4936,8 +4465,8 @@ module.exports = {
   refreshLocalFeatureMechanizationRailSourceHashes,
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
-  restoreArchitectureComponentStatusOverrides,
-  retireLocalTaskLifecycle,
+  restoreDbGovernanceSurfaceCatalog,
+  restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,
   sha256,
 };
