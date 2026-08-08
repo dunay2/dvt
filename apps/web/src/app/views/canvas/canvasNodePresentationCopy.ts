@@ -32,7 +32,9 @@ const NODE_PROPERTY_PRESENTATION_COPY = {
     },
     rowLabels: {},
     columnLabels: {},
-    valueLabels: {},
+    valueLabels: {
+      input: 'Input',
+    },
   },
   es: {
     sectionLabels: {
