@@ -7,14 +7,18 @@ owners:
   - dvt-api
   - '@dvt/web'
 arc_level: ARC-2
-breaking: false
+breaking: true
 code_refs:
   - packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts
-  - apps/api/src/application/services/sourceImport/graphDraftWarehouseSourceImportStrategy.ts
-  - apps/api/src/application/services/sourceImport/warehouseSourceYamlIdentity.ts
+  - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
+  - apps/api/src/application/services/importWarehouseSourcesUseCase.ts
+  - apps/api/src/application/services/warehouseSourceYamlIdentity.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
+  - apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
+  - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
   - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.tsx
+  - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
   - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - scripts/run-canvas-source-import-live-proof.cjs
@@ -59,8 +63,9 @@ flowchart LR
 - `ConnectedSourceRef.v1` is strict, versioned and secret-free. It owns
   `connectionId`, provider and physical `sourceObjectId`; projection-only
   `connectionName` remains outside the identity contract.
-- Import validates the complete existing draft before mutation and rejects
-  legacy top-level source identity instead of translating or migrating it.
+- The command admits the existing Canvas authority before external discovery;
+  import then validates the complete draft before mutation and rejects legacy
+  top-level source identity instead of translating or migrating it.
 - Dedupe and generated source-YAML identity use JCS hashing over connection and
   physical object. No filename, display label or insertion order substitutes
   for product identity.
@@ -76,16 +81,23 @@ flowchart LR
 - Node code navigation uses an explicit persisted workspace path or the exact
   node authoring surface; it never fabricates a path or opens an unrelated
   fallback file.
+- Exterior whitespace is rejected at the identity boundary, and reserved
+  connection-qualified node-ID collisions fail before file or draft mutation.
 
 # Executable outcome
 
-The protected live proof starts from a missing graph draft, imports a real
-PostgreSQL source, checks the persisted nested connection identity, connects it
-to a generated dbt model, verifies accessible and fully visible connection
-facts at 1000x660, edits and persists model SQL, publishes artifacts, previews
-the plan and opens the exact generated project file. The runner uses native
-Cypress on Windows because pnpm directory junctions are not resolvable inside
-the Linux Cypress container; non-Windows execution retains the container lane.
+The protected live proof starts from a missing graph draft, creates two real
+PostgreSQL connections to the same physical relation, imports through both and
+checks two distinct persisted nested identities and nodes. It opens both source
+Workbenches without forced interaction, proves their exact connections, then
+connects a source to a generated dbt model, edits and persists model SQL,
+publishes artifacts, previews the plan and opens the exact generated project
+file. The Add Source dialog remains inside 1440x900, 1280x720, 1000x660 and
+500x330 viewports; its bounded content and Cancel action stay visible, axe finds
+no serious or critical WCAG 2.0/2.1 A/AA violations, and cancellation leaves
+the two-source draft unchanged. The runner uses native Cypress on Windows
+because pnpm directory junctions are not resolvable inside the Linux Cypress
+container; non-Windows execution retains the container lane.
 
 No database migration, compatibility state, dual-read path, stub, fixture draft
 or fake-success route is introduced.

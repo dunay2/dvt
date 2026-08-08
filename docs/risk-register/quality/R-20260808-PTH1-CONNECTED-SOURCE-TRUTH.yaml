@@ -28,11 +28,14 @@ mitigations:
     explicitly disconnected selection.'
   - 'Route code actions only to an explicit persisted path or the exact node authoring surface;
     reject guessed paths and unrelated fallback files.'
-  - 'Run the protected live source-import proof with PostgreSQL, API authorization, Temporal,
-    Cypress visibility checks and axe serious/critical checks.'
+  - 'Run the protected live source-import proof with PostgreSQL, API authorization, Temporal, two
+    real connections to the same relation, a four-size Cypress visibility/cancellation matrix and
+    axe serious/critical checks.'
 residual_risk: >
-  The MVP proves PostgreSQL source import and one dbt model within one browser session. Revoked
-  connection reconciliation, cross-session collaborative edits and additional warehouse providers
-  require their own product slices and evidence.
+  The MVP proves PostgreSQL source import, two colliding physical identities, and one dbt model
+  within one browser session. True browser-level 200-percent zoom remains a demanding-user manual
+  check beyond the automated 500x330 layout-pressure equivalent. Revoked connection reconciliation,
+  cross-session collaborative edits and additional warehouse providers require their own product
+  slices and evidence.
 review_after: 2026-09-08
 ---
