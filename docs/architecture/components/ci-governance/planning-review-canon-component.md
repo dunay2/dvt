@@ -13,9 +13,9 @@ component_type: governance
 
 ## Public API
 
-- `ValidatePlanningReviewBoardTraceability(input)`: validates that executable
-  review findings link to GitHub Issues and that local documents do not become
-  a parallel task registry.
+- `tools/ci/planning-review-canon.test.mjs` validates that executable review
+  findings link to GitHub Issues and that local documents do not become a
+  parallel task registry.
 
 ## Invariants
 
@@ -38,9 +38,9 @@ stateDiagram-v2
   Classified --> ExecutableFollowUp
   Classified --> ArchiveCandidate
   ExecutableFollowUp --> LinkedGitHubIssue: direct GitHub workflow
-  LinkedGitHubIssue --> Traceable: ValidatePlanningReviewBoardTraceability
-  ReferenceContext --> Traceable: ValidatePlanningReviewBoardTraceability
-  AcceptedEvidence --> Traceable: ValidatePlanningReviewBoardTraceability
+  LinkedGitHubIssue --> Traceable: semantic CI guard
+  ReferenceContext --> Traceable: semantic CI guard
+  AcceptedEvidence --> Traceable: semantic CI guard
 ```
 
 ## Consumers
@@ -48,18 +48,15 @@ stateDiagram-v2
 - Review stewards classify review rows and link executable findings to existing
   or newly created GitHub Issues.
 - Product operators select the next MVP slice from GitHub.
-- Reviewers use the traceability query to detect local parallel backlogs.
+- Reviewers use the semantic CI guard to detect local parallel backlogs.
 - Architecture maintainers update Planning DB only for architecture or
   mechanization changes caused by the issue.
 
-## Command And Query Rail
+## Command And Query Boundary
 
-| Rail                                      | Type  | Owner                       | Surface                    |
-| ----------------------------------------- | ----- | --------------------------- | -------------------------- |
-| `ValidatePlanningReviewBoardTraceability` | query | Planning board traceability | CI guard, reviews, stories |
-
-Task lifecycle has no repository command rail. It is performed directly through
-the GitHub Issues product boundary.
+No repository command/query rail is declared for this fitness check. It is a
+repository policy assertion, not an application query or read model. Task
+lifecycle is performed directly through the GitHub Issues product boundary.
 
 ## Semantic Fitness Function
 

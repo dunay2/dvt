@@ -506,8 +506,7 @@ groups those rails by concern:
 - Authoring metadata:
   - `ConfigureCanvasDbtNode`;
   - `ConfigureCanvasDvtNode`;
-  - `SelectDbtModelOrigin`;
-  - `SelectCanvasRuntimeTemplate`.
+  - `SelectDbtModelOrigin`.
 - Project canvas lifecycle:
   - `ListProjectCanvases`;
   - `CreateProjectCanvas`;

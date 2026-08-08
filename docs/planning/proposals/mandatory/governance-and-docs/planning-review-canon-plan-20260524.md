@@ -18,7 +18,7 @@ superseded by
 
 - Review documents provide rationale and evidence; they are not task queues.
 - Executable MVP work is represented and tracked in GitHub Issues.
-- `ValidatePlanningReviewBoardTraceability` checks that review follow-up links
+- `tools/ci/planning-review-canon.test.mjs` checks that review follow-up links
   to the GitHub issue authority without recreating local task state.
 - Planning DB retains architecture, component, capability, relation,
   command/query rail, feature-mechanization, and architecture-evidence records.
@@ -32,5 +32,5 @@ superseded by
 
 The current operating procedure is
 [GitHub MVP issue workflow](../../../state/github-mvp-issue-workflow.md). Feature
-mechanization for the retained query rail is DB-owned and is not duplicated in
-this historical document.
+mechanization for current architecture rails is DB-owned and is not duplicated
+in this historical document.
