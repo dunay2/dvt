@@ -44,13 +44,20 @@ async function applyCurrentPlanningDbSchema(options = {}) {
   const client =
     options.client || new Client({ connectionString: options.databaseUrl || databaseUrl() });
   const ownsClient = !options.client;
+  const managesTransaction = options.manageTransaction !== false;
+
+  if (!managesTransaction && ownsClient) {
+    throw new Error('Caller-managed schema replacement requires an existing client transaction.');
+  }
 
   if (ownsClient) {
     await client.connect();
   }
 
   try {
-    await client.query('begin');
+    if (managesTransaction) {
+      await client.query('begin');
+    }
     await client.query(
       "select pg_advisory_xact_lock(hashtext('dvt:planning-db'), hashtext('current-schema'))"
     );
@@ -58,9 +65,13 @@ async function applyCurrentPlanningDbSchema(options = {}) {
       await client.query(`drop schema if exists ${name} cascade`);
     }
     await client.query(schemaSql);
-    await client.query('commit');
+    if (managesTransaction) {
+      await client.query('commit');
+    }
   } catch (error) {
-    await client.query('rollback');
+    if (managesTransaction) {
+      await client.query('rollback');
+    }
     throw error;
   } finally {
     if (ownsClient) {

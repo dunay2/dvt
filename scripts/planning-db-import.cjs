@@ -3337,8 +3337,8 @@ async function importContent(options = {}) {
   }
 
   try {
-    await applyCurrentPlanningDbSchema({ client, silent: true });
     await beginImportTransaction(client);
+    await applyCurrentPlanningDbSchema({ client, silent: true, manageTransaction: false });
     await restoreArchitectureState(client, canonicalStateSnapshot.architectureState);
     await restoreDbGovernanceSurfaceCatalog(client, dbGovernanceSurfaceCatalog);
     await restoreDbtProjectRoundtripCapabilityCatalog(client, dbtProjectRoundtripCapabilityCatalog);

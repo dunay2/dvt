@@ -117,6 +117,30 @@ test('schema application replaces the complete query store in one transaction', 
   });
 });
 
+test('schema replacement can participate in the caller import transaction', async () => {
+  const client = new RecordingClient();
+  const schemaSql = [
+    'create schema architecture;',
+    'create schema component_engineering;',
+    'create schema planning_query_store;',
+  ].join('\n');
+
+  await applyCurrentPlanningDbSchema({
+    client,
+    schemaSql,
+    silent: true,
+    manageTransaction: false,
+  });
+
+  assert.deepEqual(client.queries, [
+    "select pg_advisory_xact_lock(hashtext('dvt:planning-db'), hashtext('current-schema'))",
+    'drop schema if exists planning_query_store cascade',
+    'drop schema if exists component_engineering cascade',
+    'drop schema if exists architecture cascade',
+    schemaSql,
+  ]);
+});
+
 test('schema application rolls back and never publishes a partial replacement', async () => {
   const client = new RecordingClient({ failOn: 'create schema planning_query_store' });
   const schemaSql = [
