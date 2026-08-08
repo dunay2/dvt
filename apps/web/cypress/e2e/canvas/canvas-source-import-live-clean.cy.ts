@@ -196,6 +196,12 @@ describe('Canvas source import live clean proof', () => {
         .replace(/^-+|-+$/g, '');
     const expectedConnectionId = toExpectedConnectionId(expectedConnectionName);
     const expectedSecondaryConnectionId = toExpectedConnectionId(expectedSecondaryConnectionName);
+    const viewportMatrix = [
+      { width: 1440, height: 900 },
+      { width: 1280, height: 720 },
+      { width: 1000, height: 660 },
+      { width: 500, height: 330 },
+    ] as const;
 
     assertLiveFirstAuthoringDraftScopeIsClean('dbt');
     visitCleanDbtCanvas();
@@ -275,12 +281,7 @@ describe('Canvas source import live clean proof', () => {
     openCanvasContextMenuAt(640, 420);
     clickCanvasContextMenuAction('open-add-node-catalog');
     clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
-    for (const viewport of [
-      { width: 1440, height: 900 },
-      { width: 1280, height: 720 },
-      { width: 1000, height: 660 },
-      { width: 500, height: 330 },
-    ]) {
+    for (const viewport of viewportMatrix) {
       cy.viewport(viewport.width, viewport.height);
       cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 })
         .should('be.visible')
@@ -320,6 +321,25 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', expectedConnectionName)
       .and('contain.text', 'postgres')
       .and('contain.text', expectedConnectionId);
+    for (const viewport of viewportMatrix) {
+      cy.viewport(viewport.width, viewport.height);
+      cy.get('[data-slot="canvas-node-workbench-overlay"]')
+        .should('be.visible')
+        .should(($overlay) => {
+          const bounds = $overlay.get(0).getBoundingClientRect();
+          expect(bounds.left).to.be.at.least(0);
+          expect(bounds.top).to.be.at.least(0);
+          expect(bounds.right).to.be.at.most(viewport.width);
+          expect(bounds.bottom).to.be.at.most(viewport.height);
+        });
+      cy.contains('[data-slot="canvas-node-workbench-general-section"] dt', 'Connection')
+        .next('dd')
+        .scrollIntoView()
+        .should('be.visible');
+      cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').and('be.enabled');
+      assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
+    }
+    cy.viewport(1000, 660);
     cy.contains('[data-slot="canvas-node-workbench-general-section"] dt', 'Connection')
       .next('dd')
       .scrollIntoView()
