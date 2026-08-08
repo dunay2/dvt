@@ -154,6 +154,17 @@ describe('CanvasViewport', () => {
     });
   });
 
+  it('suspends global node deletion while a contextual workbench owns keyboard input', async () => {
+    await renderViewport({
+      canEditEdges: true,
+      externalNodeSurfaceActive: true,
+    });
+
+    expect(xyflowState.lastReactFlowProps).toMatchObject({
+      deleteKeyCode: null,
+    });
+  });
+
   it('preserves the governed Shift multi-selection gesture for canvas node selection', async () => {
     await renderViewport();
 
