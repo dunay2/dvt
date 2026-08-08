@@ -76,6 +76,7 @@ test('DBT round-trip current catalog enumerates implemented and deferred rails w
     (evidence) => evidence.railName === 'ExportDbtProject'
   );
   assert.equal(exportEvidence.expectedRailStatus, 'not-implemented');
+  assert.equal(exportEvidence.expectedMechanizationStatus, 'documented');
   assert.equal(exportEvidence.expectedImplemented, false);
 });
 
