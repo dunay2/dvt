@@ -62,6 +62,11 @@ function visitCleanDbtCanvas(): void {
   cy.visit('/canvas', {
     onBeforeLoad(window) {
       window.localStorage.clear();
+      Object.defineProperty(window.navigator, 'language', {
+        configurable: true,
+        value: 'en-US',
+      });
+      window.document.documentElement.lang = 'en';
       seedE2eWorkspaceSession(window, session);
     },
   });
