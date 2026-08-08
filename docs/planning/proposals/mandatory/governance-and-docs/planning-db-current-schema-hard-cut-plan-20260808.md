@@ -183,6 +183,7 @@ allowedImplementationSurfaces:
   - docs/planning/status/**
   - docs/**/index.md
   - package.json
+  - traceability.manifest.json
   - scripts/planning-db*.cjs
   - scripts/planning-db/**
   - scripts/planning-db-operate-tests/**
