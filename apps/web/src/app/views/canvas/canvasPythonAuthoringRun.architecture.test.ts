@@ -10,17 +10,17 @@ const CANVAS_ROOT = import.meta.dirname;
 describe('Python Canvas authoring and run architecture', () => {
   it('keeps authoritative Python execution outside the Web application', () => {
     for (const source of readTypeScriptSources(WEB_APP_ROOT)) {
-      expect(source).not.toContain("from 'node:child_process'");
-      expect(source).not.toContain('spawn(');
-      expect(source).not.toContain('exec(');
-      expect(source).not.toContain('compile(source');
+      expect(source).not.toMatch(/from\s+['"]node:child_process['"]/u);
+      expect(source).not.toMatch(/from\s+['"]node:vm['"]/u);
+      expect(source).not.toContain('EphemeralPythonProcessRuntime');
+      expect(source).not.toContain('PYTHON_CODE_PROCESS_WRAPPER');
     }
   });
 
   it('registers Python as a backend-gated optional plugin and separate Canvas kind', () => {
     const contributions = readFileSync(join(PYTHON_PLUGIN_ROOT, 'pythonContributions.ts'), 'utf8');
 
-    expect(contributions).toContain("backendPluginId: PYTHON_PLUGIN_ID");
+    expect(contributions).toContain('backendPluginId: PYTHON_PLUGIN_ID');
     expect(contributions).toContain("kind: 'optional'");
     expect(contributions).toContain("kind: 'python'");
     expect(contributions).toContain("kind: 'python_code_preview'");
