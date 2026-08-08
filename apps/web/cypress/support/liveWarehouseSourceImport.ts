@@ -8,14 +8,15 @@ function toStableYamlIdentifierPart(part: string): string {
   return normalized.length > 0 ? normalized : 'unnamed';
 }
 
-export function expectedLivePostgresSourceName(): string {
+export function expectedLivePostgresSourceName(connectionNameSuffix = ''): string {
   const runId = String(Cypress.env('firstAuthoringRunId') ?? 'source-import-live');
-  return [`live-postgres-${runId}`, 'dvt', 'public'].map(toStableYamlIdentifierPart).join('_');
+  const connectionId = ['live-postgres', runId, connectionNameSuffix].filter(Boolean).join('-');
+  return [connectionId, 'dvt', 'public'].map(toStableYamlIdentifierPart).join('_');
 }
 
-function createLivePostgresConnection(): void {
+function createLivePostgresConnection(connectionNameSuffix = ''): void {
   const runId = String(Cypress.env('firstAuthoringRunId') ?? 'source-import-live');
-  const connectionName = `Live Postgres ${runId}`;
+  const connectionName = [`Live Postgres ${runId}`, connectionNameSuffix].filter(Boolean).join(' ');
 
   cy.contains('[role="dialog"] button', 'New connection').should('be.enabled').click();
   cy.get('[data-slot="source-import-create-connection-name"]')
@@ -40,10 +41,11 @@ type ExpectedSourceImportAuthority =
   | Readonly<{ kind: 'dbt-project-files'; expectedYamlPath: string }>;
 
 export function importLivePostgresSource(
-  expectedAuthority: ExpectedSourceImportAuthority = { kind: 'graph-draft' }
+  expectedAuthority: ExpectedSourceImportAuthority = { kind: 'graph-draft' },
+  connectionNameSuffix = ''
 ): void {
   cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 }).should('be.visible');
-  createLivePostgresConnection();
+  createLivePostgresConnection(connectionNameSuffix);
   cy.contains('[role="dialog"] button', 'Test connection').should('be.enabled').click();
   cy.contains('[role="dialog"]', 'Connection passed', { timeout: 20_000 }).should('be.visible');
   cy.contains('[role="dialog"]', 'objects reachable').should('be.visible');
