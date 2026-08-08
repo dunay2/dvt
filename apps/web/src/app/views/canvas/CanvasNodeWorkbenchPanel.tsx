@@ -1,4 +1,5 @@
 /** Owned concern: render the Canvas-owned contextual node workbench panel. */
+import { CircleHelp, X } from 'lucide-react';
 import { useEffect, useMemo, useState, type HTMLAttributes, type ReactNode } from 'react';
 
 import { getInspectorPanels } from '../../plugins/registry';
@@ -9,6 +10,7 @@ import {
 } from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
 import { ScrollArea } from '../../components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { cn } from '../../components/ui/utils';
 import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTabs';
@@ -323,6 +325,7 @@ export function CanvasNodeWorkbenchPanel({
         <div
           {...dragHandleProps}
           className={cn(
+            'min-w-0 flex-1',
             dragHandleProps != null && canvasNodeWorkbenchVisualTokens.dragHandle,
             dragHandleProps?.className
           )}
@@ -337,15 +340,39 @@ export function CanvasNodeWorkbenchPanel({
             {node.kind}
           </p>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          data-slot="canvas-node-workbench-close"
-          onClick={onClose}
+        <div
+          data-slot="canvas-node-workbench-header-actions"
+          className="ml-auto flex shrink-0 items-center gap-1"
         >
-          {copy.nodeWorkbenchCloseLabel}
-        </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                data-slot="canvas-node-workbench-help"
+                aria-label={copy.inspectorEditablePropertiesTitle}
+              >
+                <CircleHelp className="size-4" aria-hidden="true" />
+                <span className="sr-only">{copy.inspectorEditablePropertiesTitle}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-72">
+              {copy.inspectorEditablePropertiesDescription}
+            </TooltipContent>
+          </Tooltip>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            data-slot="canvas-node-workbench-close"
+            aria-label={copy.nodeWorkbenchCloseLabel}
+            onClick={onClose}
+          >
+            <X className="size-4" aria-hidden="true" />
+            <span className="sr-only">{copy.nodeWorkbenchCloseLabel}</span>
+          </Button>
+        </div>
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
