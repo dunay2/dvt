@@ -37,6 +37,10 @@ test('DBT round-trip capability current schema owns normalized phase evidence an
     sql,
     /CREATE VIEW planning_query_store\.dbt_project_roundtrip_capability_status_query/
   );
+  assert.match(
+    sql,
+    /feature_mechanization_local_rails_mechanization_status_check CHECK \(\(mechanization_status = ANY \(ARRAY\['closed'::text, 'documented'::text, 'implemented'::text\]\)\)\)/
+  );
   assert.match(architectureState, /ProjectDbtRoundtripCapabilityStatus/);
   assert.match(architectureState, /SYS-CI-GOVERNANCE-SCRIPTS-PLANNING-DB-QUERY-DBT-ROUNDTRIP/);
   assert.match(architectureState, /SYS-CI-GOVERNANCE-SCRIPTS-DOCS-GENERATION-DBT-ROUNDTRIP/);
