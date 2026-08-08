@@ -2,7 +2,7 @@
 title: PR Preflight And CI Triage
 status: Active
 owner: Product / Architecture / Delivery / Docs
-last_reviewed: 2026-04-02
+last_reviewed: 2026-08-07
 ---
 
 # PR Preflight And CI Triage
@@ -49,7 +49,10 @@ Start with failed-job extraction first, then decide the minimal rerun set.
 If the slice touches planning/docs structure or workspace structure, run required generators before push:
 
 - `pnpm docs:sync`
-- `pnpm docs:status:generate` (when workspace source sets changed)
+- `pnpm docs:status:generate --code-state-only` (DB-free local inventory when
+  workspace source sets changed)
+- `pnpm docs:status:generate --repository-map-only` (tracked map after
+  preparing and importing Planning DB)
 
 Then run `pnpm verify:prepush` again.
 

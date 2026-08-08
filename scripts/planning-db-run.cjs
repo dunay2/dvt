@@ -192,6 +192,8 @@ function runPlanningDbUp(extraArgs = [], options = {}) {
 function waitForPlanningDbReady(options = {}) {
   const attempts = options.attempts ?? 20;
   const intervalMs = options.intervalMs ?? 500;
+  const runComposeQuietFn = options.runComposeQuiet || runComposeQuiet;
+  const sleepFn = options.sleep || sleep;
   const readyArgs = [
     'exec',
     '-T',
@@ -203,14 +205,89 @@ function waitForPlanningDbReady(options = {}) {
     'dvt_planning',
   ];
 
-  for (let attempt = 0; attempt < attempts; attempt += 1) {
-    if (runComposeQuiet(readyArgs)) {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    if (runComposeQuietFn(readyArgs)) {
       return;
     }
-    sleep(intervalMs);
+    if (attempt < attempts) {
+      sleepFn(intervalMs);
+    }
   }
 
-  throw new Error('Planning DB did not become ready before shared reset backup.');
+  throw new Error('Planning DB did not become ready within the bounded wait.');
+}
+
+function isPlanningDbActive(options = {}) {
+  const spawn = options.spawnSync || childProcess.spawnSync;
+  const result = spawn('docker', ['inspect', '--format', '{{.State.Running}}', containerName], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  if (result.error) {
+    throw new Error(`Planning DB active probe failed: ${result.error.message}`);
+  }
+
+  const stdout = String(result.stdout || '').trim();
+  const stderr = String(result.stderr || '').trim();
+  if (result.status !== 0) {
+    if (/No such (?:object|container)/iu.test(stderr)) {
+      return false;
+    }
+    throw new Error(
+      `Planning DB active probe failed with exit code ${result.status || 1}: ${stderr || 'unknown Docker error'}`
+    );
+  }
+  if (stdout === 'true') return true;
+  if (stdout === 'false') return false;
+  throw new Error(`Planning DB active probe returned unexpected state "${stdout || '<empty>'}".`);
+}
+
+function runPlanningDbHealth(args = [], options = {}) {
+  const unknownArgs = args.filter((arg) => arg !== '--wait' && arg !== '--active');
+  if (unknownArgs.length > 0) {
+    throw new Error(`Unknown planning DB health option "${unknownArgs[0]}".`);
+  }
+  if (args.includes('--wait') && args.includes('--active')) {
+    throw new Error('Choose either --wait or --active for planning DB health, not both.');
+  }
+
+  if (args.includes('--active')) {
+    const activeProbe = options.isPlanningDbActive || isPlanningDbActive;
+    if (!activeProbe(options)) {
+      const error = new Error('Planning DB is not active.');
+      error.exitCode = 3;
+      throw error;
+    }
+    return;
+  }
+
+  if (args.includes('--wait')) {
+    const waitForReady = options.waitForPlanningDbReady || waitForPlanningDbReady;
+    waitForReady({
+      attempts: normalizePositiveInteger(
+        options.attempts ?? process.env.DVT_PLANNING_DB_HEALTH_ATTEMPTS,
+        30
+      ),
+      intervalMs: normalizePositiveInteger(
+        options.intervalMs ?? process.env.DVT_PLANNING_DB_HEALTH_INTERVAL_MS,
+        2000
+      ),
+    });
+    return;
+  }
+
+  const runComposeFn = options.runCompose || runCompose;
+  runComposeFn([
+    'exec',
+    '-T',
+    'postgres',
+    'pg_isready',
+    '-U',
+    'dvt_planning',
+    '-d',
+    'dvt_planning',
+  ]);
 }
 
 async function readLocalOperationBackup(options = {}) {
@@ -356,16 +433,7 @@ async function main() {
   }
 
   if (action === 'health') {
-    runCompose([
-      'exec',
-      '-T',
-      'postgres',
-      'pg_isready',
-      '-U',
-      'dvt_planning',
-      '-d',
-      'dvt_planning',
-    ]);
+    runPlanningDbHealth(rest);
     return;
   }
 
@@ -384,7 +452,7 @@ async function main() {
 if (require.main === module) {
   main().catch((error) => {
     console.error(error.message);
-    process.exit(1);
+    process.exit(error.exitCode || 1);
   });
 }
 
@@ -397,9 +465,11 @@ module.exports = {
   buildPgEnv,
   buildComposeArgs,
   ensureDataDir,
+  isPlanningDbActive,
   planResetDataDir,
   readLocalOperationBackup,
   resolveComposeCommand,
+  runPlanningDbHealth,
   runPlanningDbUp,
   resetPlanningDb,
   resetComposeCommandCache,

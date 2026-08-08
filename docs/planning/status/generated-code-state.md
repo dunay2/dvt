@@ -2,7 +2,7 @@
 title: Generated Code State
 status: Active
 owner: docs
-last_reviewed: 2026-05-12
+last_reviewed: 2026-08-07
 planning_type: status
 ---
 
@@ -14,8 +14,12 @@ conflicts from source and test inventory churn.
 Run:
 
 ```bash
-pnpm docs:status:generate
+pnpm docs:status:generate --code-state-only
 ```
+
+This mode is deliberately DB-free. The tracked Repository Map is a separate,
+DB-backed projection; after preparing and importing Planning DB, refresh it
+with `pnpm docs:status:generate --repository-map-only`.
 
 The local render is written to:
 

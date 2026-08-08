@@ -1,12 +1,159 @@
 #!/usr/bin/env node
 /** Owned concern: run the governed PR closeout rail without pre-commit/prepush duplication. */
 const { execFileSync, spawnSync } = require('node:child_process');
+const { createHash } = require('node:crypto');
 const fs = require('node:fs');
+const net = require('node:net');
 const path = require('node:path');
 
 const { listLocalChangedFiles, parseGitLines, toPosix } = require('./git-local-changes.cjs');
+const { projectName: planningDbProjectName } = require('./planning-db-run.cjs');
+const workflowScopePolicy = require('../tools/ci/policy/workflow-scope.json');
 
 const repoRoot = path.resolve(__dirname, '..');
+const repositoryMapSourcePatterns = Object.freeze([
+  ...workflowScopePolicy.generated_status_relevant,
+]);
+const workspaceSourcePatterns = Object.freeze([
+  'package.json',
+  'pnpm-workspace.yaml',
+  'README.md',
+  'src/**',
+  'test/**',
+  'apps/**',
+  'packages/**',
+  '**/package.json',
+  '**/README.md',
+  '**/src/**',
+  '**/test/**',
+]);
+
+function resolveCloseoutLockEndpoint(
+  scope = `resource:${planningDbProjectName}`,
+  platform = process.platform
+) {
+  if (typeof scope !== 'string' || scope.length === 0) {
+    throw new Error('PR_CLOSEOUT_LOCK_SCOPE_FAILED: expected a non-empty scope.');
+  }
+
+  const resourceScoped = scope.startsWith('resource:');
+  let canonicalScope = scope;
+  if (!resourceScoped) {
+    const absoluteScope = path.resolve(scope);
+    try {
+      canonicalScope = fs.realpathSync.native(absoluteScope);
+    } catch (error) {
+      throw new Error(`PR_CLOSEOUT_LOCK_SCOPE_FAILED: ${error.message}`, { cause: error });
+    }
+    if (platform === 'win32') canonicalScope = canonicalScope.toLowerCase();
+  }
+
+  const digest = createHash('sha256').update(canonicalScope).digest();
+  const lockName = `dvt-pr-closeout-${digest.toString('hex').slice(0, 24)}`;
+  if (platform === 'win32') {
+    return { path: `\\\\.\\pipe\\${lockName}` };
+  }
+  if (platform === 'linux') {
+    return { path: `\0${lockName}` };
+  }
+  return {
+    host: '127.0.0.1',
+    port: 49_152 + (digest.readUInt16BE(0) % 16_384),
+  };
+}
+
+function runWithCloseoutLock(task, options = {}) {
+  const endpoint = options.endpoint || resolveCloseoutLockEndpoint(options.scope);
+  const createServer = options.createServer || net.createServer;
+
+  return new Promise((resolve, reject) => {
+    const server = createServer();
+    let closing = false;
+    let settled = false;
+    const runtimeErrors = [];
+    const endpointLabel = endpoint.path
+      ? endpoint.path.replace(/^\0/u, '@')
+      : `${endpoint.host}:${endpoint.port}`;
+
+    const closeAndSettle = (taskError, value) => {
+      if (closing || settled) return;
+      closing = true;
+      const settleAfterClose = (closeError) => {
+        if (settled) return;
+        settled = true;
+        const releaseError = closeError
+          ? new Error(`PR_CLOSEOUT_LEASE_RELEASE_FAILED: ${closeError.message}`, {
+              cause: closeError,
+            })
+          : null;
+        const errors = [
+          ...(taskError ? [taskError] : []),
+          ...runtimeErrors,
+          ...(releaseError ? [releaseError] : []),
+        ];
+        if (errors.length > 1) {
+          reject(
+            new AggregateError(
+              errors,
+              `Guarded closeout failed: ${errors.map((error) => error.message).join('; ')}`
+            )
+          );
+        } else if (errors.length === 1) {
+          reject(errors[0]);
+        } else {
+          resolve(value);
+        }
+      };
+      try {
+        server.close(settleAfterClose);
+      } catch (closeError) {
+        settleAfterClose(closeError);
+      }
+    };
+
+    const rejectAcquisition = (error) => {
+      if (settled) return;
+      settled = true;
+      if (error?.code === 'EADDRINUSE') {
+        reject(
+          new Error(
+            `PR_CLOSEOUT_LEASE_BUSY: closeout endpoint ${endpointLabel} is already owned. Retry after it finishes.`,
+            { cause: error }
+          )
+        );
+        return;
+      }
+      reject(new Error(`PR_CLOSEOUT_LEASE_ACQUIRE_FAILED: ${error.message}`, { cause: error }));
+    };
+
+    server.once('error', rejectAcquisition);
+    server.on('connection', (socket) => socket.destroy());
+
+    server.listen({ ...endpoint, exclusive: true }, () => {
+      server.off('error', rejectAcquisition);
+      server.on('error', (error) => {
+        if (settled) return;
+        runtimeErrors.push(
+          new Error(`PR_CLOSEOUT_LEASE_RUNTIME_FAILED: ${error.message}`, { cause: error })
+        );
+      });
+      const settleTask = (taskError, value) => {
+        setImmediate(() => closeAndSettle(taskError, value));
+      };
+      let result;
+      try {
+        result = task();
+      } catch (error) {
+        settleTask(error);
+        return;
+      }
+      Promise.resolve(result).then(
+        (value) => settleTask(null, value),
+        (error) => settleTask(error)
+      );
+    });
+  });
+}
 
 function normalizeChangedFiles(changedFiles) {
   return Array.from(new Set(changedFiles.map(toPosix).filter(Boolean))).sort();
@@ -16,10 +163,39 @@ function hasDocsChange(changedFiles) {
   return changedFiles.some((filePath) => filePath.startsWith('docs/'));
 }
 
+function escapeRegexCharacter(character) {
+  return /[|\\{}()[\]^$+?.]/u.test(character) ? `\\${character}` : character;
+}
+
+function globToRegExp(pattern) {
+  let source = '^';
+
+  for (let index = 0; index < pattern.length; index += 1) {
+    const current = pattern[index];
+    const next = pattern[index + 1];
+    if (current === '*' && next === '*') {
+      source += '.*';
+      index += 1;
+    } else if (current === '*') {
+      source += '[^/]*';
+    } else {
+      source += escapeRegexCharacter(current);
+    }
+  }
+
+  return new RegExp(`${source}$`, 'u');
+}
+
+function matchesAnyPattern(filePath, patterns) {
+  return patterns.some((pattern) => globToRegExp(pattern).test(toPosix(filePath)));
+}
+
 function hasWorkspaceSourceChange(changedFiles) {
-  return changedFiles.some(
-    (filePath) => filePath.startsWith('apps/') || filePath.startsWith('packages/')
-  );
+  return changedFiles.some((filePath) => matchesAnyPattern(filePath, workspaceSourcePatterns));
+}
+
+function hasRepositoryMapSourceChange(changedFiles) {
+  return changedFiles.some((filePath) => matchesAnyPattern(filePath, repositoryMapSourcePatterns));
 }
 
 function hasGovernanceRefreshChange(changedFiles) {
@@ -66,6 +242,9 @@ function commitArgs(commit) {
 function buildPrCloseoutPlan(options = {}) {
   const changedFiles = normalizeChangedFiles(options.changedFiles || []);
   const stagedFiles = normalizeChangedFiles(options.stagedFiles || []);
+  const workspaceSourceChanged = hasWorkspaceSourceChange(changedFiles);
+  const repositoryMapSourceChanged = hasRepositoryMapSourceChange(changedFiles);
+  const governanceRefreshChanged = hasGovernanceRefreshChange(changedFiles);
   const steps = [];
 
   if (changedFiles.length === 0) {
@@ -86,15 +265,49 @@ function buildPrCloseoutPlan(options = {}) {
     });
   }
 
-  if (hasWorkspaceSourceChange(changedFiles)) {
+  if (workspaceSourceChanged) {
     pushStepOnce(steps, {
-      id: 'docs-status-generate',
+      id: 'docs-status-code-state',
       command: 'pnpm',
-      args: ['docs:status:generate'],
+      args: ['docs:status:generate', '--code-state-only'],
     });
   }
 
-  if (hasGovernanceRefreshChange(changedFiles)) {
+  pushStepOnce(steps, {
+    id: 'planning-db-ownership',
+    internal: 'capturePlanningDbOwnership',
+    label: 'detect Planning DB ownership',
+  });
+  pushStepOnce(steps, {
+    id: 'planning-db-up',
+    command: 'pnpm',
+    args: ['planning:db:up'],
+  });
+  pushStepOnce(steps, {
+    id: 'planning-db-health',
+    command: 'pnpm',
+    args: ['planning:db:health', '--wait'],
+  });
+  pushStepOnce(steps, {
+    id: 'planning-db-migrate',
+    command: 'pnpm',
+    args: ['planning:db:migrate'],
+  });
+
+  if (repositoryMapSourceChanged && !governanceRefreshChanged) {
+    pushStepOnce(steps, {
+      id: 'planning-db-import',
+      command: 'pnpm',
+      args: ['planning:db:import', '--', '--if-stale'],
+    });
+    pushStepOnce(steps, {
+      id: 'docs-status-repository-map',
+      command: 'pnpm',
+      args: ['docs:status:generate', '--repository-map-only'],
+    });
+  }
+
+  if (governanceRefreshChanged) {
     pushStepOnce(steps, {
       id: 'governance-refresh',
       command: 'pnpm',
@@ -132,6 +345,12 @@ function buildPrCloseoutPlan(options = {}) {
     id: 'verify-prepush',
     command: 'pnpm',
     args: ['verify:prepush', '--', '--full'],
+  });
+
+  pushStepOnce(steps, {
+    id: 'planning-db-release',
+    internal: 'releasePlanningDbIfOwned',
+    label: 'release owned Planning DB',
   });
 
   if (options.push) {
@@ -221,9 +440,55 @@ function assertNoUnstagedChanges(options = {}) {
   }
 }
 
-function runCommand(step, options = {}) {
+function probePlanningDbActive(options = {}) {
+  const spawnCommand = options.spawnCommand || spawnSync;
+  const invocation = resolveCommandInvocation('pnpm', ['planning:db:health', '--active'], options);
+  const result = spawnCommand(invocation.command, invocation.args, {
+    cwd: options.repoRootPath || repoRoot,
+    shell: invocation.shell,
+    stdio: 'ignore',
+  });
+
+  if (result.error) {
+    throw new Error(`PLANNING_DB_OWNERSHIP_PROBE_FAILED: ${result.error.message}`);
+  }
+  if (result.status === 0) return true;
+  if (result.status === 3) return false;
+  throw new Error(
+    `PLANNING_DB_OWNERSHIP_PROBE_FAILED: planning:db:health --active exited with ${result.status || 1}`
+  );
+}
+
+function releasePlanningDbIfOwned(options, runtime) {
+  if (!runtime.planningDbOwned || runtime.planningDbReleaseAttempted) {
+    return;
+  }
+
+  runtime.planningDbReleaseAttempted = true;
+  runCommand(
+    {
+      id: 'planning-db-down',
+      command: 'pnpm',
+      args: ['planning:db:down'],
+    },
+    options,
+    runtime
+  );
+}
+
+function runCommand(step, options = {}, runtime = {}) {
   if (step.internal === 'assertNoUnstagedChanges') {
     assertNoUnstagedChanges(options);
+    return;
+  }
+  if (step.internal === 'capturePlanningDbOwnership') {
+    const activeProbe = options.probePlanningDbActive || probePlanningDbActive;
+    runtime.planningDbOwned = !activeProbe(options);
+    runtime.planningDbOwnershipKnown = true;
+    return;
+  }
+  if (step.internal === 'releasePlanningDbIfOwned') {
+    releasePlanningDbIfOwned(options, runtime);
     return;
   }
 
@@ -250,9 +515,41 @@ function runCommand(step, options = {}) {
 }
 
 function executePrCloseoutPlan(plan, options = {}) {
-  for (const step of plan) {
-    console.log(`[pr:closeout] ${commandLabel(step)}`);
-    runCommand(step, options);
+  const runtime = {};
+  let executionError;
+
+  try {
+    for (const step of plan) {
+      console.log(`[pr:closeout] ${commandLabel(step)}`);
+      runCommand(step, options, runtime);
+    }
+  } catch (error) {
+    executionError = error;
+  }
+
+  const cleanupErrors = [];
+  if (runtime.planningDbOwned && !runtime.planningDbReleaseAttempted) {
+    console.log('[pr:closeout] release owned Planning DB after interrupted closeout');
+    try {
+      releasePlanningDbIfOwned(options, runtime);
+    } catch (error) {
+      cleanupErrors.push(error);
+    }
+  }
+  if (executionError && cleanupErrors.length > 0) {
+    throw new AggregateError(
+      [executionError, ...cleanupErrors],
+      `${executionError.message}; closeout cleanup also failed: ${cleanupErrors.map((error) => error.message).join('; ')}`
+    );
+  }
+  if (executionError) {
+    throw executionError;
+  }
+  if (cleanupErrors.length === 1) {
+    throw cleanupErrors[0];
+  }
+  if (cleanupErrors.length > 1) {
+    throw new AggregateError(cleanupErrors, 'Multiple closeout cleanup operations failed.');
   }
 }
 
@@ -380,15 +677,13 @@ function main(argv = process.argv.slice(2)) {
 }
 
 if (require.main === module) {
-  try {
-    main();
-  } catch (error) {
+  runWithCloseoutLock(() => main()).catch((error) => {
     console.error(`[pr:closeout] ${error.message}`);
     if (error.message.startsWith('INVALID_')) {
       printUsage();
     }
-    process.exit(1);
-  }
+    process.exitCode = 1;
+  });
 }
 
 module.exports = {
@@ -399,6 +694,9 @@ module.exports = {
   listPrCloseoutChangedFiles,
   listPrCloseoutStagedFiles,
   parseArgs,
+  probePlanningDbActive,
+  resolveCloseoutLockEndpoint,
   resolveCommandInvocation,
   runCommand,
+  runWithCloseoutLock,
 };

@@ -724,7 +724,10 @@ test('security and nightly workflows stay wired to pinned actions and failure no
 
   assertWorkflowContains(docsDeploy, 'timeout-minutes: 20');
   assertWorkflowContains(docsDeploy, 'contents: write');
-  assertWorkflowContains(docsDeploy, 'python -m pip install zensical==0.0.39');
+  assert.match(
+    docsDeploy,
+    /python -m pip install --disable-pip-version-check --require-hashes -r\s+\.github\/requirements\/zensical\.lock/u
+  );
   assertWorkflowContains(docsDeploy, "if: ${{ github.event.inputs.run_pages_deploy == 'true' }}");
 
   assert.doesNotMatch(contracts, /POSTGRES_PASSWORD:\s+dvt_test/);

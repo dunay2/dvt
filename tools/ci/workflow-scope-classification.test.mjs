@@ -43,6 +43,29 @@ test('classifies docs-only pull request scope', () => {
   assert.equal(scope.security_analysis_relevant, false);
 });
 
+test('classifies Repository Map binding and lifecycle inputs as generated-status relevant', () => {
+  for (const file of [
+    'docs/planning/status/system-governance-unit-index.units.yaml',
+    'docs/contracts/index.md',
+    'buzon/20260807-example.md',
+    'tools/planning-db/state/canonical-state.json',
+    'scripts/planning-db-import.cjs',
+    'README.md',
+    'src/index.ts',
+    'test/root.test.ts',
+    'integrations/example/README.md',
+    'integrations/example/package.json',
+    'integrations/example/src/index.ts',
+    'integrations/example/test/example.test.ts',
+    '.github/workflows/docs-deploy.yml',
+    '.github/requirements/zensical.in',
+    '.github/requirements/zensical.lock',
+  ]) {
+    const scope = computeBooleanScope([file], WORKFLOW_SCOPE_PATTERNS);
+    assert.equal(scope.generated_status_relevant, true, file);
+  }
+});
+
 test('keeps mailbox analysis out of security analysis scope', () => {
   const scope = computeWorkflowModeScopeOutputs('workflow', [
     'buzon/20260531-db-first-architecture-generated-docs-fowler-analysis.md',

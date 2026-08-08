@@ -19,8 +19,9 @@ function buildRefreshStages() {
         script: 'docs:sync',
       },
       {
-        id: 'code-status',
+        id: 'code-status-local',
         script: 'docs:status:generate',
+        args: ['--code-state-only'],
       },
       {
         id: 'capability-coverage',
@@ -63,7 +64,12 @@ function buildRefreshStages() {
       {
         id: 'governance-db-import-final',
         script: 'governance:db:import',
-        args: ['--', '--if-stale'],
+        args: ['--if-stale'],
+      },
+      {
+        id: 'repository-map-final',
+        script: 'docs:status:generate',
+        args: ['--repository-map-only'],
       },
       {
         id: 'dbt-roundtrip-capability-status',
@@ -240,49 +246,81 @@ function runGovernanceRefresh(options = {}) {
 
   const generationStagesRun = [];
   const databaseStagesRun = [];
-  let previousFingerprint = readFingerprint();
   let generationPasses = 0;
-  let stabilized = false;
+  const stabilizeGeneration = (startingFingerprint) => {
+    let previousFingerprint = startingFingerprint;
 
-  for (let pass = 1; pass <= maxPasses; pass += 1) {
-    generationPasses = pass;
-    logger.log(`[governance:refresh] generation pass ${pass}/${maxPasses}`);
+    for (let pass = 1; pass <= maxPasses; pass += 1) {
+      generationPasses += 1;
+      logger.log(`[governance:refresh] generation pass ${pass}/${maxPasses}`);
 
-    for (const stage of stages.generationStages) {
-      logger.log(`[governance:refresh] pnpm ${stage.script}`);
-      runScript(stage.script, stage);
-      generationStagesRun.push(stage.script);
+      for (const stage of stages.generationStages) {
+        logger.log(`[governance:refresh] pnpm ${stage.script}`);
+        runScript(stage.script, stage);
+        generationStagesRun.push(stage.script);
+      }
+
+      const currentFingerprint = readFingerprint();
+      if (currentFingerprint === previousFingerprint) return currentFingerprint;
+      previousFingerprint = currentFingerprint;
     }
 
-    const currentFingerprint = readFingerprint();
-    if (currentFingerprint === previousFingerprint) {
-      stabilized = true;
-      break;
-    }
-
-    previousFingerprint = currentFingerprint;
-  }
-
-  if (!stabilized) {
     throw new Error(`Governance refresh did not stabilize after ${maxPasses} generation pass(es).`);
-  }
+  };
+
+  let stableFingerprint = stabilizeGeneration(readFingerprint());
 
   logger.log(
     `[governance:refresh] generated surfaces stable after ${generationPasses} generation pass(es)`
   );
 
-  if (readFingerprint === readWorktreeFingerprint) {
-    waitForStableWorktreeFingerprint(readFingerprint, logger);
-  }
-
-  for (const stage of stages.databaseStages) {
+  const runDatabaseStage = (stage) => {
     logger.log(`[governance:refresh] pnpm ${stage.script}`);
     runScript(stage.script, stage);
     databaseStagesRun.push(stage.script);
+  };
+  const repositoryMapStageIndex = stages.databaseStages.findIndex(
+    (stage) => stage.id === 'repository-map-final'
+  );
+
+  if (repositoryMapStageIndex === -1) {
+    for (const stage of stages.databaseStages) runDatabaseStage(stage);
+  } else {
+    const preparationAndMapStages = stages.databaseStages.slice(0, repositoryMapStageIndex + 1);
+    const validationStages = stages.databaseStages.slice(repositoryMapStageIndex + 1);
+    let databaseProjectionStable = false;
+
+    for (let pass = 1; pass <= maxPasses; pass += 1) {
+      if (readFingerprint === readWorktreeFingerprint) {
+        waitForStableWorktreeFingerprint(readFingerprint, logger);
+      }
+
+      for (const stage of preparationAndMapStages) runDatabaseStage(stage);
+
+      const projectedFingerprint = readFingerprint();
+      if (projectedFingerprint === stableFingerprint) {
+        databaseProjectionStable = true;
+        break;
+      }
+
+      if (pass === maxPasses) break;
+      logger.log(
+        '[governance:refresh] Repository Map changed governed inputs; reconverging before DB validation'
+      );
+      stableFingerprint = stabilizeGeneration(projectedFingerprint);
+    }
+
+    if (!databaseProjectionStable) {
+      throw new Error(
+        `Governance refresh did not stabilize after ${maxPasses} database-backed projection pass(es).`
+      );
+    }
+
+    for (const stage of validationStages) runDatabaseStage(stage);
   }
 
   return {
-    stabilized,
+    stabilized: true,
     generationPasses,
     generationStagesRun,
     databaseStagesRun,
