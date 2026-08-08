@@ -106,9 +106,6 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     inspectorNode,
     inspectorPreferredTabId: store.inspectorPreferredTabId,
     inspectorPreferredTabRequestId: store.inspectorPreferredTabRequestId,
-    inspectorNodeSelectedForExecution: inspectorNode
-      ? store.selectedNodeIds.includes(inspectorNode.id)
-      : false,
     inspectorGraphNodes: graphModel.canonicalNodes,
     inspectorGraphEdges: visibleScope.canonicalEdges,
     activeRunId: overlayModel.activeRunId,
