@@ -196,6 +196,39 @@ describe('Canvas source import live clean proof', () => {
         .replace(/^-+|-+$/g, '');
     const expectedConnectionId = toExpectedConnectionId(expectedConnectionName);
     const expectedSecondaryConnectionId = toExpectedConnectionId(expectedSecondaryConnectionName);
+    const readRequiredScopeEnv = (name: string): string => {
+      const value = Cypress.env(name);
+      expect(value, `Cypress env ${name}`).to.be.a('string');
+      const normalized = String(value).trim();
+      expect(normalized, `Cypress env ${name}`).not.to.equal('');
+      return normalized;
+    };
+    const secondarySession = {
+      tenantId: readRequiredScopeEnv('secondaryWorkspaceTenantId'),
+      projectId: readRequiredScopeEnv('secondaryWorkspaceProjectId'),
+      environmentId: readRequiredScopeEnv('secondaryWorkspaceEnvironmentId'),
+    };
+    const selectWorkspaceScope = (scope: typeof secondarySession): void => {
+      const scopeLabel = `${scope.tenantId} / ${scope.projectId} / ${scope.environmentId}`;
+      cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 })
+        .should('be.visible')
+        .click();
+      cy.contains('[data-slot="shell-workspace-scope-selector"] button', scopeLabel, {
+        timeout: 20_000,
+      })
+        .should('be.visible')
+        .and('have.attr', 'aria-pressed', 'false')
+        .click();
+      cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 }).should(
+        'contain.text',
+        `Project: ${scope.projectId}`
+      );
+    };
+    const scopeBConnectionSuffix = 'Scope B';
+    const expectedScopeBSourceName = expectedLivePostgresSourceName(scopeBConnectionSuffix);
+    const expectedScopeBConnectionId = toExpectedConnectionId(
+      `${expectedConnectionName} ${scopeBConnectionSuffix}`
+    );
     const viewportMatrix = [
       { width: 1440, height: 900 },
       { width: 1280, height: 720 },
@@ -507,6 +540,7 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.value', `{{ source('${expectedSourceName}', 'source_1') }}`)
       .focus()
       .type('{selectall}{backspace}');
+    cy.contains('.react-flow__node', 'Model 1').should('exist');
     cy.get('textarea[name="dbt-model-sql"]').type(authoredModelSql, {
       parseSpecialCharSequences: false,
     });
@@ -556,5 +590,89 @@ describe('Canvas source import live clean proof', () => {
     cy.get('textarea[aria-label*="model_1.sql"], [role="textbox"][aria-label*="model_1.sql"]', {
       timeout: 20_000,
     }).should('exist');
+
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
+    selectWorkspaceScope(secondarySession);
+
+    cy.contains('Create canvas', { timeout: 20_000 }).should('be.visible');
+    cy.get('.react-flow__node').should('not.exist');
+    cy.get('[data-slot="canvas-playground-empty-state"]').within(() => {
+      cy.contains('button', 'dbt').should('be.enabled').click();
+    });
+    cy.contains('Start dbt canvas', { timeout: 20_000 }).should('be.visible');
+    waitForLiveDraftSaved(secondarySession);
+
+    openCanvasContextMenuAt(420, 280);
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    importLivePostgresSource({ kind: 'graph-draft' }, scopeBConnectionSuffix);
+
+    cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
+      .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
+      .should('have.length', 1);
+    cy.contains('.react-flow__node', 'Model 1').should('not.exist');
+    readLiveGraphDraft(secondarySession).then((draftResponse) => {
+      expect(draftResponse.status).to.equal(200);
+      const nodes = (
+        draftResponse.body as {
+          record: {
+            draft: {
+              nodes: Array<{
+                name: string;
+                pluginId: string;
+                metadata?: Record<string, unknown>;
+              }>;
+            };
+          };
+        }
+      ).record.draft.nodes;
+      const importedSources = nodes.filter((node) => node.pluginId === 'dvt.warehouse-source');
+
+      expect(importedSources).to.have.length(1);
+      expect(importedSources[0]?.metadata?.connectedSourceRef).to.deep.equal({
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: expectedScopeBConnectionId,
+          provider: 'postgres',
+        },
+        sourceObjectId: 'relation/dvt/public/source_1',
+      });
+      expect(nodes.some((node) => node.name === 'Model 1')).to.equal(false);
+    });
+    readLiveWorkspaceFile('models/sources/src_public.yml', secondarySession).then(
+      (sourceYamlResponse) => {
+        expect(sourceYamlResponse.status).to.equal(200);
+        const content = (sourceYamlResponse.body as { content: string }).content;
+
+        expect(content).to.contain(`name: ${expectedScopeBSourceName}`);
+        expect(content).not.to.contain(`name: ${expectedSourceName}`);
+      }
+    );
+
+    selectWorkspaceScope(session);
+
+    cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
+      .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
+      .should('have.length', 2);
+    cy.contains('.react-flow__node', 'Model 1', { timeout: 20_000 }).should('be.visible');
+    readLiveGraphDraft(session).then((draftResponse) => {
+      expect(draftResponse.status).to.equal(200);
+      const nodes = (
+        draftResponse.body as {
+          record: { draft: { nodes: Array<{ name: string; pluginId: string }> } };
+        }
+      ).record.draft.nodes;
+
+      expect(nodes.filter((node) => node.pluginId === 'dvt.warehouse-source')).to.have.length(2);
+      expect(nodes.some((node) => node.name === 'Model 1')).to.equal(true);
+    });
+    readLiveWorkspaceFile('models/sources/src_public.yml', session).then((sourceYamlResponse) => {
+      expect(sourceYamlResponse.status).to.equal(200);
+      const content = (sourceYamlResponse.body as { content: string }).content;
+
+      expect(content).to.contain(`name: ${expectedSourceName}`);
+      expect(content).not.to.contain(`name: ${expectedScopeBSourceName}`);
+    });
   });
 });
