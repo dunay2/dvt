@@ -189,7 +189,7 @@ describe('Canvas source import live clean proof', () => {
     const secondaryConnectionSuffix = 'Secondary';
     const expectedConnectionName = `Live Postgres ${runId}`;
     const expectedSecondaryConnectionName = `${expectedConnectionName} ${secondaryConnectionSuffix}`;
-    const toExpectedConnectionId = (name: string) =>
+    const toExpectedConnectionId = (name: string): string =>
       name
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
