@@ -427,6 +427,10 @@ scope A / models/orders.sql = A
     object identifiers reject leading or trailing whitespace rather than
     trimming it after admission. JCS therefore cannot treat visually identical
     values as distinct identities, and the contract performs no silent repair.
+16. **Overlay-safe Fit view, selected.** The visible React Flow control receives
+    the same governed fit options as initial layout, with enough padding to
+    keep node actions outside the persistent Add Component overlay. Browser
+    proof must double-click both imported sources without forced interaction.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -446,6 +450,7 @@ scope A / models/orders.sql = A
 | External probe precedes Canvas admission          | Temporal coupling / misplaced responsibility | Move statements before extraction               | Missing authority performs zero source-object reads                   |
 | Derived node ID is owned by another identity      | Identity collision / false idempotency       | Guard Clause                                    | Conflict occurs before file or draft mutation                         |
 | Identity differs only by exterior whitespace      | Primitive ambiguity / duplicate value        | Introduce Assertion                             | Strict contract rejects exterior-whitespace variants                  |
+| Fit view places a node under Add Component        | Presentation collision / hidden interaction  | Move shared options to the action owner         | Both live source nodes remain actionable after Fit view               |
 
 ### 13.6 DoR for the bounded slice
 
@@ -518,6 +523,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
+  - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.test.tsx
+  - apps/web/src/app/views/canvas/canvasViewportXyflowTestAdapter.tsx
   - apps/web/cypress/support/liveWarehouseSourceImport.ts
   - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
   - scripts/run-canvas-source-import-live-proof.cjs
@@ -644,6 +652,12 @@ redGreenCycles:
       - apps/web/cypress/support/liveWarehouseSourceImport.ts
       - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
     greenTest: pnpm --filter @dvt/web test:e2e:source-import:live
+  - id: overlay-safe-fit-view
+    redTest: pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx
+    expectedFailure: The visible Fit view control uses default padding and places an imported node beneath Add Component.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+    greenTest: pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx
   - id: bounded-source-review-visibility
     redTest: pnpm --filter @dvt/web test:presentation -- SourceImportWizardFrame.focus.test.tsx
     expectedFailure: The bounded review region does not expose a persistent scrolling affordance.
