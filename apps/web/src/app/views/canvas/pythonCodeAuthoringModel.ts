@@ -1,7 +1,6 @@
 /** Owned concern: validate, persist and project Python code-node authoring metadata. */
 import {
   PYTHON_CODE_MAX_INPUT_BYTES,
-  PYTHON_CODE_MAX_SOURCE_BYTES,
   PythonCodeStepTypeConfigSchema,
   type JsonObject,
   type PythonCodeStepTypeConfig,
@@ -221,10 +220,7 @@ function mapIssues(paths: readonly (readonly PropertyKey[])[]): PythonCodeAuthor
       errors.maxResultBytes = PYTHON_CODE_AUTHORING_ERROR.maxResultBytes;
   }
 
-  if (
-    new TextEncoder().encode(String(paths)).byteLength > PYTHON_CODE_MAX_SOURCE_BYTES ||
-    Object.keys(errors).length === 0
-  ) {
+  if (Object.keys(errors).length === 0) {
     errors.source = PYTHON_CODE_AUTHORING_ERROR.source;
   }
   return errors;
