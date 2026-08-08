@@ -25,6 +25,37 @@ import {
 } from '../../support/liveWarehouseSourceImport';
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
+function assertNoSeriousAccessibilityViolations(context: string): void {
+  cy.get(context).should('be.visible');
+  cy.injectAxe();
+  cy.checkA11y(
+    context,
+    {
+      runOnly: {
+        type: 'tag',
+        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
+      },
+      includedImpacts: ['serious', 'critical'],
+    },
+    (violations) => {
+      if (violations.length === 0) {
+        return;
+      }
+
+      throw new Error(
+        violations
+          .map(
+            (violation) =>
+              `${violation.id}: ${violation.help} -> ${violation.nodes
+                .map((node) => node.target.join(' '))
+                .join(', ')}`
+          )
+          .join('\n')
+      );
+    }
+  );
+}
+
 function visitCleanDbtCanvas(): void {
   const session = resolveLiveFirstAuthoringWorkspaceSession('dbt');
 
@@ -223,6 +254,15 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', expectedConnectionName)
       .and('contain.text', 'postgres')
       .and('contain.text', expectedConnectionId);
+    cy.contains('[data-slot="canvas-node-workbench-general-section"] dt', 'Connection')
+      .next('dd')
+      .should('be.visible')
+      .and(($value) => {
+        const element = $value.get(0);
+        expect(element.scrollWidth).to.be.at.most(element.clientWidth);
+        expect(getComputedStyle(element).textOverflow).not.to.equal('ellipsis');
+      });
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
 
