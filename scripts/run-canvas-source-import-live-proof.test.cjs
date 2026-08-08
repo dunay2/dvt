@@ -16,6 +16,46 @@ test('source import live proof starts the API without the package predev lifecyc
   ]);
 });
 
+test('source import live proof grants two workspace scopes for one tenant', () => {
+  const runner = new CanvasSourceImportLiveProofRunner({});
+
+  assert.deepEqual(
+    runner.buildProtectedRuntimeTenantAccess(
+      [
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+        },
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-b',
+          environmentId: 'test',
+        },
+      ],
+      ['workspace:graph-draft:view']
+    ),
+    [
+      {
+        tenantId: 'tenant-a',
+        allowedActions: ['workspace:graph-draft:view'],
+        projectAccess: [
+          {
+            projectId: 'project-a',
+            allowedActions: [],
+            environmentAccess: [{ environmentId: 'dev', allowedActions: [] }],
+          },
+          {
+            projectId: 'project-b',
+            allowedActions: [],
+            environmentAccess: [{ environmentId: 'test', allowedActions: [] }],
+          },
+        ],
+      },
+    ]
+  );
+});
+
 test('source import live proof uses locally resolvable Cypress dependencies on Windows', () => {
   const runner = new CanvasSourceImportLiveProofRunner({
     ELECTRON_RUN_AS_NODE: '1',
@@ -32,6 +72,11 @@ test('source import live proof uses locally resolvable Cypress dependencies on W
         projectId: 'proof-project',
         environmentId: 'dev',
       },
+      secondaryWorkspaceScope: {
+        tenantId: 'tenant-a',
+        projectId: 'proof-project-b',
+        environmentId: 'test',
+      },
       sourceImportRunId: 'run-1',
     },
     'win32'
@@ -43,6 +88,9 @@ test('source import live proof uses locally resolvable Cypress dependencies on W
   assert.equal(invocation.options.env.CYPRESS_baseUrl, 'http://127.0.0.1:4174');
   assert.equal(invocation.options.env.CYPRESS_apiBaseUrl, 'http://127.0.0.1:3300');
   assert.equal(invocation.options.env.CYPRESS_workspaceProjectId, 'base-project');
+  assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceTenantId, 'tenant-a');
+  assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceProjectId, 'proof-project-b');
+  assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceEnvironmentId, 'test');
   assert.equal(invocation.options.env.CYPRESS_apiBearerToken, 'test-token');
   assert.equal(invocation.options.env.EXISTING_ENV, 'preserved');
   assert.equal(invocation.options.env.ELECTRON_RUN_AS_NODE, undefined);
@@ -61,6 +109,11 @@ test('source import live proof retains the isolated Docker Cypress lane on POSIX
         projectId: 'proof-project',
         environmentId: 'dev',
       },
+      secondaryWorkspaceScope: {
+        tenantId: 'tenant-a',
+        projectId: 'proof-project-b',
+        environmentId: 'test',
+      },
       sourceImportRunId: 'run-1',
     },
     'linux'
@@ -68,6 +121,9 @@ test('source import live proof retains the isolated Docker Cypress lane on POSIX
 
   assert.equal(invocation.command, 'docker');
   assert.ok(invocation.args.includes('CYPRESS_baseUrl=http://host.docker.internal:4174'));
+  assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceTenantId=tenant-a'));
+  assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceProjectId=proof-project-b'));
+  assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceEnvironmentId=test'));
   assert.ok(invocation.args.includes(runner.cypressImage));
   assert.ok(invocation.args.includes(runner.specPath));
 });
