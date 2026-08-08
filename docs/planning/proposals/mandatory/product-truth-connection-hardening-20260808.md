@@ -473,16 +473,16 @@ scope A / models/orders.sql = A
 
 ### 13.7 DoD for the bounded slice
 
-- [ ] Canonical contracts reject ambiguous or secret-bearing payloads.
-- [ ] Import persists/replays using the complete connected-source identity.
-- [ ] Two connections exposing the same object ID never alias.
-- [ ] Missing/legacy ambiguous state fails closed before mutation.
-- [ ] Canvas Workbench exposes the effective connection in ES and EN.
-- [ ] A -> B -> A with the same relative path proves cache isolation.
-- [ ] Live Source Import persists the same physical object through two distinct real connections without reducing its existing assertions.
-- [ ] Add Source and connected-source Workbench remain visible, axe-clean and cancellable across the governed viewport matrix.
-- [ ] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
-- [ ] No debt, stub, skipped check, disabled rule, or migration is introduced.
+- [x] Canonical contracts reject ambiguous or secret-bearing payloads.
+- [x] Import persists/replays using the complete connected-source identity.
+- [x] Two connections exposing the same object ID never alias.
+- [x] Missing/legacy ambiguous state fails closed before mutation.
+- [x] Canvas Workbench exposes the effective connection in ES and EN.
+- [x] A -> B -> A with the same relative path proves cache isolation.
+- [x] Live Source Import persists the same physical object through two distinct real connections without reducing its existing assertions.
+- [x] Add Source and connected-source Workbench remain visible, axe-clean and cancellable across the governed viewport matrix.
+- [x] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
+- [x] No debt, stub, skipped check, disabled rule, or migration is introduced.
 
 ## 14. Feature mechanization
 
