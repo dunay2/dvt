@@ -431,6 +431,12 @@ scope A / models/orders.sql = A
     the same governed fit options as initial layout, with enough padding to
     keep node actions outside the persistent Add Component overlay. Browser
     proof must double-click both imported sources without forced interaction.
+17. **Viewport and cancellation matrix, selected.** The live Add Source dialog
+    remains visible, scrollable, axe-clean and cancellable at 1440x900,
+    1280x720, 1000x660 and a 500x330 CSS viewport that exercises the layout
+    pressure produced by 200% zoom from the 1000x660 baseline. Cancel must close
+    the dialog without importing a third source; viewport pressure never
+    authorizes hidden actions or clipped product truth.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -451,6 +457,7 @@ scope A / models/orders.sql = A
 | Derived node ID is owned by another identity      | Identity collision / false idempotency       | Guard Clause                                    | Conflict occurs before file or draft mutation                         |
 | Identity differs only by exterior whitespace      | Primitive ambiguity / duplicate value        | Introduce Assertion                             | Strict contract rejects exterior-whitespace variants                  |
 | Fit view places a node under Add Component        | Presentation collision / hidden interaction  | Move shared options to the action owner         | Both live source nodes remain actionable after Fit view               |
+| Add Source clips actions under viewport pressure  | Hidden command / inaccessible cancellation   | Introduce Parameter Object for viewport proof   | Four-size live matrix keeps Cancel visible and closes without import  |
 
 ### 13.6 DoR for the bounded slice
 
@@ -472,6 +479,7 @@ scope A / models/orders.sql = A
 - [ ] Canvas Workbench exposes the effective connection in ES and EN.
 - [ ] A -> B -> A with the same relative path proves cache isolation.
 - [ ] Live Source Import persists the same physical object through two distinct real connections without reducing its existing assertions.
+- [ ] Add Source and connected-source Workbench remain visible, axe-clean and cancellable across the governed viewport matrix.
 - [ ] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
 - [ ] No debt, stub, skipped check, disabled rule, or migration is introduced.
 
@@ -665,6 +673,12 @@ redGreenCycles:
       - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
       - apps/web/cypress/support/liveWarehouseSourceImport.ts
     greenTest: pnpm --filter @dvt/web test:presentation -- SourceImportWizardFrame.focus.test.tsx
+  - id: live-source-dialog-viewport-matrix
+    redTest: pnpm --filter @dvt/web test:e2e:source-import:live
+    expectedFailure: The live proof checks only the default viewport and never proves that Cancel stays reachable under 200-percent layout pressure.
+    patchSurfaces:
+      - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    greenTest: pnpm --filter @dvt/web test:e2e:source-import:live
   - id: exact-node-code-authority
     redTest: pnpm --filter @dvt/web test:canvas -- CanvasShell.graphSurface.test.tsx
     expectedFailure: A dbt model without a persisted path fabricates a file name and opens an unrelated workspace file.
