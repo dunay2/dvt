@@ -13,6 +13,7 @@ import type {
 import type { WorkspaceBootstrapConfig } from '../../services/config/workspaceConfig';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { buildCanvasDbtExecutionProjection } from './canvasDbtExecutionProjection';
+import { buildCanvasPythonExecutionProjection } from './canvasPythonExecutionProjection';
 import { buildDbtWorkspaceArtifacts } from './canvasDbtWorkspaceArtifacts';
 import { buildDbtProjectFilePreviewProvenance } from './dbtProjectFileExecutionStrategy';
 import { resolvePreviewProvenance } from './canvasPreviewProvenance';
@@ -42,14 +43,16 @@ type CanvasPlanActionSuccess = {
 
 export type CanvasPlanActionResult = CanvasPlanActionFailure | CanvasPlanActionSuccess;
 
-function attachDbtSelectionIntent(
+type ProjectedSelectionIntent = {
+  readonly selectionMode: 'explicit' | 'workspace';
+  readonly requestedRootNodeIds: readonly string[];
+  readonly derivedDependencyNodeIds: readonly string[];
+  readonly scopedNodeIds: readonly string[];
+};
+
+function attachExecutionSelectionIntent(
   plan: PreviewedPlanViewModel,
-  selection: {
-    readonly selectionMode: 'explicit' | 'workspace';
-    readonly requestedRootNodeIds: readonly string[];
-    readonly derivedDependencyNodeIds: readonly string[];
-    readonly scopedNodeIds: readonly string[];
-  }
+  selection: ProjectedSelectionIntent
 ): PreviewedPlanViewModel {
   return {
     ...plan,
@@ -65,9 +68,9 @@ function attachDbtSelectionIntent(
   };
 }
 
-function attachDbtSelectionIntentToOutcome(
+function attachExecutionSelectionIntentToOutcome(
   outcome: PlanPreviewOutcome,
-  selection: Parameters<typeof attachDbtSelectionIntent>[1]
+  selection: ProjectedSelectionIntent
 ): PlanPreviewOutcome {
   if (outcome.kind === 'selection-rejected') {
     return outcome;
@@ -75,7 +78,7 @@ function attachDbtSelectionIntentToOutcome(
 
   return {
     ...outcome,
-    plan: attachDbtSelectionIntent(outcome.plan, selection),
+    plan: attachExecutionSelectionIntent(outcome.plan, selection),
   };
 }
 
@@ -139,6 +142,40 @@ export async function executeCanvasPlanAction({
       ok: false,
       message: canvasViewCopy.canvasExecutionUnavailableMessage,
     };
+  }
+
+  if (executionStrategy.kind === 'python_code_preview') {
+    try {
+      const projection = buildCanvasPythonExecutionProjection({
+        canonicalNodes,
+        canonicalEdges,
+        selectionIntent,
+        workspaceNodeIds,
+        executionScope: sessionContext.getWorkspaceScopeSnapshot(),
+      });
+      if (!projection.ok) {
+        return { ok: false, message: projection.message };
+      }
+
+      const previewOutcome = await plansService.previewPlan({
+        previewProfile: executionStrategy.previewProfile,
+        graphSource: projection.graphSource,
+        selection: projection.selection,
+        context: sessionContext.buildRunContext('preview_context'),
+        persist: true,
+      });
+      return {
+        ok: true,
+        draftSignature: projection.draftSignature,
+        previewOutcome: attachExecutionSelectionIntentToOutcome(previewOutcome, projection),
+        writtenArtifactPaths: [],
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        message: formatPlanActionErrorMessage(error),
+      };
+    }
   }
 
   if (
@@ -218,7 +255,7 @@ export async function executeCanvasPlanAction({
       return {
         ok: true,
         draftSignature: plannerProjection.draftSignature,
-        previewOutcome: attachDbtSelectionIntentToOutcome(previewOutcome, plannerProjection),
+        previewOutcome: attachExecutionSelectionIntentToOutcome(previewOutcome, plannerProjection),
         writtenArtifactPaths,
       };
     } catch (error) {
