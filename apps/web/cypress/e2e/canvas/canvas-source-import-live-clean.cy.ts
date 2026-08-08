@@ -208,21 +208,72 @@ describe('Canvas source import live clean proof', () => {
       projectId: readRequiredScopeEnv('secondaryWorkspaceProjectId'),
       environmentId: readRequiredScopeEnv('secondaryWorkspaceEnvironmentId'),
     };
-    const selectWorkspaceScope = (scope: typeof secondarySession): void => {
+    const selectWorkspaceScope = (
+      scope: typeof secondarySession,
+      copy: Readonly<{ availableProjects: string; projectPrefix: string }>
+    ): void => {
       const scopeLabel = `${scope.tenantId} / ${scope.projectId} / ${scope.environmentId}`;
       cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 })
         .should('be.visible')
-        .click();
+        .focus()
+        .should('be.focused');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get('[data-slot="shell-workspace-scope-selector"]')
+        .should('be.visible')
+        .and('contain.text', copy.availableProjects);
+      assertNoSeriousAccessibilityViolations('[data-slot="shell-menu-workspace-context"]');
       cy.contains('[data-slot="shell-workspace-scope-selector"] button', scopeLabel, {
         timeout: 20_000,
       })
         .should('be.visible')
         .and('have.attr', 'aria-pressed', 'false')
-        .click();
+        .focus()
+        .should('be.focused');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
       cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 }).should(
         'contain.text',
-        `Project: ${scope.projectId}`
+        `${copy.projectPrefix}: ${scope.projectId}`
       );
+    };
+    const assertPresentedWorkspaceFileContent = (
+      expectedContent: string,
+      forbiddenContent: string
+    ): void => {
+      cy.get('[data-slot="shell-workspace-menu-trigger"]')
+        .should('be.visible')
+        .focus()
+        .should('be.focused');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
+        .scrollIntoView()
+        .should('be.visible')
+        .focus()
+        .should('be.focused');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get(
+        '[data-slot="code-workspace-file-entry"][data-workspace-path="models/sources/src_public.yml"]',
+        { timeout: 20_000 }
+      )
+        .should('be.visible')
+        .focus()
+        .should('be.focused');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]', {
+        timeout: 20_000,
+      })
+        .find('.view-line')
+        .should(($lines) => {
+          const presentedContent = [...$lines]
+            .map((line) => (line.textContent ?? '').replaceAll('\u00a0', ' '))
+            .join('\n');
+          const normalizedPresentedContent = presentedContent.replace(/\s+/g, '');
+          expect(normalizedPresentedContent).to.contain(expectedContent.replace(/\s+/g, ''));
+          expect(normalizedPresentedContent).not.to.contain(forbiddenContent.replace(/\s+/g, ''));
+        });
+      assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
+      cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
+      cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
+      cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
     };
     const scopeBConnectionSuffix = 'Scope B';
     const expectedScopeBSourceName = expectedLivePostgresSourceName(scopeBConnectionSuffix);
@@ -592,7 +643,10 @@ describe('Canvas source import live clean proof', () => {
     }).should('exist');
 
     cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
-    selectWorkspaceScope(secondarySession);
+    selectWorkspaceScope(secondarySession, {
+      availableProjects: 'Projects available in this session',
+      projectPrefix: 'Project',
+    });
 
     cy.contains('Create canvas', { timeout: 20_000 }).should('be.visible');
     cy.get('.react-flow__node').should('not.exist');
@@ -650,7 +704,25 @@ describe('Canvas source import live clean proof', () => {
       }
     );
 
-    selectWorkspaceScope(session);
+    assertPresentedWorkspaceFileContent(expectedScopeBSourceName, expectedSourceName);
+
+    cy.get('[data-slot="shell-menu-trigger"]').should('be.visible').focus().should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('[data-slot="shell-language-menu"]')
+      .should('be.visible')
+      .and('contain.text', 'Language');
+    cy.get('[data-slot="shell-language-option-es"]')
+      .should('be.visible')
+      .focus()
+      .should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('html').should('have.attr', 'lang', 'es');
+    cy.get('[data-slot="shell-menu-trigger"]').should('contain.text', 'Vista');
+
+    selectWorkspaceScope(session, {
+      availableProjects: 'Proyectos disponibles en esta sesión',
+      projectPrefix: 'Proyecto',
+    });
 
     cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
       .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
@@ -674,5 +746,6 @@ describe('Canvas source import live clean proof', () => {
       expect(content).to.contain(`name: ${expectedSourceName}`);
       expect(content).not.to.contain(`name: ${expectedScopeBSourceName}`);
     });
+    assertPresentedWorkspaceFileContent(expectedSourceName, expectedScopeBSourceName);
   });
 });
