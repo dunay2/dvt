@@ -283,7 +283,12 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
 
   const handleOpenWorkbench = () => {
     if (data.canOpenNodeCode === true && typeof data.onOpenNodeCode === 'function') {
-      data.onOpenNodeCode?.(id);
+      data.onOpenNodeCode(id);
+      return;
+    }
+
+    if (data.canOpenNodeCode === false) {
+      data.onInspectNode?.(id, null);
       return;
     }
 
