@@ -10,12 +10,7 @@ import {
 } from '../../components/inspector/inspectorVisualTokens';
 import { Button } from '../../components/ui/button';
 import { ScrollArea } from '../../components/ui/scroll-area';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '../../components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { cn } from '../../components/ui/utils';
 import type { CanvasNodeWorkbenchSectionPolicyId } from '../../plugins/canvasSurfaceStrategyContracts';
 import { NodePropertiesTabs } from '../../components/inspector/NodePropertiesTabs';
@@ -36,7 +31,6 @@ import {
   type CanvasNodeWorkbenchContribution,
 } from './canvasNodeWorkbenchContribution';
 import { resolveNodeWorkbenchPrimarySectionIds } from './canvasNodeWorkbenchSectionStrategy';
-import { resolveCanvasNodeWorkbenchHelpCopy } from './canvasCopy.nodeWorkbench';
 import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
 import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
@@ -230,7 +224,6 @@ export function CanvasNodeWorkbenchPanel({
 }: CanvasNodeWorkbenchPanelProps): JSX.Element {
   const applicationLanguage = useApplicationLanguageStore((state) => state.language);
   const copy = resolveCanvasViewCopy(applicationLanguage);
-  const helpCopy = resolveCanvasNodeWorkbenchHelpCopy(applicationLanguage);
   const [activeTab, setActiveTab] = useState<string | undefined>(() => preferredTabId ?? undefined);
   const [appliedPreferredTabKey, setAppliedPreferredTabKey] = useState<string | null>(null);
   const draftController = useCanvasNodeWorkbenchDraftController(node);
@@ -332,6 +325,7 @@ export function CanvasNodeWorkbenchPanel({
         <div
           {...dragHandleProps}
           className={cn(
+            'min-w-0 flex-1',
             dragHandleProps != null && canvasNodeWorkbenchVisualTokens.dragHandle,
             dragHandleProps?.className
           )}
@@ -346,23 +340,27 @@ export function CanvasNodeWorkbenchPanel({
             {node.kind}
           </p>
         </div>
-        <div className="ml-auto flex shrink-0 items-center gap-1">
-          <TooltipProvider delayDuration={250}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  data-slot="canvas-node-workbench-help"
-                  aria-label={helpCopy.nodeWorkbenchHelpLabel}
-                >
-                  <CircleHelp aria-hidden="true" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="bottom">{helpCopy.nodeWorkbenchHelpDescription}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        <div
+          data-slot="canvas-node-workbench-header-actions"
+          className="ml-auto flex shrink-0 items-center gap-1"
+        >
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                data-slot="canvas-node-workbench-help"
+                aria-label={copy.inspectorEditablePropertiesTitle}
+              >
+                <CircleHelp className="size-4" aria-hidden="true" />
+                <span className="sr-only">{copy.inspectorEditablePropertiesTitle}</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-72">
+              {copy.inspectorEditablePropertiesDescription}
+            </TooltipContent>
+          </Tooltip>
           <Button
             type="button"
             variant="ghost"
@@ -371,7 +369,7 @@ export function CanvasNodeWorkbenchPanel({
             aria-label={copy.nodeWorkbenchCloseLabel}
             onClick={onClose}
           >
-            <X aria-hidden="true" />
+            <X className="size-4" aria-hidden="true" />
             <span className="sr-only">{copy.nodeWorkbenchCloseLabel}</span>
           </Button>
         </div>
