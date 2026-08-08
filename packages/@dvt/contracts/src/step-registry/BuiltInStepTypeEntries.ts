@@ -10,6 +10,11 @@ import {
   LoadObjectFileToPostgresStepTypeConfigSchema,
   validateLoadObjectFileToPostgresPlanOwnership,
 } from '../contracts/planner/ObjectFileToPostgresStepTypeConfig.v1.js';
+import {
+  EXECUTE_PYTHON_CODE_REQUIRED_CAPABILITY,
+  PythonCodeStepTypeConfigSchema,
+  validatePythonCodePlanOwnership,
+} from '../contracts/planner/PythonCodeStepTypeConfig.v1.js';
 import { KNOWN_STEP_KINDS } from '../contracts/planner/StepKindRegistry.v1.js';
 import { TRANSFORMATION_STEP_KIND } from '../contracts/planner/TransformationFlowStepKinds.v1.js';
 import {
@@ -40,6 +45,12 @@ export const ACQUIRE_HTTP_JSON_ARTIFACT_EXECUTION_PROFILE = {
   supportedAdapters: ['temporal'],
   requiredCapabilities: [ACQUIRE_HTTP_JSON_ARTIFACT_REQUIRED_CAPABILITY],
 } as const satisfies StepKindExecutionProfile;
+export const EXECUTE_PYTHON_CODE_STEP_REQUIRED_CAPABILITY =
+  EXECUTE_PYTHON_CODE_REQUIRED_CAPABILITY;
+export const EXECUTE_PYTHON_CODE_EXECUTION_PROFILE = {
+  supportedAdapters: ['temporal'],
+  requiredCapabilities: [EXECUTE_PYTHON_CODE_REQUIRED_CAPABILITY],
+} as const satisfies StepKindExecutionProfile;
 
 export function createBuiltInStepTypeEntries(
   defaultProfile: StepKindExecutionProfile
@@ -66,6 +77,15 @@ export function createBuiltInStepTypeEntries(
         profile: LOAD_OBJECT_FILE_TO_POSTGRES_EXECUTION_PROFILE,
         validateContext: (config, context) =>
           validateLoadObjectFileToPostgresPlanOwnership(config, context?.planOwnership),
+      },
+    ],
+    [
+      KNOWN_STEP_KINDS.EXECUTE_PYTHON_CODE,
+      {
+        schema: PythonCodeStepTypeConfigSchema,
+        profile: EXECUTE_PYTHON_CODE_EXECUTION_PROFILE,
+        validateContext: (config, context) =>
+          validatePythonCodePlanOwnership(config, context?.planOwnership),
       },
     ],
     [
