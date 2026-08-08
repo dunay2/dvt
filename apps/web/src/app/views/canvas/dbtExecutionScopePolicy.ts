@@ -11,13 +11,17 @@ import {
   createCanvasExecutionSelectionIntent,
   type CanvasExecutionSelectionIntent,
 } from '../../types/canvasExecutionSelection';
+import {
+  buildExecutableScopeGraph,
+  buildExecutionIntentDraftSignature,
+  EXECUTION_SCOPE_REJECTION,
+  resolveExecutableScope,
+  type ExecutableScopeGraph,
+  type ExecutableScopeResolution,
+} from './canvasExecutionScopePolicy';
 
 /** Owned concern: preserve DBT execution-selection intent while deriving executable scope. */
-export const DBT_EXECUTION_SCOPE_REJECTION = {
-  explicitSelectionIsEmpty: 'explicit_selection_is_empty',
-  explicitSelectionContainsUnavailableOrNonExecutableNodes:
-    'explicit_selection_contains_unavailable_or_non_executable_nodes',
-} as const;
+export const DBT_EXECUTION_SCOPE_REJECTION = EXECUTION_SCOPE_REJECTION;
 
 export const DBT_EXECUTABLE_STEP_KIND_BY_NODE_KIND = {
   'dbt:model': 'DBT_MODEL',
@@ -54,49 +58,18 @@ export function canOfferDbtExecutionSelectionToggle(args: {
   return args.isExecutableRoot || args.selectedForExecution;
 }
 
-export type DbtExecutionScopeResolution =
-  | {
-      readonly ok: true;
-      readonly selectionMode: CanvasExecutionSelectionIntent['mode'];
-      readonly requestedRootNodeIds: readonly string[];
-      readonly derivedDependencyNodeIds: readonly string[];
-      readonly nodeIds: readonly string[];
-    }
-  | {
-      readonly ok: false;
-      readonly cause: (typeof DBT_EXECUTION_SCOPE_REJECTION)[keyof typeof DBT_EXECUTION_SCOPE_REJECTION];
-      readonly invalidNodeIds: readonly string[];
-    };
-
-export type DbtExecutionScopeGraph = Readonly<{
-  executableNodeIds: readonly string[];
-  dependencyIdsByNodeId: ReadonlyMap<string, readonly string[]>;
-}>;
+export type DbtExecutionScopeResolution = ExecutableScopeResolution;
+export type DbtExecutionScopeGraph = ExecutableScopeGraph;
 
 export function buildDbtExecutionScopeGraph(args: {
   readonly nodes: readonly Pick<CanonicalNode, 'id' | 'pluginId' | 'kind'>[];
   readonly edges: readonly Pick<CanonicalEdge, 'sourceId' | 'targetId'>[];
   readonly workspaceNodeIds: readonly string[];
 }): DbtExecutionScopeGraph {
-  const nodeById = new Map(args.nodes.map((node) => [node.id, node]));
-  const executableNodeIds = [...new Set(args.workspaceNodeIds)].filter((nodeId) => {
-    const node = nodeById.get(nodeId);
-    return node != null && isDbtExecutionSelectableNode(node);
+  return buildExecutableScopeGraph({
+    ...args,
+    isExecutableNode: isDbtExecutionSelectableNode,
   });
-  const executableNodeIdSet = new Set(executableNodeIds);
-  const dependencyIdsByNodeId = new Map<string, string[]>();
-
-  for (const edge of args.edges) {
-    if (!executableNodeIdSet.has(edge.sourceId) || !executableNodeIdSet.has(edge.targetId)) {
-      continue;
-    }
-    const dependencies = dependencyIdsByNodeId.get(edge.targetId) ?? [];
-    if (!dependencies.includes(edge.sourceId)) dependencies.push(edge.sourceId);
-    dependencyIdsByNodeId.set(edge.targetId, dependencies);
-  }
-  for (const dependencies of dependencyIdsByNodeId.values()) dependencies.sort();
-
-  return { executableNodeIds, dependencyIdsByNodeId };
 }
 
 export function buildDbtExecutionIntentDraftSignature(args: {
@@ -105,14 +78,7 @@ export function buildDbtExecutionIntentDraftSignature(args: {
   readonly selectionMode: CanvasExecutionSelectionIntent['mode'];
   readonly requestedRootNodeIds: readonly string[];
 }): string {
-  return JSON.stringify({
-    graphSource: args.graphSource,
-    selection: args.selection,
-    selectionIntent: {
-      mode: args.selectionMode,
-      requestedRootNodeIds: [...new Set(args.requestedRootNodeIds)].sort(),
-    },
-  });
+  return buildExecutionIntentDraftSignature(args);
 }
 
 export function resolveDbtExecutionScope(args: {
@@ -121,56 +87,7 @@ export function resolveDbtExecutionScope(args: {
   readonly executableNodeIds: readonly string[];
   readonly dependencyIdsByNodeId: ReadonlyMap<string, readonly string[]>;
 }): DbtExecutionScopeResolution {
-  const executableNodeIds = [...new Set(args.executableNodeIds)];
-  const executableNodeIdSet = new Set(executableNodeIds);
-  const hasExplicitSelection = args.selectionIntent.mode === 'explicit';
-
-  if (hasExplicitSelection && args.selectionIntent.nodeIds.length === 0) {
-    return {
-      ok: false,
-      cause: DBT_EXECUTION_SCOPE_REJECTION.explicitSelectionIsEmpty,
-      invalidNodeIds: [],
-    };
-  }
-
-  const requestedNodeIds = [
-    ...new Set(hasExplicitSelection ? args.selectionIntent.nodeIds : args.workspaceNodeIds),
-  ];
-  const invalidNodeIds = hasExplicitSelection
-    ? requestedNodeIds.filter((nodeId) => !executableNodeIdSet.has(nodeId))
-    : [];
-
-  if (invalidNodeIds.length > 0) {
-    return {
-      ok: false,
-      cause: DBT_EXECUTION_SCOPE_REJECTION.explicitSelectionContainsUnavailableOrNonExecutableNodes,
-      invalidNodeIds,
-    };
-  }
-
-  const requestedRootNodeIds = requestedNodeIds.filter((nodeId) => executableNodeIdSet.has(nodeId));
-
-  const scopedNodeIds = new Set(requestedRootNodeIds);
-  const includeDependencies = (nodeId: string): void => {
-    for (const dependencyId of args.dependencyIdsByNodeId.get(nodeId) ?? []) {
-      if (!executableNodeIdSet.has(dependencyId) || scopedNodeIds.has(dependencyId)) continue;
-      scopedNodeIds.add(dependencyId);
-      includeDependencies(dependencyId);
-    }
-  };
-
-  for (const nodeId of requestedRootNodeIds) includeDependencies(nodeId);
-
-  const requestedRootNodeIdSet = new Set(requestedRootNodeIds);
-  const nodeIds = executableNodeIds.filter((nodeId) => scopedNodeIds.has(nodeId));
-
-  return {
-    ok: true,
-    selectionMode: args.selectionIntent.mode,
-    requestedRootNodeIds: executableNodeIds.filter((nodeId) => requestedRootNodeIdSet.has(nodeId)),
-    derivedDependencyNodeIds: nodeIds.filter((nodeId) => !requestedRootNodeIdSet.has(nodeId)),
-    nodeIds,
-  };
+  return resolveExecutableScope(args);
 }
 
 export function applyDbtExecutionSelectionToggle(args: {
