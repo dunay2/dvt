@@ -1,5 +1,7 @@
 /** Owned concern: resolve stable dbt source YAML identities. */
 
+import { jcsCanonicalize } from '@dvt/contracts';
+
 import {
   toCollisionResistantYamlIdentifierPart,
   toStableYamlIdentifierPart,
@@ -7,7 +9,10 @@ import {
 import type { ConnectedRelationalSourceObject } from './warehouseSourceYamlTypes.js';
 
 export function sourceObjectIdentity(sourceObject: ConnectedRelationalSourceObject): string {
-  return sourceObject.objectId;
+  return jcsCanonicalize({
+    connectionId: sourceObject.connectionId,
+    sourceObjectId: sourceObject.objectId,
+  });
 }
 
 export function buildCanonicalSourceName(sourceObject: ConnectedRelationalSourceObject): string {
