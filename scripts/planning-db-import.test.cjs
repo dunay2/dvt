@@ -29,6 +29,7 @@ const {
   parseArgs,
   readCanonicalStateSnapshot,
   readDbGovernanceSurfaceCatalog,
+  readDbtProjectRoundtripCapabilityCatalog,
   readTrackedDocumentPaths,
   refreshCodeSymbolMaterializedProjection,
   refreshComponentTreeMaterializedProjection,
@@ -37,6 +38,7 @@ const {
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
   restoreDbGovernanceSurfaceCatalog,
+  restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,
   sha256,
 } = require('./planning-db-import.cjs');
@@ -1489,6 +1491,60 @@ test('planning DB import restores the declarative current governance surface cat
     assert.throws(
       () => readDbGovernanceSurfaceCatalog(catalogPath),
       /forbidden field migrationState/u
+    );
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('planning DB import restores the current DBT round-trip capability catalog', async () => {
+  const fs = require('node:fs');
+  const os = require('node:os');
+  const path = require('node:path');
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'planning-db-dbt-capabilities-'));
+  const catalogPath = path.join(tempRoot, 'dbt-project-roundtrip-capabilities.json');
+  const catalogValue = {
+    schemaVersion: 1,
+    phases: [
+      { phaseId: 'phase-2', phaseOrder: 2, phaseName: 'Read projection', expectedRailCount: 1 },
+    ],
+    railEvidence: [
+      {
+        evidenceId: 'E-PHASE-2',
+        phaseId: 'phase-2',
+        railName: 'ProjectDbtGraphFromFiles',
+        expectedRailType: 'query',
+        expectedRailStatus: 'implemented',
+        expectedMechanizationStatus: 'implemented',
+        expectedIsGap: false,
+        expectedImplemented: true,
+        reviewedPrUrl: 'https://github.com/dunay2/dvt/pull/1954',
+        reviewedCommitSha: '2894552f66ae5405edb0593679e785fa495d2998',
+        evidenceSummary: 'Reviewed current capability.',
+      },
+    ],
+  };
+  const queries = [];
+
+  try {
+    fs.writeFileSync(catalogPath, JSON.stringify(catalogValue), 'utf8');
+    const catalog = readDbtProjectRoundtripCapabilityCatalog(catalogPath);
+    await restoreDbtProjectRoundtripCapabilityCatalog(
+      { query: async (sql, params = []) => queries.push({ sql: String(sql), params }) },
+      catalog,
+      { catalogPath }
+    );
+
+    assert.equal(queries.length, 2);
+    assert.match(queries[0].sql, /dbt_project_roundtrip_phases/u);
+    assert.match(queries[1].sql, /dbt_project_roundtrip_phase_rail_evidence/u);
+    assert.equal(queries[0].params[0], 'phase-2');
+    assert.equal(queries[1].params[2], 'ProjectDbtGraphFromFiles');
+
+    fs.writeFileSync(catalogPath, JSON.stringify({ ...catalogValue, railEvidence: [] }), 'utf8');
+    assert.throws(
+      () => readDbtProjectRoundtripCapabilityCatalog(catalogPath),
+      /expects 1 rails but declares 0/u
     );
   } finally {
     fs.rmSync(tempRoot, { recursive: true, force: true });

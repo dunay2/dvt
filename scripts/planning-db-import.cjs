@@ -54,6 +54,13 @@ const dbGovernanceSurfaceCatalogPath = path.join(
   'state',
   'db-governance-surfaces.json'
 );
+const dbtProjectRoundtripCapabilityCatalogPath = path.join(
+  repoRoot,
+  'tools',
+  'planning-db',
+  'state',
+  'dbt-project-roundtrip-capabilities.json'
+);
 const governanceFileIndexPath = governanceGeneratedPath('system-governance-file-index.files.yaml');
 const governanceComponentIndexPath = governanceGeneratedPath(
   'system-governance-component-index.components.yaml'
@@ -2593,6 +2600,107 @@ async function restoreDbGovernanceSurfaceCatalog(client, catalog, options = {}) 
   );
 }
 
+function readDbtProjectRoundtripCapabilityCatalog(
+  catalogPath = dbtProjectRoundtripCapabilityCatalogPath
+) {
+  if (!fs.existsSync(catalogPath)) {
+    throw new Error(`Missing DBT project round-trip capability catalog: ${catalogPath}`);
+  }
+
+  const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf8'));
+  if (
+    catalog?.schemaVersion !== 1 ||
+    !Array.isArray(catalog.phases) ||
+    !Array.isArray(catalog.railEvidence)
+  ) {
+    throw new Error(
+      'DBT project round-trip capability catalog must use schemaVersion 1 and contain phases and railEvidence.'
+    );
+  }
+
+  const phasesById = new Map(catalog.phases.map((phase) => [phase.phaseId, phase]));
+  if (phasesById.size !== catalog.phases.length) {
+    throw new Error('DBT project round-trip capability catalog contains duplicate phase IDs.');
+  }
+  const evidenceIds = new Set();
+  for (const evidence of catalog.railEvidence) {
+    if (!phasesById.has(evidence.phaseId)) {
+      throw new Error(
+        `DBT round-trip evidence ${evidence.evidenceId} references an unknown phase.`
+      );
+    }
+    if (evidenceIds.has(evidence.evidenceId)) {
+      throw new Error(`Duplicate DBT round-trip evidence ID "${evidence.evidenceId}".`);
+    }
+    evidenceIds.add(evidence.evidenceId);
+  }
+  for (const phase of catalog.phases) {
+    const actualCount = catalog.railEvidence.filter(
+      (evidence) => evidence.phaseId === phase.phaseId
+    ).length;
+    if (actualCount !== phase.expectedRailCount) {
+      throw new Error(
+        `DBT round-trip phase ${phase.phaseId} expects ${phase.expectedRailCount} rails but declares ${actualCount}.`
+      );
+    }
+  }
+
+  assertCurrentStateValue(catalog, 'dbtProjectRoundtripCapabilityCatalog');
+  return catalog;
+}
+
+async function restoreDbtProjectRoundtripCapabilityCatalog(client, catalog, options = {}) {
+  const catalogPath = options.catalogPath || dbtProjectRoundtripCapabilityCatalogPath;
+  const sourcePath = path.relative(repoRoot, catalogPath).replaceAll('\\', '/');
+
+  await insertRows(
+    client,
+    'dbt_project_roundtrip_phases',
+    ['phase_id', 'phase_order', 'phase_name', 'expected_rail_count', 'source_path'],
+    catalog.phases,
+    (phase) => [
+      phase.phaseId,
+      phase.phaseOrder,
+      phase.phaseName,
+      phase.expectedRailCount,
+      sourcePath,
+    ]
+  );
+  await insertRows(
+    client,
+    'dbt_project_roundtrip_phase_rail_evidence',
+    [
+      'evidence_id',
+      'phase_id',
+      'rail_name',
+      'expected_rail_type',
+      'expected_rail_status',
+      'expected_mechanization_status',
+      'expected_is_gap',
+      'expected_implemented',
+      'reviewed_pr_url',
+      'reviewed_commit_sha',
+      'evidence_summary',
+      'source_path',
+    ],
+    catalog.railEvidence,
+    (evidence) => [
+      evidence.evidenceId,
+      evidence.phaseId,
+      evidence.railName,
+      evidence.expectedRailType,
+      evidence.expectedRailStatus,
+      evidence.expectedMechanizationStatus,
+      evidence.expectedIsGap,
+      evidence.expectedImplemented,
+      evidence.reviewedPrUrl,
+      evidence.reviewedCommitSha,
+      evidence.evidenceSummary,
+      sourcePath,
+    ]
+  );
+}
+
 async function refreshLocalFeatureMechanizationRailSourceHashes(client) {
   await client.query(`
     update ${schemaName}.feature_mechanization_local_rails rail
@@ -3218,6 +3326,7 @@ async function importContent(options = {}) {
     });
   const canonicalStateSnapshot = readCanonicalStateSnapshot();
   const dbGovernanceSurfaceCatalog = readDbGovernanceSurfaceCatalog();
+  const dbtProjectRoundtripCapabilityCatalog = readDbtProjectRoundtripCapabilityCatalog();
   let docsDispositionSnapshot;
   let knowledgeSnapshot;
   const client = options.client || new Client({ connectionString: url });
@@ -3232,6 +3341,7 @@ async function importContent(options = {}) {
     await beginImportTransaction(client);
     await restoreArchitectureState(client, canonicalStateSnapshot.architectureState);
     await restoreDbGovernanceSurfaceCatalog(client, dbGovernanceSurfaceCatalog);
+    await restoreDbtProjectRoundtripCapabilityCatalog(client, dbtProjectRoundtripCapabilityCatalog);
     const planningTaskIds = [];
     docsDispositionSnapshot = buildDocsDispositionSnapshot({
       planningTaskIds,
@@ -4428,6 +4538,7 @@ module.exports = {
   readTrackedDocumentPaths,
   readCanonicalStateSnapshot,
   readDbGovernanceSurfaceCatalog,
+  readDbtProjectRoundtripCapabilityCatalog,
   readGovernanceSourceState,
   readGovernanceAuxiliarySourceState,
   readGovernanceAuxiliaryState,
@@ -4440,6 +4551,7 @@ module.exports = {
   restoreLocalFeatureMechanizationOperations,
   restoreLocalFeatureMechanizationRails,
   restoreDbGovernanceSurfaceCatalog,
+  restoreDbtProjectRoundtripCapabilityCatalog,
   runPlanningImport,
   sha256,
 };
