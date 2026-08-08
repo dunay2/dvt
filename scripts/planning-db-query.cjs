@@ -1086,7 +1086,9 @@ function buildAiProjectContext(snapshot = {}, options = {}) {
 }
 
 function markdownCell(value) {
-  return compactText(Array.isArray(value) ? value.join(', ') : value).replace(/\|/g, '\\|');
+  return compactText(Array.isArray(value) ? value.join(', ') : value)
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|');
 }
 
 function markdownTable(headers, rows) {
