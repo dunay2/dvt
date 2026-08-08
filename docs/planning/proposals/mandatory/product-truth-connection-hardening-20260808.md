@@ -62,7 +62,7 @@ These concepts remain separate.
 
 ### 2.4 Canvas acceptance remains incomplete
 
-#2195 already identifies the required authoring truth:
+Issue #2195 already identifies the required authoring truth:
 
 ```text
 focus/identify node
@@ -74,7 +74,7 @@ focus/identify node
 -> observe the same authoritative value
 ```
 
-#2255 makes this a product acceptance gate rather than optional follow-up polish.
+Issue #2255 makes this a product acceptance gate rather than optional follow-up polish.
 
 ## 3. Target semantic model
 
@@ -152,7 +152,7 @@ The first implementation adds only the fields required by current Postgres Sourc
 
 ## 6. Canvas representation decision
 
-#2256 chooses the smallest truthful rendering.
+Issue #2256 chooses the smallest truthful rendering.
 
 ### Option A — compact first-class connection node
 
@@ -180,7 +180,7 @@ A hidden global/default connection is not an allowed third option.
 
 ## 7. dbt first vertical
 
-#2257 is the first proof that Project != Connection.
+Issue #2257 is the first proof that Project != Connection.
 
 Proposed bounded projection:
 
