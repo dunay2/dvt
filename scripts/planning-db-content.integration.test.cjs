@@ -22,9 +22,9 @@ test('live planning DB imports governance files without a local task mirror', as
   try {
     const summary = await readSummary(client);
 
-    assert.equal(summary.lanes, 0);
-    assert.equal(summary.tasks, 0);
-    assert.equal(summary.reviewTasks, 0);
+    assert.equal(Object.hasOwn(summary, 'lanes'), false);
+    assert.equal(Object.hasOwn(summary, 'tasks'), false);
+    assert.equal(Object.hasOwn(summary, 'reviewTasks'), false);
     assert.equal(summary.governanceFiles, governanceSnapshot.files.length);
     assert.equal(
       summary.driftFiles,
