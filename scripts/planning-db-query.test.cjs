@@ -2288,7 +2288,7 @@ test('buildAiProjectContext aggregates database project state for agent discover
           rail_status: 'declared',
           is_gap: true,
           is_duplicate: false,
-          source_path: 'docs\\planning|example.md',
+          source_path: 'docs/planning/example.md',
         },
       ],
       components: [
@@ -2363,7 +2363,7 @@ test('renderAiProjectContextMarkdown fills a reusable database context template'
           ddd_owner: 'WidgetReadModel',
           rail_status: 'declared',
           is_gap: true,
-          source_path: 'docs/planning/example.md',
+          source_path: 'docs\\planning|example.md',
         },
       ],
       components: [],
