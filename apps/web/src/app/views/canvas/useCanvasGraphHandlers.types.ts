@@ -21,8 +21,6 @@ export type UseCanvasGraphHandlersResult = {
   onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
   confirmEdgeCreation: () => void;
   handleInspectNode: (nodeId: string, preferredTabId?: string | null) => void;
-  handleNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
-  onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
   handleAutoLayout: () => void;
   handleDrop: React.DragEventHandler<HTMLDivElement>;
   handleDragOver: React.DragEventHandler<HTMLDivElement>;
