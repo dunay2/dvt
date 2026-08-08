@@ -72,6 +72,13 @@ describe('loadEnv', () => {
     ).toBe(false);
   });
 
+  it('exposes Python code execution support only for explicit true', async () => {
+    expect(loadEnv({}).DVT_TEMPORAL_PYTHON_ENABLED).toBe(false);
+    expect(loadEnv({ DVT_TEMPORAL_PYTHON_ENABLED: 'true' }).DVT_TEMPORAL_PYTHON_ENABLED).toBe(true);
+    expect(loadEnv({ DVT_TEMPORAL_PYTHON_ENABLED: 'false' }).DVT_TEMPORAL_PYTHON_ENABLED).toBe(false);
+    expect(loadEnv({ DVT_TEMPORAL_PYTHON_ENABLED: 'yes' }).DVT_TEMPORAL_PYTHON_ENABLED).toBe(false);
+  });
+
   it('accepts the Temporal continue-as-new payload budget env', async () => {
     const env = loadEnv({
       TEMPORAL_MAX_CONTINUE_AS_NEW_PAYLOAD_BYTES: '64000',
