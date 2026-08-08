@@ -523,6 +523,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/graph/graphNodeTitlePresentation.test.ts
   - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
   - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
+  - apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
   - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
   - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.focus.test.tsx
   - apps/web/src/app/views/canvas/CanvasShell.tsx
@@ -678,6 +679,8 @@ redGreenCycles:
     expectedFailure: The live proof checks only the default viewport and never proves that Cancel stays reachable under 200-percent layout pressure.
     patchSurfaces:
       - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+      - apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx
+      - apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx
     greenTest: pnpm --filter @dvt/web test:e2e:source-import:live
   - id: exact-node-code-authority
     redTest: pnpm --filter @dvt/web test:canvas -- CanvasShell.graphSurface.test.tsx
@@ -700,4 +703,8 @@ symbols:
   - { name: ConnectedSourceRefSchema, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Replace Primitive with Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
   - { name: ConnectedSourceRef, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Replace Primitive with Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
   - { name: assertNoSeriousAccessibilityViolations, path: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, dddOwner: ConnectedSourceRefVisibilityProof, cqRails: [GetWorkspaceGraphDraft], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:source-import:live] }
+  - { name: expectedLivePostgresSourceName, path: apps/web/cypress/support/liveWarehouseSourceImport.ts, dddOwner: ConnectedSourceRefLiveProof, cqRails: [ImportWarehouseSources], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:source-import:live] }
+  - { name: createLivePostgresConnection, path: apps/web/cypress/support/liveWarehouseSourceImport.ts, dddOwner: ConnectedSourceRefLiveProof, cqRails: [ImportWarehouseSources], fowlerSignals: [Extract Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/web test:e2e:source-import:live] }
+  - { name: CANVAS_FIT_VIEW_OPTIONS, path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx, dddOwner: CanvasViewportPresentation, cqRails: [GetWorkspaceGraphDraft], fowlerSignals: [Move Function], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx] }
+  - { name: Controls, path: apps/web/src/app/views/canvas/canvasViewportXyflowTestAdapter.tsx, dddOwner: CanvasViewportPresentationProof, cqRails: [GetWorkspaceGraphDraft], fowlerSignals: [Introduce Assertion], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx] }
 ```
