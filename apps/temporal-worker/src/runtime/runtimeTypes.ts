@@ -21,6 +21,7 @@ import type {
   ContentAddressedObjectReader,
   ObjectFilePostgresRelationalLoader,
 } from '@dvt/temporal-object-file-postgres-plugin';
+import type { PythonRuntimePort } from '@dvt/temporal-python-plugin';
 
 import type { Env } from '../plugins/env.js';
 
@@ -61,6 +62,7 @@ export interface CreateTemporalWorkerRuntimeOptions {
   objectFileReaderFactory?: (env: Env) => ContentAddressedObjectReader;
   httpJsonClientFactory?: (env: Env) => HttpJsonAcquisitionClient;
   contentAddressedArtifactStoreFactory?: (env: Env) => IContentAddressedArtifactStore;
+  pythonRuntimeFactory?: (env: Env) => PythonRuntimePort;
   hostFactory?: (config: TemporalWorkerHostConfig) => TemporalWorkerHostLike;
   connectionFactory?: (config: TemporalAdapterConfig) => Promise<TemporalConnectionLike>;
   dbtAvailabilityProbe?: (dbtBin: string) => Promise<void>;
