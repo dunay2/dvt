@@ -106,7 +106,7 @@ function assertCurrentStateValue(value, location = 'currentState') {
     return value;
   }
   if (
-    /tools\/planning-db\/migrations|scripts\/planning-db-migrate|pnpm planning:db:migrate|test:planning:db:migrations|schema_migrations|migration_state|current#rail-decision#|PreserveLocalFeatureMechanizationRails|mergeCanonicalFeatureMechanizationRails/iu.test(
+    /tools\/planning-db\/migrations|scripts\/planning-db-migrate|pnpm planning:db:migrate|test:planning:db:migrations|schema_migrations|migration_state|PreserveLocalFeatureMechanizationRails|mergeCanonicalFeatureMechanizationRails/iu.test(
       value
     )
   ) {

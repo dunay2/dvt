@@ -83039,6 +83039,2775 @@
   },
   "featureMechanizationRails": [
     {
+      "railId": "current#rail-decision#command#appendruneventscommand",
+      "featureId": "DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG",
+      "mechanizationStatus": "implemented",
+      "railName": "AppendRunEventsCommand",
+      "normalizedRailName": "appendruneventscommand",
+      "railType": "command",
+      "dddOwner": "Engine state store",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/engine/src/ports/IRunStateStore.ts#appendAndEnqueueTx",
+        "packages/@dvt/engine/src/ports/IRunStateStore.ts#appendTransitions",
+        "packages/@dvt/adapter-postgres/src/runStateCommandPortBridge.ts#appendTransitions",
+        "packages/@dvt/adapter-postgres/src/PostgresRunEventStore.ts"
+      ],
+      "implementationRefs": [
+        "packages/@dvt/engine/src/ports/IRunStateStore.ts#appendAndEnqueueTx",
+        "packages/@dvt/engine/src/ports/IRunStateStore.ts#appendTransitions",
+        "packages/@dvt/adapter-postgres/src/runStateCommandPortBridge.ts#appendTransitions",
+        "packages/@dvt/adapter-postgres/src/PostgresRunEventStore.ts"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/runtime-and-contracts/run-events-hash-partitioning-plan-20260513.md",
+        "docs/architecture/components/engine/contracts/state-store/IRunStateStore.v1.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/components/engine/contracts/state-store/IRunStateStore.v1.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "IRunStateStore append authority",
+        "RunStateCommandPort adapter bridge"
+      ],
+      "architectureGuards": [
+        "Append path must remain tenant scoped and idempotent."
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/adapter-postgres test -- PostgresRunEventStore.test.ts runStateCommandPortBridge.test.ts"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/runtime-and-contracts/run-events-hash-partitioning-plan-20260513.md",
+      "sourceContentSha256": "bdcbf04ae11e9df17e397fabbf11c7559aedb8eb9676b10714b891f525d220d9",
+      "rawRail": {
+        "name": "AppendRunEventsCommand",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Engine state store"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/components/engine/contracts/state-store/IRunStateStore.v1.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "AppendRunEventsCommand",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Engine state store"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#applyadr0traceabilitygate",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "implemented",
+      "railName": "ApplyAdr0TraceabilityGate",
+      "normalizedRailName": "applyadr0traceabilitygate",
+      "railType": "command",
+      "dddOwner": "Repository CI governance baseline",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "package.json#traceability:adr0",
+        ".github/workflows/pr-quality-gate.yml#pnpm traceability:adr0"
+      ],
+      "implementationRefs": [
+        "package.json#traceability:adr0",
+        ".github/workflows/pr-quality-gate.yml#pnpm traceability:adr0"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/adr0-traceability-gate-restoration-plan-20260505.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/adr0-traceability-gate-restoration-plan-20260505.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Production code or package command owns the rail implementation."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/adr0-traceability-gate-restoration-plan-20260505.md",
+      "sourceContentSha256": "1df0cb8d1a5b3a846da9ad7935657d6ac55c6372fb6cfa277dbbc0eff92f6026",
+      "rawRail": {
+        "name": "ApplyAdr0TraceabilityGate",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Repository CI governance baseline"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/adr0-traceability-gate-restoration-plan-20260505.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ApplyAdr0TraceabilityGate",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Repository CI governance baseline"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#applyarchitecturedependencyboundarygate",
+      "featureId": "ARCH-DEPS-GUARD",
+      "mechanizationStatus": "implemented",
+      "railName": "ApplyArchitectureDependencyBoundaryGate",
+      "normalizedRailName": "applyarchitecturedependencyboundarygate",
+      "railType": "command",
+      "dddOwner": "Repository CI governance baseline",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        ".github/workflows/pr-quality-gate.yml#Validate architecture dependency boundaries",
+        "package.json#arch:deps",
+        "tools/ci/check-architecture-dependencies.mjs",
+        "tools/ci/architecture-dependency-guard.test.mjs"
+      ],
+      "implementationRefs": [
+        ".github/workflows/pr-quality-gate.yml#Validate architecture dependency boundaries",
+        "package.json#arch:deps",
+        "tools/ci/check-architecture-dependencies.mjs",
+        "tools/ci/architecture-dependency-guard.test.mjs"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/guides/testing-and-ci-capabilities.md"
+      ],
+      "allowedImplementationSurfaces": ["pnpm arch:deps", "PR Quality Gate"],
+      "architectureGuards": [
+        "PR quality gate and local scripts must both run pnpm arch:deps."
+      ],
+      "completionGate": [
+        "node --test tools/ci/architecture-dependency-guard.test.mjs",
+        "pnpm arch:deps"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/architecture-dependency-boundary-guard-implementation-plan-20260502.md",
+      "sourceContentSha256": "10d2af012579ec5027085108cd9f6b182e7aa9c9d69188ce22ee4f3e3f56bf8a",
+      "rawRail": {
+        "name": "ApplyArchitectureDependencyBoundaryGate",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Repository CI governance baseline"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "ARCH-DEPS-GUARD",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ApplyArchitectureDependencyBoundaryGate",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Repository CI governance baseline"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#applycontractsworkflowcredentialposture",
+      "featureId": "CI-GOV-PARITY",
+      "mechanizationStatus": "implemented",
+      "railName": "ApplyContractsWorkflowCredentialPosture",
+      "normalizedRailName": "applycontractsworkflowcredentialposture",
+      "railType": "command",
+      "dddOwner": "Contracts workflow runtime credential posture",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        ".github/workflows/contracts.yml",
+        "tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "implementationRefs": [
+        ".github/workflows/contracts.yml",
+        "tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/guides/testing-and-ci-capabilities.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Contracts workflow runtime credential derivation"
+      ],
+      "architectureGuards": [
+        "Contracts workflow must not reintroduce reusable PostgreSQL password literals."
+      ],
+      "completionGate": [
+        "node --test tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md",
+      "sourceContentSha256": "64e04f4e9eddb3739f996eb8b4f7a84bbc1d83ecb0c162a2b758264613e41672",
+      "rawRail": {
+        "name": "ApplyContractsWorkflowCredentialPosture",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Contracts workflow runtime credential posture"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "CI-GOV-PARITY",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ApplyContractsWorkflowCredentialPosture",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Contracts workflow runtime credential posture"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#applyprecommithooklifecyclededupe",
+      "featureId": "CI-PRECOMMIT-LIFECYCLE-DEDUPE",
+      "mechanizationStatus": "implemented",
+      "railName": "ApplyPrecommitHookLifecycleDedupe",
+      "normalizedRailName": "applyprecommithooklifecyclededupe",
+      "railType": "command",
+      "dddOwner": "Repository Git hook lifecycle",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "package.json#hooks:precommit",
+        ".husky/pre-commit",
+        "tools/ci/precommit-hook-wiring.test.mjs"
+      ],
+      "implementationRefs": [
+        "package.json#hooks:precommit",
+        ".husky/pre-commit",
+        "tools/ci/precommit-hook-wiring.test.mjs"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/precommit-hook-lifecycle-dedupe-plan-20260508.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/guides/testing-and-ci-capabilities.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "pnpm run hooks:precommit",
+        ".husky/pre-commit"
+      ],
+      "architectureGuards": [
+        "Root package must not define a lifecycle precommit script."
+      ],
+      "completionGate": ["node --test tools/ci/precommit-hook-wiring.test.mjs"],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/precommit-hook-lifecycle-dedupe-plan-20260508.md",
+      "sourceContentSha256": "d556d209ebaf69c60a18187bd0caf2348a42499c57f064155689119888bd3f6c",
+      "rawRail": {
+        "name": "ApplyPrecommitHookLifecycleDedupe",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Repository Git hook lifecycle"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "CI-PRECOMMIT-LIFECYCLE-DEDUPE",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ApplyPrecommitHookLifecycleDedupe",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Repository Git hook lifecycle"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#applyprqualitygovernanceparity",
+      "featureId": "CI-GOV-PARITY",
+      "mechanizationStatus": "implemented",
+      "railName": "ApplyPrQualityGovernanceParity",
+      "normalizedRailName": "applyprqualitygovernanceparity",
+      "railType": "command",
+      "dddOwner": "Repository CI governance baseline",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        ".github/workflows/pr-quality-gate.yml",
+        "tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "implementationRefs": [
+        ".github/workflows/pr-quality-gate.yml",
+        "tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/guides/testing-and-ci-capabilities.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "PR Quality Gate",
+        "pnpm verify:prepush governance subset"
+      ],
+      "architectureGuards": [
+        "Remote PR quality workflow must cover the governed prepush subset."
+      ],
+      "completionGate": [
+        "node --test tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md",
+      "sourceContentSha256": "64e04f4e9eddb3739f996eb8b4f7a84bbc1d83ecb0c162a2b758264613e41672",
+      "rawRail": {
+        "name": "ApplyPrQualityGovernanceParity",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Repository CI governance baseline"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "CI-GOV-PARITY",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ApplyPrQualityGovernanceParity",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Repository CI governance baseline"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#applyworkflowdependencypins",
+      "featureId": "CI-GOV-PARITY",
+      "mechanizationStatus": "implemented",
+      "railName": "ApplyWorkflowDependencyPins",
+      "normalizedRailName": "applyworkflowdependencypins",
+      "railType": "command",
+      "dddOwner": "Workflow dependency policy",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        ".github/workflows/create-labels.yml",
+        ".github/workflows/docs-deploy.yml",
+        "tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "implementationRefs": [
+        ".github/workflows/create-labels.yml",
+        ".github/workflows/docs-deploy.yml",
+        "tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/guides/testing-and-ci-capabilities.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "GitHub workflow action pins",
+        "docs builder dependency pin"
+      ],
+      "architectureGuards": [
+        "Workflow action and docs builder references must stay pinned."
+      ],
+      "completionGate": [
+        "node --test tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md",
+      "sourceContentSha256": "64e04f4e9eddb3739f996eb8b4f7a84bbc1d83ecb0c162a2b758264613e41672",
+      "rawRail": {
+        "name": "ApplyWorkflowDependencyPins",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Workflow dependency policy"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "CI-GOV-PARITY",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ApplyWorkflowDependencyPins",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Workflow dependency policy"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#applyworkspacegraphauthoringcommand",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "implemented",
+      "railName": "ApplyWorkspaceGraphAuthoringCommand",
+      "normalizedRailName": "applyworkspacegraphauthoringcommand",
+      "railType": "command",
+      "dddOwner": "Workspace graph authoring draft aggregate",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts#WorkspaceGraphAuthoringCommandSchema",
+        "packages/@dvt/contracts/test/workspace-graph-authoring-draft.contract.test.ts",
+        "packages/@dvt/contracts/test/workspace-graph-authoring-draft.architecture.test.ts",
+        "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md"
+      ],
+      "implementationRefs": [
+        "packages/@dvt/contracts/src/contracts/planner/WorkspaceGraphAuthoringCommand.v1.ts#WorkspaceGraphAuthoringCommandSchema",
+        "packages/@dvt/contracts/test/workspace-graph-authoring-draft.contract.test.ts",
+        "packages/@dvt/contracts/test/workspace-graph-authoring-draft.architecture.test.ts",
+        "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md"
+      ],
+      "documentationRefs": [
+        "docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md",
+        "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md",
+        "docs/planning/closeouts/20260503-tf-e2-a-authoring-draft-hard-cut-closeout.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "WorkspaceGraphAuthoringCommand contract schema",
+        "Canvas authoring draft aggregate command value object"
+      ],
+      "architectureGuards": [
+        "Authoring commands must reject duplicate node ids, missing node refs, invalid edge refs, and non-writable posture."
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/contracts test -- workspace-graph-authoring-draft.contract.test.ts workspace-graph-authoring-draft.architecture.test.ts"
+      ],
+      "sourcePath": "docs/architecture/components/web/graph/canvas-authoring-draft-boundary-component.md",
+      "sourceContentSha256": "3745cfadcf827d821e0cb686cb8db8fef165862355c0c00c664120c19502a201",
+      "rawRail": {
+        "name": "ApplyWorkspaceGraphAuthoringCommand",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Workspace graph authoring draft aggregate"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/components/planner/workspace-authoring-draft-aggregate.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ApplyWorkspaceGraphAuthoringCommand",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Workspace graph authoring draft aggregate"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#createcanvasannotation",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "closed",
+      "railName": "CreateCanvasAnnotation",
+      "normalizedRailName": "createcanvasannotation",
+      "railType": "command",
+      "dddOwner": "CanvasAnnotation",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "No active Canvas annotation component or command adapter exists."
+      ],
+      "architectureGuards": [
+        "Do not create annotation rails without a concrete component, port, and tests."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md",
+      "sourceContentSha256": "38caf43e1939d684828c10780fa72974bd76eac549d3ab24696a942055a76a1b",
+      "rawRail": {
+        "name": "CreateCanvasAnnotation",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "CanvasAnnotation"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "CreateCanvasAnnotation",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "CanvasAnnotation"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#documentprecommithooklifecyclestate",
+      "featureId": "CI-PRECOMMIT-LIFECYCLE-DEDUPE",
+      "mechanizationStatus": "implemented",
+      "railName": "DocumentPrecommitHookLifecycleState",
+      "normalizedRailName": "documentprecommithooklifecyclestate",
+      "railType": "command",
+      "dddOwner": "Repository CI process guidance",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "docs/guides/testing-and-ci-capabilities.md#hooks:precommit",
+        "docs/planning/proposals/mandatory/governance-and-docs/precommit-hook-lifecycle-dedupe-plan-20260508.md"
+      ],
+      "implementationRefs": [
+        "docs/guides/testing-and-ci-capabilities.md#hooks:precommit",
+        "docs/planning/proposals/mandatory/governance-and-docs/precommit-hook-lifecycle-dedupe-plan-20260508.md"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/precommit-hook-lifecycle-dedupe-plan-20260508.md",
+        "docs/guides/testing-and-ci-capabilities.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/guides/testing-and-ci-capabilities.md"
+      ],
+      "allowedImplementationSurfaces": ["Testing and CI capabilities guide"],
+      "architectureGuards": [
+        "Contributor docs must name hooks:precommit, not the obsolete precommit lifecycle path."
+      ],
+      "completionGate": ["node --test tools/ci/precommit-hook-wiring.test.mjs"],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/precommit-hook-lifecycle-dedupe-plan-20260508.md",
+      "sourceContentSha256": "d556d209ebaf69c60a18187bd0caf2348a42499c57f064155689119888bd3f6c",
+      "rawRail": {
+        "name": "DocumentPrecommitHookLifecycleState",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Repository CI process guidance"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "CI-PRECOMMIT-LIFECYCLE-DEDUPE",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "DocumentPrecommitHookLifecycleState",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Repository CI process guidance"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#exportdbtproject",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "closed",
+      "railName": "ExportDbtProject",
+      "normalizedRailName": "exportdbtproject",
+      "railType": "command",
+      "dddOwner": "dbt project export",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "No active dbt project export adapter or artifact writer implements this rail."
+      ],
+      "architectureGuards": [
+        "dbt project export requires an artifact writer and compatibility tests before reintroduction."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md",
+      "sourceContentSha256": "11143ec595d5da515db3f899c69f21347d08542bfa7ff4752c92b813b0a9fa82",
+      "rawRail": {
+        "name": "ExportDbtProject",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "dbt project export"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ExportDbtProject",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "dbt project export"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#generategovernancedocumentunitmap",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "implemented",
+      "railName": "GenerateGovernanceDocumentUnitMap",
+      "normalizedRailName": "generategovernancedocumentunitmap",
+      "railType": "command",
+      "dddOwner": "Repository governance document map",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/generate-governance-document-unit-map.cjs",
+        "package.json#docs:governance:document-unit-map"
+      ],
+      "implementationRefs": [
+        "scripts/generate-governance-document-unit-map.cjs",
+        "package.json#docs:governance:document-unit-map"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Production code or package command owns the rail implementation."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md",
+      "sourceContentSha256": "924ecfbe755513f5553baa79cbed2602594c4cb03530b8a87f4262576ff5c693",
+      "rawRail": {
+        "name": "GenerateGovernanceDocumentUnitMap",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Repository governance document map"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GenerateGovernanceDocumentUnitMap",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Repository governance document map"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#generategovernanceunitcoverage",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "implemented",
+      "railName": "GenerateGovernanceUnitCoverage",
+      "normalizedRailName": "generategovernanceunitcoverage",
+      "railType": "command",
+      "dddOwner": "Repository governance unit index",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/check-governance-unit-coverage.cjs",
+        "package.json#docs:governance:unit-coverage"
+      ],
+      "implementationRefs": [
+        "scripts/check-governance-unit-coverage.cjs",
+        "package.json#docs:governance:unit-coverage"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Production code or package command owns the rail implementation."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md",
+      "sourceContentSha256": "924ecfbe755513f5553baa79cbed2602594c4cb03530b8a87f4262576ff5c693",
+      "rawRail": {
+        "name": "GenerateGovernanceUnitCoverage",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Repository governance unit index"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GenerateGovernanceUnitCoverage",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Repository governance unit index"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#recordarchitecturedocumentationreconciliationcanon",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "closed",
+      "railName": "RecordArchitectureDocumentationReconciliationCanon",
+      "normalizedRailName": "recordarchitecturedocumentationreconciliationcanon",
+      "railType": "command",
+      "dddOwner": "Architecture documentation reconciliation canon aggregate",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Prose, tests, and review records do not constitute command/query implementations."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md",
+      "sourceContentSha256": "aae95c6e115ee6e9bf7a80833a9fb322384202325eb5a479783663466e978868",
+      "rawRail": {
+        "name": "RecordArchitectureDocumentationReconciliationCanon",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "Architecture documentation reconciliation canon aggregate"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/architecture-doc-reconciliation-canon-plan-20260523.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordArchitectureDocumentationReconciliationCanon",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "Architecture documentation reconciliation canon aggregate"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#recordcanvasfowlercanon",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "closed",
+      "railName": "RecordCanvasFowlerCanon",
+      "normalizedRailName": "recordcanvasfowlercanon",
+      "railType": "command",
+      "dddOwner": "Canvas Fowler canon aggregate",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Prose, tests, and review records do not constitute command/query implementations."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md",
+      "sourceContentSha256": "86a0595282d6ec64fa2b8cffebd08ed1127320dd2770b672a31254a2d9a8a418",
+      "rawRail": {
+        "name": "RecordCanvasFowlerCanon",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "Canvas Fowler canon aggregate"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/frontend-and-ux/canvas-fowler-canon-plan-20260523.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordCanvasFowlerCanon",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "Canvas Fowler canon aggregate"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#recordciretentionreviewcanon",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "closed",
+      "railName": "RecordCiRetentionReviewCanon",
+      "normalizedRailName": "recordciretentionreviewcanon",
+      "railType": "command",
+      "dddOwner": "CI retention review canon aggregate",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Prose, tests, and review records do not constitute command/query implementations."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md",
+      "sourceContentSha256": "a4a288ccdd94d884761a7c7e8d70786bef8c55bf1446ff56cebfa0937c9def4f",
+      "rawRail": {
+        "name": "RecordCiRetentionReviewCanon",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "CI retention review canon aggregate"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/ci-retention-review-canon-plan-20260523.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordCiRetentionReviewCanon",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "CI retention review canon aggregate"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#recordruntimereviewcanon",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "closed",
+      "railName": "RecordRuntimeReviewCanon",
+      "normalizedRailName": "recordruntimereviewcanon",
+      "railType": "command",
+      "dddOwner": "Runtime review canon aggregate",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Prose, tests, and review records do not constitute command/query implementations."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md",
+      "sourceContentSha256": "c79fa250a88dfc258f65399dd4bd7282bf0cf434a31e2243c25d7b1940caade4",
+      "rawRail": {
+        "name": "RecordRuntimeReviewCanon",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "Runtime review canon aggregate"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/runtime-and-contracts/runtime-review-canon-plan-20260523.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordRuntimeReviewCanon",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "Runtime review canon aggregate"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#recordworkbenchuxcanon",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "closed",
+      "railName": "RecordWorkbenchUxCanon",
+      "normalizedRailName": "recordworkbenchuxcanon",
+      "railType": "command",
+      "dddOwner": "Workbench UX canon aggregate",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Prose, tests, and review records do not constitute command/query implementations."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md",
+      "sourceContentSha256": "0438446a4d20e7a4f67148106395305afb3e73c332d3928fd021695bd9b479cb",
+      "rawRail": {
+        "name": "RecordWorkbenchUxCanon",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "Workbench UX canon aggregate"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RecordWorkbenchUxCanon",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "Workbench UX canon aggregate"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#runadr0traceabilitygate",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "closed",
+      "railName": "RunAdr0TraceabilityGate",
+      "normalizedRailName": "runadr0traceabilitygate",
+      "railType": "command",
+      "dddOwner": "ADR-0000 traceability",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/archive/planning/proposals/ci-adr0-owner-consolidation-plan-20260511.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/archive/planning/proposals/ci-adr0-owner-consolidation-plan-20260511.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Prose, tests, and review records do not constitute command/query implementations."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/archive/planning/proposals/ci-adr0-owner-consolidation-plan-20260511.md",
+      "sourceContentSha256": "f70e33670d09c80f6e86edf918399caca321b80f31c37df6fa02f13ed3a75042",
+      "rawRail": {
+        "name": "RunAdr0TraceabilityGate",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "ADR-0000 traceability"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/archive/planning/proposals/ci-adr0-owner-consolidation-plan-20260511.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "RunAdr0TraceabilityGate",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "ADR-0000 traceability"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#saveexecutiontemplateartifact",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "closed",
+      "railName": "SaveExecutionTemplateArtifact",
+      "normalizedRailName": "saveexecutiontemplateartifact",
+      "railType": "command",
+      "dddOwner": "WorkspaceArtifactWritePolicy",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/top-menu-templates-artifact-graph-flow-plan-20260527.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "No active template artifact command adapter or workspace artifact writer implements this rail."
+      ],
+      "architectureGuards": [
+        "Template artifact saves require a concrete artifact writer component and tests before reintroduction."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/top-menu-templates-artifact-graph-flow-plan-20260527.md",
+      "sourceContentSha256": "9d89fa6f9140be1f32af97dce2dc9ab009c02e618ecaae097e36cd62658fd8be",
+      "rawRail": {
+        "name": "SaveExecutionTemplateArtifact",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "WorkspaceArtifactWritePolicy"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "SaveExecutionTemplateArtifact",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "WorkspaceArtifactWritePolicy"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#subdivideruntimegovernanceroot",
+      "featureId": "SYS-GOV-UNIT-INDEX",
+      "mechanizationStatus": "implemented",
+      "railName": "SubdivideRuntimeGovernanceRoot",
+      "normalizedRailName": "subdivideruntimegovernanceroot",
+      "railType": "command",
+      "dddOwner": "SYS-RUNTIME-ROOT runtime component model",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "tools/planning-db/schema.sql#runtime_components",
+        "tools/planning-db/schema.sql"
+      ],
+      "implementationRefs": [
+        "tools/planning-db/schema.sql#runtime_components",
+        "tools/planning-db/schema.sql"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/status/governance-document-rule-inventory.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "planning_query_store.governance_component_local_definitions",
+        "architecture.component"
+      ],
+      "architectureGuards": [
+        "Runtime root must have governed leaf components before files are assigned."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query component-integrity --no-refresh --limit 120"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/system-governance-unit-index-plan-20260501.md",
+      "sourceContentSha256": "924ecfbe755513f5553baa79cbed2602594c4cb03530b8a87f4262576ff5c693",
+      "rawRail": {
+        "name": "SubdivideRuntimeGovernanceRoot",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "SYS-RUNTIME-ROOT runtime component model"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "SYS-GOV-UNIT-INDEX",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "SubdivideRuntimeGovernanceRoot",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "SYS-RUNTIME-ROOT runtime component model"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#submitworkbenchcommand",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "closed",
+      "railName": "SubmitWorkbenchCommand",
+      "normalizedRailName": "submitworkbenchcommand",
+      "railType": "command",
+      "dddOwner": "WorkbenchCommandSubmission",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md",
+        "docs/planning/reviews/architecture-and-governance/20260527-canvas-workspace-explorer-fowler-review.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "No active browser command bus or WorkbenchCommandSubmission component exists."
+      ],
+      "architectureGuards": [
+        "Browser console product commands require explicit accepted rails before reintroduction."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md",
+      "sourceContentSha256": "38caf43e1939d684828c10780fa72974bd76eac549d3ab24696a942055a76a1b",
+      "rawRail": {
+        "name": "SubmitWorkbenchCommand",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "WorkbenchCommandSubmission"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "SubmitWorkbenchCommand",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "WorkbenchCommandSubmission"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#updatecanvasannotation",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "closed",
+      "railName": "UpdateCanvasAnnotation",
+      "normalizedRailName": "updatecanvasannotation",
+      "railType": "command",
+      "dddOwner": "CanvasAnnotation",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "No active Canvas annotation component or command adapter exists."
+      ],
+      "architectureGuards": [
+        "Do not create annotation rails without a concrete component, port, and tests."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md",
+      "sourceContentSha256": "38caf43e1939d684828c10780fa72974bd76eac549d3ab24696a942055a76a1b",
+      "rawRail": {
+        "name": "UpdateCanvasAnnotation",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "CanvasAnnotation"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "UpdateCanvasAnnotation",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "CanvasAnnotation"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#updatetablefield",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "closed",
+      "railName": "UpdateTableField",
+      "normalizedRailName": "updatetablefield",
+      "railType": "command",
+      "dddOwner": "FieldDefinition",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Current Canvas inspector rails configure dbt/DVT nodes, not a generic FieldDefinition command."
+      ],
+      "architectureGuards": [
+        "Table-field authoring needs a concrete component and adapter before reintroduction."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md",
+      "sourceContentSha256": "38caf43e1939d684828c10780fa72974bd76eac549d3ab24696a942055a76a1b",
+      "rawRail": {
+        "name": "UpdateTableField",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "FieldDefinition"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "UpdateTableField",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "FieldDefinition"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#updateworkbenchthemepreferences",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "closed",
+      "railName": "UpdateWorkbenchThemePreferences",
+      "normalizedRailName": "updateworkbenchthemepreferences",
+      "railType": "command",
+      "dddOwner": "WorkbenchThemePreference",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "No active workbench theme preference command adapter exists."
+      ],
+      "architectureGuards": [
+        "Theme preference writes require a token policy component and tests before reintroduction."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md",
+      "sourceContentSha256": "38caf43e1939d684828c10780fa72974bd76eac549d3ab24696a942055a76a1b",
+      "rawRail": {
+        "name": "UpdateWorkbenchThemePreferences",
+        "type": "command",
+        "status": "retired",
+        "dddOwner": "WorkbenchThemePreference"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "UpdateWorkbenchThemePreferences",
+            "type": "command",
+            "status": "retired",
+            "dddOwner": "WorkbenchThemePreference"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#validatecontractreferences",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "implemented",
+      "railName": "ValidateContractReferences",
+      "normalizedRailName": "validatecontractreferences",
+      "railType": "command",
+      "dddOwner": "ContractReferenceValidationCommand",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/validate-references.cjs",
+        "package.json#contracts:references:validate"
+      ],
+      "implementationRefs": [
+        "scripts/validate-references.cjs",
+        "package.json#contracts:references:validate"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Production code or package command owns the rail implementation."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md",
+      "sourceContentSha256": "175e2db461a1f876b4db7149d711e1297630ea33cb597a1ea6f29c18bfd563ef",
+      "rawRail": {
+        "name": "ValidateContractReferences",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "ContractReferenceValidationCommand"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ValidateContractReferences",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "ContractReferenceValidationCommand"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#command#validaterfc2119language",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "implemented",
+      "railName": "ValidateRfc2119Language",
+      "normalizedRailName": "validaterfc2119language",
+      "railType": "command",
+      "dddOwner": "Rfc2119LanguageValidationCommand",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "scripts/validate-rfc2119.cjs",
+        "package.json#contracts:rfc2119:validate"
+      ],
+      "implementationRefs": [
+        "scripts/validate-rfc2119.cjs",
+        "package.json#contracts:rfc2119:validate"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Production code or package command owns the rail implementation."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md",
+      "sourceContentSha256": "175e2db461a1f876b4db7149d711e1297630ea33cb597a1ea6f29c18bfd563ef",
+      "rawRail": {
+        "name": "ValidateRfc2119Language",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Rfc2119LanguageValidationCommand"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/planning-db-component-integrity-vocabulary-rail-plan-20260612.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ValidateRfc2119Language",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Rfc2119LanguageValidationCommand"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#checkcontractsworkflowcredentialposture",
+      "featureId": "DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG",
+      "mechanizationStatus": "implemented",
+      "railName": "CheckContractsWorkflowCredentialPosture",
+      "normalizedRailName": "checkcontractsworkflowcredentialposture",
+      "railType": "query",
+      "dddOwner": "Contracts workflow runtime credential posture",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "tools/ci/workflow-pattern-parity.test.mjs#contracts workflow credential posture"
+      ],
+      "implementationRefs": [
+        "tools/ci/workflow-pattern-parity.test.mjs#contracts workflow credential posture"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/guides/testing-and-ci-capabilities.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "node --test tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "architectureGuards": [
+        "Reusable workflow database credentials must be absent."
+      ],
+      "completionGate": [
+        "node --test tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md",
+      "sourceContentSha256": "64e04f4e9eddb3739f996eb8b4f7a84bbc1d83ecb0c162a2b758264613e41672",
+      "rawRail": {
+        "name": "CheckContractsWorkflowCredentialPosture",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Contracts workflow runtime credential posture"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "CheckContractsWorkflowCredentialPosture",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Contracts workflow runtime credential posture"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#checkworkflowdependencypins",
+      "featureId": "DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG",
+      "mechanizationStatus": "implemented",
+      "railName": "CheckWorkflowDependencyPins",
+      "normalizedRailName": "checkworkflowdependencypins",
+      "railType": "query",
+      "dddOwner": "Workflow dependency policy",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "tools/ci/workflow-pattern-parity.test.mjs#workflow dependency pins"
+      ],
+      "implementationRefs": [
+        "tools/ci/workflow-pattern-parity.test.mjs#workflow dependency pins"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/guides/testing-and-ci-capabilities.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "node --test tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "architectureGuards": [
+        "Unpinned governed workflow dependencies must fail the parity test."
+      ],
+      "completionGate": [
+        "node --test tools/ci/workflow-pattern-parity.test.mjs"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/ci-governance-parity-implementation-plan-20260502.md",
+      "sourceContentSha256": "64e04f4e9eddb3739f996eb8b4f7a84bbc1d83ecb0c162a2b758264613e41672",
+      "rawRail": {
+        "name": "CheckWorkflowDependencyPins",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Workflow dependency policy"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/guides/testing-and-ci-capabilities.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "CheckWorkflowDependencyPins",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Workflow dependency policy"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#classifyarchitecturegovernancereviewfinding",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "closed",
+      "railName": "ClassifyArchitectureGovernanceReviewFinding",
+      "normalizedRailName": "classifyarchitecturegovernancereviewfinding",
+      "railType": "query",
+      "dddOwner": "Architecture review finding catalog",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Prose, tests, and review records do not constitute command/query implementations."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md",
+      "sourceContentSha256": "11cfae41e2490774c319a2802c2b15765b013ba0e94b99d2ce773eff0db248e2",
+      "rawRail": {
+        "name": "ClassifyArchitectureGovernanceReviewFinding",
+        "type": "query",
+        "status": "retired",
+        "dddOwner": "Architecture review finding catalog"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/architecture-governance-review-canon-plan-20260524.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ClassifyArchitectureGovernanceReviewFinding",
+            "type": "query",
+            "status": "retired",
+            "dddOwner": "Architecture review finding catalog"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#documentrepositorycommandtaxonomy",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "closed",
+      "railName": "DocumentRepositoryCommandTaxonomy",
+      "normalizedRailName": "documentrepositorycommandtaxonomy",
+      "railType": "query",
+      "dddOwner": "Repository delivery governance",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Prose, tests, and review records do not constitute command/query implementations."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md",
+      "sourceContentSha256": "069afdb1c6a2c51e406dd5e6ac9bb8d1afd64678c46709fc1948c52e9c793197",
+      "rawRail": {
+        "name": "DocumentRepositoryCommandTaxonomy",
+        "type": "query",
+        "status": "retired",
+        "dddOwner": "Repository delivery governance"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/proposals/mandatory/governance-and-docs/repository-command-catalog-normalization-plan-20260508.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "DocumentRepositoryCommandTaxonomy",
+            "type": "query",
+            "status": "retired",
+            "dddOwner": "Repository delivery governance"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#getplanrecordbyref",
+      "featureId": "S08-SCOPED-ARTIFACT-PORT-CLOSURE-20260509",
+      "mechanizationStatus": "implemented",
+      "railName": "GetPlanRecordByRef",
+      "normalizedRailName": "getplanrecordbyref",
+      "railType": "query",
+      "dddOwner": "Plan record read model",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts#getPlanRecordByRef",
+        "packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts#getPlanRecordByRef",
+        "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts#getPlanRecordByRef"
+      ],
+      "implementationRefs": [
+        "packages/@dvt/artifacts/src/ports/IPlanStoreReader.ts#getPlanRecordByRef",
+        "packages/@dvt/adapter-postgres/src/PostgresPlanStore.ts#getPlanRecordByRef",
+        "packages/@dvt/adapter-postgres/test/PostgresPlanStore.records-core.integration.test.ts#getPlanRecordByRef"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md",
+        "docs/architecture/components/engine/contracts/plan-store-records-component.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/contracts/planner/plan-store-records-v1.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "IPlanStoreReader query port",
+        "Postgres plan-store adapter"
+      ],
+      "architectureGuards": [
+        "Scoped PlanRef lookup must reject mismatched metadata."
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/adapter-postgres test -- PostgresPlanStore.records-core.integration.test.ts"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/runtime-and-contracts/s08-plan-store-command-query-matrix-20260501.md",
+      "sourceContentSha256": "406ea631f07b5419c494a21808680c314b97f48389daf1c8cb8597c5d9cdad3f",
+      "rawRail": {
+        "name": "GetPlanRecordByRef",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Plan record read model"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "S08-SCOPED-ARTIFACT-PORT-CLOSURE-20260509",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/contracts/planner/plan-store-records-v1.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GetPlanRecordByRef",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Plan record read model"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#getworkbenchthemepreferences",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "closed",
+      "railName": "GetWorkbenchThemePreferences",
+      "normalizedRailName": "getworkbenchthemepreferences",
+      "railType": "query",
+      "dddOwner": "WorkbenchThemePreference",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "No active workbench theme preference read model exists."
+      ],
+      "architectureGuards": [
+        "Theme preferences require a token policy component and tests before reintroduction."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md",
+      "sourceContentSha256": "38caf43e1939d684828c10780fa72974bd76eac549d3ab24696a942055a76a1b",
+      "rawRail": {
+        "name": "GetWorkbenchThemePreferences",
+        "type": "query",
+        "status": "retired",
+        "dddOwner": "WorkbenchThemePreference"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "GetWorkbenchThemePreferences",
+            "type": "query",
+            "status": "retired",
+            "dddOwner": "WorkbenchThemePreference"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#listadminauditlog",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "implemented",
+      "railName": "ListAdminAuditLog",
+      "normalizedRailName": "listadminauditlog",
+      "railType": "query",
+      "dddOwner": "Admin audit unsupported read model",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/services/workspace/workspacePorts.api.ts#createApiWorkspaceAdminReadPort",
+        "apps/web/src/app/services/workspace/workspacePorts.api.test.ts#unsupportedApiWorkspaceOperations",
+        "apps/web/src/app/services/workspace/workspaceErrors.ts#WorkspaceApiUnsupportedRail"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/services/workspace/workspacePorts.api.ts#createApiWorkspaceAdminReadPort",
+        "apps/web/src/app/services/workspace/workspacePorts.api.test.ts#unsupportedApiWorkspaceOperations",
+        "apps/web/src/app/services/workspace/workspaceErrors.ts#WorkspaceApiUnsupportedRail"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/web-api-workspace-port-route-parity-remediation-plan-20260510.md",
+        "docs/architecture/components/web/workspace/workspace-port-decomposition-component.md",
+        "docs/architecture/components/web/frontend-mechanical-truth-inventory.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/components/web/workspace/workspace-port-decomposition-component.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "IWorkspaceAdminReadPort.getAuditLog",
+        "fail-closed API workspace adapter"
+      ],
+      "architectureGuards": [
+        "Admin audit reads must reject before transport while the backend rail is intentionally unavailable."
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
+      ],
+      "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
+      "sourceContentSha256": "741f755939fa9963e9dda9674c49dec4c386c20fd65701a9bab070d76d79d67d",
+      "rawRail": {
+        "name": "ListAdminAuditLog",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Admin audit unsupported read model"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/components/web/workspace/workspace-port-decomposition-component.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ListAdminAuditLog",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Admin audit unsupported read model"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#listadminroles",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "implemented",
+      "railName": "ListAdminRoles",
+      "normalizedRailName": "listadminroles",
+      "railType": "query",
+      "dddOwner": "Admin RBAC unsupported read model",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/services/workspace/workspacePorts.api.ts#createApiWorkspaceAdminReadPort",
+        "apps/web/src/app/services/workspace/workspacePorts.api.test.ts#unsupportedApiWorkspaceOperations",
+        "apps/web/src/app/services/workspace/workspaceErrors.ts#WorkspaceApiUnsupportedRail"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/services/workspace/workspacePorts.api.ts#createApiWorkspaceAdminReadPort",
+        "apps/web/src/app/services/workspace/workspacePorts.api.test.ts#unsupportedApiWorkspaceOperations",
+        "apps/web/src/app/services/workspace/workspaceErrors.ts#WorkspaceApiUnsupportedRail"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/web-api-workspace-port-route-parity-remediation-plan-20260510.md",
+        "docs/architecture/components/web/workspace/workspace-port-decomposition-component.md",
+        "docs/architecture/components/web/frontend-mechanical-truth-inventory.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/components/web/workspace/workspace-port-decomposition-component.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "IWorkspaceAdminReadPort.getRoles",
+        "fail-closed API workspace adapter"
+      ],
+      "architectureGuards": [
+        "Admin role reads must reject before transport while the backend rail is intentionally unavailable."
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web test:unit:run -- src/app/services/workspace/workspacePorts.api.test.ts"
+      ],
+      "sourcePath": "apps/web/src/app/services/workspace/workspacePorts.api.ts",
+      "sourceContentSha256": "741f755939fa9963e9dda9674c49dec4c386c20fd65701a9bab070d76d79d67d",
+      "rawRail": {
+        "name": "ListAdminRoles",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Admin RBAC unsupported read model"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/components/web/workspace/workspace-port-decomposition-component.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ListAdminRoles",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Admin RBAC unsupported read model"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#listsupportedcolumntypes",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "closed",
+      "railName": "ListSupportedColumnTypes",
+      "normalizedRailName": "listsupportedcolumntypes",
+      "railType": "query",
+      "dddOwner": "ColumnTypeCatalog",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "No active provider column type catalog read model exists."
+      ],
+      "architectureGuards": [
+        "Provider column type catalog needs an adapter-backed read model before reintroduction."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md",
+      "sourceContentSha256": "38caf43e1939d684828c10780fa72974bd76eac549d3ab24696a942055a76a1b",
+      "rawRail": {
+        "name": "ListSupportedColumnTypes",
+        "type": "query",
+        "status": "retired",
+        "dddOwner": "ColumnTypeCatalog"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ListSupportedColumnTypes",
+            "type": "query",
+            "status": "retired",
+            "dddOwner": "ColumnTypeCatalog"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#listworkbenchcommandhistory",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "closed",
+      "railName": "ListWorkbenchCommandHistory",
+      "normalizedRailName": "listworkbenchcommandhistory",
+      "railType": "query",
+      "dddOwner": "WorkbenchCommandHistoryReadModel",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "No active workbench command history read model exists."
+      ],
+      "architectureGuards": [
+        "Command history requires a real read model and authorization scope before reintroduction."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-workspace-explorer-console-theme-modeling-plan-20260527.md",
+      "sourceContentSha256": "38caf43e1939d684828c10780fa72974bd76eac549d3ab24696a942055a76a1b",
+      "rawRail": {
+        "name": "ListWorkbenchCommandHistory",
+        "type": "query",
+        "status": "retired",
+        "dddOwner": "WorkbenchCommandHistoryReadModel"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ListWorkbenchCommandHistory",
+            "type": "query",
+            "status": "retired",
+            "dddOwner": "WorkbenchCommandHistoryReadModel"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#listworkspaceartifacts",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "implemented",
+      "railName": "ListWorkspaceArtifacts",
+      "normalizedRailName": "listworkspaceartifacts",
+      "railType": "query",
+      "dddOwner": "Workspace artifact preview read model",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/queries/workspaceQueries.ts#useWorkspaceArtifactsQuery",
+        "apps/web/src/app/views/artifacts/useArtifactsViewModel.ts"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/queries/workspaceQueries.ts#useWorkspaceArtifactsQuery",
+        "apps/web/src/app/views/artifacts/useArtifactsViewModel.ts"
+      ],
+      "documentationRefs": [
+        "docs/architecture/components/web/frontend-component-inventory.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/components/web/frontend-component-inventory.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Production code or package command owns the rail implementation."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/architecture/components/web/frontend-component-inventory.md",
+      "sourceContentSha256": "c1a133f3bbc1307bbb706349d41b967aedb8acdf2f02c1127aef1c929b7cdeaf",
+      "rawRail": {
+        "name": "ListWorkspaceArtifacts",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Workspace artifact preview read model"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ListWorkspaceArtifacts",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Workspace artifact preview read model"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#querygovernedfeaturework",
+      "featureId": "GOV-S3-PLANNING-STATE-QUERY-STORE",
+      "mechanizationStatus": "implemented",
+      "railName": "QueryGovernedFeatureWork",
+      "normalizedRailName": "querygovernedfeaturework",
+      "railType": "query",
+      "dddOwner": "DocsDispositionQueue",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "tools/planning-db/schema.sql#planning_work_intake_query",
+        "scripts/planning-db-query.cjs#feature-work",
+        "scripts/planning-db-query.test.cjs#readFeatureWorkRows"
+      ],
+      "implementationRefs": [
+        "tools/planning-db/schema.sql#planning_work_intake_query",
+        "scripts/planning-db-query.cjs#feature-work",
+        "scripts/planning-db-query.test.cjs#readFeatureWorkRows"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/status/governance-document-rule-inventory.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "pnpm planning:db:query feature-work",
+        "planning_query_store.planning_work_intake_query"
+      ],
+      "architectureGuards": [
+        "Governed feature work must come from DB views, not ad hoc document scans."
+      ],
+      "completionGate": ["node --test scripts/planning-db-query.test.cjs"],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/planning-state-query-store-plan-20260506.md",
+      "sourceContentSha256": "7a2926c039498ec2a9211f1e23d752bb2265874fdc612dfe3934b198f796da52",
+      "rawRail": {
+        "name": "QueryGovernedFeatureWork",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "DocsDispositionQueue"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "GOV-S3-PLANNING-STATE-QUERY-STORE",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "QueryGovernedFeatureWork",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "DocsDispositionQueue"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#queryplanningnexttasks",
+      "featureId": "POST-MERGE-PLANNING-CLOSEOUT-GUARDRAIL-20260508",
+      "mechanizationStatus": "implemented",
+      "railName": "QueryPlanningNextTasks",
+      "normalizedRailName": "queryplanningnexttasks",
+      "railType": "query",
+      "dddOwner": "Planning query store",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "tools/planning-db/schema.sql#planning_next_tasks",
+        "tools/planning-db/schema.sql#planning_next_tasks",
+        "scripts/planning-db-query.cjs#readNextTaskRows",
+        "scripts/planning-db-query.test.cjs#readNextTaskRows"
+      ],
+      "implementationRefs": [
+        "tools/planning-db/schema.sql#planning_next_tasks",
+        "tools/planning-db/schema.sql#planning_next_tasks",
+        "scripts/planning-db-query.cjs#readNextTaskRows",
+        "scripts/planning-db-query.test.cjs#readNextTaskRows"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/post-merge-planning-closeout-drift-problem-20260508.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/status/governance-document-rule-inventory.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "pnpm planning:db:query next",
+        "planning_query_store.planning_next_tasks"
+      ],
+      "architectureGuards": [
+        "Next-task routing must respect dependency and claim recovery boundaries."
+      ],
+      "completionGate": ["node --test scripts/planning-db-query.test.cjs"],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/post-merge-planning-closeout-drift-problem-20260508.md",
+      "sourceContentSha256": "56f37a0f00e01021f1cb8b2bfc81e515ec92c3d953ead263b14e33576dae6360",
+      "rawRail": {
+        "name": "QueryPlanningNextTasks",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Planning query store"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "POST-MERGE-PLANNING-CLOSEOUT-GUARDRAIL-20260508",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "QueryPlanningNextTasks",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Planning query store"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#queryplanningopentasks",
+      "featureId": "POST-MERGE-PLANNING-CLOSEOUT-GUARDRAIL-20260508",
+      "mechanizationStatus": "implemented",
+      "railName": "QueryPlanningOpenTasks",
+      "normalizedRailName": "queryplanningopentasks",
+      "railType": "query",
+      "dddOwner": "Planning query store",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "tools/planning-db/schema.sql#planning_open_tasks",
+        "scripts/planning-db-query.cjs#readOpenTaskRows",
+        "scripts/planning-db-query.test.cjs#readOpenTaskRows"
+      ],
+      "implementationRefs": [
+        "tools/planning-db/schema.sql#planning_open_tasks",
+        "scripts/planning-db-query.cjs#readOpenTaskRows",
+        "scripts/planning-db-query.test.cjs#readOpenTaskRows"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/governance-and-docs/post-merge-planning-closeout-drift-problem-20260508.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/planning/status/governance-document-rule-inventory.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "pnpm planning:db:query open",
+        "planning_query_store.planning_open_tasks"
+      ],
+      "architectureGuards": [
+        "Open-task status logic must stay in the DB view, not duplicated in CLI code."
+      ],
+      "completionGate": ["node --test scripts/planning-db-query.test.cjs"],
+      "sourcePath": "docs/planning/proposals/mandatory/governance-and-docs/post-merge-planning-closeout-drift-problem-20260508.md",
+      "sourceContentSha256": "56f37a0f00e01021f1cb8b2bfc81e515ec92c3d953ead263b14e33576dae6360",
+      "rawRail": {
+        "name": "QueryPlanningOpenTasks",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Planning query store"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "POST-MERGE-PLANNING-CLOSEOUT-GUARDRAIL-20260508",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/planning/status/governance-document-rule-inventory.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "QueryPlanningOpenTasks",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Planning query store"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#temporalworkerscalingstrategy",
+      "featureId": "AR-D3-WORKER-SCALING-STRATEGY",
+      "mechanizationStatus": "implemented",
+      "railName": "TemporalWorkerScalingStrategy",
+      "normalizedRailName": "temporalworkerscalingstrategy",
+      "railType": "query",
+      "dddOwner": "Runtime / SRE worker topology policy",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts",
+        "docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md",
+        "docs/runbooks/temporal-worker-scaling-operations.md"
+      ],
+      "implementationRefs": [
+        "packages/@dvt/adapter-temporal/test/worker-scaling-strategy.architecture.test.ts",
+        "docs/architecture/components/engine/adapters/temporal/temporal-worker-scaling-strategy.md",
+        "docs/runbooks/temporal-worker-scaling-operations.md"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/runtime-and-contracts/ar-d3-worker-scaling-strategy-plan-20260514.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/adr/ADR-0001-temporal-integration-test-policy.md",
+        "docs/adr/ADR-0003-execution-model.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Temporal worker scaling strategy docs",
+        "Temporal adapter architecture test"
+      ],
+      "architectureGuards": [
+        "Worker scaling docs must not imply a global shared worker pool unsupported by the adapter."
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/adapter-temporal test -- test/worker-scaling-strategy.architecture.test.ts"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/runtime-and-contracts/ar-d3-worker-scaling-strategy-plan-20260514.md",
+      "sourceContentSha256": "2b66303128dd041f82d0254768edcc2c2ca498c32879c7c0ea011c64e92534b6",
+      "rawRail": {
+        "name": "TemporalWorkerScalingStrategy",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Runtime / SRE worker topology policy"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "AR-D3-WORKER-SCALING-STRATEGY",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/adr/ADR-0001-temporal-integration-test-policy.md",
+          "docs/adr/ADR-0003-execution-model.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "TemporalWorkerScalingStrategy",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Runtime / SRE worker topology policy"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#validatecanvastransformationrun",
+      "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+      "mechanizationStatus": "implemented",
+      "railName": "ValidateCanvasTransformationRun",
+      "normalizedRailName": "validatecanvastransformationrun",
+      "railType": "query",
+      "dddOwner": "Transformation graph validation read model",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "apps/web/src/app/views/canvas/transformationGraphValidation.ts#validateTransformationGraph",
+        "apps/web/src/app/views/canvas/transformationGraphValidation.test.ts",
+        "apps/web/src/app/views/canvas/canvasExecutionState.ts",
+        "apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts"
+      ],
+      "implementationRefs": [
+        "apps/web/src/app/views/canvas/transformationGraphValidation.ts#validateTransformationGraph",
+        "apps/web/src/app/views/canvas/transformationGraphValidation.test.ts",
+        "apps/web/src/app/views/canvas/canvasExecutionState.ts",
+        "apps/web/src/app/views/canvas/useCanvasControllerReadModel.ts"
+      ],
+      "documentationRefs": [
+        "docs/planning/proposals/mandatory/frontend-and-ux/authoring-graph-lab-roadmap-plan-20260603.md",
+        "docs/planning/closeouts/20260418-tf-e2-canvas-interaction-command-seam-closeout.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "validateTransformationGraph",
+        "Canvas execution read model"
+      ],
+      "architectureGuards": [
+        "Invalid or incomplete transformation graphs must fail before plan/run readiness."
+      ],
+      "completionGate": [
+        "pnpm --filter @dvt/web test:unit:run -- src/app/views/canvas/transformationGraphValidation.test.ts"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/authoring-graph-lab-roadmap-plan-20260603.md",
+      "sourceContentSha256": "beba3ed044f0330a1fb9344b4aef1af2094402a3bb7653a149b7c138c961ca59",
+      "rawRail": {
+        "name": "ValidateCanvasTransformationRun",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "Transformation graph validation read model"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "FRONTEND-GAP-RAIL-RECONCILIATION-20260619",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/components/web/graph/canvas-workbench-command-query-catalog.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ValidateCanvasTransformationRun",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "Transformation graph validation read model"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#validateenginecoveragescopecontract",
+      "featureId": "DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG",
+      "mechanizationStatus": "implemented",
+      "railName": "ValidateEngineCoverageScopeContract",
+      "normalizedRailName": "validateenginecoveragescopecontract",
+      "railType": "query",
+      "dddOwner": "CI tool contract tests",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "tools/ci/scope-config.mjs#TEST_SCOPE_PATTERNS",
+        "tools/ci/workflow-pattern-parity.test.mjs#engine coverage scope",
+        "tools/ci/root-test-runner-config.test.mjs#engine coverage thresholds",
+        "package.json#test:coverage:engine"
+      ],
+      "implementationRefs": [
+        "tools/ci/scope-config.mjs#TEST_SCOPE_PATTERNS",
+        "tools/ci/workflow-pattern-parity.test.mjs#engine coverage scope",
+        "tools/ci/root-test-runner-config.test.mjs#engine coverage thresholds",
+        "package.json#test:coverage:engine"
+      ],
+      "documentationRefs": [
+        "docs/architecture/components/ci-governance/engine-coverage-scope-gate-component.md",
+        "docs/planning/proposals/mandatory/governance-and-docs/ci-audit-engine-coverage-plan-20260515.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/components/ci-governance/engine-coverage-scope-gate-component.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "node --test tools/ci/*.test.mjs",
+        "pnpm test:coverage:engine"
+      ],
+      "architectureGuards": [
+        "Coverage relevant patterns must include engine workspace policy."
+      ],
+      "completionGate": [
+        "node --test tools/ci/workflow-pattern-parity.test.mjs tools/ci/root-test-runner-config.test.mjs"
+      ],
+      "sourcePath": "docs/architecture/components/ci-governance/engine-coverage-scope-gate-component.md",
+      "sourceContentSha256": "1f6c0dc9e4334f4715f36ccd772dd93004f1ecf6a4da93e49b77ea0a3570a2cd",
+      "rawRail": {
+        "name": "ValidateEngineCoverageScopeContract",
+        "type": "query",
+        "status": "implemented",
+        "dddOwner": "CI tool contract tests"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "DOCUMENTED-COMMAND-QUERY-RAIL-CATALOG",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/components/ci-governance/engine-coverage-scope-gate-component.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ValidateEngineCoverageScopeContract",
+            "type": "query",
+            "status": "implemented",
+            "dddOwner": "CI tool contract tests"
+          }
+        ],
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
+      "railId": "current#rail-decision#query#validateworkbenchshellcontract",
+      "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+      "mechanizationStatus": "closed",
+      "railName": "ValidateWorkbenchShellContract",
+      "normalizedRailName": "validateworkbenchshellcontract",
+      "railType": "query",
+      "dddOwner": "Workbench shell contract read model",
+      "railStatus": "retired",
+      "symbolRefs": [],
+      "implementationRefs": [],
+      "documentationRefs": [
+        "docs/architecture/components/web/workbench-ux-canon-component.md"
+      ],
+      "governingSources": [
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/components/web/workbench-ux-canon-component.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "Prose, tests, and review records do not constitute command/query implementations."
+      ],
+      "architectureGuards": [
+        "No test, fixture, migration, or prose-only mention may count as implementation evidence."
+      ],
+      "completionGate": [
+        "pnpm planning:db:query rail-vocabulary --no-refresh --limit 100",
+        "pnpm planning:db:integrity:check"
+      ],
+      "sourcePath": "docs/architecture/components/web/workbench-ux-canon-component.md",
+      "sourceContentSha256": "766b245a036baa5f82c1a97cf381bffb521ec2dc2fcddbf157407fbc50f51588",
+      "rawRail": {
+        "name": "ValidateWorkbenchShellContract",
+        "type": "query",
+        "status": "retired",
+        "dddOwner": "Workbench shell contract read model"
+      },
+      "rawManifest": {
+        "version": 1,
+        "featureId": "PRODUCTION-RAIL-EVIDENCE-20260711",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/components/web/workbench-ux-canon-component.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ValidateWorkbenchShellContract",
+            "type": "query",
+            "status": "retired",
+            "dddOwner": "Workbench shell contract read model"
+          }
+        ],
+        "mechanizationStatus": "closed",
+        "noHumanDecisionsRemaining": true
+      },
+      "revision": 1,
+      "createdBy": "codex",
+      "createdAt": "2026-08-08T00:00:00.000Z"
+    },
+    {
       "railId": "local#CANVAS-GRAPH-FILTER-2069#query#filtercanvasgraph",
       "featureId": "CANVAS-GRAPH-FILTER-2069",
       "mechanizationStatus": "implemented",
