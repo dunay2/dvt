@@ -17,6 +17,10 @@ import type {
   HttpJsonArtifactAuthoringDraft,
   HttpJsonArtifactAuthoringErrors,
 } from './httpJsonArtifactAuthoringModel';
+import type {
+  PythonCodeAuthoringDraft,
+  PythonCodeAuthoringErrors,
+} from './pythonCodeAuthoringModel';
 
 export type CanvasInspectorNodeDraft = Readonly<{
   name: string;
@@ -27,6 +31,7 @@ export type CanvasInspectorNodeDraft = Readonly<{
   dvt?: DvtNodeAuthoringMetadata;
   objectFilePostgres?: ObjectFilePostgresAuthoringDraft;
   httpJsonArtifact?: HttpJsonArtifactAuthoringDraft;
+  pythonCode?: PythonCodeAuthoringDraft;
 }>;
 
 export type CanvasInspectorNodeDraftErrors = Readonly<{
@@ -36,6 +41,7 @@ export type CanvasInspectorNodeDraftErrors = Readonly<{
   dvt?: DvtNodeAuthoringMetadataErrors;
   objectFilePostgres?: ObjectFilePostgresAuthoringErrors;
   httpJsonArtifact?: HttpJsonArtifactAuthoringErrors;
+  pythonCode?: PythonCodeAuthoringErrors;
 }>;
 
 export type CanvasInspectorNodeModelerActions = Readonly<{
