@@ -279,7 +279,15 @@ This proposal does not replace existing owners:
 - #2176 owns API composition/readiness/capability truth;
 - #2255 owns acceptance proof;
 - #2256 owns cross-cutting explicit connection/resource-binding semantics;
-- #2257 owns the first dbt target binding vertical.
+- #2257 owns the first dbt target binding vertical;
+- #2262 and PR #2266 own generic node gesture and Workbench interaction
+  convergence. This slice reuses those seams and changes only the exact
+  generated-node code authority needed by the protected PTH1 proof;
+- #2268 owns first-Canvas entry simplification;
+- #2269 owns the later Source Import interaction reduction. This slice keeps
+  the current workflow topology and supplies its connection-bound contract,
+  bounded scrolling and live collision evidence;
+- #2267 owns broad Web retirement analysis; no retirement is inferred here.
 
 ## 12. Non-goals
 
@@ -299,10 +307,13 @@ This proposal does not replace existing owners:
 - Baseline: `main@32cfaf6d31fa5ca789bdb390def95d27f5d71f59`.
 - Feature ID: `PTH1-CONNECTED-SOURCE-TRUTH`.
 - Primary issue: #2256, under #2254.
-- Existing studies consumed: #2170, #2171, #2173, #2174, #2176, and #2195.
+- Existing studies consumed: #2170, #2171, #2173, #2174, #2176, #2195,
+  #2262/#2266, #2267, #2268, and #2269.
 - Included: canonical connection-bound source identity; fail-closed handling of
   legacy ambiguous nodes and missing drafts; deterministic JCS hashes; visible
-  read-only Canvas binding; A -> B -> A cache proof with a colliding path.
+  read-only Canvas binding; command admission before warehouse discovery;
+  collision-safe graph node identity; A -> B -> A cache proof with a colliding
+  path.
 - Deferred: #2257 dbt target binding, runtime capability truth from #2176,
   additional providers, a connection node, and the complete #2255 product
   acceptance suite.
@@ -403,6 +414,15 @@ scope A / models/orders.sql = A
     the same `relation/dvt/public/source_1`, imports through both, and reads the
     persisted draft back. Two distinct canonical refs and nodes are required;
     an in-memory collision test alone is insufficient for #2256 acceptance.
+13. **Authority admission before external discovery, selected.** The complete
+    `ImportWarehouseSources` rail resolves the persisted Canvas authoring
+    authority before probing a connection or reading source objects. A missing
+    Canvas therefore fails without an external provider call; a strategy-only
+    test is not sufficient evidence of command ordering.
+14. **Reserved node identifiers fail closed, selected.** If both a readable
+    stable ID and its connection-qualified collision-resistant ID are already
+    owned by another identity, import raises a draft conflict. It never reports
+    the foreign node as selected and never searches for an ungoverned suffix.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -419,6 +439,8 @@ scope A / models/orders.sql = A
 | Source review extends below a bounded dialog      | Hidden content / inaccessible navigation     | Expose bounded scrolling region                 | Visible scrollbar, reachable selected object, fixed Cancel            |
 | Missing node file falls back to another file      | Hidden authority / semantic substitution     | Replace guessed path with explicit strategy     | Generated model opens node code; persisted path opens Workbench       |
 | One edge still requires hidden selected-source ID | Data clump / duplicated decision             | Derive from the single explicit relationship    | One edge generates and validates; zero or ambiguous edges fail closed |
+| External probe precedes Canvas admission          | Temporal coupling / misplaced responsibility | Move statements before extraction               | Missing authority performs zero source-object reads                   |
+| Derived node ID is owned by another identity      | Identity collision / false idempotency       | Guard Clause                                    | Conflict occurs before file or draft mutation                         |
 
 ### 13.6 DoR for the bounded slice
 
@@ -464,16 +486,18 @@ governingSources:
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/adr/0061-server-owned-effective-workspace-context.md
-  - docs/adr/0058-warehouse-source-import.md
-  - docs/adr/0060-dbt-project-source-authority.md
+  - docs/adr/ADR-0062-server-owned-effective-workspace-context.md
+  - docs/adr/ADR-0058-warehouse-source-import-rails.md
+  - docs/adr/ADR-0060-dbt-project-authoring-authority.md
 allowedImplementationSurfaces:
   - docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md
   - packages/@dvt/contracts/src/contracts/source-import/**
   - packages/@dvt/contracts/test/source-import/ConnectedSourceRef.v1.test.ts
   - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
+  - apps/api/src/application/services/importWarehouseSourcesUseCase.ts
   - apps/api/src/application/services/warehouseSourceYamlIdentity.ts
   - apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts
+  - apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts
   - apps/api/test/application/services/warehouseSourceYaml.test.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.ts
   - apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts
@@ -571,6 +595,18 @@ redGreenCycles:
       - apps/api/src/application/services/warehouseSourceYamlIdentity.ts
       - apps/web/src/app/plugins/graph/graphNodeTitlePresentation.ts
     greenTest: pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts && pnpm --filter @dvt/web test:canvas -- graphNodeTitlePresentation.test.ts
+  - id: command-admission-before-discovery
+    redTest: pnpm --filter dvt-api test -- importWarehouseSourcesUseCase.test.ts
+    expectedFailure: A missing Canvas authority still calls the external source-object reader before failing.
+    patchSurfaces:
+      - apps/api/src/application/services/importWarehouseSourcesUseCase.ts
+    greenTest: pnpm --filter dvt-api test -- importWarehouseSourcesUseCase.test.ts
+  - id: reserved-source-node-identity
+    redTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
+    expectedFailure: A collision-resistant node ID owned by a different canonical ref is returned as if it were the imported node.
+    patchSurfaces:
+      - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
+    greenTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
   - id: visible-connection-binding
     redTest: pnpm --filter @dvt/web test:canvas -- nodePropertiesReadModel.test.ts
     expectedFailure: The Workbench read model and localized copy do not expose Connection.
