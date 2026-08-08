@@ -61,10 +61,24 @@ test('current Planning DB schema is one declarative artifact without migration s
     'planning_task_status_events',
     'planning_task_trace_query',
     'planning_work_intake_query',
+    'registered_planning_task',
   ]) {
     assert.doesNotMatch(schemaSql, new RegExp(`\\b${taskObject}\\b`, 'u'));
   }
   assert.doesNotThrow(() => assertCurrentPlanningDbSchema(schemaSql));
+});
+
+test('Planning DB import contains no dormant local task registry compatibility', () => {
+  const importSource = fs.readFileSync(path.join(__dirname, 'planning-db-import.cjs'), 'utf8');
+
+  for (const retiredSemantic of [
+    'buildPlanningTaskReferencePattern',
+    'planningTaskIds',
+    'registered_planning_task',
+    'registeredPlanningTask',
+  ]) {
+    assert.doesNotMatch(importSource, new RegExp(`\\b${retiredSemantic}\\b`, 'u'));
+  }
 });
 
 test('schema readiness rejects missing or legacy state without mutating the database', async () => {
