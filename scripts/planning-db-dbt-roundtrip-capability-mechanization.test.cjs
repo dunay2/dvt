@@ -11,13 +11,13 @@ const featureId = 'E-DBT-PROJECT-ROUNDTRIP-P4-TRUTH-SYNC';
 const proposalRelativePath =
   'docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md';
 const proposalPath = path.join(__dirname, '..', ...proposalRelativePath.split('/'));
-const authorityCorrectionPath = path.join(
+const canonicalStatePath = path.join(
   __dirname,
   '..',
   'tools',
   'planning-db',
-  'migrations',
-  '729_dbt_roundtrip_manifest_authority_correction.sql'
+  'state',
+  'canonical-state.json'
 );
 
 test('DBT round-trip capability mechanization is proposal-owned and symbol-complete', () => {
@@ -73,11 +73,12 @@ test('DBT round-trip capability mechanization is proposal-owned and symbol-compl
   );
 });
 
-test('append-only correction retires the migration-owned feature manifest copy', () => {
-  const sql = fs.readFileSync(authorityCorrectionPath, 'utf8');
+test('current state keeps the proposal-owned feature without a parallel local copy', () => {
+  const snapshot = JSON.parse(fs.readFileSync(canonicalStatePath, 'utf8'));
 
-  assert.match(sql, /delete from planning_query_store\.feature_mechanization_local_rails/i);
-  assert.match(sql, new RegExp(featureId));
-  assert.match(sql, /must be proposal-owned/);
-  assert.doesNotMatch(sql, /insert into planning_query_store\.feature_mechanization_local_rails/i);
+  assert.equal(
+    snapshot.featureMechanizationRails.some((rail) => rail.featureId === featureId),
+    false
+  );
+  assert.doesNotMatch(JSON.stringify(snapshot.featureMechanizationRails), /planning-db-migrate/iu);
 });
