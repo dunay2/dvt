@@ -125,10 +125,11 @@ describe('DbtModelCodeAuthoringSection', () => {
 
     const editor = container.querySelector<HTMLTextAreaElement>('textarea[name="dbt-model-sql"]');
     const leakedKeyDown = vi.fn();
-    container.addEventListener('keydown', leakedKeyDown);
+    document.addEventListener('keydown', leakedKeyDown);
 
     fireEvent.keyDown(editor!, { key });
 
     expect(leakedKeyDown).not.toHaveBeenCalled();
+    document.removeEventListener('keydown', leakedKeyDown);
   });
 });
