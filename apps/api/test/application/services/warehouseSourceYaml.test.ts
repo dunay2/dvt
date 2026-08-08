@@ -13,6 +13,7 @@ import {
   buildWarehouseSourceYamlUpdates,
   groupSourceObjectsForYaml,
   readExistingSourceDocument,
+  sourceObjectIdentity,
   type ConnectedRelationalSourceObject,
 } from '../../../src/application/services/warehouseSourceYaml.js';
 
@@ -65,6 +66,15 @@ function sourceObject(
 }
 
 describe('warehouse source YAML projection', () => {
+  it('qualifies YAML binding identity by connection and physical object', () => {
+    const production = sourceObject({ connectionId: 'warehouse-prod' });
+    const sandbox = sourceObject({ connectionId: 'warehouse-sandbox' });
+
+    expect(sourceObjectIdentity(production)).not.toBe(sourceObjectIdentity(sandbox));
+    expect(sourceObjectIdentity(production)).toContain('warehouse-prod');
+    expect(sourceObjectIdentity(production)).toContain(production.objectId);
+  });
+
   it('owns dbt source artifact naming and grouping policy in one descriptor', () => {
     const orders = sourceObject({ catalog: 'Raw Lake', schema: 'Sales/ERP Ops' });
 
