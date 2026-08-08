@@ -51,4 +51,18 @@ describe('ConnectedSourceRef v1', () => {
       })
     ).toThrow();
   });
+
+  it('rejects exterior whitespace instead of creating visually duplicate identities', () => {
+    expect(() =>
+      ConnectionRefSchema.parse({ ...connectionRef, connectionId: ' warehouse-prod' })
+    ).toThrow();
+    expect(() => ConnectionRefSchema.parse({ ...connectionRef, provider: 'postgres ' })).toThrow();
+    expect(() =>
+      ConnectedSourceRefSchema.parse({
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef,
+        sourceObjectId: ' relation/analytics/public/orders ',
+      })
+    ).toThrow();
+  });
 });
