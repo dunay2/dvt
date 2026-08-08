@@ -1,7 +1,7 @@
 ---
 title: Manual de usuario de autoria en Canvas
-status: Review
-date: 2026-06-02
+status: Accepted
+date: 2026-08-08
 owner: Web
 planning_type: guide
 ---
@@ -32,6 +32,10 @@ Este manual es para usuarios, QA y revisores de producto que validan la autoria
 visual de workflows en Canvas. Describe como usar la herramienta, que casos de
 uso estan cubiertos por el flujo actual y que casos siguen condicionados o fuera
 de alcance.
+
+Los nombres de controles se citan como aparecen en la evidencia inglesa. Desde
+`Vista > Idioma` se puede elegir `Espanol` o `Ingles`; etiquetas, tooltips,
+mensajes y estados deben cambiar juntos al idioma seleccionado.
 
 ## Prerrequisitos
 
@@ -73,6 +77,24 @@ Resultado esperado: el usuario ve un grafo real de proyecto. Si falta autoridad
 de backend o de proyecto, la vista debe bloquear autoria en vez de mostrar datos
 de muestra.
 
+## Cambiar de proyecto sin mezclar datos
+
+1. Pulsar el nombre `Proyecto: ...` de la barra superior para abrir `Espacio de
+trabajo`.
+2. Revisar el tenant, proyecto y entorno activos en `Contexto del proyecto`.
+   Esos campos son informativos; no se editan escribiendo sobre ellos.
+3. En `Proyectos disponibles en esta sesion`, elegir el scope
+   `tenant / proyecto / entorno` deseado.
+4. Confirmar que el menu se cierra y que la barra superior muestra el proyecto
+   nuevo antes de continuar.
+5. Volver al proyecto anterior con el mismo selector cuando sea necesario.
+
+Resultado esperado: la seleccion usa el rail `SelectWorkspaceScope`, vuelve a
+cargar el borrador, archivos y conexiones del scope elegido y no reutiliza el
+contenido de otro proyecto aunque ambos tengan una ruta como
+`models/orders.sql`. Si solo existe un proyecto autorizado, aparece `No hay otro
+proyecto disponible en esta sesion.`; no se inventan alternativas.
+
 ## Insertar nodos
 
 1. Hacer click derecho sobre una zona vacia del canvas.
@@ -108,11 +130,18 @@ base del grafo.
 5. En `Metadata`, revisar columnas y metadata del origen activo.
 6. En `Selected`, confirmar la cesta de tablas y pulsar `Attach sources to
 canvas`.
+7. Si la cesta supera el alto visible, usar la barra de desplazamiento del
+   contenido. `Cancel` y `Attach sources to canvas` permanecen accesibles.
+8. Abrir el Workbench del nodo importado y comprobar en `General` la fila
+   `Connection`, con nombre, proveedor e identificador completos.
 
 Resultado esperado: el flujo registra fuentes gobernadas desde los rails
 `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects` e
 `ImportWarehouseSources`, y las proyecta como nodos de fuente en el canvas cerca
-del punto donde se abrio el menu contextual.
+del punto donde se abrio el menu contextual. La identidad persistida es la
+combinacion de conexion y objeto fisico: importar el mismo objeto mediante dos
+conexiones produce dos nodos distinguibles. No se muestran secretos ni se
+deduce una conexion a partir del nombre de tabla.
 
 ## Gestionar proyecto
 
@@ -140,14 +169,20 @@ captura principal, `Ejecutar` esta deshabilitado porque la barra indica
 
 ## Revisar codigo y artefactos
 
-1. Abrir la pestana `Codigo` para revisar archivos del workspace.
-2. Abrir `Artefactos` para revisar artefactos sincronizados.
-3. Usar `View` o `Download` cuando el artefacto este disponible.
-4. Verificar que el archivo mostrado corresponde al nodo o artefacto esperado.
+1. Seleccionar un nodo y pulsar el icono `Codigo` de su barra flotante.
+2. Si el nodo declara una ruta persistida, confirmar que se abre ese archivo
+   exacto en el Workbench de codigo del proyecto.
+3. Si el nodo es nuevo o generado y aun no tiene archivo persistido, confirmar
+   que se abre `More: Code` del propio nodo para revisar o editar su SQL.
+4. Para revisar el proyecto completo, abrir `Espacio de trabajo > Open project
+code` y elegir un archivo del explorador.
+5. Abrir `Artefactos` para revisar artefactos sincronizados y usar `View` o
+   `Download` cuando esten disponibles.
 
 Resultado esperado: codigo y artefactos son vistas de inspeccion del workspace;
-no sustituyen el grafo ni deben mostrar contenido que no corresponda al recurso
-seleccionado.
+no sustituyen el grafo, no fabrican rutas `models/<nombre>.sql` y nunca deben
+mostrar el primer archivo disponible o contenido de otro nodo como sustituto
+del recurso seleccionado.
 
 ## Casos de uso con evidencia parcial
 
@@ -245,10 +280,27 @@ de rails protegidos como `ListWarehouseConnections`,
   nodo real.
 - Abrir `Add source` desde el menu contextual y comprobar conexiones, tablas,
   columnas, metadata y cesta de seleccion.
+- Con una cesta alta, recorrerla con teclado y puntero; comprobar que la barra
+  de desplazamiento es visible y que `Cancel` y `Attach sources to canvas` son
+  alcanzables sin perder contexto.
+- Abrir el nodo importado y verificar que `Connection` muestra nombre,
+  proveedor e identificador completos, sin elipsis y sin secretos.
+- Importar el mismo objeto fisico mediante dos conexiones y confirmar que no se
+  deduplican entre si.
+- Cambiar entre dos proyectos autorizados que compartan una ruta de archivo y
+  confirmar que cada uno conserva su propio contenido al volver.
 - Abrir `Proyecto` y confirmar que `Importar` es snapshot, no conexion.
 - Confirmar que `Ejecutar` no se habilita con `Plan requerido`.
-- Abrir `Codigo`, `Artefactos` y `Ejecuciones` y comprobar que cada vista
-  muestra informacion alineada con el workspace activo.
+- Pulsar `Codigo` en un nodo persistido y en uno generado; comprobar que cada
+  accion abre el recurso exacto y nunca un archivo de respaldo no relacionado.
+- Repetir la comprobacion de visibilidad a 1000x660, 1280x720 y 1440x900, con
+  zoom de navegador al 100 % y al 200 %, sin texto truncado que oculte identidad
+  ni controles fuera del alcance del scroll.
+- Recorrer las acciones con teclado, comprobar foco visible, nombres
+  accesibles, orden logico, cierre con `Escape` y ausencia de violaciones axe
+  `serious` o `critical` en las superficies revisadas.
+- Abrir `Codigo`, `Artefactos` y `Ejecuciones` y comprobar que cada vista muestra
+  informacion alineada con el workspace activo.
 
 ## Diagnostico rapido
 
