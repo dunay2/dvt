@@ -26,19 +26,19 @@ const EXTERNAL_MODEL_SQL = 'select externally_edited_amount from protected_proje
 function openNodeWorkbench(nodeId: string): void {
   cy.get(`.react-flow__node[data-id="${nodeId}"]`, { timeout: 20_000 })
     .should('be.visible')
-    .dblclick();
+    .rightclick();
+  cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 })
+    .should('be.visible')
+    .find('[data-menu-action="inspect-node"]')
+    .should('be.visible')
+    .click();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
 }
 
 function openNodeCodeWorkbench(nodeId: string): void {
   cy.get(`.react-flow__node[data-id="${nodeId}"]`, { timeout: 20_000 })
     .should('be.visible')
-    .click();
-  cy.get(`[data-slot="canvas-node-floating-toolbar"][data-node-id="${nodeId}"]`)
-    .should('be.visible')
-    .find('[data-toolbar-action="code"]')
-    .should('be.enabled')
-    .click();
+    .dblclick();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
   cy.get('textarea[name="dbt-model-sql"]').should('be.enabled');
 }
