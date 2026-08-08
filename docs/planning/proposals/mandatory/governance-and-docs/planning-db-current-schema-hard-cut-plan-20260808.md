@@ -168,6 +168,8 @@ allowedImplementationSurfaces:
   - docs/adr/index.md
   - docs/adr/adr-catalog.md
   - docs/adr/adr-implementation-status.md
+  - docs/.manifest.json
+  - docs/architecture/components/ci-governance/**
   - docs/generated-docs-policy.json
   - docs/guides/**
   - docs/runbooks/**
@@ -177,6 +179,8 @@ allowedImplementationSurfaces:
   - package.json
   - scripts/planning-db*.cjs
   - scripts/planning-db/**
+  - scripts/planning-db-operate-tests/**
+  - scripts/planning-db-query-tests/**
   - scripts/governance-db*.cjs
   - scripts/governance-refresh*.cjs
   - scripts/generate-*.cjs
@@ -186,6 +190,7 @@ allowedImplementationSurfaces:
   - scripts/check-generated-docs-policy*.cjs
   - tools/planning-db/**
   - tools/ci/policy/workflow-scope.json
+  - .github/actions/**
   - .github/workflows/**
 forbiddenImplementationSurfaces:
   - infra/db/migrations/**
@@ -196,12 +201,15 @@ forbiddenImplementationSurfaces:
 commandQueryRails:
   - name: RestorePlanningDbCanonicalArchitectureState
     type: command
+    status: implemented
     dddOwner: PlanningDbCanonicalStateImport
   - name: ExportPlanningDbCanonicalArchitectureState
     type: command
+    status: implemented
     dddOwner: PlanningDbCanonicalStateExport
   - name: EnforcePlanningDbCurrentSchema
     type: query
+    status: implemented
     dddOwner: PlanningDbCurrentSchemaPolicy
 domainObjects:
   - name: PlanningDbCanonicalStateImport
