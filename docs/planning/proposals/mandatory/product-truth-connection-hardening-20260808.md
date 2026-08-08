@@ -313,10 +313,11 @@ This proposal does not replace existing owners:
   legacy ambiguous nodes and missing drafts; deterministic JCS hashes; visible
   read-only Canvas binding; command admission before warehouse discovery;
   collision-safe graph node identity; A -> B -> A cache proof with a colliding
-  path.
+  path; and an A -> B -> A live-product proof through two server-granted
+  workspace scopes that reuse the same graph title and workspace-file path.
 - Deferred: #2257 dbt target binding, runtime capability truth from #2176,
-  additional providers, a connection node, and the complete #2255 product
-  acceptance suite.
+  additional providers, a connection node, and #2255 acceptance slices other
+  than the bounded A1/A6 evidence produced here.
 
 ### 13.2 Governing command/query rails
 
@@ -328,6 +329,7 @@ is introduced:
 | Persist imported sources in Graph Draft        | `ImportWarehouseSources`                        | command | Warehouse Source Import / API strategy |
 | Read the authoritative draft                   | `GetWorkspaceGraphDraft`                        | query   | Workspace Graph Draft read model       |
 | Discover source objects through one connection | `ListWarehouseConnectionSourceObjects`          | query   | Warehouse Source Import                |
+| Resolve server-granted workspace choices       | `GetEffectiveWorkspaceContext`                  | query   | Protected runtime workspace context    |
 | Change active granted scope                    | `SelectWorkspaceScope`                          | command | Web session scope selection            |
 | Read scope-bound workspace files               | `ListWorkspaceFiles`, `GetWorkspaceFileContent` | query   | Workspace Files                        |
 
@@ -362,6 +364,17 @@ scope A / models/orders.sql = A
   -> select scope B / models/orders.sql = B
   -> select scope A / models/orders.sql = A
   -> no key, cache, file, graph, or artifact state crosses scope
+```
+
+```text
+LIVE WORKSPACE PROOF
+server grants scope A and scope B
+  -> author/import same physical source into A
+  -> SelectWorkspaceScope(B) through the visible product control
+  -> B starts without A graph/file presentation
+  -> author/import same physical source and same YAML path into B
+  -> SelectWorkspaceScope(A) through the visible product control
+  -> A recovers its original graph and file while B remains distinct
 ```
 
 ### 13.4 Decision rationale
@@ -438,27 +451,36 @@ scope A / models/orders.sql = A
     scrollable and cancellable; Cancel must close the dialog without importing
     a third source. Viewport pressure never authorizes hidden actions or clipped
     product truth.
+18. **Two real granted scopes, selected.** The protected live runner grants two
+    projects to the same authenticated principal and exposes both through
+    `GetEffectiveWorkspaceContext`. Cypress must change scope only through the
+    visible `SelectWorkspaceScope` control, author the same physical source and
+    `models/sources/src_public.yml` path in both scopes, then return A -> B -> A.
+    Direct storage seeding, browser-only scope invention, or an API-only switch
+    is rejected because it would not prove the product interaction or query
+    invalidation boundary.
 
 ### 13.5 Fowler opportunity matrix
 
-| Scenario                                          | Smell / risk                                 | Fowler move                                     | Required proof                                                        |
-| ------------------------------------------------- | -------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------- |
-| Connection and object travel as loose strings     | Primitive obsession / data clump             | Introduce Value Object                          | Strict `ConnectionRef` and `ConnectedSourceRef` contract tests        |
-| Same object ID exists through connections A and B | Hidden authority / identity collision        | Replace derived identity with explicit identity | Live import persists two distinct nodes and refs for the same object  |
-| Legacy node lacks connection identity             | Hidden authority / speculative compatibility | Introduce Assertion / Guard Clause              | Import fails before any mutation; no inference or migration           |
-| Canvas hides the effective source connection      | Hidden authority                             | Introduce Presentation Model                    | Localized read-only Workbench row names the connection                |
-| Scope A and B share a relative path               | Identity Map leakage                         | Make scope key explicit                         | A -> B -> A returns A, B, A for the same path                         |
-| Missing Canvas triggers initial-draft creation    | Divergent change / boundary drift            | Separate creation from import                   | Typed not-found with zero file/external writes                        |
-| Graph metadata accepts secret-shaped extras       | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                               |
-| Windows Docker cannot resolve pnpm junctions      | Environment coupling / false-negative gate   | Encapsulate platform execution strategy         | Unit proof selects native Cypress on Windows; live proof passes       |
-| Source review extends below a bounded dialog      | Hidden content / inaccessible navigation     | Expose bounded scrolling region                 | Visible scrollbar, reachable selected object, fixed Cancel            |
-| Missing node file falls back to another file      | Hidden authority / semantic substitution     | Replace guessed path with explicit strategy     | Generated model opens node code; persisted path opens Workbench       |
-| One edge still requires hidden selected-source ID | Data clump / duplicated decision             | Derive from the single explicit relationship    | One edge generates and validates; zero or ambiguous edges fail closed |
-| External probe precedes Canvas admission          | Temporal coupling / misplaced responsibility | Move statements before extraction               | Missing authority performs zero source-object reads                   |
-| Derived node ID is owned by another identity      | Identity collision / false idempotency       | Guard Clause                                    | Conflict occurs before file or draft mutation                         |
-| Identity differs only by exterior whitespace      | Primitive ambiguity / duplicate value        | Introduce Assertion                             | Strict contract rejects exterior-whitespace variants                  |
-| Fit view places a node under Add Component        | Presentation collision / hidden interaction  | Move shared options to the action owner         | Both live source nodes remain actionable after Fit view               |
-| Add Source clips actions under viewport pressure  | Hidden command / inaccessible cancellation   | Introduce Parameter Object for viewport proof   | Four-size live matrix keeps Cancel visible and closes without import  |
+| Scenario                                           | Smell / risk                                 | Fowler move                                     | Required proof                                                        |
+| -------------------------------------------------- | -------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------- |
+| Connection and object travel as loose strings      | Primitive obsession / data clump             | Introduce Value Object                          | Strict `ConnectionRef` and `ConnectedSourceRef` contract tests        |
+| Same object ID exists through connections A and B  | Hidden authority / identity collision        | Replace derived identity with explicit identity | Live import persists two distinct nodes and refs for the same object  |
+| Legacy node lacks connection identity              | Hidden authority / speculative compatibility | Introduce Assertion / Guard Clause              | Import fails before any mutation; no inference or migration           |
+| Canvas hides the effective source connection       | Hidden authority                             | Introduce Presentation Model                    | Localized read-only Workbench row names the connection                |
+| Scope A and B share a relative path                | Identity Map leakage                         | Make scope key explicit                         | A -> B -> A returns A, B, A for the same path                         |
+| Missing Canvas triggers initial-draft creation     | Divergent change / boundary drift            | Separate creation from import                   | Typed not-found with zero file/external writes                        |
+| Graph metadata accepts secret-shaped extras        | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                               |
+| Windows Docker cannot resolve pnpm junctions       | Environment coupling / false-negative gate   | Encapsulate platform execution strategy         | Unit proof selects native Cypress on Windows; live proof passes       |
+| Source review extends below a bounded dialog       | Hidden content / inaccessible navigation     | Expose bounded scrolling region                 | Visible scrollbar, reachable selected object, fixed Cancel            |
+| Missing node file falls back to another file       | Hidden authority / semantic substitution     | Replace guessed path with explicit strategy     | Generated model opens node code; persisted path opens Workbench       |
+| One edge still requires hidden selected-source ID  | Data clump / duplicated decision             | Derive from the single explicit relationship    | One edge generates and validates; zero or ambiguous edges fail closed |
+| External probe precedes Canvas admission           | Temporal coupling / misplaced responsibility | Move statements before extraction               | Missing authority performs zero source-object reads                   |
+| Derived node ID is owned by another identity       | Identity collision / false idempotency       | Guard Clause                                    | Conflict occurs before file or draft mutation                         |
+| Identity differs only by exterior whitespace       | Primitive ambiguity / duplicate value        | Introduce Assertion                             | Strict contract rejects exterior-whitespace variants                  |
+| Fit view places a node under Add Component         | Presentation collision / hidden interaction  | Move shared options to the action owner         | Both live source nodes remain actionable after Fit view               |
+| Add Source clips actions under viewport pressure   | Hidden command / inaccessible cancellation   | Introduce Parameter Object for viewport proof   | Four-size live matrix keeps Cancel visible and closes without import  |
+| A and B reuse graph/file names in one live session | Hidden authority / Identity Map leakage      | Make scope key explicit at query boundaries     | Visible A -> B -> A switch recovers distinct graph and YAML state     |
 
 ### 13.6 DoR for the bounded slice
 
@@ -479,6 +501,7 @@ scope A / models/orders.sql = A
 - [x] Missing/legacy ambiguous state fails closed before mutation.
 - [x] Canvas Workbench exposes the effective connection in ES and EN.
 - [x] A -> B -> A with the same relative path proves cache isolation.
+- [ ] A -> B -> A through two real granted scopes proves live graph/file isolation.
 - [x] Live Source Import persists the same physical object through two distinct real connections without reducing its existing assertions.
 - [x] Add Source and connected-source Workbench remain visible, axe-clean and cancellable across the governed viewport matrix.
 - [x] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
@@ -561,6 +584,9 @@ commandQueryRails:
   - name: GetWorkspaceGraphDraft
     type: query
     dddOwner: Workspace Graph Draft
+  - name: GetEffectiveWorkspaceContext
+    type: query
+    dddOwner: Protected runtime workspace context
   - name: SelectWorkspaceScope
     type: command
     dddOwner: Web session workspace selection
@@ -649,6 +675,14 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/src/app/queries/workspaceQueries.scope.test.tsx
     greenTest: pnpm --filter @dvt/web test -- workspaceQueries.scope.test.tsx
+  - id: live-granted-workspace-scope-isolation
+    redTest: pnpm --filter @dvt/web test:e2e:source-import:live
+    expectedFailure: The protected proof grants only one real workspace scope and cannot exercise the visible A -> B -> A selector path with colliding graph and file identities.
+    patchSurfaces:
+      - scripts/run-canvas-source-import-live-proof.cjs
+      - scripts/run-canvas-source-import-live-proof.test.cjs
+      - apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts
+    greenTest: pnpm --filter @dvt/web test:e2e:source-import:live
   - id: windows-live-proof-dependency-resolution
     redTest: node --test scripts/run-canvas-source-import-live-proof.test.cjs
     expectedFailure: The live proof always selects a Linux Docker bind mount even when Windows pnpm dependencies are NTFS junctions.
