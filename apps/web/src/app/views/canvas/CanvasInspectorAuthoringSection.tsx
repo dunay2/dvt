@@ -6,6 +6,9 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Textarea } from '../../components/ui/textarea';
 import { inspectorVisualClasses } from '../../components/inspector/inspectorVisualTokens';
+import { HttpJsonArtifactAuthoringFields } from '../../plugins/httpJson/HttpJsonArtifactAuthoringFields';
+import { ObjectFilePostgresAuthoringFields } from '../../plugins/objectFilePostgres/ObjectFilePostgresAuthoringFields';
+import { PythonCodeAuthoringFields } from '../../plugins/python/PythonCodeAuthoringFields';
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
 import {
@@ -17,8 +20,6 @@ import { canvasViewCopy } from './copy';
 import { DbtAuthoringFields } from './DbtAuthoringFields';
 import { DvtAuthoringFields } from './DvtAuthoringFields';
 import type { CanvasNodeWorkbenchDraftController } from './useCanvasNodeWorkbenchDraftController';
-import { ObjectFilePostgresAuthoringFields } from '../../plugins/objectFilePostgres/ObjectFilePostgresAuthoringFields';
-import { HttpJsonArtifactAuthoringFields } from '../../plugins/httpJson/HttpJsonArtifactAuthoringFields';
 
 type CanvasInspectorAuthoringSectionProps = Readonly<{
   node: CanonicalNode;
@@ -65,6 +66,8 @@ export function CanvasInspectorAuthoringSection({
     draft.objectFilePostgres != null && (section === 'all' || section === 'general');
   const showHttpJsonArtifactAuthoring =
     draft.httpJsonArtifact != null && (section === 'all' || section === 'general');
+  const showPythonCodeAuthoring =
+    draft.pythonCode != null && (section === 'all' || section === 'general' || section === 'code');
   const dvtAuthoringSection = section === 'sink' ? 'general' : section;
 
   if (
@@ -72,7 +75,8 @@ export function CanvasInspectorAuthoringSection({
     !showDvtAuthoring &&
     !showDbtAuthoring &&
     !showObjectFilePostgresAuthoring &&
-    !showHttpJsonArtifactAuthoring
+    !showHttpJsonArtifactAuthoring &&
+    !showPythonCodeAuthoring
   ) {
     return null;
   }
@@ -180,6 +184,18 @@ export function CanvasInspectorAuthoringSection({
             errors={errors.httpJsonArtifact}
             onChange={(httpJsonArtifact) =>
               setDraft((currentDraft) => ({ ...currentDraft, httpJsonArtifact }))
+            }
+          />
+        ) : null}
+
+        {showPythonCodeAuthoring && draft.pythonCode ? (
+          <PythonCodeAuthoringFields
+            nodeId={node.id}
+            disabled={!authoring.canEditNode}
+            draft={draft.pythonCode}
+            errors={errors.pythonCode}
+            onChange={(pythonCode) =>
+              setDraft((currentDraft) => ({ ...currentDraft, pythonCode }))
             }
           />
         ) : null}
