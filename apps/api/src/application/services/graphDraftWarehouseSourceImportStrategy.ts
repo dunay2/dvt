@@ -82,12 +82,12 @@ export class GraphDraftWarehouseSourceImportStrategy {
       workspaceFiles: this.deps.workspaceFiles,
       authorityProjectRoot: null,
     });
+    const mutation = appendImportedSourceNodes(draft, context, filePlan.bindings);
     const appliedReceipt = await applyWarehouseSourceImportFilePlan({
       context,
       plan: filePlan,
       batchMutation: this.deps.batchMutation,
     });
-    const mutation = appendImportedSourceNodes(draft, context, filePlan.bindings);
     const requestHash = sha256HexUtf8(
       jcsCanonicalize({
         scope: context.scope,
@@ -229,6 +229,10 @@ function appendImportedSourceNodes(
   const importedNodes: WorkspaceGraphAuthoringNode[] = [];
   const selectedNodeIds: string[] = [];
   const nextPositions = { ...target.nodePositions };
+  const rightmostExistingPosition = Object.values(target.nodePositions).reduce(
+    (rightmost, position) => Math.max(rightmost, position.x),
+    -200
+  );
   for (const sourceObject of context.sourceObjects) {
     const connectedSourceRef: ConnectedSourceRef = {
       schemaVersion: 'connected-source-ref.v1',
@@ -254,15 +258,17 @@ function appendImportedSourceNodes(
         ? toCollisionResistantSourceNodeId(sourceObject)
         : stableNodeId;
     if (existingIds.has(nodeId)) {
-      selectedNodeIds.push(nodeId);
-      continue;
+      throw new WarehouseSourceImportDraftConflictError();
     }
 
     existingIds.add(nodeId);
     selectedNodeIds.push(nodeId);
     const binding = sourceYamlBindings.get(sourceObject.objectId);
     importedNodes.push(toSourceNode(nodeId, context, sourceObject, binding));
-    nextPositions[nodeId] = { x: 80 + selectedNodeIds.length * 40, y: 120 };
+    nextPositions[nodeId] = {
+      x: rightmostExistingPosition + importedNodes.length * 320,
+      y: 120,
+    };
   }
 
   const nextTarget = {
