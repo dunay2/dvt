@@ -11,17 +11,26 @@
 import { z } from 'zod';
 
 import { JsonObjectSchema, type JsonValue } from '../shared/JsonValue.v1.js';
+import {
+  PYTHON_CODE_MAX_INPUT_BYTES,
+  PYTHON_CODE_MAX_RESULT_BYTES,
+  PYTHON_CODE_MAX_SOURCE_BYTES,
+  PYTHON_CODE_MAX_STREAM_BYTES,
+  PYTHON_CODE_MAX_TIMEOUT_MS,
+} from '../shared/PythonCodeLimits.v1.js';
 import type { PlanOwnership } from './ExecutionPlan.v1.js';
+
+export {
+  PYTHON_CODE_MAX_INPUT_BYTES,
+  PYTHON_CODE_MAX_RESULT_BYTES,
+  PYTHON_CODE_MAX_SOURCE_BYTES,
+  PYTHON_CODE_MAX_STREAM_BYTES,
+  PYTHON_CODE_MAX_TIMEOUT_MS,
+} from '../shared/PythonCodeLimits.v1.js';
 
 export const EXECUTE_PYTHON_CODE_STEP_KIND = 'EXECUTE_PYTHON_CODE' as const;
 export const EXECUTE_PYTHON_CODE_REQUIRED_CAPABILITY = 'executor.python-code' as const;
 export const PYTHON_CODE_PROTOCOL_VERSION = 'python-json-v1' as const;
-
-export const PYTHON_CODE_MAX_SOURCE_BYTES = 65_536 as const;
-export const PYTHON_CODE_MAX_INPUT_BYTES = 65_536 as const;
-export const PYTHON_CODE_MAX_STREAM_BYTES = 65_536 as const;
-export const PYTHON_CODE_MAX_RESULT_BYTES = 65_536 as const;
-export const PYTHON_CODE_MAX_TIMEOUT_MS = 300_000 as const;
 
 export type PythonJsonValue = JsonValue;
 
