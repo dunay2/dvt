@@ -56,6 +56,37 @@ test('source import live proof grants two workspace scopes for one tenant', () =
   );
 });
 
+test('source import live proof rejects cross-tenant grant fixtures', () => {
+  const runner = new CanvasSourceImportLiveProofRunner({});
+
+  assert.throws(
+    () =>
+      runner.buildProtectedRuntimeTenantAccess(
+        [
+          { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' },
+          { tenantId: 'tenant-b', projectId: 'project-b', environmentId: 'dev' },
+        ],
+        ['workspace:graph-draft:view']
+      ),
+    /requires all workspace scopes in one tenant/
+  );
+});
+
+test('source import live proof exposes each workspace option once', () => {
+  const runner = new CanvasSourceImportLiveProofRunner({});
+
+  assert.equal(
+    runner.formatWorkspaceOptions(
+      [
+        { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' },
+        { tenantId: 'tenant-a', projectId: 'project-b', environmentId: 'test' },
+      ],
+      'tenantId'
+    ),
+    'tenant-a|tenant-a'
+  );
+});
+
 test('source import live proof uses locally resolvable Cypress dependencies on Windows', () => {
   const runner = new CanvasSourceImportLiveProofRunner({
     ELECTRON_RUN_AS_NODE: '1',
