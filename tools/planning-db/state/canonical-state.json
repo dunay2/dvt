@@ -82798,7 +82798,7 @@
         "pnpm planning:db:query rail-vocabulary --no-refresh --limit 80"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md",
-      "sourceContentSha256": "ac2b795912edf181dab2cb8b88b775374cce8a826f957edf7a9e4615abc405a4",
+      "sourceContentSha256": "398162900dbdf8f47d01b36389fbd48e1ac1661bcf9659fdd2a82aec4ec1db40",
       "rawRail": {
         "name": "ExportDbtProject",
         "type": "command",
