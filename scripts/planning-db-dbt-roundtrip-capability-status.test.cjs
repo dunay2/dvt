@@ -72,11 +72,11 @@ test('DBT round-trip current catalog enumerates implemented and deferred rails w
     'ValidateDbtProjectImport',
   ]);
   assert.equal(catalog.railEvidence.length, 8);
-  assert.equal(
-    catalog.railEvidence.find((evidence) => evidence.railName === 'ExportDbtProject')
-      .expectedImplemented,
-    false
+  const exportEvidence = catalog.railEvidence.find(
+    (evidence) => evidence.railName === 'ExportDbtProject'
   );
+  assert.equal(exportEvidence.expectedRailStatus, 'not-implemented');
+  assert.equal(exportEvidence.expectedImplemented, false);
 });
 
 test('DBT round-trip current catalog contains no compatibility or history state', () => {
