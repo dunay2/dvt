@@ -28,7 +28,11 @@ function assertCurrentPlanningDbSchema(schemaSql) {
   if (missingSchemas.length > 0) {
     throw new Error(`Current Planning DB schema must declare ${missingSchemas.join(', ')}.`);
   }
-  if (/schema_migrations|migration_state|planning:db:migrate/iu.test(sql)) {
+  if (
+    /schema_migrations|migration_state|migration_checksum|migration_ordinal|applied_migrations?(?:_identity)?|planning:db:migrate/iu.test(
+      sql
+    )
+  ) {
     throw new Error('Current Planning DB schema must not contain migration state.');
   }
   if (/^\\(?:restrict|unrestrict)\b/imu.test(sql)) {

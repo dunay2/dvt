@@ -14,6 +14,8 @@ const dependencies = (() => {
     defaultPgUrl: require('./planning-db-run.cjs').defaultPgUrl,
     schemaName: require('./planning-db-schema.cjs').schemaName,
     readArchitectureState: require('./planning-db-architecture-state.cjs').readArchitectureState,
+    assertCurrentRailDecisionState: require('./planning-db-architecture-state.cjs')
+      .assertCurrentRailDecisionState,
     assertCurrentStateValue: require('./planning-db-architecture-state.cjs')
       .assertCurrentStateValue,
     repoRoot: path.resolve(__dirname, '..'),
@@ -146,6 +148,10 @@ class PlanningDbExportRunner {
     this.deps.assertCurrentStateValue(
       featureMechanizationRailOperations.rows,
       'featureMechanizationRailOperations'
+    );
+    this.deps.assertCurrentRailDecisionState(
+      featureMechanizationRails.rows,
+      featureMechanizationRailOperations.rows
     );
     const currentRails = featureMechanizationRails.rows.map((rail) => {
       const sourcePath = this.deps.path.resolve(this.deps.repoRoot, rail.sourcePath);

@@ -39,7 +39,10 @@ test('current Planning DB schema is one declarative artifact without migration s
   const schemaSql = fs.readFileSync(currentSchemaPath, 'utf8');
   assert.doesNotMatch(schemaSql, /schema_migrations/iu);
   assert.doesNotMatch(schemaSql, /migration_state/iu);
-  assert.doesNotMatch(schemaSql, /migration checksum|applied migration/iu);
+  assert.doesNotMatch(
+    schemaSql,
+    /migration[_ ](?:checksum|ordinal)|applied[_ ]migrations?(?:_identity)?/iu
+  );
   for (const taskObject of [
     'planning_artifacts',
     'planning_lanes',
@@ -117,6 +120,20 @@ test('current schema validation rejects migration ledgers and wrong schema owner
       ),
     /must not contain migration state/iu
   );
+  for (const forbiddenLedger of [
+    'migration_checksum',
+    'migration_ordinal',
+    'applied_migration',
+    'applied_migration_identity',
+  ]) {
+    assert.throws(
+      () =>
+        assertCurrentPlanningDbSchema(
+          `create schema architecture; create schema component_engineering; create schema planning_query_store; create table planning_query_store.example(${forbiddenLedger} text);`
+        ),
+      /must not contain migration state/iu
+    );
+  }
   assert.throws(
     () =>
       assertCurrentPlanningDbSchema(
