@@ -7,6 +7,7 @@ import { act } from 'react';
 
 import {
   createCanvasShellHarness,
+  getCanvasShellState,
   type CanvasShellPropsOverrides,
 } from './CanvasShell.testHarness';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
@@ -38,6 +39,44 @@ describe('CanvasShell graph base surface', () => {
         status: 'idle',
       })
     ).toBeNull();
+  });
+
+  it('routes generated dbt model code to the node authoring surface', async () => {
+    const onInspectNode = vi.fn();
+    await renderShell({
+      graph: {
+        nodesWithImpact: [
+          {
+            id: 'dbt-model-1',
+            type: 'dbtNode',
+            position: { x: 0, y: 0 },
+            data: {
+              name: 'Model 1',
+              pluginKind: 'dbt:model',
+              status: 'idle',
+              presentationTruth: {
+                code: {
+                  kind: 'generated',
+                  content: 'select * from source_1',
+                  path: 'models/model_1.sql',
+                  language: 'sql',
+                },
+              },
+              onInspectNode,
+            },
+          },
+        ],
+      },
+    });
+
+    const forwardedNode = (
+      getCanvasShellState().canvasViewportProps?.nodesWithImpact as
+        Array<{ data: { onOpenNodeCode?: (nodeId: string) => void } }> | undefined
+    )?.[0];
+    forwardedNode?.data.onOpenNodeCode?.('dbt-model-1');
+
+    expect(onInspectNode).toHaveBeenCalledWith('dbt-model-1', 'code');
+    expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
   });
 
   it('keeps node selection separate from contextual node workbench opening', async () => {
