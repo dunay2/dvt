@@ -8,10 +8,12 @@ import { inspectorVisualClasses } from '../../components/inspector/inspectorVisu
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { DvtSqlTransformAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
+import { detectCanvasViewLocale } from './canvasCopyCatalog';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftErrors,
 } from './canvasInspectorAuthoring.types';
+import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { canvasViewCopy } from './copy';
 
 export function DvtSqlTransformAuthoringSection({
@@ -44,6 +46,11 @@ export function DvtSqlTransformAuthoringSection({
     sqlLineCount === 1
       ? canvasViewCopy.inspectorDvtSqlLineSingularLabel
       : canvasViewCopy.inspectorDvtSqlLinePluralLabel;
+  const nodePresentationCopy = buildCanvasNodePresentationCopy(
+    canvasViewCopy,
+    detectCanvasViewLocale()
+  );
+  const inputRoleLabel = nodePresentationCopy.valueLabels?.input;
   const columnOptions = buildDvtTransformColumnOptions({
     node,
     nodes,
@@ -121,7 +128,8 @@ export function DvtSqlTransformAuthoringSection({
         <div className={showCode ? 'mt-4 space-y-2' : 'space-y-2'}>
           <div className="flex items-center justify-between gap-3">
             <h4 className={inspectorVisualClasses.contextPanelSectionTitle}>
-              {canvasViewCopy.nodePresentationColumnsLabel} ({canvasViewCopy.inspectorDbtOriginLabel})
+              {canvasViewCopy.nodePresentationColumnsLabel}
+              {inputRoleLabel == null ? null : ` (${inputRoleLabel})`}
             </h4>
             {columnOptions.length > 0 ? (
               <span className={inspectorVisualClasses.inspectorSubtle}>
