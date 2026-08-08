@@ -1,5 +1,5 @@
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import { z } from 'zod';
 
@@ -56,6 +56,10 @@ const EnvSchema = z
     DVT_TEMPORAL_DBT_ENABLED: envBoolean.default(false),
     DVT_TEMPORAL_OBJECT_FILE_POSTGRES_ENABLED: envBoolean.default(false),
     DVT_TEMPORAL_HTTP_JSON_ENABLED: envBoolean.default(false),
+    DVT_TEMPORAL_PYTHON_ENABLED: envBoolean.default(false),
+    DVT_PYTHON_RUNTIMES: z.string().optional(),
+    DVT_PYTHON_WORKDIR_ROOT: nonBlankString.default(join(tmpdir(), 'dvt', 'python-worker')),
+    DVT_PYTHON_ISOLATED_WORKER_ACKNOWLEDGED: envBoolean.default(false),
     DVT_HTTP_JSON_ENDPOINTS: z.string().optional(),
     DVT_HTTP_JSON_AUTH_TOKENS: z.string().optional(),
     DVT_HTTP_JSON_ARTIFACT_CREDENTIAL_REF: z.string().optional(),
@@ -79,6 +83,17 @@ const EnvSchema = z
         path: ['DVT_HTTP_JSON_ALLOW_LOOPBACK_FIXTURE'],
         message: 'loopback fixture access is forbidden in production',
       });
+    }
+
+    if (input.DVT_TEMPORAL_PYTHON_ENABLED) {
+      if (!input.DVT_PYTHON_ISOLATED_WORKER_ACKNOWLEDGED) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['DVT_PYTHON_ISOLATED_WORKER_ACKNOWLEDGED'],
+          message: 'must be true before the Python profile can be enabled',
+        });
+      }
+      validatePythonRuntimeBindings(input.DVT_PYTHON_RUNTIMES, ctx);
     }
 
     if (input.DVT_TEMPORAL_HTTP_JSON_ENABLED) {
@@ -159,6 +174,52 @@ const EnvSchema = z
       });
     }
   });
+
+function validatePythonRuntimeBindings(
+  value: string | undefined,
+  ctx: z.RefinementCtx
+): void {
+  const field = 'DVT_PYTHON_RUNTIMES' as const;
+  if (value === undefined || value.trim().length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [field],
+      message: 'required when DVT_TEMPORAL_PYTHON_ENABLED=true',
+    });
+    return;
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    parsed = undefined;
+  }
+  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: 'must be a JSON object' });
+    return;
+  }
+
+  const entries = Object.entries(parsed as Record<string, unknown>);
+  if (entries.length === 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: [field], message: 'must not be empty' });
+    return;
+  }
+  for (const [runtimeRef, executable] of entries) {
+    if (
+      !/^python-runtime:[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/u.test(runtimeRef) ||
+      typeof executable !== 'string' ||
+      executable.trim().length === 0 ||
+      !isAbsolute(executable)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [field],
+        message: 'keys must use python-runtime:* and values must be absolute executable paths',
+      });
+    }
+  }
+}
 
 function validateCredentialBinding(
   value: string | undefined,
