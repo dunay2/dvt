@@ -34,15 +34,13 @@ type CanvasNodeShellProps = Readonly<{
   onDrop?: DragEventHandler<HTMLDivElement>;
 }>;
 
-type CanvasNodeDoubleClickAvailability = Readonly<{
-  canOpenCode: boolean;
-  canOpenWorkbench: boolean;
-}>;
-
 export function resolveCanvasNodeDoubleClickAction({
   canOpenCode,
   canOpenWorkbench,
-}: CanvasNodeDoubleClickAvailability): 'open-code' | 'open-workbench' | null {
+}: Readonly<{
+  canOpenCode: boolean;
+  canOpenWorkbench: boolean;
+}>): 'open-code' | 'open-workbench' | null {
   if (canOpenCode) {
     return 'open-code';
   }
