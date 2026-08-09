@@ -106,6 +106,29 @@ describe('warehouse source YAML projection', () => {
     );
   });
 
+  it('assigns distinct logical source keys when colliding schemas use separate YAML paths', () => {
+    const updates = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map(),
+      groupingStrategy: 'schema',
+      includeColumns: false,
+      addTests: false,
+      addFreshness: false,
+      sourceObjects: [
+        sourceObject({ schema: 'Sales/ERP Ops', name: 'orders' }),
+        sourceObject({ schema: 'Sales ERP Ops', name: 'orders' }),
+      ],
+    });
+
+    const logicalSourceKeys = updates.flatMap((update) =>
+      readExistingSourceDocument(update.content).sources.flatMap((source) =>
+        source.tables.map((table) => `${source.name}.${table.name}`)
+      )
+    );
+
+    expect(updates).toHaveLength(2);
+    expect(new Set(logicalSourceKeys)).toHaveLength(2);
+  });
+
   it('keeps colliding physical schemas distinct when they are imported in separate batches', () => {
     const first = sourceObject({ schema: 'Sales/ERP Ops', name: 'open_orders' });
     const second = sourceObject({ schema: 'Sales ERP Ops', name: 'closed_orders' });

@@ -34,6 +34,7 @@ import {
 } from './warehouseSourceImportPlan.js';
 import {
   buildWarehouseSourceYamlPath,
+  sourceObjectIdentity,
   toStableYamlIdentifierPart,
   type WarehouseSourceYamlBinding,
 } from './warehouseSourceYaml.js';
@@ -215,7 +216,11 @@ function appendImportedSourceNodes(
     if (!connectedSourceRef.success || node.metadata?.sourceObjectId !== undefined) {
       throw new WarehouseSourceImportDraftConflictError();
     }
-    existingNodeIdByConnectedSourceRef.set(jcsCanonicalize(connectedSourceRef.data), node.id);
+    const identityKey = jcsCanonicalize(connectedSourceRef.data);
+    if (existingNodeIdByConnectedSourceRef.has(identityKey)) {
+      throw new WarehouseSourceImportDraftConflictError();
+    }
+    existingNodeIdByConnectedSourceRef.set(identityKey, node.id);
   }
 
   const stableIdOwners = new Map<string, Set<string>>();
@@ -263,7 +268,7 @@ function appendImportedSourceNodes(
 
     existingIds.add(nodeId);
     selectedNodeIds.push(nodeId);
-    const binding = sourceYamlBindings.get(sourceObject.objectId);
+    const binding = sourceYamlBindings.get(sourceObjectIdentity(sourceObject));
     importedNodes.push(toSourceNode(nodeId, context, sourceObject, binding));
     nextPositions[nodeId] = {
       x: rightmostExistingPosition + importedNodes.length * 320,
