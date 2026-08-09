@@ -77,6 +77,8 @@ The surviving operation model is `CanvasNodeModelerActionModel`. It may expose o
 
 It does not expose Code, Workbench, Properties, or section navigation.
 
+The direct play/pause execution-selection control is also retired because it mutates the same execution-selection intent as the ellipsis operation. One semantic command has one visible owner.
+
 Native node right-click is blocked. Empty-Canvas right-click remains owned by the existing Canvas context-menu presenter and continues to expose Add Component / Canvas actions.
 
 ## Retained architecture
@@ -96,13 +98,16 @@ Native node right-click is blocked. Empty-Canvas right-click remains owned by th
 - left-click node floating toolbar presentation;
 - floating-toolbar model, token and position/state plumbing;
 - floating-toolbar Code/Freeze/More actions;
+- direct play/pause execution-selection presentation on the node card;
 - node-native right-click as a DVT action surface;
-- `inspect-node` as a visible node-operations entry;
+- `inspect-node` as a visible node-operations entry and its parallel menu builder;
 - `open-code | open-workbench` double-click branching;
 - tests that protect those displaced surfaces;
 - current documentation that treats those surfaces as product authority.
 
 The underlying layout freeze state is not promoted elsewhere by this cut. If a future supported user operation requires Freeze/Unfreeze, it must be introduced through the existing node-operation authority with a distinct product decision, not by restoring the retired toolbar.
+
+One non-visible caller cleanup remains deliberately outside this bounded interaction cut: `DbtNodeRenderer` still computes the former `GraphNodeCardPlayAction`; `GraphNodeCardView` ignores the transitional input and never renders it. Retirement of that last producer plus `graphNodeCardActions` and any now-unused visual tokens is recorded in #2267 and must not restore a visible play/pause surface.
 
 ## Acceptance invariants
 
@@ -114,16 +119,19 @@ The underlying layout freeze state is not promoted elsewhere by this cut. If a f
 6. Native right-click on a node does not open a DVT node menu.
 7. Right-click on empty Canvas still opens the existing Canvas context menu.
 8. No floating node toolbar is rendered or retained as dormant state.
-9. File-backed dbt metadata remains inspectable and SQL remains revision-authoritative.
-10. Closing a file-backed Code editor returns to the same focused node Properties context.
-11. Execution selection is never mutated by plain visual selection.
-12. ES/EN and keyboard accessibility continue to use the existing localization and focus owners.
+9. No direct play/pause execution-selection control is rendered on the node card.
+10. File-backed dbt metadata remains inspectable and SQL remains revision-authoritative.
+11. Closing a file-backed Code editor returns to the same focused node Properties context.
+12. Execution selection is never mutated by plain visual selection.
+13. ES/EN and keyboard accessibility continue to use the existing localization and focus owners.
 
 ## Evidence
 
 Primary automated evidence:
 
 - `CanvasNodeShell.test.tsx` — one node-entry gesture, embedded-control protection, native right-click rejection;
+- `canvasNodeContextMenuModel.test.ts` / `CanvasNodeContextMenuView.test.tsx` — operations-only ellipsis model;
+- `GraphNodeCardView.test.tsx` — no direct play/pause execution-selection surface;
 - `canvasNodeWorkbenchHardening.architecture.test.ts` — no floating-toolbar production topology and one Properties entry authority;
 - `canvasNodeContextSurfaceModel.test.ts` — only distinct transient health detail survives;
 - `canvas-dbt-author-code-run-live.cy.ts` — Graph Draft Properties authoring/code persistence path;
@@ -147,6 +155,7 @@ componentGuides:
 userStories:
   - As a Canvas author, I double-click a node once to enter its single Properties surface, with Code preferred when available.
   - As a Canvas author, I use the card ellipsis only for node operations and never need a duplicate floating toolbar or node right-click menu.
+  - As a Canvas author, I select or deselect execution through the node operations menu rather than a duplicate play/pause control.
   - As a file-backed dbt author, I reach the authoritative Code editor from the Code section and return to the same node Properties context when it closes.
 governingSources:
   - AGENTS.md
@@ -157,10 +166,15 @@ governingSources:
 allowedImplementationSurfaces:
   - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
   - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+  - apps/web/src/app/components/canvas/CanvasNodeContextMenuView.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.tsx
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+  - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
+  - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+  - apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
   - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
+  - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.header.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx
@@ -219,6 +233,7 @@ domainObjects:
 fowlerSignals:
   - duplicate node gestures and adjacent action surfaces
   - split Code versus Workbench node-entry semantics
+  - duplicate execution-selection presentation
   - dead application selection callbacks
   - displaced floating-toolbar state and tests
   - presentation and localization drift
@@ -244,6 +259,15 @@ redGreenCycles:
       - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
       - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
     greenTest: apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
+  - id: operations-only-node-menu
+    redTest: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
+    expectedFailure: The previous node menu still exposes Workbench inspection and parallel execution-selection presentation.
+    patchSurfaces:
+      - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+      - apps/web/src/app/components/canvas/CanvasNodeContextMenuView.test.tsx
+      - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
+      - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
+    greenTest: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - id: retire-floating-toolbar
     redTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
     expectedFailure: Left-click still projects a second floating Code/Freeze/More surface.
