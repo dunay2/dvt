@@ -187,55 +187,55 @@ domainObjects:
     owner: Canvas node interaction presentation
 symbols:
   - path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx
-    symbol: handleDoubleClick
+    name: handleDoubleClick
     kind: function
     exported: false
   - path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx
-    symbol: handleContextMenuCapture
+    name: handleContextMenuCapture
     kind: function
     exported: false
   - path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx
-    symbol: nativeEvent
+    name: nativeEvent
     kind: const
     exported: false
   - path: apps/web/src/app/components/canvas/DbtNodeComponent.tsx
-    symbol: hasCodeSection
+    name: hasCodeSection
     kind: const
     exported: false
   - path: apps/web/src/app/components/canvas/DbtNodeComponent.tsx
-    symbol: contextMenuModel
+    name: contextMenuModel
     kind: const
     exported: false
   - path: apps/web/src/app/components/canvas/DbtNodeComponent.tsx
-    symbol: handleOpenNode
+    name: handleOpenNode
     kind: function
     exported: false
   - path: apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
-    symbol: contextMenuEvent
+    name: contextMenuEvent
     kind: const
     exported: false
   - path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
-    symbol: activateFocusedCanvasNodeFromKeyboard
+    name: activateFocusedCanvasNodeFromKeyboard
     kind: function
     exported: true
   - path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
-    symbol: nodeElement
+    name: nodeElement
     kind: const
     exported: false
   - path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
-    symbol: shell
+    name: shell
     kind: const
     exported: false
   - path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
-    symbol: MouseEventConstructor
+    name: MouseEventConstructor
     kind: const
     exported: false
   - path: apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
-    symbol: openNodeCodeEditor
+    name: openNodeCodeEditor
     kind: function
     exported: false
   - path: apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
-    symbol: node
+    name: node
     kind: const
     exported: false
 fowlerSignals:
