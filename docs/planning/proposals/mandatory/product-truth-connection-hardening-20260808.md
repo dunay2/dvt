@@ -611,6 +611,9 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
   - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
   - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
+  - apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts
+  - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
+  - apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts
   - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts
   - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
@@ -865,6 +868,9 @@ redGreenCycles:
     patchSurfaces:
       - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
       - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
+      - apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts
+      - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
+      - apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts
     greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
 symbols:
   - { name: CONNECTION_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }

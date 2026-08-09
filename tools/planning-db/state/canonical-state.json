@@ -111345,7 +111345,10 @@
         "docs/.manifest.json",
         "docs/concepts/repository-map.md",
         "docs/planning/status/**",
-        "tools/planning-db/state/canonical-state.json"
+        "tools/planning-db/state/canonical-state.json",
+        "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+        "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+        "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
       ],
       "architectureGuards": [
         "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH",
@@ -111369,7 +111372,7 @@
         "pnpm planning:db:export:check"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
-      "sourceContentSha256": "8e65c59eebf352e64697e942df9f2aa680ea55713088245bdfce4873ead03a62",
+      "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
       "rawRail": {
         "name": "ImportWarehouseSources",
         "type": "command",
@@ -111525,9 +111528,13 @@
             "cqRails": ["ImportWarehouseSources"],
             "dddOwner": "Warehouse Source Import",
             "unitTests": [
-              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+              "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx src/app/views/canvas/dbtAuthoringFieldsModel.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
             ],
-            "fowlerSignals": ["Hidden authority"],
+            "fowlerSignals": [
+              "Hidden authority",
+              "Replace Magic Literal with explicit fixture"
+            ],
             "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
             "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
           }
@@ -111538,7 +111545,8 @@
           "As a Canvas author I can see which connection qualifies an imported source.",
           "As a workspace user I can switch between scopes with colliding paths without stale data.",
           "As an operator I get an explicit failure instead of guessed legacy connection state.",
-          "As a Canvas author I cannot Preview an unbound or unsupported warehouse source."
+          "As a Canvas author I cannot Preview an unbound or unsupported warehouse source.",
+          "As a Canvas author I cannot preview a warehouse model unless its source has an explicit supported connection binding."
         ],
         "cypressFlows": [
           "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
@@ -111556,7 +111564,8 @@
           "Hidden authority",
           "Identity Map leakage",
           "Boundary drift",
-          "Replace derived identity with explicit identity"
+          "Replace derived identity with explicit identity",
+          "Replace Magic Literal with explicit fixture"
         ],
         "completionGate": [
           "pnpm docs:feature-mechanization -- --feature PTH1-CONNECTED-SOURCE-TRUTH",
@@ -111817,15 +111826,18 @@
           },
           {
             "id": "importwarehousesources-record",
-            "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
-            "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+            "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx src/app/views/canvas/dbtAuthoringFieldsModel.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
             "patchSurfaces": [
               "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
               "apps/api/src/application/services/warehouseSourceYamlBindings.ts",
               "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
-              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+              "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+              "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
             ],
-            "expectedFailure": "Missing or unsupported connected-source bindings still project executable DBT source artifacts from display metadata."
+            "expectedFailure": "Positive warehouse-source fixtures omit ConnectedSourceRef and are correctly rejected by fail-closed artifact projection."
           }
         ],
         "componentGuides": [
@@ -111928,7 +111940,10 @@
           "docs/.manifest.json",
           "docs/concepts/repository-map.md",
           "docs/planning/status/**",
-          "tools/planning-db/state/canonical-state.json"
+          "tools/planning-db/state/canonical-state.json",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+          "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
         ],
         "forbiddenImplementationSurfaces": [
           "database migrations or migration-state compatibility",
@@ -111939,7 +111954,7 @@
           "dbt target binding or runtime connection resolution from issue 2257"
         ]
       },
-      "revision": 1,
+      "revision": 2,
       "createdBy": "codex",
       "createdAt": "2026-08-09T09:16:34.047Z"
     },
@@ -131218,6 +131233,75 @@
         ]
       },
       "createdAt": "2026-08-09T11:53:44.525Z"
+    },
+    {
+      "operationId": "89153ca9-5c40-45db-842a-accf285f0232",
+      "idempotencyKey": "pth1-connected-source-fixtures-d87eb1cd",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#importwarehousesources",
+      "sourcePath": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+      "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2",
+        "dddOwner": "Warehouse Source Import",
+        "railName": "ImportWarehouseSources",
+        "railType": "command",
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx src/app/views/canvas/dbtAuthoringFieldsModel.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+        "sourceRef": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "unitTests": [
+          "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx src/app/views/canvas/dbtAuthoringFieldsModel.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a Canvas author I cannot preview a warehouse model unless its source has an explicit supported connection binding."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["ConnectedSourceRef"],
+        "fowlerSignals": ["Replace Magic Literal with explicit fixture"],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+          "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
+        ],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm planning:db:export:check"
+        ],
+        "componentGuides": ["docs/architecture/components/source-import.md"],
+        "expectedFailure": "Positive warehouse-source fixtures omit ConnectedSourceRef and are correctly rejected by fail-closed artifact projection.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260808-pth1-connected-source-truth.md"
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#projectDbtModelArtifact"
+        ],
+        "normalizedRailName": "importwarehousesources",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+          "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "database migrations or migration-state compatibility"
+        ]
+      },
+      "createdAt": "2026-08-09T12:14:50.392Z"
     }
   ]
 }
