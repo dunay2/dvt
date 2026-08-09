@@ -74,8 +74,10 @@ interface CancelScenarioRequest {
   mode: 'signal' | 'cancel';
   adapter: TemporalAdapter;
   planRef: PlanRef;
+  releaseAfterDispatch?: () => void;
   runContext: ResolvedRunContext;
   store: TestStateStore;
+  waitUntilExecuting: Promise<void>;
   waitForCondition: WaitForConditionFn;
 }
 
@@ -91,6 +93,7 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
     (events) => events.some((event) => event.eventType === 'StepStarted'),
     { timeoutMs: 30_000 }
   );
+  await args.waitUntilExecuting;
 
   if (args.mode === 'signal') {
     await args.adapter.signal(runRef, {
@@ -100,6 +103,13 @@ async function runCancelScenario(args: CancelScenarioRequest): Promise<{
   } else {
     await args.adapter.cancelRun(runRef);
   }
+  args.releaseAfterDispatch?.();
+
+  await args.waitForCondition(
+    () => args.store.listRunEvents(runId),
+    (events) => events.some((event) => event.eventType === 'RunCancelRequested'),
+    { timeoutMs: 30_000 }
+  );
 
   const status = await waitForTerminalStatus(args.adapter, runRef, args.waitForCondition);
   await args.waitForCondition(
@@ -181,6 +191,48 @@ function createBlockingExecutor(targetStepId: string): {
   };
 }
 
+function createCancellationActivityBarrier(): {
+  block: () => Promise<void>;
+  release: () => void;
+  waitUntilExecuting: Promise<void>;
+} {
+  let markExecuting: (() => void) | null = null;
+  let releaseExecution: (() => void) | null = null;
+  const waitUntilExecuting = new Promise<void>((resolve) => {
+    markExecuting = resolve;
+  });
+
+  return {
+    async block() {
+      markExecuting?.();
+      const cancellationSignal = Context.current().cancellationSignal;
+      await new Promise<void>((resolve, reject) => {
+        const onCancellation = (): void => {
+          cancellationSignal.removeEventListener('abort', onCancellation);
+          reject(cancellationSignal.reason);
+        };
+        releaseExecution = () => {
+          cancellationSignal.removeEventListener('abort', onCancellation);
+          resolve();
+        };
+
+        if (cancellationSignal.aborted) {
+          onCancellation();
+          return;
+        }
+        cancellationSignal.addEventListener('abort', onCancellation, { once: true });
+      });
+    },
+    release() {
+      if (!releaseExecution) {
+        throw new Error('CANCELLATION_ACTIVITY_NOT_READY');
+      }
+      releaseExecution();
+    },
+    waitUntilExecuting,
+  };
+}
+
 function mkGatewaySkipPlan(): ExecutionPlan {
   return createExecutionPlan({
     inputHashSha256: 'b'.repeat(64),
@@ -210,8 +262,10 @@ async function createCancellationHarness(args: {
   taskQueue: string;
 }): Promise<{
   adapter: TemporalAdapter;
+  cancelActivityBarrier: ReturnType<typeof createCancellationActivityBarrier>;
   env: TestWorkflowEnvironment;
   observedProjectBundles: string[];
+  signalActivityBarrier: ReturnType<typeof createCancellationActivityBarrier>;
   store: TestStateStore;
   worker: ReturnType<typeof createTenantWorkerHost>;
 }> {
@@ -219,6 +273,12 @@ async function createCancellationHarness(args: {
   const store = new TestStateStore();
   const outbox = new TestOutbox();
   const observedProjectBundles: string[] = [];
+  const signalActivityBarrier = createCancellationActivityBarrier();
+  const cancelActivityBarrier = createCancellationActivityBarrier();
+  const activityBarrierByRunId = new Map([
+    [args.signalCtx.runId, signalActivityBarrier],
+    [args.cancelCtx.runId, cancelActivityBarrier],
+  ]);
 
   const temporalConfig = loadTemporalAdapterConfig({
     TEMPORAL_NAMESPACE: 'default',
@@ -236,6 +296,11 @@ async function createCancellationHarness(args: {
     dbtPluginRunner: {
       async execute(input) {
         observedProjectBundles.push(input.pluginContext.projectBundleRef.uri);
+        const activityBarrier = activityBarrierByRunId.get(input.runContext.runId);
+        if (!activityBarrier) {
+          throw new Error(`CANCELLATION_ACTIVITY_BARRIER_NOT_FOUND:${input.runContext.runId}`);
+        }
+        await activityBarrier.block();
         return { stepId: input.step.stepId, status: 'COMPLETED' };
       },
     },
@@ -256,8 +321,10 @@ async function createCancellationHarness(args: {
       workflowClient: env.client.workflow,
       config: temporalConfig,
     }),
+    cancelActivityBarrier,
     env,
     observedProjectBundles,
+    signalActivityBarrier,
     store,
     worker,
   };
@@ -420,22 +487,31 @@ describe('temporal integration (time-skipping)', () => {
         createRunContext(RunId.of('run-it-cancel-2')),
         planRef
       );
-      const { adapter, env, observedProjectBundles, store, worker } =
-        await createCancellationHarness({
-          signalCtx,
-          cancelCtx,
-          planRef,
-          planBytes,
-          taskQueue: 'dvt-it-time-skipping-cancel',
-        });
+      const {
+        adapter,
+        cancelActivityBarrier,
+        env,
+        observedProjectBundles,
+        signalActivityBarrier,
+        store,
+        worker,
+      } = await createCancellationHarness({
+        signalCtx,
+        cancelCtx,
+        planRef,
+        planBytes,
+        taskQueue: 'dvt-it-time-skipping-cancel',
+      });
 
       try {
         const signalResult = await runCancelScenario({
           mode: 'signal',
           adapter,
           planRef,
+          releaseAfterDispatch: signalActivityBarrier.release,
           runContext: signalCtx,
           store,
+          waitUntilExecuting: signalActivityBarrier.waitUntilExecuting,
           waitForCondition,
         });
         expectCancelScenarioOutcome(signalResult, 'COMPLETED');
@@ -446,6 +522,7 @@ describe('temporal integration (time-skipping)', () => {
           planRef,
           runContext: cancelCtx,
           store,
+          waitUntilExecuting: cancelActivityBarrier.waitUntilExecuting,
           waitForCondition,
         });
         expectCancelScenarioOutcome(cancelResult, 'CANCELLED');
