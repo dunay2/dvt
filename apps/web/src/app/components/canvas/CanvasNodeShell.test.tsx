@@ -16,13 +16,13 @@ const CONTEXT_MENU_MODEL: CanvasNodeContextMenuModel = {
   target: { kind: 'node', nodeId: 'model-orders', nodeName: 'Orders model' },
   actionGroups: [
     {
-      id: 'workbench',
-      label: 'Workbench',
+      id: 'edit',
+      label: 'Edit',
       actions: [
         {
-          id: 'inspect-node',
-          label: 'Open workbench',
-          intent: 'read',
+          id: 'duplicate-node',
+          label: 'Duplicate',
+          intent: 'command',
           disabled: false,
         },
       ],
@@ -58,8 +58,8 @@ describe('CanvasNodeShell', () => {
     }
   });
 
-  it('opens the contextual node workbench from the node body double-click gesture', () => {
-    const openWorkbench = vi.fn();
+  it('opens the node through one Properties intent on body double-click', () => {
+    const openNode = vi.fn();
 
     act(() => {
       root.render(
@@ -68,7 +68,7 @@ describe('CanvasNodeShell', () => {
           shouldShowSourceHandle={false}
           shouldShowTargetHandle={false}
           onContextMenuAction={vi.fn()}
-          onOpenWorkbench={openWorkbench}
+          onOpenNode={openNode}
         >
           <div>Orders model</div>
         </CanvasNodeShell>
@@ -79,41 +79,11 @@ describe('CanvasNodeShell', () => {
       fireEvent.dblClick(container.querySelector('div')!);
     });
 
-    expect(openWorkbench).toHaveBeenCalledOnce();
+    expect(openNode).toHaveBeenCalledOnce();
   });
 
-  it('prefers the governed node code callback without exposing a context-menu code action', () => {
-    const openCode = vi.fn();
-    const openWorkbench = vi.fn();
-
-    act(() => {
-      root.render(
-        <CanvasNodeShell
-          contextMenuModel={CONTEXT_MENU_MODEL}
-          shouldShowSourceHandle={false}
-          shouldShowTargetHandle={false}
-          onContextMenuAction={vi.fn()}
-          onOpenCode={openCode}
-          onOpenWorkbench={openWorkbench}
-        >
-          <div>Orders model</div>
-        </CanvasNodeShell>
-      );
-    });
-
-    act(() => {
-      fireEvent.dblClick(container.querySelector('div')!);
-    });
-
-    expect(openCode).toHaveBeenCalledOnce();
-    expect(openWorkbench).not.toHaveBeenCalled();
-    expect(CONTEXT_MENU_MODEL.actionGroups.flatMap((group) => group.actions)).not.toContainEqual(
-      expect.objectContaining({ id: 'open-node-code' })
-    );
-  });
-
-  it('does not open node code or workbench when double-click starts on an embedded node control', () => {
-    const openWorkbench = vi.fn();
+  it('does not enter the node when double-click starts on an embedded node control', () => {
+    const openNode = vi.fn();
     const onContextMenuAction = vi.fn();
 
     act(() => {
@@ -123,7 +93,7 @@ describe('CanvasNodeShell', () => {
           shouldShowSourceHandle={false}
           shouldShowTargetHandle={false}
           onContextMenuAction={onContextMenuAction}
-          onOpenWorkbench={openWorkbench}
+          onOpenNode={openNode}
         >
           <button type="button" {...canvasNodeEmbeddedControlProps}>
             Inline control
@@ -136,7 +106,31 @@ describe('CanvasNodeShell', () => {
       fireEvent.dblClick(container.querySelector('button')!);
     });
 
-    expect(openWorkbench).not.toHaveBeenCalled();
+    expect(openNode).not.toHaveBeenCalled();
+    expect(onContextMenuAction).not.toHaveBeenCalled();
+  });
+
+  it('does not expose node operations from a native right-click on the node body', () => {
+    const onContextMenuAction = vi.fn();
+
+    act(() => {
+      root.render(
+        <CanvasNodeShell
+          contextMenuModel={CONTEXT_MENU_MODEL}
+          shouldShowSourceHandle={false}
+          shouldShowTargetHandle={false}
+          onContextMenuAction={onContextMenuAction}
+        >
+          <div data-testid="node-body">Orders model</div>
+        </CanvasNodeShell>
+      );
+    });
+
+    const event = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2 });
+    const target = container.querySelector('[data-testid="node-body"]')!;
+    const dispatchResult = target.dispatchEvent(event);
+
+    expect(dispatchResult).toBe(false);
     expect(onContextMenuAction).not.toHaveBeenCalled();
   });
 
