@@ -82,7 +82,7 @@ Play/Pause remains a distinct visible affordance and must not be retired merely 
 - `canvas-dbt-author-code-run-live.cy.ts`
 - `dbt-project-file-projection-live.cy.ts`
 
-#2255 remains the independent live-product/product-owner acceptance gate.
+GitHub issue #2255 remains the independent live-product/product-owner acceptance gate.
 
 ## Feature Mechanization
 
