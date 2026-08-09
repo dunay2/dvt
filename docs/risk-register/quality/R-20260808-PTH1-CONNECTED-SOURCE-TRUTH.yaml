@@ -40,7 +40,8 @@ residual_risk: >
   within one browser session. True browser-level 200-percent zoom remains a demanding-user manual
   check beyond the automated 500x330 layout-pressure equivalent. Revoked connection reconciliation,
   cross-session collaborative edits and additional warehouse providers require their own product
-  slices and evidence. PR #2258 remains blocked until focused regression tests prove qualified YAML
-  binding lookup and duplicate ConnectedSourceRef rejection and both P1 review threads are resolved.
+  slices and evidence. Qualified YAML binding lookup, global logical-key uniqueness and duplicate
+  ConnectedSourceRef rejection pass locally. PR #2258 remains blocked until the correction commits
+  are pushed, remote CI passes and both P1 review threads are resolved.
 review_after: 2026-09-08
 ---

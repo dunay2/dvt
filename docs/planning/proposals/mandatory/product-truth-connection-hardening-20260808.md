@@ -480,7 +480,9 @@ server grants scope A and scope B
     `sourceObjectIdentity(connectionId, sourceObjectId)` key. Looking up a
     qualified binding by raw `sourceObjectId` is forbidden because normalized
     name collisions can make the persisted node point at a different or
-    nonexistent YAML path.
+    nonexistent YAML path. Collision detection spans the complete import batch,
+    because dbt resolves `source(source_name, table_name)` without using the YAML
+    path as a namespace.
 23. **Duplicate persisted identities fail closed, selected.** A Graph Draft
     containing more than one warehouse node with the same valid
     `ConnectedSourceRef` is conflicting state. Import must raise
@@ -514,6 +516,7 @@ server grants scope A and scope B
 | Add Component appears fixed and on right-click     | Duplicated command / cluttered interface     | Remove dead UI and keep contextual command      | No fixed button; right-click opens the governed catalog               |
 | Graph projection retrieves a binding by object ID  | Split identity / divergent change            | Replace derived identity with explicit identity | Node metadata and YAML use the same qualified collision-safe binding  |
 | Draft repeats one valid connected-source identity  | Silent overwrite / false idempotency         | Introduce Assertion / Guard Clause              | Import rejects duplicate refs before file or draft mutation           |
+| Separate YAML files reuse one dbt logical key      | Hidden namespace / ambiguous reference       | Make logical identity explicit                  | Colliding schemas produce distinct source/table keys across the batch |
 
 ### 13.6 DoR for the bounded slice
 
@@ -542,12 +545,14 @@ server grants scope A and scope B
 - [x] Add Source and connected-source Workbench remain visible, axe-clean and cancellable across the governed viewport matrix.
 - [x] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
 - [x] No debt, stub, skipped check, disabled rule, or migration is introduced.
-- [ ] Graph node projection retrieves source YAML bindings only by the complete
+- [x] Graph node projection retrieves source YAML bindings only by the complete
       connection-qualified identity and preserves collision-safe names and paths.
-- [ ] A persisted draft containing duplicate valid `ConnectedSourceRef` values
+- [x] A persisted draft containing duplicate valid `ConnectedSourceRef` values
       fails with `WarehouseSourceImportDraftConflictError` before mutation.
-- [ ] Focused regression tests pass and both blocking P1 review threads are
-      resolved before merge.
+- [x] Focused regression tests pass for qualified binding lookup, global dbt
+      logical-key uniqueness and duplicate-ref rejection.
+- [ ] Both blocking P1 review threads are resolved and remote CI passes before
+      merge.
 
 ## 14. Feature mechanization
 
@@ -579,6 +584,7 @@ allowedImplementationSurfaces:
   - packages/@dvt/contracts/test/source-import/ConnectedSourceRef.v1.test.ts
   - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
   - apps/api/src/application/services/importWarehouseSourcesUseCase.ts
+  - apps/api/src/application/services/warehouseSourceYamlBindings.ts
   - apps/api/src/application/services/warehouseSourceYamlIdentity.ts
   - apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts
   - apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts
@@ -667,7 +673,7 @@ completionGate:
   - pnpm docs:feature-mechanization -- --feature PTH1-CONNECTED-SOURCE-TRUTH
   - pnpm --filter @dvt/contracts test
   - pnpm --filter @dvt/contracts typecheck
-  - pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
+  - pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts warehouseSourceYaml.test.ts
   - pnpm --filter dvt-api lint
   - pnpm --filter dvt-api typecheck
   - pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2
@@ -705,6 +711,13 @@ redGreenCycles:
       - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
       - apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts
     greenTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
+  - id: global-dbt-logical-source-key
+    redTest: pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts
+    expectedFailure: Colliding physical schemas split across YAML paths still reuse one ambiguous dbt source_name.table_name key.
+    patchSurfaces:
+      - apps/api/src/application/services/warehouseSourceYamlBindings.ts
+      - apps/api/test/application/services/warehouseSourceYaml.test.ts
+    greenTest: pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts
   - id: duplicate-connected-source-ref-conflict
     redTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
     expectedFailure: Existing warehouse nodes with the same valid ConnectedSourceRef overwrite one another in the identity index and import selects an arbitrary clone.
