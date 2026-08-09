@@ -150,6 +150,15 @@ describe('canvas dbt workspace artifacts', () => {
       status: 'idle',
       tags: [],
       metadata: {
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-prod',
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/erp/orders',
+        },
         sourceName: 'warehouse_prod_analytics_erp',
         schema: 'erp',
         tableName: 'orders',
