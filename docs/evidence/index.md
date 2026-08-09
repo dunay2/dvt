@@ -112,6 +112,7 @@ Evidence documents that justify or validate relevant changes.
 - [ED 20260803 Supported Runtime Recovery](ED-20260803-supported-runtime-recovery.md)
 - [ED 20260804 Object File Postgres Runtime](ED-20260804-object-file-postgres-runtime.md)
 - [ED 20260804 Object File Postgres Step Admission](ED-20260804-object-file-postgres-step-admission.md)
+- [ED 20260809 Temporal Cancellation Test Barrier](ED-20260809-temporal-cancellation-test-barrier.md)
 - [ED-20260402 RC-G1 governance startup and health reconciliation](ED-20260402-rc-g1-governance-startup-reconciliation.md)
 - [ED-20260402 S05 envelope boundary hardening](ED-20260402-s05-envelope-boundary-hardening.md)
 - [ED-20260402 S08 contract-layer hardening](ED-20260402-s08-contract-layer-hardening.md)
