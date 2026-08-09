@@ -13,6 +13,15 @@ const warehouseSource: CanonicalNode = {
   status: 'idle',
   tags: [],
   metadata: {
+    connectedSourceRef: {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'warehouse-prod',
+        provider: 'postgres',
+      },
+      sourceObjectId: 'relation/dvt/erp/orders',
+    },
     sourceName: 'warehouse_prod_analytics_erp',
     schema: 'erp',
     tableName: 'orders',
@@ -162,6 +171,61 @@ describe('canvas DBT model artifact projection', () => {
           tableName: 'orders',
         },
       },
+    });
+  });
+
+  it('fails closed when a warehouse source has no canonical connected-source binding', () => {
+    const sourceWithoutBinding = {
+      ...warehouseSource,
+      metadata: {
+        sourceName: 'warehouse_prod_analytics_erp',
+        schema: 'erp',
+        tableName: 'orders',
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: model,
+        nodes: [sourceWithoutBinding, model],
+        edges: [edge(sourceWithoutBinding.id)],
+      })
+    ).toEqual({
+      ok: false,
+      reason: 'origin_metadata_unavailable',
+      message:
+        'DBT source origin "Warehouse Orders" does not expose a valid connected source binding.',
+    });
+  });
+
+  it('fails closed when a warehouse source uses an unsupported connection provider', () => {
+    const sourceWithUnsupportedProvider = {
+      ...warehouseSource,
+      metadata: {
+        ...warehouseSource.metadata,
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-snowflake',
+            provider: 'snowflake',
+          },
+          sourceObjectId: 'relation/dvt/erp/orders',
+        },
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: model,
+        nodes: [sourceWithUnsupportedProvider, model],
+        edges: [edge(sourceWithUnsupportedProvider.id)],
+      })
+    ).toEqual({
+      ok: false,
+      reason: 'origin_metadata_unavailable',
+      message:
+        'DBT source origin "Warehouse Orders" uses unsupported connection provider "snowflake".',
     });
   });
 
