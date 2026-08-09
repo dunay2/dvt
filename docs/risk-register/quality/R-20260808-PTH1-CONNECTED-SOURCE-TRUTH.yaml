@@ -1,0 +1,51 @@
+---
+id: R-20260808-PTH1-CONNECTED-SOURCE-TRUTH
+title: Connected source identity can collide or cross workspace boundaries
+status: Open
+date: 2026-08-08
+owners:
+  - packages/@dvt/contracts
+  - apps/api
+  - apps/web
+severity: High
+probability: Low
+context: >
+  PTH1 persists connection-qualified warehouse source identity in the workspace graph draft and
+  consumes it in source YAML, Canvas presentation, dbt projection and scoped file queries.
+risk: >
+  A regression that deduplicates by physical object alone, accepts legacy ambiguous metadata,
+  guesses a connection or file path, or omits tenant/project/environment from a query key could show
+  or execute data from the wrong connection, node or workspace.
+mitigations:
+  - 'Use one strict versioned ConnectedSourceRef contract and reject unknown fields, credentials,
+    legacy top-level identity and malformed existing draft nodes before mutation.'
+  - 'Build dedupe and source-YAML identity from JCS-canonical connectionId plus sourceObjectId.'
+  - 'Use the same connection-qualified sourceObjectIdentity key when building and retrieving YAML
+    bindings so graph metadata cannot diverge from collision-safe generated names or paths.'
+  - 'Reject repeated valid ConnectedSourceRef values in an existing draft before indexing, file
+    mutation or draft persistence; never use last-write-wins identity semantics.'
+  - 'Partition graph, file-tree and file-content queries by the complete server-granted workspace
+    scope, with an A/B/A colliding-path regression proof.'
+  - 'Project connection facts only from the validated canonical reference, show the full visible
+    identifier and never infer missing truth from names or labels.'
+  - 'Use the single compatible incoming edge as dbt origin; fail closed for zero, ambiguity or an
+    explicitly disconnected selection.'
+  - 'Require a strict ConnectedSourceRef with a currently supported warehouse provider before a
+    warehouse source can project executable DBT artifacts; reject missing, malformed, legacy or
+    unsupported binding state before publication and Preview.'
+  - 'Route code actions only to an explicit persisted path or the exact node authoring surface;
+    reject guessed paths and unrelated fallback files.'
+  - 'Run the protected live source-import proof with PostgreSQL, API authorization, Temporal, two
+    real connections to the same relation, a four-size Cypress visibility/cancellation matrix and
+    axe serious/critical checks.'
+residual_risk: >
+  The MVP proves PostgreSQL source import, two colliding physical identities, and one dbt model
+  within one browser session. True browser-level 200-percent zoom remains a demanding-user manual
+  check beyond the automated 500x330 layout-pressure equivalent. Revoked connection reconciliation,
+  cross-session collaborative edits and additional warehouse providers require their own product
+  slices and evidence. Qualified YAML binding lookup, global logical-key uniqueness, duplicate
+  ConnectedSourceRef rejection and fail-closed artifact readiness are covered. Both P1 review
+  threads are resolved and the unrelated Temporal CI race was integrated through #2276. PR #2258
+  remains governed by final required checks and branch protection.
+review_after: 2026-09-08
+---

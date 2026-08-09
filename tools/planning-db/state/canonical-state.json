@@ -111119,6 +111119,846 @@
       "createdAt": "2026-07-31T19:13:06.127Z"
     },
     {
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#importwarehousesources",
+      "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+      "mechanizationStatus": "implemented",
+      "railName": "ImportWarehouseSources",
+      "normalizedRailName": "importwarehousesources",
+      "railType": "command",
+      "dddOwner": "Warehouse Source Import",
+      "railStatus": "implemented",
+      "symbolRefs": [
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#CONNECTION_REF_SCHEMA_VERSION",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#CONNECTED_SOURCE_REF_SCHEMA_VERSION",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#ConnectionRefSchema",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#ConnectionRef",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#ConnectedSourceRefSchema",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#ConnectedSourceRef",
+        "apps/web/cypress/support/liveWarehouseSourceImport.ts#expectedLivePostgresSourceName",
+        "apps/web/cypress/support/liveWarehouseSourceImport.ts#createLivePostgresConnection",
+        "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts#GraphDraftWarehouseSourceImportStrategy",
+        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#projectDbtModelArtifact"
+      ],
+      "implementationRefs": [
+        "apps/web/cypress/support/liveWarehouseSourceImport.ts#createLivePostgresConnection",
+        "apps/web/cypress/support/liveWarehouseSourceImport.ts#expectedLivePostgresSourceName",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#CONNECTED_SOURCE_REF_SCHEMA_VERSION",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#ConnectedSourceRef",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#ConnectedSourceRefSchema",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#CONNECTION_REF_SCHEMA_VERSION",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#ConnectionRef",
+        "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts#ConnectionRefSchema",
+        "apps/api/src/application/ports/protectedRuntimeRailVocabulary.ts#ImportWarehouseSources",
+        "apps/api/src/application/ports/warehouseSourceImport.ts#ImportWarehouseSources",
+        "apps/api/src/application/services/importWarehouseSourcesUseCase.ts#ImportWarehouseSources",
+        "apps/api/src/entrypoints/http/warehouseSourceImportRouteGroup.ts#ImportWarehouseSources",
+        "apps/api/src/entrypoints/http/warehouseSourceImportRoutes.ts#ImportWarehouseSources",
+        "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts#GraphDraftWarehouseSourceImportStrategy",
+        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#projectDbtModelArtifact"
+      ],
+      "documentationRefs": [
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/adr/ADR-0058-warehouse-source-import-rails.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/adr/ADR-0060-dbt-project-authoring-authority.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/architecture/components/web/frontend-command-query-rail-inventory.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/architecture/components/web/frontend-component-inventory.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/architecture/components/web/graph/canvas-interaction-command-surface-component.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/architecture/components/web/graph/dbt-project-import-and-source-authority-component.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/architecture/components/web/workspace/workspace-port-decomposition-component.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/architecture/components/web/workspace/workspace-port-decomposition-user-stories.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/evidence/ED-20260711-source-object-catalog-contract.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/evidence/ED-20260714-dbt-project-import-phase3-runtime.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/evidence/ED-20260808-pth1-connected-source-truth.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/guides/canvas-authoring-user-manual-20260501.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/closeouts/20260530-e-canvas-source-import-backend-closeout.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/closeouts/20260531-e-source-import-commercial-hardening-closeout.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-context-properties-panel-plan-20260604.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/dbt-project-roundtrip-product-plan-20260527.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/e-canvas-source-import-backend-plan-20260530.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/e-canvas-workflow-e2e-usability-plan-20260601.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/e-db-connection-port-gate-plan-20260531.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/e-source-import-commercial-hardening-plan-20260531.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/sql-canvas-demanding-user-flow-review-plan-20260608.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/proposals/mandatory/frontend-and-ux/web-api-workspace-port-decomposition-plan-20260510.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/reviews/20260608-sql-canvas-demanding-user-flow-review.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/reviews/architecture-and-governance/20260607-product-flow-closure-source-gap-report.md",
+          "sourceKind": "documentation"
+        },
+        {
+          "name": "ImportWarehouseSources",
+          "path": "docs/planning/status/frontend-mature-system-gap-status-20260602.md",
+          "sourceKind": "documentation"
+        },
+        "docs/architecture/components/source-import.md",
+        "docs/evidence/ED-20260808-pth1-connected-source-truth.md"
+      ],
+      "governingSources": [
+        "docs/planning/status/governance-document-rule-inventory.md",
+        "docs/guides/ai-work-protocol.md",
+        "docs/architecture/command-query-rail-governance.md",
+        "docs/architecture/fowler-opportunity-planning-governance.md",
+        "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+        "docs/adr/ADR-0058-warehouse-source-import-rails.md",
+        "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+      ],
+      "allowedImplementationSurfaces": [
+        "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "packages/@dvt/contracts/src/contracts/source-import/**",
+        "packages/@dvt/contracts/test/source-import/ConnectedSourceRef.v1.test.ts",
+        "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+        "apps/api/src/application/services/importWarehouseSourcesUseCase.ts",
+        "apps/api/src/application/services/warehouseSourceYamlBindings.ts",
+        "apps/api/src/application/services/warehouseSourceYamlIdentity.ts",
+        "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
+        "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
+        "apps/api/test/application/services/warehouseSourceYaml.test.ts",
+        "apps/web/src/app/components/inspector/nodePropertiesReadModel.ts",
+        "apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts",
+        "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+        "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts",
+        "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts",
+        "apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx",
+        "apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.test.tsx",
+        "apps/web/src/app/plugins/graph/graphNodeTitlePresentation.ts",
+        "apps/web/src/app/plugins/graph/graphNodeTitlePresentation.test.ts",
+        "apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts",
+        "apps/web/src/app/queries/workspaceQueries.scope.test.tsx",
+        "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx",
+        "apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx",
+        "apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.focus.test.tsx",
+        "apps/web/src/app/views/canvas/CanvasShell.tsx",
+        "apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx",
+        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+        "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+        "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts",
+        "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.test.tsx",
+        "apps/web/src/app/views/canvas/CanvasViewport.contextMenu.test.tsx",
+        "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+        "apps/web/src/app/views/canvas/canvasViewportXyflowTestAdapter.tsx",
+        "apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.tsx",
+        "apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.test.tsx",
+        "apps/web/cypress/support/liveWarehouseSourceImport.ts",
+        "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+        "scripts/run-canvas-source-import-live-proof.cjs",
+        "scripts/run-canvas-source-import-live-proof.test.cjs",
+        "docs/guides/canvas-authoring-user-manual-20260501.md",
+        "docs/guides/canvas-workbench-user-manual-20260806.md",
+        "docs/evidence/**",
+        "docs/risk-register/quality/**",
+        "docs/**/index.md",
+        "docs/.manifest.json",
+        "docs/concepts/repository-map.md",
+        "docs/planning/status/**",
+        "tools/planning-db/state/canonical-state.json",
+        "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+        "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+        "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
+      ],
+      "architectureGuards": [
+        "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH",
+        "GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs"
+      ],
+      "completionGate": [
+        "pnpm docs:feature-mechanization -- --feature PTH1-CONNECTED-SOURCE-TRUTH",
+        "pnpm --filter @dvt/contracts test",
+        "pnpm --filter @dvt/contracts typecheck",
+        "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts warehouseSourceYaml.test.ts",
+        "pnpm --filter dvt-api lint",
+        "pnpm --filter dvt-api typecheck",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2",
+        "pnpm --filter @dvt/web test:shell-session -- ShellWorkspaceScopeSelector.test.tsx",
+        "pnpm --filter @dvt/web lint",
+        "pnpm --filter @dvt/web typecheck",
+        "node --test scripts/run-canvas-source-import-live-proof.test.cjs",
+        "pnpm --filter @dvt/web test:e2e:source-import:live",
+        "pnpm verify:prepush",
+        "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+        "pnpm planning:db:export:check"
+      ],
+      "sourcePath": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+      "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+      "rawRail": {
+        "name": "ImportWarehouseSources",
+        "type": "command",
+        "status": "implemented",
+        "dddOwner": "Warehouse Source Import"
+      },
+      "rawManifest": {
+        "symbols": [
+          {
+            "name": "CONNECTION_REF_SCHEMA_VERSION",
+            "path": "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "ConnectionRef",
+            "unitTests": [
+              "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts"
+            ],
+            "fowlerSignals": ["Introduce Value Object"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "CONNECTED_SOURCE_REF_SCHEMA_VERSION",
+            "path": "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "ConnectedSourceRef",
+            "unitTests": [
+              "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts"
+            ],
+            "fowlerSignals": ["Introduce Value Object"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "ConnectionRefSchema",
+            "path": "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "ConnectionRef",
+            "unitTests": [
+              "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts"
+            ],
+            "fowlerSignals": ["Replace Primitive with Object"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "ConnectionRef",
+            "path": "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "ConnectionRef",
+            "unitTests": [
+              "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts"
+            ],
+            "fowlerSignals": ["Replace Primitive with Object"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "ConnectedSourceRefSchema",
+            "path": "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "ConnectedSourceRef",
+            "unitTests": [
+              "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts"
+            ],
+            "fowlerSignals": ["Replace Primitive with Object"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "ConnectedSourceRef",
+            "path": "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "ConnectedSourceRef",
+            "unitTests": [
+              "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts"
+            ],
+            "fowlerSignals": ["Replace Primitive with Object"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "assertNoSeriousAccessibilityViolations",
+            "path": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "ConnectedSourceRefVisibilityProof",
+            "unitTests": ["pnpm --filter @dvt/web test:e2e:source-import:live"],
+            "fowlerSignals": ["Extract Function"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "expectedLivePostgresSourceName",
+            "path": "apps/web/cypress/support/liveWarehouseSourceImport.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "ConnectedSourceRefLiveProof",
+            "unitTests": ["pnpm --filter @dvt/web test:e2e:source-import:live"],
+            "fowlerSignals": ["Extract Function"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "createLivePostgresConnection",
+            "path": "apps/web/cypress/support/liveWarehouseSourceImport.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "ConnectedSourceRefLiveProof",
+            "unitTests": ["pnpm --filter @dvt/web test:e2e:source-import:live"],
+            "fowlerSignals": ["Extract Function"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "CANVAS_FIT_VIEW_OPTIONS",
+            "path": "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasViewportPresentation",
+            "unitTests": [
+              "pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx"
+            ],
+            "fowlerSignals": ["Move Function"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "Controls",
+            "path": "apps/web/src/app/views/canvas/canvasViewportXyflowTestAdapter.tsx",
+            "cqRails": ["GetWorkspaceGraphDraft"],
+            "dddOwner": "CanvasViewportPresentationProof",
+            "unitTests": [
+              "pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx"
+            ],
+            "fowlerSignals": ["Introduce Assertion"],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation"
+          },
+          {
+            "name": "GraphDraftWarehouseSourceImportStrategy",
+            "path": "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "Warehouse Source Import",
+            "unitTests": [
+              "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
+              "apps/api/test/application/services/warehouseSourceYaml.test.ts"
+            ],
+            "fowlerSignals": [
+              "Replace derived identity with explicit identity"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+          },
+          {
+            "name": "projectDbtModelArtifact",
+            "path": "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+            "cqRails": ["ImportWarehouseSources"],
+            "dddOwner": "Warehouse Source Import",
+            "unitTests": [
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+              "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx src/app/views/canvas/dbtAuthoringFieldsModel.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+            ],
+            "fowlerSignals": [
+              "Hidden authority",
+              "Replace Magic Literal with explicit fixture"
+            ],
+            "cypressCoverage": "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+            "architectureGuard": "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+          }
+        ],
+        "version": 1,
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "userStories": [
+          "As a Canvas author I can see which connection qualifies an imported source.",
+          "As a workspace user I can switch between scopes with colliding paths without stale data.",
+          "As an operator I get an explicit failure instead of guessed legacy connection state.",
+          "As a Canvas author I cannot Preview an unbound or unsupported warehouse source.",
+          "As a Canvas author I cannot preview a warehouse model unless its source has an explicit supported connection binding."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": [
+          "ConnectionRef",
+          "ConnectedSourceRef",
+          "WarehouseConnection",
+          "SourceObject",
+          "WorkspaceGraphDraft"
+        ],
+        "fowlerSignals": [
+          "Primitive obsession",
+          "Data clump",
+          "Hidden authority",
+          "Identity Map leakage",
+          "Boundary drift",
+          "Replace derived identity with explicit identity",
+          "Replace Magic Literal with explicit fixture"
+        ],
+        "completionGate": [
+          "pnpm docs:feature-mechanization -- --feature PTH1-CONNECTED-SOURCE-TRUTH",
+          "pnpm --filter @dvt/contracts test",
+          "pnpm --filter @dvt/contracts typecheck",
+          "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts warehouseSourceYaml.test.ts",
+          "pnpm --filter dvt-api lint",
+          "pnpm --filter dvt-api typecheck",
+          "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2",
+          "pnpm --filter @dvt/web test:shell-session -- ShellWorkspaceScopeSelector.test.tsx",
+          "pnpm --filter @dvt/web lint",
+          "pnpm --filter @dvt/web typecheck",
+          "node --test scripts/run-canvas-source-import-live-proof.test.cjs",
+          "pnpm --filter @dvt/web test:e2e:source-import:live",
+          "pnpm verify:prepush",
+          "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+          "pnpm planning:db:export:check"
+        ],
+        "redGreenCycles": [
+          {
+            "id": "connection-reference-contract",
+            "redTest": "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts",
+            "greenTest": "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts",
+            "patchSurfaces": [
+              "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts",
+              "packages/@dvt/contracts/src/contracts/source-import/index.ts"
+            ],
+            "expectedFailure": "ConnectionRefSchema and ConnectedSourceRefSchema are not exported."
+          },
+          {
+            "id": "connection-qualified-import",
+            "redTest": "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts"
+            ],
+            "expectedFailure": "Import aliases identical source object IDs across connections and accepts legacy ambiguous metadata."
+          },
+          {
+            "id": "canonical-identity-consumers",
+            "redTest": "pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts && pnpm --filter @dvt/web test:canvas -- graphNodeTitlePresentation.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts && pnpm --filter @dvt/web test:canvas -- graphNodeTitlePresentation.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/warehouseSourceYamlIdentity.ts",
+              "apps/web/src/app/plugins/graph/graphNodeTitlePresentation.ts"
+            ],
+            "expectedFailure": "YAML binding identity and card title projection still consume loose object or connection type fields."
+          },
+          {
+            "id": "qualified-yaml-binding-lookup",
+            "redTest": "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+              "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts"
+            ],
+            "expectedFailure": "Graph Draft projection looks up a connection-qualified YAML binding by raw sourceObjectId and loses collision-safe names or paths."
+          },
+          {
+            "id": "global-dbt-logical-source-key",
+            "redTest": "pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/warehouseSourceYamlBindings.ts",
+              "apps/api/test/application/services/warehouseSourceYaml.test.ts"
+            ],
+            "expectedFailure": "Colliding physical schemas split across YAML paths still reuse one ambiguous dbt source_name.table_name key."
+          },
+          {
+            "id": "duplicate-connected-source-ref-conflict",
+            "redTest": "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+              "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts"
+            ],
+            "expectedFailure": "Existing warehouse nodes with the same valid ConnectedSourceRef overwrite one another in the identity index and import selects an arbitrary clone."
+          },
+          {
+            "id": "canonical-identity-boundary-strings",
+            "redTest": "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts",
+            "greenTest": "pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts",
+            "patchSurfaces": [
+              "packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts"
+            ],
+            "expectedFailure": "Non-blank identifiers with exterior whitespace are admitted and hash as distinct product identities."
+          },
+          {
+            "id": "command-admission-before-discovery",
+            "redTest": "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- importWarehouseSourcesUseCase.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/importWarehouseSourcesUseCase.ts"
+            ],
+            "expectedFailure": "A missing Canvas authority still calls the external source-object reader before failing."
+          },
+          {
+            "id": "reserved-source-node-identity",
+            "redTest": "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts",
+            "greenTest": "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts"
+            ],
+            "expectedFailure": "A collision-resistant node ID owned by a different canonical ref is returned as if it were the imported node."
+          },
+          {
+            "id": "visible-connection-binding",
+            "redTest": "pnpm --filter @dvt/web test:canvas -- nodePropertiesReadModel.test.ts",
+            "greenTest": "pnpm --filter @dvt/web test:canvas -- nodePropertiesReadModel.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/components/inspector/nodePropertiesReadModel.ts",
+              "apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts"
+            ],
+            "expectedFailure": "The Workbench read model and localized copy do not expose Connection."
+          },
+          {
+            "id": "workspace-colliding-path-isolation",
+            "redTest": "pnpm --filter @dvt/web test -- workspaceQueries.scope.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test -- workspaceQueries.scope.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/queries/workspaceQueries.scope.test.tsx"
+            ],
+            "expectedFailure": "Existing proof does not exercise the same relative path across A and B."
+          },
+          {
+            "id": "live-granted-workspace-scope-isolation",
+            "redTest": "pnpm --filter @dvt/web test:e2e:source-import:live",
+            "greenTest": "pnpm --filter @dvt/web test:e2e:source-import:live",
+            "patchSurfaces": [
+              "scripts/run-canvas-source-import-live-proof.cjs",
+              "scripts/run-canvas-source-import-live-proof.test.cjs",
+              "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+            ],
+            "expectedFailure": "The protected proof grants only one real workspace scope and cannot exercise the visible A -> B -> A selector path with colliding graph and file identities."
+          },
+          {
+            "id": "workspace-selector-keyboard-activation",
+            "redTest": "pnpm --filter @dvt/web test:shell-session -- ShellWorkspaceScopeSelector.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test:shell-session -- ShellWorkspaceScopeSelector.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live",
+            "patchSurfaces": [
+              "apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx",
+              "apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.test.tsx",
+              "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+            ],
+            "expectedFailure": "The visible granted-scope option does not dispatch SelectWorkspaceScope from Enter or Space."
+          },
+          {
+            "id": "single-node-code-command-entry",
+            "redTest": "pnpm --filter @dvt/web test:canvas -- canvasNodeContextMenuModel.test.ts",
+            "greenTest": "pnpm --filter @dvt/web test:canvas -- canvasNodeContextMenuModel.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts",
+              "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts",
+              "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+              "apps/web/src/app/views/canvas/canvasNodeMapper.ts"
+            ],
+            "expectedFailure": "Open node code is duplicated in the selected-node toolbar and contextual More/right-click menus."
+          },
+          {
+            "id": "context-only-add-component-command",
+            "redTest": "pnpm --filter @dvt/web test:canvas -- CanvasViewport.contextMenu.test.tsx CanvasViewport.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test:canvas -- CanvasViewport.contextMenu.test.tsx CanvasViewport.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.contextMenu.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.test.tsx"
+            ],
+            "expectedFailure": "Canvas renders a fixed Add Component button in addition to the governed right-click catalog command."
+          },
+          {
+            "id": "workbench-editor-destructive-key-isolation",
+            "redTest": "pnpm --filter @dvt/web test:canvas -- DbtModelCodeAuthoringSection.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test:canvas -- DbtModelCodeAuthoringSection.test.tsx CanvasViewport.test.tsx && pnpm --filter @dvt/web test:e2e:source-import:live",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.tsx",
+              "apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.test.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+              "apps/web/src/app/views/canvas/CanvasViewport.test.tsx",
+              "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+            ],
+            "expectedFailure": "Backspace in the focused SQL editor bubbles to React Flow and deletes the selected model node."
+          },
+          {
+            "id": "windows-live-proof-dependency-resolution",
+            "redTest": "node --test scripts/run-canvas-source-import-live-proof.test.cjs",
+            "greenTest": "node --test scripts/run-canvas-source-import-live-proof.test.cjs",
+            "patchSurfaces": [
+              "scripts/run-canvas-source-import-live-proof.cjs"
+            ],
+            "expectedFailure": "The live proof always selects a Linux Docker bind mount even when Windows pnpm dependencies are NTFS junctions."
+          },
+          {
+            "id": "live-connected-source-collision",
+            "redTest": "pnpm --filter @dvt/web test:e2e:source-import:live",
+            "greenTest": "pnpm --filter @dvt/web test:e2e:source-import:live",
+            "patchSurfaces": [
+              "apps/web/cypress/support/liveWarehouseSourceImport.ts",
+              "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+            ],
+            "expectedFailure": "The protected flow imports one real connection only, so two connection-qualified references to the same physical object are not proven end to end."
+          },
+          {
+            "id": "overlay-safe-fit-view",
+            "redTest": "pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx"
+            ],
+            "expectedFailure": "The visible Fit view control uses default padding and places an imported node beneath Add Component."
+          },
+          {
+            "id": "bounded-source-review-visibility",
+            "redTest": "pnpm --filter @dvt/web test:presentation -- SourceImportWizardFrame.focus.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test:presentation -- SourceImportWizardFrame.focus.test.tsx",
+            "patchSurfaces": [
+              "apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx",
+              "apps/web/cypress/support/liveWarehouseSourceImport.ts"
+            ],
+            "expectedFailure": "The bounded review region does not expose a persistent scrolling affordance."
+          },
+          {
+            "id": "live-source-dialog-viewport-matrix",
+            "redTest": "pnpm --filter @dvt/web test:e2e:source-import:live",
+            "greenTest": "pnpm --filter @dvt/web test:e2e:source-import:live",
+            "patchSurfaces": [
+              "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+              "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx",
+              "apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx"
+            ],
+            "expectedFailure": "The live proof checks only the default viewport and never proves that Cancel stays reachable under 200-percent layout pressure."
+          },
+          {
+            "id": "live-connection-workbench-viewport-matrix",
+            "redTest": "pnpm --filter @dvt/web test:e2e:source-import:live",
+            "greenTest": "pnpm --filter @dvt/web test:e2e:source-import:live",
+            "patchSurfaces": [
+              "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+            ],
+            "expectedFailure": "The live proof checks connected-source Workbench visibility only at the default viewport."
+          },
+          {
+            "id": "exact-node-code-authority",
+            "redTest": "pnpm --filter @dvt/web test:canvas -- CanvasShell.graphSurface.test.tsx",
+            "greenTest": "pnpm --filter @dvt/web test:canvas -- CanvasShell.graphSurface.test.tsx",
+            "patchSurfaces": ["apps/web/src/app/views/canvas/CanvasShell.tsx"],
+            "expectedFailure": "A dbt model without a persisted path fabricates a file name and opens an unrelated workspace file."
+          },
+          {
+            "id": "single-connected-dbt-origin",
+            "redTest": "pnpm --filter @dvt/web test:canvas -- canvasDbtModelArtifactProjection.test.ts canvasInspectorAuthoringModel.test.ts",
+            "greenTest": "pnpm --filter @dvt/web test:canvas -- canvasDbtModelArtifactProjection.test.ts canvasInspectorAuthoringModel.test.ts",
+            "patchSurfaces": [
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+              "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts"
+            ],
+            "expectedFailure": "One explicit compatible incoming edge still requires a duplicate selectedSourceId in generation or authoring validation."
+          },
+          {
+            "id": "importwarehousesources-record",
+            "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2",
+            "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx src/app/views/canvas/dbtAuthoringFieldsModel.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+            "patchSurfaces": [
+              "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+              "apps/api/src/application/services/warehouseSourceYamlBindings.ts",
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+              "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+              "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+              "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+              "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
+            ],
+            "expectedFailure": "Positive warehouse-source fixtures omit ConnectedSourceRef and are correctly rejected by fail-closed artifact projection."
+          }
+        ],
+        "componentGuides": [
+          "docs/architecture/components/source-import.md",
+          "docs/architecture/components/workspace-graph-draft.md",
+          "docs/architecture/components/web/frontend-component-inventory.md"
+        ],
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/guides/ai-work-protocol.md",
+          "docs/architecture/command-query-rail-governance.md",
+          "docs/architecture/fowler-opportunity-planning-governance.md",
+          "docs/adr/ADR-0062-server-owned-effective-workspace-context.md",
+          "docs/adr/ADR-0058-warehouse-source-import-rails.md",
+          "docs/adr/ADR-0060-dbt-project-authoring-authority.md"
+        ],
+        "commandQueryRails": [
+          {
+            "name": "ImportWarehouseSources",
+            "type": "command",
+            "status": "implemented",
+            "dddOwner": "Warehouse Source Import"
+          },
+          {
+            "name": "GetWorkspaceGraphDraft",
+            "type": "query",
+            "dddOwner": "Workspace Graph Draft"
+          },
+          {
+            "name": "GetEffectiveWorkspaceContext",
+            "type": "query",
+            "dddOwner": "Protected runtime workspace context"
+          },
+          {
+            "name": "SelectWorkspaceScope",
+            "type": "command",
+            "dddOwner": "Web session workspace selection"
+          },
+          {
+            "name": "GetWorkspaceFileContent",
+            "type": "query",
+            "dddOwner": "Workspace Files"
+          }
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH",
+          "GIT_BASE=origin/main GIT_HEAD=HEAD node tools/ci/arc-check.mjs"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "mechanizationStatus": "implemented",
+        "noHumanDecisionsRemaining": true,
+        "allowedImplementationSurfaces": [
+          "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+          "packages/@dvt/contracts/src/contracts/source-import/**",
+          "packages/@dvt/contracts/test/source-import/ConnectedSourceRef.v1.test.ts",
+          "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+          "apps/api/src/application/services/importWarehouseSourcesUseCase.ts",
+          "apps/api/src/application/services/warehouseSourceYamlBindings.ts",
+          "apps/api/src/application/services/warehouseSourceYamlIdentity.ts",
+          "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
+          "apps/api/test/application/services/importWarehouseSourcesUseCase.test.ts",
+          "apps/api/test/application/services/warehouseSourceYaml.test.ts",
+          "apps/web/src/app/components/inspector/nodePropertiesReadModel.ts",
+          "apps/web/src/app/components/inspector/nodePropertiesReadModel.test.ts",
+          "apps/web/src/app/components/canvas/DbtNodeComponent.tsx",
+          "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts",
+          "apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts",
+          "apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.tsx",
+          "apps/web/src/app/components/shell/ShellWorkspaceScopeSelector.test.tsx",
+          "apps/web/src/app/plugins/graph/graphNodeTitlePresentation.ts",
+          "apps/web/src/app/plugins/graph/graphNodeTitlePresentation.test.ts",
+          "apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts",
+          "apps/web/src/app/queries/workspaceQueries.scope.test.tsx",
+          "apps/web/src/app/components/sourceImportWizard/ConnectionStep.tsx",
+          "apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.tsx",
+          "apps/web/src/app/components/sourceImportWizard/SourceImportWizardFrame.focus.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasShell.tsx",
+          "apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx",
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts",
+          "apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.test.ts",
+          "apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.test.tsx",
+          "apps/web/src/app/views/canvas/CanvasViewport.contextMenu.test.tsx",
+          "apps/web/src/app/views/canvas/canvasNodeMapper.ts",
+          "apps/web/src/app/views/canvas/canvasViewportXyflowTestAdapter.tsx",
+          "apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.tsx",
+          "apps/web/src/app/views/canvas/DbtModelCodeAuthoringSection.test.tsx",
+          "apps/web/cypress/support/liveWarehouseSourceImport.ts",
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts",
+          "scripts/run-canvas-source-import-live-proof.cjs",
+          "scripts/run-canvas-source-import-live-proof.test.cjs",
+          "docs/guides/canvas-authoring-user-manual-20260501.md",
+          "docs/guides/canvas-workbench-user-manual-20260806.md",
+          "docs/evidence/**",
+          "docs/risk-register/quality/**",
+          "docs/**/index.md",
+          "docs/.manifest.json",
+          "docs/concepts/repository-map.md",
+          "docs/planning/status/**",
+          "tools/planning-db/state/canonical-state.json",
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+          "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "database migrations or migration-state compatibility",
+          "packages/@dvt/engine/**",
+          "packages/@dvt/planner/**",
+          "packages/@dvt/adapter-*/**",
+          "new API routes, services, providers, registries, or fake adapters",
+          "dbt target binding or runtime connection resolution from issue 2257"
+        ]
+      },
+      "revision": 2,
+      "createdBy": "codex",
+      "createdAt": "2026-08-09T09:16:34.047Z"
+    },
+    {
       "railId": "local#TASK-HET1-2#command#workflowengine.startrun",
       "featureId": "TASK-HET1-2",
       "mechanizationStatus": "implemented",
@@ -130253,6 +131093,215 @@
         "forbiddenImplementationSurfaces": ["apps/api"]
       },
       "createdAt": "2026-08-07T00:18:43.713Z"
+    },
+    {
+      "operationId": "187b441a-e4d2-4d76-b6ed-2af9baacbc94",
+      "idempotencyKey": "pth1-connected-source-truth-import-warehouse-sources-008bef84",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#importwarehousesources",
+      "sourcePath": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+      "sourceContentSha256": "008bef84f64e77049dcffcb0ecec54a6048fafcd35b1cded428a1357641dd68c",
+      "expectedRevision": null,
+      "previousRevision": null,
+      "resultingRevision": 0,
+      "payload": {
+        "redTest": "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts warehouseSourceYaml.test.ts",
+        "dddOwner": "Warehouse Source Import",
+        "railName": "ImportWarehouseSources",
+        "railType": "command",
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "greenTest": "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts warehouseSourceYaml.test.ts",
+        "sourceRef": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "unitTests": [
+          "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
+          "apps/api/test/application/services/warehouseSourceYaml.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a Canvas author I can see which connection qualifies an imported source."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["ConnectedSourceRef"],
+        "fowlerSignals": ["Replace derived identity with explicit identity"],
+        "patchSurfaces": [
+          "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+          "apps/api/src/application/services/warehouseSourceYamlBindings.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts warehouseSourceYaml.test.ts",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["docs/architecture/components/source-import.md"],
+        "expectedFailure": "Qualified binding collisions or duplicate persisted source identities are accepted.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": ["docs/architecture/components/source-import.md"],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "implementationRefs": [
+          "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts#GraphDraftWarehouseSourceImportStrategy"
+        ],
+        "normalizedRailName": "importwarehousesources",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "008bef84f64e77049dcffcb0ecec54a6048fafcd35b1cded428a1357641dd68c",
+        "allowedImplementationSurfaces": [
+          "apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts",
+          "apps/api/src/application/services/warehouseSourceYamlBindings.ts",
+          "apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts",
+          "apps/api/test/application/services/warehouseSourceYaml.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "database migrations or migration-state compatibility"
+        ]
+      },
+      "createdAt": "2026-08-09T09:28:19.666Z"
+    },
+    {
+      "operationId": "ef513388-66d6-4bea-8348-47b7efedfccb",
+      "idempotencyKey": "pth1-connected-source-readiness-0b481daa",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#importwarehousesources",
+      "sourcePath": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+      "sourceContentSha256": "0b481daa24f70746ea7dc6d7845f4f828bc6c62d4692f49575cf9f2ae5f1b043",
+      "expectedRevision": 0,
+      "previousRevision": 0,
+      "resultingRevision": 1,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+        "dddOwner": "Warehouse Source Import",
+        "railName": "ImportWarehouseSources",
+        "railType": "command",
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+        "sourceRef": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "unitTests": [
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a Canvas author I cannot Preview an unbound or unsupported warehouse source."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["ConnectedSourceRef"],
+        "fowlerSignals": ["Hidden authority"],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+        ],
+        "completionGate": [
+          "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+          "pnpm planning:db:export:check",
+          "pnpm verify:prepush"
+        ],
+        "componentGuides": ["docs/architecture/components/source-import.md"],
+        "expectedFailure": "Missing or unsupported connected-source bindings still project executable DBT source artifacts from display metadata.",
+        "governingSources": [
+          "docs/planning/status/governance-document-rule-inventory.md",
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260808-pth1-connected-source-truth.md"
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#projectDbtModelArtifact"
+        ],
+        "normalizedRailName": "importwarehousesources",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "0b481daa24f70746ea7dc6d7845f4f828bc6c62d4692f49575cf9f2ae5f1b043",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts",
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+          "tools/planning-db/state/canonical-state.json"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "database migrations or migration-state compatibility",
+          "dbt target binding or runtime connection resolution from issue 2257"
+        ]
+      },
+      "createdAt": "2026-08-09T11:53:44.525Z"
+    },
+    {
+      "operationId": "89153ca9-5c40-45db-842a-accf285f0232",
+      "idempotencyKey": "pth1-connected-source-fixtures-d87eb1cd",
+      "operationType": "feature_mechanization_rail_record",
+      "actor": "codex",
+      "railId": "local#PTH1-CONNECTED-SOURCE-TRUTH#command#importwarehousesources",
+      "sourcePath": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+      "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+      "expectedRevision": 1,
+      "previousRevision": 1,
+      "resultingRevision": 2,
+      "payload": {
+        "redTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2",
+        "dddOwner": "Warehouse Source Import",
+        "railName": "ImportWarehouseSources",
+        "railType": "command",
+        "featureId": "PTH1-CONNECTED-SOURCE-TRUTH",
+        "greenTest": "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx src/app/views/canvas/dbtAuthoringFieldsModel.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts",
+        "sourceRef": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "unitTests": [
+          "pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx src/app/views/canvas/dbtAuthoringFieldsModel.test.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts"
+        ],
+        "railStatus": "implemented",
+        "userStories": [
+          "As a Canvas author I cannot preview a warehouse model unless its source has an explicit supported connection binding."
+        ],
+        "cypressFlows": [
+          "apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts"
+        ],
+        "domainObjects": ["ConnectedSourceRef"],
+        "fowlerSignals": ["Replace Magic Literal with explicit fixture"],
+        "patchSurfaces": [
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+          "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
+        ],
+        "completionGate": [
+          "pnpm verify:prepush",
+          "pnpm planning:db:export:check"
+        ],
+        "componentGuides": ["docs/architecture/components/source-import.md"],
+        "expectedFailure": "Positive warehouse-source fixtures omit ConnectedSourceRef and are correctly rejected by fail-closed artifact projection.",
+        "governingSources": [
+          "docs/architecture/command-query-rail-governance.md"
+        ],
+        "documentationRefs": [
+          "docs/evidence/ED-20260808-pth1-connected-source-truth.md"
+        ],
+        "architectureGuards": [
+          "pnpm docs:feature-mechanization:implementation -- --feature PTH1-CONNECTED-SOURCE-TRUTH"
+        ],
+        "implementationPlan": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
+        "implementationRefs": [
+          "apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts#projectDbtModelArtifact"
+        ],
+        "normalizedRailName": "importwarehousesources",
+        "mechanizationStatus": "implemented",
+        "sourceContentSha256": "d87eb1cdf62d70336bca5c03d826d3100007c9d9e80375f120a420dfc9de8edf",
+        "allowedImplementationSurfaces": [
+          "apps/web/src/app/views/canvas/canvasDbtWorkspaceArtifacts.test.ts",
+          "apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx",
+          "apps/web/src/app/views/canvas/dbtAuthoringFieldsModel.test.ts"
+        ],
+        "forbiddenImplementationSurfaces": [
+          "database migrations or migration-state compatibility"
+        ]
+      },
+      "createdAt": "2026-08-09T12:14:50.392Z"
     }
   ]
 }

@@ -13,6 +13,7 @@ import {
   buildWarehouseSourceYamlUpdates,
   groupSourceObjectsForYaml,
   readExistingSourceDocument,
+  sourceObjectIdentity,
   type ConnectedRelationalSourceObject,
 } from '../../../src/application/services/warehouseSourceYaml.js';
 
@@ -65,6 +66,15 @@ function sourceObject(
 }
 
 describe('warehouse source YAML projection', () => {
+  it('qualifies YAML binding identity by connection and physical object', () => {
+    const production = sourceObject({ connectionId: 'warehouse-prod' });
+    const sandbox = sourceObject({ connectionId: 'warehouse-sandbox' });
+
+    expect(sourceObjectIdentity(production)).not.toBe(sourceObjectIdentity(sandbox));
+    expect(sourceObjectIdentity(production)).toContain('warehouse-prod');
+    expect(sourceObjectIdentity(production)).toContain(production.objectId);
+  });
+
   it('owns dbt source artifact naming and grouping policy in one descriptor', () => {
     const orders = sourceObject({ catalog: 'Raw Lake', schema: 'Sales/ERP Ops' });
 
@@ -94,6 +104,29 @@ describe('warehouse source YAML projection', () => {
         expect.stringMatching(/^models\/sources\/src_sales_erp_ops_[a-f0-9]{8}\.yml$/),
       ])
     );
+  });
+
+  it('assigns distinct logical source keys when colliding schemas use separate YAML paths', () => {
+    const updates = buildWarehouseSourceYamlUpdates({
+      existingFiles: new Map(),
+      groupingStrategy: 'schema',
+      includeColumns: false,
+      addTests: false,
+      addFreshness: false,
+      sourceObjects: [
+        sourceObject({ schema: 'Sales/ERP Ops', name: 'orders' }),
+        sourceObject({ schema: 'Sales ERP Ops', name: 'orders' }),
+      ],
+    });
+
+    const logicalSourceKeys = updates.flatMap((update) =>
+      readExistingSourceDocument(update.content).sources.flatMap((source) =>
+        source.tables.map((table) => `${source.name}.${table.name}`)
+      )
+    );
+
+    expect(updates).toHaveLength(2);
+    expect(new Set(logicalSourceKeys)).toHaveLength(2);
   });
 
   it('keeps colliding physical schemas distinct when they are imported in separate batches', () => {

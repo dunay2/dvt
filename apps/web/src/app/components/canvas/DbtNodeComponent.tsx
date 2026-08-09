@@ -223,7 +223,6 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     selectedForExecution,
     canMutateGraph: canMutateNodeCommands,
     canInspectNode: typeof data.onInspectNode === 'function',
-    canOpenNodeCode: data.canOpenNodeCode === true && typeof data.onOpenNodeCode === 'function',
     canDuplicateNode: typeof data.onDuplicateNode === 'function',
     canToggleNodeSelection: typeof data.onToggleNodeSelection === 'function',
     canRemoveNode: typeof data.onRemoveNode === 'function',
@@ -264,9 +263,6 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     switch (actionId) {
       case 'inspect-node':
         data.onInspectNode?.(id, null);
-        return;
-      case 'open-node-code':
-        data.onOpenNodeCode?.(id);
         return;
       case 'duplicate-node':
         data.onDuplicateNode?.(id);

@@ -65,6 +65,16 @@ function buildSourceNode(overrides: Partial<CanonicalNode> = {}): CanonicalNode 
     tags: ['source', 'raw'],
     path: 'models/sources/src_orders.yml',
     metadata: {
+      connectedSourceRef: {
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: 'warehouse-prod',
+          provider: 'postgres',
+        },
+        sourceObjectId: 'relation/analytics/raw/orders',
+      },
+      connectionName: 'Production warehouse',
       sourceName: 'warehouse_prod_analytics_raw',
       database: 'analytics',
       schema: 'raw',
@@ -185,6 +195,7 @@ describe('nodePropertiesReadModel', () => {
     );
 
     expectRows(sectionById(model, 'general'), {
+      Connection: 'Production warehouse · postgres · warehouse-prod',
       Schema: 'raw',
       Table: 'orders',
       Rows: '1,500',
@@ -233,6 +244,38 @@ describe('nodePropertiesReadModel', () => {
       description: 'Code lives at models/sources/src_orders.yml.',
     });
     expect(sectionById(model, 'code').code).toBeUndefined();
+  });
+
+  it.each([
+    { locale: 'en', label: 'Connection' },
+    { locale: 'es', label: 'Conexión' },
+  ])('exposes the complete read-only connection binding in $locale', ({ locale, label }) => {
+    const node = buildSourceNode();
+    const model = buildNodePropertiesReadModel({
+      node,
+      nodes: [node],
+      edges: [],
+      presentationCopy: buildCanvasNodePresentationCopy(resolveCanvasViewCopy(locale), locale),
+    });
+
+    expect(sectionById(model, 'general').rows).toContainEqual({
+      id: 'connection',
+      label,
+      value: 'Production warehouse · postgres · warehouse-prod',
+    });
+  });
+
+  it('does not infer a connection binding from legacy loose metadata', () => {
+    const node = buildSourceNode({
+      metadata: {
+        connectionName: 'Production warehouse',
+        sourceObjectId: 'relation/analytics/raw/orders',
+      },
+    });
+
+    expect(sectionById(buildSourceModel(node), 'general').rows).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 'connection' })])
+    );
   });
 
   it('shows calculated source object size distinctly from measured byte size', () => {

@@ -127,7 +127,7 @@ export function ConnectionStep({
               <div className="mb-2 flex items-center justify-between gap-3 text-xs text-slate-300">
                 <div className="min-w-0">
                   <div>{formatConnectionCatalogSummary(connections.length)}</div>
-                  <div className="truncate text-slate-500">{copy.connection.catalogSource}</div>
+                  <div className="truncate text-slate-400">{copy.connection.catalogSource}</div>
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <Button
@@ -233,7 +233,7 @@ export function ConnectionStep({
                           <div className="text-xs text-slate-300">
                             {connection.type} - {connection.database}
                           </div>
-                          <div className="mt-1 truncate text-[11px] text-slate-500">
+                          <div className="mt-1 truncate text-[11px] text-slate-400">
                             {connection.id}
                           </div>
                         </div>

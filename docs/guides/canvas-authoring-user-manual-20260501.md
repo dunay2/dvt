@@ -1,7 +1,7 @@
 ---
 title: Manual de usuario de autoria en Canvas
-status: Review
-date: 2026-06-02
+status: Accepted
+date: 2026-08-08
 owner: Web
 planning_type: guide
 ---
@@ -32,6 +32,10 @@ Este manual es para usuarios, QA y revisores de producto que validan la autoria
 visual de workflows en Canvas. Describe como usar la herramienta, que casos de
 uso estan cubiertos por el flujo actual y que casos siguen condicionados o fuera
 de alcance.
+
+Los nombres de controles se citan como aparecen en la evidencia inglesa. Desde
+`Vista > Idioma` se puede elegir `Espanol` o `Ingles`; etiquetas, tooltips,
+mensajes y estados deben cambiar juntos al idioma seleccionado.
 
 ## Prerrequisitos
 
@@ -73,6 +77,32 @@ Resultado esperado: el usuario ve un grafo real de proyecto. Si falta autoridad
 de backend o de proyecto, la vista debe bloquear autoria en vez de mostrar datos
 de muestra.
 
+## Cambiar de proyecto sin mezclar datos
+
+1. Pulsar el nombre `Proyecto: ...` de la barra superior para abrir `Espacio de
+trabajo`.
+2. Revisar el tenant, proyecto y entorno activos en `Contexto del proyecto`.
+   Esos campos son informativos; no se editan escribiendo sobre ellos.
+3. En `Proyectos disponibles en esta sesion`, elegir el scope
+   `tenant / proyecto / entorno` deseado. Con teclado, llevar el foco a la
+   opcion y pulsar `Enter` o espacio.
+4. Confirmar que el menu se cierra y que la barra superior muestra el proyecto
+   nuevo antes de continuar.
+5. Volver al proyecto anterior con el mismo selector cuando sea necesario.
+
+Resultado esperado: la seleccion usa el rail `SelectWorkspaceScope`, vuelve a
+cargar el borrador, archivos y conexiones del scope elegido y no reutiliza el
+contenido de otro proyecto aunque ambos tengan una ruta como
+`models/sources/src_public.yml`. La prueba mas exigente usa el mismo objeto
+fisico PostgreSQL en A y B, confirma que B empieza sin el grafo de A y, al
+volver, recupera las dos fuentes y `Model 1` de A. Si solo existe un proyecto
+autorizado, aparece `No hay otro proyecto disponible en esta sesion.`; no se
+inventan alternativas.
+
+Comprobacion exigente: repetir A -> B en ingles y B -> A en espanol. El nombre
+visible de `Project/Proyecto` debe cambiar antes que el grafo; el selector debe
+tener foco visible y no presentar hallazgos axe `serious` o `critical`.
+
 ## Insertar nodos
 
 1. Hacer click derecho sobre una zona vacia del canvas.
@@ -86,6 +116,8 @@ Resultado esperado: el menu contextual solo muestra acciones del canvas y no
 mezcla propiedades de nodos. En un canvas `dbt`, las acciones crean tipos
 compatibles con dbt; en un canvas DVT, crean tipos compatibles con el flujo DVT.
 La insercion de nodos no sustituye al importador de fuentes gobernadas.
+`Anadir componente` no debe ocupar un boton fijo sobre el Canvas: el unico
+acceso al catalogo es el menu contextual abierto con click derecho.
 
 ## Usar el explorador de proyecto
 
@@ -108,11 +140,18 @@ base del grafo.
 5. En `Metadata`, revisar columnas y metadata del origen activo.
 6. En `Selected`, confirmar la cesta de tablas y pulsar `Attach sources to
 canvas`.
+7. Si la cesta supera el alto visible, usar la barra de desplazamiento del
+   contenido. `Cancel` y `Attach sources to canvas` permanecen accesibles.
+8. Abrir el Workbench del nodo importado y comprobar en `General` la fila
+   `Connection`, con nombre, proveedor e identificador completos.
 
 Resultado esperado: el flujo registra fuentes gobernadas desde los rails
 `ListWarehouseConnections`, `ListWarehouseConnectionSourceObjects` e
 `ImportWarehouseSources`, y las proyecta como nodos de fuente en el canvas cerca
-del punto donde se abrio el menu contextual.
+del punto donde se abrio el menu contextual. La identidad persistida es la
+combinacion de conexion y objeto fisico: importar el mismo objeto mediante dos
+conexiones produce dos nodos distinguibles. No se muestran secretos ni se
+deduce una conexion a partir del nombre de tabla.
 
 ## Gestionar proyecto
 
@@ -140,14 +179,29 @@ captura principal, `Ejecutar` esta deshabilitado porque la barra indica
 
 ## Revisar codigo y artefactos
 
-1. Abrir la pestana `Codigo` para revisar archivos del workspace.
-2. Abrir `Artefactos` para revisar artefactos sincronizados.
-3. Usar `View` o `Download` cuando el artefacto este disponible.
-4. Verificar que el archivo mostrado corresponde al nodo o artefacto esperado.
+1. Seleccionar un nodo y pulsar el icono `Codigo` de su barra flotante.
+2. Si el nodo declara una ruta persistida, confirmar que se abre ese archivo
+   exacto en el Workbench de codigo del proyecto.
+3. Si el nodo es nuevo o generado y aun no tiene archivo persistido, confirmar
+   que se abre `More: Code` del propio nodo para revisar o editar su SQL.
+4. Con el editor SQL enfocado, usar `Backspace` o `Delete` y confirmar que solo
+   cambia el texto; el nodo seleccionado debe seguir en el grafo.
+5. Para revisar el proyecto completo, abrir `Espacio de trabajo > Open project
+code` y elegir un archivo del explorador. En la prueba de aislamiento, abrir
+   `models/sources/src_public.yml` en B y en A y confirmar visualmente que cada
+   archivo contiene su propia identidad de fuente y no la del otro proyecto.
+6. Abrir `Artefactos` para revisar artefactos sincronizados y usar `View` o
+   `Download` cuando esten disponibles.
 
 Resultado esperado: codigo y artefactos son vistas de inspeccion del workspace;
-no sustituyen el grafo ni deben mostrar contenido que no corresponda al recurso
-seleccionado.
+no sustituyen el grafo, no fabrican rutas `models/<nombre>.sql` y nunca deben
+mostrar el primer archivo disponible o contenido de otro nodo como sustituto
+del recurso seleccionado.
+
+La accion `Abrir codigo del nodo` no debe repetirse en `Mas acciones` ni en el
+menu de click derecho. Si aparece ahi, o si esa copia no abre exactamente el
+mismo recurso, el resultado es `NO-GO`; la unica entrada es el icono superior
+de la barra flotante del nodo seleccionado.
 
 ## Casos de uso con evidencia parcial
 
@@ -241,14 +295,66 @@ de rails protegidos como `ListWarehouseConnections`,
 - Confirmar que no existe panel fijo `Project Resources` ni accion `Add data`
   en el modo base del grafo.
 - Crear un nodo y verificar que queda visible en el mismo contexto del grafo.
+- Confirmar que no existe un boton fijo `Anadir componente`; abrir el catalogo
+  solamente con click derecho sobre una zona vacia.
 - Seleccionar un nodo y revisar que el workbench contextual muestra datos del
   nodo real.
 - Abrir `Add source` desde el menu contextual y comprobar conexiones, tablas,
   columnas, metadata y cesta de seleccion.
+- Con una cesta alta, recorrerla con teclado y puntero; comprobar que la barra
+  de desplazamiento es visible y que `Cancel` y `Attach sources to canvas` son
+  alcanzables sin perder contexto.
+- Abrir el nodo importado y verificar que `Connection` muestra nombre,
+  proveedor e identificador completos, sin elipsis y sin secretos.
+- Importar el mismo objeto fisico mediante dos conexiones y confirmar que no se
+  deduplican entre si.
+- Cambiar entre dos proyectos autorizados que compartan una ruta de archivo y
+  un nombre de nodo; confirmar que B empieza limpio, crea su propio estado y que
+  cada uno conserva su contenido al volver A -> B -> A.
+- Repetir el selector con `Enter` o espacio en ingles y espanol; comprobar foco
+  visible, `Project/Proyecto` actualizado y cero hallazgos axe graves.
 - Abrir `Proyecto` y confirmar que `Importar` es snapshot, no conexion.
 - Confirmar que `Ejecutar` no se habilita con `Plan requerido`.
-- Abrir `Codigo`, `Artefactos` y `Ejecuciones` y comprobar que cada vista
-  muestra informacion alineada con el workspace activo.
+- Pulsar `Codigo` en un nodo persistido y en uno generado; comprobar que cada
+  accion abre el recurso exacto y nunca un archivo de respaldo no relacionado.
+- Abrir `Mas acciones` y el menu contextual del nodo; confirmar que ninguno
+  repite `Abrir codigo del nodo`.
+- Borrar texto dentro del editor SQL con `Backspace` y `Delete`; comprobar que
+  el nodo seleccionado no se elimina y que el Canvas conserva su grafo.
+- Repetir la comprobacion de visibilidad a 1000x660, 1280x720 y 1440x900, con
+  zoom de navegador al 100 % y al 200 %, sin texto truncado que oculte identidad
+  ni controles fuera del alcance del scroll.
+- Recorrer las acciones con teclado, comprobar foco visible, nombres
+  accesibles, orden logico, cierre con `Escape` y ausencia de violaciones axe
+  `serious` o `critical` en las superficies revisadas.
+- Abrir `Codigo`, `Artefactos` y `Ejecuciones` y comprobar que cada vista muestra
+  informacion alineada con el workspace activo.
+
+### Cobertura automatizada y comprobacion manual exigente
+
+La prueba protegida de Source Import ejecuta 1440x900, 1280x720, 1000x660 y
+500x330. Este ultimo tamano ejerce la presion de layout equivalente a ampliar al
+200 % la base 1000x660. En cada tamano exige el dialogo y el Workbench de la
+fuente completamente dentro del viewport, `Connection` visible con su identidad
+exacta, scroll util, cierre y `Cancel` alcanzables, cero hallazgos axe
+`serious`/`critical` y ninguna tercera fuente persistida al cancelar. No se usan
+clicks forzados.
+
+La misma prueba abre dos scopes concedidos por el servidor en una unica sesion,
+cambia mediante el selector visible, crea B desde su estado vacio, reutiliza la
+ruta `models/sources/src_public.yml` y el mismo objeto fisico, y vuelve a A. Las
+lecturas autorizadas de borrador y archivo deben devolver A, B y A sin datos
+cruzados. Ademas abre el YAML exacto en Project Code para B y A, rechaza
+visualmente la identidad del otro scope y revisa selector/Workbench con axe.
+Tambien vacia el SQL con teclado y exige que `Model 1` permanezca antes de
+continuar la autoria; el Canvas suspende sus atajos globales de borrado mientras
+el Workbench contextual posee el teclado.
+
+El usuario exigente debe repetir ademas el 200 % con el zoom real del navegador,
+porque el rasterizado, las preferencias de fuente y el escalado del sistema
+operativo no quedan completamente representados por un viewport CSS reducido.
+Si titulo, conexion, identificador, acciones o foco quedan ocultos, el resultado
+es `NO-GO` aunque la prueba automatizada sea verde.
 
 ## Diagnostico rapido
 

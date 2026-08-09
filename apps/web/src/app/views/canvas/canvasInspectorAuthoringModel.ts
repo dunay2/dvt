@@ -112,7 +112,13 @@ export function validateCanvasInspectorNodeDraft(
           edges: context.edges,
         }).map((origin) => origin.id)
       );
-      if (selectedSourceId.length === 0 || !connectedOriginIds.has(selectedSourceId)) {
+      const effectiveSourceId =
+        selectedSourceId.length > 0
+          ? selectedSourceId
+          : connectedOriginIds.size === 1
+            ? (connectedOriginIds.values().next().value ?? '')
+            : '';
+      if (effectiveSourceId.length === 0 || !connectedOriginIds.has(effectiveSourceId)) {
         dbtErrors.selectedSourceId = 'dbt_source_required';
       }
     }

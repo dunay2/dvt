@@ -421,6 +421,7 @@ function CanvasViewportWithPresenter({
       viewportRef={viewportRef}
       resolvedCanvasPalette={resolvedCanvasPalette}
       canEditEdges={props.canEditEdges}
+      canDeleteWithKeyboard={props.canEditEdges && !(props.externalNodeSurfaceActive ?? false)}
       canMoveNodes={props.canMoveNodes ?? props.canEditEdges}
       canSelectNodes={canSelectNodes}
       nodesWithImpact={graphSearchPresentation.nodes}

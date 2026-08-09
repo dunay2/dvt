@@ -13,6 +13,15 @@ const warehouseSource: CanonicalNode = {
   status: 'idle',
   tags: [],
   metadata: {
+    connectedSourceRef: {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'warehouse-prod',
+        provider: 'postgres',
+      },
+      sourceObjectId: 'relation/dvt/erp/orders',
+    },
     sourceName: 'warehouse_prod_analytics_erp',
     schema: 'erp',
     tableName: 'orders',
@@ -165,6 +174,84 @@ describe('canvas DBT model artifact projection', () => {
     });
   });
 
+  it('fails closed when a warehouse source has no canonical connected-source binding', () => {
+    const sourceWithoutBinding = {
+      ...warehouseSource,
+      metadata: {
+        sourceName: 'warehouse_prod_analytics_erp',
+        schema: 'erp',
+        tableName: 'orders',
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: model,
+        nodes: [sourceWithoutBinding, model],
+        edges: [edge(sourceWithoutBinding.id)],
+      })
+    ).toEqual({
+      ok: false,
+      reason: 'origin_metadata_unavailable',
+      message:
+        'DBT source origin "Warehouse Orders" does not expose a valid connected source binding.',
+    });
+  });
+
+  it('fails closed when a warehouse source uses an unsupported connection provider', () => {
+    const sourceWithUnsupportedProvider = {
+      ...warehouseSource,
+      metadata: {
+        ...warehouseSource.metadata,
+        connectedSourceRef: {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: 'warehouse-snowflake',
+            provider: 'snowflake',
+          },
+          sourceObjectId: 'relation/dvt/erp/orders',
+        },
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: model,
+        nodes: [sourceWithUnsupportedProvider, model],
+        edges: [edge(sourceWithUnsupportedProvider.id)],
+      })
+    ).toEqual({
+      ok: false,
+      reason: 'origin_metadata_unavailable',
+      message:
+        'DBT source origin "Warehouse Orders" uses unsupported connection provider "snowflake".',
+    });
+  });
+
+  it('fails closed instead of accepting legacy source-object identity alongside the binding', () => {
+    const sourceWithLegacyIdentity = {
+      ...warehouseSource,
+      metadata: {
+        ...warehouseSource.metadata,
+        sourceObjectId: 'relation/dvt/erp/orders',
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: model,
+        nodes: [sourceWithLegacyIdentity, model],
+        edges: [edge(sourceWithLegacyIdentity.id)],
+      })
+    ).toEqual({
+      ok: false,
+      reason: 'origin_metadata_unavailable',
+      message:
+        'DBT source origin "Warehouse Orders" does not expose a valid connected source binding.',
+    });
+  });
+
   it('uses authored SQL unchanged as the body consumed by the executable artifact', () => {
     const metadata = {
       ...createDbtNodeAuthoringMetadata(model),
@@ -229,6 +316,35 @@ describe('canvas DBT model artifact projection', () => {
       ok: false,
       reason: 'origin_required',
       message: 'DBT model "Orders Model" must select a connected source or model origin.',
+    });
+  });
+
+  it('uses the only compatible incoming edge without a duplicate selected-source field', () => {
+    const unselectedModel = {
+      ...model,
+      metadata: {
+        dbt: {
+          packageName: 'analytics',
+          materialized: 'table',
+          selectedSourceId: '',
+        },
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: unselectedModel,
+        nodes: [warehouseSource, unselectedModel],
+        edges: [edge(warehouseSource.id)],
+      })
+    ).toMatchObject({
+      ok: true,
+      artifact: {
+        origin: {
+          nodeId: warehouseSource.id,
+          sql: "{{ source('warehouse_prod_analytics_erp', 'orders') }}",
+        },
+      },
     });
   });
 

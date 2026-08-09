@@ -10,7 +10,6 @@ import {
   type AriaLabelConfig,
 } from '@xyflow/react';
 import type { DragEventHandler, RefObject } from 'react';
-import { Plus } from 'lucide-react';
 
 import { GraphNodeHealthPopoverView } from '../../plugins/graph/GraphNodeHealthPopoverView';
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
@@ -26,10 +25,13 @@ import type { CanvasContextMenuPresenter } from './useCanvasContextMenuPresenter
 import type { CanvasGraphSearchController } from './useCanvasGraphSearchController';
 import type { CanvasGraphFilterController } from './useCanvasGraphFilterController';
 
+const CANVAS_FIT_VIEW_OPTIONS = { padding: 0.32, maxZoom: 0.82 } as const;
+
 type CanvasViewportSurfaceViewProps = Readonly<{
   viewportRef: RefObject<HTMLDivElement>;
   resolvedCanvasPalette: CanvasPaletteId;
   canEditEdges: boolean;
+  canDeleteWithKeyboard: boolean;
   canMoveNodes: boolean;
   canSelectNodes: boolean;
   nodesWithImpact: Node[];
@@ -95,6 +97,7 @@ function resolveMiniMapNodeColor(node: { data?: unknown }): string {
 
 function CanvasViewportReactFlowSurface({
   canEditEdges,
+  canDeleteWithKeyboard,
   canMoveNodes,
   canSelectNodes,
   nodesWithImpact,
@@ -217,10 +220,10 @@ function CanvasViewportReactFlowSurface({
         elementsSelectable={canSelectNodes}
         selectNodesOnDrag
         multiSelectionKeyCode="Shift"
-        deleteKeyCode={canEditEdges ? undefined : null}
+        deleteKeyCode={canDeleteWithKeyboard ? undefined : null}
         disableKeyboardA11y={!canSelectNodes}
         fitView={viewport == null}
-        fitViewOptions={{ padding: 0.2, maxZoom: 0.82 }}
+        fitViewOptions={CANVAS_FIT_VIEW_OPTIONS}
         minZoom={0.35}
         defaultViewport={viewport ?? undefined}
         onMoveEnd={(event, nextViewport) => {
@@ -236,7 +239,7 @@ function CanvasViewportReactFlowSurface({
         className="bg-(--canvas-surface)"
         ariaLabelConfig={buildCanvasReactFlowAriaLabelConfig(copy)}
       >
-        <Controls />
+        <Controls fitViewOptions={CANVAS_FIT_VIEW_OPTIONS} />
         <MiniMap
           pannable
           zoomable
@@ -268,17 +271,6 @@ export function CanvasViewportSurfaceView({
   copy,
   ...reactFlowSurfaceProps
 }: CanvasViewportSurfaceViewProps): JSX.Element {
-  const handleOpenAddNodeCatalog = (opener: HTMLButtonElement): void => {
-    const bounds = viewportRef.current?.getBoundingClientRect();
-    contextMenuPresenter.openAddNodeCatalog(
-      {
-        x: (bounds?.left ?? 0) + Math.max(bounds?.width ?? 0, 1) / 2,
-        y: (bounds?.top ?? 0) + Math.max(bounds?.height ?? 0, 1) / 2,
-      },
-      opener
-    );
-  };
-
   return (
     <div
       ref={viewportRef}
@@ -286,16 +278,6 @@ export function CanvasViewportSurfaceView({
       data-canvas-palette={resolvedCanvasPalette}
       className="relative flex-1 overflow-hidden"
     >
-      <button
-        type="button"
-        data-slot="canvas-add-component-command"
-        aria-label={copy.canvasAddNodeCatalogTitle}
-        className="bg-popover text-popover-foreground border-border hover:bg-accent hover:text-accent-foreground focus-visible:border-ring focus-visible:ring-ring/50 absolute top-3 left-3 z-20 inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium shadow-lg outline-none focus-visible:ring-[3px]"
-        onClick={(event) => handleOpenAddNodeCatalog(event.currentTarget)}
-      >
-        <Plus className="size-4" aria-hidden="true" />
-        {copy.canvasAddNodeCatalogTitle}
-      </button>
       <CanvasViewportReactFlowSurface
         {...reactFlowSurfaceProps}
         contextMenuPresenter={contextMenuPresenter}

@@ -40,7 +40,12 @@ export function buildWarehouseSourceYamlBindings(
       const canonicalSourceName = buildCanonicalSourceName(sourceObject);
       const sourceName =
         existingSourceName ??
-        (hasSourceNameCollision(existingDocument, sourceObjects, sourceObject, canonicalSourceName)
+        (hasSourceNameCollision(
+          existingDocument,
+          input.sourceObjects,
+          sourceObject,
+          canonicalSourceName
+        )
           ? buildCollisionResistantSourceName(sourceObject)
           : canonicalSourceName);
       sourceNames.set(sourceObjectIdentity(sourceObject), sourceName);

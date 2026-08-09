@@ -53,8 +53,18 @@ export function DbtModelCodeAuthoringSection({
           name="dbt-model-sql"
           value={editorValue}
           disabled={disabled}
-          className={inspectorVisualClasses.inspectorCodeEditor}
+          className={`${inspectorVisualClasses.inspectorCodeEditor} nokey`}
           spellCheck={false}
+          onKeyDown={(event) => {
+            if (event.key === 'Backspace' || event.key === 'Delete') {
+              event.stopPropagation();
+            }
+          }}
+          onKeyUp={(event) => {
+            if (event.key === 'Backspace' || event.key === 'Delete') {
+              event.stopPropagation();
+            }
+          }}
           onChange={(event) => {
             const modelSql = event.currentTarget.value;
             onChange((currentDraft) =>
