@@ -64,7 +64,8 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
           environmentId: 'dev',
         },
       },
-      'C:/repo'
+      'C:/repo',
+      { platform: 'linux' }
     ),
     [
       'run',
@@ -97,6 +98,38 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
       '/repo/apps/web/cypress/e2e/dbt/dbt-project-import-source-live.cy.ts',
     ]
   );
+});
+
+test('buildLiveProofCypressDockerInvocation mounts Windows pnpm support dependencies read-only', () => {
+  const invocation = buildLiveProofCypressDockerInvocation(
+    {
+      apiPort: 3300,
+      webPort: 4174,
+      apiBearerToken: 'proof-token',
+      specPath: '/repo/apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts',
+      workspaceScope: {
+        tenantId: 'tenant',
+        projectId: 'project',
+        environmentId: 'dev',
+      },
+    },
+    'C:/repo',
+    {
+      platform: 'win32',
+      resolvePackageDirectory: (packageName) => `C:\\pnpm\\${packageName}`,
+    }
+  );
+
+  assert.deepEqual(invocation.slice(3, 11), [
+    '-v',
+    'C:/repo:/repo',
+    '-v',
+    'C:/pnpm/cypress-axe:/repo/apps/web/node_modules/cypress-axe:ro',
+    '-v',
+    'C:/pnpm/axe-core:/repo/apps/web/node_modules/axe-core:ro',
+    '-w',
+    '/repo/apps/web',
+  ]);
 });
 
 test('resolveLiveProofSpecPath rejects paths outside the governed Cypress E2E surface', () => {
