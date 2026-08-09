@@ -47,15 +47,19 @@ function openGovernedNodeActions(event: ReactMouseEvent<HTMLButtonElement>): voi
   const rect = trigger.getBoundingClientRect();
   const MouseEventConstructor =
     trigger.ownerDocument.defaultView?.MouseEvent ?? globalThis.MouseEvent;
-  trigger.dispatchEvent(
-    new MouseEventConstructor('contextmenu', {
-      bubbles: true,
-      cancelable: true,
-      button: 2,
-      clientX: Math.max(8, rect.left),
-      clientY: Math.max(8, rect.bottom),
-    })
-  );
+  const contextMenuEvent = new MouseEventConstructor('contextmenu', {
+    bubbles: true,
+    cancelable: true,
+    button: 2,
+    clientX: Math.max(8, rect.left),
+    clientY: Math.max(8, rect.bottom),
+  });
+  Object.defineProperty(contextMenuEvent, 'dvtNodeActionsRequest', {
+    configurable: false,
+    enumerable: false,
+    value: true,
+  });
+  trigger.dispatchEvent(contextMenuEvent);
 }
 
 export function GraphNodeCardView({

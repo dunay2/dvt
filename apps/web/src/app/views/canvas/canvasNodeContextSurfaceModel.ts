@@ -1,13 +1,5 @@
-/** Owned concern: keep transient node surfaces mutually exclusive across Canvas hosts. */
+/** Owned concern: keep transient node detail surfaces coherent across Canvas hosts. */
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
-
-export type CanvasNodeFloatingToolbarAnchor = Readonly<{
-  nodeId: string;
-  nodeName: string;
-  position: { x: number; y: number };
-  nodeTop: number;
-  contextMenuTrigger: Element | null;
-}>;
 
 export type CanvasNodeHealthPopoverModel = Readonly<{
   nodeId: string;
@@ -16,9 +8,7 @@ export type CanvasNodeHealthPopoverModel = Readonly<{
 }>;
 
 export type CanvasNodeContextActiveSurface =
-  | Readonly<{ kind: 'idle' }>
-  | Readonly<{ kind: 'toolbar'; anchor: CanvasNodeFloatingToolbarAnchor }>
-  | Readonly<{ kind: 'health'; model: CanvasNodeHealthPopoverModel }>;
+  Readonly<{ kind: 'idle' }> | Readonly<{ kind: 'health'; model: CanvasNodeHealthPopoverModel }>;
 
 export type CanvasNodeContextSurfaceState = Readonly<{
   externalSurfaceActive: boolean;
@@ -26,7 +16,6 @@ export type CanvasNodeContextSurfaceState = Readonly<{
 }>;
 
 export type CanvasNodeContextSurfaceEvent =
-  | Readonly<{ type: 'open-toolbar'; anchor: CanvasNodeFloatingToolbarAnchor }>
   | Readonly<{ type: 'open-health'; model: CanvasNodeHealthPopoverModel }>
   | Readonly<{ type: 'close-transient-surface' }>
   | Readonly<{ type: 'remove-node'; nodeId: string }>
@@ -43,8 +32,6 @@ export function createCanvasNodeContextSurfaceState(): CanvasNodeContextSurfaceS
 
 function activeSurfaceNodeId(surface: CanvasNodeContextActiveSurface): string | null {
   switch (surface.kind) {
-    case 'toolbar':
-      return surface.anchor.nodeId;
     case 'health':
       return surface.model.nodeId;
     case 'idle':
@@ -57,10 +44,6 @@ export function reduceCanvasNodeContextSurface(
   event: CanvasNodeContextSurfaceEvent
 ): CanvasNodeContextSurfaceState {
   switch (event.type) {
-    case 'open-toolbar':
-      return state.externalSurfaceActive
-        ? state
-        : { ...state, activeSurface: { kind: 'toolbar', anchor: event.anchor } };
     case 'open-health':
       return state.externalSurfaceActive
         ? state

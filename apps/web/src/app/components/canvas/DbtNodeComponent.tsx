@@ -27,7 +27,7 @@ import type { CanvasNodePortCompatibilityView, CanvasNodePortTone } from './Canv
 import type { CanvasNodePresentationCopy } from './canvasNodePresentationCopy.contract';
 import type { CanvasNodePresentationTruth } from './canvasNodePresentationTruth.contract';
 import {
-  buildCanvasNodeContextMenuModel,
+  buildCanvasNodeModelerActionModel,
   type CanvasNodeContextMenuCopy,
   type CanvasNodeContextMenuActionId,
 } from './canvasNodeContextMenuModel';
@@ -218,19 +218,10 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
   const portTone = NODE_ROLE_PORT_TONES[role];
   const canMutateNodeCommands = data.canMutateGraph === true;
   const canAttachSchema = canMutateNodeCommands && typeof data.onAttachSchemaToNode === 'function';
-  const canOpenCodeThroughWorkbench =
-    data.canOpenNodeCode !== false &&
-    typeof data.onInspectNode === 'function' &&
-    (data.presentationTruth?.code.kind === 'inline' ||
-      data.presentationTruth?.code.kind === 'generated');
-  const canOpenNodeCode =
-    (data.canOpenNodeCode === true && typeof data.onOpenNodeCode === 'function') ||
-    canOpenCodeThroughWorkbench;
-  const contextMenuModel = buildCanvasNodeContextMenuModel({
+  const contextMenuModel = buildCanvasNodeModelerActionModel({
     target: { kind: 'node', nodeId: id, nodeName: data.name },
     selectedForExecution,
     canMutateGraph: canMutateNodeCommands,
-    canInspectNode: typeof data.onInspectNode === 'function',
     canDuplicateNode: typeof data.onDuplicateNode === 'function',
     canToggleNodeSelection: typeof data.onToggleNodeSelection === 'function',
     canRemoveNode: typeof data.onRemoveNode === 'function',
@@ -267,21 +258,12 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     data.onAttachSchemaToNode?.(id, payload.schemaName);
   };
 
-  const handleOpenNodeCode = () => {
-    if (data.canOpenNodeCode === true && typeof data.onOpenNodeCode === 'function') {
-      data.onOpenNodeCode(id);
-      return;
-    }
-    if (canOpenCodeThroughWorkbench) {
-      data.onInspectNode?.(id, 'code');
-    }
+  const handleOpenNode = () => {
+    data.onInspectNode?.(id, 'code');
   };
 
   const handleContextMenuAction = (actionId: CanvasNodeContextMenuActionId) => {
     switch (actionId) {
-      case 'inspect-node':
-        data.onInspectNode?.(id, null);
-        return;
       case 'duplicate-node':
         data.onDuplicateNode?.(id);
         return;
@@ -307,10 +289,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       sourcePortCompatibility={data.portCompatibility?.source}
       targetPortCompatibility={data.portCompatibility?.target}
       onContextMenuAction={handleContextMenuAction}
-      onOpenCode={canOpenNodeCode ? handleOpenNodeCode : undefined}
-      onOpenWorkbench={
-        typeof data.onInspectNode === 'function' ? () => data.onInspectNode?.(id, null) : undefined
-      }
+      onOpenNode={typeof data.onInspectNode === 'function' ? handleOpenNode : undefined}
       onDragOver={handleSchemaResourceDragOver}
       onDrop={handleSchemaResourceDrop}
     >

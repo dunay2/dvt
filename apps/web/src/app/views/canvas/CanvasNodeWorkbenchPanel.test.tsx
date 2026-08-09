@@ -264,7 +264,7 @@ describe('CanvasNodeWorkbenchPanel', () => {
     }
   });
 
-  it('routes the Code tab to the authoritative node-file workbench when available', () => {
+  it('keeps the authoritative node-file editor launch inside the Code section', () => {
     const onOpenNodeCode = vi.fn();
 
     act(() => {
@@ -292,6 +292,17 @@ describe('CanvasNodeWorkbenchPanel', () => {
       fireEvent.pointerDown(codeTab!, { button: 0, ctrlKey: false, pointerType: 'mouse' });
       fireEvent.mouseDown(codeTab!, { button: 0, ctrlKey: false });
       fireEvent.click(codeTab!);
+    });
+
+    expect(onOpenNodeCode).not.toHaveBeenCalled();
+
+    const openCodeEditor = container.querySelector<HTMLButtonElement>(
+      '[data-slot="canvas-node-workbench-open-code-editor"]'
+    );
+    expect(openCodeEditor).not.toBeNull();
+
+    act(() => {
+      fireEvent.click(openCodeEditor!);
     });
 
     expect(onOpenNodeCode).toHaveBeenCalledTimes(1);

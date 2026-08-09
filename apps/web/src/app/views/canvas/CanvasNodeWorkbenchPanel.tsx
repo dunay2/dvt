@@ -279,13 +279,28 @@ export function CanvasNodeWorkbenchPanel({
     node.id
   );
   const handleActiveTabChange = (nextTabId: string): void => {
-    if (nextTabId === 'code' && onOpenNodeCode != null) {
-      onOpenNodeCode();
-      return;
-    }
-
     setActiveTab(nextTabId);
   };
+
+  if (onOpenNodeCode != null) {
+    sectionBeforeChildren.code = (
+      <>
+        <div className="flex justify-end pb-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            data-slot="canvas-node-workbench-open-code-editor"
+            aria-label={copy.canvasNodeToolbarCodeDescription}
+            onClick={onOpenNodeCode}
+          >
+            {copy.canvasNodeToolbarCodeLabel}
+          </Button>
+        </div>
+        {sectionBeforeChildren.code}
+      </>
+    );
+  }
 
   if (authoring.canEditNode) {
     sectionBeforeChildren.general = (

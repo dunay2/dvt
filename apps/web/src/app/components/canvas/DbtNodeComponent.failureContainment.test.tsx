@@ -102,7 +102,7 @@ describe('DbtNodeComponent plugin failure containment', () => {
     expect(container.textContent).toContain('Healthy');
   });
 
-  it('honors an explicit code denial when inline presentation code still exists', () => {
+  it('opens Properties on Code while honoring an explicit external editor denial', () => {
     const onInspectNode = vi.fn();
     const onOpenNodeCode = vi.fn();
     const nodeProps = {
@@ -148,6 +148,6 @@ describe('DbtNodeComponent plugin failure containment', () => {
 
     expect(onOpenNodeCode).not.toHaveBeenCalled();
     expect(onInspectNode).toHaveBeenCalledOnce();
-    expect(onInspectNode).toHaveBeenCalledWith('model.orders', null);
+    expect(onInspectNode).toHaveBeenCalledWith('model.orders', 'code');
   });
 });

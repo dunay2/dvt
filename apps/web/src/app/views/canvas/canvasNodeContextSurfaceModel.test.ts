@@ -5,14 +5,6 @@ import {
   reduceCanvasNodeContextSurface,
 } from './canvasNodeContextSurfaceModel';
 
-const TOOLBAR = {
-  nodeId: 'model.orders',
-  nodeName: 'Orders',
-  position: { x: 20, y: 30 },
-  nodeTop: 82,
-  contextMenuTrigger: null,
-};
-
 const HEALTH = {
   nodeId: 'model.orders',
   detail: {
@@ -24,13 +16,8 @@ const HEALTH = {
 };
 
 describe('reduceCanvasNodeContextSurface', () => {
-  it('replaces the toolbar with health instead of exposing both surfaces', () => {
-    const toolbarState = reduceCanvasNodeContextSurface(createCanvasNodeContextSurfaceState(), {
-      type: 'open-toolbar',
-      anchor: TOOLBAR,
-    });
-
-    const healthState = reduceCanvasNodeContextSurface(toolbarState, {
+  it('opens one health detail surface from idle state', () => {
+    const healthState = reduceCanvasNodeContextSurface(createCanvasNodeContextSurfaceState(), {
       type: 'open-health',
       model: HEALTH,
     });
@@ -38,18 +25,18 @@ describe('reduceCanvasNodeContextSurface', () => {
     expect(healthState.activeSurface).toEqual({ kind: 'health', model: HEALTH });
   });
 
-  it('closes transient surfaces and blocks reopening while an external workbench is active', () => {
-    const toolbarState = reduceCanvasNodeContextSurface(createCanvasNodeContextSurfaceState(), {
-      type: 'open-toolbar',
-      anchor: TOOLBAR,
+  it('closes health detail and blocks reopening while an external node surface is active', () => {
+    const healthState = reduceCanvasNodeContextSurface(createCanvasNodeContextSurfaceState(), {
+      type: 'open-health',
+      model: HEALTH,
     });
-    const workbenchState = reduceCanvasNodeContextSurface(toolbarState, {
+    const workbenchState = reduceCanvasNodeContextSurface(healthState, {
       type: 'synchronize-external-surface',
       active: true,
     });
     const attemptedReopen = reduceCanvasNodeContextSurface(workbenchState, {
-      type: 'open-toolbar',
-      anchor: TOOLBAR,
+      type: 'open-health',
+      model: HEALTH,
     });
 
     expect(workbenchState).toEqual({
@@ -59,20 +46,20 @@ describe('reduceCanvasNodeContextSurface', () => {
     expect(attemptedReopen).toBe(workbenchState);
   });
 
-  it('removes only a surface owned by the deleted node', () => {
-    const toolbarState = reduceCanvasNodeContextSurface(createCanvasNodeContextSurfaceState(), {
-      type: 'open-toolbar',
-      anchor: TOOLBAR,
+  it('removes only health detail owned by the deleted node', () => {
+    const healthState = reduceCanvasNodeContextSurface(createCanvasNodeContextSurfaceState(), {
+      type: 'open-health',
+      model: HEALTH,
     });
 
     expect(
-      reduceCanvasNodeContextSurface(toolbarState, {
+      reduceCanvasNodeContextSurface(healthState, {
         type: 'remove-node',
         nodeId: 'source.orders',
       })
-    ).toBe(toolbarState);
+    ).toBe(healthState);
     expect(
-      reduceCanvasNodeContextSurface(toolbarState, {
+      reduceCanvasNodeContextSurface(healthState, {
         type: 'remove-node',
         nodeId: 'model.orders',
       }).activeSurface

@@ -44,7 +44,6 @@ const CANVAS_VIEWPORT_BEHAVIOR_SPECS = [
   'CanvasViewport.test.tsx',
   'CanvasViewport.contextMenu.test.tsx',
   'CanvasViewport.edgeContextMenu.test.tsx',
-  'CanvasViewport.nodeFloatingToolbar.test.tsx',
   'CanvasViewport.nodeOperationalRail.test.tsx',
 ] as const;
 

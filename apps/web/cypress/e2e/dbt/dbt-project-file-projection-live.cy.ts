@@ -271,8 +271,15 @@ describe('dbt project file projection live vertical', () => {
       );
     });
 
-    // Double-click is the code-first shortcut for a file-backed dbt node.
+    // Enter the node once: Properties opens with Code as the preferred section.
     cy.get('.react-flow__node[data-id="model.analytics.orders"]').dblclick();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-tab-code"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-selected', 'true');
+
+    // File-authoritative editing is reached from inside the Code section, not from another node gesture.
+    cy.get('[data-slot="canvas-node-workbench-open-code-editor"]').should('be.visible').click();
     cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
     cy.get(
       `[data-slot="code-workspace-file-entry"][data-workspace-path="${PROJECT_ROOT}/models/orders.sql"]`
@@ -288,13 +295,7 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="canvas-contextual-workbench-header"] button').should('be.visible').click();
     cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
 
-    // The explicit Workbench command remains available for passive metadata inspection.
-    cy.get('.react-flow__node[data-id="model.analytics.orders"]').rightclick();
-    cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 })
-      .should('be.visible')
-      .find('[data-menu-action="inspect-node"]')
-      .should('be.visible')
-      .click();
+    // Closing Code returns to the same node Properties context.
     cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
     cy.get('[data-slot="canvas-node-workbench-help"]')
       .should('be.visible')
@@ -308,34 +309,24 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="canvas-node-workbench-overlay"]')
       .should('contain.text', 'Value is present')
       .and('contain.text', 'blocks run');
+
+    // Ellipsis is operations-only; it must not expose inspect/workbench/code navigation.
+    cy.get('.react-flow__node[data-id="model.analytics.orders"]')
+      .find('[data-slot="graph-node-card-actions"]')
+      .should('be.visible')
+      .click();
+    cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 }).should('be.visible');
+    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="inspect-node"]').should(
+      'not.exist'
+    );
+    cy.get('[data-slot="canvas-context-menu"] [data-menu-action="open-node-code"]').should(
+      'not.exist'
+    );
+    cy.get('body').type('{esc}', { force: true });
+
     cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
-
-    // The floating toolbar remains a second surface for the same existing code intent.
-    cy.get('.react-flow__node[data-id="model.analytics.orders"]').click();
-    cy.get('[data-slot="canvas-node-floating-toolbar"]', { timeout: 20_000 })
-      .should('be.visible')
-      .find('button[aria-label="Código"]')
-      .click();
-    cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
-    cy.get('.react-flow').should(($graph) => {
-      const graphElement = $graph.get(0);
-      expect(graphElement, 'graph remains mounted beside Code').to.exist;
-      const graphRect = graphElement.getBoundingClientRect();
-      expect(graphRect.width).to.be.greaterThan(320);
-      expect(graphRect.height).to.be.greaterThan(320);
-    });
-    cy.get(
-      `[data-slot="code-workspace-file-entry"][data-workspace-path="${PROJECT_ROOT}/models/orders.sql"]`
-    ).should('be.visible');
-    cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
-      .find('.view-lines')
-      .invoke('text')
-      .should((editorText) => {
-        expect(editorText.replaceAll('\u00a0', ' ')).to.match(
-          /source\(\s*'raw'\s*,\s*'orders'\s*\)/
-        );
-      });
+    cy.get('[data-slot="canvas-node-floating-toolbar"]').should('not.exist');
   });
 
   it('keeps invalid projects file-authoritative and reports the analyzer diagnostic', () => {

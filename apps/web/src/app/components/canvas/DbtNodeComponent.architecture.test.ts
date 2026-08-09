@@ -25,7 +25,7 @@ describe('DbtNodeComponent architecture', () => {
     expect(CanvasNodeMapperSource).not.toContain('dragHandle:');
   });
 
-  it('uses Canvas execution selection state for node selection menu intent', () => {
+  it('uses Canvas execution selection state for node operations intent', () => {
     expect(DbtNodeComponentSource).toContain('selectedForExecution');
     expect(DbtNodeComponentSource).toContain('data.selectedForExecution ?? selected');
     expect(DbtNodeComponentSource).toContain(
@@ -40,9 +40,10 @@ describe('DbtNodeComponent architecture', () => {
     expect(DbtNodeComponentSource).toContain('data.onAttachSchemaToNode?.(id, payload.schemaName)');
   });
 
-  it('renders node context-menu actions from the governed read model', () => {
-    expect(DbtNodeComponentSource).toContain('buildCanvasNodeContextMenuModel');
+  it('renders node operations from the governed operations-only read model', () => {
+    expect(DbtNodeComponentSource).toContain('buildCanvasNodeModelerActionModel');
     expect(DbtNodeComponentSource).toContain('CanvasNodeContextMenuActionId');
+    expect(DbtNodeComponentSource).not.toContain('buildCanvasNodeContextMenuModel');
   });
 
   it('delegates React Flow shell markup to the shared CanvasNodeShell template', () => {

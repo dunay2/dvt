@@ -52,21 +52,15 @@ const NODE_CONTEXT_MENU_MODEL: CanvasNodeContextMenuModel = {
   },
   actionGroups: [
     {
-      id: 'workbench',
-      label: 'Workbench',
+      id: 'edit',
+      label: 'Edit',
       actions: [
         {
-          id: 'inspect-node',
-          label: 'Open workbench',
-          intent: 'read',
+          id: 'duplicate-node',
+          label: 'Duplicate',
+          intent: 'command',
           disabled: false,
         },
-      ],
-    },
-    {
-      id: 'execute',
-      label: 'Execute',
-      actions: [
         {
           id: 'select-node-for-execution',
           label: 'Select for execution',
@@ -116,7 +110,7 @@ describe('CanvasNodeContextMenuView', () => {
     }
   });
 
-  it('renders governed node actions without duplicating node workbench sections', () => {
+  it('renders node operations without Properties or Code navigation', () => {
     const onAction = vi.fn();
 
     act(() => {
@@ -127,27 +121,29 @@ describe('CanvasNodeContextMenuView', () => {
 
     expect(screen.getByRole('menu').getAttribute('data-slot')).toBe('canvas-node-context-menu');
     expect(screen.getByText('Orders model')).toBeTruthy();
-    expect(screen.getByText('Execute')).toBeTruthy();
 
     act(() => {
-      fireEvent.click(screen.getByRole('menuitem', { name: 'Open workbench' }));
+      fireEvent.click(screen.getByRole('menuitem', { name: 'Duplicate' }));
       fireEvent.click(screen.getByRole('menuitem', { name: 'Select for execution' }));
       fireEvent.click(screen.getByRole('menuitem', { name: 'Delete' }));
     });
 
-    expect(onAction).toHaveBeenNthCalledWith(1, 'inspect-node');
+    expect(onAction).toHaveBeenNthCalledWith(1, 'duplicate-node');
     expect(onAction).toHaveBeenNthCalledWith(2, 'select-node-for-execution');
     expect(onAction).toHaveBeenNthCalledWith(3, 'remove-node');
     expect(screen.getByRole('menuitem', { name: 'Delete' }).getAttribute('data-variant')).toBe(
       'destructive'
     );
 
-    expect(screen.queryByRole('menuitem', { name: 'Properties' })).toBeNull();
-    expect(screen.queryByRole('menuitem', { name: 'Inputs / Outputs' })).toBeNull();
-    expect(screen.queryByRole('menuitem', { name: 'Tests' })).toBeNull();
-    expect(screen.queryByRole('menuitem', { name: 'Edit SQL' })).toBeNull();
-    expect(screen.queryByRole('menuitem', { name: 'Preview node' })).toBeNull();
-    expect(screen.queryByRole('menuitem', { name: 'Run from here' })).toBeNull();
-    expect(screen.queryByRole('menuitem', { name: 'Show lineage' })).toBeNull();
+    for (const retiredNavigationLabel of [
+      'Open workbench',
+      'Open code',
+      'Properties',
+      'Inputs / Outputs',
+      'Tests',
+      'Edit SQL',
+    ]) {
+      expect(screen.queryByRole('menuitem', { name: retiredNavigationLabel })).toBeNull();
+    }
   });
 });
