@@ -292,7 +292,7 @@ describe('dbt project file projection live vertical', () => {
           /source\(\s*'raw'\s*,\s*'orders'\s*\)/
         );
       });
-    cy.get('[data-slot="canvas-contextual-workbench-header"] button').should('be.visible').click();
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
     cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
 
     // Closing Code returns to the same node Properties context.

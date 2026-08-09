@@ -251,7 +251,7 @@ describe('Canvas dbt authoring Code and Run live protected runtime', () => {
         'select order_id, amount'
       );
     });
-    cy.get('[data-slot="canvas-contextual-workbench-header"] button').should('be.visible').click();
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
     cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
 
     replaceLiveWorkspaceFile(workingTreePath, EXTERNAL_MODEL_SQL);
