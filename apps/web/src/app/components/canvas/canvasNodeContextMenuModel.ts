@@ -1,4 +1,4 @@
-/** Owned concern: derive Canvas node context-menu actions without owning node mutation. */
+/** Owned concern: derive explicit Canvas node operations without owning node mutation. */
 
 export type CanvasNodeContextMenuTarget = Readonly<{
   kind: 'node';
@@ -7,19 +7,17 @@ export type CanvasNodeContextMenuTarget = Readonly<{
 }>;
 
 export type CanvasNodeContextMenuActionId =
-  | 'inspect-node'
   | 'duplicate-node'
   | 'select-node-for-execution'
   | 'deselect-node-from-execution'
   | 'remove-node';
 
-export type CanvasNodeModelerActionId =
-  'duplicate-node' | 'select-node-for-execution' | 'deselect-node-from-execution' | 'remove-node';
+export type CanvasNodeModelerActionId = CanvasNodeContextMenuActionId;
 
 export type CanvasNodeContextMenuAction = Readonly<{
   id: CanvasNodeContextMenuActionId;
   label: string;
-  intent: 'read' | 'command';
+  intent: 'command';
   disabled: boolean;
   destructive?: boolean;
   disabledReason?: string;
@@ -61,7 +59,7 @@ const DEFAULT_COPY: CanvasNodeContextMenuCopy = {
 };
 
 export type CanvasNodeModelerAction = CanvasNodeContextMenuAction &
-  Readonly<{ id: CanvasNodeModelerActionId; intent: 'command' }>;
+  Readonly<{ id: CanvasNodeModelerActionId }>;
 
 export type CanvasNodeModelerActionGroup = Readonly<{
   id: string;
@@ -74,37 +72,15 @@ export type CanvasNodeModelerActionModel = Readonly<{
   actionGroups: readonly CanvasNodeModelerActionGroup[];
 }>;
 
-type BuildCanvasNodeContextMenuModelArgs = Readonly<{
+type BuildCanvasNodeModelerActionModelArgs = Readonly<{
   target: CanvasNodeContextMenuTarget;
   selectedForExecution: boolean;
   canMutateGraph: boolean;
-  canInspectNode: boolean;
   canDuplicateNode: boolean;
   canToggleNodeSelection: boolean;
   canRemoveNode: boolean;
   copy?: CanvasNodeContextMenuCopy;
 }>;
-
-type BuildCanvasNodeModelerActionModelArgs = Omit<
-  BuildCanvasNodeContextMenuModelArgs,
-  'canInspectNode'
->;
-
-function buildOpenWorkbenchAction(
-  canInspectNode: boolean,
-  copy: CanvasNodeContextMenuCopy
-): CanvasNodeContextMenuAction | null {
-  if (!canInspectNode) {
-    return null;
-  }
-
-  return {
-    id: 'inspect-node',
-    label: copy.openWorkbenchLabel,
-    intent: 'read',
-    disabled: false,
-  };
-}
 
 export function buildCanvasNodeModelerActionModel({
   target,
@@ -159,61 +135,6 @@ export function buildCanvasNodeModelerActionModel({
       ],
     });
   }
-
-  return {
-    target,
-    actionGroups: groups,
-  };
-}
-
-export function buildCanvasNodeContextMenuModel({
-  target,
-  selectedForExecution,
-  canMutateGraph,
-  canInspectNode,
-  canDuplicateNode,
-  canToggleNodeSelection,
-  canRemoveNode,
-  copy = DEFAULT_COPY,
-}: BuildCanvasNodeContextMenuModelArgs): CanvasNodeContextMenuModel {
-  const executionSelectionAction: CanvasNodeContextMenuAction | null = canToggleNodeSelection
-    ? {
-        id: selectedForExecution ? 'deselect-node-from-execution' : 'select-node-for-execution',
-        label: selectedForExecution ? copy.deselectForExecutionLabel : copy.selectForExecutionLabel,
-        intent: 'command',
-        disabled: false,
-      }
-    : null;
-  const workbenchAction = buildOpenWorkbenchAction(canInspectNode, copy);
-  const groups: CanvasNodeContextMenuActionGroup[] = [];
-
-  if (workbenchAction != null) {
-    groups.push({
-      id: 'workbench',
-      label: copy.workbenchGroupLabel,
-      actions: [workbenchAction],
-    });
-  }
-
-  if (executionSelectionAction != null) {
-    groups.push({
-      id: 'execute',
-      label: copy.executeGroupLabel,
-      actions: [executionSelectionAction],
-    });
-  }
-
-  groups.push(
-    ...buildCanvasNodeModelerActionModel({
-      target,
-      selectedForExecution,
-      canMutateGraph,
-      canDuplicateNode,
-      canToggleNodeSelection: false,
-      canRemoveNode,
-      copy,
-    }).actionGroups
-  );
 
   return {
     target,
