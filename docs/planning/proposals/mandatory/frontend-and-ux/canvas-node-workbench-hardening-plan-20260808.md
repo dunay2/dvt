@@ -115,6 +115,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.tsx
   - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
+  - apps/web/src/app/components/canvas/DbtNodeComponent.failureContainment.test.tsx
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
@@ -127,6 +128,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/plugins/graph/graphVisualTokens.ts
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx
+  - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx
@@ -187,57 +189,165 @@ domainObjects:
     owner: Canvas node interaction presentation
 symbols:
   - path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx
+    name: GovernedNodeActionContextMenuEvent
+    kind: type
+    exported: false
+    dddOwner: Canvas node operations presentation
+    cqRails: [SelectCanvasExecutionNode]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx
     name: handleDoubleClick
     kind: function
     exported: false
+    dddOwner: Canvas interaction presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx
     name: handleContextMenuCapture
     kind: function
     exported: false
+    dddOwner: Canvas interaction presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx
     name: nativeEvent
     kind: const
     exported: false
+    dddOwner: Canvas interaction presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/components/canvas/DbtNodeComponent.tsx
     name: hasCodeSection
     kind: const
     exported: false
+    dddOwner: Dbt node Properties presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/components/canvas/DbtNodeComponent.tsx
     name: contextMenuModel
     kind: const
     exported: false
+    dddOwner: Canvas node operations presentation
+    cqRails: [SelectCanvasExecutionNode]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/components/canvas/DbtNodeComponent.tsx
     name: handleOpenNode
     kind: function
     exported: false
+    dddOwner: Dbt node Properties presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+    name: CanvasNodeModelerActionId
+    kind: type
+    exported: true
+    dddOwner: Canvas node operations presentation
+    cqRails: [SelectCanvasExecutionNode]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
+  - path: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+    name: BuildCanvasNodeModelerActionModelArgs
+    kind: type
+    exported: false
+    dddOwner: Canvas node operations presentation
+    cqRails: [SelectCanvasExecutionNode]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
     name: contextMenuEvent
     kind: const
     exported: false
+    dddOwner: Canvas node operations presentation
+    cqRails: [SelectCanvasExecutionNode]
+    fowlerSignals: [Duplicate semantics]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
     name: activateFocusedCanvasNodeFromKeyboard
     kind: function
     exported: true
+    dddOwner: Canvas keyboard interaction presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Test-only confidence]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
     name: nodeElement
     kind: const
     exported: false
+    dddOwner: Canvas keyboard interaction presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
     name: shell
     kind: const
     exported: false
+    dddOwner: Canvas keyboard interaction presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
     name: MouseEventConstructor
     kind: const
     exported: false
+    dddOwner: Canvas keyboard interaction presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Boundary drift]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
     name: openNodeCodeEditor
     kind: function
     exported: false
+    dddOwner: File-backed dbt Properties presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
   - path: apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
     name: node
     kind: const
     exported: false
+    dddOwner: File-backed dbt Properties presentation
+    cqRails: [InspectCanvasNode]
+    fowlerSignals: [Hidden authority]
+    architectureGuard: pnpm --filter @dvt/web test:canvas
+    cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    unitTests: [pnpm --filter @dvt/web test:canvas]
 fowlerSignals:
   - duplicate node gestures and adjacent action surfaces
   - split Code versus Workbench node-entry semantics
@@ -259,18 +369,44 @@ redGreenCycles:
   - id: single-node-properties-entry
     redTest: apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
     expectedFailure: Previous node entry split Code and Workbench, duplicated node right-click, and lacked keyboard parity.
+    patchSurfaces:
+      - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
+      - apps/web/src/app/components/canvas/CanvasNodeShell.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
+      - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
     greenTest: apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
   - id: operations-only-node-menu
     redTest: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
     expectedFailure: Previous node menu exposed Workbench navigation alongside node operations.
+    patchSurfaces:
+      - apps/web/src/app/components/canvas/CanvasNodeContextMenuView.test.tsx
+      - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
+      - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
+      - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
+      - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
     greenTest: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - id: retire-floating-toolbar
     redTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
     expectedFailure: Left-click projected a second floating Code/Freeze/More surface.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.test.tsx
+      - apps/web/src/app/views/canvas/CanvasNodeFloatingToolbarView.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.nodeFloatingToolbar.test.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.tsx
+      - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+      - apps/web/src/app/views/canvas/canvasNodeFloatingToolbarModel.test.ts
+      - apps/web/src/app/views/canvas/canvasNodeFloatingToolbarModel.ts
+      - apps/web/src/app/views/canvas/canvasNodeFloatingToolbarTokens.ts
+      - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
     greenTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
   - id: file-backed-properties-code-return
     redTest: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
     expectedFailure: Double-click bypassed Properties and metadata inspection required another gesture.
+    patchSurfaces:
+      - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+      - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.test.tsx
+      - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+      - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
     greenTest: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
 ```
 
