@@ -111369,7 +111369,7 @@
         "pnpm planning:db:export:check"
       ],
       "sourcePath": "docs/planning/proposals/mandatory/product-truth-connection-hardening-20260808.md",
-      "sourceContentSha256": "0b481daa24f70746ea7dc6d7845f4f828bc6c62d4692f49575cf9f2ae5f1b043",
+      "sourceContentSha256": "8e65c59eebf352e64697e942df9f2aa680ea55713088245bdfce4873ead03a62",
       "rawRail": {
         "name": "ImportWarehouseSources",
         "type": "command",
