@@ -71,12 +71,15 @@ flowchart LR
 - `ConnectedSourceRef.v1` is strict, versioned and secret-free. It owns
   `connectionId`, provider and physical `sourceObjectId`; projection-only
   `connectionName` remains outside the identity contract.
-- The command admits the existing Canvas authority before external discovery;
-  import then validates the complete draft before mutation and rejects legacy
-  top-level source identity instead of translating or migrating it.
-- Dedupe and generated source-YAML identity use JCS hashing over connection and
-  physical object. No filename, display label or insertion order substitutes
-  for product identity.
+- The command admits the existing Canvas authority before external discovery
+  and rejects legacy top-level source identity instead of translating or
+  migrating it. Post-ready review found that validation did not yet reject two
+  existing nodes carrying the same otherwise-valid `ConnectedSourceRef`; that
+  multiplicity check is now a blocking correction gate.
+- Dedupe and generated source-YAML identity are defined by JCS hashing over
+  connection and physical object. Post-ready review found one Graph Draft
+  projection lookup still used raw `sourceObjectId` against a map keyed by the
+  qualified identity; collision-safe node/YAML agreement must be reproven.
 - Workspace file-tree and file-content caches include the full scope key. The
   query-level A/B/A proof uses the colliding path `models/orders.sql`. The
   live-product proof grants two real scopes in one authenticated session, uses
@@ -107,6 +110,24 @@ flowchart LR
   Component is available only through the Canvas context menu, opened by
   right-click or its `Shift+F10` keyboard equivalent; no fixed button competes
   with the graph.
+
+# Post-ready review correction gate
+
+PR #2258 is not mergeable on this evidence until both P1 findings are closed:
+
+1. Graph Draft source-node projection must retrieve `WarehouseSourceYamlBinding`
+   with the same connection-qualified `sourceObjectIdentity` used to build the
+   binding map. A focused normalization-collision test must prove that node
+   metadata and generated YAML retain the same collision-safe names and path.
+2. Indexing existing warehouse nodes must reject a repeated valid
+   `ConnectedSourceRef` with `WarehouseSourceImportDraftConflictError` before
+   any file or draft mutation. Silent overwrite and arbitrary duplicate-node
+   reuse are not accepted idempotency semantics.
+
+The prior green suite remains historical evidence for the reviewed commit; it
+does not satisfy these newly explicit negative cases. Focused red/green proof,
+the full closeout baseline and resolved review threads are required before this
+evidence authorizes merge.
 
 # Executable outcome
 

@@ -20,6 +20,10 @@ mitigations:
   - 'Use one strict versioned ConnectedSourceRef contract and reject unknown fields, credentials,
     legacy top-level identity and malformed existing draft nodes before mutation.'
   - 'Build dedupe and source-YAML identity from JCS-canonical connectionId plus sourceObjectId.'
+  - 'Use the same connection-qualified sourceObjectIdentity key when building and retrieving YAML
+    bindings so graph metadata cannot diverge from collision-safe generated names or paths.'
+  - 'Reject repeated valid ConnectedSourceRef values in an existing draft before indexing, file
+    mutation or draft persistence; never use last-write-wins identity semantics.'
   - 'Partition graph, file-tree and file-content queries by the complete server-granted workspace
     scope, with an A/B/A colliding-path regression proof.'
   - 'Project connection facts only from the validated canonical reference, show the full visible
@@ -36,6 +40,7 @@ residual_risk: >
   within one browser session. True browser-level 200-percent zoom remains a demanding-user manual
   check beyond the automated 500x330 layout-pressure equivalent. Revoked connection reconciliation,
   cross-session collaborative edits and additional warehouse providers require their own product
-  slices and evidence.
+  slices and evidence. PR #2258 remains blocked until focused regression tests prove qualified YAML
+  binding lookup and duplicate ConnectedSourceRef rejection and both P1 review threads are resolved.
 review_after: 2026-09-08
 ---

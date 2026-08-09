@@ -475,6 +475,17 @@ server grants scope A and scope B
     and modeler actions but cannot repeat `Open node code`. Add Component opens
     only from the Canvas right-click menu, so no fixed primary button competes
     with the graph or duplicates the contextual command.
+22. **One qualified identity at every binding boundary, selected.** Warehouse
+    source YAML bindings and Graph Draft node projection must address the same
+    `sourceObjectIdentity(connectionId, sourceObjectId)` key. Looking up a
+    qualified binding by raw `sourceObjectId` is forbidden because normalized
+    name collisions can make the persisted node point at a different or
+    nonexistent YAML path.
+23. **Duplicate persisted identities fail closed, selected.** A Graph Draft
+    containing more than one warehouse node with the same valid
+    `ConnectedSourceRef` is conflicting state. Import must raise
+    `WarehouseSourceImportDraftConflictError` before file or draft mutation;
+    last-write-wins indexing and arbitrary clone selection are forbidden.
 
 ### 13.5 Fowler opportunity matrix
 
@@ -501,6 +512,8 @@ server grants scope A and scope B
 | Scope changes only by pointer or API               | Inaccessible command / hidden presentation   | Expose command through accessible presentation  | EN/ES keyboard A -> B -> A plus visible isolated YAML and axe         |
 | Code appears in toolbar and contextual menus       | Duplicated command / divergent behavior      | Consolidate conditional expression              | Only the selected-node floating toolbar exposes node code             |
 | Add Component appears fixed and on right-click     | Duplicated command / cluttered interface     | Remove dead UI and keep contextual command      | No fixed button; right-click opens the governed catalog               |
+| Graph projection retrieves a binding by object ID  | Split identity / divergent change            | Replace derived identity with explicit identity | Node metadata and YAML use the same qualified collision-safe binding  |
+| Draft repeats one valid connected-source identity  | Silent overwrite / false idempotency         | Introduce Assertion / Guard Clause              | Import rejects duplicate refs before file or draft mutation           |
 
 ### 13.6 DoR for the bounded slice
 
@@ -529,6 +542,12 @@ server grants scope A and scope B
 - [x] Add Source and connected-source Workbench remain visible, axe-clean and cancellable across the governed viewport matrix.
 - [x] Package test, lint, type-check, ARC-2, mechanization, and pre-push gates pass.
 - [x] No debt, stub, skipped check, disabled rule, or migration is introduced.
+- [ ] Graph node projection retrieves source YAML bindings only by the complete
+      connection-qualified identity and preserves collision-safe names and paths.
+- [ ] A persisted draft containing duplicate valid `ConnectedSourceRef` values
+      fails with `WarehouseSourceImportDraftConflictError` before mutation.
+- [ ] Focused regression tests pass and both blocking P1 review threads are
+      resolved before merge.
 
 ## 14. Feature mechanization
 
@@ -679,6 +698,20 @@ redGreenCycles:
       - apps/api/src/application/services/warehouseSourceYamlIdentity.ts
       - apps/web/src/app/plugins/graph/graphNodeTitlePresentation.ts
     greenTest: pnpm --filter dvt-api test -- warehouseSourceYaml.test.ts && pnpm --filter @dvt/web test:canvas -- graphNodeTitlePresentation.test.ts
+  - id: qualified-yaml-binding-lookup
+    redTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
+    expectedFailure: Graph Draft projection looks up a connection-qualified YAML binding by raw sourceObjectId and loses collision-safe names or paths.
+    patchSurfaces:
+      - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
+      - apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts
+    greenTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
+  - id: duplicate-connected-source-ref-conflict
+    redTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
+    expectedFailure: Existing warehouse nodes with the same valid ConnectedSourceRef overwrite one another in the identity index and import selects an arbitrary clone.
+    patchSurfaces:
+      - apps/api/src/application/services/graphDraftWarehouseSourceImportStrategy.ts
+      - apps/api/test/application/services/graphDraftWarehouseSourceImportStrategy.test.ts
+    greenTest: pnpm --filter dvt-api test -- graphDraftWarehouseSourceImportStrategy.test.ts
   - id: canonical-identity-boundary-strings
     redTest: pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts
     expectedFailure: Non-blank identifiers with exterior whitespace are admitted and hash as distinct product identities.
