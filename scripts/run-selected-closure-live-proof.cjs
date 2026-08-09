@@ -37,7 +37,6 @@ const POSTGRES_BOOTSTRAP_SCRIPT = path.resolve(__dirname, 'run-temporal-postgres
 const TEMPORAL_PACKAGE_ROOT = path.resolve(__dirname, '../packages/@dvt/adapter-temporal');
 const DEFAULT_SPEC_RELATIVE_PATH = 'apps/web/cypress/e2e/canvas/canvas-preview-run-live.cy.ts';
 const CYPRESS_IMAGE = 'cypress/included:15.18.1';
-const CYPRESS_SUPPORT_DEPENDENCIES = Object.freeze(['cypress-axe', 'axe-core']);
 const LOCAL_AUTH_HOST = '127.0.0.1';
 const API_BIND_HOST = '0.0.0.0';
 const WEB_BIND_HOST = '0.0.0.0';
@@ -308,40 +307,21 @@ function resolveLiveProofSpecPath(argv = process.argv.slice(2)) {
   return `/repo/${relativeSpecPath}`;
 }
 
-function resolveLiveProofCypressDependencyDirectory(packageName, repoRoot) {
-  try {
-    return path.dirname(
-      require.resolve(`${packageName}/package.json`, {
-        paths: [path.join(repoRoot, 'apps/web')],
-      })
-    );
-  } catch (error) {
-    throw new Error(`Unable to resolve Cypress support dependency ${packageName} from apps/web.`, {
-      cause: error,
-    });
-  }
-}
-
-function buildLiveProofCypressDependencyMounts(repoRoot, deps = {}) {
+function buildLiveProofCypressJunctionMirror(repoRoot, deps = {}) {
   const platform = deps.platform ?? process.platform;
   if (platform !== 'win32') {
     return [];
   }
 
-  const resolvePackageDirectory =
-    deps.resolvePackageDirectory ?? resolveLiveProofCypressDependencyDirectory;
+  const absoluteRepoRoot = path.win32.resolve(repoRoot);
+  const driveMatch = /^([A-Za-z]):\\(.*)$/.exec(absoluteRepoRoot);
+  if (driveMatch == null) {
+    throw new Error('Cypress live proof requires a drive-qualified Windows repository path.');
+  }
 
-  return CYPRESS_SUPPORT_DEPENDENCIES.flatMap((packageName) => {
-    const packageDirectory = resolvePackageDirectory(packageName, repoRoot);
-    if (!path.win32.isAbsolute(packageDirectory)) {
-      throw new Error(
-        `Cypress support dependency ${packageName} resolved to a non-absolute Windows path.`
-      );
-    }
-
-    const normalizedPackageDirectory = packageDirectory.replaceAll('\\', '/');
-    return ['-v', `${normalizedPackageDirectory}:/repo/apps/web/node_modules/${packageName}:ro`];
-  });
+  const normalizedRepoRoot = absoluteRepoRoot.replaceAll('\\', '/');
+  const junctionTargetRoot = `/mnt/host/${driveMatch[1].toLowerCase()}/${driveMatch[2].replaceAll('\\', '/')}`;
+  return ['-v', `${normalizedRepoRoot}:${junctionTargetRoot}:ro`];
 }
 
 function buildLiveProofCypressDockerInvocation(
@@ -350,7 +330,7 @@ function buildLiveProofCypressDockerInvocation(
   deps = {}
 ) {
   const normalizedRepoRoot = repoRoot.replaceAll('\\', '/');
-  const dependencyMounts = buildLiveProofCypressDependencyMounts(repoRoot, deps);
+  const junctionMirror = buildLiveProofCypressJunctionMirror(repoRoot, deps);
 
   return [
     'run',
@@ -358,7 +338,7 @@ function buildLiveProofCypressDockerInvocation(
     '-t',
     '-v',
     `${normalizedRepoRoot}:/repo`,
-    ...dependencyMounts,
+    ...junctionMirror,
     '-w',
     '/repo/apps/web',
     '-e',

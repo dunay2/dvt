@@ -100,7 +100,7 @@ test('buildLiveProofCypressDockerInvocation isolates the one governed spec in Cy
   );
 });
 
-test('buildLiveProofCypressDockerInvocation mounts Windows pnpm support dependencies read-only', () => {
+test('buildLiveProofCypressDockerInvocation mirrors Windows junction targets read-only', () => {
   const invocation = buildLiveProofCypressDockerInvocation(
     {
       apiPort: 3300,
@@ -116,17 +116,14 @@ test('buildLiveProofCypressDockerInvocation mounts Windows pnpm support dependen
     'C:/repo',
     {
       platform: 'win32',
-      resolvePackageDirectory: (packageName) => `C:\\pnpm\\${packageName}`,
     }
   );
 
-  assert.deepEqual(invocation.slice(3, 11), [
+  assert.deepEqual(invocation.slice(3, 9), [
     '-v',
     'C:/repo:/repo',
     '-v',
-    'C:/pnpm/cypress-axe:/repo/apps/web/node_modules/cypress-axe:ro',
-    '-v',
-    'C:/pnpm/axe-core:/repo/apps/web/node_modules/axe-core:ro',
+    'C:/repo:/mnt/host/c/repo:ro',
     '-w',
     '/repo/apps/web',
   ]);
