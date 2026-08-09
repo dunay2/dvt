@@ -301,6 +301,6 @@ symbols:
 
 ## Completion boundary
 
-#2266 may be considered implementation-review-ready only when the exact-head mechanization, Web type/lint/unit gates, PR Quality, changed-slice/full required CI, and focused QA are green.
+PR #2266 may be considered implementation-review-ready only when the exact-head mechanization, Web type/lint/unit gates, PR Quality, changed-slice/full required CI, and focused QA are green.
 
 That still does **not** close #2255. Real product/browser UAT and explicit product-owner acceptance remain mandatory. The PR stays open and unmerged for owner review.
