@@ -16,6 +16,7 @@ import CanvasSelectionHandlersSource from './useCanvasSelectionHandlers.ts?raw';
 
 describe('Canvas Node Workbench W4 hardening contracts', () => {
   it('maps each visible node gesture to one intent and keeps ellipsis operations-only', () => {
+    expect(CanvasNodeShellSource).toContain('data-slot="canvas-node-shell"');
     expect(CanvasNodeShellSource).toContain('onOpenNode?.();');
     expect(CanvasNodeShellSource).toContain('isCanvasNodeEmbeddedControlTarget(event.target)');
     expect(CanvasNodeShellSource).toContain('dvtNodeActionsRequest');
@@ -26,11 +27,28 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
     expect(GraphNodeCardViewSource).toContain('data-slot="graph-node-card-actions"');
     expect(GraphNodeCardViewSource).toContain("'dvtNodeActionsRequest'");
     expect(GraphNodeCardViewSource).not.toContain('data-slot="graph-node-card-play"');
+    expect(GraphNodeCardViewSource).not.toContain('GraphNodeCardPlayAction');
+    expect(GraphNodeCardViewSource).not.toContain('playAction');
     expect(DbtNodeComponentSource).toContain('buildCanvasNodeModelerActionModel');
     expect(DbtNodeComponentSource).toContain(
       "data.onInspectNode?.(id, hasCodeSection ? 'code' : 'general');"
     );
     expect(CanvasNodeContextMenuModelSource).toContain('buildCanvasNodeModelerActionModel');
+    expect(CanvasNodeContextMenuModelSource).not.toContain('inspect-node');
+  });
+
+  it('keeps Enter as the accessibility-equivalent path to the same node-entry gesture', () => {
+    expect(CanvasViewportSurfaceViewSource).toContain(
+      'export function activateFocusedCanvasNodeFromKeyboard'
+    );
+    expect(CanvasViewportSurfaceViewSource).toContain("event.key !== 'Enter'");
+    expect(CanvasViewportSurfaceViewSource).toContain(
+      'isCanvasNodeEmbeddedControlTarget(event.target)'
+    );
+    expect(CanvasViewportSurfaceViewSource).toContain(
+      "querySelector<HTMLElement>('[data-slot=\"canvas-node-shell\"]')"
+    );
+    expect(CanvasViewportSurfaceViewSource).toContain("new MouseEventConstructor('dblclick'");
   });
 
   it('removes the left-click floating toolbar instead of hiding it', () => {
