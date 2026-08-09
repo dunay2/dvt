@@ -2,7 +2,7 @@
 title: Canvas Node Workbench Hardening Plan
 status: Active
 owner: Frontend / Product / Architecture
-last_reviewed: 2026-08-09
+last_reviewed: 2026-08-10
 planning_type: mandatory
 issue: 2277
 ---
@@ -144,6 +144,8 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
   - docs/concepts/repository-map.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md
+  - scripts/run-selected-closure-live-proof.cjs
+  - scripts/run-selected-closure-live-proof.test.cjs
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
   - packages/@dvt/engine/**
@@ -410,6 +412,13 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
       - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
     greenTest: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+  - id: windows-docker-cypress-support-resolution
+    redTest: scripts/run-selected-closure-live-proof.test.cjs
+    expectedFailure: A Windows workspace mount exposes pnpm junctions with host-absolute targets that the Linux Cypress container cannot resolve.
+    patchSurfaces:
+      - scripts/run-selected-closure-live-proof.cjs
+      - scripts/run-selected-closure-live-proof.test.cjs
+    greenTest: scripts/run-selected-closure-live-proof.test.cjs
 ```
 
 ## Completion rule
