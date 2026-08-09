@@ -26,13 +26,9 @@ const EXTERNAL_MODEL_SQL = 'select externally_edited_amount from protected_proje
 function openNodeWorkbench(nodeId: string): void {
   cy.get(`.react-flow__node[data-id="${nodeId}"]`, { timeout: 20_000 })
     .should('be.visible')
-    .rightclick();
-  cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 })
-    .should('be.visible')
-    .find('[data-menu-action="inspect-node"]')
-    .should('be.visible')
-    .click();
+    .dblclick();
   cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
+  cy.get('[data-slot="canvas-node-workbench-tab-general"]').should('be.visible').click();
 }
 
 function openNodeCodeWorkbench(nodeId: string): void {
