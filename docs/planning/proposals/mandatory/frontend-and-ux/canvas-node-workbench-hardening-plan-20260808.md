@@ -153,6 +153,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts
   - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.tsx
+  - apps/web/src/app/components/canvas/DbtNodeComponent.failureContainment.test.tsx
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
   - apps/web/src/app/views/Canvas.test.controller.defaults.ts
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.header.test.tsx
@@ -176,6 +177,7 @@ allowedImplementationSurfaces:
   - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
   - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
   - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+  - apps/web/src/app/views/canvas/useCanvasController.test.stateFactory.ts
   - apps/web/src/app/views/canvas/useCanvasGraphHandlers.selection.test.tsx
   - apps/web/src/app/views/canvas/useCanvasGraphHandlers.types.ts
   - apps/web/src/app/views/canvas/useCanvasSelectionHandlers.ts
