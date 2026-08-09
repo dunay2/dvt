@@ -4,7 +4,14 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { activateFocusedCanvasNodeFromKeyboard } from './CanvasViewportSurfaceView';
 
-function buildKeyboardEvent(target: EventTarget, key = 'Enter') {
+type KeyboardEventDouble = Readonly<{
+  key: string;
+  target: EventTarget;
+  preventDefault: ReturnType<typeof vi.fn>;
+  stopPropagation: ReturnType<typeof vi.fn>;
+}>;
+
+function buildKeyboardEvent(target: EventTarget, key = 'Enter'): KeyboardEventDouble {
   return {
     key,
     target,
