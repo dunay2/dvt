@@ -2,127 +2,135 @@
 title: Canvas Node Workbench Hardening Plan
 status: Active
 owner: Frontend / Product / Architecture
-last_reviewed: 2026-08-08
+last_reviewed: 2026-08-09
 planning_type: mandatory
-issue: 2262
+issue: 2277
 ---
 
 # Canvas Node Workbench Hardening Plan
 
-## Goal
+## Current decision
 
-Harden the existing Canvas / Graph Editor / Node Workbench without creating a second editor, state store, command rail, localization owner, or connection model.
+This document is the current authority for the Canvas node-interaction hardening that began in #2262/#2266 and is corrected by #2277.
+
+Historical #2266 evidence remains in Git and the merged PR. The current product rule supersedes its former multi-surface interaction model.
+
+Baseline for the correction: `main@cf4a568bb45051e18962b4df434d703e10bd76d9`.
 
 Principle: **less mechanism, no capability loss**.
 
-This is the bounded W4 implementation child #2262 under #2195. Product acceptance remains #2255. Connection/resource-binding semantics remain owned by #2256 and are outside this slice. The later #2258 product-truth integration is the convergence baseline for this PR.
+Product acceptance remains #2255. Connection/resource semantics remain owned by #2256/#2257.
 
-Baseline: `main@32cfaf6d31fa5ca789bdb390def95d27f5d71f59`.
+## Gesture-to-intent contract
 
-## Governing sources
+```text
+left click node      -> visual selection/focus only
+double left click    -> enter node / open Properties
+                         Code is preferred when authoritative code exists
+three-dot button (…) -> node operations only
+right click node     -> no DVT-specific action
+right click canvas   -> existing Add Component / Canvas context
+keyboard activation  -> accessibility-equivalent node entry
+```
 
-- `AGENTS.md`
-- `docs/planning/status/governance-document-rule-inventory.md`
-- `docs/guides/ai-work-protocol.md`
-- `docs/architecture/command-query-rail-governance.md`
-- `docs/architecture/fowler-opportunity-planning-governance.md`
-- `docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md`
-- GitHub #2195, #2255, #2262
+The node floating toolbar is retired. An empty toolbar is not retained for hypothetical future work.
 
-## Current authority model
+Multiple visible gestures or adjacent controls may not expose the same semantic command merely for discoverability. Input-method equivalents required for accessibility are not separate product surfaces.
 
-The repository already has the required owners:
+## One node Properties surface
 
-- `CanvasNodeContextMenuModel` expresses the actions that are actually visible in the node context menu;
-- `CanvasNodeShell` owns node-shell gestures and receives only already-enabled code/Workbench callbacks;
-- `onInspectNode` and `onOpenNodeCode` are the existing Workbench/code intents;
-- Graph Draft DVT/dbt authoring persists through `CanvasDraftSession` / CAS;
-- file-backed dbt SQL/YAML remain project-file authoritative;
-- execution selection is explicit and independent from ordinary React Flow visual selection;
-- `CanvasViewCopy` plus the Canvas/node-presentation copy adapters own EN/ES presentation copy.
+`CanvasNodeWorkbenchPanel` is the surviving node inspection/edit surface. It is evolved rather than duplicated.
 
-Therefore this hardening converges entry points onto those owners instead of creating alternatives.
+Its sections are capability-driven. Current section families include, where the node actually supports them:
 
-## Integration of PR #2261
+- Code;
+- General;
+- Input / Columns;
+- Output / Sink;
+- Tests;
+- Connection/resource information;
+- plugin-specific sections.
 
-PR #2261 (`hardening/canvas-workbench-ux`) overlapped this slice and contained stronger local decisions. They are absorbed into #2266 rather than keeping parallel implementations:
+A section does not create a new persistence authority.
 
-1. **Double-click ownership moves to `CanvasNodeShell`.** It prefers the already-gated existing code callback, otherwise falls back to the already-gated Workbench callback. Missing callbacks fail closed and execution-selection actions are never double-click targets.
-2. **Workbench help reuses canonical Canvas copy.** The temporary `canvasCopy.nodeWorkbench.ts` owner is removed. The header uses `inspectorEditablePropertiesTitle` / `inspectorEditablePropertiesDescription`, while preserving existing localized close copy.
-3. **The focused double-click and stronger header interaction tests are retained.** The duplicate #2261 implementation plan is not copied; this document remains the canonical plan for #2266.
+| Surface / value | Authority | Posture |
+| --- | --- | --- |
+| Graph Draft name/tags/description and plugin semantics | `CanvasDraftSession` -> `WorkspaceGraphAuthoringDraft` CAS | editable when policy admits |
+| Graph Draft SQL / selected input columns / sink semantics | typed Graph Draft authoring value objects | editable |
+| dbt project SQL | revisioned workspace project file | editable through existing Code working-tree rail |
+| supported dbt YAML description | project YAML | editable through existing mutation rail |
+| dbt artifacts / analysis facts | derived projection | read-only |
+| `NodePropertiesReadModel` | passive projection | read-only |
+| `CanvasInspectorNodeDraft` | transient UI DTO | never persistence authority |
 
-## Convergence with #2258
+For file-backed dbt, double-click first focuses `CanvasNodeWorkbenchPanel` on Code. The existing revisioned Code editor remains the authoritative editor host in this bounded cut and is launched **inside the Code section**. Closing it restores the same focused node Properties context. No toolbar/right-click shortcut is retained to preserve that file authority.
 
-`main@9b103e8585852fc72cda8b449205642cbfec42f3` removes the repeated Code action from the node context menu and makes source/code availability fail closed. This later product decision supersedes the original #2266 assumption that the context-menu action model could also carry Code for double-click resolution.
+## Node operations
 
-The converged interaction keeps one visible Code action in the selected-node floating toolbar. `CanvasNodeShell` receives the same authoritatively gated code callback without projecting a hidden or repeated context-menu action. The explicit context-menu Workbench action remains available for general inspection. This preserves one command owner and removes duplicate presentation semantics.
+The visible card `…` is the sole visible launcher for contextual node operations.
 
-## Selected behavior
+The surviving operation model is `CanvasNodeModelerActionModel`. It may expose only operations currently backed by a command, such as:
 
-- Double-click is code-first only when the existing source-aware code callback is available.
-- If Code is unavailable but the Workbench callback is available, double-click opens the existing general Workbench.
-- Explicit context-menu `Open workbench` remains the passive/general inspection path.
-- The floating-toolbar Code control remains the only visible node Code action; double-click reuses its existing command callback without adding a menu item.
-- Ordinary node click remains presentation-local and may open the floating toolbar; it does not mutate execution selection.
-- Only the explicit execution-selection command mutates execution intent.
-- Workbench `?` and `X` are separate right-side controls outside the drag handle.
-- Workbench help is contextual; permanent explanatory header prose is not added.
-- DVT selectable transform columns retain the **input** role meaning. The UI composes the existing Columns label with the canonical node-presentation role vocabulary, yielding `Columns (Input)` / `Columnas (Entrada)` rather than generic `Columns` or the different concept `Origin`.
-- No connection-domain change is made.
+- select/deselect for execution;
+- duplicate when graph mutation is supported;
+- remove when graph mutation is supported.
 
-## Authoring authority matrix
+It does not expose Code, Workbench, Properties, or section navigation.
 
-| Property / surface                                                  | Authority                                                   | Posture                             |
-| ------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------- |
-| Graph Draft name/tags/description                                   | `WorkspaceGraphAuthoringDraft` through `CanvasDraftSession` | editable when policy admits         |
-| DVT source database/schema/table/alias                              | Graph Draft DVT authoring value object                      | editable                            |
-| DVT transform SQL + selected input columns                          | Graph Draft DVT authoring value object                      | editable                            |
-| DVT sink database/schema/table/materialization/write mode/partition | Graph Draft DVT authoring value object                      | editable                            |
-| dbt SQL project file                                                | revisioned workspace project file                           | editable through existing Code rail |
-| supported dbt YAML description                                      | project YAML                                                | editable through existing YAML rail |
-| dbt artifact / analysis facts                                       | derived projection                                          | read-only / truthful unavailable    |
-| `NodePropertiesReadModel`                                           | passive query model                                         | read-only                           |
-| `CanvasInspectorNodeDraft`                                          | transient UI DTO                                            | never persistence authority         |
+Native node right-click is blocked. Empty-Canvas right-click remains owned by the existing Canvas context-menu presenter and continues to expose Add Component / Canvas actions.
 
-## Reduction performed
+## Retained architecture
 
-- Removed application-level React Flow click / visual-selection callbacks that intentionally owned no behavior.
-- Removed shell/controller forwarding used only by those no-op callbacks.
-- Removed unconsumed Inspector `modelerActions` projection after consumer audit.
-- Removed the temporary Workbench-specific localization file after #2261 proved existing Canvas copy already owns that message.
-- Removed dbt-specific double-click branching after centralizing gesture policy in `CanvasNodeShell`.
-- Kept Code out of the node context menu after #2258 removed the repeated visible action; no hidden menu action is used to drive double-click.
-- Reused the existing node-presentation role copy for DVT input semantics instead of introducing another copy family.
-- Kept explicit execution selection, Graph Draft CAS persistence, project-file/YAML persistence, local floating-toolbar click behavior, search/filter/drag/zoom/context menus, and existing plugin/action models.
+- `CanvasNodeShell` owns the double-click boundary and embedded-control safety.
+- `isCanvasNodeEmbeddedControlTarget` prevents node entry from button/input/port interactions.
+- `CanvasNodeWorkbenchPanel` remains the node Properties owner.
+- `NodePropertiesTabs` remains the section presentation primitive.
+- Graph Draft CAS/autosave remains unchanged.
+- file-backed SQL/YAML persistence remains unchanged.
+- visual selection, Properties focus and execution selection remain distinct concepts.
+- graph-node operational health detail remains because it has a distinct observable intent.
+- Canvas empty-space context menu remains because it owns creation/Canvas operations rather than node operations.
 
-## QA findings already incorporated
+## Retired / absorbed
 
-Remote CI/review caught real defects during this slice and they were fixed without weakening gates:
+- left-click node floating toolbar presentation;
+- floating-toolbar model, token and position/state plumbing;
+- floating-toolbar Code/Freeze/More actions;
+- node-native right-click as a DVT action surface;
+- `inspect-node` as a visible node-operations entry;
+- `open-code | open-workbench` double-click branching;
+- tests that protect those displaced surfaces;
+- current documentation that treats those surfaces as product authority.
 
-- stale test/harness consumers of the removed no-op callback seam;
-- an accidental stale `CanvasContextMenuView` call signature;
-- an over-broad raw-source localization assertion matching `selectedColumns`;
-- loss of the `Input columns` semantic when copy was reduced to generic `Columns`;
-- the follow-up distinction between `Origin` and the actual `Input` role, resolved through canonical node-presentation role copy;
-- the temporary duplicate Workbench copy owner;
-- generated Repository Map drift after Web source/test counts changed;
-- #2261's original `CanvasNodeShell` double-click fixture, which needed an enabled Inspect action in its context model;
-- the mechanization command spelling, which must not include a standalone extra `--`.
-- the #2258 integration conflict between source-aware Code availability and the older hidden context-menu Code projection; the converged callback posture preserves both decisions.
+The underlying layout freeze state is not promoted elsewhere by this cut. If a future supported user operation requires Freeze/Unfreeze, it must be introduced through the existing node-operation authority with a distinct product decision, not by restoring the retired toolbar.
 
-## Regression baseline
+## Acceptance invariants
 
-The slice must preserve:
+1. Simple node click changes only ordinary React Flow visual focus/selection.
+2. Double-click enters one node Properties intent.
+3. Code-capable nodes focus Code first; nodes without code focus their default/general section.
+4. Double-click on an embedded control does not enter Properties.
+5. The `…` menu contains operations only.
+6. Native right-click on a node does not open a DVT node menu.
+7. Right-click on empty Canvas still opens the existing Canvas context menu.
+8. No floating node toolbar is rendered or retained as dormant state.
+9. File-backed dbt metadata remains inspectable and SQL remains revision-authoritative.
+10. Closing a file-backed Code editor returns to the same focused node Properties context.
+11. Execution selection is never mutated by plain visual selection.
+12. ES/EN and keyboard accessibility continue to use the existing localization and focus owners.
 
-- contextual Workbench open/close/move;
-- explicit Workbench command for passive metadata;
-- explicit execution selection and Preview/Run semantics;
-- Graph Draft source/model/sink validation and CAS persistence;
-- file-backed dbt SQL and supported YAML authority;
-- derived file-backed facts remaining read-only;
-- route-local layout persistence;
-- Canvas graph search/filter/drag/zoom/context menus;
-- EN/ES semantics and keyboard-focusable critical controls.
+## Evidence
+
+Primary automated evidence:
+
+- `CanvasNodeShell.test.tsx` — one node-entry gesture, embedded-control protection, native right-click rejection;
+- `canvasNodeWorkbenchHardening.architecture.test.ts` — no floating-toolbar production topology and one Properties entry authority;
+- `canvasNodeContextSurfaceModel.test.ts` — only distinct transient health detail survives;
+- `canvas-dbt-author-code-run-live.cy.ts` — Graph Draft Properties authoring/code persistence path;
+- `dbt-project-file-projection-live.cy.ts` — file-backed Properties -> Code editor -> return to Properties;
+- existing Graph Draft, SQL/YAML, execution-selection, localization and accessibility regressions.
+
+#2255 remains the live-product/product-owner acceptance authority. Green component/CI evidence does not by itself close product acceptance.
 
 ## Feature Mechanization
 
@@ -137,52 +145,32 @@ componentGuides:
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
 userStories:
-  - As a Canvas author, I double-click a node and reach the enabled existing code action or a truthful Workbench fallback.
-  - As a Canvas author, I use the explicit Workbench command to inspect or edit only properties owned by the active authority.
-  - As a keyboard or Spanish/English user, I can understand, get contextual help for, and close the Workbench without dead or clipped controls.
+  - As a Canvas author, I double-click a node once to enter its single Properties surface, with Code preferred when available.
+  - As a Canvas author, I use the card ellipsis only for node operations and never need a duplicate floating toolbar or node right-click menu.
+  - As a file-backed dbt author, I reach the authoritative Code editor from the Code section and return to the same node Properties context when it closes.
 governingSources:
   - AGENTS.md
   - docs/planning/status/governance-document-rule-inventory.md
   - docs/guides/ai-work-protocol.md
   - docs/architecture/command-query-rail-governance.md
   - docs/architecture/fowler-opportunity-planning-governance.md
-  - docs/planning/proposals/mandatory/frontend-and-ux/dvt-workbench-ux-canon-plan-20260524.md
 allowedImplementationSurfaces:
   - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
   - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
-  - apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts
   - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.tsx
-  - apps/web/src/app/components/canvas/DbtNodeComponent.failureContainment.test.tsx
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
-  - apps/web/src/app/views/Canvas.test.controller.defaults.ts
+  - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.header.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
-  - apps/web/src/app/views/canvas/CanvasShell.graphSurface.test.tsx
-  - apps/web/src/app/views/canvas/CanvasShell.testHarness.tsx
-  - apps/web/src/app/views/canvas/CanvasShellMainPanel.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.testHarness.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
   - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
-  - apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
-  - apps/web/src/app/views/canvas/DvtSqlTransformAuthoringSection.tsx
-  - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
-  - apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
-  - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
+  - apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.test.ts
+  - apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.ts
   - apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
-  - apps/web/src/app/views/canvas/canvasShell.types.ts
-  - apps/web/src/app/views/canvas/canvasShellBuilder.types.ts
-  - apps/web/src/app/views/canvas/canvasShellGraphCommandsBuilder.ts
-  - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts
-  - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
-  - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
-  - apps/web/src/app/views/canvas/useCanvasController.test.stateFactory.ts
-  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.selection.test.tsx
-  - apps/web/src/app/views/canvas/useCanvasGraphHandlers.types.ts
-  - apps/web/src/app/views/canvas/useCanvasSelectionHandlers.ts
   - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
-  - docs/concepts/repository-map.md
   - docs/planning/proposals/mandatory/frontend-and-ux/canvas-node-workbench-hardening-plan-20260808.md
 forbiddenImplementationSurfaces:
   - packages/@dvt/contracts/**
@@ -221,19 +209,18 @@ domainObjects:
     owner: Graph Draft authority
   - name: CanvasInspectorNodeDraft
     type: transient DTO
-    owner: Node Workbench presentation
+    owner: Node Properties presentation
   - name: NodePropertiesReadModel
     type: read model
     owner: passive node properties
-  - name: CanvasNodeContextMenuModel
-    type: read/action model
+  - name: CanvasNodeModelerActionModel
+    type: operation read model
     owner: Canvas node interaction presentation
 fowlerSignals:
-  - duplicate semantics across Workbench/code entry points
-  - dbt-specific gesture branching despite a generic node action model
+  - duplicate node gestures and adjacent action surfaces
+  - split Code versus Workbench node-entry semantics
   - dead application selection callbacks
-  - unconsumed Inspector command projection
-  - duplicate presentation copy ownership
+  - displaced floating-toolbar state and tests
   - presentation and localization drift
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808
@@ -249,60 +236,31 @@ completionGate:
   - pnpm governance:refresh
   - pnpm verify:prepush
 redGreenCycles:
-  - id: canonical-code-first-node-double-click
-    redTest: apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts
-    expectedFailure: The base shell does not resolve double-click from the enabled canonical code and Workbench callbacks.
+  - id: single-node-properties-entry
+    redTest: apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
+    expectedFailure: The merged interaction exposes separate Code and Workbench double-click intents and native node right-click actions.
     patchSurfaces:
       - apps/web/src/app/components/canvas/CanvasNodeShell.tsx
-      - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
       - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
-    greenTest: apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts
-  - id: workbench-professional-help-close
-    redTest: apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.header.test.tsx
-    expectedFailure: Help/close are not proven as separate right-side actions outside the drag handle using canonical localized copy.
-    patchSurfaces:
-      - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
-    greenTest: apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.header.test.tsx
-  - id: selection-seam-reduction
+      - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
+    greenTest: apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
+  - id: retire-floating-toolbar
     redTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
-    expectedFailure: Application-level React Flow click/selection callbacks and Inspector modeler actions remain despite no product behavior or consumer.
+    expectedFailure: Left-click still projects a second floating Code/Freeze/More surface.
     patchSurfaces:
-      - apps/web/src/app/views/canvas/useCanvasSelectionHandlers.ts
-      - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
       - apps/web/src/app/views/canvas/CanvasViewport.tsx
       - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
-      - apps/web/src/app/views/canvas/canvasControllerViewModel.ts
-      - apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts
-      - apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts
-      - apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx
+      - apps/web/src/app/views/canvas/canvasNodeContextSurfaceModel.ts
     greenTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
-  - id: dvt-localized-input-semantics
-    redTest: apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
-    expectedFailure: Generic localized Columns copy loses the fact that the selectable columns are transform inputs.
+  - id: file-backed-properties-code-return
+    redTest: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
+    expectedFailure: Double-click bypasses Properties and opens a separate file Code surface; metadata inspection requires another gesture.
     patchSurfaces:
-      - apps/web/src/app/views/canvas/DvtSqlTransformAuthoringSection.tsx
-      - apps/web/src/app/views/canvas/canvasNodePresentationCopy.ts
-    greenTest: apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx
-  - id: live-authority-proof
-    redTest: existing live flows encoded double-click as generic inspection instead of code-first intent.
-    expectedFailure: Browser journeys do not distinguish explicit Workbench inspection from double-click Code while preserving authoritative persistence.
-    patchSurfaces:
-      - apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts
-      - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
-    greenTest: existing live protected-runtime flows with code-first double-click and explicit Workbench command
-symbols:
-  - { name: resolveCanvasNodeDoubleClickAction, path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx, dddOwner: Canvas node interaction presentation, cqRails: [InspectCanvasNode], fowlerSignals: [dbt-specific gesture branching and repeated visible Code actions], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts, apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx], cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts }
-  - { name: CanvasNodeWorkbenchPanel, path: apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx, dddOwner: Node Workbench presentation, cqRails: [InspectCanvasNode], fowlerSignals: [presentation and localization drift], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.header.test.tsx], cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts }
-  - { name: DvtSqlTransformAuthoringSection, path: apps/web/src/app/views/canvas/DvtSqlTransformAuthoringSection.tsx, dddOwner: DVT transform authoring presentation, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [presentation and localization drift], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx, apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts], cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts }
-  - { name: useCanvasSelectionHandlers, path: apps/web/src/app/views/canvas/useCanvasSelectionHandlers.ts, dddOwner: Canvas interaction presentation, cqRails: [SelectCanvasExecutionNode], fowlerSignals: [dead application selection callbacks], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts], cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts }
-  - { name: CanvasInspectorAuthoringContract, path: apps/web/src/app/views/canvas/canvasInspectorAuthoring.types.ts, dddOwner: Node Workbench authoring contract, cqRails: [ConfigureCanvasDvtNode, ConfigureCanvasDbtNode], fowlerSignals: [unconsumed Inspector command projection], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts], cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts }
-  - { name: buildCanvasShellPanels, path: apps/web/src/app/views/canvas/canvasShellPanelsBuilder.ts, dddOwner: Canvas shell composition, cqRails: [InspectCanvasNode], fowlerSignals: [unconsumed Inspector command projection], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/views/canvas/canvasShellPanelsBuilder.test.ts], cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts }
-  - { name: buildCanvasShellGraphCommands, path: apps/web/src/app/views/canvas/canvasShellGraphCommandsBuilder.ts, dddOwner: Canvas shell composition, cqRails: [InspectCanvasNode], fowlerSignals: [dead application selection callbacks], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts], cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts }
-  - { name: buildCanvasShellProps, path: apps/web/src/app/views/canvas/canvasShellPropsBuilder.tsx, dddOwner: Canvas route composition, cqRails: [InspectCanvasNode], fowlerSignals: [dead application selection callbacks], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts], cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts }
+      - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+      - apps/web/src/app/views/canvas/useDbtProjectFileCanvasController.ts
+    greenTest: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
 ```
 
-## Completion boundary
+## Completion rule
 
-PR #2266 may be considered implementation-review-ready only when the exact-head mechanization, Web type/lint/unit gates, PR Quality, changed-slice/full required CI, and focused QA are green.
-
-That still does **not** close #2255. Real product/browser UAT and explicit product-owner acceptance remain mandatory. The PR stays open and unmerged for owner review.
+This implementation cut is complete when the exact branch head passes the applicable Web, documentation, governance and repository gates and the PR contains no unresolved review finding. It remains distinct from #2255 live-product/product-owner acceptance.
