@@ -27,15 +27,15 @@ Product acceptance remains #2255. Connection/resource semantics remain owned by 
 left click node      -> visual selection/focus only
 double left click    -> enter node / open Properties
                          Code is preferred when authoritative code exists
+Enter on focused node-> accessibility-equivalent node entry
 three-dot button (…) -> node operations only
 right click node     -> no DVT-specific action
 right click canvas   -> existing Add Component / Canvas context
-keyboard activation  -> accessibility-equivalent node entry
 ```
 
 The node floating toolbar is retired. An empty toolbar is not retained for hypothetical future work.
 
-Multiple visible gestures or adjacent controls may not expose the same semantic command merely for discoverability. Input-method equivalents required for accessibility are not separate product surfaces.
+Multiple visible gestures or adjacent controls may not expose the same semantic command merely for discoverability. Keyboard Enter is an input-method equivalent for accessibility and routes through the same node-entry gesture; it is not a second product surface. Embedded buttons, inputs and ports retain their own Enter behavior and do not enter Properties.
 
 ## One node Properties surface
 
@@ -63,7 +63,7 @@ A section does not create a new persistence authority.
 | `NodePropertiesReadModel` | passive projection | read-only |
 | `CanvasInspectorNodeDraft` | transient UI DTO | never persistence authority |
 
-For file-backed dbt, double-click first focuses `CanvasNodeWorkbenchPanel` on Code. The existing revisioned Code editor remains the authoritative editor host in this bounded cut and is launched **inside the Code section**. Closing it restores the same focused node Properties context. No toolbar/right-click shortcut is retained to preserve that file authority.
+For file-backed dbt, double-click or Enter first focuses `CanvasNodeWorkbenchPanel` on Code. The existing revisioned Code editor remains the authoritative editor host in this bounded cut and is launched **inside the Code section**. Closing it restores the same focused node Properties context. No toolbar/right-click shortcut is retained to preserve that file authority.
 
 ## Node operations
 
@@ -77,13 +77,14 @@ The surviving operation model is `CanvasNodeModelerActionModel`. It may expose o
 
 It does not expose Code, Workbench, Properties, or section navigation.
 
-The direct play/pause execution-selection control is also retired because it mutates the same execution-selection intent as the ellipsis operation. One semantic command has one visible owner.
+The direct play/pause execution-selection control and its producer/model/tokens are retired because they mutate the same execution-selection intent as the ellipsis operation. One semantic command has one visible owner and no dormant compatibility input remains.
 
 Native node right-click is blocked. Empty-Canvas right-click remains owned by the existing Canvas context-menu presenter and continues to expose Add Component / Canvas actions.
 
 ## Retained architecture
 
-- `CanvasNodeShell` owns the double-click boundary and embedded-control safety.
+- `CanvasNodeShell` owns the double-click node-entry boundary, stable shell target and embedded-control safety.
+- `activateFocusedCanvasNodeFromKeyboard` maps Enter on the React Flow node wrapper to the same shell node-entry gesture.
 - `isCanvasNodeEmbeddedControlTarget` prevents node entry from button/input/port interactions.
 - `CanvasNodeWorkbenchPanel` remains the node Properties owner.
 - `NodePropertiesTabs` remains the section presentation primitive.
@@ -99,6 +100,7 @@ Native node right-click is blocked. Empty-Canvas right-click remains owned by th
 - floating-toolbar model, token and position/state plumbing;
 - floating-toolbar Code/Freeze/More actions;
 - direct play/pause execution-selection presentation on the node card;
+- `GraphNodeCardPlayAction`, its builder/test and its visual tokens;
 - node-native right-click as a DVT action surface;
 - `inspect-node` as a visible node-operations entry and its parallel menu builder;
 - `open-code | open-workbench` double-click branching;
@@ -107,32 +109,33 @@ Native node right-click is blocked. Empty-Canvas right-click remains owned by th
 
 The underlying layout freeze state is not promoted elsewhere by this cut. If a future supported user operation requires Freeze/Unfreeze, it must be introduced through the existing node-operation authority with a distinct product decision, not by restoring the retired toolbar.
 
-One non-visible caller cleanup remains deliberately outside this bounded interaction cut: `DbtNodeRenderer` still computes the former `GraphNodeCardPlayAction`; `GraphNodeCardView` ignores the transitional input and never renders it. Retirement of that last producer plus `graphNodeCardActions` and any now-unused visual tokens is recorded in #2267 and must not restore a visible play/pause surface.
-
 ## Acceptance invariants
 
 1. Simple node click changes only ordinary React Flow visual focus/selection.
 2. Double-click enters one node Properties intent.
-3. Code-capable nodes focus Code first; nodes without code focus their default/general section.
-4. Double-click on an embedded control does not enter Properties.
-5. The `…` menu contains operations only.
-6. Native right-click on a node does not open a DVT node menu.
-7. Right-click on empty Canvas still opens the existing Canvas context menu.
-8. No floating node toolbar is rendered or retained as dormant state.
-9. No direct play/pause execution-selection control is rendered on the node card.
-10. File-backed dbt metadata remains inspectable and SQL remains revision-authoritative.
-11. Closing a file-backed Code editor returns to the same focused node Properties context.
-12. Execution selection is never mutated by plain visual selection.
-13. ES/EN and keyboard accessibility continue to use the existing localization and focus owners.
+3. Enter on a focused React Flow node enters the same Properties intent.
+4. Code-capable nodes focus Code first; nodes without code focus their default/general section.
+5. Double-click or Enter on an embedded control does not enter Properties.
+6. The `…` menu contains operations only.
+7. Native right-click on a node does not open a DVT node menu.
+8. Right-click on empty Canvas still opens the existing Canvas context menu.
+9. No floating node toolbar is rendered or retained as dormant state.
+10. No direct play/pause execution-selection control, producer or compatibility input remains.
+11. File-backed dbt metadata remains inspectable and SQL remains revision-authoritative.
+12. Closing a file-backed Code editor returns to the same focused node Properties context.
+13. Execution selection is never mutated by plain visual selection.
+14. ES/EN and keyboard accessibility continue to use the existing localization and focus owners.
 
 ## Evidence
 
 Primary automated evidence:
 
-- `CanvasNodeShell.test.tsx` — one node-entry gesture, embedded-control protection, native right-click rejection;
+- `CanvasNodeShell.test.tsx` — one pointer node-entry gesture, embedded-control protection, native right-click rejection;
+- `CanvasViewport.keyboardNodeEntry.test.ts` — Enter opens the same node-entry gesture and embedded controls remain independent;
 - `canvasNodeContextMenuModel.test.ts` / `CanvasNodeContextMenuView.test.tsx` — operations-only ellipsis model;
 - `GraphNodeCardView.test.tsx` — no direct play/pause execution-selection surface;
-- `canvasNodeWorkbenchHardening.architecture.test.ts` — no floating-toolbar production topology and one Properties entry authority;
+- `DbtNodeComponent.architecture.test.ts` — operations-only node-action builder;
+- `canvasNodeWorkbenchHardening.architecture.test.ts` — no floating-toolbar/play topology and one Properties entry authority with keyboard equivalent;
 - `canvasNodeContextSurfaceModel.test.ts` — only distinct transient health detail survives;
 - `canvas-dbt-author-code-run-live.cy.ts` — Graph Draft Properties authoring/code persistence path;
 - `dbt-project-file-projection-live.cy.ts` — file-backed Properties -> Code editor -> return to Properties;
@@ -154,6 +157,7 @@ componentGuides:
   - docs/architecture/fowler-opportunity-planning-governance.md
 userStories:
   - As a Canvas author, I double-click a node once to enter its single Properties surface, with Code preferred when available.
+  - As a keyboard user, I press Enter on the focused node to enter the same Properties surface without creating another visible command.
   - As a Canvas author, I use the card ellipsis only for node operations and never need a duplicate floating toolbar or node right-click menu.
   - As a Canvas author, I select or deselect execution through the node operations menu rather than a duplicate play/pause control.
   - As a file-backed dbt author, I reach the authoritative Code editor from the Code section and return to the same node Properties context when it closes.
@@ -169,14 +173,20 @@ allowedImplementationSurfaces:
   - apps/web/src/app/components/canvas/CanvasNodeContextMenuView.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
   - apps/web/src/app/components/canvas/CanvasNodeShell.tsx
+  - apps/web/src/app/components/canvas/DbtNodeComponent.architecture.test.ts
   - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
+  - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
   - apps/web/src/app/plugins/graph/GraphNodeCardView.test.tsx
   - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
   - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
+  - apps/web/src/app/plugins/graph/graphNodeCardActions.test.ts
+  - apps/web/src/app/plugins/graph/graphNodeCardActions.ts
+  - apps/web/src/app/plugins/graph/graphVisualTokens.ts
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.header.test.tsx
   - apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx
+  - apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
   - apps/web/src/app/views/canvas/CanvasViewport.nodeOperationalRail.test.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.testHarness.tsx
   - apps/web/src/app/views/canvas/CanvasViewport.tsx
@@ -253,20 +263,24 @@ completionGate:
 redGreenCycles:
   - id: single-node-properties-entry
     redTest: apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
-    expectedFailure: The merged interaction exposes separate Code and Workbench double-click intents and native node right-click actions.
+    expectedFailure: The merged interaction exposes separate Code and Workbench double-click intents, no keyboard-equivalent node entry, and native node right-click actions.
     patchSurfaces:
       - apps/web/src/app/components/canvas/CanvasNodeShell.tsx
       - apps/web/src/app/components/canvas/DbtNodeComponent.tsx
-      - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
-    greenTest: apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
+      - apps/web/src/app/views/canvas/CanvasViewportSurfaceView.tsx
+      - apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
+    greenTest: apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
   - id: operations-only-node-menu
     redTest: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
     expectedFailure: The previous node menu still exposes Workbench inspection and parallel execution-selection presentation.
     patchSurfaces:
       - apps/web/src/app/components/canvas/canvasNodeContextMenuModel.ts
       - apps/web/src/app/components/canvas/CanvasNodeContextMenuView.test.tsx
+      - apps/web/src/app/plugins/dbt/DbtNodeRenderer.tsx
       - apps/web/src/app/plugins/graph/GraphNodeCardView.tsx
       - apps/web/src/app/plugins/graph/GraphNodeRenderer.tsx
+      - apps/web/src/app/plugins/graph/graphNodeCardActions.ts
+      - apps/web/src/app/plugins/graph/graphVisualTokens.ts
     greenTest: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - id: retire-floating-toolbar
     redTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
