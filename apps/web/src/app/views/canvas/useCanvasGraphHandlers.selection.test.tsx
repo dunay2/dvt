@@ -10,8 +10,6 @@ import {
 } from './useCanvasGraphHandlers.test.support';
 
 type GraphHandlersHarness = ReturnType<typeof renderGraphHandlersHook>;
-type GraphHandlersResult = NonNullable<ReturnType<GraphHandlersHarness['latest']>>;
-type NodeClickHandler = NonNullable<GraphHandlersResult['handleNodeClick']>;
 
 function renderSelectionHarness(
   args: Partial<Parameters<typeof renderGraphHandlersHook>[0]> = {}
@@ -22,18 +20,7 @@ function renderSelectionHarness(
   });
 }
 
-function clickNode(harness: GraphHandlersHarness, nodeId: string): void {
-  act(() => {
-    harness.latest()?.handleNodeClick(
-      {} as Parameters<NodeClickHandler>[0],
-      {
-        id: nodeId,
-      } as Parameters<NodeClickHandler>[1]
-    );
-  });
-}
-
-describe('useCanvasGraphHandlers selection', () => {
+describe('useCanvasGraphHandlers explicit selection intents', () => {
   let harness: GraphHandlersHarness | null = null;
 
   beforeEach(() => {
@@ -44,52 +31,6 @@ describe('useCanvasGraphHandlers selection', () => {
     harness?.cleanup();
     harness = null;
     restoreGraphHandlersTestDoubles();
-  });
-
-  it('ignores stale node clicks that no longer resolve into the canonical map', async () => {
-    const setInspectorNode = vi.fn();
-    harness = renderSelectionHarness({
-      setInspectorNode,
-    });
-    await harness.render();
-
-    clickNode(harness, 'stale-node');
-
-    expect(setInspectorNode).not.toHaveBeenCalled();
-  });
-
-  it('does not open node workbench from a plain graph node click', async () => {
-    const setInspectorNode = vi.fn();
-    harness = renderSelectionHarness({
-      inspectorPanelVisible: true,
-      setInspectorNode,
-    });
-    await harness.render();
-
-    clickNode(harness, 'source-node');
-
-    expect(setInspectorNode).not.toHaveBeenCalled();
-  });
-
-  it('does not let React Flow visual selection overwrite execution scope', async () => {
-    const setSelectedNodes = vi.fn();
-    const renderedHarness = renderSelectionHarness({
-      setSelectedNodes,
-    });
-    harness = renderedHarness;
-    await renderedHarness.render();
-
-    act(() => {
-      renderedHarness.latest()?.onSelectionChange({
-        nodes: [
-          { id: 'source-node', data: {}, position: { x: 0, y: 0 } },
-          { id: 'sink-node', data: {}, position: { x: 1, y: 1 } },
-        ],
-        edges: [],
-      });
-    });
-
-    expect(setSelectedNodes).not.toHaveBeenCalled();
   });
 
   it('opens the inspector panel when explicitly inspecting a node outside focus mode', async () => {
@@ -126,7 +67,7 @@ describe('useCanvasGraphHandlers selection', () => {
     expect(setInspectorNode).toHaveBeenCalledWith('source-node', 'inputs-outputs');
   });
 
-  it('adds and removes ids through toggle node selection', async () => {
+  it('adds and removes ids only through explicit execution-selection toggles', async () => {
     const setSelectedNodes = vi.fn();
     const renderedHarness = renderSelectionHarness({
       selectedNodeIds: ['source-node'],

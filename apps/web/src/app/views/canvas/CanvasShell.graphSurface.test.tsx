@@ -11,7 +11,7 @@ import {
   type CanvasShellPropsOverrides,
 } from './CanvasShell.testHarness';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
-import type { CanvasShellGraphCommands, CanvasShellProps } from './canvasShell.types';
+import type { CanvasShellProps } from './canvasShell.types';
 import { canvasViewCopy } from './copy';
 import { resolveWorkspaceFilePath } from './CanvasShell';
 
@@ -79,25 +79,12 @@ describe('CanvasShell graph base surface', () => {
     expect(container.querySelector('[data-testid="sql-context-workbench"]')).toBeNull();
   });
 
-  it('keeps node selection separate from contextual node workbench opening', async () => {
-    const onShowInspector = vi.fn();
-    const onNodeClick = vi.fn();
-    const clickedNode = { id: 'node.orders' } as Parameters<
-      CanvasShellGraphCommands['onNodeClick']
-    >[1];
-    const clickEvent = new MouseEvent('click') as unknown as Parameters<
-      CanvasShellGraphCommands['onNodeClick']
-    >[0];
+  it('keeps plain node click out of the application shell command contract', async () => {
+    const props = await renderShell();
 
-    const props = await renderShell({
-      chromeCommands: { onShowInspector },
-      graphCommands: { onNodeClick },
-    });
-
-    props.graphCommands.onNodeClick(clickEvent, clickedNode);
-
-    expect(onShowInspector).not.toHaveBeenCalled();
-    expect(onNodeClick).toHaveBeenCalledWith(clickEvent, clickedNode);
+    expect('onNodeClick' in props.graphCommands).toBe(false);
+    expect('onSelectionChange' in props.graphCommands).toBe(false);
+    expect(container.querySelector('[data-testid="canvas-viewport"]')).not.toBeNull();
   });
 
   it('keeps host-owned tab chrome out of the graph base panel', async () => {

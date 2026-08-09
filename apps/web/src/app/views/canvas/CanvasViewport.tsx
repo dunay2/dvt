@@ -50,8 +50,6 @@ type CanvasViewportProps = {
   readonly onEdgesChange: NonNullable<ReactFlowProps<Node, Edge>['onEdgesChange']>;
   readonly onConnect: NonNullable<ReactFlowProps<Node, Edge>['onConnect']>;
   readonly onReconnect: NonNullable<ReactFlowProps<Node, Edge>['onReconnect']>;
-  readonly onNodeClick: NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>;
-  readonly onSelectionChange: NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>;
   readonly onViewportChange: (viewport: { x: number; y: number; zoom: number }) => void;
   readonly onNodeDrag: NonNullable<ReactFlowProps<Node, Edge>['onNodeDrag']>;
   readonly onNodeDragStop: NonNullable<ReactFlowProps<Node, Edge>['onNodeDragStop']>;
@@ -394,9 +392,8 @@ function CanvasViewportWithPresenter({
           contextMenuTrigger,
         },
       });
-      props.onNodeClick(event, node);
     },
-    [closeNodeHealthPopover, props.onNodeClick]
+    [closeNodeHealthPopover]
   );
 
   useCanvasGraphSearchActivation({
@@ -435,7 +432,6 @@ function CanvasViewportWithPresenter({
       onConnect={props.onConnect}
       onReconnect={props.onReconnect}
       onNodeClick={handleNodeClick}
-      onSelectionChange={props.onSelectionChange}
       onViewportChange={props.onViewportChange}
       onNodeDrag={props.onNodeDrag}
       onNodeDragStop={props.onNodeDragStop}

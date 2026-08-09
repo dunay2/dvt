@@ -1,5 +1,5 @@
 /** Owned concern: orchestrate the read-only file-authoritative dbt Canvas read model. */
-import type { Edge, Node, NodeTypes, ReactFlowProps } from '@xyflow/react';
+import type { Node, NodeTypes } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import DbtNodeComponent, { type DbtNodeData } from '../../components/canvas/DbtNodeComponent';
@@ -362,13 +362,6 @@ export function useDbtProjectFileCanvasController(
     }
   }, [canonicalNodesById, hideInspectorPanel, inspectorNodeId, setInspectorNode]);
 
-  const handleSelectionChange = useCallback<
-    NonNullable<ReactFlowProps<Node, Edge>['onSelectionChange']>
-  >(() => undefined, []);
-  const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
-    () => undefined,
-    []
-  );
   const handleDragOver = useCallback<React.DragEventHandler<HTMLDivElement>>((event) => {
     event.dataTransfer.dropEffect = 'none';
   }, []);
@@ -453,8 +446,6 @@ export function useDbtProjectFileCanvasController(
       onEdgesChange: graphModel.onEdgesChange,
       onConnect: () => unsupportedSemanticMutation('Connect nodes'),
       onReconnect: () => unsupportedSemanticMutation('Reconnect nodes'),
-      onNodeClick: handleNodeClick,
-      onSelectionChange: handleSelectionChange,
       onViewportChange: persistence.handleViewportChange,
       onDrop: handleDrop,
       onDragOver: handleDragOver,

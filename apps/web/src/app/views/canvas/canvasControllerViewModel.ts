@@ -106,9 +106,6 @@ function buildCanvasShellViewModel(args: CanvasControllerViewModelArgs) {
     inspectorNode,
     inspectorPreferredTabId: store.inspectorPreferredTabId,
     inspectorPreferredTabRequestId: store.inspectorPreferredTabRequestId,
-    inspectorNodeSelectedForExecution: inspectorNode
-      ? store.selectedNodeIds.includes(inspectorNode.id)
-      : false,
     inspectorGraphNodes: graphModel.canonicalNodes,
     inspectorGraphEdges: visibleScope.canonicalEdges,
     activeRunId: overlayModel.activeRunId,
@@ -160,8 +157,6 @@ function buildCanvasInteractionViewModel(args: CanvasControllerViewModelArgs) {
     onEdgesChange: mutationHandlers.handleEdgesChange,
     onConnect: graphHandlers.onConnect,
     onReconnect: graphHandlers.onReconnect,
-    handleNodeClick: graphHandlers.handleNodeClick,
-    onSelectionChange: graphHandlers.onSelectionChange,
     handleViewportChange: persistence.handleViewportChange,
     handleNodeDrag: persistence.handleNodeDrag,
     handleNodeDragStop: persistence.handleNodeDragStop,

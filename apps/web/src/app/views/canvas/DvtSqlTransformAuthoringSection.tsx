@@ -8,10 +8,12 @@ import { inspectorVisualClasses } from '../../components/inspector/inspectorVisu
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import type { DvtSqlTransformAuthoringMetadata } from './canvasDvtAuthoringModel';
 import { formatCanvasInspectorNodeDraftError } from './canvasCopyFormatting';
+import { detectCanvasViewLocale } from './canvasCopyCatalog';
 import type {
   CanvasInspectorNodeDraft,
   CanvasInspectorNodeDraftErrors,
 } from './canvasInspectorAuthoring.types';
+import { buildCanvasNodePresentationCopy } from './canvasNodePresentationCopy';
 import { canvasViewCopy } from './copy';
 
 export function DvtSqlTransformAuthoringSection({
@@ -44,6 +46,11 @@ export function DvtSqlTransformAuthoringSection({
     sqlLineCount === 1
       ? canvasViewCopy.inspectorDvtSqlLineSingularLabel
       : canvasViewCopy.inspectorDvtSqlLinePluralLabel;
+  const nodePresentationCopy = buildCanvasNodePresentationCopy(
+    canvasViewCopy,
+    detectCanvasViewLocale()
+  );
+  const inputRoleLabel = nodePresentationCopy.valueLabels?.input;
   const columnOptions = buildDvtTransformColumnOptions({
     node,
     nodes,
@@ -120,10 +127,14 @@ export function DvtSqlTransformAuthoringSection({
       {showColumns ? (
         <div className={showCode ? 'mt-4 space-y-2' : 'space-y-2'}>
           <div className="flex items-center justify-between gap-3">
-            <h4 className={inspectorVisualClasses.contextPanelSectionTitle}>Input columns</h4>
+            <h4 className={inspectorVisualClasses.contextPanelSectionTitle}>
+              {canvasViewCopy.nodePresentationColumnsLabel}
+              {inputRoleLabel == null ? null : ` (${inputRoleLabel})`}
+            </h4>
             {columnOptions.length > 0 ? (
               <span className={inspectorVisualClasses.inspectorSubtle}>
-                {draft.selectedColumns.length}/{columnOptions.length} selected
+                {draft.selectedColumns.length}/{columnOptions.length}{' '}
+                {canvasViewCopy.dvtFlowGuideColumnsLabel}
               </span>
             ) : null}
           </div>
@@ -152,14 +163,16 @@ export function DvtSqlTransformAuthoringSection({
                   </span>
                   <span className="rounded border border-[color:var(--border-default)] px-2 py-1 font-mono text-(--text-muted)">
                     {option.dataType}
-                    {option.nullable === false ? ' not null' : ''}
+                    {option.nullable === false
+                      ? ` ${canvasViewCopy.dvtFlowGuideRequiredLabel}`
+                      : ''}
                   </span>
                 </label>
               ))}
             </div>
           ) : (
             <p className={inspectorVisualClasses.inspectorBody}>
-              Connect a source with recorded columns to choose transform inputs.
+              {canvasViewCopy.dvtFlowGuideColumnsMissingMessage}
             </p>
           )}
         </div>

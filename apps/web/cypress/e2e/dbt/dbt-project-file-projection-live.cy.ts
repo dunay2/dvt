@@ -271,11 +271,34 @@ describe('dbt project file projection live vertical', () => {
       );
     });
 
+    // Double-click is the code-first shortcut for a file-backed dbt node.
     cy.get('.react-flow__node[data-id="model.analytics.orders"]').dblclick();
+    cy.get('[data-slot="canvas-contextual-workbench"]', { timeout: 30_000 }).should('be.visible');
+    cy.get(
+      `[data-slot="code-workspace-file-entry"][data-workspace-path="${PROJECT_ROOT}/models/orders.sql"]`
+    ).should('be.visible');
+    cy.get('[data-testid="monaco-code-editor"]', { timeout: 30_000 })
+      .find('.view-lines')
+      .invoke('text')
+      .should((editorText) => {
+        expect(editorText.replaceAll('\u00a0', ' ')).to.match(
+          /source\(\s*'raw'\s*,\s*'orders'\s*\)/
+        );
+      });
+    cy.get('[data-slot="canvas-contextual-workbench-header"] button').should('be.visible').click();
+    cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
+
+    // The explicit Workbench command remains available for passive metadata inspection.
+    cy.get('.react-flow__node[data-id="model.analytics.orders"]').rightclick();
+    cy.get('[data-slot="canvas-context-menu"]', { timeout: 20_000 })
+      .should('be.visible')
+      .find('[data-menu-action="inspect-node"]')
+      .should('be.visible')
+      .click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]', { timeout: 20_000 }).should('be.visible');
-    cy.get('[data-slot="canvas-node-workbench-overlay"]')
-      .find('[data-slot="canvas-node-workbench-authoring"]')
-      .should('not.exist');
+    cy.get('[data-slot="canvas-node-workbench-help"]')
+      .should('be.visible')
+      .and('have.attr', 'aria-label');
     cy.get('[data-slot="canvas-node-workbench-tab-columns"]').click();
     cy.get('[data-slot="canvas-node-workbench-overlay"]')
       .should('contain.text', 'order_id')
@@ -285,8 +308,10 @@ describe('dbt project file projection live vertical', () => {
     cy.get('[data-slot="canvas-node-workbench-overlay"]')
       .should('contain.text', 'Value is present')
       .and('contain.text', 'blocks run');
-    cy.get('[data-slot="canvas-node-workbench-overlay"]').contains('button', 'Close').click();
+    cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').click();
+    cy.get('[data-slot="canvas-node-workbench-overlay"]').should('not.exist');
 
+    // The floating toolbar remains a second surface for the same existing code intent.
     cy.get('.react-flow__node[data-id="model.analytics.orders"]').click();
     cy.get('[data-slot="canvas-node-floating-toolbar"]', { timeout: 20_000 })
       .should('be.visible')

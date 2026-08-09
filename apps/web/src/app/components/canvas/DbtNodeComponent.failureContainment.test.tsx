@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 
 import { ReactFlowProvider } from '@xyflow/react';
+import { fireEvent } from '@testing-library/dom';
 import React, { act, type ComponentProps } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -99,5 +100,54 @@ describe('DbtNodeComponent plugin failure containment', () => {
 
     expect(container.textContent).toContain('Orders model');
     expect(container.textContent).toContain('Healthy');
+  });
+
+  it('honors an explicit code denial when inline presentation code still exists', () => {
+    const onInspectNode = vi.fn();
+    const onOpenNodeCode = vi.fn();
+    const nodeProps = {
+      id: 'model.orders',
+      selected: false,
+      data: {
+        name: 'Orders model',
+        type: 'MODEL',
+        status: 'idle',
+        canOpenNodeCode: false,
+        onOpenNodeCode,
+        onInspectNode,
+        presentationTruth: {
+          columns: {
+            declared: [],
+            inherited: [],
+            visible: [],
+            declaredCount: 0,
+            inheritedCount: 0,
+            visibleCount: 0,
+            visibleProvenance: 'none',
+          },
+          code: {
+            kind: 'inline',
+            content: 'select 1',
+            language: 'sql',
+          },
+        },
+      },
+    } as unknown as ComponentProps<typeof DbtNodeComponent>;
+
+    act(() => {
+      root.render(
+        <ReactFlowProvider>
+          <DbtNodeComponent {...nodeProps} />
+        </ReactFlowProvider>
+      );
+    });
+
+    act(() => {
+      fireEvent.dblClick(container.querySelector('div')!);
+    });
+
+    expect(onOpenNodeCode).not.toHaveBeenCalled();
+    expect(onInspectNode).toHaveBeenCalledOnce();
+    expect(onInspectNode).toHaveBeenCalledWith('model.orders', null);
   });
 });
