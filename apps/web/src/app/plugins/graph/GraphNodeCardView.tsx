@@ -10,7 +10,6 @@ import { GraphNodeMetricRow } from './GraphNodeMetricRow';
 import { GraphNodeOperationalRail } from './GraphNodeOperationalRail';
 import { GraphNodeStatusChip } from './GraphNodeStatusChip';
 import { GraphNodeTagList } from './GraphNodeTagList';
-import type { GraphNodeCardPlayAction } from './graphNodeCardActions';
 import type {
   GraphNodeCardReadModel,
   GraphNodeOperationalDetail,
@@ -32,8 +31,6 @@ export type GraphNodeCardViewProps = Readonly<{
   hovered: boolean;
   dimmed: boolean;
   overlayStyle?: CSSProperties;
-  /** Compatibility input while callers converge; execution selection is rendered only in the ellipsis menu. */
-  playAction?: GraphNodeCardPlayAction | null;
   onOpenOperationalDetails?: (
     detail: GraphNodeOperationalDetail,
     anchorElement: HTMLElement
