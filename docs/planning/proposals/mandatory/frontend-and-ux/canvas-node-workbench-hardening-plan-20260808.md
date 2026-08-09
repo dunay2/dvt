@@ -15,7 +15,7 @@ Harden the existing Canvas / Graph Editor / Node Workbench without creating a se
 
 Principle: **less mechanism, no capability loss**.
 
-This is the bounded W4 implementation child #2262 under #2195. Product acceptance remains #2255. Connection/resource-binding semantics remain owned by #2256 and are outside this slice.
+This is the bounded W4 implementation child #2262 under #2195. Product acceptance remains #2255. Connection/resource-binding semantics remain owned by #2256 and are outside this slice. The later #2258 product-truth integration is the convergence baseline for this PR.
 
 Baseline: `main@32cfaf6d31fa5ca789bdb390def95d27f5d71f59`.
 
@@ -33,8 +33,8 @@ Baseline: `main@32cfaf6d31fa5ca789bdb390def95d27f5d71f59`.
 
 The repository already has the required owners:
 
-- `CanvasNodeContextMenuModel` expresses which node actions exist and whether they are disabled;
-- `CanvasNodeShell` owns node-shell gestures;
+- `CanvasNodeContextMenuModel` expresses the actions that are actually visible in the node context menu;
+- `CanvasNodeShell` owns node-shell gestures and receives only already-enabled code/Workbench callbacks;
 - `onInspectNode` and `onOpenNodeCode` are the existing Workbench/code intents;
 - Graph Draft DVT/dbt authoring persists through `CanvasDraftSession` / CAS;
 - file-backed dbt SQL/YAML remain project-file authoritative;
@@ -47,16 +47,22 @@ Therefore this hardening converges entry points onto those owners instead of cre
 
 PR #2261 (`hardening/canvas-workbench-ux`) overlapped this slice and contained stronger local decisions. They are absorbed into #2266 rather than keeping parallel implementations:
 
-1. **Double-click ownership moves to `CanvasNodeShell`.** It resolves the preferred gesture from the same `CanvasNodeContextMenuModel` that governs visible node actions. Enabled `open-node-code` wins; otherwise enabled `inspect-node` falls back to the existing Workbench; disabled actions fail closed; execution-selection actions are never double-click targets.
+1. **Double-click ownership moves to `CanvasNodeShell`.** It prefers the already-gated existing code callback, otherwise falls back to the already-gated Workbench callback. Missing callbacks fail closed and execution-selection actions are never double-click targets.
 2. **Workbench help reuses canonical Canvas copy.** The temporary `canvasCopy.nodeWorkbench.ts` owner is removed. The header uses `inspectorEditablePropertiesTitle` / `inspectorEditablePropertiesDescription`, while preserving existing localized close copy.
 3. **The focused double-click and stronger header interaction tests are retained.** The duplicate #2261 implementation plan is not copied; this document remains the canonical plan for #2266.
 
+## Convergence with #2258
+
+`main@9b103e8585852fc72cda8b449205642cbfec42f3` removes the repeated Code action from the node context menu and makes source/code availability fail closed. This later product decision supersedes the original #2266 assumption that the context-menu action model could also carry Code for double-click resolution.
+
+The converged interaction keeps one visible Code action in the selected-node floating toolbar. `CanvasNodeShell` receives the same authoritatively gated code callback without projecting a hidden or repeated context-menu action. The explicit context-menu Workbench action remains available for general inspection. This preserves one command owner and removes duplicate presentation semantics.
+
 ## Selected behavior
 
-- Double-click is code-first only when the existing action model says Code is enabled.
-- If Code is unavailable but Inspect/Workbench is enabled, double-click opens the existing general Workbench.
+- Double-click is code-first only when the existing source-aware code callback is available.
+- If Code is unavailable but the Workbench callback is available, double-click opens the existing general Workbench.
 - Explicit context-menu `Open workbench` remains the passive/general inspection path.
-- Floating-toolbar Code and context-menu Code continue to use the same code command.
+- The floating-toolbar Code control remains the only visible node Code action; double-click reuses its existing command callback without adding a menu item.
 - Ordinary node click remains presentation-local and may open the floating toolbar; it does not mutate execution selection.
 - Only the explicit execution-selection command mutates execution intent.
 - Workbench `?` and `X` are separate right-side controls outside the drag handle.
@@ -66,17 +72,17 @@ PR #2261 (`hardening/canvas-workbench-ux`) overlapped this slice and contained s
 
 ## Authoring authority matrix
 
-| Property / surface | Authority | Posture |
-|---|---|---|
-| Graph Draft name/tags/description | `WorkspaceGraphAuthoringDraft` through `CanvasDraftSession` | editable when policy admits |
-| DVT source database/schema/table/alias | Graph Draft DVT authoring value object | editable |
-| DVT transform SQL + selected input columns | Graph Draft DVT authoring value object | editable |
-| DVT sink database/schema/table/materialization/write mode/partition | Graph Draft DVT authoring value object | editable |
-| dbt SQL project file | revisioned workspace project file | editable through existing Code rail |
-| supported dbt YAML description | project YAML | editable through existing YAML rail |
-| dbt artifact / analysis facts | derived projection | read-only / truthful unavailable |
-| `NodePropertiesReadModel` | passive query model | read-only |
-| `CanvasInspectorNodeDraft` | transient UI DTO | never persistence authority |
+| Property / surface                                                  | Authority                                                   | Posture                             |
+| ------------------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------- |
+| Graph Draft name/tags/description                                   | `WorkspaceGraphAuthoringDraft` through `CanvasDraftSession` | editable when policy admits         |
+| DVT source database/schema/table/alias                              | Graph Draft DVT authoring value object                      | editable                            |
+| DVT transform SQL + selected input columns                          | Graph Draft DVT authoring value object                      | editable                            |
+| DVT sink database/schema/table/materialization/write mode/partition | Graph Draft DVT authoring value object                      | editable                            |
+| dbt SQL project file                                                | revisioned workspace project file                           | editable through existing Code rail |
+| supported dbt YAML description                                      | project YAML                                                | editable through existing YAML rail |
+| dbt artifact / analysis facts                                       | derived projection                                          | read-only / truthful unavailable    |
+| `NodePropertiesReadModel`                                           | passive query model                                         | read-only                           |
+| `CanvasInspectorNodeDraft`                                          | transient UI DTO                                            | never persistence authority         |
 
 ## Reduction performed
 
@@ -85,6 +91,7 @@ PR #2261 (`hardening/canvas-workbench-ux`) overlapped this slice and contained s
 - Removed unconsumed Inspector `modelerActions` projection after consumer audit.
 - Removed the temporary Workbench-specific localization file after #2261 proved existing Canvas copy already owns that message.
 - Removed dbt-specific double-click branching after centralizing gesture policy in `CanvasNodeShell`.
+- Kept Code out of the node context menu after #2258 removed the repeated visible action; no hidden menu action is used to drive double-click.
 - Reused the existing node-presentation role copy for DVT input semantics instead of introducing another copy family.
 - Kept explicit execution selection, Graph Draft CAS persistence, project-file/YAML persistence, local floating-toolbar click behavior, search/filter/drag/zoom/context menus, and existing plugin/action models.
 
@@ -101,6 +108,7 @@ Remote CI/review caught real defects during this slice and they were fixed witho
 - generated Repository Map drift after Web source/test counts changed;
 - #2261's original `CanvasNodeShell` double-click fixture, which needed an enabled Inspect action in its context model;
 - the mechanization command spelling, which must not include a standalone extra `--`.
+- the #2258 integration conflict between source-aware Code availability and the older hidden context-menu Code projection; the converged callback posture preserves both decisions.
 
 ## Regression baseline
 
@@ -241,7 +249,7 @@ completionGate:
 redGreenCycles:
   - id: canonical-code-first-node-double-click
     redTest: apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts
-    expectedFailure: The base shell does not resolve double-click from the enabled canonical node action model.
+    expectedFailure: The base shell does not resolve double-click from the enabled canonical code and Workbench callbacks.
     patchSurfaces:
       - apps/web/src/app/components/canvas/CanvasNodeShell.tsx
       - apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx
@@ -281,7 +289,7 @@ redGreenCycles:
       - apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts
     greenTest: existing live protected-runtime flows with code-first double-click and explicit Workbench command
 symbols:
-  - { name: resolveCanvasNodeDoubleClickAction, path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx, dddOwner: Canvas node interaction presentation, cqRails: [InspectCanvasNode], fowlerSignals: [dbt-specific gesture branching despite a generic node action model], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts, apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx], cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts }
+  - { name: resolveCanvasNodeDoubleClickAction, path: apps/web/src/app/components/canvas/CanvasNodeShell.tsx, dddOwner: Canvas node interaction presentation, cqRails: [InspectCanvasNode], fowlerSignals: [dbt-specific gesture branching and repeated visible Code actions], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/components/canvas/CanvasNodeShell.doubleClick.test.ts, apps/web/src/app/components/canvas/CanvasNodeShell.test.tsx], cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts }
   - { name: CanvasNodeWorkbenchPanel, path: apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.tsx, dddOwner: Node Workbench presentation, cqRails: [InspectCanvasNode], fowlerSignals: [presentation and localization drift], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/views/canvas/CanvasNodeWorkbenchPanel.header.test.tsx], cypressCoverage: apps/web/cypress/e2e/dbt/dbt-project-file-projection-live.cy.ts }
   - { name: DvtSqlTransformAuthoringSection, path: apps/web/src/app/views/canvas/DvtSqlTransformAuthoringSection.tsx, dddOwner: DVT transform authoring presentation, cqRails: [ConfigureCanvasDvtNode], fowlerSignals: [presentation and localization drift], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/views/canvas/DvtAuthoringFields.test.tsx, apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts], cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts }
   - { name: useCanvasSelectionHandlers, path: apps/web/src/app/views/canvas/useCanvasSelectionHandlers.ts, dddOwner: Canvas interaction presentation, cqRails: [SelectCanvasExecutionNode], fowlerSignals: [dead application selection callbacks], architectureGuard: pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808, unitTests: [apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts], cypressCoverage: apps/web/cypress/e2e/canvas/canvas-dbt-author-code-run-live.cy.ts }
