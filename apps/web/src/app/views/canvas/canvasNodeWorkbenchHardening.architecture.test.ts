@@ -25,6 +25,7 @@ describe('Canvas Node Workbench W4 hardening contracts', () => {
 
     expect(GraphNodeCardViewSource).toContain('data-slot="graph-node-card-actions"');
     expect(GraphNodeCardViewSource).toContain("'dvtNodeActionsRequest'");
+    expect(GraphNodeCardViewSource).not.toContain('data-slot="graph-node-card-play"');
     expect(DbtNodeComponentSource).toContain('buildCanvasNodeModelerActionModel');
     expect(DbtNodeComponentSource).toContain(
       "data.onInspectNode?.(id, hasCodeSection ? 'code' : 'general');"
