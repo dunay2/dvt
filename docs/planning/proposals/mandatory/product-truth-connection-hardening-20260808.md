@@ -491,32 +491,33 @@ server grants scope A and scope B
 
 ### 13.5 Fowler opportunity matrix
 
-| Scenario                                           | Smell / risk                                 | Fowler move                                     | Required proof                                                        |
-| -------------------------------------------------- | -------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------- |
-| Connection and object travel as loose strings      | Primitive obsession / data clump             | Introduce Value Object                          | Strict `ConnectionRef` and `ConnectedSourceRef` contract tests        |
-| Same object ID exists through connections A and B  | Hidden authority / identity collision        | Replace derived identity with explicit identity | Live import persists two distinct nodes and refs for the same object  |
-| Legacy node lacks connection identity              | Hidden authority / speculative compatibility | Introduce Assertion / Guard Clause              | Import fails before any mutation; no inference or migration           |
-| Canvas hides the effective source connection       | Hidden authority                             | Introduce Presentation Model                    | Localized read-only Workbench row names the connection                |
-| Scope A and B share a relative path                | Identity Map leakage                         | Make scope key explicit                         | A -> B -> A returns A, B, A for the same path                         |
-| Missing Canvas triggers initial-draft creation     | Divergent change / boundary drift            | Separate creation from import                   | Typed not-found with zero file/external writes                        |
-| Graph metadata accepts secret-shaped extras        | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                               |
-| Windows Docker cannot resolve pnpm junctions       | Environment coupling / false-negative gate   | Encapsulate platform execution strategy         | Unit proof selects native Cypress on Windows; live proof passes       |
-| Source review extends below a bounded dialog       | Hidden content / inaccessible navigation     | Expose bounded scrolling region                 | Visible scrollbar, reachable selected object, fixed Cancel            |
-| Missing node file falls back to another file       | Hidden authority / semantic substitution     | Replace guessed path with explicit strategy     | Generated model opens node code; persisted path opens Workbench       |
-| One edge still requires hidden selected-source ID  | Data clump / duplicated decision             | Derive from the single explicit relationship    | One edge generates and validates; zero or ambiguous edges fail closed |
-| External probe precedes Canvas admission           | Temporal coupling / misplaced responsibility | Move statements before extraction               | Missing authority performs zero source-object reads                   |
-| Derived node ID is owned by another identity       | Identity collision / false idempotency       | Guard Clause                                    | Conflict occurs before file or draft mutation                         |
-| Identity differs only by exterior whitespace       | Primitive ambiguity / duplicate value        | Introduce Assertion                             | Strict contract rejects exterior-whitespace variants                  |
-| Fit view places a node under Add Component         | Presentation collision / hidden interaction  | Move shared options to the action owner         | Both live source nodes remain actionable after Fit view               |
-| Add Source clips actions under viewport pressure   | Hidden command / inaccessible cancellation   | Introduce Parameter Object for viewport proof   | Four-size live matrix keeps Cancel visible and closes without import  |
-| A and B reuse graph/file names in one live session | Hidden authority / Identity Map leakage      | Make scope key explicit at query boundaries     | Visible A -> B -> A switch recovers distinct graph and YAML state     |
-| Backspace in Workbench removes the selected node   | Event leakage / feature envy                 | Encapsulate event ownership at shortcut owner   | React Flow delete is disabled while Workbench owns keyboard input     |
-| Scope changes only by pointer or API               | Inaccessible command / hidden presentation   | Expose command through accessible presentation  | EN/ES keyboard A -> B -> A plus visible isolated YAML and axe         |
-| Code appears in toolbar and contextual menus       | Duplicated command / divergent behavior      | Consolidate conditional expression              | Only the selected-node floating toolbar exposes node code             |
-| Add Component appears fixed and on right-click     | Duplicated command / cluttered interface     | Remove dead UI and keep contextual command      | No fixed button; right-click opens the governed catalog               |
-| Graph projection retrieves a binding by object ID  | Split identity / divergent change            | Replace derived identity with explicit identity | Node metadata and YAML use the same qualified collision-safe binding  |
-| Draft repeats one valid connected-source identity  | Silent overwrite / false idempotency         | Introduce Assertion / Guard Clause              | Import rejects duplicate refs before file or draft mutation           |
-| Separate YAML files reuse one dbt logical key      | Hidden namespace / ambiguous reference       | Make logical identity explicit                  | Colliding schemas produce distinct source/table keys across the batch |
+| Scenario                                            | Smell / risk                                 | Fowler move                                     | Required proof                                                        |
+| --------------------------------------------------- | -------------------------------------------- | ----------------------------------------------- | --------------------------------------------------------------------- |
+| Connection and object travel as loose strings       | Primitive obsession / data clump             | Introduce Value Object                          | Strict `ConnectionRef` and `ConnectedSourceRef` contract tests        |
+| Same object ID exists through connections A and B   | Hidden authority / identity collision        | Replace derived identity with explicit identity | Live import persists two distinct nodes and refs for the same object  |
+| Legacy node lacks connection identity               | Hidden authority / speculative compatibility | Introduce Assertion / Guard Clause              | Import fails before any mutation; no inference or migration           |
+| Canvas hides the effective source connection        | Hidden authority                             | Introduce Presentation Model                    | Localized read-only Workbench row names the connection                |
+| Scope A and B share a relative path                 | Identity Map leakage                         | Make scope key explicit                         | A -> B -> A returns A, B, A for the same path                         |
+| Missing Canvas triggers initial-draft creation      | Divergent change / boundary drift            | Separate creation from import                   | Typed not-found with zero file/external writes                        |
+| Graph metadata accepts secret-shaped extras         | Inappropriate intimacy / boundary drift      | Preserve Whole Object with strict DTO           | Strict schemas reject credential fields                               |
+| Windows Docker cannot resolve pnpm junctions        | Environment coupling / false-negative gate   | Encapsulate platform execution strategy         | Unit proof selects native Cypress on Windows; live proof passes       |
+| Source review extends below a bounded dialog        | Hidden content / inaccessible navigation     | Expose bounded scrolling region                 | Visible scrollbar, reachable selected object, fixed Cancel            |
+| Missing node file falls back to another file        | Hidden authority / semantic substitution     | Replace guessed path with explicit strategy     | Generated model opens node code; persisted path opens Workbench       |
+| One edge still requires hidden selected-source ID   | Data clump / duplicated decision             | Derive from the single explicit relationship    | One edge generates and validates; zero or ambiguous edges fail closed |
+| Display metadata makes an unbound source executable | Hidden authority / fail-open readiness       | Guard clause at artifact projection             | Missing, legacy or unsupported binding returns no executable artifact |
+| External probe precedes Canvas admission            | Temporal coupling / misplaced responsibility | Move statements before extraction               | Missing authority performs zero source-object reads                   |
+| Derived node ID is owned by another identity        | Identity collision / false idempotency       | Guard Clause                                    | Conflict occurs before file or draft mutation                         |
+| Identity differs only by exterior whitespace        | Primitive ambiguity / duplicate value        | Introduce Assertion                             | Strict contract rejects exterior-whitespace variants                  |
+| Fit view places a node under Add Component          | Presentation collision / hidden interaction  | Move shared options to the action owner         | Both live source nodes remain actionable after Fit view               |
+| Add Source clips actions under viewport pressure    | Hidden command / inaccessible cancellation   | Introduce Parameter Object for viewport proof   | Four-size live matrix keeps Cancel visible and closes without import  |
+| A and B reuse graph/file names in one live session  | Hidden authority / Identity Map leakage      | Make scope key explicit at query boundaries     | Visible A -> B -> A switch recovers distinct graph and YAML state     |
+| Backspace in Workbench removes the selected node    | Event leakage / feature envy                 | Encapsulate event ownership at shortcut owner   | React Flow delete is disabled while Workbench owns keyboard input     |
+| Scope changes only by pointer or API                | Inaccessible command / hidden presentation   | Expose command through accessible presentation  | EN/ES keyboard A -> B -> A plus visible isolated YAML and axe         |
+| Code appears in toolbar and contextual menus        | Duplicated command / divergent behavior      | Consolidate conditional expression              | Only the selected-node floating toolbar exposes node code             |
+| Add Component appears fixed and on right-click      | Duplicated command / cluttered interface     | Remove dead UI and keep contextual command      | No fixed button; right-click opens the governed catalog               |
+| Graph projection retrieves a binding by object ID   | Split identity / divergent change            | Replace derived identity with explicit identity | Node metadata and YAML use the same qualified collision-safe binding  |
+| Draft repeats one valid connected-source identity   | Silent overwrite / false idempotency         | Introduce Assertion / Guard Clause              | Import rejects duplicate refs before file or draft mutation           |
+| Separate YAML files reuse one dbt logical key       | Hidden namespace / ambiguous reference       | Make logical identity explicit                  | Colliding schemas produce distinct source/table keys across the batch |
 
 ### 13.6 DoR for the bounded slice
 
@@ -551,8 +552,11 @@ server grants scope A and scope B
       fails with `WarehouseSourceImportDraftConflictError` before mutation.
 - [x] Focused regression tests pass for qualified binding lookup, global dbt
       logical-key uniqueness and duplicate-ref rejection.
-- [ ] Both blocking P1 review threads are resolved and remote CI passes before
-      merge.
+- [x] Warehouse-source artifact projection rejects missing, legacy-competing or
+      unsupported connection bindings before publication and Preview.
+- [x] Both blocking P1 review threads are resolved and the unrelated Temporal
+      CI blocker is integrated through #2276; final merge remains protected by
+      the required remote checks.
 
 ## 14. Feature mechanization
 
@@ -629,6 +633,7 @@ allowedImplementationSurfaces:
   - docs/.manifest.json
   - docs/concepts/repository-map.md
   - docs/planning/status/**
+  - tools/planning-db/state/canonical-state.json
 forbiddenImplementationSurfaces:
   - database migrations or migration-state compatibility
   - packages/@dvt/engine/**
@@ -682,6 +687,7 @@ completionGate:
   - pnpm --filter @dvt/web typecheck
   - node --test scripts/run-canvas-source-import-live-proof.test.cjs
   - pnpm --filter @dvt/web test:e2e:source-import:live
+  - pnpm planning:db:export:check
   - pnpm verify:prepush
 redGreenCycles:
   - id: connection-reference-contract
@@ -853,6 +859,13 @@ redGreenCycles:
       - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
       - apps/web/src/app/views/canvas/canvasInspectorAuthoringModel.ts
     greenTest: pnpm --filter @dvt/web test:canvas -- canvasDbtModelArtifactProjection.test.ts canvasInspectorAuthoringModel.test.ts
+  - id: connected-source-execution-readiness
+    redTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
+    expectedFailure: Missing or unsupported connected-source bindings still project executable DBT source artifacts from display metadata.
+    patchSurfaces:
+      - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.ts
+      - apps/web/src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
+    greenTest: pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
 symbols:
   - { name: CONNECTION_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectionRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }
   - { name: CONNECTED_SOURCE_REF_SCHEMA_VERSION, path: packages/@dvt/contracts/src/contracts/source-import/ConnectedSourceRef.v1.ts, dddOwner: ConnectedSourceRef, cqRails: [ImportWarehouseSources], fowlerSignals: [Introduce Value Object], architectureGuard: pnpm docs:feature-mechanization:implementation, cypressCoverage: apps/web/cypress/e2e/canvas/canvas-source-import-live-clean.cy.ts, unitTests: [pnpm --filter @dvt/contracts test -- ConnectedSourceRef.v1.test.ts] }

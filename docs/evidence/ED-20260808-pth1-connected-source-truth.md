@@ -37,6 +37,7 @@ evidence:
     - pnpm --filter dvt-api lint
     - pnpm --filter dvt-api typecheck
     - pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts --maxWorkers=2 --minWorkers=2
+    - pnpm --filter @dvt/web exec vitest run --config vitest.canvas.config.ts src/app/views/canvas/canvasDbtModelArtifactProjection.test.ts
     - pnpm --filter @dvt/web test:canvas -- CanvasViewport.test.tsx DbtModelCodeAuthoringSection.test.tsx
     - pnpm --filter @dvt/web test:shell-session -- ShellWorkspaceScopeSelector.test.tsx
     - pnpm --filter @dvt/web lint
@@ -96,6 +97,13 @@ flowchart LR
 - A dbt model with exactly one compatible incoming edge uses that explicit
   relationship for generation and authoring validation. Zero, ambiguous or
   explicitly disconnected origins fail closed.
+- A warehouse-source origin is executable only when its persisted
+  `ConnectedSourceRef` is schema-valid, contains no competing legacy
+  `sourceObjectId`, and names a provider in the supported warehouse-connection
+  catalog. Missing, malformed, legacy or unsupported bindings fail before DBT
+  workspace artifacts are published or Preview is called. The dbt
+  profile/target execution binding remains owned by #2257 and is not fabricated
+  here.
 - Node code navigation uses an explicit persisted workspace path or the exact
   node authoring surface; it never fabricates a path or opens an unrelated
   fallback file.
@@ -115,12 +123,15 @@ flowchart LR
 
 # Post-ready review correction evidence
 
-The review findings are corrected locally through three microcommits:
+The review findings are corrected through reviewable microcommits:
 
 - `2eedd20ff` records the blocking controls before implementation;
 - `08c4f6821` exposes qualified-binding and duplicate-ref regressions;
 - `10f6df339` applies the fail-closed production correction and global dbt
-  logical-key hardening.
+  logical-key hardening;
+- `dfed5aa54` exposes missing and unsupported execution-readiness bindings;
+- `f9b8afeb6` requires the canonical supported binding before artifact
+  publication.
 
 The executable proof now covers:
 
@@ -135,11 +146,16 @@ The executable proof now covers:
 3. Source-name collision analysis must cover the whole import batch because the
    YAML path does not qualify dbt's `source(source_name, table_name)` reference.
    Two colliding physical schemas now produce two distinct logical keys.
+4. Warehouse-source artifact projection must reject absent, malformed,
+   unsupported or legacy-competing binding state instead of synthesizing
+   executable source SQL from display metadata.
 
-The two focused files pass 23/23 tests. API lint, API type-check and
-`pnpm verify:prepush` pass after the correction commit. PR #2258 remains
-non-mergeable until these local commits are pushed, remote CI passes and both
-P1 review threads are resolved.
+The API correction files pass 23/23 tests and the focused Canvas artifact
+projection passes 10/10. API lint/type-check, Web type-check and
+`pnpm verify:prepush` pass after the corrections. Both P1 review threads are
+resolved. The unrelated Temporal cancellation race is fixed and integrated in
+`main` through #2276; PR #2258 remains subject to its final required checks and
+branch protection before merge.
 
 # Executable outcome
 

@@ -30,6 +30,9 @@ mitigations:
     identifier and never infer missing truth from names or labels.'
   - 'Use the single compatible incoming edge as dbt origin; fail closed for zero, ambiguity or an
     explicitly disconnected selection.'
+  - 'Require a strict ConnectedSourceRef with a currently supported warehouse provider before a
+    warehouse source can project executable DBT artifacts; reject missing, malformed, legacy or
+    unsupported binding state before publication and Preview.'
   - 'Route code actions only to an explicit persisted path or the exact node authoring surface;
     reject guessed paths and unrelated fallback files.'
   - 'Run the protected live source-import proof with PostgreSQL, API authorization, Temporal, two
@@ -40,8 +43,9 @@ residual_risk: >
   within one browser session. True browser-level 200-percent zoom remains a demanding-user manual
   check beyond the automated 500x330 layout-pressure equivalent. Revoked connection reconciliation,
   cross-session collaborative edits and additional warehouse providers require their own product
-  slices and evidence. Qualified YAML binding lookup, global logical-key uniqueness and duplicate
-  ConnectedSourceRef rejection pass locally. PR #2258 remains blocked until the correction commits
-  are pushed, remote CI passes and both P1 review threads are resolved.
+  slices and evidence. Qualified YAML binding lookup, global logical-key uniqueness, duplicate
+  ConnectedSourceRef rejection and fail-closed artifact readiness are covered. Both P1 review
+  threads are resolved and the unrelated Temporal CI race was integrated through #2276. PR #2258
+  remains governed by final required checks and branch protection.
 review_after: 2026-09-08
 ---
