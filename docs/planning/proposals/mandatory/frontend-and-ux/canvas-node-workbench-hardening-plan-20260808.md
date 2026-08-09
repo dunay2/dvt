@@ -17,6 +17,7 @@ This plan supersedes the multi-surface node interaction merged by #2266.
 left click node       -> visual selection/focus only
 double click node     -> enter node / Properties
 Enter on focused node -> same node-entry gesture
+card Play/Pause       -> retained direct node affordance; not classified as duplicate of ellipsis
 card ellipsis (…)     -> node operations only
 right click node      -> no DVT-specific action
 right click canvas    -> existing Canvas/Add Component context
@@ -28,11 +29,18 @@ Code-capable nodes enter Properties with Code preferred. Embedded controls keep 
 
 For file-backed dbt, the authoritative revisioned editor is launched from inside the Code section and closing it returns to the same focused node Properties context.
 
+### Product-owner correction — Play/Pause
+
+Play/Pause was incorrectly classified as a duplicate of execution-selection operations during #2278 hardening. That removal was not authorized and is reverted.
+
+Play/Pause remains a distinct visible affordance and must not be retired merely because the current baseline implementation derives it from `onToggleNodeSelection`. That implementation detail is evidence of a possible semantic conflation, not proof that the product intents are identical. Any change to the Play/Pause command semantics belongs to a separately evidenced run/execution-control audit; this W4.2 cut preserves the capability.
+
 ## Retain
 
 - `CanvasNodeShell` as node-entry gesture boundary;
 - `CanvasNodeWorkbenchPanel` + `NodePropertiesTabs` as Properties surface;
 - `CanvasNodeModelerActionModel` as operations-only ellipsis model;
+- card Play/Pause affordance, its model, visual tokens and current command wiring until a separate execution-control decision replaces it;
 - visual selection separate from execution selection;
 - Graph Draft and file-backed persistence authorities;
 - distinct operational-health detail;
@@ -44,8 +52,6 @@ For file-backed dbt, the authoritative revisioned editor is launched from inside
 - split `open-code | open-workbench` double-click policy;
 - native node right-click product menu;
 - visible `inspect-node`/Workbench navigation in node operations;
-- direct play/pause execution-selection control;
-- `GraphNodeCardPlayAction`, its builder/test and play visual tokens;
 - topology tests that require the retired surfaces.
 
 ## Acceptance invariants
@@ -55,11 +61,12 @@ For file-backed dbt, the authoritative revisioned editor is launched from inside
 3. Embedded controls do not trigger node entry.
 4. Code-capable nodes prefer Code; other nodes use their default/general section.
 5. Ellipsis contains operations only: execution selection, duplicate and remove when supported.
-6. Native right-click on a node does not expose DVT node actions.
-7. Empty-Canvas right-click still exposes the existing Canvas context.
-8. No floating toolbar or direct play/pause surface remains.
-9. File-backed Code remains revision-authoritative and returns to the same Properties context on close.
-10. ES/EN and accessibility remain owned by the existing localization/focus rails.
+6. Play/Pause remains available when the node-card action model exposes it; this slice does not remove or silently redefine it.
+7. Native right-click on a node does not expose DVT node actions.
+8. Empty-Canvas right-click still exposes the existing Canvas context.
+9. No floating toolbar remains.
+10. File-backed Code remains revision-authoritative and returns to the same Properties context on close.
+11. ES/EN and accessibility remain owned by the existing localization/focus rails.
 
 ## Evidence
 
@@ -68,6 +75,7 @@ For file-backed dbt, the authoritative revisioned editor is launched from inside
 - `canvasNodeContextMenuModel.test.ts`
 - `CanvasNodeContextMenuView.test.tsx`
 - `GraphNodeCardView.test.tsx`
+- `graphNodeCardActions.test.ts`
 - `DbtNodeComponent.architecture.test.ts`
 - `canvasNodeWorkbenchHardening.architecture.test.ts`
 - `canvasNodeContextSurfaceModel.test.ts`
@@ -92,7 +100,7 @@ userStories:
   - As a Canvas author, I enter a node through one Properties surface with Code preferred when available.
   - As a keyboard user, I press Enter on the focused node to enter the same Properties surface.
   - As a Canvas author, I use the card ellipsis only for node operations.
-  - As a Canvas author, I select execution through the ellipsis operation instead of a duplicate play/pause control.
+  - As a Canvas author, I retain the direct Play/Pause affordance and do not lose it as a side effect of simplifying node navigation.
   - As a file-backed dbt author, I open the authoritative editor from Properties Code and return to the same node context.
 governingSources:
   - AGENTS.md
@@ -233,7 +241,7 @@ symbols:
 fowlerSignals:
   - duplicate node gestures and adjacent action surfaces
   - split Code versus Workbench node-entry semantics
-  - duplicate execution-selection presentation
+  - possible Play/Pause versus execution-selection semantic conflation; preserve the affordance and audit separately rather than deleting it
   - displaced floating-toolbar state and tests
 architectureGuards:
   - pnpm docs:feature-mechanization:implementation --feature W4-CANVAS-NODE-WORKBENCH-HARDENING-20260808
@@ -254,7 +262,7 @@ redGreenCycles:
     greenTest: apps/web/src/app/views/canvas/CanvasViewport.keyboardNodeEntry.test.ts
   - id: operations-only-node-menu
     redTest: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
-    expectedFailure: Previous node menu exposed Workbench and duplicate execution selection presentation.
+    expectedFailure: Previous node menu exposed Workbench navigation alongside node operations.
     greenTest: apps/web/src/app/components/canvas/canvasNodeContextMenuModel.test.ts
   - id: retire-floating-toolbar
     redTest: apps/web/src/app/views/canvas/canvasNodeWorkbenchHardening.architecture.test.ts
@@ -269,3 +277,5 @@ redGreenCycles:
 ## Completion rule
 
 The implementation cut is complete only when the exact PR head passes the applicable Web, documentation, governance and repository gates and review has no unresolved finding. This is separate from #2255 product-owner acceptance.
+
+Play/Pause command semantics are not silently redefined by this cut. Their current baseline wiring is preserved while W5/run-control work determines whether the product intent should map to run/start/pause/resume or another explicit execution control.
