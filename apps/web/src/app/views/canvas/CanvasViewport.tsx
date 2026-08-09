@@ -8,7 +8,6 @@ import {
 } from '@xyflow/react';
 import { useCallback, useEffect, useMemo, useReducer, useRef, type DragEventHandler } from 'react';
 
-import { isCanvasNodeEmbeddedControlTarget } from '../../components/canvas/canvasNodeInteractionBoundary';
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import type { NodeKindRegistration } from '../../plugins/nodeTypeContracts';
 import { normalizeCanvasPaletteId, type CanvasPaletteId } from './canvasPalette';
@@ -16,7 +15,6 @@ import { resolveCanvasViewCopy } from './canvasCopyCatalog';
 import type { CreateCanvasAuthoringNode } from './canvasGraphHandlerContracts';
 import { projectCanvasGraphFilterPresentation } from './canvasGraphFilterPresentation';
 import { projectCanvasGraphSearchPresentation } from './canvasGraphSearchPresentation';
-import { buildCanvasNodeFloatingToolbarModel } from './canvasNodeFloatingToolbarModel';
 import {
   createCanvasNodeContextSurfaceState,
   reduceCanvasNodeContextSurface,
@@ -94,10 +92,6 @@ function CanvasViewportWithPresenter({
     undefined,
     createCanvasNodeContextSurfaceState
   );
-  const nodeFloatingToolbarAnchor =
-    nodeContextSurfaceState.activeSurface.kind === 'toolbar'
-      ? nodeContextSurfaceState.activeSurface.anchor
-      : null;
   const nodeHealthPopoverModel =
     nodeContextSurfaceState.activeSurface.kind === 'health'
       ? nodeContextSurfaceState.activeSurface.model
@@ -108,9 +102,6 @@ function CanvasViewportWithPresenter({
     gridVisible: props.canvasGridVisible,
     gridColor: props.canvasGridColor,
   });
-  const closeNodeFloatingToolbar = useCallback(() => {
-    dispatchNodeContextSurface({ type: 'close-transient-surface' });
-  }, []);
   const closeNodeHealthPopover = useCallback((restoreTriggerFocus = false) => {
     dispatchNodeContextSurface({ type: 'close-transient-surface' });
     const trigger = nodeHealthPopoverTriggerRef.current;
@@ -170,7 +161,6 @@ function CanvasViewportWithPresenter({
               ? {}
               : {
                   onInspectNode: (...args: unknown[]) => {
-                    closeNodeFloatingToolbar();
                     closeNodeHealthPopover();
                     inspectNode(...args);
                   },
@@ -182,7 +172,7 @@ function CanvasViewportWithPresenter({
           },
         };
       }),
-    [closeNodeFloatingToolbar, closeNodeHealthPopover, openNodeHealthPopover, props.nodesWithImpact]
+    [closeNodeHealthPopover, openNodeHealthPopover, props.nodesWithImpact]
   );
 
   const graphFilterController = useCanvasGraphFilterController({
@@ -227,86 +217,6 @@ function CanvasViewportWithPresenter({
       graphFilterPresentation.nodes,
     ]
   );
-
-  const nodeFloatingToolbarModel = useMemo(() => {
-    if (nodeFloatingToolbarAnchor == null) {
-      return null;
-    }
-
-    const ownerNode = props.nodesWithImpact.find(
-      (node) => node.id === nodeFloatingToolbarAnchor.nodeId
-    );
-    if (ownerNode == null) {
-      return null;
-    }
-
-    const ownerNodeData = ownerNode.data as Record<string, unknown>;
-    const inspectNode = ownerNodeData.onInspectNode;
-    const canOpenNodeCode = ownerNodeData.canOpenNodeCode;
-    const openNodeCode = ownerNodeData.onOpenNodeCode;
-    const contextMenuTrigger = nodeFloatingToolbarAnchor.contextMenuTrigger;
-    const model = buildCanvasNodeFloatingToolbarModel({
-      nodeId: nodeFloatingToolbarAnchor.nodeId,
-      nodeName: nodeFloatingToolbarAnchor.nodeName,
-      position: nodeFloatingToolbarAnchor.position,
-      frozen: props.frozenNodeIds?.has(nodeFloatingToolbarAnchor.nodeId) ?? false,
-      onOpenCode:
-        canOpenNodeCode === false
-          ? undefined
-          : typeof openNodeCode === 'function'
-            ? (nodeId) => {
-                closeNodeFloatingToolbar();
-                openNodeCode(nodeId);
-              }
-            : typeof inspectNode === 'function'
-              ? (nodeId) => {
-                  closeNodeFloatingToolbar();
-                  inspectNode(nodeId, 'code');
-                }
-              : undefined,
-      onToggleFreeze: props.onToggleFrozenNode,
-      onOpenMore:
-        contextMenuTrigger == null
-          ? undefined
-          : () => {
-              const { nodeTop, position } = nodeFloatingToolbarAnchor;
-              closeNodeFloatingToolbar();
-              contextMenuTrigger.dispatchEvent(
-                new MouseEvent('contextmenu', {
-                  bubbles: true,
-                  cancelable: true,
-                  button: 2,
-                  clientX: position.x,
-                  clientY: nodeTop,
-                })
-              );
-            },
-    });
-
-    return model.actions.length > 0 ? model : null;
-  }, [
-    closeNodeFloatingToolbar,
-    nodeFloatingToolbarAnchor,
-    props.frozenNodeIds,
-    props.nodesWithImpact,
-    props.onToggleFrozenNode,
-  ]);
-
-  useEffect(() => {
-    if (nodeFloatingToolbarAnchor == null) {
-      return;
-    }
-
-    const toolbarOwnerStillExists = props.nodesWithImpact.some(
-      (node) => node.id === nodeFloatingToolbarAnchor.nodeId
-    );
-    if (!toolbarOwnerStillExists) {
-      dispatchNodeContextSurface({
-        type: 'remove-node',
-        nodeId: nodeFloatingToolbarAnchor.nodeId,
-      });
-    }
-  }, [nodeFloatingToolbarAnchor, props.nodesWithImpact]);
 
   useEffect(() => {
     if (nodeHealthPopoverModel == null) {
@@ -358,44 +268,6 @@ function CanvasViewportWithPresenter({
     };
   }, [closeNodeHealthPopover, nodeHealthPopoverModel]);
 
-  const handleNodeClick = useCallback<NonNullable<ReactFlowProps<Node, Edge>['onNodeClick']>>(
-    (event, node) => {
-      const eventTarget = event.currentTarget instanceof Element ? event.currentTarget : null;
-      const clickedTarget = event.target instanceof Element ? event.target : null;
-      if (isCanvasNodeEmbeddedControlTarget(event.target)) {
-        return;
-      }
-
-      closeNodeHealthPopover(false);
-      const contextMenuTrigger =
-        clickedTarget?.closest('[data-slot="context-menu-trigger"]') ??
-        eventTarget?.querySelector('[data-slot="context-menu-trigger"]') ??
-        eventTarget;
-      const nodeRect =
-        typeof eventTarget?.getBoundingClientRect === 'function'
-          ? eventTarget.getBoundingClientRect()
-          : null;
-      const data = node.data as Record<string, unknown>;
-      const nodeName = typeof data.name === 'string' && data.name.length > 0 ? data.name : node.id;
-      const toolbarPosition =
-        nodeRect == null
-          ? { x: Math.max(8, event.clientX - 8), y: Math.max(8, event.clientY - 52) }
-          : { x: Math.max(8, nodeRect.left), y: Math.max(8, nodeRect.top - 52) };
-
-      dispatchNodeContextSurface({
-        type: 'open-toolbar',
-        anchor: {
-          nodeId: node.id,
-          nodeName,
-          position: toolbarPosition,
-          nodeTop: nodeRect?.top ?? toolbarPosition.y + 52,
-          contextMenuTrigger,
-        },
-      });
-    },
-    [closeNodeHealthPopover]
-  );
-
   useCanvasGraphSearchActivation({
     activeNodeId: graphSearchController.model.activeNodeId,
     nodes: props.nodesWithImpact,
@@ -431,7 +303,6 @@ function CanvasViewportWithPresenter({
       onEdgesChange={props.onEdgesChange}
       onConnect={props.onConnect}
       onReconnect={props.onReconnect}
-      onNodeClick={handleNodeClick}
       onViewportChange={props.onViewportChange}
       onNodeDrag={props.onNodeDrag}
       onNodeDragStop={props.onNodeDragStop}
@@ -441,8 +312,6 @@ function CanvasViewportWithPresenter({
       renderContextMenuView={renderContextMenuView}
       contextSurfaceLabel={copy.canvasViewportContextSurfaceLabel}
       contextMenuLabel={copy.canvasContextMenuLabel}
-      nodeFloatingToolbarModel={nodeFloatingToolbarModel}
-      onCloseNodeFloatingToolbar={closeNodeFloatingToolbar}
       nodeHealthPopoverModel={nodeHealthPopoverModel}
       onCloseNodeHealthPopover={closeNodeHealthPopover}
       graphSearchController={graphSearchController}
