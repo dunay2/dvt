@@ -9,8 +9,9 @@ import {
   type ReactFlowProps,
   type AriaLabelConfig,
 } from '@xyflow/react';
-import type { DragEventHandler, RefObject } from 'react';
+import type { DragEventHandler, KeyboardEvent as ReactKeyboardEvent, RefObject } from 'react';
 
+import { isCanvasNodeEmbeddedControlTarget } from '../../components/canvas/canvasNodeInteractionBoundary';
 import { GraphNodeHealthPopoverView } from '../../plugins/graph/GraphNodeHealthPopoverView';
 import type { GraphNodeOperationalDetail } from '../../plugins/graph/graphNodeCardStrategyContracts';
 import { resolveNodeKindRegistration } from '../../plugins/nodeTypeRegistry';
@@ -87,6 +88,35 @@ export function buildCanvasReactFlowAriaLabelConfig(
 function resolveMiniMapNodeColor(node: { data?: unknown }): string {
   const pluginKind = (node.data as { pluginKind?: string }).pluginKind ?? 'dvt:unknown';
   return resolveNodeKindRegistration(pluginKind).minimapColor;
+}
+
+export function activateFocusedCanvasNodeFromKeyboard(
+  event: Pick<ReactKeyboardEvent<HTMLElement>, 'key' | 'target' | 'preventDefault' | 'stopPropagation'>
+): boolean {
+  if (event.key !== 'Enter' || isCanvasNodeEmbeddedControlTarget(event.target)) {
+    return false;
+  }
+  if (!(event.target instanceof Element)) {
+    return false;
+  }
+
+  const nodeElement = event.target.closest('.react-flow__node');
+  const shell = nodeElement?.querySelector<HTMLElement>('[data-slot="canvas-node-shell"]');
+  if (shell == null) {
+    return false;
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+  const MouseEventConstructor = shell.ownerDocument.defaultView?.MouseEvent ?? globalThis.MouseEvent;
+  shell.dispatchEvent(
+    new MouseEventConstructor('dblclick', {
+      bubbles: true,
+      cancelable: true,
+      detail: 2,
+    })
+  );
+  return true;
 }
 
 function CanvasViewportReactFlowSurface({
@@ -168,6 +198,9 @@ function CanvasViewportReactFlowSurface({
       className="h-full w-full outline-none focus-visible:ring-2 focus-visible:ring-[var(--focus-ring)] focus-visible:ring-inset"
       onContextMenuCapture={contextMenuPresenter.handleViewportContextMenu}
       onKeyDown={(event) => {
+        if (activateFocusedCanvasNodeFromKeyboard(event)) {
+          return;
+        }
         graphSearchController.onViewportKeyDown(event);
         if (!event.defaultPrevented) {
           contextMenuPresenter.handleViewportContextMenuKeyDown(event);
