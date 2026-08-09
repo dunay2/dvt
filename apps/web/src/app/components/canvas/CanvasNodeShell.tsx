@@ -75,6 +75,7 @@ export function CanvasNodeShell({
     <ContextMenu>
       <ContextMenuTrigger asChild>
         <div
+          data-slot="canvas-node-shell"
           className={cn(styles.root, 'relative')}
           onDoubleClick={handleDoubleClick}
           onContextMenuCapture={handleContextMenuCapture}
