@@ -229,6 +229,29 @@ describe('canvas DBT model artifact projection', () => {
     });
   });
 
+  it('fails closed instead of accepting legacy source-object identity alongside the binding', () => {
+    const sourceWithLegacyIdentity = {
+      ...warehouseSource,
+      metadata: {
+        ...warehouseSource.metadata,
+        sourceObjectId: 'relation/dvt/erp/orders',
+      },
+    };
+
+    expect(
+      projectDbtModelArtifact({
+        modelNode: model,
+        nodes: [sourceWithLegacyIdentity, model],
+        edges: [edge(sourceWithLegacyIdentity.id)],
+      })
+    ).toEqual({
+      ok: false,
+      reason: 'origin_metadata_unavailable',
+      message:
+        'DBT source origin "Warehouse Orders" does not expose a valid connected source binding.',
+    });
+  });
+
   it('uses authored SQL unchanged as the body consumed by the executable artifact', () => {
     const metadata = {
       ...createDbtNodeAuthoringMetadata(model),
