@@ -11,7 +11,9 @@ import type { SessionContextPort, WorkspaceScope } from '../ports/sessionContext
 import type { IWorkspaceFilesQueryPort } from '../ports/workspace';
 import { AppServicesProvider } from '../services/AppServicesContext';
 import { queryKeys } from './queryKeys';
-import { useWorkspaceFileTreeQuery } from './workspaceQueries';
+import { useWorkspaceFileContentQuery, useWorkspaceFileTreeQuery } from './workspaceQueries';
+
+const COLLIDING_PATH = 'models/orders.sql';
 
 const PROJECT_A: WorkspaceScope = {
   tenantId: 'tenant',
@@ -45,17 +47,26 @@ describe('workspace query scope isolation', () => {
     const workspaceFilesQuery: IWorkspaceFilesQueryPort = {
       listFiles: vi.fn(async () => [
         {
-          path: `${scope.projectId}.sql`,
-          name: `${scope.projectId}.sql`,
+          path: COLLIDING_PATH,
+          name: 'orders.sql',
           kind: 'file' as const,
         },
       ]),
-      getFileContent: vi.fn(),
+      getFileContent: vi.fn(async (path: string) => ({
+        path,
+        name: 'orders.sql',
+        language: 'sql',
+        content: `select '${scope.projectId}' as project_id`,
+        contentSha256: scope.projectId === 'project-a' ? 'a'.repeat(64) : 'b'.repeat(64),
+        lastModified: '2026-08-08T00:00:00.000Z',
+      })),
     };
     let observedQuery: ReturnType<typeof useWorkspaceFileTreeQuery> | undefined;
+    let observedContentQuery: ReturnType<typeof useWorkspaceFileContentQuery> | undefined;
 
     function Probe(): null {
       observedQuery = useWorkspaceFileTreeQuery();
+      observedContentQuery = useWorkspaceFileContentQuery(COLLIDING_PATH);
       return null;
     }
 
@@ -77,20 +88,28 @@ describe('workspace query scope isolation', () => {
     );
 
     try {
-      await waitForReactQuery(() => observedQuery?.data?.[0]?.path === 'project-a.sql');
-      expect(subscribers.size).toBe(1);
+      await waitForReactQuery(
+        () =>
+          observedQuery?.data?.[0]?.path === COLLIDING_PATH &&
+          observedContentQuery?.data?.content.includes('project-a') === true
+      );
+      expect(subscribers.size).toBe(2);
 
       await act(async () => {
         scope = PROJECT_B;
         subscribers.forEach((subscriber) => subscriber());
       });
-      await waitForReactQuery(() => observedQuery?.data?.[0]?.path === 'project-b.sql');
+      await waitForReactQuery(
+        () => observedContentQuery?.data?.content.includes('project-b') === true
+      );
 
       await act(async () => {
         scope = PROJECT_A;
         subscribers.forEach((subscriber) => subscriber());
       });
-      await waitForReactQuery(() => observedQuery?.data?.[0]?.path === 'project-a.sql');
+      await waitForReactQuery(
+        () => observedContentQuery?.data?.content.includes('project-a') === true
+      );
 
       expect(workspaceFilesQuery.listFiles).toHaveBeenCalledTimes(3);
       expect(
@@ -101,10 +120,20 @@ describe('workspace query scope isolation', () => {
       ).toContainEqual(queryKeys.workspace.fileTree('tenant::project-b::stage'));
       expect(
         mounted.queryClient.getQueryData(queryKeys.workspace.fileTree('tenant::project-a::dev'))
-      ).toEqual([expect.objectContaining({ path: 'project-a.sql' })]);
+      ).toEqual([expect.objectContaining({ path: COLLIDING_PATH })]);
       expect(
         mounted.queryClient.getQueryData(queryKeys.workspace.fileTree('tenant::project-b::stage'))
-      ).toEqual([expect.objectContaining({ path: 'project-b.sql' })]);
+      ).toEqual([expect.objectContaining({ path: COLLIDING_PATH })]);
+      expect(
+        mounted.queryClient.getQueryData(
+          queryKeys.workspace.fileContent('tenant::project-a::dev', COLLIDING_PATH)
+        )
+      ).toEqual(expect.objectContaining({ content: expect.stringContaining('project-a') }));
+      expect(
+        mounted.queryClient.getQueryData(
+          queryKeys.workspace.fileContent('tenant::project-b::stage', COLLIDING_PATH)
+        )
+      ).toEqual(expect.objectContaining({ content: expect.stringContaining('project-b') }));
     } finally {
       await mounted.cleanup();
     }

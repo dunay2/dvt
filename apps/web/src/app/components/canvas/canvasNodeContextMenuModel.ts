@@ -8,7 +8,6 @@ export type CanvasNodeContextMenuTarget = Readonly<{
 
 export type CanvasNodeContextMenuActionId =
   | 'inspect-node'
-  | 'open-node-code'
   | 'duplicate-node'
   | 'select-node-for-execution'
   | 'deselect-node-from-execution'
@@ -39,7 +38,6 @@ export type CanvasNodeContextMenuModel = Readonly<{
 
 export type CanvasNodeContextMenuCopy = Readonly<{
   openWorkbenchLabel: string;
-  openCodeLabel: string;
   workbenchGroupLabel: string;
   executeGroupLabel: string;
   editGroupLabel: string;
@@ -52,7 +50,6 @@ export type CanvasNodeContextMenuCopy = Readonly<{
 
 const DEFAULT_COPY: CanvasNodeContextMenuCopy = {
   openWorkbenchLabel: 'Open workbench',
-  openCodeLabel: 'Open node code',
   workbenchGroupLabel: 'Workbench',
   executeGroupLabel: 'Execution',
   editGroupLabel: 'Edit',
@@ -82,7 +79,6 @@ type BuildCanvasNodeContextMenuModelArgs = Readonly<{
   selectedForExecution: boolean;
   canMutateGraph: boolean;
   canInspectNode: boolean;
-  canOpenNodeCode?: boolean;
   canDuplicateNode: boolean;
   canToggleNodeSelection: boolean;
   canRemoveNode: boolean;
@@ -91,7 +87,7 @@ type BuildCanvasNodeContextMenuModelArgs = Readonly<{
 
 type BuildCanvasNodeModelerActionModelArgs = Omit<
   BuildCanvasNodeContextMenuModelArgs,
-  'canInspectNode' | 'canOpenNodeCode'
+  'canInspectNode'
 >;
 
 function buildOpenWorkbenchAction(
@@ -105,22 +101,6 @@ function buildOpenWorkbenchAction(
   return {
     id: 'inspect-node',
     label: copy.openWorkbenchLabel,
-    intent: 'read',
-    disabled: false,
-  };
-}
-
-function buildOpenNodeCodeAction(
-  canOpenNodeCode: boolean,
-  copy: CanvasNodeContextMenuCopy
-): CanvasNodeContextMenuAction | null {
-  if (!canOpenNodeCode) {
-    return null;
-  }
-
-  return {
-    id: 'open-node-code',
-    label: copy.openCodeLabel,
     intent: 'read',
     disabled: false,
   };
@@ -191,7 +171,6 @@ export function buildCanvasNodeContextMenuModel({
   selectedForExecution,
   canMutateGraph,
   canInspectNode,
-  canOpenNodeCode = false,
   canDuplicateNode,
   canToggleNodeSelection,
   canRemoveNode,
@@ -206,16 +185,13 @@ export function buildCanvasNodeContextMenuModel({
       }
     : null;
   const workbenchAction = buildOpenWorkbenchAction(canInspectNode, copy);
-  const codeAction = buildOpenNodeCodeAction(canOpenNodeCode, copy);
   const groups: CanvasNodeContextMenuActionGroup[] = [];
 
-  if (workbenchAction != null || codeAction != null) {
+  if (workbenchAction != null) {
     groups.push({
       id: 'workbench',
       label: copy.workbenchGroupLabel,
-      actions: [workbenchAction, codeAction].filter(
-        (action): action is CanvasNodeContextMenuAction => action != null
-      ),
+      actions: [workbenchAction],
     });
   }
 

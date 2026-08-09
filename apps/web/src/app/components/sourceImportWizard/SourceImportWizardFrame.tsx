@@ -98,7 +98,7 @@ export function SourceImportWizardFrame({
       }}
     >
       <DialogContent
-        className="flex h-[min(90vh,760px)] max-w-5xl flex-col overflow-hidden"
+        className="flex h-[calc(100vh-2rem)] max-h-[760px] w-[calc(100vw-2rem)] max-w-5xl flex-col overflow-hidden"
         onCloseAutoFocus={(event) => {
           if (onRestoreFocus) {
             event.preventDefault();
@@ -113,7 +113,13 @@ export function SourceImportWizardFrame({
 
         {isResultStep ? null : <div className="shrink-0">{sections}</div>}
 
-        <ScrollArea key={activeContentId} className="-mx-6 min-h-0 flex-1 px-6">
+        <ScrollArea
+          key={activeContentId}
+          type="always"
+          data-slot="source-import-wizard-content-scroll"
+          data-overflow-affordance="always"
+          className="-mx-6 min-h-0 flex-1 px-6"
+        >
           <div className="pb-4">{children}</div>
         </ScrollArea>
 

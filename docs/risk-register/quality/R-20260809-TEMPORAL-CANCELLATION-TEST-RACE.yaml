@@ -1,0 +1,23 @@
+---
+id: R-20260809-TEMPORAL-CANCELLATION-TEST-RACE
+title: Temporal cancellation integration could regress to activity timing dependence
+status: Closed
+date: 2026-08-09
+owners:
+  - packages/@dvt/adapter-temporal
+severity: High
+probability: Low
+context: >
+  The combined logical-signal and provider-native cancellation test previously used an
+  immediate-return DBT activity after observing StepStarted. Provider cancellation could then race
+  workflow finalization and leave the status assertion waiting for a terminal state.
+risk: >
+  A timing-dependent harness can fail nondeterministically while production cancellation semantics
+  remain unchanged, blocking unrelated pull requests and obscuring real cancellation regressions.
+mitigations:
+  - Each cancellation run now owns a cancellable activity barrier keyed by run identity.
+  - The logical signal path explicitly releases only its own activity after signal dispatch.
+  - The provider-native path proves Temporal aborts the still-blocked activity.
+  - Existing lifecycle and distinct terminal-status assertions remain unchanged.
+  - No timeout was increased and no runtime rule was relaxed.
+---

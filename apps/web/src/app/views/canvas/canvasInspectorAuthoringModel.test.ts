@@ -145,7 +145,7 @@ describe('canvasInspectorAuthoringModel', () => {
     ).toEqual({});
   });
 
-  it('rejects a DBT model origin that is blank or not connected', () => {
+  it('accepts one connected DBT model origin without duplicate selection metadata', () => {
     const source: CanonicalNode = {
       id: 'source-orders',
       name: 'Orders source',
@@ -181,9 +181,7 @@ describe('canvasInspectorAuthoringModel', () => {
     };
     const context = { node: model, nodes: [source, model], edges };
 
-    expect(validateCanvasInspectorNodeDraft(draft, context)).toEqual({
-      dbt: { selectedSourceId: 'dbt_source_required' },
-    });
+    expect(validateCanvasInspectorNodeDraft(draft, context)).toEqual({});
     expect(
       validateCanvasInspectorNodeDraft(
         { ...draft, dbt: { ...draft.dbt, selectedSourceId: 'detached-source' } },
@@ -196,6 +194,47 @@ describe('canvasInspectorAuthoringModel', () => {
         context
       )
     ).toEqual({});
+  });
+
+  it('rejects a blank DBT model origin when connected origins are ambiguous', () => {
+    const firstSource: CanonicalNode = {
+      id: 'source-orders',
+      name: 'Orders source',
+      pluginId: 'dbt',
+      kind: 'dbt:source',
+      role: 'input',
+      status: 'idle',
+      tags: [],
+    };
+    const secondSource: CanonicalNode = {
+      ...firstSource,
+      id: 'source-refunds',
+      name: 'Refunds source',
+    };
+    const model: CanonicalNode = {
+      id: 'model-orders',
+      name: 'Orders model',
+      pluginId: 'dbt',
+      kind: 'dbt:model',
+      role: 'transform',
+      status: 'idle',
+      tags: [],
+    };
+    const draft = createCanvasInspectorNodeDraft(model);
+    const edges: readonly CanonicalEdge[] = [firstSource, secondSource].map((source) => ({
+      id: `${source.id}-${model.id}`,
+      sourceId: source.id,
+      targetId: model.id,
+      relation: 'lineage',
+    }));
+
+    expect(
+      validateCanvasInspectorNodeDraft(draft, {
+        node: model,
+        nodes: [firstSource, secondSource, model],
+        edges,
+      })
+    ).toEqual({ dbt: { selectedSourceId: 'dbt_source_required' } });
   });
 
   it('uses a dedicated DBT test draft without irrelevant source or model fields', () => {

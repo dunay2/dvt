@@ -72,6 +72,7 @@ const NODE_PROPERTY_PRESENTATION_COPY = {
       plugin: 'Plugin',
       package: 'Paquete',
       materialization: 'Materialización',
+      connection: 'Conexión',
       database: 'Base de datos',
       schema: 'Esquema',
       table: 'Tabla',

@@ -25,12 +25,48 @@ import {
 } from '../../support/liveWarehouseSourceImport';
 import { seedE2eWorkspaceSession } from '../../support/workspaceSession';
 
+function assertNoSeriousAccessibilityViolations(context: string): void {
+  cy.get(context).should('be.visible');
+  cy.injectAxe();
+  cy.checkA11y(
+    context,
+    {
+      runOnly: {
+        type: 'tag',
+        values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'],
+      },
+      includedImpacts: ['serious', 'critical'],
+    },
+    (violations) => {
+      if (violations.length === 0) {
+        return;
+      }
+
+      throw new Error(
+        violations
+          .map(
+            (violation) =>
+              `${violation.id}: ${violation.help} -> ${violation.nodes
+                .map((node) => node.target.join(' '))
+                .join(', ')}`
+          )
+          .join('\n')
+      );
+    }
+  );
+}
+
 function visitCleanDbtCanvas(): void {
   const session = resolveLiveFirstAuthoringWorkspaceSession('dbt');
 
   cy.visit('/canvas', {
     onBeforeLoad(window) {
       window.localStorage.clear();
+      Object.defineProperty(window.navigator, 'language', {
+        configurable: true,
+        value: 'en-US',
+      });
+      window.document.documentElement.lang = 'en';
       seedE2eWorkspaceSession(window, session);
     },
   });
@@ -149,6 +185,107 @@ describe('Canvas source import live clean proof', () => {
   it('imports a warehouse source, connects it to a dbt model, and previews without draft seeding', () => {
     const session = resolveLiveFirstAuthoringWorkspaceSession('dbt');
     const expectedSourceName = expectedLivePostgresSourceName();
+    const runId = String(Cypress.env('firstAuthoringRunId') ?? 'source-import-live');
+    const secondaryConnectionSuffix = 'Secondary';
+    const expectedConnectionName = `Live Postgres ${runId}`;
+    const expectedSecondaryConnectionName = `${expectedConnectionName} ${secondaryConnectionSuffix}`;
+    const toExpectedConnectionId = (name: string): string =>
+      name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    const expectedConnectionId = toExpectedConnectionId(expectedConnectionName);
+    const expectedSecondaryConnectionId = toExpectedConnectionId(expectedSecondaryConnectionName);
+    const readRequiredScopeEnv = (name: string): string => {
+      const value = Cypress.env(name);
+      expect(value, `Cypress env ${name}`).to.be.a('string');
+      const normalized = String(value).trim();
+      expect(normalized, `Cypress env ${name}`).not.to.equal('');
+      return normalized;
+    };
+    const secondarySession = {
+      tenantId: readRequiredScopeEnv('secondaryWorkspaceTenantId'),
+      projectId: readRequiredScopeEnv('secondaryWorkspaceProjectId'),
+      environmentId: readRequiredScopeEnv('secondaryWorkspaceEnvironmentId'),
+    };
+    const selectWorkspaceScope = (
+      scope: typeof secondarySession,
+      copy: Readonly<{ availableProjects: string; projectPrefix: string }>
+    ): void => {
+      const scopeLabel = `${scope.tenantId} / ${scope.projectId} / ${scope.environmentId}`;
+      cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 })
+        .should('be.visible')
+        .focus()
+        .should('be.focused');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get('[data-slot="shell-workspace-scope-selector"]')
+        .should('be.visible')
+        .and('contain.text', copy.availableProjects);
+      assertNoSeriousAccessibilityViolations('[data-slot="shell-menu-workspace-context"]');
+      cy.contains('[data-slot="shell-workspace-scope-selector"] button', scopeLabel, {
+        timeout: 20_000,
+      })
+        .should('be.visible')
+        .and('have.attr', 'aria-pressed', 'false')
+        .focus()
+        .should('be.focused');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get('[data-slot="shell-workspace-menu-trigger"]', { timeout: 20_000 }).should(
+        'contain.text',
+        `${copy.projectPrefix}: ${scope.projectId}`
+      );
+    };
+    const assertPresentedWorkspaceFileContent = (
+      expectedContent: string,
+      forbiddenContent: string
+    ): void => {
+      cy.get('[data-slot="shell-workspace-menu-trigger"]')
+        .should('be.visible')
+        .focus()
+        .should('be.focused');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get('[data-slot="canvas-workspace-open-project-code-command"]')
+        .scrollIntoView()
+        .should('be.visible')
+        .focus()
+        .should('be.focused');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get(
+        '[data-slot="code-workspace-file-entry"][data-workspace-path="models/sources/src_public.yml"]',
+        { timeout: 20_000 }
+      )
+        .should('be.visible')
+        .focus()
+        .should('be.focused');
+      cy.press(Cypress.Keyboard.Keys.ENTER);
+      cy.get('[data-testid="monaco-code-editor"], [data-testid="monaco-code-viewer"]', {
+        timeout: 20_000,
+      })
+        .find('.view-line')
+        .should(($lines) => {
+          const presentedContent = [...$lines]
+            .map((line) => (line.textContent ?? '').replaceAll('\u00a0', ' '))
+            .join('\n');
+          const normalizedPresentedContent = presentedContent.replace(/\s+/g, '');
+          expect(normalizedPresentedContent).to.contain(expectedContent.replace(/\s+/g, ''));
+          expect(normalizedPresentedContent).not.to.contain(forbiddenContent.replace(/\s+/g, ''));
+        });
+      assertNoSeriousAccessibilityViolations('[data-slot="canvas-contextual-workbench"]');
+      cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
+      cy.get('[data-slot="canvas-contextual-workbench"]').should('not.exist');
+      cy.get('[data-slot="shell-workspace-menu-trigger"]').should('be.focused');
+    };
+    const scopeBConnectionSuffix = 'Scope B';
+    const expectedScopeBSourceName = expectedLivePostgresSourceName(scopeBConnectionSuffix);
+    const expectedScopeBConnectionId = toExpectedConnectionId(
+      `${expectedConnectionName} ${scopeBConnectionSuffix}`
+    );
+    const viewportMatrix = [
+      { width: 1440, height: 900 },
+      { width: 1280, height: 720 },
+      { width: 1000, height: 660 },
+      { width: 500, height: 330 },
+    ] as const;
 
     assertLiveFirstAuthoringDraftScopeIsClean('dbt');
     visitCleanDbtCanvas();
@@ -175,6 +312,146 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', '32 KB')
       .and('contain.text', 'models/sources/src_public.yml');
     cy.contains('Stale version').should('not.exist');
+
+    openCanvasContextMenuAt(820, 500);
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    importLivePostgresSource({ kind: 'graph-draft' }, secondaryConnectionSuffix);
+
+    readLiveGraphDraft(session).then((draftResponse) => {
+      expect(draftResponse.status).to.equal(200);
+      const importedSources = (
+        draftResponse.body as {
+          record: {
+            draft: {
+              nodes: Array<{
+                pluginId: string;
+                metadata?: Record<string, unknown>;
+              }>;
+            };
+          };
+        }
+      ).record.draft.nodes.filter((node) => node.pluginId === 'dvt.warehouse-source');
+
+      expect(importedSources).to.have.length(2);
+      expect(
+        importedSources.map((node) => node.metadata?.connectedSourceRef)
+      ).to.deep.include.members([
+        {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: expectedConnectionId,
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/public/source_1',
+        },
+        {
+          schemaVersion: 'connected-source-ref.v1',
+          connectionRef: {
+            schemaVersion: 'connection-ref.v1',
+            connectionId: expectedSecondaryConnectionId,
+            provider: 'postgres',
+          },
+          sourceObjectId: 'relation/dvt/public/source_1',
+        },
+      ]);
+      for (const importedSource of importedSources) {
+        expect(importedSource.metadata).not.to.have.property('sourceObjectId');
+        expect(importedSource.metadata).not.to.have.property('connectionType');
+      }
+    });
+
+    openCanvasContextMenuAt(640, 420);
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    for (const viewport of viewportMatrix) {
+      cy.viewport(viewport.width, viewport.height);
+      cy.contains('[role="dialog"]', 'Add source', { timeout: 20_000 })
+        .should('be.visible')
+        .should(($dialog) => {
+          const bounds = $dialog.get(0).getBoundingClientRect();
+          expect(bounds.left).to.be.at.least(0);
+          expect(bounds.top).to.be.at.least(0);
+          expect(bounds.right).to.be.at.most(viewport.width);
+          expect(bounds.bottom).to.be.at.most(viewport.height);
+        });
+      cy.get('[data-slot="source-import-wizard-content-scroll"]').should('be.visible');
+      cy.contains('[role="dialog"] button', 'Cancel').should('be.visible').and('be.enabled');
+      assertNoSeriousAccessibilityViolations('[role="dialog"][data-state="open"]');
+    }
+    cy.contains('[role="dialog"] button', 'Cancel').click();
+    cy.contains('[role="dialog"]', 'Add source').should('not.exist');
+    readLiveGraphDraft(session).then((draftResponse) => {
+      const importedSources = (
+        draftResponse.body as {
+          record: { draft: { nodes: Array<{ pluginId: string }> } };
+        }
+      ).record.draft.nodes.filter((node) => node.pluginId === 'dvt.warehouse-source');
+      expect(importedSources).to.have.length(2);
+    });
+    cy.viewport(1000, 660);
+
+    cy.get('button.react-flow__controls-fitview').should('be.visible').click();
+    cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
+      .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
+      .should('have.length', 2)
+      .first()
+      .dblclick();
+    cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
+    openNodeWorkbenchSection('general');
+    cy.get('[data-slot="canvas-node-workbench-general-section"]')
+      .should('contain.text', 'Connection')
+      .and('contain.text', expectedConnectionName)
+      .and('contain.text', 'postgres')
+      .and('contain.text', expectedConnectionId);
+    for (const viewport of viewportMatrix) {
+      cy.viewport(viewport.width, viewport.height);
+      cy.get('[data-slot="canvas-node-workbench-overlay"]')
+        .should('be.visible')
+        .should(($overlay) => {
+          const bounds = $overlay.get(0).getBoundingClientRect();
+          expect(bounds.left).to.be.at.least(0);
+          expect(bounds.top).to.be.at.least(0);
+          expect(bounds.right).to.be.at.most(viewport.width);
+          expect(bounds.bottom).to.be.at.most(viewport.height);
+        });
+      cy.contains('[data-slot="canvas-node-workbench-general-section"] dt', 'Connection')
+        .next('dd')
+        .scrollIntoView()
+        .should('be.visible');
+      cy.get('[data-slot="canvas-node-workbench-close"]').should('be.visible').and('be.enabled');
+      assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
+    }
+    cy.viewport(1000, 660);
+    cy.contains('[data-slot="canvas-node-workbench-general-section"] dt', 'Connection')
+      .next('dd')
+      .scrollIntoView()
+      .should('be.visible')
+      .and(($value) => {
+        const element = $value.get(0);
+        expect(element.scrollWidth).to.be.at.most(element.clientWidth);
+        expect(getComputedStyle(element).textOverflow).not.to.equal('ellipsis');
+      });
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+
+    cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
+      .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
+      .should('have.length', 2)
+      .last()
+      .dblclick();
+    cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
+    openNodeWorkbenchSection('general');
+    cy.get('[data-slot="canvas-node-workbench-general-section"]')
+      .should('contain.text', 'Connection')
+      .and('contain.text', expectedSecondaryConnectionName)
+      .and('contain.text', 'postgres')
+      .and('contain.text', expectedSecondaryConnectionId);
+    assertNoSeriousAccessibilityViolations('[data-slot="canvas-node-workbench-panel"]');
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
 
     cy.contains('.react-flow__node', 'Postgres')
       .find('[data-slot="graph-node-operational-metric"]')
@@ -300,24 +577,38 @@ describe('Canvas source import live clean proof', () => {
       .and('contain.text', 'customer')
       .and('contain.text', 'amount');
 
-    openNodeWorkbenchSection('code');
-    const authoredModelSql = `select order_id, customer\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
-    cy.get('[data-slot="canvas-node-workbench-code-section"]')
-      .should('not.contain.text', 'No SQL or generated code is recorded for this node.')
-      .within(() => {
-        cy.get('[data-slot="dbt-model-code-provenance"]')
-          .should('contain.text', 'models/model_1.sql')
-          .and('contain.text', 'Generated');
-        cy.get('textarea[name="dbt-model-sql"]')
-          .should('be.visible')
-          .and('contain.value', `{{ source('${expectedSourceName}', 'source_1') }}`)
-          .focus()
-          .type('{selectall}{backspace}')
-          .should('have.value', '')
-          .type(authoredModelSql, { parseSpecialCharSequences: false });
-        cy.get('[data-slot="dbt-model-code-provenance"]').should('contain.text', 'Authored');
-        cy.contains('button', 'Apply').should('be.enabled').click();
-      });
+    cy.get('[data-slot="canvas-node-workbench-close"]').click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
+    getVisibleCanvasNodeByCardTitle('Model 1')
+      .find('[data-slot="graph-node-card"]')
+      .click('center');
+    cy.get('[data-slot="canvas-node-floating-toolbar"] button[data-toolbar-action="code"]')
+      .should('have.attr', 'aria-label', 'Open node code')
+      .click();
+    cy.get('[data-slot="canvas-node-workbench-panel"]', { timeout: 10_000 }).should('be.visible');
+    const authoredModelSql = `select order_id, customer, amount\nfrom {{ source('${expectedSourceName}', 'source_1') }}`;
+    cy.get('[data-slot="canvas-node-workbench-code-section"]').should(
+      'not.contain.text',
+      'No SQL or generated code is recorded for this node.'
+    );
+    cy.get('[data-slot="dbt-model-code-provenance"]')
+      .should('contain.text', 'models/model_1.sql')
+      .and('contain.text', 'Generated');
+    cy.get('textarea[name="dbt-model-sql"]')
+      .should('be.visible')
+      .and('contain.value', `{{ source('${expectedSourceName}', 'source_1') }}`)
+      .focus()
+      .type('{selectall}{backspace}');
+    cy.contains('.react-flow__node', 'Model 1').should('exist');
+    cy.get('textarea[name="dbt-model-sql"]').type(authoredModelSql, {
+      parseSpecialCharSequences: false,
+    });
+    cy.get('textarea[name="dbt-model-sql"]').should('have.value', authoredModelSql);
+    cy.contains('[data-slot="dbt-model-code-provenance"]', 'Authored').should('be.visible');
+    cy.get('[data-slot="canvas-node-workbench-panel"]')
+      .contains('button', 'Apply')
+      .should('be.enabled');
+    cy.get('[data-slot="canvas-node-workbench-panel"]').contains('button', 'Apply').click();
     waitForLiveDraftModelSqlSaved(session, authoredModelSql);
     cy.get('[data-slot="canvas-node-workbench-close"]').click();
     cy.get('[data-slot="canvas-node-workbench-panel"]').should('not.exist');
@@ -358,5 +649,111 @@ describe('Canvas source import live clean proof', () => {
     cy.get('textarea[aria-label*="model_1.sql"], [role="textbox"][aria-label*="model_1.sql"]', {
       timeout: 20_000,
     }).should('exist');
+
+    cy.get('[data-slot="canvas-contextual-workbench-close"]').should('be.visible').click();
+    selectWorkspaceScope(secondarySession, {
+      availableProjects: 'Projects available in this session',
+      projectPrefix: 'Project',
+    });
+
+    cy.contains('Create canvas', { timeout: 20_000 }).should('be.visible');
+    cy.get('.react-flow__node').should('not.exist');
+    cy.get('[data-slot="canvas-playground-empty-state"]').within(() => {
+      cy.contains('button', 'dbt').should('be.enabled').click();
+    });
+    cy.contains('Start dbt canvas', { timeout: 20_000 }).should('be.visible');
+    waitForLiveDraftSaved(secondarySession);
+
+    openCanvasContextMenuAt(420, 280);
+    clickCanvasContextMenuAction('open-add-node-catalog');
+    clickCanvasAddCatalogAction('open-source-import', 'dbt:source');
+    importLivePostgresSource({ kind: 'graph-draft' }, scopeBConnectionSuffix);
+
+    cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
+      .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
+      .should('have.length', 1);
+    cy.contains('.react-flow__node', 'Model 1').should('not.exist');
+    readLiveGraphDraft(secondarySession).then((draftResponse) => {
+      expect(draftResponse.status).to.equal(200);
+      const nodes = (
+        draftResponse.body as {
+          record: {
+            draft: {
+              nodes: Array<{
+                name: string;
+                pluginId: string;
+                metadata?: Record<string, unknown>;
+              }>;
+            };
+          };
+        }
+      ).record.draft.nodes;
+      const importedSources = nodes.filter((node) => node.pluginId === 'dvt.warehouse-source');
+
+      expect(importedSources).to.have.length(1);
+      expect(importedSources[0]?.metadata?.connectedSourceRef).to.deep.equal({
+        schemaVersion: 'connected-source-ref.v1',
+        connectionRef: {
+          schemaVersion: 'connection-ref.v1',
+          connectionId: expectedScopeBConnectionId,
+          provider: 'postgres',
+        },
+        sourceObjectId: 'relation/dvt/public/source_1',
+      });
+      expect(nodes.some((node) => node.name === 'Model 1')).to.equal(false);
+    });
+    readLiveWorkspaceFile('models/sources/src_public.yml', secondarySession).then(
+      (sourceYamlResponse) => {
+        expect(sourceYamlResponse.status).to.equal(200);
+        const content = (sourceYamlResponse.body as { content: string }).content;
+
+        expect(content).to.contain(`name: ${expectedScopeBSourceName}`);
+        expect(content).not.to.contain(`name: ${expectedSourceName}`);
+      }
+    );
+
+    assertPresentedWorkspaceFileContent(expectedScopeBSourceName, expectedSourceName);
+
+    cy.get('[data-slot="shell-menu-trigger"]').should('be.visible').focus().should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('[data-slot="shell-language-menu"]')
+      .should('be.visible')
+      .and('contain.text', 'Language');
+    cy.get('[data-slot="shell-language-option-es"]')
+      .should('be.visible')
+      .focus()
+      .should('be.focused');
+    cy.press(Cypress.Keyboard.Keys.ENTER);
+    cy.get('html').should('have.attr', 'lang', 'es');
+    cy.get('[data-slot="shell-menu-trigger"]').should('contain.text', 'Vista');
+
+    selectWorkspaceScope(session, {
+      availableProjects: 'Proyectos disponibles en esta sesión',
+      projectPrefix: 'Proyecto',
+    });
+
+    cy.get('[data-slot="graph-node-card-title"]', { timeout: 20_000 })
+      .filter((_, element) => (element.textContent ?? '').includes('Postgres'))
+      .should('have.length', 2);
+    cy.contains('.react-flow__node', 'Model 1', { timeout: 20_000 }).should('be.visible');
+    readLiveGraphDraft(session).then((draftResponse) => {
+      expect(draftResponse.status).to.equal(200);
+      const nodes = (
+        draftResponse.body as {
+          record: { draft: { nodes: Array<{ name: string; pluginId: string }> } };
+        }
+      ).record.draft.nodes;
+
+      expect(nodes.filter((node) => node.pluginId === 'dvt.warehouse-source')).to.have.length(2);
+      expect(nodes.some((node) => node.name === 'Model 1')).to.equal(true);
+    });
+    readLiveWorkspaceFile('models/sources/src_public.yml', session).then((sourceYamlResponse) => {
+      expect(sourceYamlResponse.status).to.equal(200);
+      const content = (sourceYamlResponse.body as { content: string }).content;
+
+      expect(content).to.contain(`name: ${expectedSourceName}`);
+      expect(content).not.to.contain(`name: ${expectedScopeBSourceName}`);
+    });
+    assertPresentedWorkspaceFileContent(expectedSourceName, expectedScopeBSourceName);
   });
 });

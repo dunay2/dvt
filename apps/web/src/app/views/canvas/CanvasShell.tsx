@@ -20,7 +20,6 @@ import { useCanvasRouteIntentHandler } from './useCanvasRouteIntentHandler';
 import { useCanvasInteractionStore } from '../../stores/canvasInteractionStore';
 import type { DbtNodeData } from '../../components/canvas/DbtNodeComponent';
 import { useApplicationLanguageStore } from '../../stores/applicationLanguageStore';
-import { normalizeDbtArtifactIdentifier } from './canvasDbtModelArtifactProjection';
 
 type GraphDraftCodeTarget = Readonly<{
   nodeId: string;
@@ -42,10 +41,6 @@ export function resolveWorkspaceFilePath(data: DbtNodeData): string | null {
 
   if (typeof data.path === 'string' && data.path.trim().length > 0) {
     return data.path;
-  }
-
-  if (data.pluginKind === 'dbt:model') {
-    return `models/${normalizeDbtArtifactIdentifier(data.name, 'dbt_model')}.sql`;
   }
 
   return null;
@@ -238,10 +233,31 @@ export default function CanvasShell({
         const data = node.data as DbtNodeData;
         const existingOpenNodeCode = data.onOpenNodeCode;
         const workspaceFilePath = resolveWorkspaceFilePath(data);
-        const canOpenNodeCode =
+        const codeTruthKind = data.presentationTruth?.code.kind;
+        const canInspectNodeCode =
+          typeof data.onInspectNode === 'function' &&
+          (data.pluginKind === 'dbt:model' ||
+            codeTruthKind === 'inline' ||
+            codeTruthKind === 'generated');
+        const fallbackOpenNodeCode =
+          workspaceFilePath != null
+            ? (nodeId: string) => {
+                openGraphDraftNodeCodeWorkbench({
+                  nodeId,
+                  nodeName: data.name,
+                  path: workspaceFilePath,
+                });
+              }
+            : canInspectNodeCode
+              ? (nodeId: string) => data.onInspectNode?.(nodeId, 'code')
+              : undefined;
+        const openNodeCode =
           data.canOpenNodeCode === true
-            ? typeof existingOpenNodeCode === 'function'
-            : workspaceFilePath != null;
+            ? existingOpenNodeCode
+            : data.canOpenNodeCode === false
+              ? undefined
+              : (existingOpenNodeCode ?? fallbackOpenNodeCode);
+        const canOpenNodeCode = typeof openNodeCode === 'function';
 
         return {
           ...node,
@@ -251,17 +267,7 @@ export default function CanvasShell({
             onOpenNodeCode: canOpenNodeCode
               ? (nodeId: string) => {
                   captureWorkbenchOpener(undefined, nodeId);
-                  if (typeof existingOpenNodeCode === 'function') {
-                    existingOpenNodeCode(nodeId);
-                    return;
-                  }
-                  if (workspaceFilePath != null) {
-                    openGraphDraftNodeCodeWorkbench({
-                      nodeId,
-                      nodeName: data.name,
-                      path: workspaceFilePath,
-                    });
-                  }
+                  openNodeCode?.(nodeId);
                 }
               : undefined,
           },

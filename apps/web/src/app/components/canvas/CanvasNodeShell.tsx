@@ -28,27 +28,26 @@ type CanvasNodeShellProps = Readonly<{
   sourcePortCompatibility?: CanvasNodePortCompatibilityView;
   targetPortCompatibility?: CanvasNodePortCompatibilityView;
   onContextMenuAction: (actionId: CanvasNodeContextMenuActionId) => void;
+  onOpenCode?: () => void;
   onOpenWorkbench?: () => void;
   onDragOver?: DragEventHandler<HTMLDivElement>;
   onDrop?: DragEventHandler<HTMLDivElement>;
 }>;
 
-export function resolveCanvasNodeDoubleClickAction(
-  model: CanvasNodeContextMenuModel
-): CanvasNodeContextMenuActionId | 'open-workbench' | null {
-  const codeAction = model.actionGroups
-    .flatMap((group) => group.actions)
-    .find((action) => action.id === 'open-node-code' && !action.disabled);
+type CanvasNodeDoubleClickAvailability = Readonly<{
+  canOpenCode: boolean;
+  canOpenWorkbench: boolean;
+}>;
 
-  if (codeAction != null) {
-    return 'open-node-code';
+export function resolveCanvasNodeDoubleClickAction({
+  canOpenCode,
+  canOpenWorkbench,
+}: CanvasNodeDoubleClickAvailability): 'open-code' | 'open-workbench' | null {
+  if (canOpenCode) {
+    return 'open-code';
   }
 
-  const workbenchAction = model.actionGroups
-    .flatMap((group) => group.actions)
-    .find((action) => action.id === 'inspect-node' && !action.disabled);
-
-  return workbenchAction != null ? 'open-workbench' : null;
+  return canOpenWorkbench ? 'open-workbench' : null;
 }
 
 export function CanvasNodeShell({
@@ -63,6 +62,7 @@ export function CanvasNodeShell({
   sourcePortCompatibility,
   targetPortCompatibility,
   onContextMenuAction,
+  onOpenCode,
   onOpenWorkbench,
   onDragOver,
   onDrop,
@@ -72,9 +72,12 @@ export function CanvasNodeShell({
       return;
     }
 
-    const action = resolveCanvasNodeDoubleClickAction(contextMenuModel);
-    if (action === 'open-node-code') {
-      onContextMenuAction(action);
+    const action = resolveCanvasNodeDoubleClickAction({
+      canOpenCode: onOpenCode != null,
+      canOpenWorkbench: onOpenWorkbench != null,
+    });
+    if (action === 'open-code') {
+      onOpenCode?.();
       return;
     }
     if (action === 'open-workbench') {

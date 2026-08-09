@@ -25,6 +25,15 @@ const SOURCE_NODE: CanonicalNode = {
   status: 'idle',
   tags: ['raw'],
   metadata: {
+    connectedSourceRef: {
+      schemaVersion: 'connected-source-ref.v1',
+      connectionRef: {
+        schemaVersion: 'connection-ref.v1',
+        connectionId: 'warehouse-prod',
+        provider: 'postgres',
+      },
+      sourceObjectId: 'relation/dvt/raw/orders',
+    },
     database: 'analytics',
     schema: 'raw',
     tableName: 'orders',

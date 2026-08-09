@@ -59,52 +59,70 @@ describe('ShellWorkspaceScopeSelector', () => {
     expect(container.textContent).toContain('No other project is available in this session.');
   });
 
-  it('selects an explicitly listed server-granted project', async () => {
-    const projectA = { tenantId: 'tenant', projectId: 'project-a', environmentId: 'dev' };
-    const projectB = { tenantId: 'tenant', projectId: 'project-b', environmentId: 'stage' };
-    let snapshot = createSelectionSnapshot(projectA, [projectA, projectB]);
-    const subscribers = new Set<() => void>();
-    const selectWorkspaceScope = vi.fn((scope: WorkspaceScopeIdentity) => {
-      snapshot = createSelectionSnapshot(scope, [projectA, projectB]);
-      subscribers.forEach((subscriber) => subscriber());
-      return { status: 'selected' as const, selectedScope: scope };
-    });
-    const onScopeSelected = vi.fn();
-    const port: WorkspaceScopeSelectionPort = {
-      getSelection: () => snapshot,
-      subscribeSelection: (subscriber) => {
-        subscribers.add(subscriber);
-        return () => subscribers.delete(subscriber);
-      },
-      selectWorkspaceScope,
-    };
+  it.each([
+    {
+      interaction: 'pointer click',
+      activate: (button: HTMLButtonElement) => fireEvent.click(button),
+    },
+    {
+      interaction: 'Enter',
+      activate: (button: HTMLButtonElement) =>
+        fireEvent.keyDown(button, { key: 'Enter', code: 'Enter' }),
+    },
+    {
+      interaction: 'Space',
+      activate: (button: HTMLButtonElement) =>
+        fireEvent.keyDown(button, { key: ' ', code: 'Space' }),
+    },
+  ])(
+    'selects an explicitly listed server-granted project with $interaction',
+    async ({ activate }) => {
+      const projectA = { tenantId: 'tenant', projectId: 'project-a', environmentId: 'dev' };
+      const projectB = { tenantId: 'tenant', projectId: 'project-b', environmentId: 'stage' };
+      let snapshot = createSelectionSnapshot(projectA, [projectA, projectB]);
+      const subscribers = new Set<() => void>();
+      const selectWorkspaceScope = vi.fn((scope: WorkspaceScopeIdentity) => {
+        snapshot = createSelectionSnapshot(scope, [projectA, projectB]);
+        subscribers.forEach((subscriber) => subscriber());
+        return { status: 'selected' as const, selectedScope: scope };
+      });
+      const onScopeSelected = vi.fn();
+      const port: WorkspaceScopeSelectionPort = {
+        getSelection: () => snapshot,
+        subscribeSelection: (subscriber) => {
+          subscribers.add(subscriber);
+          return () => subscribers.delete(subscriber);
+        },
+        selectWorkspaceScope,
+      };
 
-    await act(async () => {
-      root.render(
-        <AppServicesProvider
-          overrides={{ ...createAppServicesTestOverrides(), workspaceScopeSelection: port }}
-        >
-          <ShellWorkspaceScopeSelector
-            copy={resolveShellTopBarCopy('en')}
-            onScopeSelected={onScopeSelected}
-          />
-        </AppServicesProvider>
+      await act(async () => {
+        root.render(
+          <AppServicesProvider
+            overrides={{ ...createAppServicesTestOverrides(), workspaceScopeSelection: port }}
+          >
+            <ShellWorkspaceScopeSelector
+              copy={resolveShellTopBarCopy('en')}
+              onScopeSelected={onScopeSelected}
+            />
+          </AppServicesProvider>
+        );
+      });
+
+      const projectBButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find(
+        (button) => button.textContent?.includes('project-b')
       );
-    });
+      expect(projectBButton).toBeDefined();
 
-    const projectBButton = [...container.querySelectorAll<HTMLButtonElement>('button')].find(
-      (button) => button.textContent?.includes('project-b')
-    );
-    expect(projectBButton).toBeDefined();
+      await act(async () => {
+        activate(projectBButton!);
+      });
 
-    await act(async () => {
-      fireEvent.click(projectBButton!);
-    });
-
-    expect(selectWorkspaceScope).toHaveBeenCalledWith(projectB);
-    expect(onScopeSelected).toHaveBeenCalledOnce();
-    expect(projectBButton?.getAttribute('aria-pressed')).toBe('true');
-  });
+      expect(selectWorkspaceScope).toHaveBeenCalledWith(projectB);
+      expect(onScopeSelected).toHaveBeenCalledOnce();
+      expect(projectBButton?.getAttribute('aria-pressed')).toBe('true');
+    }
+  );
 });
 
 function createSelectionSnapshot(

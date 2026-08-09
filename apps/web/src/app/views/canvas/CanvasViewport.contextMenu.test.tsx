@@ -91,30 +91,10 @@ describe('CanvasViewport context menus', () => {
     expect(props.onCreateAuthoringNode).toHaveBeenCalledWith(sourceKind, { x: 580, y: 280 });
   });
 
-  it('exposes the governed Add component catalog as a visible primary command', async () => {
-    const sourceKind = buildTestNodeKind('dvt:source', 'Source');
-    await renderViewport({
-      authoringNodeKinds: [sourceKind],
-      onCreateAuthoringNode: vi.fn(),
-    });
+  it('keeps Add component out of the fixed Canvas chrome', async () => {
+    await renderViewport();
 
-    const addComponentButton = container.querySelector<HTMLButtonElement>(
-      '[data-slot="canvas-add-component-command"]'
-    );
-    const contextSurface = container.querySelector('[data-slot="canvas-viewport-context-surface"]');
-    expect(addComponentButton?.textContent).toContain('Add component');
-    expect(
-      (addComponentButton?.compareDocumentPosition(contextSurface!) ?? 0) &
-        Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
-
-    await act(async () => {
-      addComponentButton?.click();
-    });
-
-    expect(getMenuText()).toContain('Add component');
-    expect(findButton('Add source')).toBeDefined();
-    expect(xyflowState.screenToFlowPosition).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('[data-slot="canvas-add-component-command"]')).toBeNull();
   });
 
   it('opens a governed create-node menu from the viewport context surface', async () => {

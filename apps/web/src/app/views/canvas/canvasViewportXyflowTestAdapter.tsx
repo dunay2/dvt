@@ -20,6 +20,7 @@ const xyflowState = {
   miniMapMaskColor: null as null | string,
   miniMapMaskStrokeColor: null as null | string,
   miniMapClassName: null as null | string,
+  controlsFitViewOptions: null as unknown,
   lastReactFlowProps: null as null | Record<string, unknown>,
   setViewport: vi.fn(),
   fitView: vi.fn(),
@@ -31,7 +32,8 @@ export function ReactFlow({ children, ...props }: MockReactFlowProps): JSX.Eleme
   return <div data-testid="react-flow">{children}</div>;
 }
 
-export function Controls(): JSX.Element {
+export function Controls({ fitViewOptions }: Readonly<{ fitViewOptions?: unknown }>): JSX.Element {
+  xyflowState.controlsFitViewOptions = fitViewOptions ?? null;
   return <div data-testid="controls" />;
 }
 
@@ -72,6 +74,7 @@ export function resetCanvasViewportXyflowTestAdapter(): void {
   xyflowState.miniMapMaskColor = null;
   xyflowState.miniMapMaskStrokeColor = null;
   xyflowState.miniMapClassName = null;
+  xyflowState.controlsFitViewOptions = null;
   xyflowState.lastReactFlowProps = null;
   xyflowState.setViewport.mockReset();
   xyflowState.fitView.mockReset();

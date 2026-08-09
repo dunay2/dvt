@@ -1,4 +1,6 @@
 /** Owned concern: project canonical graph node identity into human-readable card titles. */
+import { ConnectedSourceRefSchema } from '@dvt/contracts';
+
 import type { PluginNodeKind } from '../../types/canonical';
 import {
   recordValue,
@@ -49,7 +51,10 @@ export function buildGraphNodeTitlePresentation({
   const dbtData = recordValue(data.dbt);
   const configData = recordValue(data.config);
   const { database, schema, table: tableName } = resolveGraphNodeRelationParts(metadata, data);
-  const connectionType = stringValue(metadata.connectionType) ?? stringValue(data.connectionType);
+  const connectedSourceRef = ConnectedSourceRefSchema.safeParse(metadata.connectedSourceRef);
+  const connectionProvider = connectedSourceRef.success
+    ? connectedSourceRef.data.connectionRef.provider
+    : undefined;
   const sourceName =
     stringValue(metadata.sourceName) ??
     stringValue(dbtMetadata.sourceName) ??
@@ -59,7 +64,7 @@ export function buildGraphNodeTitlePresentation({
     stringValue(configData.sourceName);
   if (pluginId === 'dvt.warehouse-source' && kind === 'dvt:source' && database && schema) {
     return {
-      title: `${titleCaseIdentifier(connectionType ?? database)} · ${schema}`,
+      title: `${titleCaseIdentifier(connectionProvider ?? database)} · ${schema}`,
       technicalName: nodeName,
     };
   }

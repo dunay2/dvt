@@ -230,7 +230,6 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     selectedForExecution,
     canMutateGraph: canMutateNodeCommands,
     canInspectNode: typeof data.onInspectNode === 'function',
-    canOpenNodeCode,
     canDuplicateNode: typeof data.onDuplicateNode === 'function',
     canToggleNodeSelection: typeof data.onToggleNodeSelection === 'function',
     canRemoveNode: typeof data.onRemoveNode === 'function',
@@ -267,19 +266,20 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
     data.onAttachSchemaToNode?.(id, payload.schemaName);
   };
 
+  const handleOpenNodeCode = () => {
+    if (data.canOpenNodeCode === true && typeof data.onOpenNodeCode === 'function') {
+      data.onOpenNodeCode(id);
+      return;
+    }
+    if (canOpenCodeThroughWorkbench) {
+      data.onInspectNode?.(id, 'code');
+    }
+  };
+
   const handleContextMenuAction = (actionId: CanvasNodeContextMenuActionId) => {
     switch (actionId) {
       case 'inspect-node':
         data.onInspectNode?.(id, null);
-        return;
-      case 'open-node-code':
-        if (typeof data.onOpenNodeCode === 'function') {
-          data.onOpenNodeCode(id);
-          return;
-        }
-        if (canOpenCodeThroughWorkbench) {
-          data.onInspectNode?.(id, 'code');
-        }
         return;
       case 'duplicate-node':
         data.onDuplicateNode?.(id);
@@ -306,6 +306,7 @@ function DbtNodeComponent(props: NodeProps<DbtFlowNode>) {
       sourcePortCompatibility={data.portCompatibility?.source}
       targetPortCompatibility={data.portCompatibility?.target}
       onContextMenuAction={handleContextMenuAction}
+      onOpenCode={canOpenNodeCode ? handleOpenNodeCode : undefined}
       onOpenWorkbench={
         typeof data.onInspectNode === 'function' ? () => data.onInspectNode?.(id, null) : undefined
       }

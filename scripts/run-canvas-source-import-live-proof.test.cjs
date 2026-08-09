@@ -16,6 +16,149 @@ test('source import live proof starts the API without the package predev lifecyc
   ]);
 });
 
+test('source import live proof grants two workspace scopes for one tenant', () => {
+  const runner = new CanvasSourceImportLiveProofRunner({});
+
+  assert.deepEqual(
+    runner.buildProtectedRuntimeTenantAccess(
+      [
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-a',
+          environmentId: 'dev',
+        },
+        {
+          tenantId: 'tenant-a',
+          projectId: 'project-b',
+          environmentId: 'test',
+        },
+      ],
+      ['workspace:graph-draft:view']
+    ),
+    [
+      {
+        tenantId: 'tenant-a',
+        allowedActions: ['workspace:graph-draft:view'],
+        projectAccess: [
+          {
+            projectId: 'project-a',
+            allowedActions: [],
+            environmentAccess: [{ environmentId: 'dev', allowedActions: [] }],
+          },
+          {
+            projectId: 'project-b',
+            allowedActions: [],
+            environmentAccess: [{ environmentId: 'test', allowedActions: [] }],
+          },
+        ],
+      },
+    ]
+  );
+});
+
+test('source import live proof rejects cross-tenant grant fixtures', () => {
+  const runner = new CanvasSourceImportLiveProofRunner({});
+
+  assert.throws(
+    () =>
+      runner.buildProtectedRuntimeTenantAccess(
+        [
+          { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' },
+          { tenantId: 'tenant-b', projectId: 'project-b', environmentId: 'dev' },
+        ],
+        ['workspace:graph-draft:view']
+      ),
+    /requires all workspace scopes in one tenant/
+  );
+});
+
+test('source import live proof exposes each workspace option once', () => {
+  const runner = new CanvasSourceImportLiveProofRunner({});
+
+  assert.equal(
+    runner.formatWorkspaceOptions(
+      [
+        { tenantId: 'tenant-a', projectId: 'project-a', environmentId: 'dev' },
+        { tenantId: 'tenant-a', projectId: 'project-b', environmentId: 'test' },
+      ],
+      'tenantId'
+    ),
+    'tenant-a|tenant-a'
+  );
+});
+
+test('source import live proof uses locally resolvable Cypress dependencies on Windows', () => {
+  const runner = new CanvasSourceImportLiveProofRunner({
+    ELECTRON_RUN_AS_NODE: '1',
+    EXISTING_ENV: 'preserved',
+  });
+  const invocation = runner.buildCypressInvocation(
+    {
+      apiPort: 3300,
+      webPort: 4174,
+      apiBearerToken: 'test-token',
+      baseWorkspaceScope: { projectId: 'base-project' },
+      workspaceScope: {
+        tenantId: 'tenant-a',
+        projectId: 'proof-project',
+        environmentId: 'dev',
+      },
+      secondaryWorkspaceScope: {
+        tenantId: 'tenant-a',
+        projectId: 'proof-project-b',
+        environmentId: 'test',
+      },
+      sourceImportRunId: 'run-1',
+    },
+    'win32'
+  );
+
+  assert.equal(invocation.command, 'pnpm.cmd');
+  assert.equal(invocation.options.cwd, runner.webPackageRoot);
+  assert.deepEqual(invocation.args.slice(0, 4), ['exec', 'cypress', 'run', '--config-file']);
+  assert.equal(invocation.options.env.CYPRESS_baseUrl, 'http://127.0.0.1:4174');
+  assert.equal(invocation.options.env.CYPRESS_apiBaseUrl, 'http://127.0.0.1:3300');
+  assert.equal(invocation.options.env.CYPRESS_workspaceProjectId, 'base-project');
+  assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceTenantId, 'tenant-a');
+  assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceProjectId, 'proof-project-b');
+  assert.equal(invocation.options.env.CYPRESS_secondaryWorkspaceEnvironmentId, 'test');
+  assert.equal(invocation.options.env.CYPRESS_apiBearerToken, 'test-token');
+  assert.equal(invocation.options.env.EXISTING_ENV, 'preserved');
+  assert.equal(invocation.options.env.ELECTRON_RUN_AS_NODE, undefined);
+});
+
+test('source import live proof retains the isolated Docker Cypress lane on POSIX hosts', () => {
+  const runner = new CanvasSourceImportLiveProofRunner({});
+  const invocation = runner.buildCypressInvocation(
+    {
+      apiPort: 3300,
+      webPort: 4174,
+      apiBearerToken: 'test-token',
+      baseWorkspaceScope: { projectId: 'base-project' },
+      workspaceScope: {
+        tenantId: 'tenant-a',
+        projectId: 'proof-project',
+        environmentId: 'dev',
+      },
+      secondaryWorkspaceScope: {
+        tenantId: 'tenant-a',
+        projectId: 'proof-project-b',
+        environmentId: 'test',
+      },
+      sourceImportRunId: 'run-1',
+    },
+    'linux'
+  );
+
+  assert.equal(invocation.command, 'docker');
+  assert.ok(invocation.args.includes('CYPRESS_baseUrl=http://host.docker.internal:4174'));
+  assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceTenantId=tenant-a'));
+  assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceProjectId=proof-project-b'));
+  assert.ok(invocation.args.includes('CYPRESS_secondaryWorkspaceEnvironmentId=test'));
+  assert.ok(invocation.args.includes(runner.cypressImage));
+  assert.ok(invocation.args.includes(runner.specPath));
+});
+
 test('source import live proof uses an explicit local Temporal test server binary', async () => {
   const temporalServerPath = 'C:\\tools\\temporal-test-server.exe';
   const calls = [];

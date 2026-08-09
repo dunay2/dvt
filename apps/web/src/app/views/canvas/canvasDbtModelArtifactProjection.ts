@@ -1,4 +1,6 @@
 /** Owned concern: project one provenance-preserving DBT model artifact from canonical graph state. */
+import { ConnectedSourceRefSchema, WAREHOUSE_CONNECTION_TYPE } from '@dvt/contracts';
+
 import type { CanonicalEdge, CanonicalNode } from '../../types/canonical';
 import {
   createDbtNodeAuthoringMetadata,
@@ -137,6 +139,25 @@ function projectSourceOrigin(
     };
   }
 
+  const connectedSourceRef = ConnectedSourceRefSchema.safeParse(
+    origin.metadata?.connectedSourceRef
+  );
+  if (!connectedSourceRef.success || origin.metadata?.sourceObjectId !== undefined) {
+    return {
+      ok: false,
+      reason: 'origin_metadata_unavailable',
+      message: `DBT source origin "${origin.name}" does not expose a valid connected source binding.`,
+    };
+  }
+  const provider = connectedSourceRef.data.connectionRef.provider;
+  if (!WAREHOUSE_CONNECTION_TYPE.some((supportedProvider) => supportedProvider === provider)) {
+    return {
+      ok: false,
+      reason: 'origin_metadata_unavailable',
+      message: `DBT source origin "${origin.name}" uses unsupported connection provider "${provider}".`,
+    };
+  }
+
   const metadata = createDvtNodeAuthoringMetadata(origin);
   if (metadata?.kind !== 'source') {
     return {
@@ -162,9 +183,13 @@ function resolveOriginProjection(
   metadata: DbtNodeAuthoringMetadata
 ): DbtModelOriginProjection | DbtModelArtifactProjectionResult {
   const selectedSourceId = metadata.selectedSourceId.trim();
-  const origin = resolveCompatibleDbtModelOrigins(args).find(
-    (candidate) => candidate.id === selectedSourceId
-  );
+  const compatibleOrigins = resolveCompatibleDbtModelOrigins(args);
+  const origin =
+    selectedSourceId.length > 0
+      ? compatibleOrigins.find((candidate) => candidate.id === selectedSourceId)
+      : compatibleOrigins.length === 1
+        ? compatibleOrigins[0]
+        : undefined;
 
   if (origin == null) {
     return {

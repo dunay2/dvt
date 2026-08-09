@@ -11,12 +11,19 @@ describe('SourceImportWizardFrame focus', () => {
   let container: HTMLDivElement;
   let focusReturnTarget: HTMLButtonElement;
   let root: Root;
+  let previousResizeObserver: typeof ResizeObserver | undefined;
 
   beforeEach(() => {
     container = document.createElement('div');
     focusReturnTarget = document.createElement('button');
     document.body.append(container, focusReturnTarget);
     root = createRoot(container);
+    previousResizeObserver = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class implements ResizeObserver {
+      disconnect(): void {}
+      observe(): void {}
+      unobserve(): void {}
+    };
     (
       globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }
     ).IS_REACT_ACT_ENVIRONMENT = true;
@@ -26,6 +33,11 @@ describe('SourceImportWizardFrame focus', () => {
     act(() => root.unmount());
     container.remove();
     focusReturnTarget.remove();
+    if (previousResizeObserver === undefined) {
+      Reflect.deleteProperty(globalThis, 'ResizeObserver');
+    } else {
+      globalThis.ResizeObserver = previousResizeObserver;
+    }
   });
 
   it('owns focus while open and restores the Canvas opener after Escape', async () => {
@@ -71,5 +83,33 @@ describe('SourceImportWizardFrame focus', () => {
       expect(document.activeElement).toBe(focusReturnTarget);
     });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps bounded review overflow discoverable while footer actions remain visible', async () => {
+    await act(async () =>
+      root.render(
+        <SourceImportWizardFrame
+          open
+          activeContentId="selected"
+          isResultStep={false}
+          isProcessing={false}
+          canImport
+          sections={<button type="button">Selected</button>}
+          onClose={vi.fn()}
+          onDone={vi.fn()}
+          onImport={vi.fn()}
+        >
+          <div style={{ height: 1200 }}>Selected source review</div>
+        </SourceImportWizardFrame>
+      )
+    );
+
+    const scrollRegion = document.body.querySelector(
+      '[data-slot="source-import-wizard-content-scroll"]'
+    );
+    expect(scrollRegion).not.toBeNull();
+    expect(scrollRegion?.getAttribute('data-overflow-affordance')).toBe('always');
+    expect(document.body.textContent).toContain('Cancel');
+    expect(document.body.textContent).toContain('Attach sources to canvas');
   });
 });
