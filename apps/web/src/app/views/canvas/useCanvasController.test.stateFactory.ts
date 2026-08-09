@@ -123,8 +123,6 @@ function buildDefaultCanvasHarnessGraphHandlersResult(): CanvasHarnessState['gra
     onConnect: vi.fn(),
     confirmEdgeCreation: vi.fn(),
     handleInspectNode: vi.fn(),
-    handleNodeClick: vi.fn(),
-    onSelectionChange: vi.fn(),
     handleAutoLayout: vi.fn(),
     handleDrop: vi.fn(),
     handleDragOver: vi.fn(),
